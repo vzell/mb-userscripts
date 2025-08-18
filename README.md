@@ -15,5 +15,5 @@ Display icon shortcut for relationships of release-group, release, recording and
 Batch set recording comments from a Release page, prefilling from "recorded at:" prefixed with "live, " if comment is
 empty. Prefills edit note with user supplied configurable text.
 
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SetRecordingComment-Prefilled-CustomeEditNode.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRecordingComment-Prefilled-CustomeEditNode.user.js)
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SetRecordingComment-Prefilled-CustomEditNode.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRecordingComment-Prefilled-CustomEditNode.user.js)
