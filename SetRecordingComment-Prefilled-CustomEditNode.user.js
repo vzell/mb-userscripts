@@ -6,6 +6,7 @@
 // @tag         ai-created
 // @author      Michael Wiencek, Gemini (directed by vzell)
 // @license     X11
+// @homepageURL https://github.com/vzell/mb-userscripts
 // @downloadURL https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRecordingComment-Prefilled-CustomEditNode.user.js
 // @updateURL   https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRecordingComment-Prefilled-CustomEditNode.user.js
 // @include     /^https?:\/\/(\w+\.)?musicbrainz\.org\/release\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/disc\/\d+|(\?.+?)?$)/

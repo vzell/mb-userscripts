@@ -6,6 +6,7 @@
 // @tag         ai-created
 // @author      Aurelien Mino <aurelien.mino@gmail.com>, Gemini (directed by vzell)
 // @licence     GPL (http://www.gnu.org/copyleft/gpl.html)
+// @homepageURL https://github.com/vzell/mb-userscripts
 // @downloadURL https://raw.githubusercontent.com/vzell/mb-userscripts/master/DisplayShortcutForRelationship-CustomFavicons.user.js
 // @updateURL   https://raw.githubusercontent.com/vzell/mb-userscripts/master/DisplayShortcutForRelationship-CustomFavicons.user.js
 // @include     http*://*musicbrainz.org/artist/*
