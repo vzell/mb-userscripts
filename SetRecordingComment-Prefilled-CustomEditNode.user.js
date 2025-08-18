@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        MusicBrainz: Set recording comments for a release
 // @namespace   https://musicbrainz.org/user/vzell
-// @version     1.0.0
+// @version     1.0.1
 // @description Batch set recording comments from a Release page, prefilling from "recorded at:" prefixed with "live, " if comment is empty. Prefills edit note with user supplied configurable text.
 // @tag         ai-created
 // @author      Michael Wiencek, Gemini (directed by vzell)
