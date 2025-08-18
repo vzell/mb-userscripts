@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Display shortcut for relationships on MusicBrainz
 // @namespace   https://musicbrainz.org/user/vzell
-// @version     1.0.0
+// @version     1.0.1
 // @description Display icon shortcut for relationships of release-group, release, recording and work: e.g. Amazon, Discogs, Wikipedia, ... links. This allows to access some relationships without opening the entity page.
 // @tag         ai-created
 // @author      Aurelien Mino <aurelien.mino@gmail.com>, Gemini (directed by vzell)
