@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        MusicBrainz: Set recording comments for a release
 // @namespace   https://musicbrainz.org/user/vzell
-// @version     1.0.1
+// @version     1.0.2
 // @description Batch set recording comments from a Release page, prefilling from "recorded at:" prefixed with "live, " if comment is empty. Prefills edit note with user supplied configurable text.
 // @tag         ai-created
 // @author      Michael Wiencek, Gemini (directed by vzell)
@@ -61,7 +61,7 @@ function setRecordingComments() {
     let $inputs = $();
     const MBID_REGEX = /[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}/;
     const EDIT_RECORDING_EDIT = 72; // MusicBrainz internal edit type for editing a recording
-    const DEFAULT_EDIT_NOTE_TEXT = 'Style guide for "live" recording disambiguation comments.\n... see https://musicbrainz.org/doc/Style/Recording';
+    const DEFAULT_EDIT_NOTE_TEXT = 'Style guide for "live" recording disambiguation comments ... see https://musicbrainz.org/doc/Style/Recording';
     const STORAGE_KEY = 'mb_recording_comments_edit_note';
 
     // Load custom edit note from storage or use default
