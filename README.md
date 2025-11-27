@@ -6,6 +6,7 @@
 - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector)
 - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector)
 - [Edit Release: No Label & No Cat. no Button](#mb_nolabel_nocatno)
+- [Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 
 The Loujine scripts temporarely needed to be patched with the folloing line:
 
@@ -63,4 +64,11 @@ Adds a No Label & No Cat. no button to MusicBrainz release editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
+
+## <a name="##mb_batch_add_relationships_to_recordings"></a> Batch Add Relationships To Recordings
+
+Insert artist buttons, open batch-add dialog, reliably fill relationship type (instruments|vocal|performed / performer), artist, instrument/vocal, credited-as, click Done — sequential queue + dialog lifecycle awareness.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchAddRelationshipsToRecordings.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js)
 

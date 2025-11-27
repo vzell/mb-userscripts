@@ -5251,3 +5251,1884 @@ The Button text should have an "(i)" appended to the actual artist if his/here r
 
                 const tryBatchClick = ()
 #+end_example
+
+
+** working version for vocals and instruments with DONE button click
+
+When using the following working userscript (the pressing the "DONE" button logic commented out), the scripts works
+perfect.  But when including the "DONE" button click, the results are not OK. Especially the "Garry Tallent" button
+doesn't fill in "electric bass guitar", or when pressing the "Bruce Springsteen" button, the "lead vocals" isn't filled
+in.  It looks like a timing/timeout problem when accessing the value from the suggestion list.  Also when pressing all
+the buttons right after each other, it looks like when the data for each butten gets entered in the "Instrument" or
+"Vocal" field, the previously entered data is still present and the newly entered text is inserted somewhere in between.
+
+
+#+begin_example
+// ==UserScript==
+// @name         AA - Add Instrument Buttons (React Release Editor) Extended
+// @namespace    https://musicbrainz.org/
+// @version      1.8
+// @description  Insert multiple Artist buttons, open batch-add dialog, auto-fill relationship type = "instruments" or "vocals", then Artist, Instrument/Vocal, Credited as fields, and click Done.
+// @match        https://musicbrainz.org/release/*/edit-relationships*
+// @grant        none
+// @require      https://code.jquery.com/jquery-3.6.0.min.js
+// @run-at       document-idle
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const DEBUG = true;
+    const HEADING_SELECTOR = "h2:contains('Track relationships')";
+
+    function log(...args) {
+        if (DEBUG) console.log('[AA-add-instrument]', ...args);
+    }
+
+    // --- Configuration for multiple Artist buttons ---
+    const ARTIST_BUTTONS = [
+        {
+            label: "Max Weinberg",
+            relationshipType: "instruments",
+            artist: "Max Weinberg",
+            instrument: "drums (drum set)",
+            creditedAs: "drums"
+        },
+        {
+            label: "Garry Tallent",
+            relationshipType: "instruments",
+            artist: "Garry Tallent",
+            instrument: "electric bass guitar",
+            creditedAs: ""
+        },
+        {
+            label: "Bruce Springsteen",
+            relationshipType: "vocal",
+            artist: "Bruce Springsteen",
+            vocal: "lead vocals",
+            creditedAs: ""
+        }
+        // Add more artist buttons here easily
+    ];
+
+    function logAllButtonsAndLinks() {
+        const elems = $('button, a');
+        console.group('[AA] Fallback: Dumping all buttons/links (' + elems.length + ')');
+        elems.each((i, el) => {
+            console.group('Element #' + i);
+            console.log('Text:', $(el).text().trim());
+            console.log('Classes:', el.className);
+            console.log('ID:', el.id);
+            console.log('OuterHTML:', el.outerHTML);
+            console.groupEnd();
+        });
+        console.groupEnd();
+        alert("AA Script: Could NOT find the batch-add button.\n\nAll button/link elements have been logged in the console.");
+    }
+
+    function typeIntoAutocomplete($input, text, callback) {
+        const el = $input[0];
+        el.focus();
+
+        let idx = 0;
+
+        function reactInput(el, newValue) {
+            const last = el.value;
+            el.value = newValue;
+
+            const e = new InputEvent("input", {
+                bubbles: true,
+                cancelable: true,
+                inputType: "insertText",
+                data: newValue.replace(last, "")
+            });
+
+            el.dispatchEvent(e);
+        }
+
+        function clickOptionMatching(prefix) {
+            const $opt = $("li[role='option']").filter((i, el) =>
+                $(el).text().trim().toLowerCase().startsWith(prefix.toLowerCase())
+            );
+
+            if ($opt.length) {
+                log(`Clicking dropdown option: ${prefix}`);
+                $opt[0].click();
+                if (callback) callback();
+            } else {
+                log(`Dropdown option "${prefix}" not ready yet → retrying…`);
+                setTimeout(() => clickOptionMatching(prefix), 100);
+            }
+        }
+
+        function typeNext() {
+            if (idx >= text.length) {
+                setTimeout(() => clickOptionMatching(text), 150);
+                return;
+            }
+
+            const ch = text[idx];
+            const newValue = el.value + ch;
+            reactInput(el, newValue);
+
+            idx++;
+            setTimeout(typeNext, 50);
+        }
+
+        typeNext();
+    }
+
+    // --- Main filling sequence ---
+    function fillFields(config) {
+        fillRelationshipType(config);
+    }
+
+    function fillRelationshipType(config) {
+        log("Checking for Relationship Type input…");
+
+        const $input = $('input.relationship-type:visible');
+
+        if ($input.length === 0) {
+            log("Relationship type field not found yet — retrying…");
+            setTimeout(() => fillRelationshipType(config), 250);
+            return;
+        }
+
+        log(`Found Relationship type field → typing '${config.relationshipType}'`);
+        typeIntoAutocomplete($input, config.relationshipType, () => fillArtistField(config));
+    }
+
+    function fillArtistField(config) {
+        log("Filling Artist field…");
+        const $artist = $('input[placeholder="Type to search, or paste an MBID"]:visible');
+
+        if ($artist.length === 0) {
+            log("Artist field not ready — retrying…");
+            setTimeout(() => fillArtistField(config), 250);
+            return;
+        }
+
+        typeIntoAutocomplete($artist, config.artist, () => fillInstrumentOrVocalField(config));
+    }
+
+    function fillInstrumentOrVocalField(config) {
+        log(config.relationshipType === "instruments" ? "Filling Instrument field…" : "Filling Vocal field…");
+
+        const $inputField = $('input[placeholder="' + (config.relationshipType === "instruments" ? "instrument" : "vocal") + '"]:visible');
+
+        if ($inputField.length === 0) {
+            log(`${config.relationshipType === "instruments" ? "Instrument" : "Vocal"} field not ready — retrying…`);
+            setTimeout(() => fillInstrumentOrVocalField(config), 250);
+            return;
+        }
+
+        const valueToEnter = config.relationshipType === "instruments" ? config.instrument : config.vocal;
+        typeIntoAutocomplete($inputField, valueToEnter, () => fillCreditedAsField(config));
+    }
+
+function fillCreditedAsField(config) {
+    log("Filling 'Credited as' field…");
+
+    // Check if the relationship is for vocals or instruments and target the appropriate container
+    let $container;
+    if (config.relationshipType === "instruments") {
+        $container = $('.multiselect.instrument').last(); // For instruments
+    } else if (config.relationshipType === "vocal") {
+        $container = $('.multiselect.vocal').last(); // For vocals (new selector)
+    }
+
+    if (!$container.length) {
+        log(`${config.relationshipType === "instruments" ? "Instrument" : "Vocal"} container not found — retrying…`);
+        setTimeout(() => fillCreditedAsField(config), 250);
+        return;
+    }
+
+    const $creditedInput = $container.find('input.attribute-credit');
+    if ($creditedInput.length) {
+        const el = $creditedInput[0];
+        const text = config.creditedAs;
+
+        // React-compliant setter
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(el.__proto__, 'value')?.set;
+        if (nativeInputValueSetter) nativeInputValueSetter.call(el, text);
+
+        // Dispatch events to notify React
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    log(`'Credited as' field filled successfully with ${config.creditedAs}`);
+
+    // Click the Done button
+    // const $doneButton = $('button.positive:visible').filter((i, btn) => $(btn).text().trim() === "Done");
+    // if ($doneButton.length) {
+    //     log("Clicking Done button…");
+    //     $doneButton[0].click();
+    // } else {
+    //     log("Done button not found — retrying…");
+    //     setTimeout(() => fillCreditedAsField(config), 250);
+    // }
+}
+
+    // --- Button creation ---
+    function createCustomButtons() {
+        const $heading = $(HEADING_SELECTOR);
+
+        if ($heading.length === 0) {
+            log("Heading 'Track relationships' not found yet — retrying…");
+            setTimeout(createCustomButtons, 500);
+            return;
+        }
+
+        const $container = $('<div style="display:flex;align-items:center;margin-bottom:5px;"></div>');
+        $heading.wrap($container);
+
+        ARTIST_BUTTONS.forEach(config => {
+            const buttonText = config.relationshipType === "instruments" ? `${config.label} (i)` : `${config.label} (v)`;
+
+            const $button = $('<button/>', {
+                text: buttonText,
+                style: `
+                    margin-left: 10px;
+                    background-color: #38a169;
+                    color: white;
+                    padding: 5px 10px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                `
+            });
+
+            $heading.parent().append($button);
+
+            $button.on('click', () => {
+                log(`"${config.label}" button clicked → searching for batch-add button…`);
+
+                const tryBatchClick = () => {
+                    const $batch = $("button.add-item.with-label.batch-add-recording-relationship");
+                    if ($batch.length) {
+                        log("Found batch-add button (exact class) → clicking.");
+                        $batch[0].click();
+
+                        // Wait a bit for the dialog to appear before filling fields
+                        setTimeout(() => fillFields(config), 500);
+                        return true;
+                    }
+                    return false;
+                };
+
+                if (!tryBatchClick()) {
+                    log("Exact match failed — trying fallback text search…");
+
+                    const $fallback = $("button, a").filter((i, el) => {
+                        const t = $(el).text().toLowerCase();
+                        return t.includes("batch-add") && t.includes("record");
+                    });
+
+                    if ($fallback.length) {
+                        log("Fallback batch-add button found → clicking.");
+                        $fallback[0].click();
+                        setTimeout(() => fillFields(config), 500);
+                    } else {
+                        log("Batch-add button not found → logging all buttons/links.");
+                        logAllButtonsAndLinks();
+                    }
+                }
+            });
+        });
+
+        log("AA: Injected custom buttons.");
+    }
+
+    // Wait for the page to load, then create the custom buttons
+    setTimeout(createCustomButtons, 1000);
+})();
+#+end_example
+
+
+#+begin_example
+[AA-add-instrument] AA: Injected custom buttons.
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] "Max Weinberg" button clicked → searching for batch-add button…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Found batch-add button (exact class) → clicking.
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Checking for Relationship Type input…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Found Relationship type field → typing 'instruments'
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Clicking dropdown option: instruments
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling Artist field…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Clicking dropdown option: Max Weinberg
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling Instrument field…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Clicking dropdown option: drums (drum set)
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling 'Credited as' field…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] 'Credited as' field filled successfully with drums
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] "Garry Tallent" button clicked → searching for batch-add button…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Found batch-add button (exact class) → clicking.
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Checking for Relationship Type input…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Found Relationship type field → typing 'instruments'
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Clicking dropdown option: instruments
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling Artist field…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Clicking dropdown option: Garry Tallent
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling Instrument field…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Clicking dropdown option: electric bass guitar
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling 'Credited as' field…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] 'Credited as' field filled successfully with 
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] "Bruce Springsteen" button clicked → searching for batch-add button…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Found batch-add button (exact class) → clicking.
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Checking for Relationship Type input…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Found Relationship type field → typing 'vocal'
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Clicking dropdown option: vocal
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling Artist field…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Clicking dropdown option: Bruce Springsteen
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling Vocal field…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Clicking dropdown option: lead vocals
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling 'Credited as' field…
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] 'Credited as' field filled successfully with 
+#+end_example
+
+
+#+begin_example
+// ==UserScript==
+// @name         AA - Add Instrument/Vocal Buttons (React Release Editor) Robust
+// @namespace    https://musicbrainz.org/
+// @version      1.9
+// @description  Robust: Insert artist buttons, open batch-add dialog, reliably fill relationship type (instruments|vocal), artist, instrument/vocal, credited-as, click Done — sequential queue + dialog lifecycle awareness.
+// @match        https://musicbrainz.org/release/*/edit-relationships*
+// @grant        none
+// @require      https://code.jquery.com/jquery-3.6.0.min.js
+// @run-at       document-idle
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const DEBUG = true;
+    const HEADING_SELECTOR = "h2:contains('Track relationships')";
+
+    function log(...args) {
+        if (DEBUG) console.log('[AA-add-instrument]', ...args);
+    }
+
+    // --- Configuration for multiple Artist buttons ---
+    const ARTIST_BUTTONS = [
+        {
+            label: "Max Weinberg",
+            relationshipType: "instruments",
+            artist: "Max Weinberg",
+            instrument: "drums (drum set)",
+            creditedAs: "drums"
+        },
+        {
+            label: "Garry Tallent",
+            relationshipType: "instruments",
+            artist: "Garry Tallent",
+            instrument: "electric bass guitar",
+            creditedAs: ""
+        },
+        {
+            label: "Bruce Springsteen",
+            relationshipType: "vocal",
+            artist: "Bruce Springsteen",
+            vocal: "lead vocals",
+            creditedAs: ""
+        }
+        // Add/remove entries as needed
+    ];
+
+    // ----------------- Utilities -----------------
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    // Wait for an element matching selector that is visible
+    async function waitVisible(selector, opts = {}) {
+        const timeout = opts.timeout ?? 5000;
+        const interval = opts.interval ?? 100;
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            const $el = $(selector).filter(':visible');
+            if ($el.length) return $el;
+            await sleep(interval);
+        }
+        return null;
+    }
+
+    // Wait until no visible dialog exists (used to ensure previous dialog fully closed)
+    async function waitDialogClosed(timeout = 3000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            // adjust selector if your dialog uses a specific class; generic attempt:
+            const $visibleDialogs = $('.modal, .Dialog, .dialog, .ui-dialog').filter(':visible');
+            if ($visibleDialogs.length === 0) {
+                // small extra breathing room so React finishes unmount
+                await sleep(200);
+                return true;
+            }
+            await sleep(100);
+        }
+        return false;
+    }
+
+    // Wait until a particular condition returns truthy or times out
+    async function waitForCondition(conditionFn, {timeout = 3000, interval = 100} = {}) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            try {
+                if (await conditionFn()) return true;
+            } catch (e) { /* ignore */ }
+            await sleep(interval);
+        }
+        return false;
+    }
+
+    // Set value for React-controlled input and dispatch events
+    function setReactValueAndDispatch(el, value) {
+        try {
+            const nativeSetter = Object.getOwnPropertyDescriptor(el.__proto__, 'value')?.set;
+            if (nativeSetter) nativeSetter.call(el, value);
+            else el.value = value;
+
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            // some react versions also respond to these:
+            el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+        } catch (e) {
+            // fallback
+            el.value = value;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    // Clear an input cleanly (React-aware)
+    function clearInput(el) {
+        setReactValueAndDispatch(el, '');
+    }
+
+    // Type into autocomplete input character by character and select matching option when available.
+    // This function is defensive: it waits for suggestion list, waits for an option starting with prefix (case-insensitive),
+    // clicks it, then waits until some sign of selection appears (or a small delay).
+    async function typeAndSelect($input, text, {charDelay = 40, postSelectWait = 300, optionSelector = "li[role='option']"} = {}) {
+        const el = $input[0];
+        if (!el) throw new Error('Input element missing');
+
+        el.focus();
+
+        // Ensure input is empty first (React-friendly)
+        clearInput(el);
+        await sleep(50);
+
+        // Type characters slowly
+        for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            const newValue = el.value + ch;
+            setReactValueAndDispatch(el, newValue);
+            await sleep(charDelay);
+        }
+
+        // At end, give suggestions a moment
+        await sleep(120);
+
+        // Wait for a suggestion that startsWith text
+        const found = await waitForCondition(() => {
+            const $opts = $(optionSelector).filter(':visible');
+            if (!$opts.length) return false;
+            // prefer exact startsWith (case-insensitive)
+            const match = $opts.toArray().find(o => $(o).text().trim().toLowerCase().startsWith(text.toLowerCase()));
+            if (match) {
+                match.click();
+                return true;
+            }
+            // fallback: any option that includes the text
+            const match2 = $opts.toArray().find(o => $(o).text().trim().toLowerCase().includes(text.toLowerCase()));
+            if (match2) {
+                match2.click();
+                return true;
+            }
+            return false;
+        }, {timeout: 3000, interval: 120});
+
+        if (!found) {
+            log(`Warning: option for "${text}" not found in suggestions after timeout.`);
+        }
+
+        // give React time to update internal state / tokens
+        await sleep(postSelectWait);
+    }
+
+    // Reliable method: click batch-add button but only AFTER ensuring previous dialog closed
+    async function openBatchAddDialog() {
+        // Ensure previous closed
+        await waitDialogClosed(2000);
+
+        // Find the batch button
+        const $batch = $("button.add-item.with-label.batch-add-recording-relationship, button.add-item.batch-add-recording-relationship, button.add-item.with-label").filter(function() {
+            const t = $(this).text().toLowerCase();
+            return t.includes('batch-add') || t.includes('batch add') || (t.includes('add') && t.includes('record'));
+        });
+
+        if ($batch.length === 0) {
+            log("Batch-add button not found via selectors");
+            return false;
+        }
+
+        // Click it
+        $batch[0].click();
+
+        // Wait for dialog to appear
+        const appeared = await waitForCondition(() => {
+            const $d = $('.modal, .Dialog, .dialog, .ui-dialog').filter(':visible');
+            return $d.length > 0;
+        }, {timeout: 3000, interval: 100});
+
+        if (!appeared) {
+            // give one more small delay
+            await sleep(400);
+        }
+
+        // Extra safety pause so React finishes mounting
+        await sleep(300);
+        return true;
+    }
+
+    // ----------------- Filling sequence (async) -----------------
+    async function fillFieldsAsync(config) {
+        log(`Start filling for: ${config.label} (${config.relationshipType})`);
+
+        // 1) Relationship type
+        const $relInput = await waitVisible('input.relationship-type', {timeout: 4000});
+        if (!$relInput) {
+            log("Relationship type input not found — aborting this item.");
+            return false;
+        }
+        log(`Typing relationshipType '${config.relationshipType}'`);
+        await typeAndSelect($relInput, config.relationshipType, {charDelay: 40, postSelectWait: 200});
+
+        // 2) Artist
+        const $artist = await waitVisible('input[placeholder="Type to search, or paste an MBID"]', {timeout: 4000});
+        if (!$artist) {
+            log("Artist input not found — aborting this item.");
+            return false;
+        }
+        log(`Typing artist '${config.artist}'`);
+        await typeAndSelect($artist, config.artist, {charDelay: 50, postSelectWait: 250});
+
+        // 3) Instrument or Vocal
+        const placeholderName = config.relationshipType === 'instruments' ? 'instrument' : 'vocal';
+        const $inst = await waitVisible(`input[placeholder="${placeholderName}"]`, {timeout: 4000});
+        if (!$inst) {
+            log(`${placeholderName} input not found — aborting this item.`);
+            return false;
+        }
+        const desired = (config.relationshipType === 'instruments') ? config.instrument : config.vocal;
+        if (desired && desired.length > 0) {
+            log(`Typing ${placeholderName} '${desired}'`);
+            await typeAndSelect($inst, desired, {charDelay: 45, postSelectWait: 300});
+        } else {
+            log(`No ${placeholderName} value provided, skipping selection.`);
+        }
+
+        // 4) Credited as: find correct container near the instrument/vocal input
+        log("Attempting to fill 'Credited as' field…");
+        // Strategy: find the nearest .multiselect that contains an input.attribute-credit or the 'attribute-credit' input visible.
+        // We'll search visible attribute-credit inputs first, and then try to ensure it's the correct one by proximity.
+        let $creditedInput = $('.attribute-credit:visible');
+        if ($creditedInput.length === 0) {
+            // fallback: look for input.attribute-credit anywhere inside visible multiselects
+            const $multi = $('.multiselect:visible').filter(function() {
+                return $(this).find('input[placeholder]').length > 0;
+            }).last();
+            if ($multi && $multi.length) {
+                $creditedInput = $multi.find('input.attribute-credit:visible');
+            }
+        }
+
+        // Another proximity attempt: find attribute-credit inside last visible .multiselect.* that also contains the placeholder input
+        if ($creditedInput.length === 0) {
+            const $lastMulti = $('.multiselect:visible').filter((i, el) => {
+                return $(el).find(`input[placeholder="${placeholderName}"]`).length > 0;
+            }).last();
+            if ($lastMulti && $lastMulti.length) {
+                $creditedInput = $lastMulti.find('input.attribute-credit:visible');
+            }
+        }
+
+        // If still not found, try common selector: .multiselect.instrument or .multiselect.vocal
+        if ($creditedInput.length === 0) {
+            if (config.relationshipType === 'instruments') {
+                $creditedInput = $('.multiselect.instrument').last().find('input.attribute-credit:visible');
+            } else {
+                $creditedInput = $('.multiselect.vocal').last().find('input.attribute-credit:visible');
+            }
+        }
+
+        // Final fallback: any visible input whose name/id contains 'credit'
+        if ($creditedInput.length === 0) {
+            $creditedInput = $("input:visible").filter((i, el) => {
+                const idn = (el.id || '').toLowerCase();
+                const name = (el.name || '').toLowerCase();
+                const cls = (el.className || '').toLowerCase();
+                return idn.includes('credit') || name.includes('credit') || cls.includes('attribute-credit');
+            }).first();
+        }
+
+        if ($creditedInput && $creditedInput.length) {
+            const el = $creditedInput[0];
+            const text = config.creditedAs ?? '';
+            // set and dispatch react-friendly events
+            setReactValueAndDispatch(el, text);
+            // give React a little time
+            await sleep(120);
+            log(`'Credited as' set to "${text}"`);
+        } else {
+            log("Could not find credited-as input (it's optional); continuing.");
+        }
+
+        // 5) Click Done, but wait until Done appears and is stable
+        const $doneButton = await waitVisible('button.positive:visible', {timeout: 4000});
+        if ($doneButton) {
+            // ensure the button text is exactly "Done" (there may be other positive buttons)
+            const $exactDone = $doneButton.filter((i, btn) => $(btn).text().trim() === 'Done');
+            if ($exactDone.length) {
+                log("Clicking Done");
+                $exactDone[0].click();
+                // Wait until dialog disappears
+                await waitForCondition(() => {
+                    const $d = $('.modal, .Dialog, .dialog, .ui-dialog').filter(':visible');
+                    return $d.length === 0;
+                }, {timeout: 3500, interval: 120});
+                // small extra breathing room
+                await sleep(250);
+                log(`Finished item: ${config.label}`);
+                return true;
+            } else {
+                log("Done button not found among positive buttons — skipping Done.");
+                return true;
+            }
+        } else {
+            log("Done button not found (timeout) — skipping Done.");
+            return true;
+        }
+    }
+
+    // ----------------- Queue to process clicks sequentially -----------------
+    const queue = [];
+    let processing = false;
+
+    async function processQueue() {
+        if (processing) return;
+        processing = true;
+        while (queue.length) {
+            const config = queue.shift();
+            try {
+                log(`Processing queue item: ${config.label}`);
+                // Open dialog (ensures previous is closed and waits until the dialog is stable)
+                const opened = await openBatchAddDialog();
+                if (!opened) {
+                    log("Could not open batch-add dialog — skipping this item.");
+                    await sleep(300);
+                    continue;
+                }
+
+                // Fill all fields and click Done
+                await fillFieldsAsync(config);
+
+                // Give small pause before next item to let React settle
+                await sleep(300);
+            } catch (e) {
+                console.error('[AA-add-instrument] Error processing item', e);
+                // tiny pause and continue with next item
+                await sleep(500);
+            }
+        }
+        processing = false;
+    }
+
+    // ----------------- UI: create buttons -----------------
+    function createCustomButtons() {
+        const $heading = $(HEADING_SELECTOR);
+
+        if ($heading.length === 0) {
+            log("Heading 'Track relationships' not found yet — retrying…");
+            setTimeout(createCustomButtons, 500);
+            return;
+        }
+
+        const $container = $('<div style="display:flex;align-items:center;margin-bottom:5px;"></div>');
+        $heading.wrap($container);
+
+        ARTIST_BUTTONS.forEach(config => {
+            // Append (i) or (v) to button label UI
+            const suffix = config.relationshipType === 'instruments' ? ' (i)' : (config.relationshipType === 'vocal' ? ' (v)' : '');
+            const buttonText = `${config.label}${suffix}`;
+
+            const $button = $('<button/>', {
+                text: buttonText,
+                style: `
+                    margin-left: 10px;
+                    background-color: #38a169;
+                    color: white;
+                    padding: 5px 10px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                `
+            });
+
+            $heading.parent().append($button);
+
+            $button.on('click', () => {
+                log(`Enqueued "${config.label}" (${config.relationshipType})`);
+                // push a shallow copy to avoid mutation issues
+                queue.push(Object.assign({}, config));
+                processQueue().catch(e => console.error(e));
+            });
+        });
+
+        log("AA: Injected custom buttons.");
+    }
+
+    // Start
+    $(document).ready(() => {
+        // Wait a bit to ensure page ready
+        setTimeout(createCustomButtons, 700);
+    });
+
+})();
+#+end_example
+
+
+Notes & rationale (quick)
+
+Sequential queue: pressing multiple buttons rapidly will enqueue the tasks and process them one-by-one. This prevents DOM/React racing between dialogs.
+
+Wait for dialog lifecycle: we wait for dialogs to be closed before opening a new one and wait for them to mount before interacting.
+
+Typing + selection: types char-by-char and only clicks suggestion options after they appear. If the suggestion isn't present, it logs a warning and continues (no accidental Return/enter).
+
+React-friendly input setting: uses native property setter + input/change events so React sees the updates.
+
+Credited-as resolution: multiple strategies to locate the correct credited-as input — proximity search, .multiselect.*, and fallback name/class heuristics.
+
+If you want, I can:
+
+tweak timing constants (charDelay, waits) for your machine/network,
+
+make the queue visible with an on-page status indicator,
+
+add a per-button per-field override for custom timeouts,
+
+or adapt selectors if your MusicBrainz theme uses different class names.
+
+Want me to adjust timing to be even more conservative (safer) or more aggressive (faster)?
+
+** most robust version so far
+
+#+begin_example
+// ==UserScript==
+// @name         AA - Add Instrument/Vocal Buttons (React Release Editor) Robust
+// @namespace    https://musicbrainz.org/
+// @version      1.9
+// @description  Robust: Insert artist buttons, open batch-add dialog, reliably fill relationship type (instruments|vocal), artist, instrument/vocal, credited-as, click Done — sequential queue + dialog lifecycle awareness.
+// @match        https://musicbrainz.org/release/*/edit-relationships*
+// @grant        none
+// @require      https://code.jquery.com/jquery-3.6.0.min.js
+// @run-at       document-idle
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const DEBUG = true;
+    const HEADING_SELECTOR = "h2:contains('Track relationships')";
+
+    function log(...args) {
+        if (DEBUG) console.log('[AA-add-instrument]', ...args);
+    }
+
+    // --- Configuration for multiple Artist buttons ---
+    const ARTIST_BUTTONS = [
+        {
+            label: "Max Weinberg",
+            relationshipType: "instruments",
+            artist: "Max Weinberg",
+            instrument: "drums (drum set)",
+            creditedAs: "drums"
+        },
+        {
+            label: "Garry Tallent",
+            relationshipType: "instruments",
+            artist: "Garry Tallent",
+            instrument: "electric bass guitar",
+            creditedAs: ""
+        },
+        {
+            label: "Bruce Springsteen",
+            relationshipType: "vocal",
+            artist: "Bruce Springsteen",
+            vocal: "lead vocals",
+            creditedAs: ""
+        }
+        // Add/remove entries as needed
+    ];
+
+    // ----------------- Utilities -----------------
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    // Wait for an element matching selector that is visible
+    async function waitVisible(selector, opts = {}) {
+        const timeout = opts.timeout ?? 5000;
+        const interval = opts.interval ?? 100;
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            const $el = $(selector).filter(':visible');
+            if ($el.length) return $el;
+            await sleep(interval);
+        }
+        return null;
+    }
+
+    // Wait until no visible dialog exists (used to ensure previous dialog fully closed)
+    async function waitDialogClosed(timeout = 3000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            // adjust selector if your dialog uses a specific class; generic attempt:
+            const $visibleDialogs = $('.modal, .Dialog, .dialog, .ui-dialog').filter(':visible');
+            if ($visibleDialogs.length === 0) {
+                // small extra breathing room so React finishes unmount
+                await sleep(200);
+                return true;
+            }
+            await sleep(100);
+        }
+        return false;
+    }
+
+    // Wait until a particular condition returns truthy or times out
+    async function waitForCondition(conditionFn, {timeout = 3000, interval = 100} = {}) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            try {
+                if (await conditionFn()) return true;
+            } catch (e) { /* ignore */ }
+            await sleep(interval);
+        }
+        return false;
+    }
+
+    // Set value for React-controlled input and dispatch events
+    function setReactValueAndDispatch(el, value) {
+        try {
+            const nativeSetter = Object.getOwnPropertyDescriptor(el.__proto__, 'value')?.set;
+            if (nativeSetter) nativeSetter.call(el, value);
+            else el.value = value;
+
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            // some react versions also respond to these:
+            el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+        } catch (e) {
+            // fallback
+            el.value = value;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    // Clear an input cleanly (React-aware)
+    function clearInput(el) {
+        setReactValueAndDispatch(el, '');
+    }
+
+    // Type into autocomplete input character by character and select matching option when available.
+    // This function is defensive: it waits for suggestion list, waits for an option starting with prefix (case-insensitive),
+    // clicks it, then waits until some sign of selection appears (or a small delay).
+    async function typeAndSelect($input, text, {charDelay = 40, postSelectWait = 300, optionSelector = "li[role='option']"} = {}) {
+        const el = $input[0];
+        if (!el) throw new Error('Input element missing');
+
+        el.focus();
+
+        // Ensure input is empty first (React-friendly)
+        clearInput(el);
+        await sleep(50);
+
+        // Type characters slowly
+        for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            const newValue = el.value + ch;
+            setReactValueAndDispatch(el, newValue);
+            await sleep(charDelay);
+        }
+
+        // At end, give suggestions a moment
+        await sleep(120);
+
+        // Wait for a suggestion that startsWith text
+        const found = await waitForCondition(() => {
+            const $opts = $(optionSelector).filter(':visible');
+            if (!$opts.length) return false;
+            // prefer exact startsWith (case-insensitive)
+            const match = $opts.toArray().find(o => $(o).text().trim().toLowerCase().startsWith(text.toLowerCase()));
+            if (match) {
+                match.click();
+                return true;
+            }
+            // fallback: any option that includes the text
+            const match2 = $opts.toArray().find(o => $(o).text().trim().toLowerCase().includes(text.toLowerCase()));
+            if (match2) {
+                match2.click();
+                return true;
+            }
+            return false;
+        }, {timeout: 3000, interval: 120});
+
+        if (!found) {
+            log(`Warning: option for "${text}" not found in suggestions after timeout.`);
+        }
+
+        // give React time to update internal state / tokens
+        await sleep(postSelectWait);
+    }
+
+    // Reliable method: click batch-add button but only AFTER ensuring previous dialog closed
+    async function openBatchAddDialog() {
+        // Ensure previous closed
+        await waitDialogClosed(2000);
+
+        // Find the batch button
+        const $batch = $("button.add-item.with-label.batch-add-recording-relationship, button.add-item.batch-add-recording-relationship, button.add-item.with-label").filter(function() {
+            const t = $(this).text().toLowerCase();
+            return t.includes('batch-add') || t.includes('batch add') || (t.includes('add') && t.includes('record'));
+        });
+
+        if ($batch.length === 0) {
+            log("Batch-add button not found via selectors");
+            return false;
+        }
+
+        // Click it
+        $batch[0].click();
+
+        // Wait for dialog to appear
+        const appeared = await waitForCondition(() => {
+            const $d = $('.modal, .Dialog, .dialog, .ui-dialog').filter(':visible');
+            return $d.length > 0;
+        }, {timeout: 3000, interval: 100});
+
+        if (!appeared) {
+            // give one more small delay
+            await sleep(400);
+        }
+
+        // Extra safety pause so React finishes mounting
+        await sleep(300);
+        return true;
+    }
+
+    // ----------------- Filling sequence (async) -----------------
+    async function fillFieldsAsync(config) {
+        log(`Start filling for: ${config.label} (${config.relationshipType})`);
+
+        // 1) Relationship type
+        const $relInput = await waitVisible('input.relationship-type', {timeout: 4000});
+        if (!$relInput) {
+            log("Relationship type input not found — aborting this item.");
+            return false;
+        }
+        log(`Typing relationshipType '${config.relationshipType}'`);
+        await typeAndSelect($relInput, config.relationshipType, {charDelay: 40, postSelectWait: 200});
+
+        // 2) Artist
+        const $artist = await waitVisible('input[placeholder="Type to search, or paste an MBID"]', {timeout: 4000});
+        if (!$artist) {
+            log("Artist input not found — aborting this item.");
+            return false;
+        }
+        log(`Typing artist '${config.artist}'`);
+        await typeAndSelect($artist, config.artist, {charDelay: 50, postSelectWait: 250});
+
+        // 3) Instrument or Vocal
+        const placeholderName = config.relationshipType === 'instruments' ? 'instrument' : 'vocal';
+        const $inst = await waitVisible(`input[placeholder="${placeholderName}"]`, {timeout: 4000});
+        if (!$inst) {
+            log(`${placeholderName} input not found — aborting this item.`);
+            return false;
+        }
+        const desired = (config.relationshipType === 'instruments') ? config.instrument : config.vocal;
+        if (desired && desired.length > 0) {
+            log(`Typing ${placeholderName} '${desired}'`);
+            await typeAndSelect($inst, desired, {charDelay: 45, postSelectWait: 300});
+        } else {
+            log(`No ${placeholderName} value provided, skipping selection.`);
+        }
+
+        // 4) Credited as: find correct container near the instrument/vocal input
+        log("Attempting to fill 'Credited as' field…");
+        // Strategy: find the nearest .multiselect that contains an input.attribute-credit or the 'attribute-credit' input visible.
+        // We'll search visible attribute-credit inputs first, and then try to ensure it's the correct one by proximity.
+        let $creditedInput = $('.attribute-credit:visible');
+        if ($creditedInput.length === 0) {
+            // fallback: look for input.attribute-credit anywhere inside visible multiselects
+            const $multi = $('.multiselect:visible').filter(function() {
+                return $(this).find('input[placeholder]').length > 0;
+            }).last();
+            if ($multi && $multi.length) {
+                $creditedInput = $multi.find('input.attribute-credit:visible');
+            }
+        }
+
+        // Another proximity attempt: find attribute-credit inside last visible .multiselect.* that also contains the placeholder input
+        if ($creditedInput.length === 0) {
+            const $lastMulti = $('.multiselect:visible').filter((i, el) => {
+                return $(el).find(`input[placeholder="${placeholderName}"]`).length > 0;
+            }).last();
+            if ($lastMulti && $lastMulti.length) {
+                $creditedInput = $lastMulti.find('input.attribute-credit:visible');
+            }
+        }
+
+        // If still not found, try common selector: .multiselect.instrument or .multiselect.vocal
+        if ($creditedInput.length === 0) {
+            if (config.relationshipType === 'instruments') {
+                $creditedInput = $('.multiselect.instrument').last().find('input.attribute-credit:visible');
+            } else {
+                $creditedInput = $('.multiselect.vocal').last().find('input.attribute-credit:visible');
+            }
+        }
+
+        // Final fallback: any visible input whose name/id contains 'credit'
+        if ($creditedInput.length === 0) {
+            $creditedInput = $("input:visible").filter((i, el) => {
+                const idn = (el.id || '').toLowerCase();
+                const name = (el.name || '').toLowerCase();
+                const cls = (el.className || '').toLowerCase();
+                return idn.includes('credit') || name.includes('credit') || cls.includes('attribute-credit');
+            }).first();
+        }
+
+        if ($creditedInput && $creditedInput.length) {
+            const el = $creditedInput[0];
+            const text = config.creditedAs ?? '';
+            // set and dispatch react-friendly events
+            setReactValueAndDispatch(el, text);
+            // give React a little time
+            await sleep(120);
+            log(`'Credited as' set to "${text}"`);
+        } else {
+            log("Could not find credited-as input (it's optional); continuing.");
+        }
+
+        // 5) Click Done, but wait until Done appears and is stable
+        const $doneButton = await waitVisible('button.positive:visible', {timeout: 4000});
+        if ($doneButton) {
+            // ensure the button text is exactly "Done" (there may be other positive buttons)
+            const $exactDone = $doneButton.filter((i, btn) => $(btn).text().trim() === 'Done');
+            if ($exactDone.length) {
+                log("Clicking Done");
+                $exactDone[0].click();
+                // Wait until dialog disappears
+                await waitForCondition(() => {
+                    const $d = $('.modal, .Dialog, .dialog, .ui-dialog').filter(':visible');
+                    return $d.length === 0;
+                }, {timeout: 3500, interval: 120});
+                // small extra breathing room
+                await sleep(250);
+                log(`Finished item: ${config.label}`);
+                return true;
+            } else {
+                log("Done button not found among positive buttons — skipping Done.");
+                return true;
+            }
+        } else {
+            log("Done button not found (timeout) — skipping Done.");
+            return true;
+        }
+    }
+
+    // ----------------- Queue to process clicks sequentially -----------------
+    const queue = [];
+    let processing = false;
+
+    async function processQueue() {
+        if (processing) return;
+        processing = true;
+        while (queue.length) {
+            const config = queue.shift();
+            try {
+                log(`Processing queue item: ${config.label}`);
+                // Open dialog (ensures previous is closed and waits until the dialog is stable)
+                const opened = await openBatchAddDialog();
+                if (!opened) {
+                    log("Could not open batch-add dialog — skipping this item.");
+                    await sleep(300);
+                    continue;
+                }
+
+                // Fill all fields and click Done
+                await fillFieldsAsync(config);
+
+                // Give small pause before next item to let React settle
+                await sleep(300);
+            } catch (e) {
+                console.error('[AA-add-instrument] Error processing item', e);
+                // tiny pause and continue with next item
+                await sleep(500);
+            }
+        }
+        processing = false;
+    }
+
+    // ----------------- UI: create buttons -----------------
+    function createCustomButtons() {
+        const $heading = $(HEADING_SELECTOR);
+
+        if ($heading.length === 0) {
+            log("Heading 'Track relationships' not found yet — retrying…");
+            setTimeout(createCustomButtons, 500);
+            return;
+        }
+
+        const $container = $('<div style="display:flex;align-items:center;margin-bottom:5px;"></div>');
+        $heading.wrap($container);
+
+        ARTIST_BUTTONS.forEach(config => {
+            // Append (i) or (v) to button label UI
+            const suffix = config.relationshipType === 'instruments' ? ' (i)' : (config.relationshipType === 'vocal' ? ' (v)' : '');
+            const buttonText = `${config.label}${suffix}`;
+
+            const $button = $('<button/>', {
+                text: buttonText,
+                style: `
+                    margin-left: 10px;
+                    background-color: #38a169;
+                    color: white;
+                    padding: 5px 10px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                `
+            });
+
+            $heading.parent().append($button);
+
+            $button.on('click', () => {
+                log(`Enqueued "${config.label}" (${config.relationshipType})`);
+                // push a shallow copy to avoid mutation issues
+                queue.push(Object.assign({}, config));
+                processQueue().catch(e => console.error(e));
+            });
+        });
+
+        log("AA: Injected custom buttons.");
+    }
+
+    // Start
+    $(document).ready(() => {
+        // Wait a bit to ensure page ready
+        setTimeout(createCustomButtons, 700);
+    });
+
+})();
+#+end_example
+
+** add performer
+
+Please add also support for the following ARTIST_BUTTON with 'relationshipType: "performed / performer"':
+
+#+begin_example
+        {
+            label: "E Street Band",
+            relationshipType: "performed / performer",
+            artist: "The E Street Band"
+        }
+#+end_example
+
+The 'relationshipType: "performed / performer"' doesn't have any other input type like "instrument with creditdAs" or
+"vocal with creditedAs", so after entering the actual 'relationshipType: "performed / performer"' and the corresponding
+artist, the DONE button should be clicked right away.
+
+so in the code it should look like:
+
+#+begin_example
+    // --- Configuration for multiple Artist buttons ---
+    const ARTIST_BUTTONS = [
+        {
+            label: "Max Weinberg",
+            relationshipType: "instruments",
+            artist: "Max Weinberg",
+            instrument: "drums (drum set)",
+            creditedAs: "drums"
+        },
+        {
+            label: "Garry Tallent",
+            relationshipType: "instruments",
+            artist: "Garry Tallent",
+            instrument: "electric bass guitar",
+            creditedAs: ""
+        },
+        {
+            label: "Bruce Springsteen",
+            relationshipType: "vocal",
+            artist: "Bruce Springsteen",
+            vocal: "lead vocals",
+            creditedAs: ""
+        },
+        {
+            label: "Street Band",
+            relationshipType: "performed / performer",
+            artist: "The E Street Band"
+        }
+        // Add/remove entries as needed
+    ];
+
+#+end_example
+
+
+# Antwort
+
+#+begin_example
+const ARTIST_BUTTONS = [
+    {
+        label: "Max Weinberg",
+        relationshipType: "instruments",
+        artist: "Max Weinberg",
+        instrument: "drums (drum set)",
+        creditedAs: "drums"
+    },
+    {
+        label: "Garry Tallent",
+        relationshipType: "instruments",
+        artist: "Garry Tallent",
+        instrument: "electric bass guitar",
+        creditedAs: ""
+    },
+    {
+        label: "Bruce Springsteen",
+        relationshipType: "vocal",
+        artist: "Bruce Springsteen",
+        vocal: "lead vocals",
+        creditedAs: ""
+    },
+    {
+        label: "E Street Band",
+        relationshipType: "performed / performer",
+        artist: "The E Street Band"
+    }
+];
+#+end_example
+
+Replace your current fillFields() with this:
+
+#+begin_example
+function fillFields(config) {
+    if (config.relationshipType === "performed / performer") {
+        fillPerformerRelationship(config);
+    } else {
+        fillRelationshipType(config); // instruments + vocal
+    }
+}
+#+end_example
+
+Add this new function right below your other fill functions:
+
+#+begin_example
+function fillPerformerRelationship(config) {
+    log("Performer mode: filling relationship type…");
+
+    const $input = $('input.relationship-type:visible');
+
+    if ($input.length === 0) {
+        log("Performer: relationship type field not ready — retrying…");
+        setTimeout(() => fillPerformerRelationship(config), 200);
+        return;
+    }
+
+    typeIntoAutocomplete($input, config.relationshipType, () => {
+        log("Performer mode: filling Artist…");
+        setTimeout(() => fillPerformerArtist(config), 200);
+    });
+}
+
+function fillPerformerArtist(config) {
+    const $artist = $('input[placeholder="Type to search, or paste an MBID"]:visible');
+
+    if ($artist.length === 0) {
+        log("Performer: Artist field not ready — retrying…");
+        setTimeout(() => fillPerformerArtist(config), 200);
+        return;
+    }
+
+    typeIntoAutocomplete($artist, config.artist, () => {
+        log("Performer: Artist filled → clicking Done…");
+        clickDoneButton();
+    });
+}
+
+function clickDoneButton() {
+    const $done = $('button.positive:visible').filter((i, btn) => $(btn).text().trim() === "Done");
+
+    if ($done.length) {
+        log("Clicking Done button for performer relationship…");
+        $done[0].click();
+    } else {
+        log("Done button not found — retrying…");
+        setTimeout(clickDoneButton, 200);
+    }
+}
+#+end_example
+
+(to mark performer buttons with (p) instead of (i) or (v))
+Replace the button label generation with this version:
+
+#+begin_example
+const typeLabel =
+    config.relationshipType === "instruments" ? "(i)" :
+    config.relationshipType === "vocal" ? "(v)" :
+    "(p)"; // performer
+
+const buttonText = `${config.label} ${typeLabel}`;
+#+end_example
+
+If you want, I can:
+
+✅ merge everything into a single unified script
+✅ add automatic queuing for batch multi-button presses
+✅ add support for multiple performer roles
+✅ add color-coding or icons for button types
+✅ add better error handling / logging panel
+Add keyboard shortcuts for buttons
+
+Just tell me!
+
+** lets see
+
+Please add color-coding and icons for button types and keyboard shortcuts for buttons but do not change any other
+aspects of the following code (nothing else should be rewritten, no comments removed or changed)
+
+#+begin_example
+// ==UserScript==
+// @name         AA - Add Instrument/Vocal Buttons (React Release Editor) Robust + Performer
+// @namespace    https://musicbrainz.org/
+// @version      1.10
+// @description  Robust: Insert artist buttons, open batch-add dialog, reliably fill relationship type (instruments|vocal|performed / performer), artist, instrument/vocal, credited-as, click Done — sequential queue + dialog lifecycle awareness.
+// @match        https://musicbrainz.org/release/*/edit-relationships*
+// @grant        none
+// @require      https://code.jquery.com/jquery-3.6.0.min.js
+// @run-at       document-idle
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const DEBUG = true;
+    const HEADING_SELECTOR = "h2:contains('Track relationships')";
+
+    function log(...args) {
+        if (DEBUG) console.log('[AA-add-instrument]', ...args);
+    }
+
+    // --- Configuration for multiple Artist buttons ---
+    const ARTIST_BUTTONS = [
+        {
+            label: "Max Weinberg",
+            relationshipType: "instruments",
+            artist: "Max Weinberg",
+            instrument: "drums (drum set)",
+            creditedAs: "drums"
+        },
+        {
+            label: "Garry Tallent",
+            relationshipType: "instruments",
+            artist: "Garry Tallent",
+            instrument: "electric bass guitar",
+            creditedAs: ""
+        },
+        {
+            label: "Bruce Springsteen",
+            relationshipType: "vocal",
+            artist: "Bruce Springsteen",
+            vocal: "lead vocals",
+            creditedAs: ""
+        },
+        {
+            label: "E Street Band",
+            relationshipType: "performed / performer",
+            artist: "The E Street Band"
+        }
+        // Add/remove entries as needed
+    ];
+
+    // ----------------- Utilities -----------------
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    // Wait for an element matching selector that is visible
+    async function waitVisible(selector, opts = {}) {
+        const timeout = opts.timeout ?? 5000;
+        const interval = opts.interval ?? 100;
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            const $el = $(selector).filter(':visible');
+            if ($el.length) return $el;
+            await sleep(interval);
+        }
+        return null;
+    }
+
+    // Wait until no visible dialog exists (used to ensure previous dialog fully closed)
+    async function waitDialogClosed(timeout = 3000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            // adjust selector if your dialog uses a specific class; generic attempt:
+            const $visibleDialogs = $('.modal, .Dialog, .dialog, .ui-dialog').filter(':visible');
+            if ($visibleDialogs.length === 0) {
+                // small extra breathing room so React finishes unmount
+                await sleep(200);
+                return true;
+            }
+            await sleep(100);
+        }
+        return false;
+    }
+
+    // Wait until a particular condition returns truthy or times out
+    async function waitForCondition(conditionFn, {timeout = 3000, interval = 100} = {}) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            try {
+                if (await conditionFn()) return true;
+            } catch (e) { /* ignore */ }
+            await sleep(interval);
+        }
+        return false;
+    }
+
+    // Set value for React-controlled input and dispatch events
+    function setReactValueAndDispatch(el, value) {
+        try {
+            const nativeSetter = Object.getOwnPropertyDescriptor(el.__proto__, 'value')?.set;
+            if (nativeSetter) nativeSetter.call(el, value);
+            else el.value = value;
+
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            // some react versions also respond to these:
+            el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+        } catch (e) {
+            // fallback
+            el.value = value;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    // Clear an input cleanly (React-aware)
+    function clearInput(el) {
+        setReactValueAndDispatch(el, '');
+    }
+
+    // Type into autocomplete input character by character and select matching option when available.
+    // This function is defensive: it waits for suggestion list, waits for an option starting with prefix (case-insensitive),
+    // clicks it, then waits until some sign of selection appears (or a small delay).
+    async function typeAndSelect($input, text, {charDelay = 40, postSelectWait = 300, optionSelector = "li[role='option']"} = {}) {
+        const el = $input[0];
+        if (!el) throw new Error('Input element missing');
+
+        el.focus();
+
+        // Ensure input is empty first (React-friendly)
+        clearInput(el);
+        await sleep(50);
+
+        // Type characters slowly
+        for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            const newValue = el.value + ch;
+            setReactValueAndDispatch(el, newValue);
+            await sleep(charDelay);
+        }
+
+        // At end, give suggestions a moment
+        await sleep(120);
+
+        // Wait for a suggestion that startsWith text
+        const found = await waitForCondition(() => {
+            const $opts = $(optionSelector).filter(':visible');
+            if (!$opts.length) return false;
+            // prefer exact startsWith (case-insensitive)
+            const match = $opts.toArray().find(o => $(o).text().trim().toLowerCase().startsWith(text.toLowerCase()));
+            if (match) {
+                match.click();
+                return true;
+            }
+            // fallback: any option that includes the text
+            const match2 = $opts.toArray().find(o => $(o).text().trim().toLowerCase().includes(text.toLowerCase()));
+            if (match2) {
+                match2.click();
+                return true;
+            }
+            return false;
+        }, {timeout: 3000, interval: 120});
+
+        if (!found) {
+            log(`Warning: option for "${text}" not found in suggestions after timeout.`);
+        }
+
+        // give React time to update internal state / tokens
+        await sleep(postSelectWait);
+    }
+
+    // Reliable method: click batch-add button but only AFTER ensuring previous dialog closed
+    async function openBatchAddDialog() {
+        // Ensure previous closed
+        await waitDialogClosed(2000);
+
+        // Find the batch button
+        const $batch = $("button.add-item.with-label.batch-add-recording-relationship, button.add-item.batch-add-recording-relationship, button.add-item.with-label").filter(function() {
+            const t = $(this).text().toLowerCase();
+            return t.includes('batch-add') || t.includes('batch add') || (t.includes('add') && t.includes('record'));
+        });
+
+        if ($batch.length === 0) {
+            log("Batch-add button not found via selectors");
+            return false;
+        }
+
+        // Click it
+        $batch[0].click();
+
+        // Wait for dialog to appear
+        const appeared = await waitForCondition(() => {
+            const $d = $('.modal, .Dialog, .dialog, .ui-dialog').filter(':visible');
+            return $d.length > 0;
+        }, {timeout: 3000, interval: 100});
+
+        if (!appeared) {
+            // give one more small delay
+            await sleep(400);
+        }
+
+        // Extra safety pause so React finishes mounting
+        await sleep(300);
+        return true;
+    }
+
+    // Click Done helper
+    async function clickDoneAndWaitClose() {
+        const $doneButton = await waitVisible('button.positive:visible', {timeout: 4000});
+        if ($doneButton) {
+            const $exactDone = $doneButton.filter((i, btn) => $(btn).text().trim() === 'Done');
+            if ($exactDone.length) {
+                log("Clicking Done");
+                $exactDone[0].click();
+                // Wait until dialog disappears
+                await waitForCondition(() => {
+                    const $d = $('.modal, .Dialog, .dialog, .ui-dialog').filter(':visible');
+                    return $d.length === 0;
+                }, {timeout: 3500, interval: 120});
+                // small extra breathing room
+                await sleep(250);
+                return true;
+            }
+        }
+        log("Done button not found (when trying to click Done).");
+        return false;
+    }
+
+    // ----------------- Filling sequence (async) -----------------
+    async function fillFieldsAsync(config) {
+        log(`Start filling for: ${config.label} (${config.relationshipType})`);
+
+        // 1) Relationship type
+        const $relInput = await waitVisible('input.relationship-type', {timeout: 4000});
+        if (!$relInput) {
+            log("Relationship type input not found — aborting this item.");
+            return false;
+        }
+        log(`Typing relationshipType '${config.relationshipType}'`);
+        await typeAndSelect($relInput, config.relationshipType, {charDelay: 40, postSelectWait: 200});
+
+        // 2) Artist
+        const $artist = await waitVisible('input[placeholder="Type to search, or paste an MBID"]', {timeout: 4000});
+        if (!$artist) {
+            log("Artist input not found — aborting this item.");
+            return false;
+        }
+        log(`Typing artist '${config.artist}'`);
+        await typeAndSelect($artist, config.artist, {charDelay: 50, postSelectWait: 250});
+
+        // SPECIAL CASE: performed / performer -> skip instrument/vocal/credited-as and click Done
+        if (config.relationshipType === 'performed / performer') {
+            log("Performed / performer detected — skipping instrument/vocal/credited-as and clicking Done.");
+            await clickDoneAndWaitClose();
+            log(`Finished performer item: ${config.label}`);
+            return true;
+        }
+
+        // 3) Instrument or Vocal (only for instruments or vocal types)
+        const placeholderName = config.relationshipType === 'instruments' ? 'instrument' : 'vocal';
+
+        // Only attempt placeholder input if relationshipType is 'instruments' or 'vocal'
+        if (config.relationshipType === 'instruments' || config.relationshipType === 'vocal') {
+            const $inst = await waitVisible(`input[placeholder="${placeholderName}"]`, {timeout: 4000});
+            if (!$inst) {
+                log(`${placeholderName} input not found — aborting this item.`);
+                return false;
+            }
+            const desired = (config.relationshipType === 'instruments') ? config.instrument : config.vocal;
+            if (desired && desired.length > 0) {
+                log(`Typing ${placeholderName} '${desired}'`);
+                await typeAndSelect($inst, desired, {charDelay: 45, postSelectWait: 300});
+            } else {
+                log(`No ${placeholderName} value provided, skipping selection.`);
+            }
+        } else {
+            log(`Relationship type '${config.relationshipType}' does not require instrument/vocal step; skipping.`);
+        }
+
+        // 4) Credited as: find correct container near the instrument/vocal input
+        log("Attempting to fill 'Credited as' field…");
+        // Strategy: find the nearest .multiselect that contains an input.attribute-credit or the 'attribute-credit' input visible.
+        // We'll search visible attribute-credit inputs first, and then try to ensure it's the correct one by proximity.
+        let $creditedInput = $('.attribute-credit:visible');
+        if ($creditedInput.length === 0) {
+            // fallback: look for input.attribute-credit anywhere inside visible multiselects
+            const $multi = $('.multiselect:visible').filter(function() {
+                return $(this).find('input[placeholder]').length > 0;
+            }).last();
+            if ($multi && $multi.length) {
+                $creditedInput = $multi.find('input.attribute-credit:visible');
+            }
+        }
+
+        // Another proximity attempt: find attribute-credit inside last visible .multiselect.* that also contains the placeholder input
+        if ($creditedInput.length === 0) {
+            const $lastMulti = $('.multiselect:visible').filter((i, el) => {
+                return $(el).find(`input[placeholder="${placeholderName}"]`).length > 0;
+            }).last();
+            if ($lastMulti && $lastMulti.length) {
+                $creditedInput = $lastMulti.find('input.attribute-credit:visible');
+            }
+        }
+
+        // If still not found, try common selector: .multiselect.instrument or .multiselect.vocal
+        if ($creditedInput.length === 0) {
+            if (config.relationshipType === 'instruments') {
+                $creditedInput = $('.multiselect.instrument').last().find('input.attribute-credit:visible');
+            } else {
+                $creditedInput = $('.multiselect.vocal').last().find('input.attribute-credit:visible');
+            }
+        }
+
+        // Final fallback: any visible input whose name/id contains 'credit'
+        if ($creditedInput.length === 0) {
+            $creditedInput = $("input:visible").filter((i, el) => {
+                const idn = (el.id || '').toLowerCase();
+                const name = (el.name || '').toLowerCase();
+                const cls = (el.className || '').toLowerCase();
+                return idn.includes('credit') || name.includes('credit') || cls.includes('attribute-credit');
+            }).first();
+        }
+
+        if ($creditedInput && $creditedInput.length) {
+            const el = $creditedInput[0];
+            const text = config.creditedAs ?? '';
+            // set and dispatch react-friendly events
+            setReactValueAndDispatch(el, text);
+            // give React a little time
+            await sleep(120);
+            log(`'Credited as' set to "${text}"`);
+        } else {
+            log("Could not find credited-as input (it's optional); continuing.");
+        }
+
+        // 5) Click Done, but wait until Done appears and is stable
+        const doneClicked = await clickDoneAndWaitClose();
+        if (doneClicked) {
+            log(`Finished item: ${config.label}`);
+            return true;
+        } else {
+            log("Done not clicked (not found) — but continuing.");
+            return true;
+        }
+    }
+
+    // ----------------- Queue to process clicks sequentially -----------------
+    const queue = [];
+    let processing = false;
+
+    async function processQueue() {
+        if (processing) return;
+        processing = true;
+        while (queue.length) {
+            const config = queue.shift();
+            try {
+                log(`Processing queue item: ${config.label}`);
+                // Open dialog (ensures previous is closed and waits until the dialog is stable)
+                const opened = await openBatchAddDialog();
+                if (!opened) {
+                    log("Could not open batch-add dialog — skipping this item.");
+                    await sleep(300);
+                    continue;
+                }
+
+                // Fill all fields and click Done
+                await fillFieldsAsync(config);
+
+                // Give small pause before next item to let React settle
+                await sleep(300);
+            } catch (e) {
+                console.error('[AA-add-instrument] Error processing item', e);
+                // tiny pause and continue with next item
+                await sleep(500);
+            }
+        }
+        processing = false;
+    }
+
+    // ----------------- UI: create buttons -----------------
+    function createCustomButtons() {
+        const $heading = $(HEADING_SELECTOR);
+
+        if ($heading.length === 0) {
+            log("Heading 'Track relationships' not found yet — retrying…");
+            setTimeout(createCustomButtons, 500);
+            return;
+        }
+
+        const $container = $('<div style="display:flex;align-items:center;margin-bottom:5px;"></div>');
+        $heading.wrap($container);
+
+        ARTIST_BUTTONS.forEach(config => {
+            // Append (i) or (v) or (p) to button label UI
+            const suffix = config.relationshipType === 'instruments' ? ' (i)' :
+                           config.relationshipType === 'vocal' ? ' (v)' :
+                           config.relationshipType === 'performed / performer' ? ' (p)' : '';
+            const buttonText = `${config.label}${suffix}`;
+
+            const $button = $('<button/>', {
+                text: buttonText,
+                style: `
+                    margin-left: 10px;
+                    background-color: #38a169;
+                    color: white;
+                    padding: 5px 10px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                `
+            });
+
+            $heading.parent().append($button);
+
+            $button.on('click', () => {
+                log(`Enqueued "${config.label}" (${config.relationshipType})`);
+                // push a shallow copy to avoid mutation issues
+                queue.push(Object.assign({}, config));
+                processQueue().catch(e => console.error(e));
+            });
+        });
+
+        log("AA: Injected custom buttons.");
+    }
+
+    // Start
+    $(document).ready(() => {
+        // Wait a bit to ensure page ready
+        setTimeout(createCustomButtons, 700);
+    });
+
+})();
+#+end_example
+
+
+#+begin_example
+// ----------------- UI: create buttons -----------------
+function createCustomButtons() {
+    const $heading = $(HEADING_SELECTOR);
+
+    if ($heading.length === 0) {
+        log("Heading 'Track relationships' not found yet — retrying…");
+        setTimeout(createCustomButtons, 500);
+        return;
+    }
+
+    const $container = $('<div style="display:flex;align-items:center;margin-bottom:5px;"></div>');
+    $heading.wrap($container);
+
+    // --- NEW: Keyboard shortcut mapping ---
+    const SHORTCUTS = {
+        "instruments": "1",
+        "vocal": "2",
+        "performed / performer": "3"
+    };
+
+    // Listen globally for shortcuts (Alt+Number)
+    document.addEventListener("keydown", e => {
+        if (!e.altKey) return;
+        const key = e.key;
+
+        const found = ARTIST_BUTTONS.find(cfg =>
+            SHORTCUTS[cfg.relationshipType] === key
+        );
+
+        if (found) {
+            log(`Keyboard shortcut triggered: Alt+${key} → ${found.label}`);
+            queue.push(Object.assign({}, found));
+            processQueue().catch(e => console.error(e));
+        }
+    });
+
+    ARTIST_BUTTONS.forEach(config => {
+
+        // Append (i) or (v) or (p) to button label UI
+        const suffix = config.relationshipType === 'instruments' ? ' (i)' :
+                       config.relationshipType === 'vocal' ? ' (v)' :
+                       config.relationshipType === 'performed / performer' ? ' (p)' : '';
+
+        // --- NEW: Icons ---
+        const icon = config.relationshipType === 'instruments' ? '🥁 ' :
+                     config.relationshipType === 'vocal' ? '🎤 ' :
+                     config.relationshipType === 'performed / performer' ? '🎶 ' : '';
+
+        // --- NEW: Color coding ---
+        const color =
+            config.relationshipType === "instruments" ? "#3182ce" :       // blue
+            config.relationshipType === "vocal" ? "#d69e2e" :             // yellow/gold
+            config.relationshipType === "performed / performer" ? "#805ad5" : "#38a169"; // purple
+
+        // --- NEW: Shortcut label ---
+        const shortcut = SHORTCUTS[config.relationshipType]
+            ? ` [Alt+${SHORTCUTS[config.relationshipType]}]`
+            : "";
+
+        const buttonText = `${icon}${config.label}${suffix}${shortcut}`;
+
+        const $button = $('<button/>', {
+            text: buttonText,
+            style: `
+                margin-left: 10px;
+                background-color: ${color};
+                color: white;
+                padding: 5px 10px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+                display: inline-flex;
+                align-items: center;
+            `
+        });
+
+        $heading.parent().append($button);
+
+        $button.on('click', () => {
+            log(`Enqueued "${config.label}" (${config.relationshipType})`);
+            // push a shallow copy to avoid mutation issues
+            queue.push(Object.assign({}, config));
+            processQueue().catch(e => console.error(e));
+        });
+    });
+
+    log("AA: Injected custom buttons.");
+}
+#+end_example
