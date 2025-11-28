@@ -7,6 +7,7 @@
 - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector)
 - [Edit Release: No Label & No Cat. no Button](#mb_nolabel_nocatno)
 - [Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
+- [MusicBrainz UUID Validator (Lowercase Hex)](#mb_uuid_validator)
 
 The Loujine scripts temporarely needed to be patched with the folloing line:
 
@@ -71,4 +72,11 @@ Insert artist buttons, open batch-add dialog, reliably fill relationship type (i
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchAddRelationshipsToRecordings.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js)
+
+## <a name="##mb_uuid_validator"></a> MusicBrainz UUID Validator (Lowercase Hex)
+
+Ensures the MusicBrainz ID field accepts only valid, lowercase UUIDs on the SpringsteenLyrics editing pages.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/MusicbrainzUUIDValidator.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/MusicbrainzUUIDValidator.user.js)
 
