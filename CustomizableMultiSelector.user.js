@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         MusicBrainz Customizable Selector (Packaging, Type, Status, Language, Script)
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.3
+// @version      2.4 // Updated version to reflect the fix
 // @description  Adds customizable quick-select buttons for Packaging, Primary Type, Status, Language, and Script in the MusicBrainz release editor, with a field-specific configuration interface.
-// @author       YoGo9 & vzell
+// @author       YoGo9 & vzell + Gemini
 // @homepage     https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
 // @match        https://musicbrainz.org/release/*/edit
@@ -70,21 +70,28 @@
     // --- Utility Functions ---
 
     /**
-     * Forces the value of a React-controlled select/input element.
+     * Forces the value of a React-controlled select/input element by
+     * dispatching necessary DOM events.
      * @param {HTMLSelectElement|HTMLInputElement} input The element to update.
      * @param {string} value The new value.
      */
     function forceValue(input, value) {
-        const lastValue = input.value;
+        if (!input) return;
+
+        // 1. Set the value directly
         input.value = value;
-        const event = new Event('input', { bubbles: true });
 
-        const tracker = input._valueTracker;
-        if (tracker) {
-            tracker.setValue(lastValue);
-        }
+        // 2. Dispatch 'input' event (bubbles up to notify React of change)
+        let inputEvent = new InputEvent('input', { bubbles: true });
+        input.dispatchEvent(inputEvent);
 
-        input.dispatchEvent(event);
+        // 3. Dispatch 'change' event (standard event for select fields)
+        let changeEvent = new Event('change', { bubbles: true });
+        input.dispatchEvent(changeEvent);
+
+        // 4. Dispatch 'blur' event (often triggers validation/save state in frameworks)
+        let blurEvent = new Event('blur', { bubbles: true });
+        input.dispatchEvent(blurEvent);
     }
 
     /**
@@ -112,7 +119,9 @@
     function createClickHandler(selectElement, value) {
         return function(e) {
             e.preventDefault();
+            // Original logic for setting value is kept:
             selectElement.value = value;
+            // The fix: Use the updated forceValue function to notify React.
             forceValue(selectElement, value);
         };
     }
@@ -186,7 +195,7 @@
         configButton.title = 'Configure quick-select buttons';
         // Set margin-left to auto to push it to the right, and add 5px right and bottom margin
         // Format: top right bottom left
-        configButton.style.margin = '0 5px 5px auto'; 
+        configButton.style.margin = '0 5px 5px auto';
         configButton.onclick = () => showSettingsDialog(config);
 
         container.appendChild(configButton);
