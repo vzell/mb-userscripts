@@ -183,9 +183,9 @@
         configButton.type = 'button';
         configButton.textContent = '⚙️ Config';
         configButton.className = 'button btn-default';
+        configButton.title = 'Configure quick-select buttons'; // Added title for consistency
         configButton.style.marginLeft = '10px';
-        configButton.style.padding = '3px 8px';
-        configButton.style.fontSize = '0.9em';
+        // Removed specific padding and font-size to match the height of the standard buttons
         configButton.style.marginBottom = '5px';
         configButton.onclick = () => showSettingsDialog(config);
 
