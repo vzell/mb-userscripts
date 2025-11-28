@@ -8,6 +8,7 @@
 - [Edit Release: No Label & No Cat. no Button](#mb_nolabel_nocatno)
 - [Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 - [MusicBrainz UUID Validator (Lowercase Hex)](#mb_uuid_validator)
+- [MusicBrainz: Auto-Select Discography Link Type](#mb_auto_select_discography_link_type)
 
 The Loujine scripts temporarely needed to be patched with the folloing line:
 
@@ -80,3 +81,9 @@ Ensures the MusicBrainz ID field accepts only valid, lowercase UUIDs on the Spri
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/MusicbrainzUUIDValidator.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/MusicbrainzUUIDValidator.user.js)
 
+## <a name="##mb_auto_select_discography_link_type"></a> MusicBrainz: Auto-Select Discography Link Type
+
+Allows configuration of link mappings (URL Regex -> Link Type ID). Automatically selects link types for configured URLs, cleans up URLs on paste, and moves focus to the next link input. Implements strict hierarchical ESC key handling for nested modals.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/AutoSelectExternalLinkType.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js)
