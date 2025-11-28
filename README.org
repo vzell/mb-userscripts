@@ -603,7 +603,7 @@ Finally add "electric guitar" in the "Instrument" field
     const generalOpt = Array.from(modal.querySelectorAll('*')).find(n => textContains(n, 'instrument') && (n.matches('li') || n.matches('button') || n.matches('[role="option"]')));
     if (generalOpt) { robustClick(generalOpt); await sleep(MED); log('Picked relationship type via general option fallback.'); return true; }
 
-    log('Could not explicitly set relationship type to "instrument". The modal UI may differ.'); 
+    log('Could not explicitly set relationship type to "instrument". The modal UI may differ.');
     return false;
   }
 
@@ -1766,7 +1766,7 @@ userscript.html?name=AA-Add-Instrument-Button-React-Release-Editor-Extended.user
 userscript.html?name=AA-Add-Instrument-Button-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] 'Credited as' field filled.
 edit-relationships:1 Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
 Element with focus: <input#headerid-query>
-Ancestor with aria-hidden: <div.header> <div class=​"header" data-floating-ui-inert aria-hidden=​"true">​…​</div>​
+Ancestor with aria-hidden: <div.header> <div class=​"header" data-floating-ui-inert aria-hidden=​"true">​…​</div>
 #+end_example
 
 I now get
@@ -1792,7 +1792,7 @@ Ancestor with aria-hidden: <div.header> <div class=​"header" data-floating-ui-
 #+end_example
 
 
-It's still not working. Here is the complete generated HTML code up to the point when the text "drums" should be inserted 
+It's still not working. Here is the complete generated HTML code up to the point when the text "drums" should be inserted
 
 #+begin_example
 <div class="form">
@@ -4965,7 +4965,7 @@ The     'const ARTIST_BUTTONS = [
         // Add more artist buttons here easily
     ];'
 
-    
+
 structure should also support now the 'relationshipType: "vocal"' and for example 'vocal: "lead vocals"' like this
 
     // --- Configuration for multiple Artist buttons ---
@@ -5571,7 +5571,7 @@ userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.use
 userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling Instrument field…
 userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Clicking dropdown option: electric bass guitar
 userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling 'Credited as' field…
-userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] 'Credited as' field filled successfully with 
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] 'Credited as' field filled successfully with
 userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] "Bruce Springsteen" button clicked → searching for batch-add button…
 userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Found batch-add button (exact class) → clicking.
 userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Checking for Relationship Type input…
@@ -5582,7 +5582,7 @@ userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.use
 userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling Vocal field…
 userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Clicking dropdown option: lead vocals
 userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] Filling 'Credited as' field…
-userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] 'Credited as' field filled successfully with 
+userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22 [AA-add-instrument] 'Credited as' field filled successfully with
 #+end_example
 
 
@@ -8074,7 +8074,7 @@ Starting from the following userscript
 #+end_example
 
 please do NOT touch the code logic or comments in the script at all (as it works perfectly), but instead apply icons and
-different button colors (make them configurable) to the different button types, so instead of 
+different button colors (make them configurable) to the different button types, so instead of
 
 #+begin_example
 "Max Weinberg (i)"
@@ -8149,7 +8149,7 @@ Well the initial hiding works now, but the scripts doesn't actually react on che
 
 **** 5
 
-Here the console output, after cechkmarking some recording, nothngs happens 
+Here the console output, after cechkmarking some recording, nothngs happens
 
 #+begin_example
 [AA-add-instrument] Update visibility check called.
@@ -8705,10 +8705,10 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
     'use strict';
 
     // *** DEBUGGING IS PERMANENTLY ENABLED ***
-    const DEBUG = true; 
+    const DEBUG = true;
     // *** DEBUGGING FOR VISIBILITY CHECKS (COUNT) ONLY (DISABLED by default) ***
-    const DEBUG_VISIBILITY = false; 
-    
+    const DEBUG_VISIBILITY = false;
+
     const HEADING_SELECTOR = "h2:contains('Track relationships')";
 
     // --- OPTIMIZATION CONSTANTS ---
@@ -8865,7 +8865,7 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
         log("Done button not found (when trying to click Done).");
         return false;
     }
-    
+
     // --- MODIFIED: Force the initial state to be clean using native click event ---
     function resetInitialState() {
         // Find all track relationship checkboxes (excluding 'work' checkboxes)
@@ -8874,7 +8874,7 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
 
         if ($checkedOnLoad.length > 0) {
             log(`Initial state fix: Found ${$checkedOnLoad.length} checked checkboxes on load. Forcing uncheck with aggressive click simulation.`);
-            
+
             $checkedOnLoad.each(function() {
                 const el = this;
                 // Dispatch a native click event to trigger React's internal handler
@@ -8886,7 +8886,7 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
                     $(el).click();
                 }
             });
-            
+
             // Re-check state after a small wait to allow React to process the click event
             setTimeout(() => {
                 const $stillChecked = $allRecordings.filter(':checked');
@@ -8896,7 +8896,7 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
                     log("Initial state fix successful: 0 checked recordings after cleanup.");
                 }
             }, 100);
-            
+
             return true;
         }
         log("Initial state fix: Found 0 checked checkboxes on load. State is clean.");
@@ -9031,23 +9031,23 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
 
         // Create container, explicitly set to hidden, then append
         const $container = $(`
-            <div 
-                class="injected-buttons-container" 
+            <div
+                class="injected-buttons-container"
                 style="
                     display: none; /* Must be hidden initially */
-                    align-items: center; 
-                    gap: 10px; 
-                    flex-wrap: wrap; 
-                    margin-top: 10px; 
-                    margin-bottom: 5px; 
+                    align-items: center;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                    margin-top: 10px;
+                    margin-bottom: 5px;
                     padding: 10px 0;
-                    width: 100%; 
-                    z-index: 1000; 
+                    width: 100%;
+                    z-index: 1000;
                 ">
             </div>
         `);
-        
-        $heading.after($container); 
+
+        $heading.after($container);
 
         ARTIST_BUTTONS.forEach(config => {
             const STYLE_CONFIG = {
@@ -9056,7 +9056,7 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
                 'performed / performer': { bgColor: '#FF9800', activeColor: '#e68a00', icon: '🎭 ' },
                 'default': { bgColor: '#607D8B', activeColor: '#455a64', icon: '🔗 ' }
             };
-            
+
             const style = STYLE_CONFIG[config.relationshipType] || STYLE_CONFIG['default'];
             const buttonText = `${style.icon}${config.label}`;
 
@@ -9071,15 +9071,15 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
                 transition: all 0.15s ease-in-out;
                 white-space: nowrap;
                 flex-shrink: 0;
-                line-height: 20px; 
+                line-height: 20px;
             `;
-            
+
             const $button = $('<button/>', {
                 text: buttonText,
                 'data-label': config.label
             });
 
-            $button.attr('style', buttonStyleString); 
+            $button.attr('style', buttonStyleString);
 
             $button.on({
                 'mouseenter': function() { $(this).css('opacity', 0.9); },
@@ -9100,9 +9100,9 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
         });
 
         // --- VISIBILITY LOGIC START: FINAL, ROBUST SELECTOR ---
-        
+
         function getCheckedRecordings() {
-            // Target any checked checkbox inside the #tracklist area 
+            // Target any checked checkbox inside the #tracklist area
             // that is NOT related to 'work' relationships.
             const $checkedRecordings = $('#tracklist input[type="checkbox"]:checked:not(.work)');
             return $checkedRecordings;
@@ -9117,12 +9117,12 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
             const anyChecked = checkedCount > 0;
 
             const currentDisplay = $container.css('display');
-            
+
             // Log status for debugging, now controlled by DEBUG_VISIBILITY
             if (DEBUG_VISIBILITY) {
                  log(`Visibility check: Selector found ${checkedCount} checked recordings. Current display: ${currentDisplay}`);
             }
-            
+
             // Handle contradiction (Buttons visible but nothing checked)
             if (currentDisplay === 'flex' && checkedCount === 0) {
                  log("!!! CONTRADICTION: Buttons are visible, but 0 tracks are checked. Forcing OFF.");
@@ -9152,7 +9152,7 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
         $('#tracklist').on('change click input', 'input[type="checkbox"]', function() {
             log("Checkbox event detected, updating visibility...");
             // Use a short delay just in case the check/uncheck DOM update is slightly asynchronous
-            setTimeout(updateButtonVisibility, 50); 
+            setTimeout(updateButtonVisibility, 50);
         });
 
         // 3. Fallback heartbeat
@@ -9162,15 +9162,15 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
         log("AA: Injected custom buttons.");
     }
 
-    // Start with a slightly longer delay (2000ms) to ensure React loads, 
+    // Start with a slightly longer delay (2000ms) to ensure React loads,
     // run the cleanup, then create buttons.
     setTimeout(() => {
         // Step 1: Clean up any initial, unchecked state
         resetInitialState();
-        
+
         // Step 2: Inject buttons
         createCustomButtons();
-    }, 2000); 
+    }, 2000);
 
 })();
 
@@ -9311,7 +9311,7 @@ In that case what you currently have generated
             relationshipType: "performed / performer",
             artist: "The E Street Band",
             // These fields are intentionally empty for "performed / performer"
-            instrument: "", 
+            instrument: "",
             vocal: "",
             creditedAs: ""
         }
@@ -9392,9 +9392,9 @@ and when I remove one, actually both were removed
     'use strict';
 
     // *** DEBUGGING FLAGS ***
-    const DEBUG = true; 
-    const DEBUG_VISIBILITY = false; 
-    
+    const DEBUG = true;
+    const DEBUG_VISIBILITY = false;
+
     // --- CONSTANTS ---
     const LOG_PREFIX = '[add-recording-relations]';
     const STORAGE_KEY = 'mb_batch_add_buttons_config';
@@ -9403,7 +9403,7 @@ and when I remove one, actually both were removed
     const GLOBAL_POST_SELECT_WAIT_MS = 150;
     const SMALL_BREATHING_ROOM_MS = 150;
     const VISIBILITY_HEARTBEAT_MS = 500;
-    
+
     // Define the order for sorting buttons
     const RELATIONSHIP_ORDER = {
         'instruments': 1,
@@ -9415,14 +9415,14 @@ and when I remove one, actually both were removed
     function log(...args) {
         if (DEBUG) console.log(LOG_PREFIX, ...args);
     }
-    
+
     // --- Sorting Utility ---
     function sortButtons(buttons) {
         // Sorts the passed array in place based on relationship type order
         buttons.sort((a, b) => {
             const orderA = RELATIONSHIP_ORDER[a.relationshipType] || RELATIONSHIP_ORDER['default'];
             const orderB = RELATIONSHIP_ORDER[b.relationshipType] || RELATIONSHIP_ORDER['default'];
-            
+
             // Secondary sort by label for consistency within groups
             if (orderA === orderB) {
                 return a.label.localeCompare(b.label);
@@ -9471,12 +9471,12 @@ and when I remove one, actually both were removed
     // --- CRITICAL: GLOBAL QUEUE AND PROCESSING STATE ---
     const queue = [];
     let processing = false;
-    
+
     // Helper to provide a full default object structure for merging
     const FULL_DEFAULT_BUTTON = {
         label: 'New Button',
         relationshipType: 'instruments',
-        artist: '', 
+        artist: '',
         instrument: '',
         vocal: '',
         creditedAs: '',
@@ -9493,7 +9493,7 @@ and when I remove one, actually both were removed
                         ...FULL_DEFAULT_BUTTON, // Use default to ensure all keys exist
                         ...btn,                // Overwrite with stored values
                         // Ensure all required fields for instruments/vocal are there, even if empty
-                        instrument: btn.instrument || '', 
+                        instrument: btn.instrument || '',
                         vocal: btn.vocal || '',
                         creditedAs: btn.creditedAs || '',
                     }));
@@ -9511,7 +9511,7 @@ and when I remove one, actually both were removed
         try {
             // 1. Filter out invalid/empty buttons
             const safeButtons = buttons.filter(btn => btn.label && btn.label.trim() !== '' && btn.artist && btn.artist.trim() !== '');
-            
+
             // 2. Map and clean: only save relevant fields based on relationship type
             const cleanedButtons = safeButtons.map(btn => {
                 const clean = {
@@ -9531,7 +9531,7 @@ and when I remove one, actually both were removed
                 return clean;
             });
 
-            const sortedButtons = sortButtons(cleanedButtons); 
+            const sortedButtons = sortButtons(cleanedButtons);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(sortedButtons));
             log(`Saved ${sortedButtons.length} button configurations to localStorage.`);
             return sortedButtons;
@@ -9540,7 +9540,7 @@ and when I remove one, actually both were removed
             return buttons;
         }
     }
-    
+
     // Initialize the buttons
     ARTIST_BUTTONS = getInitialButtons();
 
@@ -9659,7 +9659,7 @@ and when I remove one, actually both were removed
         log("Done button not found (when trying to click Done).");
         return false;
     }
-    
+
     // --- Initial State Cleanup ---
     function resetInitialState() {
         const $allRecordings = $('#tracklist input[type="checkbox"]:not(.work)');
@@ -9667,7 +9667,7 @@ and when I remove one, actually both were removed
 
         if ($checkedOnLoad.length > 0) {
             log(`Initial state fix: Found ${$checkedOnLoad.length} checked checkboxes on load. Forcing uncheck with aggressive click simulation.`);
-            
+
             $checkedOnLoad.each(function() {
                 const el = this;
                 try {
@@ -9676,7 +9676,7 @@ and when I remove one, actually both were removed
                     $(el).click();
                 }
             });
-            
+
             setTimeout(() => {
                 const $stillChecked = $allRecordings.filter(':checked');
                 if ($stillChecked.length > 0) {
@@ -9685,7 +9685,7 @@ and when I remove one, actually both were removed
                     log("Initial state fix successful: 0 checked recordings after cleanup.");
                 }
             }, 100);
-            
+
             return true;
         }
         log("Initial state fix: Found 0 checked checkboxes on load. State is clean.");
@@ -9730,7 +9730,7 @@ and when I remove one, actually both were removed
 
         // Fill Credited As
         const creditedAsValue = config.creditedAs ?? '';
-        
+
         if (config.relationshipType !== 'performed / performer' && creditedAsValue.length > 0) {
             log("Attempting to fill 'Credited as' field…");
             // Find the visible 'credited as' input, prioritizing the one associated with the relationship type
@@ -9738,7 +9738,7 @@ and when I remove one, actually both were removed
                 const cls = (el.className || '').toLowerCase();
                 return cls.includes('attribute-credit');
             }).first();
-            
+
             // Fallback strategy if initial filter is too broad/narrow
             if ($creditedInput.length === 0) {
                  $creditedInput = $("input:visible").filter((i, el) => {
@@ -9799,11 +9799,11 @@ and when I remove one, actually both were removed
 
 
     // ----------------- Modal UI -----------------
-    
+
     // Function to dynamically show/hide fields based on relationship type
     function updateFieldVisibility($item) {
         const type = $item.find('select[name="relationshipType"]').val();
-        
+
         // Hide all dynamic fields first
         $item.find('.instrument-field').hide();
         $item.find('.vocal-field').hide();
@@ -9815,7 +9815,7 @@ and when I remove one, actually both were removed
             $item.find('.vocal-field').show();
         } else if (type === 'performed / performer') {
             // Hide all attribute fields for this type
-            $item.find('.creditedAs-field').hide(); 
+            $item.find('.creditedAs-field').hide();
         }
     }
 
@@ -9846,7 +9846,7 @@ and when I remove one, actually both were removed
             .aa-add-save-btn { background-color: #4CAF50; color: white; }
             .aa-add-cancel-btn { background-color: #ccc; color: #333; }
         `;
-        
+
         // Add the new style block
         if ($('#aa-add-new-modal-style').length === 0) {
              $('head').append(`<style id="aa-add-new-modal-style">${MODAL_STYLE}</style>`);
@@ -9854,13 +9854,13 @@ and when I remove one, actually both were removed
 
         const $overlay = $('<div id="aa-add-new-modal-overlay">');
         const $modal = $('<div id="aa-add-new-modal">');
-        
+
         $modal.html(`
             <h4>Add New Button Configuration</h4>
             <div id="aa-add-form">
                 <label>Label (Button Text): <input type="text" name="label" value="" placeholder="E.g., Max Weinberg"></label>
-                
-                <label>Relationship Type: 
+
+                <label>Relationship Type:
                     <select name="relationshipType">
                         <option value="instruments">instruments</option>
                         <option value="vocal">vocal</option>
@@ -9868,7 +9868,7 @@ and when I remove one, actually both were removed
                     </select>
                 </label>
                 <label>Artist Name: <input type="text" name="artist" value="" placeholder="E.g., Max Weinberg (required)"></label>
-                
+
                 <!-- DYNAMIC FIELDS -->
                 <label class="instrument-field">Instrument (if type='instruments'): <input type="text" name="instrument" value="" placeholder="E.g., drums (drum set)"></label>
                 <label class="vocal-field">Vocal (if type='vocal'): <input type="text" name="vocal" value="" placeholder="E.g., lead vocals"></label>
@@ -9879,7 +9879,7 @@ and when I remove one, actually both were removed
                 <button class="aa-add-save-btn">Add Button</button>
             </div>
         `);
-        
+
         const $form = $modal.find('#aa-add-form');
         const $select = $form.find(`select[name="relationshipType"]`);
         const $labelInput = $form.find('input[name="label"]');
@@ -9899,7 +9899,7 @@ and when I remove one, actually both were removed
                 $artistInput.val($(this).val());
             }
         });
-        
+
         // 2. Field Visibility Logic
         const updateAddModalVisibility = () => {
              // Use the same logic as the main modal updateFieldVisibility
@@ -9907,7 +9907,7 @@ and when I remove one, actually both were removed
              $form.find('.instrument-field').hide();
              $form.find('.vocal-field').hide();
              $form.find('.creditedAs-field').show();
-             
+
              if (type === 'instruments') {
                  $form.find('.instrument-field').show();
              } else if (type === 'vocal') {
@@ -9919,17 +9919,17 @@ and when I remove one, actually both were removed
 
         // Initial visibility
         updateAddModalVisibility();
-        
+
         // Add change listener for dynamic visibility
         $select.on('change', updateAddModalVisibility);
-        
+
         const cleanupAndClose = () => {
             $(document).off('keydown', escapeHandler);
             $overlay.remove();
         }
 
         $modal.on('click', '.aa-add-cancel-btn', cleanupAndClose);
-        
+
         $modal.on('click', '.aa-add-save-btn', function() {
             const newButton = {
                 label: $labelInput.val().trim(),
@@ -9939,7 +9939,7 @@ and when I remove one, actually both were removed
                 vocal: $form.find('input[name="vocal"]').val().trim(),
                 creditedAs: $form.find('input[name="creditedAs"]').val().trim(),
             };
-            
+
             if (!newButton.label || !newButton.artist) {
                 // Using alert() here as it is inside a custom modal flow and should be seen
                 alert("Both Label and Artist Name are required to add a new button.");
@@ -9949,7 +9949,7 @@ and when I remove one, actually both were removed
             saveCallback(newButton);
             cleanupAndClose();
         });
-        
+
         // Escape Key Handler
         const escapeHandler = function(e) {
             const isInput = $(e.target).is('input, select, textarea');
@@ -9965,7 +9965,7 @@ and when I remove one, actually both were removed
         $overlay.append($modal);
         $('body').append($overlay);
     }
-    
+
     function showConfigModal() {
         // Ensure only one modal is present
         $('#aa-config-modal-overlay').remove();
@@ -9977,7 +9977,7 @@ and when I remove one, actually both were removed
 
         // Capture the initial state string (must be sorted for a reliable comparison)
         const initialConfigString = JSON.stringify(sortButtons(currentButtons.map(a => Object.assign({}, a))));
-        
+
         const MODAL_STYLE = `
             #aa-config-modal-overlay {
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -9987,19 +9987,19 @@ and when I remove one, actually both were removed
             #aa-config-modal {
                 background: white; padding: 20px; border-radius: 8px;
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); max-width: 800px;
-                width: 90%; max-height: 90%; 
+                width: 90%; max-height: 90%;
                 font-family: Arial, sans-serif; color: #333;
                 display: flex; /* Flex container for scrollable content + fixed footer */
                 flex-direction: column;
             }
             #aa-config-modal h3 { margin-top: 0; border-bottom: 1px solid #ccc; padding-bottom: 10px; flex-shrink: 0; }
-            
+
             #aa-config-scroll-area {
                 overflow-y: auto; /* Scrollable content area */
-                flex-grow: 1; 
+                flex-grow: 1;
                 padding-right: 5px; /* Add slight padding for scrollbar visibility */
             }
-            
+
             .aa-config-item {
                 border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px;
                 background-color: #f9f9f9;
@@ -10011,13 +10011,13 @@ and when I remove one, actually both were removed
                 border: 1px solid #ccc; border-radius: 4px;
             }
             /* FIXED FOOTER STYLE */
-            .aa-config-footer { 
-                display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; 
+            .aa-config-footer {
+                display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px;
                 border-top: 1px solid #ccc;
                 flex-shrink: 0;
             }
-            .aa-config-footer button { 
-                padding: 8px 15px; cursor: pointer; border-radius: 4px; border: none; 
+            .aa-config-footer button {
+                padding: 8px 15px; cursor: pointer; border-radius: 4px; border: none;
                 font-weight: bold;
             }
             .aa-remove-btn { background-color: #f44336; color: white; border: none; padding: 4px 8px; font-size: 0.8em; cursor: pointer; }
@@ -10038,7 +10038,7 @@ and when I remove one, actually both were removed
         const $overlay = $('<div id="aa-config-modal-overlay">');
         const $modal = $('<div id="aa-config-modal">');
         $modal.html('<h3>Batch Relationship Button Configuration</h3><div id="aa-config-scroll-area"><div id="aa-config-form"></div></div>');
-        
+
         const $scrollArea = $modal.find('#aa-config-scroll-area');
         const $formContainer = $modal.find('#aa-config-form');
 
@@ -10047,7 +10047,7 @@ and when I remove one, actually both were removed
             // Important: Render the *sorted* array
             buttons.forEach((config, index) => {
                 const $item = $(`<div class="aa-config-item" data-index="${index}">`);
-                
+
                 // Use default values if keys are missing (e.g., in a cleaned 'performed / performer' object)
                 const safeConfig = {...FULL_DEFAULT_BUTTON, ...config};
 
@@ -10058,8 +10058,8 @@ and when I remove one, actually both were removed
                         <button class="aa-remove-btn">Remove</button>
                     </h4>
                     <label>Label (Button Text): <input type="text" name="label" value="${safeConfig.label || ''}" placeholder="E.g., Max Weinberg"></label>
-                    
-                    <label>Relationship Type: 
+
+                    <label>Relationship Type:
                         <select name="relationshipType">
                             <option value="instruments">instruments</option>
                             <option value="vocal">vocal</option>
@@ -10067,11 +10067,11 @@ and when I remove one, actually both were removed
                         </select>
                     </label>
                     <label>Artist Name: <input type="text" name="artist" value="${safeConfig.artist || ''}" placeholder="E.g., Max Weinberg (required)"></label>
-                    
+
                     <!-- DYNAMIC FIELDS -->
                     <label class="instrument-field">Instrument (if type='instruments'): <input type="text" name="instrument" value="${safeConfig.instrument || ''}" placeholder="E.g., drums (drum set)"></label>
                     <label class="vocal-field">Vocal (if type='vocal'): <input type="text" name="vocal" value="${safeConfig.vocal || ''}" placeholder="E.g., lead vocals"></label>
-                    
+
                     <label class="creditedAs-field">Credited As: <input type="text" name="creditedAs" value="${safeConfig.creditedAs || ''}" placeholder="E.g., drums"></label>
                 `);
 
@@ -10081,24 +10081,24 @@ and when I remove one, actually both were removed
 
                 // Initial visibility update
                 updateFieldVisibility($item);
-                
+
                 // Add change listener for dynamic visibility
                 $select.on('change', function() {
                     updateFieldVisibility($item);
                 });
-                
+
                 // Add change listener to all inputs to update the local currentButtons array instantly
                 $item.find('input, select').on('change keyup', function() {
                     const fieldName = $(this).attr('name');
                     const value = $(this).val();
                     const $currentItem = $(this).closest('.aa-config-item');
                     const index = $currentItem.data('index');
-                    
+
                     // Update the label in the h4 for instant feedback
                     if (fieldName === 'label') {
                         $currentItem.find('h4').html(`Button ${index + 1}: ${value}<button class="aa-remove-btn">Remove</button>`);
                     }
-                    
+
                     // Update the local array by reading the current DOM state (sorted)
                     // This ensures currentButtons always matches the visible form for accurate removal/saving
                     currentButtons = getCurrentConfigFromForm(true);
@@ -10126,59 +10126,59 @@ and when I remove one, actually both were removed
                 return sortButtons(currentConfig);
             }
             // Fallback: use the in-memory array
-            return sortButtons(currentButtons.map(a => Object.assign({}, a))); 
+            return sortButtons(currentButtons.map(a => Object.assign({}, a)));
         }
 
         // Initial render
         renderForm(currentButtons);
 
         // --- Event Handlers ---
-        
+
         // Cleanup function for modal closure
         const cleanupAndClose = () => {
             $(document).off('keydown', escapeHandler);
             $('#aa-add-new-modal-overlay').remove(); // Ensure add modal is also closed
             $overlay.remove();
         }
-        
+
         // Add New Button Handler
         const handleAddNewButton = () => {
              // Open the dedicated small modal
              showAddButtonModal((newButton) => {
                 // Callback function when the new button is saved in the sub-modal
-                
+
                 // 1. Read the current DOM state to ensure we capture any pending edits
-                const currentDomConfig = getCurrentConfigFromForm(true); 
-                
+                const currentDomConfig = getCurrentConfigFromForm(true);
+
                 // 2. Add the new button
                 currentDomConfig.push(newButton);
                 currentButtons = sortButtons(currentDomConfig); // Update local array
 
                 // 3. Re-render the main form with the new, sorted button list
                 renderForm(currentButtons);
-                
+
                 // 4. Scroll to the bottom to see the newly added button (which is now in its sorted position)
-                $scrollArea.scrollTop($scrollArea[0].scrollHeight); 
+                $scrollArea.scrollTop($scrollArea[0].scrollHeight);
              });
         };
-        
+
 
         // Remove Button (FIXED: Uses index for unique removal)
         $modal.on('click', '.aa-remove-btn', function() {
             const $item = $(this).closest('.aa-config-item');
-            
+
             // Read the current state of the buttons from the form (guaranteed to match the visible list)
-            const domConfig = getCurrentConfigFromForm(true); 
+            const domConfig = getCurrentConfigFromForm(true);
             const indexToRemove = $item.data('index'); // This index is based on the *sorted* array shown on screen
 
             if (domConfig.length > 1) {
-                
+
                 // Remove the item at the specific index using splice
                 domConfig.splice(indexToRemove, 1);
 
                 // Update currentButtons and ensure it is sorted
-                currentButtons = sortButtons(domConfig); 
-                
+                currentButtons = sortButtons(domConfig);
+
                 renderForm(currentButtons);
 
             } else {
@@ -10203,7 +10203,7 @@ and when I remove one, actually both were removed
                     valid = false;
                     return false; // Stop .each loop
                 }
-                
+
                 newConfig.push({
                     label: label,
                     relationshipType: $item.find('select[name="relationshipType"]').val(),
@@ -10222,15 +10222,15 @@ and when I remove one, actually both were removed
                 log("Configuration saved and buttons updated.");
             }
         };
-        
+
         // Escape Key Handler
         const escapeHandler = function(e) {
-            // Check if the event target is inside an input field, which might be handling Esc for something else 
+            // Check if the event target is inside an input field, which might be handling Esc for something else
             const isInput = $(e.target).is('input, select, textarea');
             if (e.key === 'Escape' && !isInput) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const finalConfig = getCurrentConfigFromForm(true); // Read current state from DOM
                 const finalConfigString = JSON.stringify(finalConfig);
 
@@ -10251,7 +10251,7 @@ and when I remove one, actually both were removed
 
         // Attach event listeners
         $(document).on('keydown', escapeHandler);
-        
+
         // Footer (Fixed position achieved by putting it outside the scroll area)
         const $footer = $(`
             <div class="aa-config-footer">
@@ -10262,26 +10262,26 @@ and when I remove one, actually both were removed
                 </div>
             </div>
         `);
-        
+
         $modal.append($footer);
 
         $modal.on('click', '.aa-close-btn', cleanupAndClose);
         $modal.on('click', '.aa-save-btn', saveAndClose);
         $modal.on('click', '.aa-add-btn', handleAddNewButton);
-        
+
         $overlay.append($modal);
         $('body').append($overlay);
     }
-    
+
     // ----------------- UI: Button Rendering and Creation -----------------
-    
+
     const BUTTON_STYLE_CONFIG = {
         'instruments': { bgColor: '#4CAF50', activeColor: '#3e8e41', icon: '🎸 ' },
         'vocal': { bgColor: '#2196F3', activeColor: '#0b7dda', icon: '🎤 ' },
         'performed / performer': { bgColor: '#FF9800', activeColor: '#e68a00', icon: '🎭 ' },
         'default': { bgColor: '#607D8B', activeColor: '#455a64', icon: '🔗 ' }
     };
-    
+
     function renderButtons(buttons) {
         const $mainContainer = $('.injected-buttons-container');
         if ($mainContainer.length === 0) return;
@@ -10289,7 +10289,7 @@ and when I remove one, actually both were removed
         let $batchButtonContainer = $mainContainer.find('#aa-batch-buttons');
         if ($batchButtonContainer.length === 0) {
             $batchButtonContainer = $('<div id="aa-batch-buttons" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>');
-            $mainContainer.append($batchButtonContainer); 
+            $mainContainer.append($batchButtonContainer);
         }
 
         $batchButtonContainer.empty();
@@ -10309,15 +10309,15 @@ and when I remove one, actually both were removed
                 transition: all 0.15s ease-in-out;
                 white-space: nowrap;
                 flex-shrink: 0;
-                line-height: 20px; 
+                line-height: 20px;
             `;
-            
+
             const $button = $('<button/>', {
                 text: buttonText,
                 'data-label': config.label
             });
 
-            $button.attr('style', buttonStyleString); 
+            $button.attr('style', buttonStyleString);
 
             $button.on({
                 'mouseenter': function() { $(this).css('opacity', 0.9); },
@@ -10350,26 +10350,26 @@ and when I remove one, actually both were removed
         let $container = $heading.next('.injected-buttons-container');
         if ($container.length === 0) {
             $container = $(`
-                <div 
-                    class="injected-buttons-container" 
+                <div
+                    class="injected-buttons-container"
                     style="
-                        display: flex; 
-                        align-items: center; 
-                        gap: 10px; 
-                        flex-wrap: wrap; 
-                        margin-top: 10px; 
-                        margin-bottom: 5px; 
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        flex-wrap: wrap;
+                        margin-top: 10px;
+                        margin-bottom: 5px;
                         padding: 10px 0;
-                        width: 100%; 
-                        z-index: 1000; 
+                        width: 100%;
+                        z-index: 1000;
                     ">
                 </div>
             `);
-            $heading.after($container); 
+            $heading.after($container);
         } else {
              $container.find('#aa-batch-buttons').remove();
         }
-        
+
         // --- 1. Create and prepend the permanent 'Configure' button with 2-line text ---
         const $configButton = $container.find('#aa-config-btn');
         if ($configButton.length === 0) {
@@ -10383,9 +10383,9 @@ and when I remove one, actually both were removed
                 font-weight: bold;
                 transition: all 0.15s ease-in-out;
                 flex-shrink: 0;
-                line-height: 1.2; 
+                line-height: 1.2;
             `;
-            
+
             // Updated text: "Configure recording\nrelation buttons"
             const buttonHtml = '⚙️ Configure recording<br>relation buttons';
 
@@ -10393,7 +10393,7 @@ and when I remove one, actually both were removed
                 id: 'aa-config-btn',
                 html: buttonHtml
             });
-            
+
             $config.attr('style', configButtonStyle);
             $container.prepend($config);
             $config.on('click', showConfigModal);
@@ -10404,7 +10404,7 @@ and when I remove one, actually both were removed
 
 
         // --- 3. VISIBILITY LOGIC ---
-        
+
         function getCheckedRecordings() {
             const $checkedRecordings = $('#tracklist input[type="checkbox"]:not(.work)');
             return $checkedRecordings;
@@ -10418,11 +10418,11 @@ and when I remove one, actually both were removed
                 const checkedCount = $checked.length;
                 const anyChecked = checkedCount > 0;
 
-                const $batchContainer = $container.find('#aa-batch-buttons'); 
+                const $batchContainer = $container.find('#aa-batch-buttons');
                 if ($batchContainer.length === 0) return;
-                
+
                 const currentDisplay = $batchContainer.css('display');
-                
+
                 if (currentDisplay === 'flex' && checkedCount === 0) {
                      if (DEBUG) log("Batch buttons visible, but 0 tracks checked. Forcing OFF.");
                      $batchContainer.css('display', 'none');
@@ -10451,7 +10451,7 @@ and when I remove one, actually both were removed
              try {
                  if (DEBUG) log("Checkbox event detected, updating visibility...");
                  // Use setTimeout to ensure the DOM state is settled after the click/change
-                 setTimeout(updateButtonVisibility, 50); 
+                 setTimeout(updateButtonVisibility, 50);
              } catch (e) {
                 console.error(LOG_PREFIX, "Error in checkbox event handler:", e);
              }
@@ -10459,18 +10459,18 @@ and when I remove one, actually both were removed
 
         // Set up the heartbeat check
         setInterval(updateButtonVisibility, VISIBILITY_HEARTBEAT_MS);
-        
+
         log("Injected custom buttons and configuration.");
     }
 
     // ----------------- Main Execution -----------------
-    
+
     try {
         setTimeout(() => {
             log("Starting userscript execution...");
             resetInitialState();
             createCustomButtons();
-        }, 2000); 
+        }, 2000);
     } catch (error) {
         // This catch block primarily catches sync errors during the setting of the timeout.
         console.error(LOG_PREFIX, "CRITICAL SCRIPT FAILURE during initial setup:", error);
@@ -10611,4 +10611,471 @@ when pasting it in the following textfield (in the following example it's alread
         }
     }
 })();
+#+end_example
+
+
+* Add new release
+** Gemini
+*** question
+
+Write a Tampermonkey userscript when adding a new release to MusicBrainz on the URL
+
+https://musicbrainz.org/release/add
+
+with the following functionality:
+
+When pasting a URL which starts with either
+
+    - https://www.springsteenlyrics.com/bootlegs.php?item=<Item-ID>&category=<category> - <=== cut off everything after <Item-ID> before insertion
+    - https://www.jungleland.it/html/<filename>.htm
+
+into the text field 'placeholder="Add link"' which looks in HTML like this
+
+#+begin_example
+<fieldset class="information">
+    <legend>External links</legend>
+      <div id="external-links-editor-container"><table class="row-form" id="external-links-editor"><tbody><tr class="external-link-item" id="external-link-0"><td></td><td class="link-actions"></td><td><input class="value with-button" data-index="0" placeholder="Add link" type="url" value=""></td></tr></tbody></table></div>
+  </fieldset>
+#+end_example
+
+then the React based Musicbrainz UI adds a new piece of HTML code
+
+#+begin_example
+<fieldset class="information">
+    <legend>External links</legend>
+      <div id="external-links-editor-container"><table class="row-form" id="external-links-editor"><tbody><tr class="external-link-item" id="external-link-0"><td><span class="favicon no-favicon"></span></td><td class="link-actions"><button class="nobutton icon remove-item" data-index="0" title="Remove link" type="button"></button><button class="icon edit-item" title="Edit URL" aria-haspopup="dialog" type="button"></button></td><td><a class="url " href="https://www.springsteenlyrics.com/bootlegs.php?item=5013" rel="noreferrer" target="_blank" style="overflow-wrap: anywhere;">https://www.springsteenlyrics.com/bootlegs.php?item=5013</a></td></tr><tr class="relationship-item"><td></td><td class="link-actions"><button class="icon edit-item" title="Edit attributes" aria-haspopup="dialog" type="button"></button></td><td><div class="relationship-content "><label>Type:</label><label class="relationship-name"><select class="link-type"><option value="">&nbsp;</option>
+      <option value="288">discography entry</option>
+      <option value="301">license</option>
+      <option disabled="" value="73">get the music</option>
+      <option value="79">&nbsp;&nbsp;purchase for mail-order</option>
+      <option value="74">&nbsp;&nbsp;purchase for download</option>
+      <option value="75">&nbsp;&nbsp;download for free</option>
+      <option value="85">&nbsp;&nbsp;stream for free</option>
+      <option value="980">&nbsp;&nbsp;streaming page</option>
+      <option value="906">crowdfunding page</option>
+      <option value="729">show notes</option>
+      <option value="78">cover art</option>
+      </select></label></div><div class="error field-error" data-visible="1">Please select a link type for the URL you’ve entered.</div></td></tr><tr class="add-relationship"><td></td><td></td><td class="add-item"><button class="add-item with-label" type="button">Add another relationship</button></td></tr><tr class="external-link-item" id="external-link-1"><td></td><td class="link-actions"></td><td><input class="value with-button" data-index="1" placeholder="Add another link" type="url" value=""></td></tr></tbody></table></div>
+  </fieldset>
+#+end_example
+
+and populates a "Type" list where the following entry should be selected
+
+#+begin_example
+<option value="288">discography entry</option>
+#+end_example
+
+*** 1
+
+The URL trimming for SpringsteenLyrics URLs and the insertion in the text box actually works, but nothing is selected
+from the "Type" pull-down list, especially the "discography entry" option.
+
+Here is the complete HTML code of the generated area when I select the entry manually:
+
+#+begin_src bash
+<fieldset class="information">
+    <legend>External links</legend>
+      <div id="external-links-editor-container"><table class="row-form" id="external-links-editor"><tbody><tr class="external-link-item" id="external-link-0"><td><span class="favicon no-favicon"></span></td><td class="link-actions"><button class="nobutton icon remove-item" data-index="0" title="Remove link" type="button"></button><button class="icon edit-item" title="Edit URL" aria-haspopup="dialog" type="button"></button></td><td><a class="url " href="https://www.springsteenlyrics.com/bootlegs.php?item=5013" rel="noreferrer" target="_blank" style="overflow-wrap: anywhere;">https://www.springsteenlyrics.com/bootlegs.php?item=5013</a></td></tr><tr class="relationship-item"><td></td><td class="link-actions"><button class="icon edit-item" title="Edit attributes" aria-haspopup="dialog" type="button"></button></td><td><div class="relationship-content "><label>Type:</label><label class="relationship-name"><select class="link-type"><option value="">&nbsp;</option><option value="288">discography entry</option><option value="301">license</option><option disabled="" value="73">get the music</option><option value="79">&nbsp;&nbsp;purchase for mail-order</option><option value="74">&nbsp;&nbsp;purchase for download</option><option value="75">&nbsp;&nbsp;download for free</option><option value="85">&nbsp;&nbsp;stream for free</option><option value="980">&nbsp;&nbsp;streaming page</option><option value="906">crowdfunding page</option><option value="729">show notes</option><option value="78">cover art</option></select><span class="tooltip-wrapper"><span class="img icon help" style="display: inline-block; margin-left: 10px; vertical-align: text-top;"></span><span class="tooltip-container"><span class="tooltip-triangle"></span><span class="tooltip-content"><div style="text-align: left;">This link points to a page for a particular release within a discography for an artist or label. (<a href="/relationship/823656dd-0309-4247-b282-b92d287d59c5" target="_blank">more documentation</a>)</div></span></span></span></label></div></td></tr><tr class="add-relationship"><td></td><td></td><td class="add-item"><button class="add-item with-label" type="button">Add another relationship</button></td></tr><tr class="external-link-item" id="external-link-1"><td></td><td class="link-actions"></td><td><input class="value with-button" data-index="1" placeholder="Add another link" type="url" value=""></td></tr></tbody></table></div>
+  </fieldset>
+#+end_src
+
+Please add debug logging to the script and fix
+
+*** 2
+
+Still nothing selected. Here console loutout
+
+#+begin_example
+MusicBrainz Quick Tools Debug: Initializing MutationObserver on the #recordings element's attributes.
+userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:21 [MB-Discography-AutoSelect] Container found, starting observer.
+userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:21 [MB-Discography-AutoSelect] Cleaned URL on paste: https://www.springsteenlyrics.com/bootlegs.php?item=5013
+userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:21 [MB-Discography-AutoSelect] Found select element: <select class=​"link-type">​<option value>​&nbsp;​</option>​slot<option value=​"288">​discography entry​</option>​slot<option value=​"301">​license​</option>​slot<option disabled value=​"73">​get the music​</option>​slot<option value=​"79">​&nbsp;&nbsp;purchase for mail-order​</option>​slot<option value=​"74">​&nbsp;&nbsp;purchase for download​</option>​slot<option value=​"75">​&nbsp;&nbsp;download for free​</option>​slot<option value=​"85">​&nbsp;&nbsp;stream for free​</option>​slot<option value=​"980">​&nbsp;&nbsp;streaming page​</option>​slot<option value=​"906">​crowdfunding page​</option>​slot<option value=​"729">​show notes​</option>​slot<option value=​"78">​cover art​</option>​slot</select>
+userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:21 [MB-Discography-AutoSelect] Could not find a.url in previous sibling row <tr class=​"external-link-item" id=​"external-link-0">​<td>​<span class=​"favicon no-favicon">​</span>​</td>​<td class=​"link-actions">​…​</td>​<button class=​"nobutton icon remove-item" data-index=​"0" title=​"Remove link" type=​"button">​</button>​<button class=​"icon edit-item" title=​"Edit URL" aria-haspopup=​"dialog" type=​"button">​</button>​</td>​<td>​<a class=​"url " href=​"https:​/​/​www.springsteenlyrics.com/​bootlegs.php?item=5013" rel=​"noreferrer" target=​"_blank" style=​"overflow-wrap:​ anywhere;​">​https://www.springsteenlyrics.com/bootlegs.php?item=5013​</a>​</td>​</tr>
+#+end_example
+
+*** 3
+
+#+begin_example
+[MB-Discography-AutoSelect] Container found, starting observer.
+userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:21 [MB-Discography-AutoSelect] Cleaned URL on paste: https://www.springsteenlyrics.com/bootlegs.php?item=5013
+userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:21 [MB-Discography-AutoSelect] Found select element: <select class=​"link-type">​<option value>​&nbsp;​</option>​slot<option value=​"288">​discography entry​</option>​slot<option value=​"301">​license​</option>​slot<option disabled value=​"73">​get the music​</option>​slot<option value=​"79">​&nbsp;&nbsp;purchase for mail-order​</option>​slot<option value=​"74">​&nbsp;&nbsp;purchase for download​</option>​slot<option value=​"75">​&nbsp;&nbsp;download for free​</option>​slot<option value=​"85">​&nbsp;&nbsp;stream for free​</option>​slot<option value=​"980">​&nbsp;&nbsp;streaming page​</option>​slot<option value=​"906">​crowdfunding page​</option>​slot<option value=​"729">​show notes​</option>​slot<option value=​"78">​cover art​</option>​slot</select>
+userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:21 [MB-Discography-AutoSelect] Could not find a.url or a[href] in previous sibling row <tr class=​"external-link-item" id=​"external-link-0">​<td>​<span class=​"favicon no-favicon">​</span>​</td>​<td class=​"link-actions">​<button class=​"nobutton icon remove-item" data-index=​"0" title=​"Remove link" type=​"button">​</button>​<button class=​"icon edit-item" title=​"Edit URL" aria-haspopup=​"dialog" type=​"button">​</button>​</td>​<td>​<a class=​"url " href=​"https:​/​/​www.springsteenlyrics.com/​bootlegs.php?item=5013" rel=​"noreferrer" target=​"_blank" style=​"overflow-wrap:​ anywhere;​">​https://www.springsteenlyrics.com/bootlegs.php?item=5013​</a>​</td>​</tr>
+#+end_example
+
+*** 4
+
+No nothing. This should actually be trivial to implement. As soon as a complete valid URL is entered, the React UI pop-ups
+after the URL input area the following pull-down list, with the following HTML code
+
+#+begin_example
+<td><div class="relationship-content "><label>Type:</label><label class="relationship-name"><select class="link-type"><option value="">&nbsp;</option><option value="288">discography entry</option><option value="301">license</option><option disabled="" value="73">get the music</option><option value="79">&nbsp;&nbsp;purchase for mail-order</option><option value="74">&nbsp;&nbsp;purchase for download</option><option value="75">&nbsp;&nbsp;download for free</option><option value="85">&nbsp;&nbsp;stream for free</option><option value="980">&nbsp;&nbsp;streaming page</option><option value="906">crowdfunding page</option><option value="729">show notes</option><option value="78">cover art</option></select></label></div><div class="error field-error" data-visible="1">Please select a link type for the URL you’ve entered.</div></td>
+#+end_example
+
+*** 5
+
+Still nothing
+
+#+begin_example
+[MB-Discography-AutoSelect] Container found, starting observer.
+userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:23 [MB-Discography-AutoSelect] Found select element: <select class=​"link-type">​…​</select>
+userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:23 [MB-Discography-AutoSelect] [Polling failed] Could not find anchor tag (a[href]) after 50 attempts. external-link-0
+#+end_example
+
+Try implementing the following. After pasting the URL (eventually stripped), emulate two times "Tab", to reach the Pull-down list, and then select the very first element which is "discography entry"
+
+*** 6
+
+This finally works.
+Emulate switching out of the current URL input field and move to the next one which gets generated after the current one
+
+*** 7
+
+Yes, thanx, this finally works.
+
+Now please add support for pasting URLs of the following type (when they start with)
+
+ - https://nugs.net/
+
+then choose the option after switching to the pull-downlist which says:
+
+#+begin_example
+      <option value="74">&nbsp;&nbsp;purchase for download</option>
+#+end_example
+
+*** 8
+
+Please add a new button right after the '<legend>External links</legend>' in the following part of the page
+
+#+begin_example
+<fieldset class="information">
+    <legend>External links</legend>
+      <div id="external-links-editor-container"><table class="row-form" id="external-links-editor"><tbody><tr class="external-link-item" id="external-link-0"><td><span class="favicon no-favicon"></span></td><td class="link-actions"><button class="nobutton icon remove-item" data-index="0" title="Remove link" type="button"></button><button class="icon edit-item" title="Edit URL" aria-haspopup="dialog" type="button"></button></td><td><a class="url " href="https://www.jungleland.it/html/19810123_2.htm" rel="noreferrer" target="_blank" style="overflow-wrap: anywhere;">https://www.jungleland.it/html/19810123_2.htm</a></td></tr><tr class="relationship-item"><td></td><td class="link-actions"><button class="icon edit-item" title="Edit attributes" aria-haspopup="dialog" type="button"></button></td><td><div class="relationship-content "><label>Type:</label><label class="relationship-name"><select class="link-type"><option value="">&nbsp;</option><option value="288">discography entry</option><option value="301">license</option><option disabled="" value="73">get the music</option><option value="79">&nbsp;&nbsp;purchase for mail-order</option><option value="74">&nbsp;&nbsp;purchase for download</option><option value="75">&nbsp;&nbsp;download for free</option><option value="85">&nbsp;&nbsp;stream for free</option><option value="980">&nbsp;&nbsp;streaming page</option><option value="906">crowdfunding page</option><option value="729">show notes</option><option value="78">cover art</option></select><span class="tooltip-wrapper"><span class="img icon help" style="display: inline-block; margin-left: 10px; vertical-align: text-top;"></span><span class="tooltip-container"><span class="tooltip-triangle"></span><span class="tooltip-content"><div style="text-align: left;">This link points to a page for a particular release within a discography for an artist or label. (<a href="/relationship/823656dd-0309-4247-b282-b92d287d59c5">more documentation</a>)</div></span></span></span></label></div></td></tr><tr class="add-relationship"><td></td><td></td><td class="add-item"><button class="add-item with-label" type="button">Add another relationship</button></td></tr><tr class="external-link-item" id="external-link-1"><td><span class="favicon no-favicon"></span></td><td class="link-actions"><button class="nobutton icon remove-item" data-index="1" title="Remove link" type="button"></button><button class="icon edit-item" title="Edit URL" aria-haspopup="dialog" type="button"></button></td><td><a class="url " href="https://www.springsteenlyrics.com/bootlegs.php?item=5013" rel="noreferrer" target="_blank" style="overflow-wrap: anywhere;">https://www.springsteenlyrics.com/bootlegs.php?item=5013</a></td></tr><tr class="relationship-item"><td></td><td class="link-actions"><button class="icon edit-item" title="Edit attributes" aria-haspopup="dialog" type="button"></button></td><td><div class="relationship-content "><label>Type:</label><label class="relationship-name"><select class="link-type"><option value="">&nbsp;</option><option value="288">discography entry</option><option value="301">license</option><option disabled="" value="73">get the music</option><option value="79">&nbsp;&nbsp;purchase for mail-order</option><option value="74">&nbsp;&nbsp;purchase for download</option><option value="75">&nbsp;&nbsp;download for free</option><option value="85">&nbsp;&nbsp;stream for free</option><option value="980">&nbsp;&nbsp;streaming page</option><option value="906">crowdfunding page</option><option value="729">show notes</option><option value="78">cover art</option></select><span class="tooltip-wrapper"><span class="img icon help" style="display: inline-block; margin-left: 10px; vertical-align: text-top;"></span><span class="tooltip-container"><span class="tooltip-triangle"></span><span class="tooltip-content"><div style="text-align: left;">This link points to a page for a particular release within a discography for an artist or label. (<a href="/relationship/823656dd-0309-4247-b282-b92d287d59c5">more documentation</a>)</div></span></span></span></label></div></td></tr><tr class="add-relationship"><td></td><td></td><td class="add-item"><button class="add-item with-label" type="button">Add another relationship</button></td></tr><tr class="external-link-item" id="external-link-2"><td><span class="favicon no-favicon"></span></td><td class="link-actions"><button class="nobutton icon remove-item" data-index="2" title="Remove link" type="button"></button><button class="icon edit-item" title="Edit URL" aria-haspopup="dialog" type="button"></button></td><td><a class="url " href="https://nugs.net/" rel="noreferrer" target="_blank" style="overflow-wrap: anywhere;">https://nugs.net/</a></td></tr><tr class="relationship-item"><td></td><td class="link-actions"><button class="icon edit-item" title="Edit attributes" aria-haspopup="dialog" type="button"></button></td><td><div class="relationship-content "><label>Type:</label><label class="relationship-name"><select class="link-type"><option value="">&nbsp;</option><option value="288">discography entry</option><option value="301">license</option><option disabled="" value="73">get the music</option><option value="79">&nbsp;&nbsp;purchase for mail-order</option><option value="74">&nbsp;&nbsp;purchase for download</option><option value="75">&nbsp;&nbsp;download for free</option><option value="85">&nbsp;&nbsp;stream for free</option><option value="980">&nbsp;&nbsp;streaming page</option><option value="906">crowdfunding page</option><option value="729">show notes</option><option value="78">cover art</option></select><span class="tooltip-wrapper"><span class="img icon help" style="display: inline-block; margin-left: 10px; vertical-align: text-top;"></span><span class="tooltip-container"><span class="tooltip-triangle"></span><span class="tooltip-content"><div style="text-align: left;">This is used to link to a page where the release can be purchased for download. (<a href="/relationship/98e08c20-8402-4163-8970-53504bb6a1e4">more documentation</a>)</div></span></span></span></label></div></td></tr><tr class="add-relationship"><td></td><td></td><td class="add-item"><button class="add-item with-label" type="button">Add another relationship</button></td></tr><tr class="external-link-item" id="external-link-3"><td><span class="favicon no-favicon"></span></td><td class="link-actions"><button class="nobutton icon remove-item" data-index="3" title="Remove link" type="button"></button><button class="icon edit-item" title="Edit URL" aria-haspopup="dialog" type="button"></button></td><td><a class="url " href="https://volkerzell.de/" rel="noreferrer" target="_blank" style="overflow-wrap: anywhere;">https://volkerzell.de/</a></td></tr><tr class="relationship-item"><td></td><td class="link-actions"><button class="icon edit-item" title="Edit attributes" aria-haspopup="dialog" type="button"></button></td><td><div class="relationship-content "><label>Type:</label><label class="relationship-name"><select class="link-type"><option value="">&nbsp;</option><option value="288">discography entry</option><option value="301">license</option><option disabled="" value="73">get the music</option><option value="79">&nbsp;&nbsp;purchase for mail-order</option><option value="74">&nbsp;&nbsp;purchase for download</option><option value="75">&nbsp;&nbsp;download for free</option><option value="85">&nbsp;&nbsp;stream for free</option><option value="980">&nbsp;&nbsp;streaming page</option><option value="906">crowdfunding page</option><option value="729">show notes</option><option value="78">cover art</option></select></label></div><div class="error field-error" data-visible="1">Please select a link type for the URL you’ve entered.</div></td></tr><tr class="add-relationship"><td></td><td></td><td class="add-item"><button class="add-item with-label" type="button">Add another relationship</button></td></tr><tr class="external-link-item" id="external-link-4"><td></td><td class="link-actions"></td><td><input class="value with-button" data-index="4" placeholder="Add another link" type="url" value=""></td></tr></tbody></table></div>
+  </fieldset>
+#+end_example
+
+with the button text "⚙️ Configure external\nlink mappings".
+
+When pressed present an UI which which it should be possible to configure the currently hardcoded variables
+
+#+begin_example
+    const REGEX_SPRINGSTEEN = /^(https?:\/\/www\.springsteenlyrics\.com\/bootlegs\.php\?item=\d+)(&.*)?$/i;
+    const REGEX_JUNGLELAND = /^https?:\/\/www\.jungleland\.it\/html\/.*\.htm$/i;
+    const REGEX_NUGS = /^https?:\/\/nugs\.net\//i; // New regex for Nugs.net
+#+end_example
+
+in kind of like an association table "URL ==> Type, like the following
+
+#+begin_example
+/^(https?:\/\/www\.springsteenlyrics\.com\/bootlegs\.php\?item=\d+)(&.*)?$/i ==> "discography entry"
+/^https?:\/\/www\.jungleland\.it\/html\/.*\.htm$/i ==> "discography entry"
+/^https?:\/\/nugs\.net\//i; "&nbsp;&nbsp;purchase for download"
+#+end_example
+
+Initially this new associaten variable should consist of the above 3 entries.
+But it should be possible to add new and remove existing entries from the structure and persist the resulting data to
+browser storage, so that different kind of users (which use different mappings) are supported.
+
+When adding a new entry (or editing an already existing entry) the "Type" choices should only be from the following list options
+
+#+begin_example
+      <option value="288">discography entry</option>
+      <option value="301">license</option>
+      <option disabled="" value="73">get the music</option>
+      <option value="79">&nbsp;&nbsp;purchase for mail-order</option>
+      <option value="74">&nbsp;&nbsp;purchase for download</option>
+      <option value="75">&nbsp;&nbsp;download for free</option>
+      <option value="85">&nbsp;&nbsp;stream for free</option>
+      <option value="980">&nbsp;&nbsp;streaming page</option>
+      <option value="906">crowdfunding page</option>
+      <option value="729">show notes</option>
+      <option value="78">cover art</option>
+#+end_example
+
+*** 2
+
+First of all a couple of observations:
+
+1.) The "⚙️ Configure external\nlink mappings" button is there, but under a different container, called "Additional Information" which is a container above our "External Links" container
+2.) The button is not really a button , but a clickable text (except the icon is there): it should be a butten with an icon and text, and the mouse curser should change to a finger when hovering over it
+3.) The resulting dialog which pops-up when pressing the "⚙️ Configure external\nlink mappings" button has the same problem with the "Add New Mapping" button which is clickable but only a text only button
+    It gives an error when clicking. Here the console output:
+
+#+begin_example
+[MB-Discography-AutoSelect] Container found, starting observer.
+userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:328 Uncaught TypeError: Cannot set properties of null (setting 'onclick')
+    at openEditModal (userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:328:59)
+    at addButton.onclick (userscript.html?name=MusicBrainz%253A-Auto-Select-Discography-Link-Type.user.js&id=d3b2b758-fc84-4cd6-9a84-c415fde438ca:269:35)
+#+end_example
+
+4.) The already existing three mappings are NOT completely editable, you onyl can delet one by one by clicking the red (x) button under the Actions column
+
+Please fix..
+
+*** 3
+
+Yes this works now.
+
+A couple more things are left:
+
+1.) The text based button "Add New Mapping" in the "MusicBrainz Auto-Select Configuration" dialog should also be a real button with text on it, like the "Close" button in the same dialog
+2.) We should be able to also edit the already existing entries, not just "Remove" them by clicking the red "x" under the actions column
+
+*** 4
+
+The "Add New Mapping" button is now OK.
+
+But it's still NOT possible to edit existing entries, undly the "(x)"-Remove is present under the actions column
+
+*** 5
+
+Still nothing. Onyl the "Delete" button present, the "Edit" button is somehow NOT rendered.
+
+This is the actual HTML which gets generated
+
+#+begin_example
+<div style="background: white; padding: 20px; border-radius: 5px; box-shadow: rgba(0, 0, 0, 0.5) 0px 5px 15px; width: 80%; max-width: 1000px; margin-top: 50px; max-height: 80vh; overflow-y: auto;">
+            <h1 style="border-bottom: 1px solid #ccc; padding-bottom: 10px;">MusicBrainz Auto-Select Configuration</h1>
+            <p>Define custom Regular Expressions to automatically select a link type when a matching URL is pasted.</p>
+            <div id="mb-autosel-modal-content"><table class="tbl" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>URL Regex Pattern</th>
+                    <th style="width: 150px;">Maps To (Type ID)</th>
+                    <th style="width: 250px;">Description (Optional)</th>
+                    <th style="width: 100px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody><tr>
+                <td style="font-family: monospace; font-size: 0.9em; max-width: 300px; word-break: break-all; vertical-align: top; padding-right: 10px;">^(https?://www\.springsteenlyrics\.com/bootlegs\.php\?item=\d+)(&amp;.*)?$</td>
+                <td style="vertical-align: top;">discography entry (288)</td>
+                <td style="vertical-align: top;">SpringsteenLyrics bootleg entry (cleaned)</td>
+                <td style="vertical-align: top;">
+                    <button class="nobutton icon edit-item" type="button" data-index="0" title="Edit"></button>
+                    <button class="nobutton icon remove-item" type="button" data-index="0" title="Delete"></button>
+                </td>
+            </tr><tr>
+                <td style="font-family: monospace; font-size: 0.9em; max-width: 300px; word-break: break-all; vertical-align: top; padding-right: 10px;">^https?://www\.jungleland\.it/html/.*\.htm$</td>
+                <td style="vertical-align: top;">discography entry (288)</td>
+                <td style="vertical-align: top;">Jungleland discography page</td>
+                <td style="vertical-align: top;">
+                    <button class="nobutton icon edit-item" type="button" data-index="1" title="Edit"></button>
+                    <button class="nobutton icon remove-item" type="button" data-index="1" title="Delete"></button>
+                </td>
+            </tr><tr>
+                <td style="font-family: monospace; font-size: 0.9em; max-width: 300px; word-break: break-all; vertical-align: top; padding-right: 10px;">^https?://nugs\.net/</td>
+                <td style="vertical-align: top;">purchase for download (74)</td>
+                <td style="vertical-align: top;">Nugs.net primary URL</td>
+                <td style="vertical-align: top;">
+                    <button class="nobutton icon edit-item" type="button" data-index="2" title="Edit"></button>
+                    <button class="nobutton icon remove-item" type="button" data-index="2" title="Delete"></button>
+                </td>
+            </tr><tr>
+                <td style="font-family: monospace; font-size: 0.9em; max-width: 300px; word-break: break-all; vertical-align: top; padding-right: 10px;">https://volkerzell.de/</td>
+                <td style="vertical-align: top;">cover art (78)</td>
+                <td style="vertical-align: top;">my homepage</td>
+                <td style="vertical-align: top;">
+                    <button class="nobutton icon edit-item" type="button" data-index="3" title="Edit"></button>
+                    <button class="nobutton icon remove-item" type="button" data-index="3" title="Delete"></button>
+                </td>
+            </tr></tbody>
+        </table><button class="submit" type="button" style="margin-top: 15px;">Add New Mapping</button></div>
+            <div style="padding-top: 20px; text-align: right;">
+                <button id="closeModalButton" class="submit" type="button">Close</button>
+            </div>
+        </div>
+#+end_example
+
+*** 6
+
+Yes, thx it finally works, the buttons are there.
+
+Please add now the latest bit:
+
+When pressing the "Esc" key in the UI dialogs, the dialogs should just close (if nothing has changed), otherwise ask for confirmation.
+
+*** 7
+
+One last glich. When the "Add New Mapping" dialog is opend from the first dialog "MusicBrainz Auto-Select
+Configuration", pressing "Esc" closes both dialogs, but instead only the "Add New Mapping" dialog should be closed.
+
+** ChatGPT
+*** question
+
+Write a Tampermonkey userscript when adding a new release to MusicBrainz on the URL
+
+https://musicbrainz.org/release/add
+
+with the following functionality:
+
+When pasting a URL which starts with either
+
+    - https://www.springsteenlyrics.com/bootlegs.php?item=<Item-ID>&category=<category> - <=== cut off everything after <Item-ID> before insertion
+    - https://www.jungleland.it/html/<filename>.htm
+
+into the text field 'placeholder="Add link"' which looks in HTML like this
+
+#+begin_example
+<fieldset class="information">
+    <legend>External links</legend>
+      <div id="external-links-editor-container"><table class="row-form" id="external-links-editor"><tbody><tr class="external-link-item" id="external-link-0"><td></td><td class="link-actions"></td><td><input class="value with-button" data-index="0" placeholder="Add link" type="url" value=""></td></tr></tbody></table></div>
+  </fieldset>
+#+end_example
+
+then the React based Musicbrainz UI adds a new piece of HTML code
+
+#+begin_example
+<fieldset class="information">
+    <legend>External links</legend>
+      <div id="external-links-editor-container"><table class="row-form" id="external-links-editor"><tbody><tr class="external-link-item" id="external-link-0"><td><span class="favicon no-favicon"></span></td><td class="link-actions"><button class="nobutton icon remove-item" data-index="0" title="Remove link" type="button"></button><button class="icon edit-item" title="Edit URL" aria-haspopup="dialog" type="button"></button></td><td><a class="url " href="https://www.springsteenlyrics.com/bootlegs.php?item=5013" rel="noreferrer" target="_blank" style="overflow-wrap: anywhere;">https://www.springsteenlyrics.com/bootlegs.php?item=5013</a></td></tr><tr class="relationship-item"><td></td><td class="link-actions"><button class="icon edit-item" title="Edit attributes" aria-haspopup="dialog" type="button"></button></td><td><div class="relationship-content "><label>Type:</label><label class="relationship-name"><select class="link-type"><option value="">&nbsp;</option><option value="288">discography entry</option><option value="301">license</option><option disabled="" value="73">get the music</option><option value="79">&nbsp;&nbsp;purchase for mail-order</option><option value="74">&nbsp;&nbsp;purchase for download</option><option value="75">&nbsp;&nbsp;download for free</option><option value="85">&nbsp;&nbsp;stream for free</option><option value="980">&nbsp;&nbsp;streaming page</option><option value="906">crowdfunding page</option><option value="729">show notes</option><option value="78">cover art</option></select></label></div><div class="error field-error" data-visible="1">Please select a link type for the URL you’ve entered.</div></td></tr><tr class="add-relationship"><td></td><td></td><td class="add-item"><button class="add-item with-label" type="button">Add another relationship</button></td></tr><tr class="external-link-item" id="external-link-1"><td></td><td class="link-actions"></td><td><input class="value with-button" data-index="1" placeholder="Add another link" type="url" value=""></td></tr></tbody></table></div>
+  </fieldset>
+#+end_example
+
+and populates a "Type" list where the following entry should be selected
+
+#+begin_example
+<option value="288">discography entry</option>
+#+end_example
+
+**** solution
+
+#+begin_example
+// ==UserScript==
+// @name         MB: Auto-select Discography Entry for Springsteen/Jungleland Links
+// @namespace    https://musicbrainz.org/
+// @version      1.0
+// @description  Automatically selects "discography entry" (288) when adding SpringsteenLyrics or Jungleland links on add-release page.
+// @match        https://musicbrainz.org/release/add*
+// @grant        none
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    // URL prefixes we care about
+    const PREFIXES = [
+        "https://www.springsteenlyrics.com/bootlegs.php?item=",
+        "https://www.jungleland.it/html/"
+    ];
+
+    /** Determine whether URL matches our pattern */
+    function matchesSource(url) {
+        return PREFIXES.some(prefix => url.startsWith(prefix));
+    }
+
+    /** Find the "relationship-item" row following an accepted link row */
+    function findRelationshipRow(linkURL) {
+        const rows = document.querySelectorAll("#external-links-editor .external-link-item a.url");
+        for (let a of rows) {
+            if (a.href === linkURL) {
+                const tr = a.closest("tr");
+                if (tr && tr.nextElementSibling && tr.nextElementSibling.classList.contains("relationship-item")) {
+                    return tr.nextElementSibling;
+                }
+            }
+        }
+        return null;
+    }
+
+    /** Try to set the dropdown to "discography entry" (value 288) */
+    function setDiscographyEntry(relationshipRow) {
+        const select = relationshipRow.querySelector("select.link-type");
+        if (select) {
+            select.value = "288";                  // Set selection
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+    }
+
+    /** Handle URL paste into the input fields */
+    function handlePaste(e) {
+        const pasted = (e.clipboardData || window.clipboardData).getData("text").trim();
+        if (!matchesSource(pasted)) return;       // Not our URL → ignore
+
+        // React will create the new rows shortly after paste
+        // We retry every 150ms until the relationship row appears
+        let attempts = 0;
+        const MAX_ATTEMPTS = 40;
+
+        const interval = setInterval(() => {
+            attempts++;
+            const row = findRelationshipRow(pasted);
+            if (row) {
+                clearInterval(interval);
+                setDiscographyEntry(row);
+            }
+            if (attempts > MAX_ATTEMPTS) clearInterval(interval);
+        }, 150);
+    }
+
+    /** Listen for paste on all dynamic link fields */
+    function attachPasteListeners() {
+        const container = document.querySelector("#external-links-editor");
+        if (!container) return;
+
+        container.addEventListener("paste", function (e) {
+            if (e.target && e.target.matches("input[type='url']")) {
+                handlePaste(e);
+            }
+        });
+    }
+
+    // Wait until the external-links table exists
+    function waitForEditor() {
+        if (document.querySelector("#external-links-editor")) {
+            attachPasteListeners();
+        } else {
+            setTimeout(waitForEditor, 300);
+        }
+    }
+    waitForEditor();
+})();
+#+end_example
+
+Automatically remove trailing parameters from URLs
+⭐ Auto-set additional relationship attributes
+⭐ Support for more sites (e.g., setlist.fm, discogs bootlegs, etc.)
+⭐ Visual highlight when auto-filled
+⭐ Error logging overlay for debugging
+   Retry loops for slow React rendering
+
+**** 1
+
+Nothing happens. Please include console logging information.
+
+**** 2
+
+Yes now it works.
+
+Please add thus additional functionality
+
+When pasting links of type
+
+#+begin_example
+https://www.springsteenlyrics.com/bootlegs.php?item=<Item-ID>&category=<category>
+#+end_example
+
+cut off everything after <Item-ID>
+
+**** 3
+
+Still not working, it somehow doubles the URL input "value=​"https:​/​/​www.springsteenlyrics.com/​bootlegs.php?item=5013https:​/​/​www.springsteenlyrics.com/​bootlegs.php?item=5013&category=aud_live1980"
+
+#+begin_example
+MusicBrainz Quick Tools Debug: Initializing MutationObserver on the #recordings element's attributes.
+userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:221 [MB-AutoLinkType] Detected #external-links-editor via MutationObserver.
+userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:197 [MB-AutoLinkType] Attaching delegated paste listener.
+userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:234 [MB-AutoLinkType] Detected #external-links-editor via fallback poll.
+userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:204 [MB-AutoLinkType] paste event received on input: <input class=​"value with-button" data-index=​"0" placeholder type=​"url" value=​"https:​/​/​www.springsteenlyrics.com/​bootlegs.php?item=5013https:​/​/​www.springsteenlyrics.com/​bootlegs.php?item=5013&category=aud_live1980">
+userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:33 [MB-AutoLinkType] Normalized SpringsteenLyrics URL: https://www.springsteenlyrics.com/bootlegs.php?item=5013
+userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:137 [MB-AutoLinkType] Target URL pasted (normalized): https://www.springsteenlyrics.com/bootlegs.php?item=5013
+userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:147 [MB-AutoLinkType] Wrote normalized URL back into input.
+userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:161 [MB-AutoLinkType] Waiting for relationship row (polling up to 24s).
+userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:176 [MB-AutoLinkType] Timeout waiting for relationship row for URL: https://www.springsteenlyrics.com/bootlegs.php?item=5013
+(anonymous) @ console.js:36
+(anonymous) @ userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:176
+r @ helpers.js:97
+setInterval
+(anonymous) @ trycatch.js:106
+handlePasteEvent @ userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:163
+container.addEventListener.capture @ userscript.html?name=MB%253A-Auto-select-Discography-Entry-%252B-URL-Cleanup-robust.user.js&id=96295f6f-8c71-4e8f-b98d-c0a124c89bdf:205
+r @ helpers.js:97
 #+end_example

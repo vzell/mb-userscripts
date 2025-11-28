@@ -17,9 +17,9 @@
     'use strict';
 
     // *** DEBUGGING FLAGS ***
-    const DEBUG = true; 
-    const DEBUG_VISIBILITY = false; 
-    
+    const DEBUG = true;
+    const DEBUG_VISIBILITY = false;
+
     // --- CONSTANTS ---
     const LOG_PREFIX = '[add-recording-relations]';
     const STORAGE_KEY = 'mb_batch_add_buttons_config';
@@ -28,7 +28,7 @@
     const GLOBAL_POST_SELECT_WAIT_MS = 150;
     const SMALL_BREATHING_ROOM_MS = 150;
     const VISIBILITY_HEARTBEAT_MS = 500;
-    
+
     // Define the order for sorting buttons
     const RELATIONSHIP_ORDER = {
         'instruments': 1,
@@ -40,14 +40,14 @@
     function log(...args) {
         if (DEBUG) console.log(LOG_PREFIX, ...args);
     }
-    
+
     // --- Sorting Utility ---
     function sortButtons(buttons) {
         // Sorts the passed array in place based on relationship type order
         buttons.sort((a, b) => {
             const orderA = RELATIONSHIP_ORDER[a.relationshipType] || RELATIONSHIP_ORDER['default'];
             const orderB = RELATIONSHIP_ORDER[b.relationshipType] || RELATIONSHIP_ORDER['default'];
-            
+
             // Secondary sort by label for consistency within groups
             if (orderA === orderB) {
                 return a.label.localeCompare(b.label);
@@ -96,12 +96,12 @@
     // --- CRITICAL: GLOBAL QUEUE AND PROCESSING STATE ---
     const queue = [];
     let processing = false;
-    
+
     // Helper to provide a full default object structure for merging
     const FULL_DEFAULT_BUTTON = {
         label: 'New Button',
         relationshipType: 'instruments',
-        artist: '', 
+        artist: '',
         instrument: '',
         vocal: '',
         creditedAs: '',
@@ -118,7 +118,7 @@
                         ...FULL_DEFAULT_BUTTON, // Use default to ensure all keys exist
                         ...btn,                // Overwrite with stored values
                         // Ensure all required fields for instruments/vocal are there, even if empty
-                        instrument: btn.instrument || '', 
+                        instrument: btn.instrument || '',
                         vocal: btn.vocal || '',
                         creditedAs: btn.creditedAs || '',
                     }));
@@ -136,7 +136,7 @@
         try {
             // 1. Filter out invalid/empty buttons
             const safeButtons = buttons.filter(btn => btn.label && btn.label.trim() !== '' && btn.artist && btn.artist.trim() !== '');
-            
+
             // 2. Map and clean: only save relevant fields based on relationship type
             const cleanedButtons = safeButtons.map(btn => {
                 const clean = {
@@ -156,7 +156,7 @@
                 return clean;
             });
 
-            const sortedButtons = sortButtons(cleanedButtons); 
+            const sortedButtons = sortButtons(cleanedButtons);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(sortedButtons));
             log(`Saved ${sortedButtons.length} button configurations to localStorage.`);
             return sortedButtons;
@@ -165,7 +165,7 @@
             return buttons;
         }
     }
-    
+
     // Initialize the buttons
     ARTIST_BUTTONS = getInitialButtons();
 
@@ -284,7 +284,7 @@
         log("Done button not found (when trying to click Done).");
         return false;
     }
-    
+
     // --- Initial State Cleanup ---
     function resetInitialState() {
         const $allRecordings = $('#tracklist input[type="checkbox"]:not(.work)');
@@ -292,7 +292,7 @@
 
         if ($checkedOnLoad.length > 0) {
             log(`Initial state fix: Found ${$checkedOnLoad.length} checked checkboxes on load. Forcing uncheck with aggressive click simulation.`);
-            
+
             $checkedOnLoad.each(function() {
                 const el = this;
                 try {
@@ -301,7 +301,7 @@
                     $(el).click();
                 }
             });
-            
+
             setTimeout(() => {
                 const $stillChecked = $allRecordings.filter(':checked');
                 if ($stillChecked.length > 0) {
@@ -310,7 +310,7 @@
                     log("Initial state fix successful: 0 checked recordings after cleanup.");
                 }
             }, 100);
-            
+
             return true;
         }
         log("Initial state fix: Found 0 checked checkboxes on load. State is clean.");
@@ -355,7 +355,7 @@
 
         // Fill Credited As
         const creditedAsValue = config.creditedAs ?? '';
-        
+
         if (config.relationshipType !== 'performed / performer' && creditedAsValue.length > 0) {
             log("Attempting to fill 'Credited as' field…");
             // Find the visible 'credited as' input, prioritizing the one associated with the relationship type
@@ -363,7 +363,7 @@
                 const cls = (el.className || '').toLowerCase();
                 return cls.includes('attribute-credit');
             }).first();
-            
+
             // Fallback strategy if initial filter is too broad/narrow
             if ($creditedInput.length === 0) {
                  $creditedInput = $("input:visible").filter((i, el) => {
@@ -424,11 +424,11 @@
 
 
     // ----------------- Modal UI -----------------
-    
+
     // Function to dynamically show/hide fields based on relationship type
     function updateFieldVisibility($item) {
         const type = $item.find('select[name="relationshipType"]').val();
-        
+
         // Hide all dynamic fields first
         $item.find('.instrument-field').hide();
         $item.find('.vocal-field').hide();
@@ -440,7 +440,7 @@
             $item.find('.vocal-field').show();
         } else if (type === 'performed / performer') {
             // Hide all attribute fields for this type
-            $item.find('.creditedAs-field').hide(); 
+            $item.find('.creditedAs-field').hide();
         }
     }
 
@@ -471,7 +471,7 @@
             .aa-add-save-btn { background-color: #4CAF50; color: white; }
             .aa-add-cancel-btn { background-color: #ccc; color: #333; }
         `;
-        
+
         // Add the new style block
         if ($('#aa-add-new-modal-style').length === 0) {
              $('head').append(`<style id="aa-add-new-modal-style">${MODAL_STYLE}</style>`);
@@ -479,13 +479,13 @@
 
         const $overlay = $('<div id="aa-add-new-modal-overlay">');
         const $modal = $('<div id="aa-add-new-modal">');
-        
+
         $modal.html(`
             <h4>Add New Button Configuration</h4>
             <div id="aa-add-form">
                 <label>Label (Button Text): <input type="text" name="label" value="" placeholder="E.g., Max Weinberg"></label>
-                
-                <label>Relationship Type: 
+
+                <label>Relationship Type:
                     <select name="relationshipType">
                         <option value="instruments">instruments</option>
                         <option value="vocal">vocal</option>
@@ -493,7 +493,7 @@
                     </select>
                 </label>
                 <label>Artist Name: <input type="text" name="artist" value="" placeholder="E.g., Max Weinberg (required)"></label>
-                
+
                 <!-- DYNAMIC FIELDS -->
                 <label class="instrument-field">Instrument (if type='instruments'): <input type="text" name="instrument" value="" placeholder="E.g., drums (drum set)"></label>
                 <label class="vocal-field">Vocal (if type='vocal'): <input type="text" name="vocal" value="" placeholder="E.g., lead vocals"></label>
@@ -504,7 +504,7 @@
                 <button class="aa-add-save-btn">Add Button</button>
             </div>
         `);
-        
+
         const $form = $modal.find('#aa-add-form');
         const $select = $form.find(`select[name="relationshipType"]`);
         const $labelInput = $form.find('input[name="label"]');
@@ -524,7 +524,7 @@
                 $artistInput.val($(this).val());
             }
         });
-        
+
         // 2. Field Visibility Logic
         const updateAddModalVisibility = () => {
              // Use the same logic as the main modal updateFieldVisibility
@@ -532,7 +532,7 @@
              $form.find('.instrument-field').hide();
              $form.find('.vocal-field').hide();
              $form.find('.creditedAs-field').show();
-             
+
              if (type === 'instruments') {
                  $form.find('.instrument-field').show();
              } else if (type === 'vocal') {
@@ -544,17 +544,17 @@
 
         // Initial visibility
         updateAddModalVisibility();
-        
+
         // Add change listener for dynamic visibility
         $select.on('change', updateAddModalVisibility);
-        
+
         const cleanupAndClose = () => {
             $(document).off('keydown', escapeHandler);
             $overlay.remove();
         }
 
         $modal.on('click', '.aa-add-cancel-btn', cleanupAndClose);
-        
+
         $modal.on('click', '.aa-add-save-btn', function() {
             const newButton = {
                 label: $labelInput.val().trim(),
@@ -564,7 +564,7 @@
                 vocal: $form.find('input[name="vocal"]').val().trim(),
                 creditedAs: $form.find('input[name="creditedAs"]').val().trim(),
             };
-            
+
             if (!newButton.label || !newButton.artist) {
                 // Using alert() here as it is inside a custom modal flow and should be seen
                 alert("Both Label and Artist Name are required to add a new button.");
@@ -574,7 +574,7 @@
             saveCallback(newButton);
             cleanupAndClose();
         });
-        
+
         // Escape Key Handler
         const escapeHandler = function(e) {
             const isInput = $(e.target).is('input, select, textarea');
@@ -590,7 +590,7 @@
         $overlay.append($modal);
         $('body').append($overlay);
     }
-    
+
     function showConfigModal() {
         // Ensure only one modal is present
         $('#aa-config-modal-overlay').remove();
@@ -602,7 +602,7 @@
 
         // Capture the initial state string (must be sorted for a reliable comparison)
         const initialConfigString = JSON.stringify(sortButtons(currentButtons.map(a => Object.assign({}, a))));
-        
+
         const MODAL_STYLE = `
             #aa-config-modal-overlay {
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -612,19 +612,19 @@
             #aa-config-modal {
                 background: white; padding: 20px; border-radius: 8px;
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); max-width: 800px;
-                width: 90%; max-height: 90%; 
+                width: 90%; max-height: 90%;
                 font-family: Arial, sans-serif; color: #333;
                 display: flex; /* Flex container for scrollable content + fixed footer */
                 flex-direction: column;
             }
             #aa-config-modal h3 { margin-top: 0; border-bottom: 1px solid #ccc; padding-bottom: 10px; flex-shrink: 0; }
-            
+
             #aa-config-scroll-area {
                 overflow-y: auto; /* Scrollable content area */
-                flex-grow: 1; 
+                flex-grow: 1;
                 padding-right: 5px; /* Add slight padding for scrollbar visibility */
             }
-            
+
             .aa-config-item {
                 border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px;
                 background-color: #f9f9f9;
@@ -636,13 +636,13 @@
                 border: 1px solid #ccc; border-radius: 4px;
             }
             /* FIXED FOOTER STYLE */
-            .aa-config-footer { 
-                display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; 
+            .aa-config-footer {
+                display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px;
                 border-top: 1px solid #ccc;
                 flex-shrink: 0;
             }
-            .aa-config-footer button { 
-                padding: 8px 15px; cursor: pointer; border-radius: 4px; border: none; 
+            .aa-config-footer button {
+                padding: 8px 15px; cursor: pointer; border-radius: 4px; border: none;
                 font-weight: bold;
             }
             .aa-remove-btn { background-color: #f44336; color: white; border: none; padding: 4px 8px; font-size: 0.8em; cursor: pointer; }
@@ -663,7 +663,7 @@
         const $overlay = $('<div id="aa-config-modal-overlay">');
         const $modal = $('<div id="aa-config-modal">');
         $modal.html('<h3>Batch Relationship Button Configuration</h3><div id="aa-config-scroll-area"><div id="aa-config-form"></div></div>');
-        
+
         const $scrollArea = $modal.find('#aa-config-scroll-area');
         const $formContainer = $modal.find('#aa-config-form');
 
@@ -672,7 +672,7 @@
             // Important: Render the *sorted* array
             buttons.forEach((config, index) => {
                 const $item = $(`<div class="aa-config-item" data-index="${index}">`);
-                
+
                 // Use default values if keys are missing (e.g., in a cleaned 'performed / performer' object)
                 const safeConfig = {...FULL_DEFAULT_BUTTON, ...config};
 
@@ -683,8 +683,8 @@
                         <button class="aa-remove-btn">Remove</button>
                     </h4>
                     <label>Label (Button Text): <input type="text" name="label" value="${safeConfig.label || ''}" placeholder="E.g., Max Weinberg"></label>
-                    
-                    <label>Relationship Type: 
+
+                    <label>Relationship Type:
                         <select name="relationshipType">
                             <option value="instruments">instruments</option>
                             <option value="vocal">vocal</option>
@@ -692,11 +692,11 @@
                         </select>
                     </label>
                     <label>Artist Name: <input type="text" name="artist" value="${safeConfig.artist || ''}" placeholder="E.g., Max Weinberg (required)"></label>
-                    
+
                     <!-- DYNAMIC FIELDS -->
                     <label class="instrument-field">Instrument (if type='instruments'): <input type="text" name="instrument" value="${safeConfig.instrument || ''}" placeholder="E.g., drums (drum set)"></label>
                     <label class="vocal-field">Vocal (if type='vocal'): <input type="text" name="vocal" value="${safeConfig.vocal || ''}" placeholder="E.g., lead vocals"></label>
-                    
+
                     <label class="creditedAs-field">Credited As: <input type="text" name="creditedAs" value="${safeConfig.creditedAs || ''}" placeholder="E.g., drums"></label>
                 `);
 
@@ -706,24 +706,24 @@
 
                 // Initial visibility update
                 updateFieldVisibility($item);
-                
+
                 // Add change listener for dynamic visibility
                 $select.on('change', function() {
                     updateFieldVisibility($item);
                 });
-                
+
                 // Add change listener to all inputs to update the local currentButtons array instantly
                 $item.find('input, select').on('change keyup', function() {
                     const fieldName = $(this).attr('name');
                     const value = $(this).val();
                     const $currentItem = $(this).closest('.aa-config-item');
                     const index = $currentItem.data('index');
-                    
+
                     // Update the label in the h4 for instant feedback
                     if (fieldName === 'label') {
                         $currentItem.find('h4').html(`Button ${index + 1}: ${value}<button class="aa-remove-btn">Remove</button>`);
                     }
-                    
+
                     // Update the local array by reading the current DOM state (sorted)
                     // This ensures currentButtons always matches the visible form for accurate removal/saving
                     currentButtons = getCurrentConfigFromForm(true);
@@ -751,59 +751,59 @@
                 return sortButtons(currentConfig);
             }
             // Fallback: use the in-memory array
-            return sortButtons(currentButtons.map(a => Object.assign({}, a))); 
+            return sortButtons(currentButtons.map(a => Object.assign({}, a)));
         }
 
         // Initial render
         renderForm(currentButtons);
 
         // --- Event Handlers ---
-        
+
         // Cleanup function for modal closure
         const cleanupAndClose = () => {
             $(document).off('keydown', escapeHandler);
             $('#aa-add-new-modal-overlay').remove(); // Ensure add modal is also closed
             $overlay.remove();
         }
-        
+
         // Add New Button Handler
         const handleAddNewButton = () => {
              // Open the dedicated small modal
              showAddButtonModal((newButton) => {
                 // Callback function when the new button is saved in the sub-modal
-                
+
                 // 1. Read the current DOM state to ensure we capture any pending edits
-                const currentDomConfig = getCurrentConfigFromForm(true); 
-                
+                const currentDomConfig = getCurrentConfigFromForm(true);
+
                 // 2. Add the new button
                 currentDomConfig.push(newButton);
                 currentButtons = sortButtons(currentDomConfig); // Update local array
 
                 // 3. Re-render the main form with the new, sorted button list
                 renderForm(currentButtons);
-                
+
                 // 4. Scroll to the bottom to see the newly added button (which is now in its sorted position)
-                $scrollArea.scrollTop($scrollArea[0].scrollHeight); 
+                $scrollArea.scrollTop($scrollArea[0].scrollHeight);
              });
         };
-        
+
 
         // Remove Button (FIXED: Uses index for unique removal)
         $modal.on('click', '.aa-remove-btn', function() {
             const $item = $(this).closest('.aa-config-item');
-            
+
             // Read the current state of the buttons from the form (guaranteed to match the visible list)
-            const domConfig = getCurrentConfigFromForm(true); 
+            const domConfig = getCurrentConfigFromForm(true);
             const indexToRemove = $item.data('index'); // This index is based on the *sorted* array shown on screen
 
             if (domConfig.length > 1) {
-                
+
                 // Remove the item at the specific index using splice
                 domConfig.splice(indexToRemove, 1);
 
                 // Update currentButtons and ensure it is sorted
-                currentButtons = sortButtons(domConfig); 
-                
+                currentButtons = sortButtons(domConfig);
+
                 renderForm(currentButtons);
 
             } else {
@@ -828,7 +828,7 @@
                     valid = false;
                     return false; // Stop .each loop
                 }
-                
+
                 newConfig.push({
                     label: label,
                     relationshipType: $item.find('select[name="relationshipType"]').val(),
@@ -847,15 +847,15 @@
                 log("Configuration saved and buttons updated.");
             }
         };
-        
+
         // Escape Key Handler
         const escapeHandler = function(e) {
-            // Check if the event target is inside an input field, which might be handling Esc for something else 
+            // Check if the event target is inside an input field, which might be handling Esc for something else
             const isInput = $(e.target).is('input, select, textarea');
             if (e.key === 'Escape' && !isInput) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const finalConfig = getCurrentConfigFromForm(true); // Read current state from DOM
                 const finalConfigString = JSON.stringify(finalConfig);
 
@@ -876,7 +876,7 @@
 
         // Attach event listeners
         $(document).on('keydown', escapeHandler);
-        
+
         // Footer (Fixed position achieved by putting it outside the scroll area)
         const $footer = $(`
             <div class="aa-config-footer">
@@ -887,26 +887,26 @@
                 </div>
             </div>
         `);
-        
+
         $modal.append($footer);
 
         $modal.on('click', '.aa-close-btn', cleanupAndClose);
         $modal.on('click', '.aa-save-btn', saveAndClose);
         $modal.on('click', '.aa-add-btn', handleAddNewButton);
-        
+
         $overlay.append($modal);
         $('body').append($overlay);
     }
-    
+
     // ----------------- UI: Button Rendering and Creation -----------------
-    
+
     const BUTTON_STYLE_CONFIG = {
         'instruments': { bgColor: '#4CAF50', activeColor: '#3e8e41', icon: '🎸 ' },
         'vocal': { bgColor: '#2196F3', activeColor: '#0b7dda', icon: '🎤 ' },
         'performed / performer': { bgColor: '#FF9800', activeColor: '#e68a00', icon: '🎭 ' },
         'default': { bgColor: '#607D8B', activeColor: '#455a64', icon: '🔗 ' }
     };
-    
+
     function renderButtons(buttons) {
         const $mainContainer = $('.injected-buttons-container');
         if ($mainContainer.length === 0) return;
@@ -914,7 +914,7 @@
         let $batchButtonContainer = $mainContainer.find('#aa-batch-buttons');
         if ($batchButtonContainer.length === 0) {
             $batchButtonContainer = $('<div id="aa-batch-buttons" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>');
-            $mainContainer.append($batchButtonContainer); 
+            $mainContainer.append($batchButtonContainer);
         }
 
         $batchButtonContainer.empty();
@@ -934,15 +934,15 @@
                 transition: all 0.15s ease-in-out;
                 white-space: nowrap;
                 flex-shrink: 0;
-                line-height: 20px; 
+                line-height: 20px;
             `;
-            
+
             const $button = $('<button/>', {
                 text: buttonText,
                 'data-label': config.label
             });
 
-            $button.attr('style', buttonStyleString); 
+            $button.attr('style', buttonStyleString);
 
             $button.on({
                 'mouseenter': function() { $(this).css('opacity', 0.9); },
@@ -975,26 +975,26 @@
         let $container = $heading.next('.injected-buttons-container');
         if ($container.length === 0) {
             $container = $(`
-                <div 
-                    class="injected-buttons-container" 
+                <div
+                    class="injected-buttons-container"
                     style="
-                        display: flex; 
-                        align-items: center; 
-                        gap: 10px; 
-                        flex-wrap: wrap; 
-                        margin-top: 10px; 
-                        margin-bottom: 5px; 
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        flex-wrap: wrap;
+                        margin-top: 10px;
+                        margin-bottom: 5px;
                         padding: 10px 0;
-                        width: 100%; 
-                        z-index: 1000; 
+                        width: 100%;
+                        z-index: 1000;
                     ">
                 </div>
             `);
-            $heading.after($container); 
+            $heading.after($container);
         } else {
              $container.find('#aa-batch-buttons').remove();
         }
-        
+
         // --- 1. Create and prepend the permanent 'Configure' button with 2-line text ---
         const $configButton = $container.find('#aa-config-btn');
         if ($configButton.length === 0) {
@@ -1008,9 +1008,9 @@
                 font-weight: bold;
                 transition: all 0.15s ease-in-out;
                 flex-shrink: 0;
-                line-height: 1.2; 
+                line-height: 1.2;
             `;
-            
+
             // Updated text: "Configure recording\nrelation buttons"
             const buttonHtml = '⚙️ Configure recording<br>relation buttons';
 
@@ -1018,7 +1018,7 @@
                 id: 'aa-config-btn',
                 html: buttonHtml
             });
-            
+
             $config.attr('style', configButtonStyle);
             $container.prepend($config);
             $config.on('click', showConfigModal);
@@ -1029,7 +1029,7 @@
 
 
         // --- 3. VISIBILITY LOGIC ---
-        
+
         function getCheckedRecordings() {
             const $checkedRecordings = $('#tracklist input[type="checkbox"]:not(.work)');
             return $checkedRecordings;
@@ -1043,11 +1043,11 @@
                 const checkedCount = $checked.length;
                 const anyChecked = checkedCount > 0;
 
-                const $batchContainer = $container.find('#aa-batch-buttons'); 
+                const $batchContainer = $container.find('#aa-batch-buttons');
                 if ($batchContainer.length === 0) return;
-                
+
                 const currentDisplay = $batchContainer.css('display');
-                
+
                 if (currentDisplay === 'flex' && checkedCount === 0) {
                      if (DEBUG) log("Batch buttons visible, but 0 tracks checked. Forcing OFF.");
                      $batchContainer.css('display', 'none');
@@ -1076,7 +1076,7 @@
              try {
                  if (DEBUG) log("Checkbox event detected, updating visibility...");
                  // Use setTimeout to ensure the DOM state is settled after the click/change
-                 setTimeout(updateButtonVisibility, 50); 
+                 setTimeout(updateButtonVisibility, 50);
              } catch (e) {
                 console.error(LOG_PREFIX, "Error in checkbox event handler:", e);
              }
@@ -1084,18 +1084,18 @@
 
         // Set up the heartbeat check
         setInterval(updateButtonVisibility, VISIBILITY_HEARTBEAT_MS);
-        
+
         log("Injected custom buttons and configuration.");
     }
 
     // ----------------- Main Execution -----------------
-    
+
     try {
         setTimeout(() => {
             log("Starting userscript execution...");
             resetInitialState();
             createCustomButtons();
-        }, 2000); 
+        }, 2000);
     } catch (error) {
         // This catch block primarily catches sync errors during the setting of the timeout.
         console.error(LOG_PREFIX, "CRITICAL SCRIPT FAILURE during initial setup:", error);
