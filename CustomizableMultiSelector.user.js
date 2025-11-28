@@ -181,12 +181,12 @@
         // 4. Add Configuration Button
         const configButton = document.createElement('button');
         configButton.type = 'button';
-        configButton.textContent = '⚙️ Config';
+        configButton.textContent = '⚙️'; // Changed from '⚙️ Config' to just '⚙️'
         configButton.className = 'button btn-default';
-        configButton.title = 'Configure quick-select buttons'; // Added title for consistency
-        configButton.style.marginLeft = '10px';
-        // Removed specific padding and font-size to match the height of the standard buttons
-        configButton.style.marginBottom = '5px';
+        configButton.title = 'Configure quick-select buttons';
+        // Set margin-left to auto to push it to the right, and add 5px right and bottom margin
+        // Format: top right bottom left
+        configButton.style.margin = '0 5px 5px auto'; 
         configButton.onclick = () => showSettingsDialog(config);
 
         container.appendChild(configButton);
