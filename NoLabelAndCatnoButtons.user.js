@@ -27,16 +27,23 @@
         labelRows.forEach((row) => {
             const labelCell = row.querySelector('td:first-child');
             if (labelCell.querySelector('.no-label-btn')) return;
+
+            // --- No Label Button ---
             const noLabelButton = document.createElement('button');
-            noLabelButton.innerHTML = '<s>Label</s>';
+            // APPEARANCE CHANGE: Updated text and removed <s> tag
+            noLabelButton.textContent = 'NO label';
             noLabelButton.title = 'Set Label to [no label]';
+            // RETAINING ORIGINAL CLASSES AND STYLES
             noLabelButton.classList.add('no-label-btn');
             noLabelButton.classList.add('negative');
-            noLabelButton.style.cssText = 'font-size: 11px;height: 28px;line-height: 10px;';
+            noLabelButton.style.cssText = 'font-size: 11px;height: 28px;line-height: 10px;padding: 6px;'; // Added padding for better look
+
+            // RETAINING ORIGINAL FUNCTIONAL LOGIC
             noLabelButton.addEventListener('click', function(e) {
                 e.preventDefault();
                 const labelInput = document.getElementById("label-0");
                 if (labelInput) {
+                    // NOTE: This value is the original URL for '[no label]'
                     labelInput.value = 'https://musicbrainz.org/label/157afde4-4bf5-4039-8ad2-5a15acc85176';
                     // Trigger update using InputEvent and ChangeEvent
                     const inputEvent = new Event('input', { bubbles: true });
@@ -47,12 +54,17 @@
             });
 
 
+            // --- No Cat. No Button ---
             const noCatNoButton = document.createElement('button');
-            noCatNoButton.innerHTML = '<s>Cat. no</s>';
+            // APPEARANCE CHANGE: Updated text and removed <s> tag
+            noCatNoButton.textContent = 'NO catno';
             noCatNoButton.title = 'Set Catalog Number to [none]';
+            // RETAINING ORIGINAL CLASSES AND STYLES
             noCatNoButton.classList.add('no-label-btn');
             noCatNoButton.classList.add('negative');
-            noCatNoButton.style.cssText = 'font-size: 11px;height: 28px;line-height: 10px;'
+            noCatNoButton.style.cssText = 'font-size: 11px;height: 28px;line-height: 10px;padding: 6px;' // Added padding for better look
+
+            // RETAINING ORIGINAL FUNCTIONAL LOGIC
             noCatNoButton.addEventListener('click', function (e) {
                 e.preventDefault();
                 const catNoInput = document.getElementById("catno-0");
@@ -66,6 +78,7 @@
                 }
             });
 
+            // --- Button Container ---
             const buttonDiv = document.createElement('div');
             buttonDiv.classList.add('buttons');
             buttonDiv.style.cssText = 'position: absolute;transform: translateY(-22px);display: flex;flex-direction: column;align-items: center;gap: 5px;';
