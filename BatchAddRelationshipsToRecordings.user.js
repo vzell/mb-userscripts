@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         BatchAddRelationshipsToRecordings.user.js
+// @name         Batch Add Relationships To Recordings
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      1.1 (Optimized)
 // @description  Insert artist buttons, open batch-add dialog, reliably fill relationship type (instruments|vocal|performed / performer), artist, instrument/vocal, credited-as, click Done — sequential queue + dialog lifecycle awareness. Optimized for speed.
