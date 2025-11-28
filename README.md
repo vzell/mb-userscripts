@@ -9,6 +9,8 @@
 - [Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 - [MusicBrainz UUID Validator (Lowercase Hex)](#mb_uuid_validator)
 - [MusicBrainz: Auto-Select Discography Link Type](#mb_auto_select_discography_link_type)
+- [MusicBrainz Customizable Selector (Packaging, Type, Status, Language, Script)](#mb_customizable_selector)
+
 
 The Loujine scripts temporarely needed to be patched with the folloing line:
 
@@ -87,3 +89,10 @@ Allows configuration of link mappings (URL Regex -> Link Type ID). Automatically
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/AutoSelectExternalLinkType.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js)
+
+## <a name="##mb_customizable_selector"></a> MusicBrainz Customizable Selector (Packaging, Type, Status, Language, Script)
+
+Adds customizable quick-select buttons for Packaging, Primary Type, Status, Language, and Script in the MusicBrainz release editor, with a field-specific configuration interface.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizableMultiSelector.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js)
