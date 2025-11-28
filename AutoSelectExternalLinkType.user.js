@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MusicBrainz: Auto-Select Discography Link Type
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      3.9
+// @version      1.0
 // @description  Allows configuration of link mappings (URL Regex -> Link Type ID). Automatically selects link types for configured URLs, cleans up URLs on paste, and moves focus to the next link input. Implements strict hierarchical ESC key handling for nested modals.
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js
