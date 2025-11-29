@@ -3,7 +3,7 @@
 - [MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages](#mb_customizable_selector)
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
-- [MusicBrainz: Auto-Select Discography Link Type](#mb_auto_select_discography_link_type)
+- [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
 - [Musicbrainz: Set recording comments for a release](#mb_set_recording_comments_for_a_release)
 - [Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
 - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector)
@@ -47,7 +47,7 @@ Adds a "NO Label" & "NO Catalognumber" button to the MusicBrainz release editor.
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
 
-## <a name="mb_auto_select_discography_link_type"></a> MusicBrainz: MusicBrainz - Auto-Select External Link Types
+## <a name="mb_auto_select_discography_link_type"></a> MusicBrainz - Auto-Select External Link Types
 
 Auto-Select External Link Types on release pages, allows configuration of link mappings (URL Regex -> Link Type ID)
 
