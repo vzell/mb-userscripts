@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MusicBrainz Customizable Language Selector for works and aliases
 // @namespace    https://github.com/YoGo9/Scripts
-// @version      2.0
+// @version      1.0+2025-11-29
 // @description  Add customizable quick-select buttons for languages in MusicBrainz work and alias editor
 // @author       YoGo9 + adaptions by vzell
 // @homepage     https://github.com/YoGo9/Scripts
