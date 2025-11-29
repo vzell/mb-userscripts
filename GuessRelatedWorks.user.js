@@ -3,8 +3,8 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Relation editor: Guess related works in batch
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9-2025-11-29
-// @description  musicbrainz.org relation editor: Guess related works in batch
+// @version      1.0-2025-11-29
+// @description  Guess related works in batch on relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -225,22 +225,30 @@ const fetchSubWorks = (workMbid, replace) => {
       <br />
       <input type="button" id="searchWork" value="Guess works">
       <br />
-      <h3>Link to parts of a main Work</h3>
-      <p>
-        Fill the main work mbid to link selected recordings to (ordered) parts of the work.
-      </p>
-      <span>
-        Repeats:&nbsp;
-      </span>
-      <input type="text" id="repeats" placeholder="n1,n2,n3... (optional)">
-      <span title="${repeatHelp}">🛈</span>
-      <br />
-      <label for="replaceSubworks">Replace work if pre-existing:&nbsp;</label>
-      <input type="checkbox" id="replaceSubworks">
-      <br />
-      <span>Main work name:&nbsp;</span>
-      <input type="text" id="mainWork" placeholder="main work mbid">
-      <input type="button" id="fetchSubworks" value="Load subworks">
+      <details open="" style="margin-left: 8px;">
+        <summary style="display: block;cursor: pointer;">
+          <h3 style="display: list-item; margin: 0;">
+            Link to parts of a main Work
+          </h3>
+        </summary>
+        <div>
+          <p>
+            Fill the main work mbid to link selected recordings to (ordered) parts of the work.
+          </p>
+          <span>
+            Repeats:&nbsp;
+          </span>
+          <input type="text" id="repeats" placeholder="n1,n2,n3... (optional)">
+          <span title="${repeatHelp}">🛈</span>
+          <br />
+          <label for="replaceSubworks">Replace work if pre-existing:&nbsp;</label>
+          <input type="checkbox" id="replaceSubworks">
+          <br />
+          <span>Main work name:&nbsp;</span>
+          <input type="text" id="mainWork" placeholder="main work mbid">
+          <input type="button" id="fetchSubworks" value="Load subworks">
+        </div>
+      </details>
     </div>
     </details>
   `);

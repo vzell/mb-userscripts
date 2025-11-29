@@ -10,7 +10,7 @@
 - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector)
 - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector)
 - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector)
-
+- [MusicBrainz - Relation editor: Guess related works in batch](#mb_guess_related_works)
 
 The Loujine scripts temporarely needed to be patched with the folloing line:
 
@@ -73,6 +73,13 @@ Insert buttons on the Release Edit Relationships page which add preconfigured Ar
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchAddRelationshipsToRecordings.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js)
+
+## <a name="mb_guess_related_works"></a> Relation editor: Guess related works in batch
+
+Guess related works in batch on relation editor
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/GuessRelatedWorks.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/GuessRelatedWorks.user.js)
 
 ## <a name="mb_customizable_primarytype_selector"></a> Customizable PrimaryType Selector
 
