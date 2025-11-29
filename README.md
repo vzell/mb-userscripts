@@ -10,6 +10,7 @@
 - [MusicBrainz UUID Validator (Lowercase Hex)](#mb_uuid_validator)
 - [MusicBrainz: Auto-Select Discography Link Type](#mb_auto_select_discography_link_type)
 - [MusicBrainz Customizable Selector (Packaging, Type, Status, Language, Script)](#mb_customizable_selector)
+- [MusicBrainz Customizable Language Selector for works and aliases](#mb_customizable_language_selector)
 
 
 The Loujine scripts temporarely needed to be patched with the folloing line:
@@ -96,3 +97,10 @@ Adds customizable quick-select buttons for Packaging, Primary Type, Status, Lang
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizableMultiSelector.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js)
+
+## <a name="##mb_customizable_language_selector"></a> MusicBrainz Customizable Language Selector for works and aliases (adopted from YoGo9)
+
+Add customizable quick-select buttons for languages in MusicBrainz work and alias editor.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizableLanguageSelector.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableLanguageSelector.user.js)
