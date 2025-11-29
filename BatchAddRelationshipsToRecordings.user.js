@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Add Preconfigured Relationships To Recordings
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.0+2025-11-29
+// @version      3.0+2025-11-29
 // @description  Insert buttons on the Release Edit Relationships page which add preconfigured Artists with their Relationship Type (instruments/vocal/performer)
 // @author       Gemini & ChatGPT (directed by vzell)
 // @tag          AI generated
@@ -323,6 +323,30 @@
 
     // ----------------- Filling sequence -----------------
     async function fillFieldsAsync(config) {
+        // --- START OF ENHANCEMENT: Ensure "Related type" is "Artist" ---
+        const $relatedTypeSelect = await waitVisible('select.entity-type:visible', {timeout: 3000});
+        const desiredValue = 'artist';
+
+        if ($relatedTypeSelect) {
+            const el = $relatedTypeSelect[0];
+
+            if ($relatedTypeSelect.val() !== desiredValue) {
+                log(`Changing 'Related type' from '${$relatedTypeSelect.val()}' to 'artist'`);
+
+                // Set the value and dispatch events to trigger React re-render
+                setReactValueAndDispatch(el, desiredValue);
+
+                // Give the application a moment to react to the entity-type change
+                await sleep(SMALL_BREATHING_ROOM_MS);
+
+            } else {
+                log("'Related type' is already set to 'artist', skipping change.");
+            }
+        } else {
+            log("Warning: 'Related type' select element not found. Continuing, but this might fail.");
+        }
+        // --- END OF ENHANCEMENT ---
+
         log(`Start filling for: ${config.label} (${config.relationshipType})`);
         const $relInput = await waitVisible('input.relationship-type', {timeout: 4000});
         if (!$relInput) { log("Relationship type input not found — aborting this item."); return false; }
@@ -498,7 +522,6 @@
                 </label>
                 <label>Artist Name: <input type="text" name="artist" value="" placeholder="E.g., Max Weinberg (required)"></label>
 
-                <!-- DYNAMIC FIELDS -->
                 <label class="instrument-field">Instrument (if type='instruments'): <input type="text" name="instrument" value="" placeholder="E.g., drums (drum set)"></label>
                 <label class="vocal-field">Vocal (if type='vocal'): <input type="text" name="vocal" value="" placeholder="E.g., lead vocals"></label>
                 <label class="creditedAs-field">Credited As: <input type="text" name="creditedAs" value="" placeholder="E.g., drums"></label>
@@ -697,7 +720,6 @@
                     </label>
                     <label>Artist Name: <input type="text" name="artist" value="${safeConfig.artist || ''}" placeholder="E.g., Max Weinberg (required)"></label>
 
-                    <!-- DYNAMIC FIELDS -->
                     <label class="instrument-field">Instrument (if type='instruments'): <input type="text" name="instrument" value="${safeConfig.instrument || ''}" placeholder="E.g., drums (drum set)"></label>
                     <label class="vocal-field">Vocal (if type='vocal'): <input type="text" name="vocal" value="${safeConfig.vocal || ''}" placeholder="E.g., lead vocals"></label>
 
