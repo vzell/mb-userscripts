@@ -15876,3 +15876,24 @@ This is the complete userscript:
 })();
 #+end_example
 
+
+*
+
+
+In the uploaded userscript, the whole UI dialog starting with
+
+#+begin_example
+    <summary style="display: block;margin-left: 8px;cursor: pointer;">
+      <h3 style="display: list-item;">
+        Search for works
+      </h3>
+    </summary>
+#+end_example
+
+is collapsible. Please make also the sub dialog starting with
+
+#+begin_example
+<h3>Link to parts of a main Work</h3>
+#+end_example
+
+collapsible.
