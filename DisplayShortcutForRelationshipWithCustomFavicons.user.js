@@ -1,21 +1,24 @@
 // ==UserScript==
-// @name        Display shortcut for relationships on MusicBrainz
-// @namespace   https://musicbrainz.org/user/vzell
-// @version     1.0.1
-// @description Display icon shortcut for relationships of release-group, release, recording and work: e.g. Amazon, Discogs, Wikipedia, ... links. This allows to access some relationships without opening the entity page.
-// @tag         ai-created
-// @author      Aurelien Mino <aurelien.mino@gmail.com>, Gemini (directed by vzell)
-// @licence     GPL (http://www.gnu.org/copyleft/gpl.html)
-// @homepageURL https://github.com/vzell/mb-userscripts
-// @downloadURL https://raw.githubusercontent.com/vzell/mb-userscripts/master/DisplayShortcutForRelationship-CustomFavicons.user.js
-// @updateURL   https://raw.githubusercontent.com/vzell/mb-userscripts/master/DisplayShortcutForRelationship-CustomFavicons.user.js
-// @include     http*://*musicbrainz.org/artist/*
-// @include     http*://*musicbrainz.org/release-group/*
-// @include     http*://*musicbrainz.org/label/*
-// @exclude     */artist/*/recordings*
-// @require     https://code.jquery.com/jquery-3.6.0.min.js
-// @grant       GM_xmlhttpRequest
-// @connect     *
+// @name         VZ: MusicBrainz - Display shortcut for relationships on MusicBrainz
+// @namespace    https://musicbrainz.org/user/vzell
+// @version      1.0+2025-11-29
+// @description  Display icon shortcuts for relationships of release-group, release, recording and work: e.g. Amazon, Discogs, Wikipedia but also selfconfigured ones are supported
+// @author       Aurelien Mino <aurelien.mino@gmail.com> + Gemini (directed by vzell)
+// @tag          AI generated
+// @licence      GPL (http://www.gnu.org/copyleft/gpl.html)
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/DisplayShortcutForRelationshipWithCustomFavicons.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/DisplayShortcutForRelationshipWithCustomFavicons.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @include      http*://*musicbrainz.org/artist/*
+// @include      http*://*musicbrainz.org/release-group/*
+// @include      http*://*musicbrainz.org/label/*
+// @exclude      */artist/*/recordings*
+// @grant        GM_xmlhttpRequest
+// @connect      *
+// @require      https://code.jquery.com/jquery-3.6.0.min.js
+// @license      MIT
 // ==/UserScript==
 
 //**************************************************************************//

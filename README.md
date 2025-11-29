@@ -5,12 +5,11 @@
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
 - [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
 - [Musicbrainz - Generate Recording Comments for a release](#mb_generate_recording_comments_for_a_release)
-- [Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
+- [MusicBrainz - Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
 - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector)
 - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector)
 - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector)
 - [Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
-- [MusicBrainz UUID Validator (Lowercase Hex)](#mb_uuid_validator)
 
 
 The Loujine scripts temporarely needed to be patched with the folloing line:
@@ -63,10 +62,10 @@ Batch set recording comments from a Release page, prefilling from "recorded at:"
 
 ## <a name="mb_relationship_shortcuts"></a> Display shortcut for relationships on MusicBrainz
 
-Display icon shortcut for relationships of release-group, release, recording and work: e.g. Amazon, Discogs, Wikipedia, ... links. This allows to access some relationships without opening the entity page.
+Display icon shortcuts for relationships of release-group, release, recording and work: e.g. Amazon, Discogs, Wikipedia but also selfconfigured ones are supported.
 
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/DisplayShortcutForRelationship-CustomFavicons.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/DisplayShortcutForRelationship-CustomFavicons.user.js)
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/DisplayShortcutForRelationshipWithCustomFavicons.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/DisplayShortcutForRelationshipWithCustomFavicons.user.js)
 
 ## <a name="mb_customizable_primarytype_selector"></a> Customizable PrimaryType Selector
 

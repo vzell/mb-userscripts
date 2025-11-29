@@ -1,16 +1,20 @@
 // ==UserScript==
-// @name         Batch Add Relationships To Recordings
+// @name         VZ: MusicBrainz - Batch Add Preconfigured Relationships To Recordings
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.6.2+2025-11-28 (Feature: Linked fields in Add-Modal, unique removal fix)
+// @version      1.1+2025-11-29
 // @description  Insert artist buttons, open batch-add dialog, reliably fill relationship type (instruments|vocal|performed / performer), artist, instrument/vocal, credited-as, click Done — sequential queue + dialog lifecycle awareness. Optimized for speed.
+// @author       Gemini (directed by vzell)
+// @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
-// @tag          vzell with the help of ChatGPT
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        https://musicbrainz.org/release/*/edit-relationships*
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.6.0.min.js
 // @run-at       document-idle
+// @license      MIT
 // ==/UserScript==
 
 (function() {
