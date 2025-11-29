@@ -976,120 +976,97 @@
             return;
         }
 
+        // --- MAIN WRAPPER (unchanged, but now holds two sub-containers) ---
         let $container = $heading.next('.injected-buttons-container');
         if ($container.length === 0) {
             $container = $(`
-                <div
-                    class="injected-buttons-container"
-                    style="
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                        flex-wrap: wrap;
-                        margin-top: 10px;
-                        margin-bottom: 5px;
-                        padding: 10px 0;
-                        width: 100%;
-                        z-index: 1000;
-                    ">
+                <div class="injected-buttons-container"
+                     style="display:flex; flex-direction:column; gap:8px;
+                            margin-top:10px; margin-bottom:5px; width:100%;">
                 </div>
             `);
             $heading.after($container);
-        } else {
-             $container.find('#aa-batch-buttons').remove();
         }
 
-        // --- 1. Create and prepend the permanent 'Configure' button with 2-line text ---
-        const $configButton = $container.find('#aa-config-btn');
+        // -------------------------------
+        // 1) CONFIG BUTTON CONTAINER (ALWAYS VISIBLE)
+        // -------------------------------
+        let $configContainer = $container.find('#aa-config-container');
+        if ($configContainer.length === 0) {
+            $configContainer = $(`
+                <div id="aa-config-container" style="display:flex; gap:10px; flex-wrap:wrap;">
+                </div>
+            `);
+            $container.append($configContainer);
+        }
+
+        // Add config button if missing
+        let $configButton = $configContainer.find('#aa-config-btn');
         if ($configButton.length === 0) {
             const configButtonStyle = `
-                background-color: #607D8B;
-                color: white;
-                padding: 5px 10px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-weight: bold;
-                transition: all 0.15s ease-in-out;
-                flex-shrink: 0;
-                line-height: 1.2;
+                background-color:#607D8B; color:white;
+                padding:5px 10px; border:none; border-radius:4px;
+                cursor:pointer; font-weight:bold; line-height:1.2; flex-shrink:0;
             `;
 
-            // Updated text: "Configure recording\nrelation buttons"
-            const buttonHtml = '⚙️ Configure recording<br>relation buttons';
-
-            const $config = $('<button/>', {
+            $configButton = $('<button/>', {
                 id: 'aa-config-btn',
-                html: buttonHtml
+                html: '⚙️ Configure recording<br>relation buttons'
             });
 
-            $config.attr('style', configButtonStyle);
-            $container.prepend($config);
-            $config.on('click', showConfigModal);
+            $configButton.attr('style', configButtonStyle);
+            $configButton.on('click', showConfigModal);
+            $configContainer.append($configButton);
         }
 
-        // --- 2. Render the dynamic batch-add buttons ---
+        // -------------------------------
+        // 2) ACTION BUTTON CONTAINER (VISIBILITY CONTROLLED)
+        // -------------------------------
+        let $actionContainer = $container.find('#aa-action-buttons-container');
+        if ($actionContainer.length === 0) {
+            $actionContainer = $(`
+                <div id="aa-action-buttons-container" style="display:none;">
+                    <div id="aa-batch-buttons"
+                         style="display:flex; gap:10px; flex-wrap:wrap;">
+                    </div>
+                </div>
+            `);
+            $container.append($actionContainer);
+        }
+
+        const $batchButtonContainer = $actionContainer.find('#aa-batch-buttons');
+        $batchButtonContainer.empty();
+
+        // Render all dynamic action buttons into this new container
         renderButtons(ARTIST_BUTTONS);
 
-
-        // --- 3. VISIBILITY LOGIC ---
-
+        // -------------------------------
+        // Visibility logic (unchanged, except new container)
+        // -------------------------------
         function getCheckedRecordings() {
-            const $checkedRecordings = $('#tracklist input[type="checkbox"]:not(.work)');
-            return $checkedRecordings;
+            return $('#tracklist input[type="checkbox"]:not(.work)');
         }
 
         function updateButtonVisibility() {
-            try {
-                if (DEBUG_VISIBILITY) log("Update visibility check called.");
+            const $checked = getCheckedRecordings().filter(':checked');
+            const anyChecked = $checked.length > 0;
 
-                const $checked = getCheckedRecordings();
-                const checkedCount = $checked.length;
-                const anyChecked = checkedCount > 0;
-
-                const $batchContainer = $container.find('#aa-batch-buttons');
-                if ($batchContainer.length === 0) return;
-
-                const currentDisplay = $batchContainer.css('display');
-
-                if (currentDisplay === 'flex' && checkedCount === 0) {
-                     if (DEBUG) log("Batch buttons visible, but 0 tracks checked. Forcing OFF.");
-                     $batchContainer.css('display', 'none');
-                     return;
-                }
-
-                if (anyChecked) {
-                    if (currentDisplay === 'none') {
-                        $batchContainer.css('display', 'flex');
-                        if (DEBUG) log("Toggled batch buttons ON (display: flex)");
-                    }
-                } else {
-                    if (currentDisplay === 'flex') {
-                        $batchContainer.css('display', 'none');
-                        if (DEBUG) log("Toggled batch buttons OFF (display: none)");
-                    }
-                }
-            } catch (e) {
-                console.error(LOG_PREFIX, "Error in updateButtonVisibility loop:", e);
+            if (anyChecked) {
+                $actionContainer.show();
+            } else {
+                $actionContainer.hide();
             }
         }
 
         updateButtonVisibility();
 
-        $('#tracklist').on('change click input', 'input[type="checkbox"]', function() {
-             try {
-                 if (DEBUG) log("Checkbox event detected, updating visibility...");
-                 // Use setTimeout to ensure the DOM state is settled after the click/change
-                 setTimeout(updateButtonVisibility, 50);
-             } catch (e) {
-                console.error(LOG_PREFIX, "Error in checkbox event handler:", e);
-             }
+        $('#tracklist').on('change click input', 'input[type="checkbox"]', () => {
+            setTimeout(updateButtonVisibility, 50);
         });
 
-        // Set up the heartbeat check
         setInterval(updateButtonVisibility, VISIBILITY_HEARTBEAT_MS);
 
-        log("Injected custom buttons and configuration.");
+        log("Injected custom buttons using separated containers.");
     }
 
     // ----------------- Main Execution -----------------
