@@ -11,7 +11,7 @@
 // @match        https://musicbrainz.org/work/create
 // @match        https://musicbrainz.org/work/*/edit
 // @match        https://musicbrainz.org/*/*/add-alias
-// @match        https://musicbrainz.org/*/*/alias/edit
+// @match        https://musicbrainz.org/*/*/alias/*/edit
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @license      MIT
