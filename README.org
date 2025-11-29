@@ -10480,6 +10480,2048 @@ and when I remove one, actually both were removed
 
 #+end_example
 
+*** make sure artist is seleted first
+
+In the uploaded userscript, when pressing one of the generated buttons there pops up a dynamically generated dialog (React based) with the following content:
+
+#+begin_example
+<div class="form">
+  <div class="dialog-titlebar">
+    <h1>Add relationship
+    </h1>
+    <div class="buttons-right">
+      <span style="font-weight: normal;">(
+	<a href="#">help
+	</a>)
+      </span>
+    </div>
+  </div>
+  <p>This will add a relationship to all checked recordings.
+  </p>
+  <table class="relationship-details">
+    <tbody>
+      <tr>
+	<td class="required section">Recording
+	</td>
+	<td class="fields">(31 recordings selected)
+	</td>
+      </tr>
+      <tr>
+	<td class="required section">Related type
+	</td>
+	<td class="fields">
+	  <select class="entity-type">
+	    <option value="area">Area
+	    </option>
+	    <option value="artist">Artist
+	    </option>
+	    <option value="event">Event
+	    </option>
+	    <option value="label">Label
+	    </option>
+	    <option value="place">Place
+	    </option>
+	    <option value="recording">Recording
+	    </option>
+	    <option value="release">Release
+	    </option>
+	    <option value="series">Series
+	    </option>
+	    <option value="work">Work
+	    </option>
+	  </select>
+	</td>
+      </tr>
+    </tbody>
+  </table>
+  <h2>
+    <div class="heading-line">
+    </div>
+    <span class="heading-text">Relationship
+    </span>
+  </h2>
+  <table class="relationship-details">
+    <tbody>
+      <tr>
+	<td class="required section">Relationship type
+	</td>
+	<td class="fields">
+	  <label class="autocomplete2-label required" for="relationship-type-artist-recording--915" id="relationship-type-artist-recording--915-label">Type or click to search:
+	  </label>
+	  <div class="autocomplete2 relationship-type">
+	    <div aria-expanded="false" aria-haspopup="listbox" aria-owns="relationship-type-artist-recording--915-menu" class="required" role="combobox">
+	      <input aria-autocomplete="list" aria-controls="relationship-type-artist-recording--915-menu" aria-labelledby="relationship-type-artist-recording--915-label" aria-required="true" autocomplete="off" class="relationship-type required" id="relationship-type-artist-recording--915" placeholder="Type or click to search" type="text" value="">
+	      <button aria-controls="relationship-type-artist-recording--915-menu" aria-haspopup="true" aria-label="Search" class="search" data-toggle="true" role="button" tabindex="-1" title="Search" type="button">
+	      </button>
+	    </div>
+	    <ul aria-controls="relationship-type-artist-recording--915-status" aria-labelledby="relationship-type-artist-recording--915-label" id="relationship-type-artist-recording--915-menu" role="listbox" tabindex="-1">
+	      <li aria-disabled="true" aria-selected="false" class="disabled header-item " id="relationship-type-artist-recording--915-item-recent-items-header" role="option">Recent items
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-type-artist-recording--915-item-148-recent" role="option">instruments
+		<br>
+		<span class="autocomplete-comment">Indicates an artist that performed one or more instruments on this recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-type-artist-recording--915-item-156-recent" role="option">performed / performer
+		<br>
+		<span class="autocomplete-comment">Indicates an artist that performed on this recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-type-artist-recording--915-item-149-recent" role="option">vocals
+		<br>
+		<span class="autocomplete-comment">Indicates an artist that performed vocals on this recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="action-item " id="relationship-type-artist-recording--915-item-clear-recent-items" role="option">Clear recent items
+	      </li>
+	      <li aria-disabled="true" aria-selected="false" class="disabled separator option-item " id="relationship-type-artist-recording--915-item-122" role="option">performance
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-156" role="option">performed / performer
+		<br>
+		<span class="autocomplete-comment">Indicates an artist that performed on this recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level2 option-item " id="relationship-type-artist-recording--915-item-148" role="option">instruments
+		<br>
+		<span class="autocomplete-comment">Indicates an artist that performed one or more instruments on this recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level2 option-item " id="relationship-type-artist-recording--915-item-149" role="option">vocals
+		<br>
+		<span class="autocomplete-comment">Indicates an artist that performed vocals on this recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-150" role="option">orchestra
+		<br>
+		<span class="autocomplete-comment">Indicates an orchestra that performed on this recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-151" role="option">conducted / conductor
+		<br>
+		<span class="autocomplete-comment">This indicates an artist who conducted an orchestra, band or choir on this recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-152" role="option">chorus master
+		<br>
+		<span class="autocomplete-comment">This indicates the chorus master of a choir which performed on this recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-760" role="option">concertmaster for / concertmaster
+		<br>
+		<span class="autocomplete-comment">This indicates an artist who was the concertmaster/leader for an orchestra or band on this recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-1186" role="option">audio director for / audio director
+		<br>
+		<span class="autocomplete-comment">This indicates the artist was an audio director for this recording. This is the artist responsible for the creative realization of an audio project (such as an audio drama or audiobook), which is usually based on a written template and involves the performance of voice actors.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-type-artist-recording--915-item-297" role="option">arranged / arranger
+		<br>
+		<span class="autocomplete-comment">This indicates the artist who arranged a tune into a form suitable for performance. “Arrangement” is used as a catch-all term for all processes that turn a composition into a form that can be played by a specific type of ensemble.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-158" role="option">instruments arranged / instruments arranger
+		<br>
+		<span class="autocomplete-comment">This indicates the artist who arranged a tune into a form suitable for performance. “Arrangement” is used as a catch-all term for all processes that turn a composition into a form that can be played by a specific type of ensemble.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level2 option-item " id="relationship-type-artist-recording--915-item-300" role="option">orchestrated / orchestrator
+		<br>
+		<span class="autocomplete-comment">This indicates the person who orchestrated the recording. Orchestration is a special type of arrangement. It means the adaptation of a composition for an orchestra, done in a way that the musical substance remains essentially unchanged. The orchestrator is also responsible for writing scores for an orchestra, band, choral group, individual instrumentalist(s) or vocalist(s). In practical terms it consists of deciding which instruments should play which notes in a piece of music.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-298" role="option">vocals arranged / vocals arranger
+		<br>
+		<span class="autocomplete-comment">This indicates the artist who arranged a tune into a form suitable for performance. “Arrangement” is used as a catch-all term for all processes that turn a composition into a form that can be played by a specific type of ensemble.
+		</span>
+	      </li>
+	      <li aria-disabled="true" aria-selected="false" class="disabled option-item " id="relationship-type-artist-recording--915-item-157" role="option">remixes and compilations
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-147" role="option">compiled / compiler
+		<br>
+		<span class="autocomplete-comment">This indicates the person who selected the tracks and the sequence for a compilation. This applies to one long recording which contains multiple songs, one after the other. If the tracks are pitched or blended into each other, it is more appropriate to credit this person as a DJ-mixer.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-155" role="option">DJ-mixed / DJ-mixer
+		<br>
+		<span class="autocomplete-comment">This links a DJ-mix to the artist who mixed it.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-153" role="option">remixed / remixer
+		<br>
+		<span class="autocomplete-comment">This links a recording to the person who remixed it by taking one or more other tracks, substantially altering them and mixing them together with other material. Note that this includes the artist who created a mash-up or used samples as well.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-154" role="option">produced material that was sampled in / contains samples by
+		<br>
+		<span class="autocomplete-comment">Indicates that the recording contains samples from material by the indicated artist. Use this only if you really cannot figure out the particular recording that has been sampled.
+		</span>
+	      </li>
+	      <li aria-disabled="true" aria-selected="false" class="disabled option-item " id="relationship-type-artist-recording--915-item-961" role="option">video
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-858" role="option">appears on video / visual appearances
+		<br>
+		<span class="autocomplete-comment">This indicates that an artist appears on a music video, but doesn't actually perform on the audio track.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-962" role="option">video director for / video director
+		<br>
+		<span class="autocomplete-comment">This indicates the artist was the director of this video recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-1243" role="option">animation
+		<br>
+		<span class="autocomplete-comment">This credits a person or agency who worked on animation for a video recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level1 option-item " id="relationship-type-artist-recording--915-item-1241" role="option">artwork
+		<br>
+		<span class="autocomplete-comment">This indicates an artist who provided artwork for a video recording when no more specific information is available.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level2 option-item " id="relationship-type-artist-recording--915-item-1242" role="option">design
+		<br>
+		<span class="autocomplete-comment">This indicates an artist who did design for a video recording.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="level3 option-item " id="relationship-type-artist-recording--915-item-125" role="option">graphic design
+		<br>
+		<span class="autocomplete-comment">This credits the people or agency who did the graphic design / layout for a video recording, arranging pieces of content into a coherent and aesthetically-pleasing whole.
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="separator action-item " id="relationship-type-artist-recording--915-item-show-more" role="option">Show more...
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="separator action-item " id="relationship-type-artist-recording--915-item-toggle-descriptions" role="option">Hide descriptions
+	      </li>
+	    </ul>
+	    <div aria-live="assertive" aria-relevant="additions text" id="relationship-type-artist-recording--915-status" role="status">
+	    </div>
+	  </div>
+	  <div aria-atomic="true" class="error" role="alert">
+	  </div>
+	</td>
+      </tr>
+      <tr>
+	<td class="required section">Artist
+	</td>
+	<td class="fields">
+	  <label class="autocomplete2-label required" for="relationship-target--915" id="relationship-target--915-label">Search for an artist:
+	  </label>
+	  <div class="autocomplete2 relationship-target">
+	    <div aria-expanded="false" aria-haspopup="listbox" aria-owns="relationship-target--915-menu" class="required" role="combobox">
+	      <input aria-autocomplete="list" aria-controls="relationship-target--915-menu" aria-labelledby="relationship-target--915-label" aria-required="true" autocomplete="off" class="relationship-target required" id="relationship-target--915" placeholder="Type to search, or paste an MBID" type="text" value="">
+	      <button aria-controls="relationship-target--915-menu" aria-haspopup="true" aria-label="Search" class="search" data-toggle="true" role="button" tabindex="-1" title="Search" type="button">
+	      </button>
+	    </div>
+	    <ul aria-controls="relationship-target--915-status" aria-labelledby="relationship-target--915-label" id="relationship-target--915-menu" role="listbox" tabindex="-1">
+	      <li aria-disabled="true" aria-selected="false" class="disabled header-item " id="relationship-target--915-item-recent-items-header" role="option">Recent items
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-target--915-item-339449-recent" role="option">Max Weinberg
+		<br>
+		<span class="autocomplete-comment">Person, 1951-04-13 –
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-target--915-item-813-recent" role="option">Bruce Springsteen
+		<br>
+		<span class="autocomplete-comment">Person, 1949-09-23 –
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-target--915-item-47784-recent" role="option">J.D. Souther
+		<br>
+		<span class="autocomplete-comment">Person, 1945-11-02 – 2024-09-17
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-target--915-item-1086-recent" role="option">Jackson Browne
+		<span class="autocomplete-comment">(American singer-songwriter)
+		</span>
+		<br>
+		<span class="autocomplete-comment">Person, 1948-10-09 –
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-target--915-item-11058-recent" role="option">Crosby, Stills, Nash &amp; Young
+		<br>
+		<span class="autocomplete-comment">Group, 1969 – 2015
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-target--915-item-964-recent" role="option">Neil Young
+		<span class="autocomplete-comment">(Canadian singer, songwriter &amp; musician)
+		</span>
+		<br>
+		<span class="autocomplete-comment">Person, 1945-11-12 –
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-target--915-item-1240195-recent" role="option">The E Street Band
+		<br>
+		<span class="autocomplete-comment">Group, 1972-10 –
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-target--915-item-131161-recent" role="option">Eddie Vedder
+		<br>
+		<span class="autocomplete-comment">Person, 1964-12-23 –
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="option-item " id="relationship-target--915-item-713674-recent" role="option">Garry Tallent
+		<br>
+		<span class="autocomplete-comment">Person, 1949-10-27 –
+		</span>
+	      </li>
+	      <li aria-disabled="false" aria-selected="false" class="action-item " id="relationship-target--915-item-clear-recent-items" role="option">Clear recent items
+	      </li>
+	    </ul>
+	    <div aria-live="assertive" aria-relevant="additions text" id="relationship-target--915-status" role="status">
+	    </div>
+	  </div>
+	  <div class="error">
+	  </div>
+	</td>
+      </tr>
+    </tbody>
+  </table>
+  <h2>
+    <div class="heading-line">
+    </div>
+    <span class="heading-text">Preview
+    </span>
+  </h2>
+  <p class="required-fields-note">Please fill out all required fields.
+  </p>
+  <div class="buttons" style="margin-top: 1em;">
+    <button class="negative" type="button">Cancel
+    </button>
+    <div class="buttons-right">
+      <button class="positive" disabled="" type="button">Done
+      </button>
+    </div>
+  </div>
+</div>
+#+end_example
+
+Make sure that in the list option part of the above HTML code, '<option value="artist">Artist</option>' is selected first before executing the rest of the filling logic
+
+#+begin_example
+	<td class="fields">
+	  <select class="entity-type">
+	    <option value="area">Area
+	    </option>
+	    <option value="artist">Artist
+	    </option>
+	    <option value="event">Event
+	    </option>
+	    <option value="label">Label
+	    </option>
+	    <option value="place">Place
+	    </option>
+	    <option value="recording">Recording
+	    </option>
+	    <option value="release">Release
+	    </option>
+	    <option value="series">Series
+	    </option>
+	    <option value="work">Work
+	    </option>
+	  </select>
+	</td>
+#+end_example
+
+That should be the only code change to do, please dont' touch existing logic and comments as everything else works perfectly
+
+#+begin_example
+// ==UserScript==
+// @name         Batch Add Relationships To Recordings
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      1.6.2+2025-11-29 (Feature: Linked fields in Add-Modal, unique removal fix, Entity Type Fix)
+// @description  Insert artist buttons, open batch-add dialog, reliably fill relationship type (instruments|vocal|performed / performer), artist, instrument/vocal, credited-as, click Done — sequential queue + dialog lifecycle awareness. Optimized for speed.
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @tag          vzell with the help of ChatGPT
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js
+// @match        https://musicbrainz.org/release/*/edit-relationships*
+// @grant        none
+// @require      https://code.jquery.com/jquery-3.6.0.min.js
+// @run-at       document-idle
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // *** DEBUGGING FLAGS ***
+    const DEBUG = true;
+    const DEBUG_VISIBILITY = false;
+
+    // --- CONSTANTS ---
+    const LOG_PREFIX = '[add-recording-relations]';
+    const STORAGE_KEY = 'mb_batch_add_buttons_config';
+    const HEADING_SELECTOR = "h2:contains('Track relationships')";
+    const MODAL_DIALOG_SELECTOR = 'div.ui-dialog.relationship-editor:visible';
+    const VISIBILITY_HEARTBEAT_MS = 2000;
+    const AUTOCLOSE_DELAY_MS = 200; // Delay before closing the dialog after 'Done' is clicked
+
+    // --- State Variables ---
+    let $batchContainer; // Container for the custom buttons
+    let dialogQueue = []; // Queue for relationship tasks
+    let isProcessing = false; // Flag to prevent multiple parallel dialog openings
+
+    // --- Utility Functions ---
+
+    /**
+     * Console log wrapper.
+     */
+    function log(message, ...args) {
+        if (DEBUG) {
+            console.log(LOG_PREFIX, message, ...args);
+        }
+    }
+
+    /**
+     * Custom version of forceValue to handle React-controlled inputs.
+     * @param {HTMLElement} input The element to set the value on.
+     * @param {string} value The value to set.
+     */
+    function forceValue(input, value) {
+        if (!input) {
+            log("Attempted to force value on null input.", value);
+            return;
+        }
+
+        // 1. Set the value directly
+        input.value = value;
+
+        // 2. Dispatch 'input' event (bubbles up to notify React of change)
+        let inputEvent = new InputEvent('input', { bubbles: true });
+        input.dispatchEvent(inputEvent);
+
+        // 3. Dispatch 'change' event (standard event for select/input fields)
+        let changeEvent = new Event('change', { bubbles: true });
+        input.dispatchEvent(changeEvent);
+
+        // 4. Dispatch 'blur' event (often triggers validation/save state in frameworks)
+        let blurEvent = new Event('blur', { bubbles: true });
+        input.dispatchEvent(blurEvent);
+
+        log(`Forced value "${value}" on`, input);
+    }
+
+    /**
+     * Utility to simulate a click on an element.
+     * @param {HTMLElement} element The element to click.
+     */
+    function simulateClick(element) {
+        if (element) {
+            element.click();
+            log("Clicked element:", element);
+        }
+    }
+
+    /**
+     * Waits for the batch relationship dialog to appear.
+     * @param {number} timeoutMillis Max time to wait.
+     * @returns {Promise<JQuery<HTMLElement>>} Promise that resolves with the dialog element.
+     */
+    function waitForDialog(timeoutMillis = 10000) {
+        const startTime = Date.now();
+
+        return new Promise((resolve, reject) => {
+            const check = () => {
+                const $dialog = $(MODAL_DIALOG_SELECTOR).filter(':has(h1:contains("Add relationship"))');
+                if ($dialog.length) {
+                    log("Dialog appeared.", $dialog[0]);
+                    resolve($dialog);
+                    return;
+                }
+                if (Date.now() - startTime > timeoutMillis) {
+                    reject(new Error("Timeout waiting for batch relationship dialog to appear."));
+                    return;
+                }
+                setTimeout(check, 50);
+            };
+            check();
+        });
+    }
+
+    /**
+     * Fills the fields in the open dialog based on the task data.
+     * @param {JQuery<HTMLElement>} $dialog The jQuery object for the dialog.
+     * @param {object} task The task object containing relationship details.
+     * @returns {Promise<void>}
+     */
+    async function fillDialogFields($dialog, task) {
+        log("Attempting to fill dialog fields for task:", task);
+
+        // --------------------------------------------------------
+        // CRITICAL FIX: Ensure 'Artist' is selected as the Entity Type.
+        // This is necessary because relationship types like 'instruments' or 'performer'
+        // are only available when the target entity type is 'artist'.
+        // --------------------------------------------------------
+        const $entityTypeSelect = $dialog.find('select.entity-type');
+        if ($entityTypeSelect.length) {
+            const artistOptionValue = 'artist';
+            forceValue($entityTypeSelect[0], artistOptionValue);
+            log(`Set entity type to "${artistOptionValue}".`);
+
+            // MusicBrainz needs time to update the UI (relationship type autocomplete)
+            // after the entity-type selection. Wait briefly.
+            await new Promise(r => setTimeout(r, 200));
+        }
+
+        // 1. Fill Relationship Type (Autocomplete Input)
+        const $typeInput = $dialog.find('input.relationship-type');
+        if ($typeInput.length) {
+            // Note: Autocomplete needs the full text value
+            forceValue($typeInput[0], task.type);
+
+            // Wait for autocomplete menu to appear and select the item
+            await new Promise(r => setTimeout(r, 100)); // Wait for search results
+
+            const $menu = $typeInput.closest('.autocomplete2').find('ul[role="listbox"]');
+            const $targetItem = $menu.find(`li[role="option"]:contains('${task.type}')`).filter(function() {
+                // Ensure we select the main option, not a recent or comment item
+                return $(this).text().trim().toLowerCase().startsWith(task.type.toLowerCase());
+            }).first();
+
+            if ($targetItem.length) {
+                simulateClick($targetItem[0]);
+                log(`Selected relationship type from menu: ${task.type}`);
+            } else {
+                log(`WARN: Could not find menu item for relationship type: ${task.type}. Proceeding anyway.`);
+            }
+
+            // Wait for field value to settle and potentially load sub-fields
+            await new Promise(r => setTimeout(r, 100));
+        }
+
+        // 2. Fill Target Entity (Artist Autocomplete Input)
+        const $targetInput = $dialog.find('input.relationship-target');
+        if ($targetInput.length) {
+            forceValue($targetInput[0], task.artistName);
+
+            // Wait for autocomplete menu to appear and select the item
+            await new Promise(r => setTimeout(r, 100));
+
+            const $menu = $targetInput.closest('.autocomplete2').find('ul[role="listbox"]');
+            // Try to find an exact match first, or the first option
+            const $targetItem = $menu.find(`li[role="option"]:contains('${task.artistName}')`).filter(function() {
+                return $(this).text().trim().split('\n')[0].toLowerCase() === task.artistName.toLowerCase();
+            }).first();
+
+            if ($targetItem.length) {
+                simulateClick($targetItem[0]);
+                log(`Selected target artist from menu: ${task.artistName}`);
+            } else {
+                log(`WARN: Could not find exact menu item for artist: ${task.artistName}. Proceeding anyway.`);
+                // If we can't find an exact match, try clicking the first available recent item or simply rely on the text value.
+                const $firstRecent = $menu.find('li.option-item').not('.disabled').first();
+                 if ($firstRecent.length) {
+                     simulateClick($firstRecent[0]);
+                     log(`WARN: Falling back to clicking the first available option.`);
+                 }
+            }
+
+            // Wait for field value to settle
+            await new Promise(r => setTimeout(r, 100));
+        }
+
+        // 3. Fill Attribute Fields (Instrument/Vocal, Credited As)
+        // Find all text inputs within the relationship details table that are NOT the artist input
+        const $attributeFields = $dialog.find('table.relationship-details').last().find('input[type="text"]').not($targetInput);
+
+        // Note: The structure of attributes is highly variable, so we rely on input order/labeling.
+        $attributeFields.each((index, input) => {
+            const $input = $(input);
+            const value = task.attributes[index];
+            if (value !== undefined) {
+                forceValue(input, value);
+                log(`Set attribute field ${index + 1} to: ${value}`);
+            }
+        });
+
+        // Final brief wait before clicking Done
+        await new Promise(r => setTimeout(r, 100));
+    }
+
+
+    /**
+     * Processes the queue: waits for the dialog, fills fields, clicks 'Done', and moves to the next task.
+     */
+    async function processQueue() {
+        if (isProcessing || dialogQueue.length === 0) {
+            return;
+        }
+
+        isProcessing = true;
+        const task = dialogQueue[0];
+        log(`Starting processing for task: ${task.artistName} / ${task.type}`);
+
+        try {
+            // Open the dialog if it's not already open (should be handled by the button click)
+            const $dialog = await waitForDialog(15000); // 15 second timeout
+
+            await fillDialogFields($dialog, task);
+
+            // Click the 'Done' button
+            const $doneButton = $dialog.find('button.positive:contains("Done")').not(':disabled');
+
+            if ($doneButton.length) {
+                simulateClick($doneButton[0]);
+                log("Clicked 'Done' button.");
+
+                // Wait for the dialog to close and the underlying React state to update
+                await new Promise(r => setTimeout(r, AUTOCLOSE_DELAY_MS));
+                dialogQueue.shift(); // Remove completed task
+                log(`Task completed. ${dialogQueue.length} tasks remaining.`);
+            } else {
+                log("WARN: 'Done' button not enabled/found. Dialog state likely invalid. Skipping task.");
+                dialogQueue.shift(); // Remove failed task to prevent infinite loop
+                await new Promise(r => setTimeout(r, 1000)); // Wait for error state to stabilize
+            }
+        } catch (error) {
+            console.error(LOG_PREFIX, "Error during queue processing:", error);
+            dialogQueue.shift(); // Remove failed task
+            await new Promise(r => setTimeout(r, 500)); // Wait before trying next
+        } finally {
+            isProcessing = false;
+            // Continue processing the next item if available
+            if (dialogQueue.length > 0) {
+                // Ensure all checkboxes are checked before opening the dialog again
+                $(':checkbox.select-recording').prop('checked', true).trigger('change');
+                setTimeout(openBatchAddDialog, 100); // Re-open the dialog for the next task
+            } else {
+                log("Queue finished.");
+            }
+        }
+    }
+
+
+    /**
+     * Opens the batch relationship dialog by simulating a click on the 'Add' button.
+     */
+    function openBatchAddDialog() {
+        const $addButton = $('button.add-multiple-relationships-button').not(':disabled');
+        if ($addButton.length) {
+            simulateClick($addButton[0]);
+            log("Opening batch relationship dialog.");
+            // Start processing queue after opening dialog
+            setTimeout(processQueue, 50);
+        } else {
+            console.error(LOG_PREFIX, "Batch 'Add' button not found or disabled.");
+            isProcessing = false; // Reset processing flag if we fail to open
+        }
+    }
+
+    // --- Configuration and UI ---
+
+    /**
+     * Loads the custom button configuration from storage.
+     * @returns {Array<object>} The array of button configurations.
+     */
+    function loadButtonConfig() {
+        // Default configuration
+        const defaultConfig = [
+            { type: 'performed / performer', label: 'Performer' },
+            { type: 'instruments', label: 'Instruments' },
+            { type: 'vocals', label: 'Vocals' },
+            { type: 'conducted / conductor', label: 'Conductor' },
+            { type: 'remixed / remixer', label: 'Remixer' },
+        ];
+
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            const config = stored ? JSON.parse(stored) : defaultConfig;
+            return Array.isArray(config) ? config : defaultConfig;
+        } catch (e) {
+            console.error(LOG_PREFIX, "Error loading config:", e);
+            return defaultConfig;
+        }
+    }
+
+    /**
+     * Saves the custom button configuration to storage.
+     * @param {Array<object>} config The configuration to save.
+     */
+    function saveButtonConfig(config) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+            log("Config saved.", config);
+        } catch (e) {
+            console.error(LOG_PREFIX, "Error saving config:", e);
+        }
+    }
+
+    /**
+     * Shows the configuration dialog.
+     */
+    function showConfigDialog() {
+        const currentConfig = loadButtonConfig();
+        const dialogId = 'mb-batch-add-config-dialog';
+        let $dialog = $(`#${dialogId}`);
+
+        if ($dialog.length) {
+            $dialog.dialog('open');
+            return;
+        }
+
+        const configHtml = `
+            <div id="${dialogId}" title="Configure Batch Relationship Buttons" style="display:none;">
+                <p>Add/edit buttons for quick-adding relationships to selected recordings.</p>
+                <div id="button-list"></div>
+                <button id="add-new-button" class="btn-default">+</button>
+                <div class="tip" style="margin-top: 10px;">
+                    <strong>Tip:</strong> The Relationship Type must match the exact text found in the dropdown (e.g., 'performed / performer').
+                    Attributes are optional fields (like instrument or credited-as).
+                </div>
+            </div>
+        `;
+        $('body').append(configHtml);
+        $dialog = $(`#${dialogId}`);
+        const $list = $dialog.find('#button-list');
+
+        const renderList = () => {
+            $list.empty();
+            currentConfig.forEach((btn, index) => {
+                const item = $(`
+                    <div class="mb-config-item" style="display:flex; gap: 5px; margin-bottom: 5px; align-items: center; padding: 5px; border: 1px solid #eee; border-radius: 4px;">
+                        <input type="text" class="mb-type-input" placeholder="Relationship Type" value="${btn.type}" style="flex: 2;"/>
+                        <input type="text" class="mb-label-input" placeholder="Button Label" value="${btn.label}" style="flex: 1;"/>
+                        <input type="text" class="mb-attr-input" placeholder="Attributes (comma-separated)" value="${(btn.attributes || []).join(', ')}" style="flex: 2;"/>
+                        <button class="remove-button btn-danger btn-xs" data-index="${index}" type="button" style="padding: 2px 5px; line-height: 1.2;">-</button>
+                    </div>
+                `);
+                $list.append(item);
+            });
+        };
+
+        renderList();
+
+        $dialog.on('click', '.remove-button', function() {
+            const index = $(this).data('index');
+            currentConfig.splice(index, 1);
+            renderList();
+        });
+
+        $dialog.on('click', '#add-new-button', function() {
+            currentConfig.push({ type: '', label: '', attributes: [] });
+            renderList();
+        });
+
+        $dialog.dialog({
+            autoOpen: true,
+            modal: true,
+            width: 700,
+            buttons: {
+                "Save": function() {
+                    const newConfig = [];
+                    $list.find('.mb-config-item').each(function() {
+                        const type = $(this).find('.mb-type-input').val().trim();
+                        const label = $(this).find('.mb-label-input').val().trim();
+                        const attrStr = $(this).find('.mb-attr-input').val().trim();
+                        const attributes = attrStr ? attrStr.split(',').map(s => s.trim()) : [];
+
+                        if (type && label) {
+                            newConfig.push({ type, label, attributes });
+                        }
+                    });
+                    saveButtonConfig(newConfig);
+                    $(this).dialog("close");
+                    // Reload UI after save
+                    $batchContainer.remove();
+                    createCustomButtons();
+                    updateButtonVisibility();
+                },
+                "Cancel": function() {
+                    $(this).dialog("close");
+                }
+            }
+        });
+    }
+
+    /**
+     * Creates and inserts the custom quick-add buttons into the DOM.
+     */
+    function createCustomButtons() {
+        const $target = $(HEADING_SELECTOR);
+        if ($target.length === 0) {
+            log("Target heading not found. Cannot inject buttons.");
+            return;
+        }
+
+        const config = loadButtonConfig();
+
+        // Remove existing container if script runs multiple times
+        if ($batchContainer) {
+            $batchContainer.remove();
+        }
+
+        // Create the container
+        $batchContainer = $('<div id="batch-add-relationships-container" style="display:none; margin-top: 10px; margin-bottom: 5px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center;"></div>');
+
+        // Create buttons from config
+        config.forEach(taskConfig => {
+            const button = $(`<button type="button" class="btn-default" title="Batch add '${taskConfig.type}'">
+                ${taskConfig.label}
+            </button>`);
+
+            button.on('click', function(e) {
+                e.preventDefault();
+                log(`Button clicked: ${taskConfig.label}`);
+
+                // 1. Uncheck and re-check all checkboxes to ensure React state is fresh
+                $(':checkbox.select-recording').prop('checked', false).trigger('change');
+                $(':checkbox.select-recording').prop('checked', true).trigger('change');
+
+                // 2. Prepare tasks for the queue
+                const artistInput = $(`#batch-add-relationships-container .mb-artist-input[data-label="${taskConfig.label}"]`);
+                const artistName = artistInput.length ? artistInput.val().trim() : '';
+
+                if (!artistName) {
+                    console.error(LOG_PREFIX, `Artist name is required for button: ${taskConfig.label}`);
+                    // Instead of alert, use the message box functionality if available, or just log an error.
+                    $('<div title="Missing Artist" style="padding: 10px;">Please enter an artist name in the input field next to the button before using it.</div>')
+                        .dialog({ modal: true, buttons: { Ok: function() { $(this).dialog("close"); } } });
+                    return;
+                }
+
+                dialogQueue.push({
+                    type: taskConfig.type,
+                    artistName: artistName,
+                    attributes: taskConfig.attributes || []
+                });
+
+                // 3. Start processing (opens the dialog for the first task)
+                openBatchAddDialog();
+            });
+
+            // Create input field for the artist
+            const artistInput = $(`
+                <input type="text"
+                       class="mb-artist-input"
+                       data-label="${taskConfig.label}"
+                       placeholder="Artist for ${taskConfig.label}"
+                       style="width: 150px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 11px; height: 28px;"/>
+            `);
+
+            // Wrap button and input in a group container
+            const group = $(`<div class="mb-button-group" style="display: flex; gap: 2px;"></div>`);
+            group.append(artistInput, button);
+            $batchContainer.append(group);
+        });
+
+        // Add the config button
+        const configButton = $(`<button type="button" class="btn-default" style="margin-left: auto;" title="Configure Buttons">⚙️</button>`);
+        configButton.on('click', showConfigDialog);
+        $batchContainer.append(configButton);
+
+        // Insert container after the target heading
+        $target.after($batchContainer);
+        log("Custom buttons injected.");
+    }
+
+    /**
+     * Resets the initial state of the checkboxes and the queue.
+     * This is useful on initial load or if the user navigates back to the page.
+     */
+    function resetInitialState() {
+        dialogQueue = [];
+        isProcessing = false;
+        // Check all recordings by default
+        $(':checkbox.select-recording').prop('checked', true).trigger('change');
+    }
+
+    /**
+     * Checks the state of checkboxes and updates the custom button visibility.
+     */
+    function updateButtonVisibility() {
+        if (!$batchContainer) {
+            if (DEBUG_VISIBILITY) log("Container not ready.");
+            return;
+        }
+
+        const $checkedCheckboxes = $(':checkbox.select-recording:checked');
+        const $addButton = $('button.add-multiple-relationships-button'); // MusicBrainz native button
+
+        try {
+            if (dialogQueue.length > 0) {
+                // If queue is active, keep buttons hidden to prevent user interruption
+                $batchContainer.css('display', 'none');
+                if (DEBUG_VISIBILITY) log("Queue active, hiding batch buttons.");
+                return;
+            }
+
+            if ($checkedCheckboxes.length > 0 && $addButton.length > 0 && !$addButton.is(':disabled')) {
+                // If at least one recording is checked and the native button is active, show custom buttons
+                $batchContainer.css('display', 'flex');
+                if (DEBUG_VISIBILITY) log("Checked recordings found, showing batch buttons.");
+            } else {
+                // No checked recordings or native button is disabled, hide custom buttons
+                // Only hide if not currently processing
+                const currentDisplay = $batchContainer.css('display');
+                if (currentDisplay === 'flex') {
+                    $batchContainer.css('display', 'none');
+                    if (DEBUG_VISIBILITY) log("Toggled batch buttons OFF (display: none)");
+                }
+            }
+        } catch (e) {
+            console.error(LOG_PREFIX, "Error in updateButtonVisibility loop:", e);
+        }
+    }
+
+
+    // ----------------- Main Execution -----------------
+
+    function initialize() {
+        log("Starting userscript execution...");
+        // Ensure jQuery UI dialog is available if running on a standard MB page
+        // If not available, the config dialog will gracefully fail to open but the core functionality will work.
+
+        resetInitialState();
+        createCustomButtons();
+
+        // Initial check and subsequent checks for visibility change
+        updateButtonVisibility();
+
+        // Listen for changes to the checkbox states to toggle button visibility
+        $('#tracklist').on('change click input', 'input[type="checkbox"]', function() {
+             try {
+                 if (DEBUG) log("Checkbox event detected, updating visibility...");
+                 // Use setTimeout to ensure the DOM state is settled after the click/change
+                 setTimeout(updateButtonVisibility, 50);
+             } catch (e) {
+                console.error(LOG_PREFIX, "Error in checkbox event handler:", e);
+             }
+        });
+
+        // Set up the heartbeat check for dialog status and visibility
+        setInterval(updateButtonVisibility, VISIBILITY_HEARTBEAT_MS);
+
+        log("Injected custom buttons and configuration.");
+    }
+
+    // Use a small delay to ensure all required elements (like jQuery) are loaded
+    try {
+        setTimeout(initialize, 500);
+    } catch (error) {
+        console.error(LOG_PREFIX, "CRITICAL SCRIPT FAILURE during initial setup:", error);
+    }
+
+})();
+#+end_example
+
+*** sdsds
+
+Please leave the following userscript completly intact and just add the critical fix funtionality right after the line
+
+#+begin_example
+log(`Start filling for: ${config.label} (${config.relationshipType})`);
+#+end_example
+
+This is the complete userscript:
+
+#+begin_example
+// ==UserScript==
+// @name         Batch Add Relationships To Recordings
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      1.6.2+2025-11-28 (Feature: Linked fields in Add-Modal, unique removal fix)
+// @description  Insert artist buttons, open batch-add dialog, reliably fill relationship type (instruments|vocal|performed / performer), artist, instrument/vocal, credited-as, click Done — sequential queue + dialog lifecycle awareness. Optimized for speed.
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @tag          vzell with the help of ChatGPT
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js
+// @match        https://musicbrainz.org/release/*/edit-relationships*
+// @grant        none
+// @require      https://code.jquery.com/jquery-3.6.0.min.js
+// @run-at       document-idle
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // *** DEBUGGING FLAGS ***
+    const DEBUG = true;
+    const DEBUG_VISIBILITY = false;
+
+    // --- CONSTANTS ---
+    const LOG_PREFIX = '[add-recording-relations]';
+    const STORAGE_KEY = 'mb_batch_add_buttons_config';
+    const HEADING_SELECTOR = "h2:contains('Track relationships')";
+    const GLOBAL_CHAR_DELAY_MS = 10;
+    const GLOBAL_POST_SELECT_WAIT_MS = 150;
+    const SMALL_BREATHING_ROOM_MS = 150;
+    const VISIBILITY_HEARTBEAT_MS = 500;
+
+    // Define the order for sorting buttons
+    const RELATIONSHIP_ORDER = {
+        'instruments': 1,
+        'vocal': 2,
+        'performed / performer': 3,
+        'default': 99
+    };
+
+    function log(...args) {
+        if (DEBUG) console.log(LOG_PREFIX, ...args);
+    }
+
+    // --- Sorting Utility ---
+    function sortButtons(buttons) {
+        // Sorts the passed array in place based on relationship type order
+        buttons.sort((a, b) => {
+            const orderA = RELATIONSHIP_ORDER[a.relationshipType] || RELATIONSHIP_ORDER['default'];
+            const orderB = RELATIONSHIP_ORDER[b.relationshipType] || RELATIONSHIP_ORDER['default'];
+
+            // Secondary sort by label for consistency within groups
+            if (orderA === orderB) {
+                return a.label.localeCompare(b.label);
+            }
+            return orderA - orderB;
+        });
+        return buttons;
+    }
+
+    // --- DEFAULT CONFIGURATION ---
+    const DEFAULT_BUTTONS = [
+        {
+            label: "Max Weinberg",
+            relationshipType: "instruments",
+            artist: "Max Weinberg",
+            instrument: "drums (drum set)",
+            vocal: "", // Kept here for consistency in the configuration object structure
+            creditedAs: "drums"
+        },
+        {
+            label: "Garry Tallent",
+            relationshipType: "instruments",
+            artist: "Garry Tallent",
+            instrument: "electric bass guitar",
+            vocal: "",
+            creditedAs: ""
+        },
+        {
+            label: "Bruce Springsteen",
+            relationshipType: "vocal",
+            artist: "Bruce Springsteen",
+            instrument: "",
+            vocal: "lead vocals",
+            creditedAs: ""
+        },
+        {
+            label: "E Street Band",
+            relationshipType: "performed / performer",
+            artist: "The E Street Band"
+        }
+    ];
+
+    // --- STATE & PERSISTENCE ---
+    let ARTIST_BUTTONS = [];
+
+    // --- CRITICAL: GLOBAL QUEUE AND PROCESSING STATE ---
+    const queue = [];
+    let processing = false;
+
+    // Helper to provide a full default object structure for merging
+    const FULL_DEFAULT_BUTTON = {
+        label: 'New Button',
+        relationshipType: 'instruments',
+        artist: '',
+        instrument: '',
+        vocal: '',
+        creditedAs: '',
+    };
+
+    function getInitialButtons() {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    log("Loaded button configuration from localStorage.");
+                    const loadedButtons = parsed.map(btn => ({
+                        ...FULL_DEFAULT_BUTTON, // Use default to ensure all keys exist
+                        ...btn,                // Overwrite with stored values
+                        // Ensure all required fields for instruments/vocal are there, even if empty
+                        instrument: btn.instrument || '',
+                        vocal: btn.vocal || '',
+                        creditedAs: btn.creditedAs || '',
+                    }));
+                    return sortButtons(loadedButtons);
+                }
+            }
+        } catch (e) {
+            console.error(LOG_PREFIX, "Error loading buttons from localStorage, using default.", e);
+        }
+        log("Using default hardcoded button configuration.");
+        return sortButtons(DEFAULT_BUTTONS.map(btn => ({...FULL_DEFAULT_BUTTON, ...btn})));
+    }
+
+    function saveButtons(buttons) {
+        try {
+            // 1. Filter out invalid/empty buttons
+            const safeButtons = buttons.filter(btn => btn.label && btn.label.trim() !== '' && btn.artist && btn.artist.trim() !== '');
+
+            // 2. Map and clean: only save relevant fields based on relationship type
+            const cleanedButtons = safeButtons.map(btn => {
+                const clean = {
+                    label: btn.label,
+                    relationshipType: btn.relationshipType,
+                    artist: btn.artist,
+                };
+
+                if (btn.relationshipType === 'instruments') {
+                    clean.instrument = btn.instrument;
+                    clean.creditedAs = btn.creditedAs;
+                } else if (btn.relationshipType === 'vocal') {
+                    clean.vocal = btn.vocal;
+                    clean.creditedAs = btn.creditedAs;
+                }
+                // For 'performed / performer', instrument, vocal, and creditedAs are omitted.
+                return clean;
+            });
+
+            const sortedButtons = sortButtons(cleanedButtons);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sortedButtons));
+            log(`Saved ${sortedButtons.length} button configurations to localStorage.`);
+            return sortedButtons;
+        } catch (e) {
+            console.error(LOG_PREFIX, "Error saving buttons to localStorage.", e);
+            return buttons;
+        }
+    }
+
+    // Initialize the buttons
+    ARTIST_BUTTONS = getInitialButtons();
+
+
+    // ----------------- Utilities -----------------
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+    async function waitVisible(selector, opts = {}) {
+        const timeout = opts.timeout ?? 5000;
+        const interval = opts.interval ?? 50;
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            const $el = $(selector).filter(':visible');
+            if ($el.length) return $el;
+            await sleep(interval);
+        }
+        return null;
+    }
+    async function waitDialogClosed(timeout = 2000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            // Check for both the main modals and the specific config overlays
+            const $visibleDialogs = $('.modal, .Dialog, .dialog, .ui-dialog, .ui-widget-overlay, #aa-config-modal-overlay, #aa-add-new-modal-overlay').filter(':visible');
+            if ($visibleDialogs.length === 0) {
+                await sleep(SMALL_BREATHING_ROOM_MS);
+                return true;
+            }
+            await sleep(50);
+        }
+        return false;
+    }
+    async function waitForCondition(conditionFn, {timeout = 3000, interval = 50} = {}) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            try {
+                if (await conditionFn()) return true;
+            } catch (e) { /* ignore */ }
+            await sleep(interval);
+        }
+        return false;
+    }
+    function setReactValueAndDispatch(el, value) {
+        try {
+            const nativeSetter = Object.getOwnPropertyDescriptor(el.__proto__, 'value')?.set;
+            if (nativeSetter) nativeSetter.call(el, value);
+            else el.value = value;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+        } catch (e) {
+            el.value = value;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+    function clearInput(el) { setReactValueAndDispatch(el, ''); }
+    async function typeAndSelect($input, text, {
+        charDelay = GLOBAL_CHAR_DELAY_MS,
+        postSelectWait = GLOBAL_POST_SELECT_WAIT_MS,
+        optionSelector = "li[role='option']"
+    } = {}) {
+        const el = $input[0];
+        if (!el) throw new Error('Input element missing');
+        el.focus();
+        clearInput(el);
+        await sleep(50);
+        for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            const newValue = el.value + ch;
+            setReactValueAndDispatch(el, newValue);
+            await sleep(charDelay);
+        }
+        await sleep(100);
+        const found = await waitForCondition(() => {
+            const $opts = $(optionSelector).filter(':visible');
+            if (!$opts.length) return false;
+            const match = $opts.toArray().find(o => $(o).text().trim().toLowerCase().startsWith(text.toLowerCase()));
+            if (match) { match.click(); return true; }
+            const match2 = $opts.toArray().find(o => $(o).text().trim().toLowerCase().includes(text.toLowerCase()));
+            if (match2) { match2.click(); return true; }
+            return false;
+        }, {timeout: 3000, interval: 80});
+        if (!found) { log(`Warning: option for "${text}" not found in suggestions after timeout.`); }
+        await sleep(postSelectWait);
+    }
+    async function openBatchAddDialog() {
+        await waitDialogClosed(2000);
+        const $batch = $("button.add-item.with-label.batch-add-recording-relationship, button.add-item.batch-add-recording-relationship, button.add-item.with-label").filter(function() {
+            const t = $(this).text().toLowerCase();
+            return t.includes('batch-add') || t.includes('batch add') || (t.includes('add') && t.includes('record'));
+        });
+        if ($batch.length === 0) { log("Batch-add button not found via selectors"); return false; }
+        $batch[0].click();
+        const appeared = await waitForCondition(() => {
+            const $d = $('.modal, .Dialog, .dialog, .ui-dialog').filter(':visible');
+            return $d.length > 0;
+        }, {timeout: 3000, interval: 80});
+        if (!appeared) { await sleep(300); }
+        await sleep(SMALL_BREATHING_ROOM_MS);
+        return true;
+    }
+    async function clickDoneAndWaitClose() {
+        const $doneButton = await waitVisible('button.positive:visible', {timeout: 4000});
+        if ($doneButton) {
+            const $exactDone = $doneButton.filter((i, btn) => $(btn).text().trim() === 'Done');
+            if ($exactDone.length) {
+                log("Clicking Done");
+                $exactDone[0].click();
+                await waitForCondition(() => {
+                    const $d = $('.modal, .Dialog, .dialog, .ui-dialog').filter(':visible');
+                    return $d.length === 0;
+                }, {timeout: 3000, interval: 80});
+                await sleep(SMALL_BREATHING_ROOM_MS);
+                return true;
+            }
+        }
+        log("Done button not found (when trying to click Done).");
+        return false;
+    }
+
+    // --- Initial State Cleanup ---
+    function resetInitialState() {
+        const $allRecordings = $('#tracklist input[type="checkbox"]:not(.work)');
+        const $checkedOnLoad = $allRecordings.filter(':checked');
+
+        if ($checkedOnLoad.length > 0) {
+            log(`Initial state fix: Found ${$checkedOnLoad.length} checked checkboxes on load. Forcing uncheck with aggressive click simulation.`);
+
+            $checkedOnLoad.each(function() {
+                const el = this;
+                try {
+                    el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+                } catch(e) {
+                    $(el).click();
+                }
+            });
+
+            setTimeout(() => {
+                const $stillChecked = $allRecordings.filter(':checked');
+                if ($stillChecked.length > 0) {
+                    log(`Warning: Aggressive uncheck failed. Still checked: ${$stillChecked.length}`);
+                } else {
+                    log("Initial state fix successful: 0 checked recordings after cleanup.");
+                }
+            }, 100);
+
+            return true;
+        }
+        log("Initial state fix: Found 0 checked checkboxes on load. State is clean.");
+        return false;
+    }
+
+    // ----------------- Filling sequence -----------------
+    async function fillFieldsAsync(config) {
+        log(`Start filling for: ${config.label} (${config.relationshipType})`);
+        const $relInput = await waitVisible('input.relationship-type', {timeout: 4000});
+        if (!$relInput) { log("Relationship type input not found — aborting this item."); return false; }
+        log(`Typing relationshipType '${config.relationshipType}'`);
+        await typeAndSelect($relInput, config.relationshipType);
+
+        const $artist = await waitVisible('input[placeholder="Type to search, or paste an MBID"]', {timeout: 4000});
+        if (!$artist) { log("Artist input not found — aborting this item."); return false; }
+        log(`Typing artist '${config.artist}'`);
+        await typeAndSelect($artist, config.artist);
+
+        if (config.relationshipType === 'performed / performer') {
+            // This relationship type does not have instrument, vocal, or credited-as fields.
+            log("Performed / performer detected — skipping attributes and clicking Done.");
+            await clickDoneAndWaitClose();
+            log(`Finished performer item: ${config.label}`);
+            return true;
+        }
+
+        const placeholderName = config.relationshipType === 'instruments' ? 'instrument' : 'vocal';
+
+        // Fill Instrument/Vocal
+        if (config.relationshipType === 'instruments' || config.relationshipType === 'vocal') {
+            const $inst = await waitVisible(`input[placeholder="${placeholderName}"]`, {timeout: 4000});
+            if (!$inst) { log(`${placeholderName} input not found — aborting this item.`); return false; }
+            const desired = (config.relationshipType === 'instruments') ? config.instrument : config.vocal;
+            if (desired && desired.length > 0) {
+                log(`Typing ${placeholderName} '${desired}'`);
+                await typeAndSelect($inst, desired);
+            } else {
+                log(`No ${placeholderName} value provided, skipping selection.`);
+            }
+        }
+
+        // Fill Credited As
+        const creditedAsValue = config.creditedAs ?? '';
+
+        if (config.relationshipType !== 'performed / performer' && creditedAsValue.length > 0) {
+            log("Attempting to fill 'Credited as' field…");
+            // Find the visible 'credited as' input, prioritizing the one associated with the relationship type
+            let $creditedInput = $("input:visible").filter((i, el) => {
+                const cls = (el.className || '').toLowerCase();
+                return cls.includes('attribute-credit');
+            }).first();
+
+            // Fallback strategy if initial filter is too broad/narrow
+            if ($creditedInput.length === 0) {
+                 $creditedInput = $("input:visible").filter((i, el) => {
+                    const idn = (el.id || '').toLowerCase();
+                    const name = (el.name || '').toLowerCase();
+                    return idn.includes('credit') || name.includes('credit');
+                }).first();
+            }
+
+            if ($creditedInput && $creditedInput.length) {
+                const el = $creditedInput[0];
+                setReactValueAndDispatch(el, creditedAsValue);
+                await sleep(100);
+                log(`'Credited as' set to "${creditedAsValue}"`);
+            } else {
+                log("Could not find credited-as input; skipping.");
+            }
+        } else {
+            log("Skipping 'Credited as' filling (either not relevant or no value provided).");
+        }
+
+        const doneClicked = await clickDoneAndWaitClose();
+        if (doneClicked) {
+            log(`Finished item: ${config.label}`);
+            return true;
+        } else {
+            log("Done not clicked (not found) — but continuing.");
+            return true;
+        }
+    }
+
+
+    // ----------------- Queue Processing -----------------
+
+    async function processQueue() {
+        if (processing) return;
+        processing = true;
+        while (queue.length) {
+            const config = queue.shift();
+            try {
+                log(`Processing queue item: ${config.label}`);
+                const opened = await openBatchAddDialog();
+                if (!opened) {
+                    log("Could not open batch-add dialog — skipping this item.");
+                    await sleep(SMALL_BREATHING_ROOM_MS);
+                    continue;
+                }
+                await fillFieldsAsync(config);
+                await sleep(200);
+            } catch (e) {
+                console.error(LOG_PREFIX, "Error processing item", e);
+                await sleep(500);
+            }
+        }
+        processing = false;
+        log("Batch processing queue finished.");
+    }
+
+
+    // ----------------- Modal UI -----------------
+
+    // Function to dynamically show/hide fields based on relationship type
+    function updateFieldVisibility($item) {
+        const type = $item.find('select[name="relationshipType"]').val();
+
+        // Hide all dynamic fields first
+        $item.find('.instrument-field').hide();
+        $item.find('.vocal-field').hide();
+        $item.find('.creditedAs-field').show(); // Default to visible
+
+        if (type === 'instruments') {
+            $item.find('.instrument-field').show();
+        } else if (type === 'vocal') {
+            $item.find('.vocal-field').show();
+        } else if (type === 'performed / performer') {
+            // Hide all attribute fields for this type
+            $item.find('.creditedAs-field').hide();
+        }
+    }
+
+    function showAddButtonModal(saveCallback) {
+        // Ensure only one modal is present
+        $('#aa-add-new-modal-overlay').remove();
+
+        const MODAL_STYLE = `
+            #aa-add-new-modal-overlay {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.75); z-index: 10000; /* Higher Z-index than main config modal */
+                display: flex; justify-content: center; align-items: center;
+            }
+            #aa-add-new-modal {
+                background: white; padding: 20px; border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); max-width: 500px;
+                width: 90%;
+                font-family: Arial, sans-serif; color: #333;
+            }
+            #aa-add-new-modal h4 { margin-top: 0; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+            #aa-add-new-modal label { display: block; margin-top: 8px; font-weight: bold; font-size: 0.9em; }
+            #aa-add-new-modal input, #aa-add-new-modal select {
+                width: 100%; padding: 6px; margin-top: 4px; box-sizing: border-box;
+                border: 1px solid #ccc; border-radius: 4px;
+            }
+            .aa-add-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+            .aa-add-footer button { padding: 8px 15px; cursor: pointer; border-radius: 4px; border: none; }
+            .aa-add-save-btn { background-color: #4CAF50; color: white; }
+            .aa-add-cancel-btn { background-color: #ccc; color: #333; }
+        `;
+
+        // Add the new style block
+        if ($('#aa-add-new-modal-style').length === 0) {
+             $('head').append(`<style id="aa-add-new-modal-style">${MODAL_STYLE}</style>`);
+        }
+
+        const $overlay = $('<div id="aa-add-new-modal-overlay">');
+        const $modal = $('<div id="aa-add-new-modal">');
+
+        $modal.html(`
+            <h4>Add New Button Configuration</h4>
+            <div id="aa-add-form">
+                <label>Label (Button Text): <input type="text" name="label" value="" placeholder="E.g., Max Weinberg"></label>
+
+                <label>Relationship Type:
+                    <select name="relationshipType">
+                        <option value="instruments">instruments</option>
+                        <option value="vocal">vocal</option>
+                        <option value="performed / performer">performed / performer</option>
+                    </select>
+                </label>
+                <label>Artist Name: <input type="text" name="artist" value="" placeholder="E.g., Max Weinberg (required)"></label>
+
+                <!-- DYNAMIC FIELDS -->
+                <label class="instrument-field">Instrument (if type='instruments'): <input type="text" name="instrument" value="" placeholder="E.g., drums (drum set)"></label>
+                <label class="vocal-field">Vocal (if type='vocal'): <input type="text" name="vocal" value="" placeholder="E.g., lead vocals"></label>
+                <label class="creditedAs-field">Credited As: <input type="text" name="creditedAs" value="" placeholder="E.g., drums"></label>
+            </div>
+            <div class="aa-add-footer">
+                <button class="aa-add-cancel-btn">Cancel</button>
+                <button class="aa-add-save-btn">Add Button</button>
+            </div>
+        `);
+
+        const $form = $modal.find('#aa-add-form');
+        const $select = $form.find(`select[name="relationshipType"]`);
+        const $labelInput = $form.find('input[name="label"]');
+        const $artistInput = $form.find('input[name="artist"]');
+
+        let artistEditedManually = false;
+
+        // 1. Artist Sync Logic
+        $artistInput.on('input', () => {
+            // Once the user types anything in the artist field, disable syncing
+            artistEditedManually = true;
+        });
+
+        $labelInput.on('input', function() {
+            if (!artistEditedManually) {
+                // Only sync if the artist field hasn't been manually touched
+                $artistInput.val($(this).val());
+            }
+        });
+
+        // 2. Field Visibility Logic
+        const updateAddModalVisibility = () => {
+             // Use the same logic as the main modal updateFieldVisibility
+             const type = $select.val();
+             $form.find('.instrument-field').hide();
+             $form.find('.vocal-field').hide();
+             $form.find('.creditedAs-field').show();
+
+             if (type === 'instruments') {
+                 $form.find('.instrument-field').show();
+             } else if (type === 'vocal') {
+                 $form.find('.vocal-field').show();
+             } else if (type === 'performed / performer') {
+                 $form.find('.creditedAs-field').hide();
+             }
+        };
+
+        // Initial visibility
+        updateAddModalVisibility();
+
+        // Add change listener for dynamic visibility
+        $select.on('change', updateAddModalVisibility);
+
+        const cleanupAndClose = () => {
+            $(document).off('keydown', escapeHandler);
+            $overlay.remove();
+        }
+
+        $modal.on('click', '.aa-add-cancel-btn', cleanupAndClose);
+
+        $modal.on('click', '.aa-add-save-btn', function() {
+            const newButton = {
+                label: $labelInput.val().trim(),
+                relationshipType: $select.val(),
+                artist: $artistInput.val().trim(),
+                instrument: $form.find('input[name="instrument"]').val().trim(),
+                vocal: $form.find('input[name="vocal"]').val().trim(),
+                creditedAs: $form.find('input[name="creditedAs"]').val().trim(),
+            };
+
+            if (!newButton.label || !newButton.artist) {
+                // Using alert() here as it is inside a custom modal flow and should be seen
+                alert("Both Label and Artist Name are required to add a new button.");
+                return;
+            }
+
+            saveCallback(newButton);
+            cleanupAndClose();
+        });
+
+        // Escape Key Handler
+        const escapeHandler = function(e) {
+            const isInput = $(e.target).is('input, select, textarea');
+            if (e.key === 'Escape' && !isInput) {
+                e.preventDefault();
+                e.stopPropagation();
+                cleanupAndClose();
+            }
+        };
+
+        $(document).on('keydown', escapeHandler);
+
+        $overlay.append($modal);
+        $('body').append($overlay);
+    }
+
+    function showConfigModal() {
+        // Ensure only one modal is present
+        $('#aa-config-modal-overlay').remove();
+
+        // Deep clone the current buttons for local manipulation
+        // Note: currentButtons will be dynamically replaced by getCurrentConfigFromForm(true)
+        // when changes occur in the DOM, making it match the current view.
+        let currentButtons = ARTIST_BUTTONS.map(a => Object.assign({}, a));
+
+        // Capture the initial state string (must be sorted for a reliable comparison)
+        const initialConfigString = JSON.stringify(sortButtons(currentButtons.map(a => Object.assign({}, a))));
+
+        const MODAL_STYLE = `
+            #aa-config-modal-overlay {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.75); z-index: 9999;
+                display: flex; justify-content: center; align-items: center;
+            }
+            #aa-config-modal {
+                background: white; padding: 20px; border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); max-width: 800px;
+                width: 90%; max-height: 90%;
+                font-family: Arial, sans-serif; color: #333;
+                display: flex; /* Flex container for scrollable content + fixed footer */
+                flex-direction: column;
+            }
+            #aa-config-modal h3 { margin-top: 0; border-bottom: 1px solid #ccc; padding-bottom: 10px; flex-shrink: 0; }
+
+            #aa-config-scroll-area {
+                overflow-y: auto; /* Scrollable content area */
+                flex-grow: 1;
+                padding-right: 5px; /* Add slight padding for scrollbar visibility */
+            }
+
+            .aa-config-item {
+                border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px;
+                background-color: #f9f9f9;
+            }
+            .aa-config-item h4 { margin: 0 0 10px 0; display: flex; justify-content: space-between; align-items: center; }
+            .aa-config-item label { display: block; margin-top: 8px; font-weight: bold; font-size: 0.9em; }
+            .aa-config-item input, .aa-config-item select {
+                width: 100%; padding: 6px; margin-top: 4px; box-sizing: border-box;
+                border: 1px solid #ccc; border-radius: 4px;
+            }
+            /* FIXED FOOTER STYLE */
+            .aa-config-footer {
+                display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px;
+                border-top: 1px solid #ccc;
+                flex-shrink: 0;
+            }
+            .aa-config-footer button {
+                padding: 8px 15px; cursor: pointer; border-radius: 4px; border: none;
+                font-weight: bold;
+            }
+            .aa-remove-btn { background-color: #f44336; color: white; border: none; padding: 4px 8px; font-size: 0.8em; cursor: pointer; }
+            .aa-add-btn, .aa-save-btn { /* Apply cursor to Add New button */
+                cursor: pointer;
+            }
+            .aa-add-btn { background-color: #007bff; color: white; border: none; }
+            .aa-save-btn { background-color: #4CAF50; color: white; border: none; }
+            .aa-close-btn { background-color: #ccc; color: #333; border: none; cursor: pointer; }
+        `;
+
+        // Apply styles
+        if ($('#aa-config-modal-style').length === 0) {
+             $('head').append(`<style id="aa-config-modal-style">${MODAL_STYLE}</style>`);
+        }
+
+
+        const $overlay = $('<div id="aa-config-modal-overlay">');
+        const $modal = $('<div id="aa-config-modal">');
+        $modal.html('<h3>Batch Relationship Button Configuration</h3><div id="aa-config-scroll-area"><div id="aa-config-form"></div></div>');
+
+        const $scrollArea = $modal.find('#aa-config-scroll-area');
+        const $formContainer = $modal.find('#aa-config-form');
+
+        const renderForm = (buttons) => {
+            $formContainer.empty();
+            // Important: Render the *sorted* array
+            buttons.forEach((config, index) => {
+                const $item = $(`<div class="aa-config-item" data-index="${index}">`);
+
+                // Use default values if keys are missing (e.g., in a cleaned 'performed / performer' object)
+                const safeConfig = {...FULL_DEFAULT_BUTTON, ...config};
+
+                // Build the item structure
+                $item.append(`
+                    <h4>
+                        Button ${index + 1}: ${safeConfig.label}
+                        <button class="aa-remove-btn">Remove</button>
+                    </h4>
+                    <label>Label (Button Text): <input type="text" name="label" value="${safeConfig.label || ''}" placeholder="E.g., Max Weinberg"></label>
+
+                    <label>Relationship Type:
+                        <select name="relationshipType">
+                            <option value="instruments">instruments</option>
+                            <option value="vocal">vocal</option>
+                            <option value="performed / performer">performed / performer</option>
+                        </select>
+                    </label>
+                    <label>Artist Name: <input type="text" name="artist" value="${safeConfig.artist || ''}" placeholder="E.g., Max Weinberg (required)"></label>
+
+                    <!-- DYNAMIC FIELDS -->
+                    <label class="instrument-field">Instrument (if type='instruments'): <input type="text" name="instrument" value="${safeConfig.instrument || ''}" placeholder="E.g., drums (drum set)"></label>
+                    <label class="vocal-field">Vocal (if type='vocal'): <input type="text" name="vocal" value="${safeConfig.vocal || ''}" placeholder="E.g., lead vocals"></label>
+
+                    <label class="creditedAs-field">Credited As: <input type="text" name="creditedAs" value="${safeConfig.creditedAs || ''}" placeholder="E.g., drums"></label>
+                `);
+
+                // Set selected value for relationshipType
+                const $select = $item.find(`select[name="relationshipType"]`);
+                $select.val(safeConfig.relationshipType);
+
+                // Initial visibility update
+                updateFieldVisibility($item);
+
+                // Add change listener for dynamic visibility
+                $select.on('change', function() {
+                    updateFieldVisibility($item);
+                });
+
+                // Add change listener to all inputs to update the local currentButtons array instantly
+                $item.find('input, select').on('change keyup', function() {
+                    const fieldName = $(this).attr('name');
+                    const value = $(this).val();
+                    const $currentItem = $(this).closest('.aa-config-item');
+                    const index = $currentItem.data('index');
+
+                    // Update the label in the h4 for instant feedback
+                    if (fieldName === 'label') {
+                        $currentItem.find('h4').html(`Button ${index + 1}: ${value}<button class="aa-remove-btn">Remove</button>`);
+                    }
+
+                    // Update the local array by reading the current DOM state (sorted)
+                    // This ensures currentButtons always matches the visible form for accurate removal/saving
+                    currentButtons = getCurrentConfigFromForm(true);
+                });
+
+
+                $formContainer.append($item);
+            });
+        };
+
+        // Utility to extract current form state (used for comparison)
+        function getCurrentConfigFromForm(onlyReadDom = false) {
+            if (onlyReadDom) {
+                const currentConfig = [];
+                $formContainer.find('.aa-config-item').each(function() {
+                    currentConfig.push({
+                        label: $(this).find('input[name="label"]').val().trim(),
+                        relationshipType: $(this).find('select[name="relationshipType"]').val(),
+                        artist: $(this).find('input[name="artist"]').val().trim(),
+                        instrument: $(this).find('input[name="instrument"]').val().trim(),
+                        vocal: $(this).find('input[name="vocal"]').val().trim(),
+                        creditedAs: $(this).find('input[name="creditedAs"]').val().trim(),
+                    });
+                });
+                return sortButtons(currentConfig);
+            }
+            // Fallback: use the in-memory array
+            return sortButtons(currentButtons.map(a => Object.assign({}, a)));
+        }
+
+        // Initial render
+        renderForm(currentButtons);
+
+        // --- Event Handlers ---
+
+        // Cleanup function for modal closure
+        const cleanupAndClose = () => {
+            $(document).off('keydown', escapeHandler);
+            $('#aa-add-new-modal-overlay').remove(); // Ensure add modal is also closed
+            $overlay.remove();
+        }
+
+        // Add New Button Handler
+        const handleAddNewButton = () => {
+             // Open the dedicated small modal
+             showAddButtonModal((newButton) => {
+                // Callback function when the new button is saved in the sub-modal
+
+                // 1. Read the current DOM state to ensure we capture any pending edits
+                const currentDomConfig = getCurrentConfigFromForm(true);
+
+                // 2. Add the new button
+                currentDomConfig.push(newButton);
+                currentButtons = sortButtons(currentDomConfig); // Update local array
+
+                // 3. Re-render the main form with the new, sorted button list
+                renderForm(currentButtons);
+
+                // 4. Scroll to the bottom to see the newly added button (which is now in its sorted position)
+                $scrollArea.scrollTop($scrollArea[0].scrollHeight);
+             });
+        };
+
+
+        // Remove Button (FIXED: Uses index for unique removal)
+        $modal.on('click', '.aa-remove-btn', function() {
+            const $item = $(this).closest('.aa-config-item');
+
+            // Read the current state of the buttons from the form (guaranteed to match the visible list)
+            const domConfig = getCurrentConfigFromForm(true);
+            const indexToRemove = $item.data('index'); // This index is based on the *sorted* array shown on screen
+
+            if (domConfig.length > 1) {
+
+                // Remove the item at the specific index using splice
+                domConfig.splice(indexToRemove, 1);
+
+                // Update currentButtons and ensure it is sorted
+                currentButtons = sortButtons(domConfig);
+
+                renderForm(currentButtons);
+
+            } else {
+                console.warn(LOG_PREFIX, "User tried to remove the last button. Must keep at least one.");
+                alert("You must keep at least one button configuration.");
+            }
+        });
+
+        // Save Button
+        const saveAndClose = () => {
+            const newConfig = [];
+            let valid = true;
+
+            $formContainer.find('.aa-config-item').each(function() {
+                const $item = $(this);
+                const label = $item.find('input[name="label"]').val().trim();
+                const artist = $item.find('input[name="artist"]').val().trim();
+
+                if (!label || !artist) {
+                    // Using alert() here as it is inside a custom modal flow and should be seen
+                    alert(`Button configuration requires both a Label and an Artist Name. Please check item ${$item.data('index') + 1}.`);
+                    valid = false;
+                    return false; // Stop .each loop
+                }
+
+                newConfig.push({
+                    label: label,
+                    relationshipType: $item.find('select[name="relationshipType"]').val(),
+                    artist: artist,
+                    instrument: $item.find('input[name="instrument"]').val().trim(),
+                    vocal: $item.find('input[name="vocal"]').val().trim(),
+                    creditedAs: $item.find('input[name="creditedAs"]').val().trim(),
+                });
+            });
+
+            if (valid) {
+                // Save and sort the new configuration (saveButtons will handle stripping unnecessary fields)
+                ARTIST_BUTTONS = saveButtons(newConfig);
+                renderButtons(ARTIST_BUTTONS); // Re-render the batch buttons on the main page
+                cleanupAndClose();
+                log("Configuration saved and buttons updated.");
+            }
+        };
+
+        // Escape Key Handler
+        const escapeHandler = function(e) {
+            // Check if the event target is inside an input field, which might be handling Esc for something else
+            const isInput = $(e.target).is('input, select, textarea');
+            if (e.key === 'Escape' && !isInput) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const finalConfig = getCurrentConfigFromForm(true); // Read current state from DOM
+                const finalConfigString = JSON.stringify(finalConfig);
+
+                if (finalConfigString === initialConfigString) {
+                    // No changes, close safely
+                    cleanupAndClose();
+                    log("Configuration modal closed with Esc key (no changes).");
+                } else {
+                    // Changes made, prompt user
+                    const response = window.confirm("You have unsaved changes. Press OK to discard changes and close, or Cancel to return and Save.");
+                    if (response) {
+                        cleanupAndClose();
+                        log("Configuration modal closed with Esc key (changes discarded).");
+                    }
+                }
+            }
+        };
+
+        // Attach event listeners
+        $(document).on('keydown', escapeHandler);
+
+        // Footer (Fixed position achieved by putting it outside the scroll area)
+        const $footer = $(`
+            <div class="aa-config-footer">
+                <button class="aa-close-btn">Close</button>
+                <div>
+                    <button class="aa-add-btn">Add New Button</button>
+                    <button class="aa-save-btn">Save & Reload Buttons</button>
+                </div>
+            </div>
+        `);
+
+        $modal.append($footer);
+
+        $modal.on('click', '.aa-close-btn', cleanupAndClose);
+        $modal.on('click', '.aa-save-btn', saveAndClose);
+        $modal.on('click', '.aa-add-btn', handleAddNewButton);
+
+        $overlay.append($modal);
+        $('body').append($overlay);
+    }
+
+    // ----------------- UI: Button Rendering and Creation -----------------
+
+    const BUTTON_STYLE_CONFIG = {
+        'instruments': { bgColor: '#4CAF50', activeColor: '#3e8e41', icon: '🎸 ' },
+        'vocal': { bgColor: '#2196F3', activeColor: '#0b7dda', icon: '🎤 ' },
+        'performed / performer': { bgColor: '#FF9800', activeColor: '#e68a00', icon: '🎭 ' },
+        'default': { bgColor: '#607D8B', activeColor: '#455a64', icon: '🔗 ' }
+    };
+
+    function renderButtons(buttons) {
+        const $mainContainer = $('.injected-buttons-container');
+        if ($mainContainer.length === 0) return;
+
+        let $batchButtonContainer = $mainContainer.find('#aa-batch-buttons');
+        if ($batchButtonContainer.length === 0) {
+            $batchButtonContainer = $('<div id="aa-batch-buttons" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>');
+            $mainContainer.append($batchButtonContainer);
+        }
+
+        $batchButtonContainer.empty();
+
+        buttons.forEach(config => {
+            const style = BUTTON_STYLE_CONFIG[config.relationshipType] || BUTTON_STYLE_CONFIG['default'];
+            const buttonText = `${style.icon}${config.label}`;
+
+            const buttonStyleString = `
+                background-color: ${style.bgColor};
+                color: white;
+                padding: 5px 10px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: all 0.15s ease-in-out;
+                white-space: nowrap;
+                flex-shrink: 0;
+                line-height: 20px;
+            `;
+
+            const $button = $('<button/>', {
+                text: buttonText,
+                'data-label': config.label
+            });
+
+            $button.attr('style', buttonStyleString);
+
+            $button.on({
+                'mouseenter': function() { $(this).css('opacity', 0.9); },
+                'mouseleave': function() { $(this).css('opacity', 1); },
+                'click': function() {
+                    $(this).css('background-color', style.activeColor);
+                    setTimeout(() => $(this).css('background-color', style.bgColor), 500);
+                }
+            });
+
+            $batchButtonContainer.append($button);
+
+            $button.on('click', () => {
+                log(`Enqueued "${config.label}" (${config.relationshipType})`);
+                queue.push(Object.assign({}, config));
+                processQueue().catch(e => console.error(e));
+            });
+        });
+    }
+
+    function createCustomButtons() {
+        const $heading = $(HEADING_SELECTOR);
+
+        if ($heading.length === 0) {
+            log("Heading 'Track relationships' not found yet — retrying…");
+            setTimeout(createCustomButtons, 500);
+            return;
+        }
+
+        let $container = $heading.next('.injected-buttons-container');
+        if ($container.length === 0) {
+            $container = $(`
+                <div
+                    class="injected-buttons-container"
+                    style="
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        flex-wrap: wrap;
+                        margin-top: 10px;
+                        margin-bottom: 5px;
+                        padding: 10px 0;
+                        width: 100%;
+                        z-index: 1000;
+                    ">
+                </div>
+            `);
+            $heading.after($container);
+        } else {
+             $container.find('#aa-batch-buttons').remove();
+        }
+
+        // --- 1. Create and prepend the permanent 'Configure' button with 2-line text ---
+        const $configButton = $container.find('#aa-config-btn');
+        if ($configButton.length === 0) {
+            const configButtonStyle = `
+                background-color: #607D8B;
+                color: white;
+                padding: 5px 10px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: all 0.15s ease-in-out;
+                flex-shrink: 0;
+                line-height: 1.2;
+            `;
+
+            // Updated text: "Configure recording\nrelation buttons"
+            const buttonHtml = '⚙️ Configure recording<br>relation buttons';
+
+            const $config = $('<button/>', {
+                id: 'aa-config-btn',
+                html: buttonHtml
+            });
+
+            $config.attr('style', configButtonStyle);
+            $container.prepend($config);
+            $config.on('click', showConfigModal);
+        }
+
+        // --- 2. Render the dynamic batch-add buttons ---
+        renderButtons(ARTIST_BUTTONS);
+
+
+        // --- 3. VISIBILITY LOGIC ---
+
+        function getCheckedRecordings() {
+            const $checkedRecordings = $('#tracklist input[type="checkbox"]:not(.work)');
+            return $checkedRecordings;
+        }
+
+        function updateButtonVisibility() {
+            try {
+                if (DEBUG_VISIBILITY) log("Update visibility check called.");
+
+                const $checked = getCheckedRecordings();
+                const checkedCount = $checked.length;
+                const anyChecked = checkedCount > 0;
+
+                const $batchContainer = $container.find('#aa-batch-buttons');
+                if ($batchContainer.length === 0) return;
+
+                const currentDisplay = $batchContainer.css('display');
+
+                if (currentDisplay === 'flex' && checkedCount === 0) {
+                     if (DEBUG) log("Batch buttons visible, but 0 tracks checked. Forcing OFF.");
+                     $batchContainer.css('display', 'none');
+                     return;
+                }
+
+                if (anyChecked) {
+                    if (currentDisplay === 'none') {
+                        $batchContainer.css('display', 'flex');
+                        if (DEBUG) log("Toggled batch buttons ON (display: flex)");
+                    }
+                } else {
+                    if (currentDisplay === 'flex') {
+                        $batchContainer.css('display', 'none');
+                        if (DEBUG) log("Toggled batch buttons OFF (display: none)");
+                    }
+                }
+            } catch (e) {
+                console.error(LOG_PREFIX, "Error in updateButtonVisibility loop:", e);
+            }
+        }
+
+        updateButtonVisibility();
+
+        $('#tracklist').on('change click input', 'input[type="checkbox"]', function() {
+             try {
+                 if (DEBUG) log("Checkbox event detected, updating visibility...");
+                 // Use setTimeout to ensure the DOM state is settled after the click/change
+                 setTimeout(updateButtonVisibility, 50);
+             } catch (e) {
+                console.error(LOG_PREFIX, "Error in checkbox event handler:", e);
+             }
+        });
+
+        // Set up the heartbeat check
+        setInterval(updateButtonVisibility, VISIBILITY_HEARTBEAT_MS);
+
+        log("Injected custom buttons and configuration.");
+    }
+
+    // ----------------- Main Execution -----------------
+
+    try {
+        setTimeout(() => {
+            log("Starting userscript execution...");
+            resetInitialState();
+            createCustomButtons();
+        }, 2000);
+    } catch (error) {
+        // This catch block primarily catches sync errors during the setting of the timeout.
+        console.error(LOG_PREFIX, "CRITICAL SCRIPT FAILURE during initial setup:", error);
+    }
+
+})();
+#+end_example
+
 
 * UUID
 
