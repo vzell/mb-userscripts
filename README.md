@@ -49,56 +49,56 @@ Create buttons for quickly choosing the primary type when adding a new release.
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizablePrimaryTypeSelector.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizablePrimaryTypeSelector.user.js)
 
-## <a name="#mb_customizable_status_selector"></a> Customizable Status Selector
+## <a name="mb_customizable_status_selector"></a> Customizable Status Selector
 
 Create buttons for quickly choosing the status when adding a new release.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizableStatusSlector.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableStatusSlector.user.js)
 
-## <a name="#mb_customizable_packaging_selector"></a> CustomizablePackagingSelector
+## <a name="mb_customizable_packaging_selector"></a> CustomizablePackagingSelector
 
 Create buttons for quickly choosing the package when adding a new release.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizablePackagingSelector.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizablePackagingSelector.user.js)
 
-## <a name="##mb_nolabel_nocatno"></a> Edit Release: No Label & No Cat. no Button
+## <a name="mb_nolabel_nocatno"></a> Edit Release: No Label & No Cat. no Button
 
 Adds a No Label & No Cat. no button to MusicBrainz release editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
 
-## <a name="##mb_batch_add_relationships_to_recordings"></a> Batch Add Relationships To Recordings
+## <a name="mb_batch_add_relationships_to_recordings"></a> Batch Add Relationships To Recordings
 
 Insert artist buttons, open batch-add dialog, reliably fill relationship type (instruments|vocal|performed / performer), artist, instrument/vocal, credited-as, click Done — sequential queue + dialog lifecycle awareness.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchAddRelationshipsToRecordings.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js)
 
-## <a name="##mb_uuid_validator"></a> MusicBrainz UUID Validator (Lowercase Hex)
+## <a name="mb_uuid_validator"></a> MusicBrainz UUID Validator (Lowercase Hex)
 
 Ensures the MusicBrainz ID field accepts only valid, lowercase UUIDs on the SpringsteenLyrics editing pages.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/MusicbrainzUUIDValidator.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/MusicbrainzUUIDValidator.user.js)
 
-## <a name="##mb_auto_select_discography_link_type"></a> MusicBrainz: Auto-Select Discography Link Type
+## <a name="mb_auto_select_discography_link_type"></a> MusicBrainz: Auto-Select Discography Link Type
 
 Allows configuration of link mappings (URL Regex -> Link Type ID). Automatically selects link types for configured URLs, cleans up URLs on paste, and moves focus to the next link input. Implements strict hierarchical ESC key handling for nested modals.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/AutoSelectExternalLinkType.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js)
 
-## <a name="##mb_customizable_selector"></a> MusicBrainz Customizable Selector (Packaging, Type, Status, Language, Script)
+## <a name="mb_customizable_selector"></a> MusicBrainz Customizable Selector (Packaging, Type, Status, Language, Script)
 
 Adds customizable quick-select buttons for Primary Type, Status, Language, Script and Packaging on release pages.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizableMultiSelector.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js)
 
-## <a name="##mb_customizable_language_selector"></a> MusicBrainz Customizable Language Selector for works and aliases (adopted from YoGo9)
+## <a name="mb_customizable_language_selector"></a> MusicBrainz Customizable Language Selector for works and aliases (adopted from YoGo9)
 
 Add customizable quick-select buttons for languages and locales in MusicBrainz work and alias pages.
 
