@@ -13360,5 +13360,5 @@ the code logic at all and the comments, as everything it's working. Only adjust 
 
 ** 1
 
-In the URLS which have "alias" in their virtual path,
-please align the generated buttons with input text field above the generated buttons
+In the URLS which have "alias" in their virtual path, please add the bold String "Quick locale:" in front of the
+generated buttons and align the description "Quick locale:" with the rest of the description in the same container, like "Alias name:" or " Sort name".
