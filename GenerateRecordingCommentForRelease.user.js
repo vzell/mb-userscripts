@@ -9,7 +9,7 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/GenerateRecordingCommentForRelease.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/GenerateRecordingCommentForRelease.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @match        https://musicbrainz.org/release\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/disc\/\d+|(\?.+?)?$)/
+// @match        https://musicbrainz.org/release/*
 // @grant        none
 // @run-at       document-idle
 // @license      X11
