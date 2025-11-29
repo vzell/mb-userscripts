@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MusicBrainz Customizable Language Selector for works and aliases
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.3+2025-11-29
+// @version      1.4+2025-11-29
 // @description  Add customizable quick-select buttons for languages in MusicBrainz work and alias editor
 // @author       YoGo9 + adaptions by vzell
 // @homepage     https://github.com/vzell/mb-userscripts
@@ -137,7 +137,8 @@
   // ----------------- Alias pages (/aliases & /add-alias) -----------------
 
   function isAliasPage() {
-    return /\/(artist|work|label|place|series|event|recording|release|release-group)\/[0-9a-f-]+\/(aliases|add-alias)$/.test(location.pathname);
+    // Check for /aliases, /add-alias, or /alias/{ID}/edit pages
+    return /\/(artist|work|label|place|series|event|recording|release|release-group)\/[0-9a-f-]+\/(aliases|add-alias|alias\/[^/]+\/edit)$/.test(location.pathname);
   }
 
   function addAliasLocaleToolbar() {
