@@ -1,15 +1,19 @@
 // ==UserScript==
-// @name         MusicBrainz UUID Validator (Lowercase Hex)
+// @name         VZ: SpringstenLyrics - MusicBrainz UUID Validator
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0
-// @description  Ensures the MusicBrainz ID field accepts only valid, lowercase UUIDs on the SpringsteenLyrics editing pages.
+// @version      1.0+2025-11-29
+// @description  Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website
+// @author       vzell with help of Gemini
+// @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/MusicbrainzUUIDValidator.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/MusicbrainzUUIDValidator.user.js
-// @author       Gemini
+// @icon         https://volkerzell.de/favicons/springsteenlyrics.ico
 // @match        https://www.springsteenlyrics.com/bootlegs.php?cmd=edit*
 // @grant        none
 // @run-at       document-idle
+// @license      MIT
 // ==/UserScript==
 
 (function() {

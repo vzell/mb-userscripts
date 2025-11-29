@@ -104,3 +104,14 @@ Ensures the MusicBrainz ID field accepts only valid, lowercase UUIDs on the Spri
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/MusicbrainzUUIDValidator.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/MusicbrainzUUIDValidator.user.js)
 
+# SpringsteenLyrics UserScripts
+
+- [SpringsteenLyrics - MusicBrainz UUID Validator](#sl_uuid_validator)
+
+## <a name="sl_uuid_validator"></a> SpringstenLyrics - MusicBrainz UUID Validator
+
+Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website. Ensures the MusicBrainz ID field accepts only valid, lowercase UUIDs.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/MusicbrainzUUIDValidator.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/MusicbrainzUUIDValidator.user.js)
+
