@@ -7,10 +7,10 @@
 - [Musicbrainz - Generate Recording Comments for a release](#mb_generate_recording_comments_for_a_release)
 - [MusicBrainz - Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
 - [MusicBrainz - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
+- [MusicBrainz - Guess Related Works In Batch In The Relation Editor](#mb_guess_related_works)
 - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector)
 - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector)
 - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector)
-- [MusicBrainz - Relation editor: Guess related works in batch](#mb_guess_related_works)
 
 The Loujine scripts temporarely needed to be patched with the folloing line:
 
@@ -21,7 +21,6 @@ instead of
 // @require      https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mbz-loujine-common.js
 
 
- - https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-reledit-guess_works.user.js
  - https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-reledit-set_relation_attrs.user.js
  - https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-reledit-copy_dates.user.js
 
@@ -74,9 +73,9 @@ Insert buttons on the Release Edit Relationships page which add preconfigured Ar
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchAddRelationshipsToRecordings.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js)
 
-## <a name="mb_guess_related_works"></a> Relation editor: Guess related works in batch
+## <a name="mb_guess_related_works"></a> Guess Related Works In Batch In The Relation Editor
 
-Guess related works in batch on relation editor
+Guess related works in batch in relation editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/GuessRelatedWorks.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/GuessRelatedWorks.user.js)

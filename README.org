@@ -15877,8 +15877,8 @@ This is the complete userscript:
 #+end_example
 
 
-*
-
+* Guess Related Works
+** Gemini
 
 In the uploaded userscript, the whole UI dialog starting with
 
@@ -15897,3 +15897,14 @@ is collapsible. Please make also the sub dialog starting with
 #+end_example
 
 collapsible.
+
+** 1
+
+A couple of little observations:
+
+1.) Can you indent the sub dialog a litle bit
+2.) The sub dialog should initially be collapsed
+3.) The mouse pointer should change to a finger when over the "Guess works" button
+4.) The button should visually react when clicking on it
+
+Please make this changes

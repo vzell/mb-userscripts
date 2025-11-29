@@ -1,10 +1,10 @@
 /* global $ MB requests helper server relEditor */
 'use strict';
 // ==UserScript==
-// @name         VZ: MusicBrainz - Relation editor: Guess related works in batch
+// @name         VZ: MusicBrainz - Guess Related Works In Batch In The Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      1.0-2025-11-29
-// @description  Guess related works in batch on relation editor
+// @description  Guess related works in batch in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -210,6 +210,19 @@ const fetchSubWorks = (workMbid, replace) => {
 
 (function displayToolbar() {
   relEditor.container(document.querySelector('div.tabs')).insertAdjacentHTML('beforeend', `
+    <style>
+      #searchWork {
+        cursor: pointer;
+        transition: background-color 0.1s ease;
+      }
+      #searchWork:hover {
+        background-color: #e6e6e6; /* Slight darkening on hover */
+      }
+      #searchWork:active {
+        background-color: #d6d6d6; /* More darkening on click */
+        transform: translateY(1px); /* Little downward push */
+      }
+    </style>
     <details open="">
     <summary style="display: block;margin-left: 8px;cursor: pointer;">
       <h3 style="display: list-item;">
@@ -225,11 +238,9 @@ const fetchSubWorks = (workMbid, replace) => {
       <br />
       <input type="button" id="searchWork" value="Guess works">
       <br />
-      <details open="" style="margin-left: 8px;">
+      <details style="margin-left: 15px;">
         <summary style="display: block;cursor: pointer;">
-          <h3 style="display: list-item; margin: 0;">
-            Link to parts of a main Work
-          </h3>
+          <h3 style="display: list-item; margin: 0;">Link to parts of a main Work</h3>
         </summary>
         <div>
           <p>
