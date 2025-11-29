@@ -13347,3 +13347,18 @@ Here's the HTML code on that page
 #+end_example
 
 
+
+* Customizable Language select
+** Gemini
+
+Please investigate the uploaded Userscript "CustomizableMultiSelector.user.js" and adjust the button appearances on the
+other one, the "CustomizableLanguageSelector.user.js" so that it matches the same style. Very important, do not touch
+the code logic at all and the comments, as everything it's working. Only adjust the button styling stuff.
+
+1.) Remove the bold text "Quick add:" in front of the "⚙️" button in the "CustomizableLanguageSelector.user.js"
+2.) Align the "⚙️" button to the right side of the generated configured buttons inside the container
+
+** 1
+
+In the URLS which have "alias" in their virtual path,
+please align the generated buttons with input text field above the generated buttons

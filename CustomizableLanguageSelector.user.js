@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MusicBrainz Customizable Language Selector for works and aliases
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0+2025-11-29
+// @version      1.1+2025-11-29
 // @description  Add customizable quick-select buttons for languages in MusicBrainz work and alias editor
 // @author       YoGo9 + adaptions by vzell
 // @homepage     https://github.com/vzell/mb-userscripts
@@ -157,9 +157,11 @@
     // Build toolbar
     const bar = document.createElement('div');
     Object.assign(bar.style, { margin: '10px 0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' });
-    const title = document.createElement('strong');
-    title.textContent = 'Quick locale:';
-    bar.appendChild(title);
+    // START MODIFICATION: Remove "Quick locale:" label
+    // const title = document.createElement('strong');
+    // title.textContent = 'Quick locale:';
+    // bar.appendChild(title);
+    // END MODIFICATION
 
     quick.forEach(code => {
       const opt = options.find(o => o.value === code);
@@ -176,6 +178,9 @@
         onSave: vals => { aliasLocales = vals; GM_setValue('mbAliasLocales', vals); },
       });
     });
+    // START MODIFICATION: Align "⚙️" button to the right
+    gear.style.marginLeft = 'auto';
+    // END MODIFICATION
     bar.appendChild(gear);
 
     // Insert near the first locale select
@@ -238,9 +243,14 @@
 
   function addButtonsAfter(selectEl, buttons, { onOpenSettings }) {
     const wrap = document.createElement('div');
-    Object.assign(wrap.style, { display: 'inline-block', marginLeft: '15px', marginTop: '5px' });
+    // START MODIFICATION: Change to 'flex' for right-alignment of the gear button
+    Object.assign(wrap.style, { display: 'flex', alignItems: 'center', flexWrap: 'wrap', marginLeft: '15px', marginTop: '5px' });
+    // END MODIFICATION
     for (const b of buttons) wrap.appendChild(createButton(b.text, b.onClick));
     const gear = createButton('⚙️', onOpenSettings);
+    // START MODIFICATION: Align "⚙️" button to the right
+    gear.style.marginLeft = 'auto';
+    // END MODIFICATION
     wrap.appendChild(gear);
     selectEl.parentNode.insertBefore(wrap, selectEl.nextSibling);
   }
@@ -332,9 +342,11 @@
     const quick = document.createElement('div');
     Object.assign(quick.style, { margin: '10px 0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' });
 
-    const label = document.createElement('strong');
-    label.textContent = 'Quick add:';
-    quick.appendChild(label);
+    // START MODIFICATION: Remove "Quick add:" label
+    // const label = document.createElement('strong');
+    // label.textContent = 'Quick add:';
+    // quick.appendChild(label);
+    // END MODIFICATION
 
     preferredIDs.forEach(id => {
       const opt = Array.from(firstSelect.options).find(o => String(o.value) === String(id));
@@ -354,6 +366,9 @@
         onSave: vals => { languageIDs = vals; GM_setValue('mbLanguageIDs', vals); },
       });
     });
+    // START MODIFICATION: Align "⚙️" button to the right
+    gear.style.marginLeft = 'auto';
+    // END MODIFICATION
     quick.appendChild(gear);
 
     container.parentElement.insertBefore(quick, container);
