@@ -1,17 +1,18 @@
 // ==UserScript==
-// @name        MusicBrainz: Set recording comments for a release
-// @namespace   https://musicbrainz.org/user/vzell
-// @version     1.0.2
-// @description Batch set recording comments from a Release page, prefilling from "recorded at:" prefixed with "live, " if comment is empty. Prefills edit note with user supplied configurable text.
-// @tag         ai-created
-// @author      Michael Wiencek, Gemini (directed by vzell)
-// @license     X11
-// @homepageURL https://github.com/vzell/mb-userscripts
-// @downloadURL https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRecordingComment-Prefilled-CustomEditNode.user.js
-// @updateURL   https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRecordingComment-Prefilled-CustomEditNode.user.js
-// @include     /^https?:\/\/(\w+\.)?musicbrainz\.org\/release\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/disc\/\d+|(\?.+?)?$)/
-// @grant       none
-// @run-at      document-idle
+// @name         VZ: MusicBrainz - Generate Recording Comments for a release
+// @namespace    https://musicbrainz.org/user/vzell
+// @version      1.2+2025-11-29
+// @description  Batch set recording comments from a Release page, prefilling from "recorded at:" prefixed with "live, " if comment is empty. Prefills edit note with user supplied configurable text.
+// @author       Michael Wiencek, Gemini (directed by vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/GenerateRecordingCommentForRelease.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/GenerateRecordingCommentForRelease.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @match        https://musicbrainz.org/release\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/disc\/\d+|(\?.+?)?$)/
+// @grant        none
+// @run-at       document-idle
+// @license      X11
 // ==/UserScript==
 
 // ==License==
