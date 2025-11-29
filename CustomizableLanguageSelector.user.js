@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MusicBrainz Customizable Language Selector for works and aliases
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1+2025-11-29
+// @version      1.3+2025-11-29
 // @description  Add customizable quick-select buttons for languages in MusicBrainz work and alias editor
 // @author       YoGo9 + adaptions by vzell
 // @homepage     https://github.com/vzell/mb-userscripts
@@ -154,19 +154,33 @@
     const quick = aliasLocales.filter(code => options.some(o => o.value === code));
     if (!quick.length) return;
 
-    // Build toolbar
-    const bar = document.createElement('div');
-    Object.assign(bar.style, { margin: '10px 0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' });
-    // START MODIFICATION: Remove "Quick locale:" label
-    // const title = document.createElement('strong');
-    // title.textContent = 'Quick locale:';
-    // bar.appendChild(title);
-    // END MODIFICATION
+    // Build the container for the buttons and gear
+    const buttonGroup = document.createElement('div');
+    Object.assign(buttonGroup.style, { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' });
+
+    // START NEW STRUCTURE: Create a container that mimics a form row for alignment
+    const formRow = document.createElement('div');
+    formRow.className = 'row';
+    formRow.style.margin = '10px 0';
+
+    // Create the label column (1)
+    const labelCol = document.createElement('label');
+    labelCol.textContent = 'Quick locale:';
+    labelCol.style.fontWeight = 'bold';
+    formRow.appendChild(labelCol);
+
+    // Create the content column
+    const contentCol = document.createElement('div');
+    formRow.appendChild(contentCol);
+
+    // Append button group to content column
+    contentCol.appendChild(buttonGroup);
+    // END NEW STRUCTURE
 
     quick.forEach(code => {
       const opt = options.find(o => o.value === code);
       if (!opt) return;
-      bar.appendChild(createButton(opt.text, () => setAliasLocaleSingleClick(code)));
+      buttonGroup.appendChild(createButton(opt.text, () => setAliasLocaleSingleClick(code)));
     });
 
     // ⚙️
@@ -178,14 +192,13 @@
         onSave: vals => { aliasLocales = vals; GM_setValue('mbAliasLocales', vals); },
       });
     });
-    // START MODIFICATION: Align "⚙️" button to the right
+    // Align "⚙️" button to the right (2)
     gear.style.marginLeft = 'auto';
-    // END MODIFICATION
-    bar.appendChild(gear);
+    buttonGroup.appendChild(gear);
 
-    // Insert near the first locale select
+    // Insert the new formRow container instead of the old bar container
     const anchor = firstSelect.closest('.row, .form-row, fieldset, form, #page') || firstSelect.parentElement;
-    anchor.parentElement.insertBefore(bar, anchor);
+    anchor.parentElement.insertBefore(formRow, anchor);
   }
 
   // For /add-alias: set the only select. For /aliases: set last empty or add row then set.
