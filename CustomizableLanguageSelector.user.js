@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Customizable Language Selector on work and alias pages
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.5+2025-11-29
+// @version      1.6+2025-11-29
 // @description  Add customizable quick-select buttons for languages and locales in MusicBrainz work and alias pages
 // @author       YoGo9 + adaptions by vzell with help of Gemini
 // @tag          AI generated

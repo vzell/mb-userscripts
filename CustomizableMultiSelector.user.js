@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1+2025-11-29
+// @version      1.2+2025-11-29
 // @description  Adds customizable quick-select buttons for Primary Type, Status, Language, Script and Packaging on release pages
 // @author       vzell + Gemini
 // @tag          AI generated
