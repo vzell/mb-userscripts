@@ -1,20 +1,19 @@
 // ==UserScript==
-// @name         Edit Release: No Label & No Cat. no Button
-// @description  Adds a No Label & No Cat. no button to MusicBrainz release editor
-// @version      1.0
-// @author       Lioncat6 + vzell + Gemini
-// @license      MIT
+// @name         VZ: MusicBrainz - NO Label & Catalognumber Buttons
 // @namespace    https://github.com/vzell/mb-userscripts
-// @homepageURL  https://github.com/vzell/mb-userscripts
+// @version      1.1+1925-11-29
+// @description  Adds a NO Label & NO Catalogenumber button to the MusicBrainz release editor
+// @author       Lioncat6 + vzell + Gemini
+// @tag          AI generated
+// @homepage     https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @match        https://musicbrainz.org/release/*/edit
-// @match        https://musicbrainz.org/release/add
-// @match        https://beta.musicbrainz.org/release/*/edit
-// @match        https://beta.musicbrainz.org/release/add
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @grant        none
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @match        https://musicbrainz.org/release/add
+// @match        https://musicbrainz.org/release/*/edit
+// @grant        none
+// @license      MIT
 // ==/UserScript==
 
 

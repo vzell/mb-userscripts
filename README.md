@@ -2,12 +2,12 @@
 
 - [MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages](#mb_customizable_selector)
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
+- [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
 - [Musicbrainz: Set recording comments for a release](#mb_set_recording_comments_for_a_release)
 - [Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
 - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector)
 - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector)
 - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector)
-- [Edit Release: No Label & No Cat. no Button](#mb_nolabel_nocatno)
 - [Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 - [MusicBrainz UUID Validator (Lowercase Hex)](#mb_uuid_validator)
 - [MusicBrainz: Auto-Select Discography Link Type](#mb_auto_select_discography_link_type)
@@ -40,6 +40,13 @@ Add customizable quick-select buttons for languages and locales in MusicBrainz w
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizableLanguageSelector.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableLanguageSelector.user.js)
+
+## <a name="mb_nolabel_nocatno"></a> MusicBrainz - NO Label & Catalognumber Buttons
+
+Adds a "NO Label" & "NO Catalognumber" button to the MusicBrainz release editor.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
 
 ## <a name="mb_relationship_shortcuts"></a> Display shortcut for relationships on MusicBrainz
 
@@ -76,13 +83,6 @@ Create buttons for quickly choosing the package when adding a new release.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizablePackagingSelector.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizablePackagingSelector.user.js)
-
-## <a name="mb_nolabel_nocatno"></a> Edit Release: No Label & No Cat. no Button
-
-Adds a No Label & No Cat. no button to MusicBrainz release editor.
-
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
 
 ## <a name="mb_batch_add_relationships_to_recordings"></a> Batch Add Relationships To Recordings
 
