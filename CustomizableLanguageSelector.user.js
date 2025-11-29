@@ -9,6 +9,7 @@
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableLanguageSelector.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableLanguageSelector.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        https://musicbrainz.org/work/create
 // @match        https://musicbrainz.org/work/*/edit
 // @match        https://musicbrainz.org/*/*/add-alias
