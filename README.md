@@ -1,5 +1,7 @@
 # MusicBrainz UserScripts
 
+- [MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages](#mb_customizable_selector)
+- [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [Musicbrainz: Set recording comments for a release](#mb_set_recording_comments_for_a_release)
 - [Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
 - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector)
@@ -9,8 +11,6 @@
 - [Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 - [MusicBrainz UUID Validator (Lowercase Hex)](#mb_uuid_validator)
 - [MusicBrainz: Auto-Select Discography Link Type](#mb_auto_select_discography_link_type)
-- [MusicBrainz Customizable Selector (Packaging, Type, Status, Language, Script)](#mb_customizable_selector)
-- [MusicBrainz Customizable Language Selector for works and aliases](#mb_customizable_language_selector)
 
 
 The Loujine scripts temporarely needed to be patched with the folloing line:
@@ -93,14 +93,14 @@ Allows configuration of link mappings (URL Regex -> Link Type ID). Automatically
 
 ## <a name="##mb_customizable_selector"></a> MusicBrainz Customizable Selector (Packaging, Type, Status, Language, Script)
 
-Adds customizable quick-select buttons for Packaging, Primary Type, Status, Language, and Script in the MusicBrainz release editor, with a field-specific configuration interface.
+Adds customizable quick-select buttons for Primary Type, Status, Language, Script and Packaging on release pages.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizableMultiSelector.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js)
 
 ## <a name="##mb_customizable_language_selector"></a> MusicBrainz Customizable Language Selector for works and aliases (adopted from YoGo9)
 
-Add customizable quick-select buttons for languages in MusicBrainz work and alias editor.
+Add customizable quick-select buttons for languages and locales in MusicBrainz work and alias pages.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizableLanguageSelector.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableLanguageSelector.user.js)

@@ -1,15 +1,16 @@
 // ==UserScript==
-// @name         MusicBrainz Customizable Selector (Packaging, Type, Status, Language, Script)
+// @name         VZ: MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.4 // Updated version to reflect the fix
-// @description  Adds customizable quick-select buttons for Packaging, Primary Type, Status, Language, and Script in the MusicBrainz release editor, with a field-specific configuration interface.
-// @author       YoGo9 & vzell + Gemini
+// @version      1.1+2025-11-29
+// @description  Adds customizable quick-select buttons for Primary Type, Status, Language, Script and Packaging on release pages
+// @author       vzell + Gemini
+// @tag          AI generated
 // @homepage     https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js
+// @match        https://musicbrainz.org/release/add
 // @match        https://musicbrainz.org/release/*/edit
-// @match        https://beta.musicbrainz.org/release/*/edit
-// @match        https://musicbrainz.org/release/add*
-// @match        https://beta.musicbrainz.org/release/add*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @license      MIT
