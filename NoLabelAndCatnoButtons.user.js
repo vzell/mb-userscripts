@@ -5,7 +5,7 @@
 // @description  Adds a NO Label & NO Catalogenumber button to the MusicBrainz release editor
 // @author       Lioncat6 + vzell + Gemini
 // @tag          AI generated
-// @homepage     https://github.com/vzell/mb-userscripts
+// @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js

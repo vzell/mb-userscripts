@@ -5,7 +5,7 @@
 // @description  Add customizable quick-select buttons for languages and locales in MusicBrainz work and alias pages
 // @author       YoGo9 + adaptions by vzell with help of Gemini
 // @tag          AI generated
-// @homepage     https://github.com/vzell/mb-userscripts
+// @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableLanguageSelector.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableLanguageSelector.user.js

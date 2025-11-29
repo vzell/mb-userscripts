@@ -5,7 +5,7 @@
 // @description  Adds customizable quick-select buttons for Primary Type, Status, Language, Script and Packaging on release pages
 // @author       vzell + Gemini
 // @tag          AI generated
-// @homepage     https://github.com/vzell/mb-userscripts
+// @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js

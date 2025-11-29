@@ -1,12 +1,14 @@
 // ==UserScript==
-// @name         MusicBrainz: Auto-Select Discography Link Type
+// @name         VZ: MusicBrainz - Auto-Select External Link Types
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0
-// @description  Allows configuration of link mappings (URL Regex -> Link Type ID). Automatically selects link types for configured URLs, cleans up URLs on paste, and moves focus to the next link input. Implements strict hierarchical ESC key handling for nested modals.
+// @version      1.1+1925-11-29
+// @description  Auto-Select External Link Types on release pages, allows configuration of link mappings (URL Regex -> Link Type ID)
+// @author       Gemini with vzell
+// @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js
-// @author       Gemini with vzell
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        https://musicBrainz.org/release/add
 // @match        https://musicBrainz.org/release/*/edit
 // @grant        none

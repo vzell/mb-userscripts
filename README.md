@@ -3,6 +3,7 @@
 - [MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages](#mb_customizable_selector)
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
+- [MusicBrainz: Auto-Select Discography Link Type](#mb_auto_select_discography_link_type)
 - [Musicbrainz: Set recording comments for a release](#mb_set_recording_comments_for_a_release)
 - [Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
 - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector)
@@ -10,7 +11,6 @@
 - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector)
 - [Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 - [MusicBrainz UUID Validator (Lowercase Hex)](#mb_uuid_validator)
-- [MusicBrainz: Auto-Select Discography Link Type](#mb_auto_select_discography_link_type)
 
 
 The Loujine scripts temporarely needed to be patched with the folloing line:
@@ -35,7 +35,6 @@ Adds customizable quick-select buttons for Primary Type, Status, Language, Scrip
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js)
 
 ## <a name="mb_customizable_language_selector"></a> MusicBrainz - Customizable Language Selector on work and alias pages
-
 Add customizable quick-select buttons for languages and locales in MusicBrainz work and alias pages.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizableLanguageSelector.user.js)
@@ -47,6 +46,13 @@ Adds a "NO Label" & "NO Catalognumber" button to the MusicBrainz release editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
+
+## <a name="mb_auto_select_discography_link_type"></a> MusicBrainz: MusicBrainz - Auto-Select External Link Types
+
+Auto-Select External Link Types on release pages, allows configuration of link mappings (URL Regex -> Link Type ID)
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/AutoSelectExternalLinkType.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js)
 
 ## <a name="mb_relationship_shortcuts"></a> Display shortcut for relationships on MusicBrainz
 
@@ -97,11 +103,4 @@ Ensures the MusicBrainz ID field accepts only valid, lowercase UUIDs on the Spri
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/MusicbrainzUUIDValidator.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/MusicbrainzUUIDValidator.user.js)
-
-## <a name="mb_auto_select_discography_link_type"></a> MusicBrainz: Auto-Select Discography Link Type
-
-Allows configuration of link mappings (URL Regex -> Link Type ID). Automatically selects link types for configured URLs, cleans up URLs on paste, and moves focus to the next link input. Implements strict hierarchical ESC key handling for nested modals.
-
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/AutoSelectExternalLinkType.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js)
 
