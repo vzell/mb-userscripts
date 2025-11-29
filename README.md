@@ -8,6 +8,7 @@
 - [MusicBrainz - Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
 - [MusicBrainz - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 - [MusicBrainz - Guess Related Works In Batch In The Relation Editor](#mb_guess_related_works)
+- [MusicBrainz - Copy Dates On Recording Relations Relation Editor](#mb_copy_dates_on_recordings)
 - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector)
 - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector)
 - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector)
@@ -79,6 +80,13 @@ Guess related works in batch in relation editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/GuessRelatedWorks.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/GuessRelatedWorks.user.js)
+
+## <a name="mb_copy_dates_on_recordings"></a> Copy Dates On Recording Relations Relation Editor
+
+Copy/remove dates on recording relations in musicbrainz.relation editor
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CopyDatesOnRecordingRelations.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CopyDatesOnRecordingRelations.user.js)
 
 ## <a name="mb_customizable_primarytype_selector"></a> Customizable PrimaryType Selector
 
