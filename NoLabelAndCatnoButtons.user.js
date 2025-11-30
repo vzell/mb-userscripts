@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - NO Label & Catalognumber Buttons
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1+1925-11-29
+// @version      1.2+2025-11-29
 // @description  Adds a NO Label & NO Catalogenumber button to the MusicBrainz release editor
 // @author       Lioncat6 + vzell + Gemini
 // @tag          AI generated
