@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Copy Dates On Recording Relations Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1-2025-11-29
+// @version      1.3+2025-11-29
 // @description  Copy/remove dates on recording relations in musicbrainz.relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated

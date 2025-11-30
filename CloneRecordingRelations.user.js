@@ -3,19 +3,22 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Clone Recording Relations Onto Other Recordings In Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9-2025-11-30
-// @author       loujine
-// @downloadURL  https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-reledit-clone_relations.user.js
-// @updateURL    https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-reledit-clone_relations.user.js
-// @supportURL   https://github.com/loujine/musicbrainz-scripts
-// @icon         https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/icon.png
+// @version      1.0+2025-11-30
 // @description  musicbrainz.org relation editor: Clone recording relations onto other recordings
-// @compatible   firefox+tampermonkey
-// @license      MIT
-// @require      https://gist.githubusercontent.com/reosarevok/e9fc05d7f251379c301b948623b3ef03/raw/e635364e2c3a60578bb349a9a95483711f6c4e4d/gistfile1.js
+// @author       loujine + Gemini (with instructions from vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRelationAttributes.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRelationAttributes.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @match        https://musicbrainz.org/release/*/edit-relationships
 // @include      http*://*musicbrainz.org/release/*/edit-relationships
 // @grant        none
 // @run-at       document-end
+// @require      https://gist.githubusercontent.com/reosarevok/e9fc05d7f251379c301b948623b3ef03/raw/e635364e2c3a60578bb349a9a95483711f6c4e4d/gistfile1.js
+// @compatible   firefox+tampermonkey
+// @license      MIT
 // ==/UserScript==
 
 const MBID_REGEX = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/;

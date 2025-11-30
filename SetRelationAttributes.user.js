@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Set Relation Attributes In Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0-2025-11-30
+// @version      1.1+2025-11-30
 // @description  Set attributes (live, partial, solo...) in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -13,7 +13,6 @@
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRelationAttributes.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        https://musicbrainz.org/release/*/edit-relationships
-// @match        http*://*musicbrainz.org/release/*/edit-relationships
 // @grant        none
 // @run-at       document-end
 // @require      https://gist.githubusercontent.com/reosarevok/e9fc05d7f251379c301b948623b3ef03/raw/e635364e2c3a60578bb349a9a95483711f6c4e4d/gistfile1.js

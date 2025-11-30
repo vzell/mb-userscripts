@@ -1,21 +1,23 @@
 /* global $ MB server relEditor */
 'use strict';
 // ==UserScript==
-// @name         MusicBrainz relation editor: Replace release relations by recording relations
-// @namespace    mbz-loujine
-// @author       loujine
-// @version      2024.11.13
-// @downloadURL  https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-reledit-release_rel_to_recording_rel.user.js
-// @updateURL    https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-reledit-release_rel_to_recording_rel.user.js
-// @supportURL   https://github.com/loujine/musicbrainz-scripts
-// @icon         https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/icon.png
+// @name         VZ: MusicBrainz - Replace Release Relations By Recording Relations In Relation Editor
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      0.9+2025-11-30
 // @description  musicbrainz.org relation editor: Replace release relations by recording relations
+// @author       loujine + Gemini (with instructions from vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRelationAttributes.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRelationAttributes.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @include      https://musicbrainz.org/release/*/edit-relationships
+// @match        none
+// @run-at       document-end
+// @require      https://gist.githubusercontent.com/reosarevok/e9fc05d7f251379c301b948623b3ef03/raw/e635364e2c3a60578bb349a9a95483711f6c4e4d/gistfile1.js
 // @compatible   firefox+tampermonkey
 // @license      MIT
-// @require      https://gist.githubusercontent.com/reosarevok/e9fc05d7f251379c301b948623b3ef03/raw/e635364e2c3a60578bb349a9a95483711f6c4e4d/gistfile1.js
-// @include      http*://*musicbrainz.org/release/*/edit-relationships
-// @grant        none
-// @run-at       document-end
 // ==/UserScript==
 
 function moveAR() {
