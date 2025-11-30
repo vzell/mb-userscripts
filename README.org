@@ -15987,3 +15987,32 @@ Additionally the button "Set live" should be there two times and also be placed 
 The whole UI should be collapsed initially.
 
 Actually its the same stuff what we did before with the other uploaded usercript "GuessRelatedWorks"
+
+
+* Clone
+
+In the uploaded userscript, the UI dialog should be changed in such a way that
+
+1.) The mouse pointer should change to a finger when over buttons
+2.) The buttons should visually react when clicking on them
+3.) Also shade the buttons light grey and make them dark grey when the curser moves over them
+
+Additionally the whole
+
+#+begin_example
+        <div>
+          <span>
+            Source recording index in selection:
+          </span>
+          &nbsp;
+          <input type="text" id="cloneRef" placeholder="empty or n or 'n1-n2'">
+          <span title="${cloneIdxHelp}">🛈</span>
+          &nbsp;
+          <span>OR recording link:&nbsp;</span>
+          <input type="text" id="cloneExtRecording" placeholder="recording mbid">
+          <br />
+          <input type="button" id="cloneAR" value="Apply">
+        </div>
+#+end_example
+
+should be rendered in one line right after the heading "Source recording index in selection:"
