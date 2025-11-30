@@ -16108,4 +16108,10 @@ In the uploaded userscript, the UI dialog should be changed in such a way that i
 
 Should be rendered in one line, the link after "loujine GM tools". Also the background of the whole area should be a very light grey and the border should be a continues line.
 
+** 1
+
+Why does on one browser get the container "div#vz-menu" rendered multiple times (once for each execution of a userscript
+which requires the definition from the same .js library file), but on another it is just rendered once
+
+
 
