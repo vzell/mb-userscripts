@@ -221,7 +221,7 @@ function cloneReleaseExtAR(relMBID) {
 
         <div id="clone_release_rels_ui" class="clone-ui-section">
             <h3 style="margin: 0;">Clone release relations from another release:</h3>
-            <span>release link:&nbsp;</span>
+            <span>Release link:&nbsp;</span>
             <input type="text" id="cloneExtRelease" placeholder="release mbid">
             <input type="button" id="cloneReleaseAR" value="Apply" class="work-button-style">
         </div>`);
