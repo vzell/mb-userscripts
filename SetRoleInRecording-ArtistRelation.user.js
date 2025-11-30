@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Set Role In Recording-Artist Relation In Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2025-11-30
+// @version      1.1+2025-11-30
 // @description  Set/unset role relations on selected recordings in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -89,30 +89,59 @@ const setInstrument = (fromType, toType, fromAttrId, toAttrId, toCredit) => {
 (function displayToolbar() {
     relEditor.container(document.querySelector('div.tabs'))
              .insertAdjacentHTML('beforeend', `
-      <details id="instrument_script_toggle">
-        <summary style="display: block;margin-left: 8px;cursor: pointer;">
-          <h3 style="display: list-item;">
-            Replace artist role:
-          </h3>
-        </summary>
-        <div>
-          <p>
-            From: <select id="fromRole">${roles.roles}</select>
-            with attr:
-              <select id="fromRoleAttrs">${roles.roleAttrs}</select>
-            <input type="text" id="fromId" value="" placeholder="or use instrument/vocal id">
-            <br />
-            To:&nbsp;&nbsp;&nbsp;<select id="toRole">${roles.roles}</select>
-            with attr:
-              <select id="toRoleAttrs">${roles.roleAttrs}</select>
-            <input type="text" id="toId" value="" placeholder="or use instrument/vocal id">
-            <br />
-            <input type="text" id="toCredit" value="" placeholder="instrument credit">
-            <br />
-            <input type="button" id="setRole" value='Apply'>
-          </p>
-        </div>
-      </details>
+        <style>
+            .work-button-style {
+                cursor: pointer; /* change cursor to finger */
+                transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
+                /* light grey */
+                background-color: #f0f0f0;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                padding: 4px 10px;
+                font-size: 13px;
+                color: #333; /* text color */
+                display: inline-block;
+            }
+            .work-button-style:hover {
+                /* dark grey on hover */
+                background-color: #555555;
+                color: white;
+            }
+            .work-button-style:active {
+                /* visual click feedback */
+                background-color: #444444;
+                transform: translateY(1px);
+            }
+            h3 {
+                margin: 0; /* Important for flexbox alignment */
+            }
+        </style>
+        <details id="setRole_script_toggle" style="margin-top: 10px;">
+            <summary style="cursor: pointer; display: flex; align-items: center; gap: 8px; margin-left: 8px;">
+                <h3 style="margin: 0;">Replace artist role:</h3>
+                <input type="button" id="setRole" value='Apply' class="work-button-style">
+            </summary>
+            <div style="margin-left: 20px;">
+                <p>
+                    From role:
+                    <select id="fromRole">${roles.roleTypes}</select>
+                    <br />
+                    From instrument/vocal attribute or similar:
+                    <select id="fromRoleAttrs">${roles.roleAttrs}</select>
+                    <input type="text" id="fromId" value="" placeholder="or use instrument/vocal id">
+                </p>
+                <p>
+                    To role:
+                    <select id="toRole">${roles.roleTypes}</select>
+                    <br />
+                    To instrument/vocal attribute or similar:
+                      <select id="toRoleAttrs">${roles.roleAttrs}</select>
+                    <input type="text" id="toId" value="" placeholder="or use instrument/vocal id">
+                    <br />
+                    <input type="text" id="toCredit" value="" placeholder="instrument credit">
+                </p>
+            </div>
+        </details>
     `);
 })();
 
