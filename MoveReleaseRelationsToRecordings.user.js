@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Replace Release Relations By Recording Relations In Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0+2025-11-30
+// @version      1.1+2025-11-30
 // @description  Replace release relations by recording relations in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -15,7 +15,7 @@
 // @include      https://musicbrainz.org/release/*/edit-relationships
 // @match        none
 // @run-at       document-end
-// @require      https://gist.githubusercontent.com/reosarevok/e9fc05d7f251379c301b948623b3ef03/raw/e635364e2c3a60578bb349a9a95483711f6c4e4d/gistfile1.js
+// @require      https://raw.githubusercontent.com/vzell/mb-userscripts/refs/heads/master/vz-common.js
 // @license      MIT
 // ==/UserScript==
 
@@ -59,9 +59,9 @@ function moveAR() {
              .insertAdjacentHTML('beforeend', `
         <style>
             .work-button-style {
-                cursor: pointer; /* 1. Change cursor to finger */
+                cursor: pointer; /* change cursor to finger */
                 transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
-                /* 3. Default: light grey */
+                /* light grey */
                 background-color: #f0f0f0;
                 border: 1px solid #ccc;
                 border-radius: 3px;
@@ -71,12 +71,12 @@ function moveAR() {
                 display: inline-block;
             }
             .work-button-style:hover {
-                /* 3. Dark grey on hover */
+                /* dark grey on hover */
                 background-color: #555555;
                 color: white;
             }
             .work-button-style:active {
-                /* 2. Visual click feedback */
+                /* visual click feedback */
                 background-color: #444444;
                 transform: translateY(1px);
             }

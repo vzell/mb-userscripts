@@ -15,7 +15,7 @@
 // @match        http*://*musicbrainz.org/release/*/edit-relationships
 // @grant        none
 // @run-at       document-end
-// @require      https://gist.githubusercontent.com/reosarevok/e9fc05d7f251379c301b948623b3ef03/raw/e635364e2c3a60578bb349a9a95483711f6c4e4d/gistfile1.js
+// @require      https://raw.githubusercontent.com/vzell/mb-userscripts/refs/heads/master/vz-common.js
 // @license      MIT
 // ==/UserScript==
 
