@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Set Relation Attributes In Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9-2025-11-30
+// @version      1.0-2025-11-30
 // @description  Set attributes (live, partial, solo...) in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -70,36 +70,63 @@ const setAttributes = (targetType, attrName, toggle) => {
 (function displayToolbar() {
     relEditor.container(document.querySelector('div.tabs'))
              .insertAdjacentHTML('beforeend', `
-      <details id="relattrs_script_toggle">
-        <summary style="display: block;margin-left: 8px;cursor: pointer;">
-          <h3 style="display: list-item;">
-            Relation attributes
-          </h3>
-        </summary>
-        <div>
-          <h3>Recording-Work relation attributes</h3>
-          <table>
-            <tr>
-              <td><input type="button" id="setCover" value="Set cover"></td>
-              <td><input type="button" id="setLive" value="Set live"></td>
-              <td><input type="button" id="setPartial" value="Set partial"></td>
-              <td><input type="button" id="setInstrumental" value="Set instrumental"></td>
-              <td><input type="button" id="setMedley" value="Set medley"></td>
-            </tr>
-            <tr>
-              <td><input type="button" id="toggleCover" value="Toggle cover"></td>
-              <td><input type="button" id="toggleLive" value="Toggle live"></td>
-              <td><input type="button" id="togglePartial" value="Toggle partial"></td>
-              <td><input type="button" id="toggleInstrumental" value="Toggle instrumental"></td>
-              <td><input type="button" id="toggleMedley" value="Toggle medley"></td>
-            </tr>
-          </table>
-          <h3>Recording-Artist relation attributes</h3>
-          <input type="button" id="toggleSolo" value="Toggle solo">
-          <input type="button" id="toggleAdditional" value="Toggle additional">
-          <input type="button" id="toggleGuest" value="Toggle guest">
-        </div>
-      </details>
+        <style>
+            .work-button-style {
+                cursor: pointer; /* Change cursor to finger */
+                transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
+                /* Default: light grey */
+                background-color: #f0f0f0;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                padding: 4px 10px;
+                font-size: 13px;
+                color: #333; /* Default text color */
+                display: inline-block;
+            }
+            .work-button-style:hover {
+                /* Dark grey on hover */
+                background-color: #555555;
+                color: white; /* Make text visible */
+            }
+            .work-button-style:active {
+                /* Visual click feedback */
+                background-color: #444444;
+                transform: translateY(1px);
+            }
+        </style>
+
+        <details id="relattrs_script_toggle" style="margin-top: 10px;">
+            <summary style="cursor: pointer; display: flex; align-items: center; gap: 8px; margin-left: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <h3 style="margin: 0;">Relation attributes:</h3>
+                    <input type="button" id="setLiveUncollapsed" value="Set live" class="work-button-style">
+                </div>
+            </summary>
+
+            <div style="margin-left: 20px;">
+                <h3>Recording-Work relation attributes</h3>
+                <table>
+                    <tr>
+                        <td><input type="button" id="setCover" value="Set cover" class="work-button-style"></td>
+                        <td><input type="button" id="setLive" value="Set live" class="work-button-style"></td>
+                        <td><input type="button" id="setPartial" value="Set partial" class="work-button-style"></td>
+                        <td><input type="button" id="setInstrumental" value="Set instrumental" class="work-button-style"></td>
+                        <td><input type="button" id="setMedley" value="Set medley" class="work-button-style"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="button" id="toggleCover" value="Toggle cover" class="work-button-style"></td>
+                        <td><input type="button" id="toggleLive" value="Toggle live" class="work-button-style"></td>
+                        <td><input type="button" id="togglePartial" value="Toggle partial" class="work-button-style"></td>
+                        <td><input type="button" id="toggleInstrumental" value="Toggle instrumental" class="work-button-style"></td>
+                        <td><input type="button" id="toggleMedley" value="Toggle medley" class="work-button-style"></td>
+                    </tr>
+                </table>
+                <h3>Recording-Artist relation attributes</h3>
+                <input type="button" id="toggleSolo" value="Toggle solo" class="work-button-style">
+                <input type="button" id="toggleAdditional" value="Toggle additional" class="work-button-style">
+                <input type="button" id="toggleGuest" value="Toggle guest" class="work-button-style">
+            </div>
+        </details>
     `);
 })();
 
@@ -115,6 +142,12 @@ $(document).ready(function() {
             relEditor.editNote(GM_info.script);
         });
     }
+    // Add event listener for the new "Set live" button in the header
+    document.getElementById('setLiveUncollapsed').addEventListener('click', () => {
+        setAttributes('work', 'live', false);
+        relEditor.editNote(GM_info.script);
+    });
+
     for (const attr of ['Solo', 'Additional', 'Guest']) {
         document.getElementById(`toggle${attr}`).addEventListener('click', () => {
             setAttributes('artist', attr.toLowerCase(), true);

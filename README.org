@@ -15972,3 +15972,18 @@ Also render the following part
 #+end_example
 
 right after the "Remove dates" button, so there is no need to use collapsing
+
+
+* Set Relation Attributes
+
+In the uploaded userscript, the UI dialog should be changed in such a way that
+
+1.) The mouse pointer should change to a finger when over buttons
+2.) The buttons should visually react when clicking on them
+3.) Also shade the buttons light grey and make them dark grey when the curser moves over them
+
+
+Additionally the button "Set live" should be there two times and also be placed directly after "Relation attributes:" in the same line
+The whole UI should be collapsed initially.
+
+Actually its the same stuff what we did before with the other uploaded usercript "GuessRelatedWorks"
