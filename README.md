@@ -12,6 +12,7 @@
 - [MusicBrainz - Set Relation Attributes In Relation Editor](#mb_set_relation_attributes)
 - [MusicBrainz - Replace Release Relations By Recording Relations In Relation Editor](#mb_replace_release_relations_by_recording_relations)
 - [MusicBrainz - Set Role In Recording-Artist Relation In Relation Editor](#mb_set_role_recording_artist_relation)
+- [MusicBrainz - Clone Recording Relations Onto Other Recordings In Relation Editor](#mb_clone_recording_relations_onto_other_relations)
 - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector)
 - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector)
 - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector)
@@ -98,6 +99,13 @@ Set/unset role relations on selected recordings in relation editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SetRoleInRecording-ArtistRelation.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRoleInRecording-ArtistRelation.user.js)
+
+## <a name="mb_clone_recording_relations_onto_other_relations"></a> Clone Recording Relations Onto Other Recordings In Relation Editor
+
+Clone recording relations onto other recordings in the relation editor
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CloneRecordingRelations.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CloneRecordingRelations.user.js)
 
 ## <a name="mb_customizable_primarytype_selector"></a> Customizable PrimaryType Selector
 
