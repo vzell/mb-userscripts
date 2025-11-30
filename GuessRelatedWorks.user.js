@@ -226,7 +226,7 @@ const fetchSubWorks = (workMbid, replace) => {
     <details open="">
     <summary style="display: block;margin-left: 8px;cursor: pointer;">
       <h3 style="display: list-item;">
-        Search for works
+        Search for works:
       </h3>
     </summary>
     <div>
