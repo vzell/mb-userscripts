@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Guess Related Works In Batch In The Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0-2025-11-29
+// @version      1.3-2025-11-29
 // @description  Guess related works in batch in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -211,56 +211,66 @@ const fetchSubWorks = (workMbid, replace) => {
 (function displayToolbar() {
   relEditor.container(document.querySelector('div.tabs')).insertAdjacentHTML('beforeend', `
     <style>
-      #searchWork {
+      .work-button-style {
         cursor: pointer;
-        transition: background-color 0.1s ease;
+        transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
+        /* Default: light grey */
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        padding: 4px 10px;
+        font-size: 13px;
+        color: #333; /* Default text color */
       }
-      #searchWork:hover {
-        background-color: #e6e6e6; /* Slight darkening on hover */
+      .work-button-style:hover {
+        /* Dark grey on hover */
+        background-color: #555555;
+        color: white; /* Make text visible */
       }
-      #searchWork:active {
-        background-color: #d6d6d6; /* More darkening on click */
-        transform: translateY(1px); /* Little downward push */
+      .work-button-style:active {
+        background-color: #444444; /* Even darker on click */
+        transform: translateY(1px);
       }
     </style>
-    <details open="">
-    <summary style="display: block;margin-left: 8px;cursor: pointer;">
-      <h3 style="display: list-item;">
-        Search for works:
-      </h3>
-    </summary>
-    <div>
-      <span>
-        <abbr title="You can add an optional prefix (e.g. the misssing parent
-        work name) to help guessing the right work">prefix</abbr>:&nbsp;
-      </span>
-      <input type="text" id="prefix" value="" placeholder="optional">
-      <br />
-      <input type="button" id="searchWork" value="Guess works">
-      <br />
-      <details style="margin-left: 15px;">
-        <summary style="display: block;cursor: pointer;">
-          <h3 style="display: list-item; margin: 0;">Link to parts of a main Work</h3>
+
+    <details style="margin-left: 8px;">
+        <summary style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-left: -8px;">
+            <h3 style="margin: 0;">Search for works:</h3>
+            <input type="button" id="searchWorkUncollapsed" value="Guess works" class="work-button-style">
         </summary>
-        <div>
-          <p>
-            Fill the main work mbid to link selected recordings to (ordered) parts of the work.
-          </p>
+
+        <div style="margin-top: 10px;">
           <span>
-            Repeats:&nbsp;
+            <abbr title="You can add an optional prefix (e.g. the misssing parent
+            work name) to help guessing the right work">prefix</abbr>:&nbsp;
           </span>
-          <input type="text" id="repeats" placeholder="n1,n2,n3... (optional)">
-          <span title="${repeatHelp}">🛈</span>
+          <input type="text" id="prefix" value="" placeholder="optional">
           <br />
-          <label for="replaceSubworks">Replace work if pre-existing:&nbsp;</label>
-          <input type="checkbox" id="replaceSubworks">
+          <input type="button" id="searchWork" value="Guess works" class="work-button-style">
           <br />
-          <span>Main work name:&nbsp;</span>
-          <input type="text" id="mainWork" placeholder="main work mbid">
-          <input type="button" id="fetchSubworks" value="Load subworks">
+          <details style="margin-left: 15px;">
+            <summary style="display: block;cursor: pointer;">
+              <h3 style="display: list-item; margin: 0;">Link to parts of a main Work</h3>
+            </summary>
+            <div>
+              <p>
+                Fill the main work mbid to link selected recordings to (ordered) parts of the work.
+              </p>
+              <span>
+                Repeats:&nbsp;
+              </span>
+              <input type="text" id="repeats" placeholder="n1,n2,n3... (optional)">
+              <span title="${repeatHelp}">🛈</span>
+              <br />
+              <label for="replaceSubworks">Replace work if pre-existing:&nbsp;</label>
+              <input type="checkbox" id="replaceSubworks">
+              <br />
+              <span>Main work name:&nbsp;</span>
+              <input type="text" id="mainWork" placeholder="main work mbid">
+              <input type="button" id="fetchSubworks" value="Load subworks">
+            </div>
+          </details>
         </div>
-      </details>
-    </div>
     </details>
   `);
 })();
@@ -268,13 +278,20 @@ const fetchSubWorks = (workMbid, replace) => {
 
 $(document).ready(function() {
   let appliedNote = false;
-  document.getElementById('searchWork').addEventListener('click', () => {
+
+  const searchWorkHandler = () => {
     guessWork();
     if (!appliedNote) {
       relEditor.editNote(GM_info.script, 'Set guessed works');
       appliedNote = true;
     }
-  });
+  };
+
+  // Attach handler to both the collapsed and uncollapsed buttons
+  document.getElementById('searchWork').addEventListener('click', searchWorkHandler);
+  document.getElementById('searchWorkUncollapsed').addEventListener('click', searchWorkHandler);
+
+
   document.getElementById('mainWork').addEventListener('input', autoComplete);
   document.getElementById('fetchSubworks').addEventListener('click', () => {
     fetchSubWorks(

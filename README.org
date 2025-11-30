@@ -15909,6 +15909,34 @@ A couple of little observations:
 
 Please make this changes
 
+** 2
+
+In the uploaded script, make the following changes
+
+1.) collapse the whole UI by default initially
+2.) Add an additional button with the same name "Guess works" right behind the "Search for works:"
+
+#+begin_example
+    <summary style="display: block;margin-left: 8px;cursor: pointer;">
+      <h3 style="display: list-item;">
+        Search for works:
+      </h3>
+    </summary>
+#+end_example
+
+So this button should never collapse. The other button
+
+#+begin_example
+      <input type="button" id="searchWork" value="Guess works">
+#+end_example
+
+should still remain. Both buttons when clicked should execute the same  functionality
+
+** 3
+
+Please put the browser's default disclosure triangle (the visual handle) right in front of the "Search for works:" heading
+Also shade the buttons light grey and make them dark grey when the curser moves over them
+
 
 * Copy Dates On Recording Relations
 ** gemini
