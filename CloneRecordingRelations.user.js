@@ -3,192 +3,179 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Clone Recording Relations Onto Other Recordings In Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1+2025-11-30
-// @author       loujine
-// @downloadURL  https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-reledit-clone_relations.user.js
-// @updateURL    https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-reledit-clone_relations.user.js
-// @supportURL   https://github.com/loujine/musicbrainz-scripts
-// @icon         https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/icon.png
-// @description  musicbrainz.org relation editor: Clone recording relations onto other recordings
-// @compatible   firefox+tampermonkey
-// @license      MIT
-// @require      https://gist.githubusercontent.com/reosarevok/e9fc05d7f251379c301b948623b3ef03/raw/e635364e2c3a60578bb349a9a95483711f6c4e4d/gistfile1.js
-// @include      http*://*musicbrainz.org/release/*/edit-relationships
+// @version      1.5+2025-11-30
+// @description  Clone recording relations onto other recordings in the relation editor
+// @author       loujine + Gemini (with instructions from vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/CloneRecordingRelations.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/CloneRecordingRelations.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @match        https://*musicbrainz.org/release/*/edit-relationships
 // @grant        none
 // @run-at       document-end
+// @require      https://gist.githubusercontent.com/reosarevok/e9fc05d7f251379c301b948623b3ef03/raw/e635364e2c3a60578bb349a9a95483711f6c4e4d/gistfile1.js
+// @license      MIT
 // ==/UserScript==
 
-// Inspired by https://github.com/murdos/musicbrainz-userscripts/blob/master/mbz-reledit-copy_relation_to_all_tracks.user.js
-// Inspired by https://github.com/ROpdebee/mb-userscripts/blob/master/clone-recording-rels-from-other-medium.user.js
+const MBID_REGEX = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/;
+const cloneIdxHelp = `Index(es) to clone relationships from.
+Indexes start at 1 and are related to the list of selected recordings, not the tracklist indexes.
+Indexes can be empty (= 1, first selected), a number n or a range n1-n2.
+Relations are cloned by looping over the 'source' recordings (e.g. '1-2' on 7 selected recordings
+will clone the relations of R1 to R3,R5,R7 and the ones from R2 to R4,R6
+`;
 
-const cloneAR = refIdx => {
-    let recordings = relEditor.orderedSelectedRecordings();
-    if (!recordings.length) {
-        return;
-    }
-    let ref;
-    if (refIdx && refIdx.match(/[0-9]+/)) {
-        ref = recordings[parseInt(refIdx) - 1];
-    } else if (refIdx && refIdx.match(/[0-9]+-[0-9]+/)) {
-        const [ref1, ref2] = refIdx.split('-').map(idx => parseInt(idx));
-        ref = recordings.slice(ref1 - 1, ref2);
+function autoComplete(nodeId, entityType) {
+    const $input = $(`input#${nodeId}`);
+    const match = $input.val().match(MBID_REGEX);
+    if (match) {
+        const mbid = match[0];
+        requests.GET(`/ws/2/${entityType}/${mbid}?fmt=json`, data => {
+            data = JSON.parse(data);
+            $input.data('mbid', mbid);
+            $input.val(data.title || data.name);
+            $input.css('background', '#bbffbb');
+        });
     } else {
-        ref = recordings[0];
-        recordings = recordings.slice(1);
+        $input.data().mbid = "";
+        $input.css('background', '#ffaaaa');
+    }
+}
+
+function autoCompleteRec() {
+    return autoComplete('cloneExtRecording', 'recording');
+}
+
+function autoCompleteRel() {
+    return autoComplete('cloneExtRelease', 'release');
+}
+
+function cloneAR(refIdx) {
+    let startIdx;
+    let range;
+    if (refIdx.includes('-')) {
+        startIdx = parseInt(refIdx.split('-')[0]) - 1;
+        range = parseInt(refIdx.split('-')[1]) - startIdx;
+    } else {
+        startIdx = parseInt(refIdx) - 1 || 0;
+        range = 1;
     }
 
-    if (Array.isArray(ref)) {
-        recordings = recordings.filter(rec => !ref.map(r => r.id).includes(rec.id));
-    }
+    const recordings = relEditor.orderedSelectedRecordings();
+    const sourceRecordings = recordings.splice(startIdx, range);
 
-    const relations = Array.isArray(ref)
-        ? ref.flatMap(r => r.relationships)
-        : ref.relationships;
-
-    if (!relations.length) {
-        alert('No relation to clone');
-    }
-
-    relations.forEach(rel => {
-        if (rel.targetType !== 'artist') {
-            return;
-        }
-        recordings.forEach(recording => {
-            const newRel = {
-                entity0: recording,
-                entity1: rel.target,
-                linkTypeID: rel.linkTypeID,
-                attributes: relEditor.createAttributeTree(rel.attributes),
-                begin_date: rel.begin_date,
-                end_date: rel.end_date,
-                ended: rel.ended,
-                entity0_credit: rel.entity0_credit,
-            };
-            relEditor.dispatch({
-                type: 'update-relationship',
-                relationship: {
+    recordings.map((rec, idx) => {
+        const sourceRecording = sourceRecordings[idx % sourceRecordings.length];
+        const sourceRels = sourceRecording.relationships.filter(
+            rel => !['recording', 'work'].includes(rel.target_type)
+        );
+        sourceRels.map(sourceRel => {
+            MB.relationshipEditor.dispatch({
+                type: 'update-relationship-state',
+                sourceEntity: rec,
+                ...relEditor.dispatchDefaults,
+                batchSelectionCount: null,
+                newRelationshipState: {
                     ...relEditor.stateDefaults,
-                    ...newRel,
                     _status: 1,
+                    entity0: sourceRel.backward ? sourceRel.target : rec,
+                    entity1: sourceRel.backward ? rec : sourceRel.target,
+                    entity0_credit: sourceRel.entity0_credit,
+                    entity1_credit: sourceRel.entity1_credit,
+                    begin_date: sourceRel.begin_date,
+                    end_date: sourceRel.end_date,
+                    ended: sourceRel.ended,
+                    attributes: relEditor.createAttributeTree(sourceRel.attributes),
                     id: MB.relationshipEditor.getRelationshipStateId(),
+                    linkTypeID: sourceRel.linkTypeID,
                 },
             });
         });
     });
-};
+}
 
-const cloneExtAR = recMBID => {
-    const recordings = relEditor.orderedSelectedRecordings();
-    if (!recordings.length) {
-        return;
+function cloneExtAR(recMBID) {
+    if (recMBID.split('/').length > 1) {
+        recMBID = recMBID.split('/')[4];
     }
-
-    requests.GET(`/ws/js/recording/${recMBID}`).then(content => {
-        const relations = JSON.parse(content).relationships.filter(
-            rel => rel.target_type === 'artist'
+    requests.GET(`/ws/js/entity/${recMBID}?inc=rels`, resp => {
+        const sourceRels = JSON.parse(resp).relationships.filter(
+            rel => rel.target_type != 'work'
         );
 
-        if (!relations.length) {
-            alert('No relation to clone');
-        }
-
-        relations.forEach(rel => {
-            recordings.forEach(recording => {
-                const newRel = {
-                    entity0: recording,
-                    entity1: rel.target,
-                    linkTypeID: rel.linkTypeID,
-                    attributes: relEditor.createAttributeTree(rel.attributes),
-                    begin_date: rel.begin_date,
-                    end_date: rel.end_date,
-                    ended: rel.ended,
-                    entity0_credit: rel.entity0_credit,
-                };
-                relEditor.dispatch({
-                    type: 'update-relationship',
-                    relationship: {
+        relEditor.orderedSelectedRecordings().forEach(async (recording, recIdx) => {
+            await helper.delay(recIdx * 100);
+            sourceRels.map(sourceRel => {
+                MB.relationshipEditor.dispatch({
+                    type: 'update-relationship-state',
+                    sourceEntity: recording,
+                    ...relEditor.dispatchDefaults,
+                    batchSelectionCount: null,
+                    newRelationshipState: {
                         ...relEditor.stateDefaults,
-                        ...newRel,
                         _status: 1,
+                        entity0: sourceRel.backward ? sourceRel.target : recording,
+                        entity1: sourceRel.backward ? recording : sourceRel.target,
+                        entity0_credit: sourceRel.entity0_credit,
+                        entity1_credit: sourceRel.entity1_credit,
+                        begin_date: sourceRel.begin_date,
+                        end_date: sourceRel.end_date,
+                        ended: sourceRel.ended,
+                        attributes: relEditor.createAttributeTree(sourceRel.attributes),
                         id: MB.relationshipEditor.getRelationshipStateId(),
+                        linkTypeID: sourceRel.linkTypeID,
                     },
                 });
             });
         });
     });
-};
+}
 
-const cloneReleaseExtAR = relMBID => {
-    requests.GET(`/ws/js/release/${relMBID}`).then(content => {
-        const relations = JSON.parse(content).relationships.filter(
-            rel => rel.target_type === 'artist'
+function cloneReleaseExtAR(relMBID) {
+    if (relMBID.split('/').length > 1) {
+        relMBID = relMBID.split('/')[4];
+    }
+
+    requests.GET(`/ws/js/entity/${relMBID}?inc=rels`, async resp => {
+        const sourceRels = JSON.parse(resp).relationships.filter(
+            rel => rel.target_type !== 'url'
         );
+        const dialogSource = MB.relationshipEditor.state.entity;
 
-        if (!relations.length) {
-            alert('No relation to clone');
-        }
-
-        relations.forEach(rel => {
-            const newRel = {
-                entity0: relEditor.state.entity,
-                entity1: rel.target,
-                linkTypeID: rel.linkTypeID,
-                attributes: relEditor.createAttributeTree(rel.attributes),
-                begin_date: rel.begin_date,
-                end_date: rel.end_date,
-                ended: rel.ended,
-                entity0_credit: rel.entity0_credit,
-            };
-            relEditor.dispatch({
-                type: 'update-relationship',
-                relationship: {
+        sourceRels.map(sourceRel => {
+            MB.relationshipEditor.dispatch({
+                type: 'update-relationship-state',
+                sourceEntity: dialogSource,
+                ...relEditor.dispatchDefaults,
+                batchSelectionCount: null,
+                newRelationshipState: {
                     ...relEditor.stateDefaults,
-                    ...newRel,
                     _status: 1,
+                    entity0: sourceRel.backward ? sourceRel.target : dialogSource,
+                    entity1: sourceRel.backward ? dialogSource : sourceRel.target,
+                    entity0_credit: sourceRel.entity0_credit,
+                    entity1_credit: sourceRel.entity1_credit,
+                    begin_date: sourceRel.begin_date,
+                    end_date: sourceRel.end_date,
+                    ended: sourceRel.ended,
+                    attributes: relEditor.createAttributeTree(sourceRel.attributes),
                     id: MB.relationshipEditor.getRelationshipStateId(),
+                    linkTypeID: sourceRel.linkTypeID,
                 },
             });
         });
     });
-};
-
-const autoCompleteRec = () => {
-    const search = $('input#cloneExtRecording');
-    const mbid = search.data('mbid');
-    if (!mbid) {
-        return;
-    }
-    requests.GET(`/ws/js/recording/${mbid}`).then(content => {
-        search.data('mbid', JSON.parse(content).id);
-    });
-};
-
-const autoCompleteRel = () => {
-    const search = $('input#cloneExtRelease');
-    const mbid = search.data('mbid');
-    if (!mbid) {
-        return;
-    }
-    requests.GET(`/ws/js/release/${mbid}`).then(content => {
-        search.data('mbid', JSON.parse(content).id);
-    });
-};
+}
 
 (function displayToolbar() {
-    const cloneIdxHelp = `
-Select reference recording using its index in the tracklist selection,
-starting at 1. Use 'n' for the n-th recording or 'n1-n2' for a range of recordings.
-If empty, the first selected recording is used as reference, and relations are
-copied to all other selected recordings.
-`;
-
     relEditor.container(document.querySelector('div.tabs'))
-             .insertAdjacentHTML('beforeend', `
-        <style>
+             .insertAdjacentHTML('beforeend', `<style>
             .work-button-style {
-                cursor: pointer; /* change cursor to finger */
+                cursor: pointer; /* 1. Change cursor to finger */
                 transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
-                /* light grey */
+                /* 3. Default: light grey */
                 background-color: #f0f0f0;
                 border: 1px solid #ccc;
                 border-radius: 3px;
@@ -198,12 +185,12 @@ copied to all other selected recordings.
                 display: inline-block;
             }
             .work-button-style:hover {
-                /* dark grey on hover */
+                /* 3. Dark grey on hover */
                 background-color: #555555;
                 color: white;
             }
             .work-button-style:active {
-                /* visual click feedback */
+                /* 2. Visual click feedback */
                 background-color: #444444;
                 transform: translateY(1px);
             }
@@ -213,9 +200,10 @@ copied to all other selected recordings.
             .clone-ui-section {
                 display: flex;
                 align-items: center;
-                flex-wrap: wrap;
+                flex-wrap: wrap; /* Allows wrapping if the line is too long */
                 gap: 8px;
                 margin-top: 10px;
+                margin-bottom: 10px;
             }
         </style>
 
@@ -236,8 +224,7 @@ copied to all other selected recordings.
             <span>release link:&nbsp;</span>
             <input type="text" id="cloneExtRelease" placeholder="release mbid">
             <input type="button" id="cloneReleaseAR" value="Apply" class="work-button-style">
-        </div>
-    `);
+        </div>`);
 })();
 
 $(document).ready(function () {

@@ -16050,6 +16050,7 @@ Additionally the info from the "details" section with id="clone_release_rels_scr
 should also be rendered non-collapsable in one line right after the heading "Clone release relations from another release:"
 one line below the above one.
 
+PLEASE DO NOT make any changes to the code logic, just the button appearance and placing.
 
 * Replace Release Relations By Recording Relations In Relation Editor
 
