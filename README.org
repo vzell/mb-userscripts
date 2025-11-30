@@ -15973,6 +15973,9 @@ Also render the following part
 
 right after the "Remove dates" button, so there is no need to use collapsing
 
+** change the button style
+
+In the uploaded userscript, change the button style to be the same as the recently implmented ones (I mean the grey handling)
 
 * Set Relation Attributes
 
@@ -16016,3 +16019,23 @@ Additionally the whole
 #+end_example
 
 should be rendered in one line right after the heading "Source recording index in selection:"
+
+
+* Replace Release Relations By Recording Relations In Relation Editor
+
+In the uploaded userscript, the UI dialog should be changed in such a way that
+
+These two elements should be rendered in one line
+
+#+begin_example
+        <h3>Move release relations to recordings</h3>
+        <input type="button" id="moveAR" value="Move release relations to selected recordings">
+#+end_example
+
+althought the button text should be changed to just "Move to selected recordings"
+
+1.) The mouse pointer should change to a finger when over buttons
+2.) The buttons should visually react when clicking on them
+3.) Also shade the buttons light grey and make them dark grey when the curser moves over them
+
+PLEASE DO NOT make any changes to the code logic, just the button appearance an placing.

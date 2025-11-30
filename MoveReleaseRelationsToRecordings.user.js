@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Replace Release Relations By Recording Relations In Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2025-11-30
+// @version      1.0+2025-11-30
 // @description  musicbrainz.org relation editor: Replace release relations by recording relations
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -58,8 +58,38 @@ function moveAR() {
 (function displayToolbar() {
     relEditor.container(document.querySelector('div.tabs'))
              .insertAdjacentHTML('beforeend', `
-        <h3>Move release relations to recordings</h3>
-        <input type="button" id="moveAR" value="Move release relations to selected recordings">
+        <style>
+            .work-button-style {
+                cursor: pointer; /* 1. Change cursor to finger */
+                transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
+                /* 3. Default: light grey */
+                background-color: #f0f0f0;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                padding: 4px 10px;
+                font-size: 13px;
+                color: #333; /* Default text color */
+                display: inline-block;
+            }
+            .work-button-style:hover {
+                /* 3. Dark grey on hover */
+                background-color: #555555;
+                color: white;
+            }
+            .work-button-style:active {
+                /* 2. Visual click feedback */
+                background-color: #444444;
+                transform: translateY(1px);
+            }
+            h3 {
+                margin: 0; /* Remove default margin to ensure vertical alignment */
+            }
+        </style>
+
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <h3 style="margin: 0;">Move release relations to recordings:</h3>
+            <input type="button" id="moveAR" value="Move to selected recordings" class="work-button-style">
+        </div>
     `);
 })();
 

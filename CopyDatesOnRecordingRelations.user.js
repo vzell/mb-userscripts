@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Copy Dates On Recording Relations Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.3+2025-11-29
+// @version      1.4+2025-11-29
 // @description  Copy/remove dates on recording relations in musicbrainz.relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -128,22 +128,26 @@ const removeDates = () => {
     .insertAdjacentHTML('beforeend', `
         <style>
             .date-button {
-                cursor: pointer;
-                transition: background-color 0.1s ease, transform 0.1s ease;
-                /* Inherit MB default button styling */
-                padding: 4px 10px;
-                background-color: #eee;
+                cursor: pointer; /* 1. Change cursor to finger */
+                transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
+                /* light grey */
+                background-color: #f0f0f0;
                 border: 1px solid #ccc;
-                border-radius: 4px;
-                font-size: 12px;
-                margin-right: 8px; /* For spacing between inline buttons */
+                border-radius: 3px;
+                padding: 4px 10px;
+                font-size: 13px;
+                color: #333; /* text color */
+                display: inline-block;
             }
             .date-button:hover {
-                background-color: #e6e6e6; /* Slight darkening on hover */
+                /* dark grey on hover */
+                background-color: #555555;
+                color: white;
             }
             .date-button:active {
-                background-color: #d6d6d6; /* More darkening on click */
-                transform: translateY(1px); /* Little downward push */
+                /* visual click feedback */
+                background-color: #444444;
+                transform: translateY(1px);
             }
             /* Style to align the checkbox label/input pair inline with buttons */
             .inline-checkbox-label {
