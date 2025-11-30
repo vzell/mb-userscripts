@@ -11,22 +11,10 @@
 - [MusicBrainz - Copy Dates On Recording Relations Relation Editor](#mb_copy_dates_on_recordings)
 - [MusicBrainz - Set Relation Attributes In Relation Editor](#mb_set_relation_attributes)
 - [MusicBrainz - Replace Release Relations By Recording Relations In Relation Editor](#mb_replace_release_relations_by_recording_relations)
+- [MusicBrainz - Set Role In Recording-Artist Relation In Relation Editor](#mb_set_role_recording_artist_relation)
 - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector)
 - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector)
 - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector)
-
-The Loujine scripts temporarely needed to be patched with the folloing line:
-
-// @require      https://gist.githubusercontent.com/reosarevok/e9fc05d7f251379c301b948623b3ef03/raw/e635364e2c3a60578bb349a9a95483711f6c4e4d/gistfile1.js
-
-instead of
-
-// @require      https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mbz-loujine-common.js
-
-
- - https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-reledit-set_relation_attrs.user.js
- - https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-reledit-copy_dates.user.js
-
 
 ## <a name="mb_customizable_selector"></a> MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages
 
@@ -99,10 +87,17 @@ Set attributes (live, partial, solo...) in relation editor.
 
 ## <a name="mb_replace_release_relations_by_recording_relations"></a> Replace Release Relations By Recording Relations In Relation Editor
 
-Set attributes (live, partial, solo...) in relation editor.
+Replace release relations by recording relations in relation editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/MoveReleaseRelationsToRecordings.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/MoveReleaseRelationsToRecordings.user.js)
+
+## <a name="mb_set_role_recording_artist_relation"></a> Set Role In Recording-Artist Relation In Relation Editor
+
+Set/unset role relations on selected recordings in relation editor.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SetRoleInRecording-ArtistRelation.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRoleInRecording-ArtistRelation.user.js)
 
 ## <a name="mb_customizable_primarytype_selector"></a> Customizable PrimaryType Selector
 

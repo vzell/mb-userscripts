@@ -4,7 +4,7 @@
 // @name         VZ: MusicBrainz - Replace Release Relations By Recording Relations In Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      1.0+2025-11-30
-// @description  musicbrainz.org relation editor: Replace release relations by recording relations
+// @description  Replace release relations by recording relations in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
