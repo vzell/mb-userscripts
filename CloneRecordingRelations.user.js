@@ -215,14 +215,14 @@ function cloneReleaseExtAR(relMBID) {
             <input type="text" id="cloneRef" placeholder="empty or n or 'n1-n2'">
             <span title="${cloneIdxHelp}">🛈</span>
             <span>OR recording link:&nbsp;</span>
-            <input type="text" id="cloneExtRecording" placeholder="recording mbid">
+            <input type="text" id="cloneExtRecording" placeholder="Recording MBID">
             <input type="button" id="cloneAR" value="Apply" class="work-button-style">
         </div>
 
         <div id="clone_release_rels_ui" class="clone-ui-section">
             <h3 style="margin: 0;">Clone release relations from another release:</h3>
             <span>Release link:&nbsp;</span>
-            <input type="text" id="cloneExtRelease" placeholder="release mbid">
+            <input type="text" id="cloneExtRelease" placeholder="Release MBID">
             <input type="button" id="cloneReleaseAR" value="Apply" class="work-button-style">
         </div>`);
 })();
