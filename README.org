@@ -15992,7 +15992,7 @@ The whole UI should be collapsed initially.
 Actually its the same stuff what we did before with the other uploaded usercript "GuessRelatedWorks"
 
 
-* Clone
+* Clone Recording Relations Onto Other Recordings In Relation Editor
 
 In the uploaded userscript, the UI dialog should be changed in such a way that
 
@@ -16000,9 +16000,17 @@ In the uploaded userscript, the UI dialog should be changed in such a way that
 2.) The buttons should visually react when clicking on them
 3.) Also shade the buttons light grey and make them dark grey when the curser moves over them
 
-Additionally the whole
+Adjust the rendering the following way:
+
+The following info from the "details" section with id="clone_rels_script_toggle"
 
 #+begin_example
+      <details id="clone_rels_script_toggle">
+        <summary style="display: block;margin-left: 8px;cursor: pointer;">
+          <h3 style="display: list-item;">
+            Clone recording relations to selected recordings:
+          </h3>
+        </summary>
         <div>
           <span>
             Source recording index in selection:
@@ -16016,9 +16024,31 @@ Additionally the whole
           <br />
           <input type="button" id="cloneAR" value="Apply">
         </div>
+      </details>
 #+end_example
 
-should be rendered in one line right after the heading "Source recording index in selection:"
+should be rendered non-collapsable in one line right after the heading "Clone recording relations to selected recordings:"
+
+Additionally the info from the "details" section with id="clone_release_rels_script_toggle"
+
+#+begin_example
+      <details id="clone_release_rels_script_toggle">
+        <summary style="display: block;margin-left: 8px;cursor: pointer;">
+          <h3 style="display: list-item;">
+            Clone release relations from another release:
+          </h3>
+        </summary>
+        <div>
+          <span>release link:&nbsp;</span>
+          <input type="text" id="cloneExtRelease" placeholder="release mbid">
+          <br />
+          <input type="button" id="cloneReleaseAR" value="Apply">
+        </div>
+      </details>
+#+end_example
+
+should also be rendered non-collapsable in one line right after the heading "Clone release relations from another release:"
+one line below the above one.
 
 
 * Replace Release Relations By Recording Relations In Relation Editor
@@ -16037,6 +16067,21 @@ althought the button text should be changed to just "Move to selected recordings
 1.) The mouse pointer should change to a finger when over buttons
 2.) The buttons should visually react when clicking on them
 3.) Also shade the buttons light grey and make them dark grey when the curser moves over them
+
+PLEASE DO NOT make any changes to the code logic, just the button appearance and placing.
+
+
+* Set Role In Recording-Artist Relation In Relation Editor
+
+In the uploaded userscript, the UI dialog should be changed in such a way that
+
+1.) The mouse pointer should change to a finger when over buttons
+2.) The buttons should visually react when clicking on them
+3.) Also shade the buttons light grey and make them dark grey when the curser moves over them
+
+Additionally place the browser's default disclosure triangle (the visual handle) right in front of the "Replace artist role:"
+heading and the "Apply" button '<input type="button" id="setRole" value='Apply'>' right after the heading
+"Replace artist role:", so all should be in one line. Right now the "Replace artist role:" is place after the disclosure triangle.
 
 PLEASE DO NOT make any changes to the code logic, just the button appearance and placing.
 
@@ -16063,16 +16108,3 @@ In the uploaded userscript, the UI dialog should be changed in such a way that i
 Should be rendered in one line, the link after "loujine GM tools". Also the background of the whole area should be a very light grey and the border should be a continues line.
 
 
-* Set Role In Recording-Artist Relation In Relation Editor
-
-In the uploaded userscript, the UI dialog should be changed in such a way that
-
-1.) The mouse pointer should change to a finger when over buttons
-2.) The buttons should visually react when clicking on them
-3.) Also shade the buttons light grey and make them dark grey when the curser moves over them
-
-Additionally place the browser's default disclosure triangle (the visual handle) right in front of the "Replace artist role:"
-heading and the "Apply" button '<input type="button" id="setRole" value='Apply'>' right after the heading
-"Replace artist role:", so all should be in one line. Right now the "Replace artist role:" is place after the disclosure triangle.
-
-PLEASE DO NOT make any changes to the code logic, just the button appearance and placing.
