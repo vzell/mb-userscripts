@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Clone Recording Relations Onto Other Recordings In Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.5+2025-11-30
+// @version      1.6+2025-11-30
 // @description  Clone recording relations onto other recordings in the relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated

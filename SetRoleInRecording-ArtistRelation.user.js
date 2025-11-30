@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Set Role In Recording-Artist Relation In Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1+2025-11-30
+// @version      1.2+2025-11-30
 // @description  Set/unset role relations on selected recordings in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated

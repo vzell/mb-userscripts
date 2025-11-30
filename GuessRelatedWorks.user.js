@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Guess Related Works In Batch In The Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.5+2025-11-29
+// @version      1.6+2025-11-30
 // @description  Guess related works in batch in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
