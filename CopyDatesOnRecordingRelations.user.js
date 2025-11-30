@@ -131,7 +131,7 @@ const removeDates = () => {
         <input type="checkbox" id="replaceDates">
         <br />
         <input type="button" id="copyDates" value="Copy dates">
-        <input type="button" id="removeDates" value="Removes dates">
+        <input type="button" id="removeDates" value="Remove dates">
     `);
 })();
 

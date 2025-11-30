@@ -15908,3 +15908,14 @@ A couple of little observations:
 4.) The button should visually react when clicking on it
 
 Please make this changes
+
+
+* Copy Dates On Recording Relations
+
+In the uploaded userscript, the UI dialog should be changed in such a way that
+
+1.) The mouse pointer should change to a finger when over the "Guess works" button
+2.) The button should visually react when clicking on it
+
+
+
