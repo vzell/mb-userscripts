@@ -16038,4 +16038,41 @@ althought the button text should be changed to just "Move to selected recordings
 2.) The buttons should visually react when clicking on them
 3.) Also shade the buttons light grey and make them dark grey when the curser moves over them
 
-PLEASE DO NOT make any changes to the code logic, just the button appearance an placing.
+PLEASE DO NOT make any changes to the code logic, just the button appearance and placing.
+
+* common functions
+** gemini
+
+In the uploaded userscript, the UI dialog should be changed in such a way that in the following code
+
+#+begin_example
+      <div id="loujine-menu"
+         style="background-color: white;
+            padding: 8px; margin: 0px -6px 6px;
+            border: 5px dotted rgb(115, 109, 171);">
+        <h2>loujine GM tools</h2>
+        <a href="${wikiUrl}" target="_blank">documentation</a>
+      </div>
+#+end_example
+
+#+begin_example
+        <h2>loujine GM tools</h2>
+        <a href="${wikiUrl}" target="_blank">documentation</a>
+#+end_example
+
+Should be rendered in one line, the link after "loujine GM tools". Also the background of the whole area should be a very light grey and the border should be a continues line.
+
+
+* Set Role In Recording-Artist Relation In Relation Editor
+
+In the uploaded userscript, the UI dialog should be changed in such a way that
+
+1.) The mouse pointer should change to a finger when over buttons
+2.) The buttons should visually react when clicking on them
+3.) Also shade the buttons light grey and make them dark grey when the curser moves over them
+
+Additionally place the browser's default disclosure triangle (the visual handle) right in front of the "Replace artist role:"
+heading and the "Apply" button '<input type="button" id="setRole" value='Apply'>' right after the heading
+"Replace artist role:", so all should be in one line. Right now the "Replace artist role:" is place after the disclosure triangle.
+
+PLEASE DO NOT make any changes to the code logic, just the button appearance and placing.

@@ -92,7 +92,7 @@ const setInstrument = (fromType, toType, fromAttrId, toAttrId, toCredit) => {
       <details id="instrument_script_toggle">
         <summary style="display: block;margin-left: 8px;cursor: pointer;">
           <h3 style="display: list-item;">
-            Replace artist role
+            Replace artist role:
           </h3>
         </summary>
         <div>

@@ -879,11 +879,13 @@ class RelationshipEditor {
     }
     node.insertAdjacentHTML('afterend', `
       <div id="loujine-menu"
-         style="background-color: white;
-            padding: 8px; margin: 0px -6px 6px;
-            border: 5px dotted rgb(115, 109, 171);">
-        <h2>loujine GM tools</h2>
-        <a href="${wikiUrl}" target="_blank">documentation</a>
+          style="background-color: #f5f5f5;
+                 padding: 8px; margin: 0px -6px 6px;
+                 border: 5px solid rgb(115, 109, 171);">
+          <div style="display: flex; align-items: center; gap: 10px;">
+              <h2 style="margin: 0; font-size: 1.5em;">loujine GM tools</h2>
+              <a href="${wikiUrl}" target="_blank">documentation</a>
+          </div>
       </div>
     `);
     return document.getElementById('loujine-menu');
@@ -933,3 +935,43 @@ class RelationshipEditor {
 
 // eslint-disable-next-line no-unused-vars
 const relEditor = new RelationshipEditor();
+
+/**
+ * Returns the HTML string for the loujine GM tools menu, styled according to
+ * the latest UI guidelines (light grey background, solid border, single-line
+ * title/documentation link).
+ *
+ * This function should be called by the individual userscripts that require the menu.
+ */
+function getLoujineMenuHtml() {
+    return `
+<div id="loujine-menu"
+    style="background-color: #f5f5f5;
+           padding: 8px; margin: 0px -6px 6px;
+           border: 5px solid rgb(115, 109, 171);">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <h2 style="margin: 0; font-size: 1.5em;">loujine GM tools</h2>
+        <a href="${wikiUrl}" target="_blank">documentation</a>
+    </div>
+</div>
+`;
+}
+
+/**
+ * Inserts the styled Loujine GM tools menu after the specified DOM node.
+ * This function is meant to replace the inline HTML injection in other userscripts.
+ * * @param {HTMLElement} node The DOM node after which the menu should be inserted.
+ */
+function addLoujineMenu(node) {
+    node.insertAdjacentHTML('afterend', `
+        <div id="loujine-menu"
+            style="background-color: #f5f5f5; /* Very light grey */
+                   padding: 8px; margin: 0px -6px 6px;
+                   border: 5px solid rgb(115, 109, 171);"> /* Continuous line (solid) */
+            <div style="display: flex; align-items: center; gap: 10px;"> /* One line layout */
+                <h2 style="margin: 0; font-size: 1.5em;">loujine GM tools</h2>
+                <a href="${wikiUrl}" target="_blank">documentation</a>
+            </div>
+        </div>
+    `);
+}
