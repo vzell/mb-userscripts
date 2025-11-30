@@ -15911,11 +15911,15 @@ Please make this changes
 
 
 * Copy Dates On Recording Relations
+** gemini
 
 In the uploaded userscript, the UI dialog should be changed in such a way that
 
-1.) The mouse pointer should change to a finger when over the "Guess works" button
-2.) The button should visually react when clicking on it
+1.) The mouse pointer should change to a finger when over the "Copy dates" and "Remove dates" buttons
+2.) The buttons should visually react when clicking on them
 
+Additionally the button "Copy dates" should be there two times and also be placed directly after "<h3>Dates:</h3>" in the same line
 
+** 1
 
+Remove one instance ot the "Copy dates" button and make the whole dialog initially collapsed

@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Copy Dates On Recording Relations Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9-2025-11-29
+// @version      1.0-2025-11-29
 // @description  Copy/remove dates on recording relations in musicbrainz.relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -126,17 +126,45 @@ const removeDates = () => {
 (function displayToolbar() {
     relEditor.container(document.querySelector('div.tabs'))
     .insertAdjacentHTML('beforeend', `
-        <h3>Dates</h3>
-        <label for="replaceDates">Replace dates if pre-existing:&nbsp;</label>
-        <input type="checkbox" id="replaceDates">
-        <br />
-        <input type="button" id="copyDates" value="Copy dates">
-        <input type="button" id="removeDates" value="Remove dates">
+        <style>
+            .date-button {
+                cursor: pointer;
+                transition: background-color 0.1s ease, transform 0.1s ease;
+                /* Inherit MB default button styling */
+                padding: 4px 10px;
+                background-color: #eee;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-size: 12px;
+                margin-right: 8px; /* For spacing between inline buttons */
+            }
+            .date-button:hover {
+                background-color: #e6e6e6; /* Slight darkening on hover */
+            }
+            .date-button:active {
+                background-color: #d6d6d6; /* More darkening on click */
+                transform: translateY(1px); /* Little downward push */
+            }
+        </style>
+        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <h3>Dates:</h3>
+            <input type="button" class="date-button" id="copyDates" value="Copy dates">
+            <input type="button" class="date-button" id="removeDates" value="Remove dates">
+
+            <details style="margin-top: 5px;">
+                <summary style="display: none;"></summary>
+                <div style="margin-top: 5px;">
+                    <label for="replaceDates">Replace dates if pre-existing:&nbsp;</label>
+                    <input type="checkbox" id="replaceDates">
+                </div>
+            </details>
+        </div>
     `);
 })();
 
 $(document).ready(function () {
     let appliedNote = false;
+
     document.getElementById('removeDates').addEventListener('click', () => {
         removeDates();
         if (!appliedNote) {
@@ -144,7 +172,8 @@ $(document).ready(function () {
             appliedNote = true;
         }
     });
-    document.getElementById('copyDates').addEventListener('click', () => {
+
+    const copyDatesHandler = () => {
         propagateDates(
             document.querySelector('input#replaceDates').checked
         );
@@ -155,6 +184,10 @@ $(document).ready(function () {
             );
             appliedNote = true;
         }
-    });
+    };
+
+    // Attach event listener to the single Copy Dates button
+    document.getElementById('copyDates').addEventListener('click', copyDatesHandler);
+
     return false;
 });
