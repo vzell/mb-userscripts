@@ -15937,6 +15937,16 @@ should still remain. Both buttons when clicked should execute the same  function
 Please put the browser's default disclosure triangle (the visual handle) right in front of the "Search for works:" heading
 Also shade the buttons light grey and make them dark grey when the curser moves over them
 
+** 4
+
+The actual trianle handle before the deading is actually not visible, but by clicking the header I can
+uncollapse. Please make the trinagle alos visible
+
+** 5
+
+The triangle overlaps with the beginning char of "Search for works:" So its hardly visible.
+Also iniitally everything should be collapsed
+
 
 * Copy Dates On Recording Relations
 ** gemini

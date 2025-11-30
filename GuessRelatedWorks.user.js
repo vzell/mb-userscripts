@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Guess Related Works In Batch In The Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.3-2025-11-29
+// @version      1.4-2025-11-29
 // @description  Guess related works in batch in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -221,6 +221,8 @@ const fetchSubWorks = (workMbid, replace) => {
         padding: 4px 10px;
         font-size: 13px;
         color: #333; /* Default text color */
+        /* Ensure buttons are displayed inline for the flex summary */
+        display: inline-block;
       }
       .work-button-style:hover {
         /* Dark grey on hover */
@@ -231,15 +233,36 @@ const fetchSubWorks = (workMbid, replace) => {
         background-color: #444444; /* Even darker on click */
         transform: translateY(1px);
       }
+      /* Ensure summary content aligns correctly next to the triangle */
+      details > summary {
+          /* By default, summary is block. Use flex on the inner content. */
+          list-style: none; /* Hide default bullet if visible */
+          /* Re-add the triangle manually using ::before or rely on default behavior
+             by ensuring the content is positioned after the triangle area. */
+      }
+      details > summary::before {
+          /* Force the triangle position */
+          content: '►'; /* Use a custom character as fallback for triangle */
+          display: inline-block;
+          margin-right: 0.5em;
+          transition: transform 0.2s;
+          transform-origin: 0.3em 50%;
+          /* Overridden by the browser's native triangle in most cases, but good to ensure spacing */
+      }
+      details[open] > summary::before {
+          transform: rotate(90deg);
+      }
     </style>
 
-    <details style="margin-left: 8px;">
-        <summary style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-left: -8px;">
-            <h3 style="margin: 0;">Search for works:</h3>
-            <input type="button" id="searchWorkUncollapsed" value="Guess works" class="work-button-style">
+    <details style="margin-top: 10px;">
+        <summary style="cursor: pointer; display: flex; align-items: center; gap: 8px; margin-left: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <h3 style="margin: 0;">Search for works:</h3>
+                <input type="button" id="searchWorkUncollapsed" value="Guess works" class="work-button-style">
+            </div>
         </summary>
 
-        <div style="margin-top: 10px;">
+        <div style="margin-left: 20px; margin-top: 10px;">
           <span>
             <abbr title="You can add an optional prefix (e.g. the misssing parent
             work name) to help guessing the right work">prefix</abbr>:&nbsp;
