@@ -871,7 +871,7 @@ class RelationshipEditor {
   }
 
   container(node) {
-    const container = document.getElementById('loujine-menu');
+    const container = document.getElementById('vz-menu');
     if (container !== null) {
       return container;
     }
