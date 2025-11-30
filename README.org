@@ -15923,3 +15923,14 @@ Additionally the button "Copy dates" should be there two times and also be place
 ** 1
 
 Remove one instance ot the "Copy dates" button and make the whole dialog initially collapsed
+
+** 2
+
+Also render the following part
+
+#+begin_example
+<label for="replaceDates">Replace dates if pre-existing:&nbsp;</label>
+                    <input type="checkbox" id="replaceDates">
+#+end_example
+
+right after the "Remove dates" button, so there is no need to use collapsing

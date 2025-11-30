@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Copy Dates On Recording Relations Relation Editor
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0-2025-11-29
+// @version      1.1-2025-11-29
 // @description  Copy/remove dates on recording relations in musicbrainz.relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -145,19 +145,25 @@ const removeDates = () => {
                 background-color: #d6d6d6; /* More darkening on click */
                 transform: translateY(1px); /* Little downward push */
             }
+            /* Style to align the checkbox label/input pair inline with buttons */
+            .inline-checkbox-label {
+                display: flex;
+                align-items: center;
+                gap: 4px; /* Space between label text and checkbox */
+            }
+            .inline-checkbox-label input[type="checkbox"] {
+                margin: 0; /* Remove default margin */
+            }
         </style>
-        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
             <h3>Dates:</h3>
             <input type="button" class="date-button" id="copyDates" value="Copy dates">
             <input type="button" class="date-button" id="removeDates" value="Remove dates">
 
-            <details style="margin-top: 5px;">
-                <summary style="display: none;"></summary>
-                <div style="margin-top: 5px;">
-                    <label for="replaceDates">Replace dates if pre-existing:&nbsp;</label>
-                    <input type="checkbox" id="replaceDates">
-                </div>
-            </details>
+            <label for="replaceDates" class="inline-checkbox-label" style="font-weight: normal; margin-left: 8px;">
+                Replace dates if pre-existing:&nbsp;
+                <input type="checkbox" id="replaceDates">
+            </label>
         </div>
     `);
 })();
