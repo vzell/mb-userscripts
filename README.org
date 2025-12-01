@@ -16423,3 +16423,37 @@ Replace the old class (.work-button-style) with the new one (.mb-userscript-butt
 // ... (end of file)
 #+end_example
 
+
+* Edit recording comments
+
+In the uploaded userscript, the <button>Edit recording comments</button> button should be change to have "padding: 2px 10px"
+and it should also react to hovering and activation, something like
+
+#+begin_example
+<style>
+            .work-button-style {
+                cursor: pointer; /* change cursor to finger */
+                transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
+                /* light grey */
+                background-color: #f0f0f0;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                padding: 2px 10px;
+                font-size: 11px;
+                color: #333; /* text color */
+                display: inline-block;
+            }
+            .work-button-style:hover {
+                /* dark grey on hover */
+                background-color: #555555;
+                color: white;
+            }
+            .work-button-style:active {
+                /* visual click feedback */
+                background-color: #444444;
+                transform: translateY(1px);
+            }
+        </style>
+#+end_example
+
+Please DO NOT make any code changes, as everything works ok.

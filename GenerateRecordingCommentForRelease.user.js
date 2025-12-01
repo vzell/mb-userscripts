@@ -70,7 +70,7 @@ function setRecordingComments() {
     // Load custom edit note from storage or use default
     let editNoteText = localStorage.getItem(STORAGE_KEY) || DEFAULT_EDIT_NOTE_TEXT;
 
-    // Add custom CSS for the input fields and settings icon
+    // Add custom CSS for the input fields, settings icon, and the new button style
     $('head').append(
         $('<style></style>').text(`
             input.recording-comment { background: inherit; border: 1px #999 solid; width: 32em; margin-left: 0.5em; }
@@ -108,6 +108,29 @@ function setRecordingComments() {
                 color: black;
                 text-decoration: none;
                 cursor: pointer;
+            }
+            /* New button style for "Edit recording comments" */
+            .work-button-style {
+                cursor: pointer; /* change cursor to finger */
+                transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
+                /* light grey */
+                background-color: #f0f0f0;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                padding: 2px 10px; /* <--- REQUIRED PADDING CHANGE */
+                font-size: 11px;
+                color: #333; /* text color */
+                display: inline-block;
+            }
+            .work-button-style:hover {
+                /* dark grey on hover */
+                background-color: #555555;
+                color: white;
+            }
+            .work-button-style:active {
+                /* visual click feedback */
+                background-color: #444444;
+                transform: translateY(1px);
             }
         `),
     );
@@ -219,7 +242,7 @@ function setRecordingComments() {
 
     // Button to toggle the editing interface visibility
     $('<button>Edit recording comments</button>')
-        .addClass('styled-button')
+        .addClass('work-button-style')
         .on('click', function () {
             editing = !editing;
             $('#set-recording-comments').add($inputs).toggle(editing); // Show/hide table and inputs
