@@ -1,9 +1,9 @@
-/* global $ MB requests helper server relEditor */
+/* global $ MB server relEditor */
 'use strict';
 // ==UserScript==
-// @name         VZ: MusicBrainz - Guess Related Works In Batch In The Relation Editor
+// @name         VZ: MusicBrainz Relation Editor - Guess Related Works In Batch
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.6+2025-11-30
+// @version      1.0+2025-12-01
 // @description  Guess related works in batch in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated

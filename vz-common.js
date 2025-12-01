@@ -871,22 +871,22 @@ class RelationshipEditor {
   }
 
   container(node) {
-    const container = document.getElementById('vz-menu');
+    const container = document.getElementById('vzell-menu');
     if (container !== null) {
       return container;
     }
     node.insertAdjacentHTML('afterend', `
-      <div id="vz-menu"
+      <div id="vzell-menu"
           style="background-color: #f5f5f5;
                  padding: 8px; margin: 0px -6px 6px;
                  border: 5px solid rgb(115, 109, 171);">
           <div style="display: flex; align-items: center; gap: 10px;">
-              <h2 style="margin: 0; font-size: 1.5em;">loujine GM tools</h2>
+              <h2 style="margin: 0; font-size: 1.5em;">loujine GM tools (adapted by <a href="https://github.com/vzell/mb-userscripts" target="_blank">vzell</a>)</h2>
               <a href="${wikiUrl}" target="_blank">documentation</a>
           </div>
       </div>
     `);
-    return document.getElementById('vz-menu');
+    return document.getElementById('vzell-menu');
   }
 
   // from https://github.com/kellnerd/musicbrainz-scripts/blob/main/src/relationship-editor/createRelationship.js

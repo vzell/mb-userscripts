@@ -1,9 +1,9 @@
 /* global $ MB server relEditor */
 'use strict';
 // ==UserScript==
-// @name         VZ: MusicBrainz - Replace Release Relations By Recording Relations In Relation Editor
+// @name         VZ: MusicBrainz Relation Editor - Replace Release Relations By Recording Relations
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.2+2025-11-30
+// @version      1.0+2025-12-01
 // @description  Replace release relations by recording relations in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -12,8 +12,8 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRelationAttributes.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRelationAttributes.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @include      https://musicbrainz.org/release/*/edit-relationships
-// @match        none
+// @match        https://musicbrainz.org/release/*/edit-relationships
+// @grant        none
 // @run-at       document-end
 // @require      https://raw.githubusercontent.com/vzell/mb-userscripts/refs/heads/master/vz-common.js
 // @license      MIT

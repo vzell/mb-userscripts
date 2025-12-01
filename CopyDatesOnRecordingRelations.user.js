@@ -1,9 +1,9 @@
-/* global $ helper MB relEditor server */
+/* global $ MB server relEditor */
 'use strict';
 // ==UserScript==
-// @name         VZ: MusicBrainz - Copy Dates On Recording Relations Relation Editor
+// @name         VZ: MusicBrainz Relation Editor - Copy Dates On Recording Relations
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.5+2025-11-30
+// @version      1.0+2025-11-30
 // @description  Copy/remove dates on recording relations in musicbrainz.relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -12,7 +12,7 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/GuessRelatedWorks.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/GuessRelatedWorks.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @match        http*://*musicbrainz.org/release/*/edit-relationships
+// @match        https://musicbrainz.org/release/*/edit-relationships
 // @grant        none
 // @run-at       document-end
 // @require      https://raw.githubusercontent.com/vzell/mb-userscripts/refs/heads/master/vz-common.js

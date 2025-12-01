@@ -1,9 +1,9 @@
-/* global $ helper MB relEditor requests */
+/* global $ MB server relEditor */
 'use strict';
 // ==UserScript==
-// @name         VZ: MusicBrainz - Clone Recording Relations Onto Other Recordings In Relation Editor
+// @name         VZ: MusicBrainz Relation Editor - Clone Recording Relations Onto Other Recordings
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.6+2025-11-30
+// @version      1.0+2025-12-01
 // @description  Clone recording relations onto other recordings in the relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -12,7 +12,7 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/CloneRecordingRelations.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/CloneRecordingRelations.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @match        https://*musicbrainz.org/release/*/edit-relationships
+// @match        https://musicbrainz.org/release/*/edit-relationships
 // @grant        none
 // @run-at       document-end
 // @require      https://raw.githubusercontent.com/vzell/mb-userscripts/refs/heads/master/vz-common.js

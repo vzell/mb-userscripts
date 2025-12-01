@@ -1,9 +1,9 @@
-/* global $ helper MB relEditor */
+/* global $ MB server relEditor */
 'use strict';
 // ==UserScript==
-// @name         VZ: MusicBrainz - Set Relation Attributes In Relation Editor
+// @name         VZ: MusicBrainz Relation Editor - Set Relation Attributes
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.2+2025-11-30
+// @version      1.0+2025-12-01
 // @description  Set attributes (live, partial, solo...) in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
