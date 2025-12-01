@@ -6,6 +6,7 @@
 - [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
 - [Musicbrainz - Generate Recording Comments for a release](#mb_generate_recording_comments_for_a_release)
 - [MusicBrainz - Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
+---
 - [MusicBrainz Relation Editor - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 - [MusicBrainz Relation Editor - Guess Related Works In Batch](#mb_guess_related_works)
 - [MusicBrainz Relation Editor - Copy Dates On Recording Relations](#mb_copy_dates_on_recordings)
@@ -13,9 +14,9 @@
 - [MusicBrainz Relation Editor - Replace Release Relations By Recording Relations](#mb_replace_release_relations_by_recording_relations)
 - [MusicBrainz Relation Editor - Set Role In Recording-Artist Relation](#mb_set_role_recording_artist_relation)
 - [MusicBrainz Relation Editor - Clone Recording Relations Onto Other Recordings](#mb_clone_recording_relations_onto_other_relations)
-- [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector)
-- [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector)
-- [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector)
+<!-- - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector) -->
+<!-- - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector) -->
+<!-- - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector) -->
 
 ## <a name="mb_customizable_selector"></a> MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages
 
@@ -65,6 +66,8 @@ Insert buttons on the Release Edit Relationships page which add preconfigured Ar
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchAddRelationshipsToRecordings.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js)
 
+---
+
 ## <a name="mb_guess_related_works"></a> Guess Related Works In Batch
 
 Guess related works in batch in relation editor.
@@ -107,27 +110,26 @@ Clone recording relations onto other recordings in the relation editor
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CloneRecordingRelations.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CloneRecordingRelations.user.js)
 
-## <a name="mb_customizable_primarytype_selector"></a> Customizable PrimaryType Selector
+<!-- ## <a name="mb_customizable_primarytype_selector"></a> Customizable PrimaryType Selector -->
 
-Create buttons for quickly choosing the primary type when adding a new release.
+<!-- Create buttons for quickly choosing the primary type when adding a new release. -->
 
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizablePrimaryTypeSelector.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizablePrimaryTypeSelector.user.js)
+<!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizablePrimaryTypeSelector.user.js) -->
+<!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizablePrimaryTypeSelector.user.js) -->
 
-## <a name="mb_customizable_status_selector"></a> Customizable Status Selector
+<!-- ## <a name="mb_customizable_status_selector"></a> Customizable Status Selector -->
 
-Create buttons for quickly choosing the status when adding a new release.
+<!-- Create buttons for quickly choosing the status when adding a new release. -->
 
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizableStatusSlector.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableStatusSlector.user.js)
+<!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizableStatusSlector.user.js) -->
+<!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableStatusSlector.user.js) -->
 
-## <a name="mb_customizable_packaging_selector"></a> CustomizablePackagingSelector
+<!-- ## <a name="mb_customizable_packaging_selector"></a> CustomizablePackagingSelector -->
 
-Create buttons for quickly choosing the package when adding a new release.
+<!-- Create buttons for quickly choosing the package when adding a new release. -->
 
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizablePackagingSelector.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizablePackagingSelector.user.js)
-
+<!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizablePackagingSelector.user.js) -->
+<!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizablePackagingSelector.user.js) -->
 
 
 # SpringsteenLyrics UserScripts
