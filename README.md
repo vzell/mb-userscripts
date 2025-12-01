@@ -6,8 +6,8 @@
 - [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
 - [Musicbrainz - Generate Recording Comments for a release](#mb_generate_recording_comments_for_a_release)
 - [MusicBrainz - Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
----
 - [MusicBrainz Relation Editor - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
+---
 - [MusicBrainz Relation Editor - Guess Related Works In Batch](#mb_guess_related_works)
 - [MusicBrainz Relation Editor - Copy Dates On Recording Relations](#mb_copy_dates_on_recordings)
 - [MusicBrainz Relation Editor - Set Relation Attributes](#mb_set_relation_attributes)
