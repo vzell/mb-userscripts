@@ -15876,6 +15876,27 @@ This is the complete userscript:
 })();
 #+end_example
 
+*** config button placement
+
+In the uploaded userscript, can you place the
+
+#+begin_example
+                <div id="aa-config-container" style="display:flex; gap:10px; flex-wrap:wrap;">
+#+end_example
+
+together with its button '<button id="aa-config-btn"' with a little space after the
+
+#+begin_example
+<h2>Track relationships</h2>
+#+end_example
+
+but in the same line when the page loads.
+
+But leave the '<div id="aa-action-buttons-container" style="display: none;">' with its buttons '<div id="aa-batch-buttons"'
+below the line with the "Track relationships" header
+
+Please DO NOT make any code changes, as everything works ok.
+
 
 * Guess Related Works
 ** Gemini
@@ -15977,6 +15998,7 @@ right after the "Remove dates" button, so there is no need to use collapsing
 
 In the uploaded userscript, change the button style to be the same as the recently implmented ones (I mean the grey handling)
 
+
 * Set Relation Attributes
 
 In the uploaded userscript, the UI dialog should be changed in such a way that
@@ -16052,6 +16074,7 @@ one line below the above one.
 
 PLEASE DO NOT make any changes to the code logic, just the button appearance and placing.
 
+
 * Replace Release Relations By Recording Relations In Relation Editor
 
 In the uploaded userscript, the UI dialog should be changed in such a way that
@@ -16085,6 +16108,7 @@ heading and the "Apply" button '<input type="button" id="setRole" value='Apply'>
 "Replace artist role:", so all should be in one line. Right now the "Replace artist role:" is place after the disclosure triangle.
 
 PLEASE DO NOT make any changes to the code logic, just the button appearance and placing.
+
 
 * common functions
 ** gemini
@@ -16458,7 +16482,7 @@ and it should also react to hovering and activation, something like
 
 Please DO NOT make any code changes, as everything works ok.
 
-* 1
+** 1
 
 In the uploaded userscript, can you place the "Edit recording comments" button and the settings icon "⚙️" after the line
 
