@@ -16457,3 +16457,15 @@ and it should also react to hovering and activation, something like
 #+end_example
 
 Please DO NOT make any code changes, as everything works ok.
+
+* 1
+
+In the uploaded userscript, can you place the "Edit recording comments" button and the settings icon "⚙️" after the line
+
+#+begin_example
+<h2 class="tracklist">Tracklist</h2>
+#+end_example
+
+when the page loads.
+
+Please DO NOT make any code changes, as everything works ok.

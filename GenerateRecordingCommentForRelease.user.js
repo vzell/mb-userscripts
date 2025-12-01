@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Generate Recording Comments For A Release
 // @namespace    https://musicbrainz.org/user/vzell
-// @version      0.9+2025-12-01
+// @version      1.0+2025-12-01
 // @description  Batch set recording comments from a Release page, prefilling from "recorded at:" prefixed with "live, " if comment is empty. Prefills edit note with user supplied configurable text.
 // @author       Michael Wiencek, Gemini (directed by vzell)
 // @tag          AI generated
@@ -117,10 +117,11 @@ function setRecordingComments() {
                 background-color: #f0f0f0;
                 border: 1px solid #ccc;
                 border-radius: 3px;
-                padding: 2px 10px; /* <--- REQUIRED PADDING CHANGE */
+                padding: 2px 10px;
                 font-size: 11px;
                 color: #333; /* text color */
                 display: inline-block;
+                margin-left: 10px; /* <--- ADDED SPACE HERE */
             }
             .work-button-style:hover {
                 /* dark grey on hover */
@@ -237,15 +238,15 @@ function setRecordingComments() {
         $(this).css('border-color', this.value === $(this).data('old') ? '#999' : 'red');
     });
 
-    // Create a container for the script's UI elements
-    let $container = $('<div></div>').insertAfter('h2.tracklist');
+    // Select the existing H2 header
+    let $header = $('h2.tracklist');
 
     // Button to toggle the editing interface visibility
     $('<button>Edit recording comments</button>')
         .addClass('work-button-style')
         .on('click', function () {
             editing = !editing;
-            $('#set-recording-comments').add($inputs).toggle(editing); // Show/hide table and inputs
+            $('#set-recording-comments').add($inputs).toggle(editing);
             $(this).text(`${editing ? 'Hide' : 'Edit'} recording comments`);
             if (editing) {
                 $('#all-recording-comments').focus(); // Focus on the "set all" input
@@ -253,13 +254,16 @@ function setRecordingComments() {
                 $('#recording-comments-edit-note').val(editNoteText);
             }
         })
-        .appendTo($container);
+        .appendTo($header); // Append button *inside* the H2
 
     // Settings icon
     $('<span id="settings-icon">⚙️</span>').on('click', function () {
         $('#settings-modal').show();
         $('#settings-text').val(editNoteText);
-    }).appendTo($container);
+    }).appendTo($header); // Append icon *inside* the H2
+
+    // Create a container for the script's UI elements (the table) and place it *after* the H2
+    let $container = $('<div></div>').insertAfter($header);
 
     // Append the editing table to the container
     $container.append(
