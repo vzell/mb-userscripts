@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Generate Recording Comments for a release
+// @name         VZ: MusicBrainz - Generate Recording Comments For A Release
 // @namespace    https://musicbrainz.org/user/vzell
-// @version      1.4+2025-11-29
+// @version      0.9+2025-12-01
 // @description  Batch set recording comments from a Release page, prefilling from "recorded at:" prefixed with "live, " if comment is empty. Prefills edit note with user supplied configurable text.
 // @author       Michael Wiencek, Gemini (directed by vzell)
 // @tag          AI generated
@@ -10,7 +10,8 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/GenerateRecordingCommentForRelease.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/GenerateRecordingCommentForRelease.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @match        https://musicbrainz.org/release/*-*
+// @match        https://musicbrainz.org/release/*
+// @exclude      https://musicbrainz.org/release/*/*
 // @grant        none
 // @run-at       document-idle
 // @license      X11

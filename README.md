@@ -4,7 +4,7 @@
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
 - [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
-- [Musicbrainz - Generate Recording Comments for a release](#mb_generate_recording_comments_for_a_release)
+- [Musicbrainz - Generate Recording Comments For A Release](#mb_generate_recording_comments_for_a_release)
 - [MusicBrainz - Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
 - [MusicBrainz Relation Editor - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 ---
@@ -47,7 +47,7 @@ Auto-Select External Link Types on release pages, allows configuration of link m
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/AutoSelectExternalLinkType.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js)
 
-## <a name="mb_generate_recording_comments_for_a_release"></a> Generate Recording Comments for a release
+## <a name="mb_generate_recording_comments_for_a_release"></a> Generate Recording Comments For A Release
 
 Batch set recording comments from a Release page, prefilling from "recorded at:" prefixed with "live, " if comment is empty. Prefills edit note with user supplied configurable text.
 
