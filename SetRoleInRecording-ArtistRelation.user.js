@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz Relation Editor - Set Role In Recording-Artist Relation
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1+2025-12-01
+// @version      1.2+2025-12-01
 // @description  Set/unset role relations on selected recordings in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -118,7 +118,7 @@ const setInstrument = (fromType, toType, fromAttrId, toAttrId, toCredit) => {
         <details id="setRole_script_toggle" style="margin-top: 10px;">
             <summary style="cursor: pointer; display: flex; align-items: center; gap: 8px; margin-left: 8px;">
                 <h3 style="margin: 0;">Replace artist role:</h3>
-                <input type="button" id="setRole" value='Apply' class="work-button-style">
+                <input type="button" id="setRole" value='Replace' class="work-button-style">
             </summary>
             <div style="margin-left: 20px;">
                 <p>
