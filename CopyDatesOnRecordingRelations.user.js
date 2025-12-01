@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz Relation Editor - Copy Dates On Recording Relations
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0+2025-11-30
+// @version      1.1+2025-11-30
 // @description  Copy/remove dates on recording relations in musicbrainz.relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -127,14 +127,14 @@ const removeDates = () => {
     .insertAdjacentHTML('beforeend', `
         <style>
             .date-button {
-                cursor: pointer; /* 1. Change cursor to finger */
+                cursor: pointer; /* change cursor to finger */
                 transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
                 /* light grey */
                 background-color: #f0f0f0;
                 border: 1px solid #ccc;
                 border-radius: 3px;
-                padding: 4px 10px;
-                font-size: 13px;
+                padding: 2px 10px;
+                font-size: 11px;
                 color: #333; /* text color */
                 display: inline-block;
             }

@@ -16115,3 +16115,311 @@ which requires the definition from the same .js library file), but on another it
 
 
 
+* refactoring buttons
+
+All the uploaded userscripts are displaying buttons for their respective UI, they also all require the same "https://raw.githubusercontent.com/vzell/mb-userscripts/refs/heads/master/vz-common.js"
+Could this be refactored and the button shape, color, changing the icon to a finger when hovering over and so on, be included somehow in the library file vz-common.js
+
+please adjust the style for the "mb-userscript-button" in out library file to look like in the following definition
+
+#+begin_example
+        const saveButton = document.createElement('button');
+        saveButton.textContent = 'Save';
+        saveButton.className = 'submit';
+        saveButton.style.padding = '6px 12px';
+        saveButton.style.border = '1px solid #4CAF50';
+        saveButton.style.borderRadius = '4px';
+        saveButton.style.backgroundColor = '#4CAF50';
+        saveButton.style.color = 'white';
+        saveButton.style.cursor = 'pointer';
+        saveButton.style.fontWeight = 'bold';
+#+end_example
+
+** library code
+
+#+begin_example
+// ... (rest of RelationshipEditor class content)
+
+  /**
+   * Common button style for all userscripts
+   */
+  commonButtonStyle() {
+    return `
+      <style>
+          .mb-userscript-button {
+              /* Based on user request (green 'Save' button style) */
+              padding: 6px 12px;
+              border: 1px solid #4CAF50;
+              border-radius: 4px;
+              background-color: #4CAF50;
+              color: white;
+              cursor: pointer; /* Sets the cursor to a finger on hover */
+              font-weight: bold;
+              /* Added effects for a better UI experience */
+              transition: background-color 0.2s ease, transform 0.1s ease;
+              display: inline-block;
+          }
+          .mb-userscript-button:hover {
+              background-color: #45a049; /* Slightly darker green on hover */
+          }
+          .mb-userscript-button:active {
+              background-color: #3e8e41; /* Even darker green on click */
+              transform: translateY(1px); /* Visual click feedback */
+          }
+          /* Ensure headings inside the container don't have excessive margins */
+          #vzell-menu h3 {
+              margin: 0;
+          }
+      </style>
+    `;
+  }
+
+  container(node) {
+    const container = document.getElementById('vzell-menu');
+    if (container !== null) {
+      // Return the inner toolbar list container if the main container already exists
+      return document.getElementById('vzell-menu-toolbar-list');
+    }
+    // Inject common styles and the main container
+    node.insertAdjacentHTML('afterend', `
+      <div id="vzell-menu"
+          style="background-color: #f5f5f5;
+                 padding: 8px; margin: 0px -6px 6px;
+                 border: 5px solid rgb(115, 109, 171);">
+          ${this.commonButtonStyle()}
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <h2 style="margin: 0; font-size: 1.5em;">loujine GM tools (adapted by <a href="https://github.com/vzell/mb-userscripts" target="_blank">vzell</a>)</h2>
+              <a href="${wikiUrl}" target="_blank">documentation</a>
+          </div>
+          <div id="vzell-menu-toolbar-list">
+             </div>
+      </div>
+    `);
+    // Return the new inner div where specific toolbars will be placed
+    return document.getElementById('vzell-menu-toolbar-list');
+  }
+
+// ... (rest of RelationshipEditor class content)
+#+end_example
+
+** MoveReleaseRelationsToRecordings.user.js
+
+Remove the entire local <style> block and update the button class.
+
+#+begin_example
+// ... (start of file)
+
+(function displayToolbar() {
+    relEditor.container(document.querySelector('div.tabs'))
+             .insertAdjacentHTML('beforeend', `
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <h3 style="margin: 0;">Move release relations to recordings:</h3>
+            <input type="button" id="moveAR" value="Move to selected recordings" class="mb-userscript-button">
+        </div>
+    `);
+})();
+
+// ... (end of file)
+#+end_example
+
+** CopyDatesOnRecordingRelations.user.js
+
+Remove the redundant button styling, replace .date-button with .mb-userscript-button, and simplify the container
+logic. Note that the essential .inline-checkbox-label style remains because it's specific to the script's layout, not
+the button appearance.
+
+#+begin_example
+// ... (start of file)
+
+(function displayToolbar() {
+    relEditor.container(document.querySelector('div.tabs'))
+    .insertAdjacentHTML('beforeend', `
+        <style>
+            /* Style to align the checkbox label/input pair inline with buttons (specific layout) */
+            .inline-checkbox-label {
+                display: flex;
+                align-items: center;
+                gap: 4px; /* Space between label text and checkbox */
+            }
+            .inline-checkbox-label input[type="checkbox"] {
+                margin: 0; /* Remove default margin */
+            }
+        </style>
+        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+            <h3>Dates:</h3>
+            <input type="button" class="mb-userscript-button" id="copyDates" value="Copy dates">
+            <input type="button" class="mb-userscript-button" id="removeDates" value="Remove dates">
+
+            <label for="replaceDates" class="inline-checkbox-label" style="font-weight: normal; margin-left: 8px;">
+                Replace dates if pre-existing:&nbsp;
+                <input type="checkbox" id="replaceDates">
+            </label>
+        </div>
+    `);
+})();
+
+// ... (end of file)
+#+end_example
+
+** CloneRecordingRelations.user.js
+
+Replace the old class (.work-button-style) with the new one (.mb-userscript-button).
+
+#+begin_example
+// ... (start of file)
+
+(function displayToolbar() {
+    relEditor.container(document.querySelector('div.tabs'))
+             .insertAdjacentHTML('beforeend', `
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <h3 style="margin: 0;">Clone recording relations from the recording at track list position:</h3>
+            <input type="number" id="cloneRef" placeholder="track #">
+            <input type="button" id="cloneAR" value="Apply" class="mb-userscript-button">
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <h3 style="margin: 0;">Clone recording relations from another recording:</h3>
+            <span>Recording link:&nbsp;</span>
+            <input type="text" id="cloneExtRecording" placeholder="Recording MBID">
+            <input type="button" id="cloneAR" value="Apply" class="mb-userscript-button">
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px; margin-bottom: 10px;">
+            <h3 style="margin: 0;">Clone release relations from another release:</h3>
+            <span>Release link:&nbsp;</span>
+            <input type="text" id="cloneExtRelease" placeholder="Release MBID">
+            <input type="button" id="cloneReleaseAR" value="Apply" class="mb-userscript-button">
+        </div>`);
+})();
+
+// ... (end of file)
+#+end_example
+
+** SetRelationAttributes.user.js
+
+Replace the old class (.work-button-style) with the new one (.mb-userscript-button) in all button definitions.
+
+#+begin_example
+// ... (start of file)
+
+(function displayToolbar() {
+    relEditor.container(document.querySelector('div.tabs'))
+             .insertAdjacentHTML('beforeend', `
+        <details>
+            <summary class="v-details-summary">
+                <h3 style="display: inline-block;">Work Relation Attributes</h3>
+                <input type="button" id="setLiveUncollapsed" value="Set live" class="mb-userscript-button">
+            </summary>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+                <h3>Work Relation Attributes:</h3>
+                <input type="button" id="setCover" value="Set cover" class="mb-userscript-button">
+                <input type="button" id="toggleCover" value="Toggle cover" class="mb-userscript-button">
+                <input type="button" id="setLive" value="Set live" class="mb-userscript-button">
+                <input type="button" id="toggleLive" value="Toggle live" class="mb-userscript-button">
+                <input type="button" id="setPartial" value="Set partial" class="mb-userscript-button">
+                <input type="button" id="togglePartial" value="Toggle partial" class="mb-userscript-button">
+                <input type="button" id="setInstrumental" value="Set instrumental" class="mb-userscript-button">
+                <input type="button" id="toggleInstrumental" value="Toggle instrumental" class="mb-userscript-button">
+                <input type="button" id="setMedley" value="Set medley" class="mb-userscript-button">
+                <input type="button" id="toggleMedley" value="Toggle medley" class="mb-userscript-button">
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+                <h3>Recording-Artist relation attributes</h3>
+                <input type="button" id="toggleSolo" value="Toggle solo" class="mb-userscript-button">
+                <input type="button" id="toggleAdditional" value="Toggle additional" class="mb-userscript-button">
+                <input type="button" id="toggleGuest" value="Toggle guest" class="mb-userscript-button">
+            </div>
+        </details>
+    `);
+})();
+
+// ... (end of file)
+#+end_example
+
+** GuessRelatedWorks.user.js
+
+Replace the old class (.work-button-style) with the new one (.mb-userscript-button).
+
+#+begin_example
+// ... (start of file)
+
+(function displayToolbar() {
+    const repeatHelp = 'Comma-separated list of track numbers (one-based) to be linked to the work, e.g. "1,2,5". If left empty, all selected recordings will be used.';
+    relEditor.container(document.querySelector('div.tabs'))
+             .insertAdjacentHTML('beforeend', `
+    <details>
+      <summary class="v-details-summary">
+        <h3 style="display: inline-block;">Guess related works</h3>
+        <input type="button" id="searchWorkUncollapsed" value="Guess work" class="mb-userscript-button">
+      </summary>
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+          <input type="button" id="searchWork" value="Guess work" class="mb-userscript-button">
+          <input type="button" id="openEditor" value="Set attributes" class="mb-userscript-button">
+          <input type="button" id="removeWorks" value="Remove works" class="mb-userscript-button">
+        <br />
+        <details>
+          <summary class="v-details-summary">
+            <h3 style="display: inline-block;">Subworks</h3>
+          </summary>
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 10px;">
+              <span>Track numbers:&nbsp;</span>
+              <input type="text" id="trackNumbers" placeholder="n1,n2,n3... (optional)">
+              <span title="${repeatHelp}">🛈</span>
+              <br />
+              <label for="replaceSubworks">Replace work if pre-existing:&nbsp;</label>
+              <input type="checkbox" id="replaceSubworks">
+              <br />
+              <span>Main work name:&nbsp;</span>
+              <input type="text" id="mainWork" placeholder="main work mbid">
+              <input type="button" id="fetchSubworks" value="Load subworks" class="mb-userscript-button">
+            </div>
+          </details>
+        </div>
+    </details>
+  `);
+})();
+
+// ... (end of file)
+#+end_example
+
+** SetRoleInRecording-ArtistRelation.user.js
+
+Replace the old class (.work-button-style) with the new one (.mb-userscript-button).
+
+#+begin_example
+// ... (start of file)
+
+(function displayToolbar() {
+    relEditor.container(document.querySelector('div.tabs'))
+             .insertAdjacentHTML('beforeend', `
+        <details>
+            <summary class="v-details-summary">
+                <h3 style="display: inline-block;">Recording-Artist relation attributes</h3>
+                <input type="button" id="setRole" value="Set role" class="mb-userscript-button">
+            </summary>
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 10px;">
+                <p>
+                    From relation type:
+                    <select id="fromRole">
+                        <option selected>Do not filter</option>
+                        ${roles.roles}
+                    </select>
+                    and optional instrument/vocal attribute or similar:
+                    <select id="fromRoleAttrs">${roles.roleAttrs}</select>
+                    <input type="text" id="fromId" value="" placeholder="or use instrument/vocal id">
+                </p>
+                <p>
+                    To relation type:
+                    <select id="toRole">${roles.roles}</select>
+                    and optional instrument/vocal attribute or similar:
+                      <select id="toRoleAttrs">${roles.roleAttrs}</select>
+                    <input type="text" id="toId" value="" placeholder="or use instrument/vocal id">
+                    <br />
+                    <input type="text" id="toCredit" value="" placeholder="instrument credit">
+                </p>
+            </div>
+        </details>
+    `);
+})();
+
+// ... (end of file)
+#+end_example
+

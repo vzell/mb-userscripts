@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz Relation Editor - Set Relation Attributes
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0+2025-12-01
+// @version      1.1+2025-12-01
 // @description  Set attributes (live, partial, solo...) in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -70,24 +70,24 @@ const setAttributes = (targetType, attrName, toggle) => {
              .insertAdjacentHTML('beforeend', `
         <style>
             .work-button-style {
-                cursor: pointer; /* Change cursor to finger */
+                cursor: pointer; /* change cursor to finger */
                 transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
-                /* Default: light grey */
+                /* light grey */
                 background-color: #f0f0f0;
                 border: 1px solid #ccc;
                 border-radius: 3px;
-                padding: 4px 10px;
-                font-size: 13px;
-                color: #333; /* Default text color */
+                padding: 2px 10px;
+                font-size: 11px;
+                color: #333; /* text color */
                 display: inline-block;
             }
             .work-button-style:hover {
-                /* Dark grey on hover */
+                /* dark grey on hover */
                 background-color: #555555;
                 color: white; /* Make text visible */
             }
             .work-button-style:active {
-                /* Visual click feedback */
+                /* visual click feedback */
                 background-color: #444444;
                 transform: translateY(1px);
             }

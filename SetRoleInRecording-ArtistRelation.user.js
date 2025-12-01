@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz Relation Editor - Set Role In Recording-Artist Relation
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0+2025-12-01
+// @version      1.1+2025-12-01
 // @description  Set/unset role relations on selected recordings in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -96,8 +96,8 @@ const setInstrument = (fromType, toType, fromAttrId, toAttrId, toCredit) => {
                 background-color: #f0f0f0;
                 border: 1px solid #ccc;
                 border-radius: 3px;
-                padding: 4px 10px;
-                font-size: 13px;
+                padding: 2px 10px;
+                font-size: 11px;
                 color: #333; /* text color */
                 display: inline-block;
             }

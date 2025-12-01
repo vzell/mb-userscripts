@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz Relation Editor - Guess Related Works In Batch
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0+2025-12-01
+// @version      1.1+2025-12-01
 // @description  Guess related works in batch in relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -211,15 +211,15 @@ const fetchSubWorks = (workMbid, replace) => {
   relEditor.container(document.querySelector('div.tabs')).insertAdjacentHTML('beforeend', `
     <style>
       .work-button-style {
-        cursor: pointer;
+        cursor: pointer; /* change cursor to finger */
         transition: background-color 0.1s ease, color 0.1s ease, transform 0.1s ease;
-        /* Default: light grey */
+        /* light grey */
         background-color: #f0f0f0;
         border: 1px solid #ccc;
         border-radius: 3px;
-        padding: 4px 10px;
-        font-size: 13px;
-        color: #333; /* Default text color */
+        padding: 2px 10px;
+        font-size: 11px;
+        color: #333; /* text color */
         /* Ensure buttons are displayed inline for the flex summary */
         display: inline-block;
       }
