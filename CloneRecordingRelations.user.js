@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz Relation Editor - Clone Recording Relations Onto Other Recordings
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1+2025-12-01
+// @version      1.2+2025-12-01
 // @description  Clone recording relations onto other recordings in the relation editor
 // @author       loujine + Gemini (with instructions from vzell)
 // @tag          AI generated
@@ -216,14 +216,14 @@ function cloneReleaseExtAR(relMBID) {
             <span title="${cloneIdxHelp}">🛈</span>
             <span>OR recording link:&nbsp;</span>
             <input type="text" id="cloneExtRecording" placeholder="Recording MBID">
-            <input type="button" id="cloneAR" value="Apply" class="work-button-style">
+            <input type="button" id="cloneAR" value="Clone to recordings" class="work-button-style">
         </div>
 
         <div id="clone_release_rels_ui" class="clone-ui-section">
             <h3 style="margin: 0;">Clone release relations from another release:</h3>
             <span>Release link:&nbsp;</span>
             <input type="text" id="cloneExtRelease" placeholder="Release MBID">
-            <input type="button" id="cloneReleaseAR" value="Apply" class="work-button-style">
+            <input type="button" id="cloneReleaseAR" value="Clone from another release" class="work-button-style">
         </div>`);
 })();
 
