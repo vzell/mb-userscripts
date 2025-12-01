@@ -17,6 +17,8 @@
 <!-- - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector) -->
 <!-- - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector) -->
 <!-- - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector) -->
+---
+- [SpringsteenLyrics - MusicBrainz UUID Validator](#sl_uuid_validator)
 
 ## <a name="mb_customizable_selector"></a> MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages
 
@@ -131,10 +133,7 @@ Clone recording relations onto other recordings in the relation editor
 <!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CustomizablePackagingSelector.user.js) -->
 <!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizablePackagingSelector.user.js) -->
 
-
-# SpringsteenLyrics UserScripts
-
-- [SpringsteenLyrics - MusicBrainz UUID Validator](#sl_uuid_validator)
+---
 
 ## <a name="sl_uuid_validator"></a> SpringstenLyrics - MusicBrainz UUID Validator
 
