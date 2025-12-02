@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Add Preconfigured Relationships To Recordings
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      4.0+2025-12-02
+// @version      5.0+2025-12-02
 // @description  Insert buttons on the Release Edit Relationships page which add preconfigured Artists with their Relationship Type (instruments/vocal/performer)
 // @author       Gemini & ChatGPT (directed by vzell)
 // @tag          AI generated
@@ -998,9 +998,10 @@
             return;
         }
 
-        // 1. Apply Flexbox styling to the H2 to hold the text and the button
-        // This makes the H2 text and the appended button sit side-by-side.
-        $heading.attr('style', 'display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 0;');
+        // 1. Apply Flexbox styling to the H2 to hold the text and the button.
+        // Removed justify-content: space-between and width: 100% to stop the button
+        // from being pushed to the far right. Added gap: 10px for spacing.
+        $heading.attr('style', 'display: flex; align-items: center; gap: 10px; margin-bottom: 0;');
 
         const configButtonStyle = `
             background-color:#607D8B; color:white;
