@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Add Preconfigured Relationships To Recordings
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      3.3+2025-12-01
+// @version      4.0+2025-12-02
 // @description  Insert buttons on the Release Edit Relationships page which add preconfigured Artists with their Relationship Type (instruments/vocal/performer)
 // @author       Gemini & ChatGPT (directed by vzell)
 // @tag          AI generated
@@ -998,8 +998,37 @@
             return;
         }
 
-        // --- MAIN WRAPPER (unchanged, but now holds two sub-containers) ---
-        let $container = $heading.next('.injected-buttons-container');
+        const configButtonStyle = `
+            background-color:#607D8B; color:white;
+            padding:2px 10px; border:none; border-radius:4px;
+            cursor:pointer; font-weight:bold; line-height:1.2; flex-shrink:0;
+        `;
+
+        // --- Configuration Button (now the only one, outside the main wrapper) ---
+        let $configContainer = $heading.next('#aa-config-container');
+        if ($configContainer.length === 0) {
+             $configContainer = $(`
+                <div id="aa-config-container"
+                     style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; margin-bottom: 5px;">
+                </div>
+            `);
+
+            const $configButton = $('<button/>', {
+                id: 'aa-config-btn',
+                // Single button, no distinguishing label text
+                html: '⚙️ Configure recording artist relation buttons (instruments/vocals/performer)'
+            });
+
+            $configButton.attr('style', configButtonStyle);
+            $configButton.on('click', showConfigModal);
+            $configContainer.append($configButton);
+
+            // Inject the single config container after the heading
+            $heading.after($configContainer);
+        }
+
+        // --- MAIN WRAPPER (This contains the action buttons) ---
+        let $container = $configContainer.nextAll('.injected-buttons-container').first();
         if ($container.length === 0) {
             $container = $(`
                 <div class="injected-buttons-container"
@@ -1007,42 +1036,12 @@
                             margin-top:10px; margin-bottom:5px; width:100%;">
                 </div>
             `);
-            $heading.after($container);
+            // Inject the main container after the config container
+            $configContainer.after($container);
         }
 
         // -------------------------------
-        // 1) CONFIG BUTTON CONTAINER (ALWAYS VISIBLE)
-        // -------------------------------
-        let $configContainer = $container.find('#aa-config-container');
-        if ($configContainer.length === 0) {
-            $configContainer = $(`
-                <div id="aa-config-container" style="display:flex; gap:10px; flex-wrap:wrap;">
-                </div>
-            `);
-            $container.append($configContainer);
-        }
-
-        // Add config button if missing
-        let $configButton = $configContainer.find('#aa-config-btn');
-        if ($configButton.length === 0) {
-            const configButtonStyle = `
-                background-color:#607D8B; color:white;
-                padding:2px 10px; border:none; border-radius:4px;
-                cursor:pointer; font-weight:bold; line-height:1.2; flex-shrink:0;
-            `;
-
-            $configButton = $('<button/>', {
-                id: 'aa-config-btn',
-                html: '⚙️ Configure recording artist relation buttons (instruments/vocals/performer)'
-            });
-
-            $configButton.attr('style', configButtonStyle);
-            $configButton.on('click', showConfigModal);
-            $configContainer.append($configButton);
-        }
-
-        // -------------------------------
-        // 2) ACTION BUTTON CONTAINER (VISIBILITY CONTROLLED)
+        // ACTION BUTTON CONTAINER (VISIBILITY CONTROLLED - Must be kept)
         // -------------------------------
         let $actionContainer = $container.find('#aa-action-buttons-container');
         if ($actionContainer.length === 0) {
@@ -1063,7 +1062,7 @@
         renderButtons(ARTIST_BUTTONS);
 
         // -------------------------------
-        // Visibility logic (unchanged, except new container)
+        // Visibility logic (unchanged)
         // -------------------------------
         function getCheckedRecordings() {
             return $('#tracklist input[type="checkbox"]:not(.work)');

@@ -15897,6 +15897,22 @@ below the line with the "Track relationships" header
 
 Please DO NOT make any code changes, as everything works ok.
 
+** 1
+
+In the uploaded userscript, can you double the following 
+
+#+begin_example
+                <div id="aa-config-container" style="display:flex; gap:10px; flex-wrap:wrap;">
+#+end_example
+
+together with its button '<button id="aa-config-btn"' with a little space after the
+
+#+begin_example
+<h2>Track relationships</h2>
+#+end_example
+
+and NOT touch the rest of the script
+
 
 * Guess Related Works
 ** Gemini
