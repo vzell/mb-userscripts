@@ -998,37 +998,35 @@
             return;
         }
 
+        // 1. Apply Flexbox styling to the H2 to hold the text and the button
+        // This makes the H2 text and the appended button sit side-by-side.
+        $heading.attr('style', 'display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 0;');
+
         const configButtonStyle = `
             background-color:#607D8B; color:white;
             padding:2px 10px; border:none; border-radius:4px;
             cursor:pointer; font-weight:bold; line-height:1.2; flex-shrink:0;
         `;
 
-        // --- Configuration Button (now the only one, outside the main wrapper) ---
-        let $configContainer = $heading.next('#aa-config-container');
-        if ($configContainer.length === 0) {
-             $configContainer = $(`
-                <div id="aa-config-container"
-                     style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; margin-bottom: 5px;">
-                </div>
-            `);
-
-            const $configButton = $('<button/>', {
+        // --- Configuration Button ---
+        // Check for existing button inside H2
+        let $configButton = $heading.find('#aa-config-btn');
+        if ($configButton.length === 0) {
+            $configButton = $('<button/>', {
                 id: 'aa-config-btn',
-                // Single button, no distinguishing label text
                 html: '⚙️ Configure recording artist relation buttons (instruments/vocals/performer)'
             });
 
             $configButton.attr('style', configButtonStyle);
             $configButton.on('click', showConfigModal);
-            $configContainer.append($configButton);
 
-            // Inject the single config container after the heading
-            $heading.after($configContainer);
+            // Inject the configuration button directly into the heading element (at the end of the line)
+            $heading.append($configButton);
         }
 
         // --- MAIN WRAPPER (This contains the action buttons) ---
-        let $container = $configContainer.nextAll('.injected-buttons-container').first();
+        // Find the next sibling that is the main wrapper for action buttons
+        let $container = $heading.nextAll('.injected-buttons-container').first();
         if ($container.length === 0) {
             $container = $(`
                 <div class="injected-buttons-container"
@@ -1036,8 +1034,8 @@
                             margin-top:10px; margin-bottom:5px; width:100%;">
                 </div>
             `);
-            // Inject the main container after the config container
-            $configContainer.after($container);
+            // Inject the main container after the heading
+            $heading.after($container);
         }
 
         // -------------------------------
@@ -1086,8 +1084,6 @@
         });
 
         setInterval(updateButtonVisibility, VISIBILITY_HEARTBEAT_MS);
-
-        log("Injected custom buttons using separated containers.");
     }
 
     // ----------------- Main Execution -----------------
