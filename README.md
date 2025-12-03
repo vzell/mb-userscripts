@@ -6,6 +6,7 @@
 - [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
 - [Musicbrainz - Generate Recording Comments For A Release](#mb_generate_recording_comments_for_a_release)
 - [MusicBrainz - Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
+- [MusicBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release](#mb_import_from_discogs)
 - [MusicBrainz Relation Editor - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 ---
 - [MusicBrainz Relation Editor - Guess Related Works In Batch](#mb_guess_related_works)
@@ -60,6 +61,13 @@ Display icon shortcuts for relationships of release-group, release, recording an
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/DisplayShortcutForRelationshipWithCustomFavicons.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/DisplayShortcutForRelationshipWithCustomFavicons.user.js)
+
+## <a name="mb_import_from_discogs"></a> Import Relationships From A Discogs Release In To A Musicbrainz Release
+
+Add a button to import Discogs release relationships to MusicBrainz
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ImportRelationshipsFromDiscogs.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ImportRelationshipsFromDiscogs.user.js)
 
 ## <a name="mb_batch_add_relationships_to_recordings"></a> Batch Add Relationships To Recordings
 
