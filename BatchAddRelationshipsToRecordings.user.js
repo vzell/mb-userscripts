@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Add Preconfigured Relationships To Recordings
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      5.1+2025-12-02
+// @version      5.2+2025-12-02
 // @description  Insert buttons on the Release Edit Relationships page which add preconfigured Artists with their Relationship Type (instruments/vocal/performer)
 // @author       Gemini & ChatGPT (directed by vzell)
 // @tag          AI generated
@@ -956,7 +956,7 @@
                 border: none;
                 border-radius: 4px;
                 cursor: pointer;
-                font-weight: bold;
+                font-weight: normal;
                 transition: all 0.15s ease-in-out;
                 white-space: nowrap;
                 flex-shrink: 0;
@@ -1006,7 +1006,7 @@
         const configButtonStyle = `
             background-color:#f0f0f0; color:#333;
             padding:2px 10px; border:none; border-radius:4px;
-            cursor:pointer; font-weight:bold; line-height:1.2; flex-shrink:0;
+            cursor:pointer; font-weight:normal; line-height:1.2; flex-shrink:0;
         `;
 
         // --- Configuration Button ---
