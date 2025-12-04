@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusciBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.2+2025-12-01
+// @version      1.3+2025-12-05
 // @description  Add a button to import Discogs release relationships to MusicBrainz
 // @author       mattgoldspink (with input from vzell)
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -158,6 +158,11 @@ function registerButton(divWrapper) {
 }
 
 function addToggleWrapperButton(wrapperDiv) {
+    // Icons: ⊕ (U+2295 Circled Plus) for 'Show', ⊖ (U+2296 Circled Minus) for 'Hide'
+    const showIcon = '\u2295';
+    const hideIcon = '\u2296';
+    const dialogText = ' Discogs Relationship Importer Dialog';
+
     // Find ANY h2 whose text is exactly "Release relationships"
     const h2 = [...document.querySelectorAll('h2')]
         .find(el => el.textContent.trim() === "Release relationships");
@@ -174,22 +179,29 @@ function addToggleWrapperButton(wrapperDiv) {
     h2.style.display = "flex";
     h2.style.alignItems = "center";
 
-    // Create the test button
+    // The wrapperDiv is initially hidden, so we start with the 'Show' icon
     const btn = document.createElement("button");
-    btn.textContent = "Show/Hide Discogs Relationship Importer Dialog";
+    btn.textContent = showIcon + dialogText;
     btn.classList.add('discogs-toggle-btn'); // Add a class to identify it
     btn.style.marginLeft = "10px";
-    btn.style.fontSize = "0.8rem"; // Optional: make it fit slightly better
+    btn.style.fontSize = "0.8rem";
 
     h2.appendChild(btn);
 
     btn.addEventListener("click", (e) => {
         e.preventDefault();
-        // Toggle logic: The wrapper uses 'display: grid' in CSS.
+
+        // Toggle logic
         if (wrapperDiv.style.display === 'none') {
+            // Currently hidden, so show it (set to 'grid' as defined in CSS)
             wrapperDiv.style.display = 'grid';
+            // Update button text to the 'Hide' state icon
+            btn.textContent = hideIcon + dialogText;
         } else {
+            // Currently visible, so hide it
             wrapperDiv.style.display = 'none';
+            // Update button text to the 'Show' state icon
+            btn.textContent = showIcon + dialogText;
         }
     });
 
