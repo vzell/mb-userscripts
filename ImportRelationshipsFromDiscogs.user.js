@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusciBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1+2025-12-01
+// @version      1.2+2025-12-01
 // @description  Add a button to import Discogs release relationships to MusicBrainz
 // @author       mattgoldspink (with input from vzell)
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -49,14 +49,16 @@ $(document).ready(function () {
             if (discogsUrl) {
                 const createrelsbutton = document.createElement('button');
                 createrelsbutton.innerText = 'Import relationships from Discogs';
-                createrelsbutton.style.marginRight = '16px';
+                createrelsbutton.style.marginRight = '10px'; // Reduced slightly for tighter grouping
                 const processTracklistLbl = document.createElement('label');
                 processTracklistLbl.innerText = 'Process Tracklist relationships too';
                 const processTracklistCheckbox = document.createElement('input');
                 processTracklistCheckbox.type = 'checkbox';
                 processTracklistCheckbox.checked = true;
                 processTracklistLbl.appendChild(processTracklistCheckbox);
+
                 const divWrapper = document.createElement('div');
+                divWrapper.style.display = 'none'; // Initially Hidden
 
                 createrelsbutton.addEventListener(
                     'click',
@@ -93,7 +95,8 @@ $(document).ready(function () {
                     border: 1px solid #ccc;
                     border-radius: 1rem;
                     padding: 2rem;
-                    grid-template-columns: 200px 1fr 1fr 200px;
+                    /* Changed columns: fixed logo | auto button | auto label | remaining space */
+                    grid-template-columns: 200px auto auto 1fr;
                     grid-template-rows: auto;
                     grid-template-areas:
                         "logo header header header"
@@ -116,12 +119,14 @@ $(document).ready(function () {
                 }
                 .discogs-wrapper > button {
                     grid-area: button;
-                    max-width: 20rem;
+                    /* Removed max-width restriction so it fits text */
                 }
                 .discogs-wrapper > label {
                     grid-area: label;
-                    max-width: 20rem;
-                    margin: 1rem;
+                    /* Removed max-width */
+                    margin: 1rem 0; /* Removed horizontal margin to keep it close */
+                    align-self: center; /* Aligns vertically with the button */
+                    white-space: nowrap; /* Prevents text wrapping */
                 }
                 .discogs-wrapper .summary {
                     grid-area: summary;
@@ -135,7 +140,6 @@ $(document).ready(function () {
                 document.head.appendChild(style);
 
                 registerButton(divWrapper);
-		// Initialize the toggle button
                 addToggleWrapperButton(divWrapper);
             }
         });

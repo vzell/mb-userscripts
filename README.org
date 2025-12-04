@@ -16676,3 +16676,137 @@ function addToggleWrapperButton(wrapperDiv) {
     console.log("DR: Button inserted successfully.");
 }
 #+end_example
+
+*** 2
+
+Now please change the code so that
+
+1.) initially the "discogs-wrapper" container is hidden
+2.) the text "'Process Tracklist relationships too'" together
+    with the checkbox is renderded with a little space right after the 'Import relationships from Discogs' button, so it should not flow to the right when the browser window is widened
+
+*** answer
+
+Here is the updated $(document).ready block.
+
+I have made the following specific changes:
+
+Hidden by default: Added divWrapper.style.display = 'none'; immediately after the container is created.
+
+Layout fix: Updated the CSS within the script.
+
+Changed grid-template-columns to 200px auto auto 1fr. This forces the button and label columns (auto) to shrink to their content size, while the empty 4th column (1fr) takes up the remaining space, keeping the elements grouped to the left.
+
+Added align-self: center to the label so it aligns vertically with the button.
+
+Replace your existing $(document).ready block with this code:
+
+#+begin_example
+$(document).ready(function () {
+    const re = new RegExp('musicbrainz.org/release/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/edit-relationships', 'i');
+    let m;
+    if ((m = window.location.href.match(re))) {
+        hasDiscogsLinkDefined(m[1]).then(discogsUrlParam => {
+            discogsUrl = discogsUrlParam;
+            console.log(`Got it: ${discogsUrl}`);
+            if (discogsUrl) {
+                const createrelsbutton = document.createElement('button');
+                createrelsbutton.innerText = 'Import relationships from Discogs';
+                createrelsbutton.style.marginRight = '10px'; // Reduced slightly for tighter grouping
+                const processTracklistLbl = document.createElement('label');
+                processTracklistLbl.innerText = 'Process Tracklist relationships too';
+                const processTracklistCheckbox = document.createElement('input');
+                processTracklistCheckbox.type = 'checkbox';
+                processTracklistCheckbox.checked = true;
+                processTracklistLbl.appendChild(processTracklistCheckbox);
+                
+                const divWrapper = document.createElement('div');
+                divWrapper.style.display = 'none'; // <--- 1.) INITIALLY HIDDEN
+
+                createrelsbutton.addEventListener(
+                    'click',
+                    () => {
+                        logs = document.createElement('ul');
+                        logs.classList.add('logs');
+                        summary = document.createElement('p');
+                        summary.classList.add('summary');
+                        divWrapper.appendChild(summary);
+                        divWrapper.appendChild(logs);
+
+                        startImportRels(discogsUrl, processTracklistCheckbox.checked);
+                    },
+                    false
+                );
+
+                divWrapper.classList.add('discogs-wrapper');
+                const logo = document.createElement('img');
+                logo.src = DISCOGS_LOGO_URL;
+                divWrapper.appendChild(logo);
+                const description = document.createElement('p');
+                description.innerHTML = `This tool will import the relationships found on <a href="${discogsUrl}" rel="nofollow noopener noreferrer" targe="_blank">${discogsUrl}</a> and apply them to the release. The tool isn't perfect and result's should be used as a starting point and also validated before submitting.<br>For example common issues include:<ul><li>On compilations all publishers and labels for individual tracks are listed on the release on discogs. These need to be manually moved to the appropriate tracks</li><li>MusicBrainz has clear guidance on the case of artists, Discogs does not and so you may see some artist names incorrectly capitalized</li><li>The tool isn't 100% perfect at matching instruments, so please review closely.</li></ul><br/>I'm always happy to recieve any feedback over on the <a href="https://community.metabrainz.org/">forums</a>.`;
+                const title = document.createElement('h3');
+                title.innerText = 'Discogs Relationship Importer';
+                divWrapper.appendChild(logo);
+                divWrapper.appendChild(title);
+                divWrapper.appendChild(description);
+                divWrapper.appendChild(processTracklistLbl);
+                divWrapper.appendChild(createrelsbutton);
+                const style = document.createElement('style');
+                style.rel = 'stylesheet';
+                // 2.) CSS UPDATED BELOW FOR LAYOUT
+                style.innerText = `.discogs-wrapper {
+                    display: grid;
+                    border: 1px solid #ccc;
+                    border-radius: 1rem;
+                    padding: 2rem;
+                    /* Changed columns: fixed logo | auto button | auto label | remaining space */
+                    grid-template-columns: 200px auto auto 1fr;
+                    grid-template-rows: auto;
+                    grid-template-areas:
+                        "logo header header header"
+                        "logo description description description"
+                        ". button label ." 
+                        "summary summary summary summary"
+                        "logs logs logs logs";
+                    width: calc(100vw - 7rem);
+                    overflow: hidden;
+                }
+                .discogs-wrapper img {
+                    height: 150px;
+                    grid-area: logo;
+                }
+                .discogs-wrapper h3 {
+                    grid-area: header;
+                }
+                .discogs-wrapper > p {
+                    grid-area: description;
+                }
+                .discogs-wrapper > button {
+                    grid-area: button;
+                    /* Removed max-width restriction so it fits text */
+                }
+                .discogs-wrapper > label {
+                    grid-area: label;
+                    /* Removed max-width */
+                    margin: 1rem 0; /* Removed horizontal margin to keep it close */
+                    align-self: center; /* Aligns vertically with the button */
+                    white-space: nowrap; /* Prevents text wrapping */
+                }
+                .discogs-wrapper .summary {
+                    grid-area: summary;
+                    width: 100%;
+                }
+                .discogs-wrapper .logs {
+                    grid-area: logs;
+                    width: 100%;
+                }`;
+
+                document.head.appendChild(style);
+
+                registerButton(divWrapper);
+                addToggleWrapperButton(divWrapper);
+            }
+        });
+    }
+});
+#+end_example
