@@ -16513,7 +16513,7 @@ Please DO NOT make any code changes, as everything works ok.
 
 * Discogs importer
 
-In the uploaded userscript, please double the button "Import relationships from Discogs" and checkbox "Process Tracklist relationships too"
+In the uploaded userscript "goodalignment.js", please double the button "Import relationships from Discogs" and checkbox "Process Tracklist relationships too"
 
 in the same line as the heading
 
@@ -16521,1079 +16521,158 @@ in the same line as the heading
 <h2>Release relationships</h2>
 #+end_example
 
-with a little space after it, also decrease the spacing between the original button and the text "checkbox "Process
-Tracklist relationships too" with the checkbox.
+with a little space after it.
 
-** 1
-
-I uploaded the complete source code again. Please parse again, as I removed the base64 encode image.
-
-Not yet working, no button and checkbox shows up.
-By the way please decrease the spacing between the original button and the text "checkbox "Process Tracklist relationships too" with the checkbox
+Use the logic provided in the uploaded userscript "place-button.js", as this one works.
 
 #+begin_example
 // ==UserScript==
-// @name         VZ: MusciBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release
+// @name         MB: Add Test Button After Release Relationships Heading (Working)
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2025-12-03
-// @description  Add a button to import Discogs release relationships to MusicBrainz
-// @author       mattgoldspink (with input from vzell)
-// @homepageURL  https://github.com/vzell/mb-userscripts
-// @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ImportRelationshipsFromDiscogs.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ImportRelationshipsFromDiscogs.user.js
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @version      1.1
 // @match        https://musicbrainz.org/release/*/edit-relationships
-// @license      MIT
+// @grant        none
 // ==/UserScript==
 
-let db;
-const request = indexedDB.open('mblink');
-request.onerror = function () {
-    console.error("Why didn't you allow my web app to use IndexedDB?!");
-};
-request.onsuccess = function (event) {
-    db = event.target.result;
-};
-request.onupgradeneeded = function (event) {
-    const db = event.target.result;
+(function() {
+    'use strict';
 
-    // Create an objectStore to hold information about our customers. We're
-    // going to use "ssn" as our key path because it's guaranteed to be
-    // unique - or at least that's what I was told during the kickoff meeting.
-    db.createObjectStore('mblinks', {
-        keyPath: 'discogs_id',
+    function waitForHeading() {
+        // Find ANY h2 whose text is exactly "Release relationships"
+        const h2 = [...document.querySelectorAll('h2')]
+            .find(el => el.textContent.trim() === "Release relationships");
+
+        if (!h2) {
+            // Retry until React renders it
+            return setTimeout(waitForHeading, 300);
+        }
+
+        // Make h2 flex so the button aligns nicely
+        h2.style.display = "flex";
+        h2.style.alignItems = "center";
+
+        // Create the test button
+        const btn = document.createElement("button");
+        btn.textContent = "Test";
+        btn.style.marginLeft = "10px";
+
+        h2.appendChild(btn);
+
+        btn.addEventListener("click", () => {
+            alert("Test button clicked!");
+        });
+
+        console.log("Test button inserted successfully.");
+    }
+
+    waitForHeading();
+})();
+#+end_example
+
+** gemini
+*** new button
+
+In the uploaded userscript please add a new functionality so that a new button "Show/Hide Discogs Relationship Importer
+Dialog" will be added in the same line as the heading
+
+#+begin_example
+<h2>Release relationships</h2>
+#+end_example
+
+with a little space after it.
+
+Use the following function as a starting point, or maybe use it right away if just works
+
+#+begin_example
+function waitForHeading() {
+    // Find ANY h2 whose text is exactly "Release relationships"
+    const h2 = [...document.querySelectorAll('h2')]
+        .find(el => el.textContent.trim() === "Release relationships");
+
+    if (!h2) {
+        // Retry until React renders it
+        return setTimeout(waitForHeading, 300);
+    }
+
+    // Make h2 flex so the button aligns nicely
+    h2.style.display = "flex";
+    h2.style.alignItems = "center";
+
+    // Create the test button
+    const btn = document.createElement("button");
+    btn.textContent = "Show/Hide Discogs Relationship Importer Dialog";
+    btn.style.marginLeft = "10px";
+
+    h2.appendChild(btn);
+
+    btn.addEventListener("click", () => {
+        alert("Button clicked!");
     });
-};
 
-let lastRequest;
-let lastUiItem;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Replaced discogsLogoBase64 with a URL constant
-const DISCOGS_LOGO_URL = 'https://s.discogs.com/img/discogs-logo.png';
-const SELECTORS = {
-    AddReleaseRelationshipButton: '#add-rel-release button',
-    InstrumentsInput: '#instruments-input',
-    TaskInput: '#task-input',
-    MediumsInput: '.medium-select-area button',
-    MediumsInputOptions: '.medium-select-area li'
-};
-
-const ENTITY_TYPE_MAP = {
-    'Instruments': {
-        entityType: 'artist',
-        linkType: 'instrument',
-        attributes: []
-    },
-    'Additional Vocals': {
-        entityType: 'artist',
-        linkType: 'vocal',
-        attributes: ['backing vocals']
-    },
-    'Vocals': {
-        entityType: 'artist',
-        linkType: 'vocal',
-        attributes: ['vocals']
-    },
-    'Lead Vocals': {
-        entityType: 'artist',
-        linkType: 'vocal',
-        attributes: ['lead vocals']
-    },
-    'Chorus': {
-        entityType: 'artist',
-        linkType: 'vocal',
-        attributes: ['choir']
-    },
-    'Performer': {
-        entityType: 'artist',
-        linkType: 'performer',
-        attributes: []
-    },
-    'Remix': {
-        entityType: 'artist',
-        linkType: 'remixer',
-        attributes: []
-    },
-    'Engineer': {
-        entityType: 'artist',
-        linkType: 'engineer',
-        attributes: []
-    },
-    'Recording Engineer': {
-        entityType: 'artist',
-        linkType: 'engineer',
-        attributes: [() => setNativeValue(SELECTORS.TaskInput, 'recording engineer')]
-    },
-    'Mastered By': {
-        entityType: 'artist',
-        linkType: 'engineer',
-        attributes: [() => setNativeValue(SELECTORS.TaskInput, 'mastering engineer')]
-    },
-    'Lacquer Cut By': {
-        entityType: 'artist',
-        linkType: 'engineer',
-        attributes: [() => setNativeValue(SELECTORS.TaskInput, 'lacquer cutting engineer')]
-    },
-    'Mixed By': {
-        entityType: 'artist',
-        linkType: 'mixer',
-        attributes: []
-    },
-    'Producer': {
-        entityType: 'artist',
-        linkType: 'producer',
-        attributes: []
-    },
-    'Executive Producer': {
-        entityType: 'artist',
-        linkType: 'producer',
-        attributes: ['executive producer']
-    },
-    'Design': {
-        entityType: 'artist',
-        linkType: 'designer',
-        attributes: []
-    },
-    'Cover': {
-        entityType: 'artist',
-        linkType: 'designer',
-        attributes: ['cover']
-    },
-    'Artwork': {
-        entityType: 'artist',
-        linkType: 'designer',
-        attributes: ['artwork']
-    },
-    'Photography': {
-        entityType: 'artist',
-        linkType: 'photography',
-        attributes: []
-    },
-    'Liner Notes': {
-        entityType: 'artist',
-        linkType: 'writer',
-        attributes: ['liner notes']
-    },
-    'Written By': {
-        entityType: 'artist',
-        linkType: 'writer',
-        attributes: ['lyrics', 'music']
-    },
-    'Lyrics By': {
-        entityType: 'artist',
-        linkType: 'writer',
-        attributes: ['lyrics']
-    },
-    'Music By': {
-        entityType: 'artist',
-        linkType: 'writer',
-        attributes: ['music']
-    },
-    'DJ Mix': {
-        entityType: 'artist',
-        linkType: 'dj-mix',
-        attributes: []
-    },
-    'Programmed By': {
-        entityType: 'artist',
-        linkType: 'programmer',
-        attributes: []
-    },
-    'Credited As': {
-        entityType: 'artist',
-        linkType: 'miscellaneous support',
-        attributes: []
-    },
-    'Other': {
-        entityType: 'artist',
-        linkType: 'miscellaneous support',
-        attributes: []
-    },
-    'Copyright': {
-        entityType: 'label',
-        linkType: 'copyright',
-        attributes: []
-    },
-    'Phonographic Copyright': {
-        entityType: 'label',
-        linkType: 'phonographic copyright',
-        attributes: []
-    },
-    'Licensed To': {
-        entityType: 'label',
-        linkType: 'licensed to',
-        attributes: []
-    },
-    'Licensed From': {
-        entityType: 'label',
-        linkType: 'licensed from',
-        attributes: []
-    },
-    'Manufactured By': {
-        entityType: 'area',
-        linkType: 'manufacturer',
-        attributes: []
-    },
-    'Pressed By': {
-        entityType: 'area',
-        linkType: 'presser',
-        attributes: []
-    },
-    'Recorded At': {
-        entityType: 'area',
-        linkType: 'recording location',
-        attributes: []
-    },
-    'Mixed At': {
-        entityType: 'area',
-        linkType: 'mixing location',
-        attributes: []
-    },
-    'Mastered At': {
-        entityType: 'area',
-        linkType: 'mastering location',
-        attributes: []
-    },
-    'Lacquer Cut At': {
-        entityType: 'area',
-        linkType: 'lacquer cutting location',
-        attributes: []
-    },
-    'Published By': {
-        entityType: 'label',
-        linkType: 'publisher',
-        attributes: []
-    },
-    'Producer': {
-        entityType: 'artist',
-        linkType: 'producer',
-        attributes: []
-    },
-    'Post Production': {
-        entityType: 'artist',
-        linkType: 'producer',
-        attributes: [() => setNativeValue(SELECTORS.TaskInput, 'post production')]
-    }
-};
-
-const INSTRUMENTS = {
-    'Acoustic Guitar': 'acoustic guitar',
-    'Accordion': 'accordion',
-    'Bass': 'bass guitar',
-    'Bass Guitar': 'bass guitar',
-    'Clarinet': 'clarinet',
-    'Drums': 'drums',
-    'Electric Guitar': 'electric guitar',
-    'Flute': 'flute',
-    'Guitar': 'guitar',
-    'Keyboards': 'keyboard',
-    'Organ': 'organ',
-    'Percussion': 'percussion',
-    'Piano': 'piano',
-    'Saxophone': 'saxophone',
-    'Synthesizer': 'synthesizer',
-    'Trumpet': 'trumpet',
-    'Viola': 'viola',
-    'Violin': 'violin',
-    'Cello': 'cello',
-    'Harp': 'harp',
-    'Trombone': 'trombone',
-    'Tuba': 'tuba',
-    'Banjo': 'banjo',
-    'Mandolin': 'mandolin',
-    'Harmonica': 'harmonica',
-    'Drum Programming': 'drum machine'
-};
-
-const WORK_ONLY_ARTIST_RELS = ['writer'];
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-let logs, summary, discogsUrl;
-
-$(document).ready(function () {
-    const re = new RegExp('musicbrainz.org/release/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/edit-relationships', 'i');
-    let m;
-    if ((m = window.location.href.match(re))) {
-        hasDiscogsLinkDefined(m[1]).then(discogsUrlParam => {
-            discogsUrl = discogsUrlParam;
-            console.log(`Got it: ${discogsUrl}`);
-            if (discogsUrl) {
-                const createrelsbutton = document.createElement('button');
-                createrelsbutton.innerText = 'Import relationships from Discogs';
-                
-                const processTracklistLbl = document.createElement('label');
-                processTracklistLbl.innerText = 'Process Tracklist relationships too';
-                const processTracklistCheckbox = document.createElement('input');
-                processTracklistCheckbox.type = 'checkbox';
-                processTracklistCheckbox.checked = true;
-                processTracklistLbl.appendChild(processTracklistCheckbox);
-                const divWrapper = document.createElement('div');
-
-                // --- START OF DUPLICATE ELEMENTS FOR H2 HEADING ---
-                const duplicateRelsButton = document.createElement('button');
-                duplicateRelsButton.innerText = 'Import relationships from Discogs';
-
-                const duplicateTracklistCheckbox = document.createElement('input');
-                duplicateTracklistCheckbox.type = 'checkbox';
-                duplicateTracklistCheckbox.checked = true;
-                const duplicateTracklistLbl = document.createElement('label');
-                duplicateTracklistLbl.innerText = 'Process Tracklist relationships too';
-                duplicateTracklistLbl.appendChild(duplicateTracklistCheckbox);
-                
-                // Container for the duplicated elements next to the H2
-                const inlineContainer = document.createElement('span');
-                inlineContainer.style.display = 'inline-flex';
-                inlineContainer.style.alignItems = 'center';
-                inlineContainer.style.gap = '10px'; 
-
-                inlineContainer.appendChild(duplicateRelsButton);
-                inlineContainer.appendChild(duplicateTracklistLbl);
-                // --- END OF DUPLICATE ELEMENTS ---
-
-                createrelsbutton.addEventListener(
-                    'click',
-                    () => {
-                        logs = document.createElement('ul');
-                        logs.classList.add('logs');
-                        summary = document.createElement('p');
-                        summary.classList.add('summary');
-                        divWrapper.appendChild(summary);
-                        divWrapper.appendChild(logs);
-
-                        startImportRels(discogsUrl, processTracklistCheckbox.checked);
-                    },
-                    false
-                );
-
-                // --- ADD EVENT LISTENER TO DUPLICATE BUTTON ---
-                duplicateRelsButton.addEventListener(
-                    'click',
-                    () => {
-                        logs = document.createElement('ul');
-                        logs.classList.add('logs');
-                        summary = document.createElement('p');
-                        summary.classList.add('summary');
-                        divWrapper.appendChild(summary);
-                        divWrapper.appendChild(logs);
-
-                        // Use the duplicate checkbox state
-                        startImportRels(discogsUrl, duplicateTracklistCheckbox.checked);
-                    },
-                    false
-                );
-                // --- END ADD EVENT LISTENER TO DUPLICATE BUTTON ---
-
-                divWrapper.classList.add('discogs-wrapper');
-                const logo = document.createElement('img');
-                logo.src = DISCOGS_LOGO_URL; // Use the new URL constant
-                divWrapper.appendChild(logo);
-                const description = document.createElement('p');
-                description.innerHTML = `This tool will import the relationships found on <a href="${discogsUrl}" rel="nofollow noopener noreferrer" targe="_blank">${discogsUrl}</a> and apply them to the release. The tool isn't perfect and result's should be used as a starting point and also validated before submitting.<br>For example common issues include:<ul><li>On compilations all publishers and labels for individual tracks are listed on the release on discogs. These need to be manually moved to the appropriate tracks</li><li>MusicBrainz has clear guidance on the case of artists, Discogs does not and so you may see some artist names incorrectly capitalized</li><li>The tool isn't 100% perfect at matching instruments, so please review closely.</li></ul><br/>I'm always happy to recieve any feedback over on the <a href="https://community.metabrainz.org/">forums</a>.`;
-                const title = document.createElement('h3');
-                title.innerText = 'Discogs Relationship Importer';
-                divWrapper.appendChild(logo);
-                divWrapper.appendChild(title);
-                divWrapper.appendChild(description);
-                divWrapper.appendChild(processTracklistLbl);
-                divWrapper.appendChild(createrelsbutton);
-                const style = document.createElement('style');
-                style.rel = 'stylesheet';
-                style.innerText = `.discogs-wrapper {
-                    display: grid;
-                    border: 1px solid #ccc;
-                    border-radius: 1rem;
-                    padding: 2rem;
-                    grid-template-columns: 200px 1fr 1fr 200px;
-                    grid-template-rows: auto;
-                    grid-template-areas:
-                        "logo header header header"
-                        "logo description description description"
-                        ". button label ."
-                        "summary summary summary summary"
-                        "logs logs logs logs";
-                    width: calc(100vw - 7rem);
-                    overflow: hidden;
-                }
-                .discogs-wrapper img {
-                    height: 150px;
-                    grid-area: logo;
-                }
-                .discogs-wrapper h3 {
-                    grid-area: header;
-                }
-                .discogs-wrapper > p {
-                    grid-area: description;
-                }
-                .discogs-wrapper > button {
-                    grid-area: button;
-                    max-width: 20rem;
-                }
-                /* FIX: Decreased the left margin of the label for closer spacing to the button */
-                .discogs-wrapper > label {
-                    grid-area: label;
-                    max-width: 20rem;
-                    margin: 1rem 0 1rem 0.5rem; 
-                }
-                .discogs-wrapper .summary {
-                    grid-area: summary;
-                    width: 100%;
-                }
-                .discogs-wrapper .logs {
-                    grid-area: logs;
-                    width: 100%;
-                }`;
-
-                document.head.appendChild(style);
-
-                registerButton(divWrapper, inlineContainer); // Pass the new inline container
-            }
-        });
-    }
-});
-
-function registerButton(divWrapper, inlineContainer) {
-    const releaseRelsContainer = document.getElementById('release-rels');
-    if (!releaseRelsContainer) {
-        setTimeout(() => {
-            // Updated recursive call to pass the new argument
-            registerButton(divWrapper, inlineContainer);
-        }, 500);
-        return;
-    }
-    
-    // 1. Insert the main UI wrapper first (original logic)
-    releaseRelsContainer.insertAdjacentElement('afterend', divWrapper);
-
-    // 2. Robustly find the H2 heading for duplication insertion
-    // FIX: Using Array.from and .find is more reliable than previousElementSibling.
-    const h2 = Array.from(document.querySelectorAll('h2')).find(el => 
-        el.textContent.trim() === 'Release relationships'
-    );
-
-    if (h2) {
-        // Make the H2 display inline-block so the new elements can sit beside it
-        h2.style.display = 'inline-block';
-        h2.style.marginRight = '8px'; // "little space" after the heading
-
-        // Set vertical alignment for consistency on the duplicated element container
-        inlineContainer.style.verticalAlign = 'middle';
-
-        // Insert the new container (with the button and checkbox) right after the H2
-        h2.insertAdjacentElement('afterend', inlineContainer);
-    }
-}
-
-function addLogLine(message) {
-    const li = document.createElement('li');
-    li.innerHTML = message;
-    logs.insertAdjacentElement('beforeend', li);
-}
-
-function hasDiscogsLinkDefined(mbid) {
-    let url = `/ws/js/release/${mbid}?fmt=json&inc=rels`;
-    return fetch(url)
-        .then(body => {
-            return body.json();
-        })
-        .then(json => {
-            const matchingRel = json.relationships.find(rel => {
-                return rel.target.sidebar_name === 'Discogs';
-            });
-            console.log(matchingRel.target.href_url);
-            return matchingRel.target.href_url;
-        });
-}
-
-function startImportRels(discogsUrl, processTracklist) {
-    return getDiscogsReleaseData(discogsUrl)
-        .then(json => {
-            let artistRoles = convertDiscogsArtistsToRolesRelationships(json.extraartists?.filter(artist => artist.tracks === ''));
-            addLogLine(`Found ${json.companies.length + artistRoles.length} release relationships`);
-            // handle potential dj mixes - if the tracks are the full medium then assign it to the release/medium else leave it as individual tracks
-            artistRoles = artistRoles.concat(convertPotentialDJMixers(json));
-            let tracklistRels = [];
-            if (processTracklist) {
-                tracklistRels = json.tracklist
-                    .filter(track => track.type_ === 'track')
-                    .reduce((map, track) => {
-                        if (!track.extraartists || !Array.isArray(track.extraartists)) {
-                            return map;
-                        }
-                        return map.concat(
-                            convertDiscogsArtistsToRolesRelationships(track.extraartists).map(rel => {
-                                return Object.assign({}, rel, {
-                                    track: track,
-                                });
-                            })
-                        );
-                    }, []);
-                const releaseLevelTracklistRels = json.extraartists?.filter(artist => artist.tracks !== '') || [];
-                if (releaseLevelTracklistRels.length > 0) {
-                    tracklistRels = tracklistRels.concat(
-                        releaseLevelTracklistRels.reduce((array, artist) => {
-                            return array.concat(
-                                getAllArtistTracks(json.tracklist, artist.tracks).reduce((array, track) => {
-                                    return array.concat(
-                                        getArtistRoles(artist).map(rel => {
-                                            return Object.assign({}, rel, {
-                                                artist: artist,
-                                                track: track,
-                                            });
-                                        })
-                                    );
-                                }, [])
-                            );
-                        }, [])
-                    );
-                }
-                addLogLine(`Found ${tracklistRels.length} tracklist relationships`);
-            }
-            return Promise.all([
-                addRelationshipsForCompanies(json.companies),
-                addRelationshipsForArtists(artistRoles),
-                addRelationshipsForTracklist(tracklistRels),
-            ]);
-        })
-        .then(() => { });
-}
-
-function convertPotentialDJMixers(json) {
-    let djmixers = json.extraartists?.filter(artist => artist.role === 'DJ Mix') || [];
-    djmixers = djmixers
-        .map(artist => {
-            const tracks = getAllArtistTracks(json.tracklist, artist.tracks);
-            const mediums = json.tracklist.reduce(
-                (mediums, track, index) => {
-                    if (track.type_ === 'heading') {
-                        if (index > 0) {
-                            mediums.push([]);
-                        }
-                    } else {
-                        mediums[mediums.length - 1].push(track);
-                    }
-                    return mediums;
-                },
-                [[]]
-            );
-            // now see if we can empty all our mediums
-            tracks.forEach(t => {
-                for (let i = 0; i < mediums.length; i++) {
-                    mediums[i] = mediums[i].filter(track => {
-                        return t.position !== track.position;
-                    });
-                }
-            });
-            // if some mediums are empty then we know that the artist has tracks on that medium
-            let mediumsDjAppearsOn = mediums.filter(medium => medium.length === 0);
-            if (mediumsDjAppearsOn.length !== mediums.length) {
-                // remove them from the extraartists list
-                json.extraartists = json.extraartists?.filter(a => {
-                    return a !== artist;
-                }) || [];
-                return Object.assign({}, ENTITY_TYPE_MAP['DJ Mix'], {
-                    artist: artist,
-                    attributes: [
-                        () => {
-                            for (let j = mediums.length - 1; j >= 0; j--) {
-                                if (mediums[j].length === 0) {
-                                    $(SELECTORS.MediumsInput).click();
-                                    $($(SELECTORS.MediumsInputOptions).get(j)).click();
-                                }
-                            }
-                        },
-                    ],
-                });
-            } else if (mediumsDjAppearsOn.length === mediums.length) {
-                // they're on all tracks so remove
-                json.extraartists = json.extraartists?.filter(a => {
-                    return a !== artist;
-                }) || [];
-                return Object.assign({}, ENTITY_TYPE_MAP['DJ Mix'], {
-                    artist: artist,
-                });
-            }
-            return null;
-        })
-        .filter(role => role !== null);
-    return djmixers;
-}
-
-function getAllArtistTracks(tracklist, artistTracks) {
-    // lets parse and get all tracks listed by the artist
-    return artistTracks.split(',').reduce((trackArray, trackNumber) => {
-        if (/\ to /.test(trackNumber)) {
-            // need to expand the range
-            const parts = trackNumber.split(' to ');
-            const startTrack = parts[0].trim().replace('.', '-');
-            const lastTrack = parts[1].trim().replace('.', '-');
-            let hasFoundStart = false,
-                hasFoundEnd = false;
-            tracklist.forEach(track => {
-                const resolvedTrackPosition = track.position.replace('.', '-');
-                if (!hasFoundStart && resolvedTrackPosition === startTrack) {
-                    hasFoundStart = true;
-                    trackArray.push(track);
-                } else if (hasFoundStart && !hasFoundEnd) {
-                    if (resolvedTrackPosition === lastTrack) {
-                        hasFoundEnd = true;
-                        trackArray.push(track);
-                    } else if (track.position === '') {
-                        hasFoundEnd = true;
-                    } else {
-                        trackArray.push(track);
-                    }
-                }
-            });
-        } else {
-            const track = tracklist.find(track => {
-                return track.position === trackNumber.trim();
-            });
-            if (track) {
-                trackArray.push(track);
-            }
-        }
-        return trackArray;
-    }, []);
-}
-
-function convertDiscogsArtistsToRolesRelationships(artists) {
-    return artists?.reduce((rolesArr, artist) => {
-        const roles = getArtistRoles(artist);
-        if (Array.isArray(roles) && roles.length > 0) {
-            return rolesArr.concat(roles);
-        }
-        return rolesArr;
-    }, []) || [];
-}
-
-function getDiscogsReleaseData(url) {
-    return fetch(
-        `${url.replace(
-            'https://www.discogs.com/release/',
-            'https://api.discogs.com/releases/'
-        )}?token=gYAnSAmIoXiHezHBmHoqcBCuJRyQLJBYSjurbGTZ`
-    )
-        .then(body => {
-            return body.json();
-        })
-        .then(json => {
-            console.log(json);
-            return json;
-        });
-}
-
-function addRelationshipsForCompanies(companies) {
-    return Promise.all(
-        companies.map(company => {
-            const details = ENTITY_TYPE_MAP[company.entity_type_name];
-            if (details) {
-                return getMbId(company, details.entityType)
-                    .then(mbid => {
-                        addReleaseRelationship(details.entityType, details.linkType, mbid, []);
-                    })
-                    .catch(error => {
-                        addLogLine(
-                            `Failed to add relationship for <a target="_blank" rel="noopener noreferrer nofollow" href="${company.resource_url}">${company.name}</a> - ${details.entityType} - ${details.linkType}<br />${error}`
-                        );
-                        console.warn(error);
-                        return Promise.resolve();
-                    });
-            }
-            return Promise.resolve();
-        })
-    );
-}
-
-function addRelationshipsForArtists(artistRoles) {
-    return Promise.all(
-        artistRoles.map(role => {
-            return getMbId(role.artist, 'artist')
-                .then(mbid => {
-                    return addReleaseRelationship(
-                        role.entityType,
-                        role.linkType,
-                        mbid,
-                        role.attributes || [],
-                        // use anv first if set since that's the listing on the release
-                        // else use the artist name incase it's different
-                        role.artist.anv.trim() || role.artist.name
-                    );
-                })
-                .catch(error => {
-                    addLogLine(`Failed to add relationship for ${role.artist.name} - ${role.entityType} - ${role.linkType}<br />${error}`);
-                    console.warn(error);
-                    return Promise.resolve();
-                });
-        })
-    );
-}
-
-function getTrackRowBasedOnTrack(track) {
-    if (/^[0-9]*$/.test(track.position)) {
-        // simple number
-        const trackNumber = parseInt(track.position, 10);
-        return Array.from(document.querySelectorAll(`#tracklist .track`)).find(el => {
-            return el.firstElementChild.textContent.trim() === `${trackNumber}`;
-        });
-    } else if (/^[0-9]*[-.][0-9]*$/.test(track.position)) {
-        // multi track release.
-        const split = track.position.split(track.position.indexOf('-') > -1 ? '-' : '.');
-        const mediumNumber = parseInt(split[0], 10);
-        const trackNumber = parseInt(split[1], 10);
-        let currentMediumNumber = 0;
-        return Array.from(document.querySelectorAll(`#tracklist tr`)).find(el => {
-            if (el.classList.contains('subh')) {
-                currentMediumNumber++;
-            }
-            if (mediumNumber === currentMediumNumber) {
-                return el.firstElementChild.textContent.trim() === `${trackNumber}`;
-            }
-        });
-    } else {
-        // assume alphabetical, e.g. A1, A2, or just A, B
-        return Array.from(document.querySelectorAll(`#tracklist .track`)).find(el => {
-            return el.firstElementChild.textContent.trim() === track.position;
-        });
-    }
-}
-
-function addRelationshipsForTracklist(tracklistRels) {
-    return Promise.all(
-        tracklistRels.map(role => {
-            return getMbId(role.artist, 'artist')
-                .then(mbid => {
-                    let addRelButton;
-                    const trackRowEl = getTrackRowBasedOnTrack(role.track);
-                    if (!trackRowEl) {
-                        addLogLine(
-                            `<span style="color: orange">Couldn't find a matching track for ${role.track.position} - ${role.track.title}: ${role.artist.name} - ${role.entityType} - ${role.linkType}</span>`
-                        );
-                        return Promise.resolve();
-                    }
-                    if (WORK_ONLY_ARTIST_RELS.includes(role.linkType)) {
-                        addRelButton = $(trackRowEl.querySelector('.works')).find('button.add-relationship').get(0);
-                        if (!addRelButton) {
-                            addLogLine(
-                                `<span style="color: orange">You need to create a Work for track ${role.track.position} - ${role.track.title}: ${role.artist.name} - ${role.entityType} - ${role.linkType}</span>`
-                            );
-                            return Promise.resolve();
-                        }
-                    } else {
-                        addRelButton = $(trackRowEl.querySelector(`.recording`)).find('button.add-relationship').get(0);
-                    }
-                    return addRelationship(
-                        addRelButton,
-                        role.entityType,
-                        role.linkType,
-                        mbid,
-                        role.attributes || [],
-                        // use anv first if set since that's the listing on the release
-                        // else use the artist name incase it's different
-                        role.artist.anv.trim() || role.artist.name
-                    );
-                })
-                .catch(error => {
-                    addLogLine(
-                        `Failed to add relationship to track ${role.track.position} - ${role.track.title}: ${role.artist.name} - ${role.entityType} - ${role.linkType}<br />${error}`
-                    );
-                    console.warn(error);
-                    return Promise.resolve();
-                });
-        })
-    );
-}
-
-function getArtistRoles(artist) {
-    const roleStr = artist.role;
-    const rawRoles = roleStr.split(',');
-    if (/\([0-9]+\)/.test(artist.anv)) {
-        artist.anv = artist.anv.replace(/\([0-9]+\)/, '').trim();
-    }
-    if (/\([0-9]+\)/.test(artist.name)) {
-        artist.name = artist.name.replace(/\([0-9]+\)/, '').trim();
-    }
-    return rawRoles
-        .map(role => {
-            let additionalAttributes = [];
-            let rolePart = role.trim().split('[');
-            const actualRole = rolePart[0].trim();
-            if (/Recording Engineer/.test(rolePart[1]) && actualRole === 'Engineer') {
-                return Object.assign({}, ENTITY_TYPE_MAP['Recording Engineer'], {
-                    artist: artist,
-                });
-            }
-            if (/Mastering Engineer/.test(rolePart[1]) && actualRole === 'Engineer') {
-                return Object.assign({}, ENTITY_TYPE_MAP['Mastered By'], {
-                    artist: artist,
-                });
-            }
-            if (/Cover Design/.test(rolePart[1]) && actualRole === 'Artwork') {
-                return Object.assign({}, ENTITY_TYPE_MAP['Design'], {
-                    artist: artist,
-                });
-            }
-            if (/Design/.test(rolePart[1]) && actualRole === 'Cover') {
-                return Object.assign({}, ENTITY_TYPE_MAP['Design'], {
-                    artist: artist,
-                });
-            }
-            if (/Additional/.test(rolePart[1])) {
-                additionalAttributes.push('additional');
-            }
-            if (/Assistant/.test(rolePart[1])) {
-                additionalAttributes.push('assistant');
-            }
-            if (/Co /.test(rolePart[1])) {
-                additionalAttributes.push('co');
-            }
-            if (/Executive/.test(rolePart[1])) {
-                additionalAttributes.push('executive');
-            }
-            if (/Associate/.test(rolePart[1])) {
-                additionalAttributes.push('associate');
-            }
-            if (/Guest/.test(rolePart[1])) {
-                additionalAttributes.push('guest');
-            }
-            if (/Solo/.test(rolePart[1])) {
-                additionalAttributes.push('solo');
-            }
-            const mapping = ENTITY_TYPE_MAP[actualRole];
-            if (mapping && mapping.linkType == 'miscellaneous support' && !rolePart[1]) {
-                additionalAttributes.push(() => {
-                    return setNativeValue(SELECTORS.TaskInput, actualRole.trim().toLowerCase());
-                });
-            }
-            if (mapping && mapping.linkType == 'miscellaneous support' && rolePart[1]) {
-                additionalAttributes.push(() => {
-                    return setNativeValue(SELECTORS.TaskInput, rolePart[1].replace(']', '').trim().toLowerCase());
-                });
-            }
-            if (mapping && mapping.linkType == 'engineer' && rolePart[1]) {
-                additionalAttributes.push(() => {
-                    return setNativeValue(SELECTORS.TaskInput, rolePart[1].replace(']', '').trim().toLowerCase());
-                });
-            }
-            if (mapping && mapping.linkType == 'mixer' && rolePart[1]) {
-                additionalAttributes.push(() => {
-                    return setNativeValue(SELECTORS.TaskInput, rolePart[1].replace(']', '').trim().toLowerCase());
-                });
-            }
-            if (mapping && mapping.linkType == 'producer' && rolePart[1]) {
-                additionalAttributes.push(() => {
-                    return setNativeValue(SELECTORS.TaskInput, rolePart[1].replace(']', '').trim().toLowerCase());
-                });
-            }
-            if (mapping && mapping.linkType == 'photography' && rolePart[1]) {
-                additionalAttributes.push(() => {
-                    return setNativeValue(SELECTORS.TaskInput, rolePart[1].replace(']', '').trim().toLowerCase());
-                });
-            }
-            if (mapping && mapping.linkType == 'artwork' && rolePart[1]) {
-                additionalAttributes.push(() => {
-                    return setNativeValue(SELECTORS.TaskInput, rolePart[1].replace(']', '').trim().toLowerCase());
-                });
-            }
-            if (mapping && mapping.linkType == 'producer' && actualRole == 'Post Production') {
-                additionalAttributes.push(() => {
-                    return setNativeValue(SELECTORS.TaskInput, actualRole.toLowerCase());
-                });
-            }
-            if (!mapping && INSTRUMENTS[actualRole] !== undefined) {
-                // check if it's an instrument
-                let instrumentName = actualRole;
-                if (INSTRUMENTS[actualRole]) {
-                    instrumentName = INSTRUMENTS[actualRole];
-                }
-                let role = ENTITY_TYPE_MAP.Instruments;
-                if ('Drum Programming' === actualRole) {
-                    role = ENTITY_TYPE_MAP['Programmed By'];
-                    instrumentName = INSTRUMENTS['Drum Machine'];
-                }
-                return Object.assign({}, role, {
-                    artist: artist,
-                    attributes: [
-                        () => {
-                            return setValueOnAutocomplete(SELECTORS.InstrumentsInput, instrumentName.toLowerCase());
-                        },
-                    ],
-                });
-            }
-            if (!mapping) {
-                return null;
-            }
-            if (Array.isArray(mapping.attributes)) {
-                additionalAttributes = additionalAttributes.concat(mapping.attributes);
-            }
-            return Object.assign({}, mapping, {
-                artist: artist,
-                attributes: additionalAttributes,
-            });
-        })
-        .filter(resolvedRole => {
-            return !!resolvedRole;
-        });
-}
-
-function addReleaseRelationship(entityType, linkType, mbidUrl, extraAttributes, creditedAsName) {
-    addRelationship(SELECTORS.AddReleaseRelationshipButton, entityType, linkType, mbidUrl, extraAttributes, creditedAsName);
-}
-
-function updateSummary() {
-    const script_name = GM_info.script.name;
-    const script_version = GM_info.script.version;
-    const trackRelationshipUpdateCount = document.querySelectorAll('#tracklist .rel').length - document.querySelectorAll('#tracklist .rel.no-relationships').length;
-    summary.innerHTML = `This tool will attempt to import relationships from a Discogs release. Found ${trackRelationshipUpdateCount} existing track relationships on the release.`;
-    summary.classList.add('note');
-}
-
-function getMbId(discogsEntity, entityType) {
-    let transaction;
-    let store;
-    if (db) {
-        transaction = db.transaction(['mblinks']);
-        store = transaction.objectStore('mblinks');
-    }
-    return new Promise((resolve, reject) => {
-        let discogsId = discogsEntity.id;
-        if (store) {
-            store.get(discogsId).onsuccess = event => {
-                const item = event.target.result;
-                if (item) {
-                    lastUiItem = item;
-                    resolve(item.mbid);
-                    return;
-                }
-            };
-        }
-        let url = `/ws/2/${entityType}/?query=${discogsEntity.name.replace(/ \([0-9]+\)/g, '')}&fmt=json&limit=10`;
-        const parts = discogsEntity.resource_url.split('/');
-        url = `${url}&inc=url-rels`;
-        if (entityType === 'label') {
-            url = url.replace('label', 'area');
-        }
-        if (entityType === 'area') {
-            url = url.replace('area', 'artist');
-        }
-        if (entityType === 'artist') {
-            url = url.replace('artist', 'label');
-        }
-        fetch(url)
-            .then(body => {
-                return body.json();
-            })
-            .then(json => {
-                let entityList;
-                if (entityType === 'artist') {
-                    entityList = json.artists;
-                } else if (entityType === 'label') {
-                    entityList = json.labels;
-                } else {
-                    entityList = json.areas;
-                }
-                const found = entityList.find(entity => {
-                    const match = entity.relations?.find(rel => {
-                        return rel.target_type === 'url' && rel.url.resource.indexOf(parts[parts.length - 1]) > -1;
-                    });
-                    return !!match;
-                });
-                if (found) {
-                    if (store) {
-                        const transaction = db.transaction(['mblinks'], 'readwrite');
-                        const store = transaction.objectStore('mblinks');
-                        store.put({
-                            discogs_id: discogsId,
-                            mbid: found.id,
-                            discogs_name: discogsEntity.name,
-                            mbid_name: found.name,
-                        });
-                    }
-                    lastUiItem = found;
-                    resolve(found.id);
-                    return;
-                }
-                reject(`Couldn't find musicbrainz id for ${discogsEntity.name}`);
-            });
-    });
-}
-
-function setValueOnAutocomplete(selector, value) {
-    const el = document.querySelector(selector);
-    const event = new Event('input', { bubbles: true });
-    el.value = value;
-    el.dispatchEvent(event);
-    $(el).val(value);
-}
-
-function setNativeValue(selector, value) {
-    const el = document.querySelector(selector);
-    const event = new Event('input', { bubbles: true });
-    el.value = value;
-    el.dispatchEvent(event);
-    $(el).val(value);
-}
-
-function addRelationship(buttonEl, entityType, linkType, mbidUrl, extraAttributes, creditedAsName) {
-    if (!buttonEl) {
-        addLogLine(
-            `<span style="color: red">Failed to find button to add relationship for ${mbidUrl} - ${entityType} - ${linkType}</span>`
-        );
-        return Promise.resolve();
-    }
-    const $button = $(buttonEl);
-    $button.click();
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const $relDialog = $button.closest('div.row').find('div.dialog-content');
-            $relDialog
-                .find('label')
-                .filter((index, el) => {
-                    return el.innerText.trim().toLowerCase().indexOf(entityType) > -1;
-                })
-                .get(0)
-                .click();
-            setTimeout(() => {
-                $relDialog
-                    .find('label')
-                    .filter((index, el) => {
-                        return el.innerText.trim().toLowerCase().indexOf(linkType) > -1;
-                    })
-                    .get(0)
-                    .click();
-                setTimeout(() => {
-                    if (extraAttributes.length > 0) {
-                        extraAttributes.forEach(attr => {
-                            if (typeof attr === 'function') {
-                                attr();
-                            } else {
-                                $relDialog
-                                    .find('input[type="checkbox"]')
-                                    .filter((index, el) => {
-                                        return el.nextSibling.textContent.trim().toLowerCase().indexOf(attr) > -1;
-                                    })
-                                    .get(0)
-                                    .click();
-                            }
-                        });
-                    }
-                    if (creditedAsName) {
-                        setNativeValue($relDialog.find('input[name="credited_as"]').get(0), creditedAsName);
-                    }
-                    setNativeValue($relDialog.find('input[name="target"]').get(0), mbidUrl);
-                    $relDialog.find('button.submit').get(0).click();
-                    resolve();
-                    updateSummary();
-                    addLogLine(
-                        `Added relationship for ${lastUiItem?.name || mbidUrl} - ${entityType} - ${linkType}`
-                    );
-                }, 500);
-            }, 500);
-        }, 500);
-    });
+    console.log("DR: Button inserted successfully.");
 }
 #+end_example
 
+The functionality when the button is clicked, should be that the
 
+#+begin_example
+<div class="discogs-wrapper">
+#+end_example
+
+container should be hidden when currently shown, or shown when currently hidden. So basically a toogle to hide and show
+the container.
+
+*** result
+
+Replace your existing $(document).ready(function () { ... }); block (lines 42–114) with the code below.
+
+The only change here is the addition of the line addToggleWrapperButton(divWrapper); right after the button is registered.
+
+#+begin_example
+// NEW: Initialize the toggle button
+                addToggleWrapperButton(divWrapper);
+#+end_example
+
+Add this function anywhere in your script (e.g., after the registerButton function). This is your requested logic
+adapted to toggle the wrapper's specific display property (grid).
+
+#+begin_example
+function addToggleWrapperButton(wrapperDiv) {
+    // Find ANY h2 whose text is exactly "Release relationships"
+    const h2 = [...document.querySelectorAll('h2')]
+        .find(el => el.textContent.trim() === "Release relationships");
+
+    if (!h2) {
+        // Retry until React/DOM renders it
+        return setTimeout(() => { addToggleWrapperButton(wrapperDiv); }, 300);
+    }
+
+    // Check if button already exists to prevent duplicates
+    if (h2.querySelector('.discogs-toggle-btn')) return;
+
+    // Make h2 flex so the button aligns nicely
+    h2.style.display = "flex";
+    h2.style.alignItems = "center";
+
+    // Create the test button
+    const btn = document.createElement("button");
+    btn.textContent = "Show/Hide Discogs Relationship Importer Dialog";
+    btn.classList.add('discogs-toggle-btn'); // Add a class to identify it
+    btn.style.marginLeft = "10px";
+    btn.style.fontSize = "0.8rem"; // Optional: make it fit slightly better
+
+    h2.appendChild(btn);
+
+    btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        // Toggle logic: The wrapper uses 'display: grid' in CSS.
+        if (wrapperDiv.style.display === 'none') {
+            wrapperDiv.style.display = 'grid';
+        } else {
+            wrapperDiv.style.display = 'none';
+        }
+    });
+
+    console.log("DR: Button inserted successfully.");
+}
+#+end_example

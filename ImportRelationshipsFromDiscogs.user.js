@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusciBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0+2025-12-01
+// @version      1.1+2025-12-01
 // @description  Add a button to import Discogs release relationships to MusicBrainz
 // @author       mattgoldspink (with input from vzell)
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -135,6 +135,8 @@ $(document).ready(function () {
                 document.head.appendChild(style);
 
                 registerButton(divWrapper);
+		// Initialize the toggle button
+                addToggleWrapperButton(divWrapper);
             }
         });
     }
@@ -149,6 +151,45 @@ function registerButton(divWrapper) {
     } else {
         releaseRelsBtn.insertAdjacentElement('afterend', divWrapper);
     }
+}
+
+function addToggleWrapperButton(wrapperDiv) {
+    // Find ANY h2 whose text is exactly "Release relationships"
+    const h2 = [...document.querySelectorAll('h2')]
+        .find(el => el.textContent.trim() === "Release relationships");
+
+    if (!h2) {
+        // Retry until React/DOM renders it
+        return setTimeout(() => { addToggleWrapperButton(wrapperDiv); }, 300);
+    }
+
+    // Check if button already exists to prevent duplicates
+    if (h2.querySelector('.discogs-toggle-btn')) return;
+
+    // Make h2 flex so the button aligns nicely
+    h2.style.display = "flex";
+    h2.style.alignItems = "center";
+
+    // Create the test button
+    const btn = document.createElement("button");
+    btn.textContent = "Show/Hide Discogs Relationship Importer Dialog";
+    btn.classList.add('discogs-toggle-btn'); // Add a class to identify it
+    btn.style.marginLeft = "10px";
+    btn.style.fontSize = "0.8rem"; // Optional: make it fit slightly better
+
+    h2.appendChild(btn);
+
+    btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        // Toggle logic: The wrapper uses 'display: grid' in CSS.
+        if (wrapperDiv.style.display === 'none') {
+            wrapperDiv.style.display = 'grid';
+        } else {
+            wrapperDiv.style.display = 'none';
+        }
+    });
+
+    console.log("DR: Button inserted successfully.");
 }
 
 function addLogLine(message) {
