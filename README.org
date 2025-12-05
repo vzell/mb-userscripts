@@ -16865,3 +16865,34 @@ function addToggleWrapperButton(wrapperDiv) {
     console.log("DR: Button inserted successfully.");
 }
 #+end_example
+
+
+* BruceBase
+** recent changes
+
+Write a userscript which automatically selects on the following URL http://brucebase.wikidot.com/system:recent-changes
+in the "Revisions per page:" pull-down list the entry "200" and execute the button click on the "Update list" button
+
+** 1
+
+#+begin_example
+<td>
+					<select id="rev-perpage">
+						<option value="10">10</option>
+						<option value="20" selected="selected">20</option>
+						<option value="50">50</option>
+						<option value="100">100</option>
+						<option value="200">200</option>
+					</select>
+				</td>
+#+end_example
+
+** 2
+
+Here is the console output, 200 was actuallly already selected
+
+#+begin_example
+[Auto200] select set to 200
+userscript.html?name=Brucebase-Recent-Changes-%25E2%2580%2593-Auto-200-Revisions-robust.user.js&id=7a956ba3-2f01-4304-8b58-1d4ff4f149b1:18 [Auto200] clicking update button <input type=​"button" class=​"btn btn-default btn-sm" value=​"Update list" onclick=​"WIKIDOT.modules.SiteChangesModule.listeners.updateList(null)​">​
+#+end_example
+
