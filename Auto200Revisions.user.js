@@ -21,15 +21,33 @@
 (function() {
     'use strict';
 
-    // Wait until the select element is present
-    const select = document.getElementById('rev-perpage');
-    if (select) {
-        select.value = "200"; // set the value to 200
-        // Optionally trigger change event if page uses JS to react
-        const event = new Event('change', { bubbles: true });
-        select.dispatchEvent(event);
-        console.log('[Auto200] select set to 200');
-    } else {
-        console.log('[Auto200] select element not found');
-    }
+    const maxRetries = 20;      // maximum number of attempts
+    const intervalMs = 200;     // interval between attempts
+    let attempts = 0;
+
+    const trySelect = () => {
+        const select = document.getElementById('rev-perpage');
+        if (select) {
+            // Safely set the value
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === "200") {
+                    select.selectedIndex = i;
+                    break;
+                }
+            }
+
+            // Trigger change event safely
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log('[VZ: Auto200] select set to 200 safely');
+        } else {
+            attempts++;
+            if (attempts < maxRetries) {
+                setTimeout(trySelect, intervalMs);
+            } else {
+                console.warn('[VZ: Auto200] select element not found after retries');
+            }
+        }
+    };
+
+    trySelect();
 })();
