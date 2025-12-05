@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: BruceBase – Auto 200 Revisions
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0+2025-12-05
+// @version      1.1+2025-12-05
 // @description  Select "200" for revisions per page BruceBase recent-changes
 // @author       ChatGPT (directed by vzell)
 // @tag          AI generated
