@@ -11,17 +11,6 @@ which checks for a valid Universally Unique Identifier (UUID) (but only lowercas
 when pasting it in the following textfield (in the following example it's already prefilled with "0761d7ea-a5d8-4499-9ab9-d0dcc161fcaa"):
 
 #+begin_example
-		<div class="row">
-			<section class="col col-6">
-				<label class="input">
-					<i class="icon-prepend bi bi-link"></i>
-					<input type="text" name="db_musicbrainz" id="db_musicbrainz" class="monospaced" value="0761d7ea-a5d8-4499-9ab9-d0dcc161fcaa" placeholder="MusicBrainz ID">
-				</label>
-			</section>
-		</div>
-#+end_example
-
-#+begin_example
 // ==UserScript==
 // @name         MusicBrainz UUID Validator (Lowercase Hex)
 // @namespace    http://tampermonkey.net/
@@ -16868,12 +16857,13 @@ function addToggleWrapperButton(wrapperDiv) {
 
 
 * BruceBase
-** recent changes
+** ChatGPT
+*** recent changes
 
 Write a userscript which automatically selects on the following URL http://brucebase.wikidot.com/system:recent-changes
 in the "Revisions per page:" pull-down list the entry "200" and execute the button click on the "Update list" button
 
-** 1
+*** 1
 
 #+begin_example
 <td>
@@ -16887,12 +16877,173 @@ in the "Revisions per page:" pull-down list the entry "200" and execute the butt
 				</td>
 #+end_example
 
-** 2
+*** 2
 
 Here is the console output, 200 was actuallly already selected
 
 #+begin_example
 [Auto200] select set to 200
 userscript.html?name=Brucebase-Recent-Changes-%25E2%2580%2593-Auto-200-Revisions-robust.user.js&id=7a956ba3-2f01-4304-8b58-1d4ff4f149b1:18 [Auto200] clicking update button <input type=​"button" class=​"btn btn-default btn-sm" value=​"Update list" onclick=​"WIKIDOT.modules.SiteChangesModule.listeners.updateList(null)​">​
+#+end_example
+
+** gemini
+
+Write a userscript which automatically selects on the following URL http://brucebase.wikidot.com/system:recent-changes
+in the "Revisions per page:" pull-down list (<select id="rev-perpage">) the option "200" and execute the button click on the "Update list" button (<input type="button" class="btn btn-default btn-sm" value="Update list" onclick="WIKIDOT.modules.SiteChangesModule.listeners.updateList(null)">)
+
+#+begin_example
+<form onsubmit="return false;" action="dummy.html" method="get">
+		<table class="form">
+			<tbody><tr>
+				<td>
+					Revision types:
+				</td>
+				<td>
+                    <input class="checkbox" type="checkbox" id="rev-type-all" checked="checked">&nbsp;ALL<br>
+                    <input class="checkbox" type="checkbox" id="rev-type-new">&nbsp;new pages<br>
+                    <input class="checkbox" type="checkbox" id="rev-type-source">&nbsp;source changes<br>
+                    <input class="checkbox" type="checkbox" id="rev-type-title">&nbsp;title changes<br>
+                    <input class="checkbox" type="checkbox" id="rev-type-move">&nbsp;page name changes<br>
+                    <input class="checkbox" type="checkbox" id="rev-type-tags">&nbsp;tags changes<br>
+                    <input class="checkbox" type="checkbox" id="rev-type-meta">&nbsp;metadata changes<br>
+                    <input class="checkbox" type="checkbox" id="rev-type-files">&nbsp;files changes				</td>
+			</tr>
+			<tr>
+				<td>
+					From categories: 
+				</td>
+				<td>
+					<select id="rev-category">
+						<option value="" selected="selected">Whole site</option>
+													<option value="15810706">_default</option>
+													<option value="38050900">admin</option>
+													<option value="15810704">admincss</option>
+											</select>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Revisions per page:
+				</td>
+				<td>
+					<select id="rev-perpage">
+						<option value="10">10</option>
+						<option value="20" selected="selected">20</option>
+						<option value="50">50</option>
+						<option value="100">100</option>
+						<option value="200">200</option>
+					</select>
+				</td>
+			</tr>
+		</tbody></table>
+		<div class="buttons">
+			<input type="button" class="btn btn-default btn-sm" value="Update list" onclick="WIKIDOT.modules.SiteChangesModule.listeners.updateList(null)">
+		</div>
+	</form>
+#+end_example
+
+** answer
+
+#+begin_example
+// ==UserScript==
+// @name         Wikidot Recent Changes Auto-200
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Automatically sets the "Revisions per page" to 200 and triggers the list update on the Brucebase Recent Changes page.
+// @author       Gemini
+// @match        http://brucebase.wikidot.com/system:recent-changes
+// @grant        none
+// @run-at       document-idle
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Wait for the window to fully load to ensure the WIKIDOT object is available
+    window.addEventListener('load', function() {
+        // 1. Select the '200' option in the 'Revisions per page' dropdown
+        const selectElement = document.getElementById('rev-perpage');
+
+        if (selectElement) {
+            // Set the value of the dropdown to "200"
+            selectElement.value = '200';
+
+            // Dispatch a 'change' event to notify the page's underlying scripts
+            // that the value has been updated, ensuring consistency.
+            const changeEvent = new Event('change', { bubbles: true });
+            selectElement.dispatchEvent(changeEvent);
+        }
+
+        // 2. Execute the 'Update list' action by calling the button's click handler directly.
+        // This is the most reliable method as it bypasses potential issues with simulating a click event.
+        if (typeof WIKIDOT !== 'undefined' &&
+            WIKIDOT.modules &&
+            WIKIDOT.modules.SiteChangesModule &&
+            WIKIDOT.modules.SiteChangesModule.listeners &&
+            typeof WIKIDOT.modules.SiteChangesModule.listeners.updateList === 'function') {
+
+            console.log('Userscript: Setting revisions to 200 and executing updateList.');
+
+            // Execute the update function with 'null' as the original onclick specified
+            WIKIDOT.modules.SiteChangesModule.listeners.updateList(null);
+
+        } else {
+            console.error('Userscript Error: Could not find the WIKIDOT update function to execute the click action.');
+        }
+    });
+})();
+#+end_example
+
+** 1
+
+The output says:
+
+#+begin_example
+Userscript: Setting revisions to 200 and executing updateList.
+#+end_example
+
+The script actually selects the 200 option but somehow does not clikc the button, instead the mouse pointer changes to "Always busy" icon
+
+** 2
+
+Output now:
+
+#+begin_example
+Userscript: Successfully set "Revisions per page" to 200.
+userscript.html?name=VZ%253A-Brucebase-%25E2%2580%2593-Auto-200-Revisions.user.js&id=f0954a20-f72e-43fe-9107-6c79b27c36ea:60 Userscript: Triggered WIKIDOT.modules.SiteChangesModule.listeners.updateList(null).
+#+end_example
+
+but same effect as before
+
+** 3
+
+The output says:
+
+#+begin_example
+Wikidot Auto-200: Set to 200 and updated list.
+#+end_example
+
+The script actually selects the 200 option but somehow does not click the button, instead the mouse pointer changes to "Always busy" icon
+
+** 4
+
+Still the same
+
+the log says:
+
+#+begin_example
+GET https://cdn.onesignal.com/sdks/OneSignalSDK.js net::ERR_BLOCKED_BY_CLIENT    system:recent-changes:108
+cdn.onesignal.com/sdks/OneSignalSDK.js:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT    cdn.onesignal.com/sdks/OneSignalSDK.js:1
+GET http://stats.g.doubleclick.net/dc.js net::ERR_BLOCKED_BY_CLIENT  system:recent-changes:1173
+Failed to load resource: net::ERR_BLOCKED_BY_CLIENT  stats.g.doubleclick.net/dc.js:1 
+SiteChangesModule.js:1 Uncaught TypeError: $(...).getElementsByTagName is not a function  SiteChangesModule.js:1
+  	(anonymous)	@	SiteChangesModule.js:1
+onDomReady	@	init.combined.js:79
+(anonymous)	@	VM3701:1
+setTimeout		
+onDomReady	@	init.combined.js:79
+WIKIDOT.modules.SiteChangesModule.init	@	SiteChangesModule.js:1
+(anonymous)	@	SiteChangesModule.js:1
+Wikidot Auto-200: Triggering updateList directly...
 #+end_example
 
