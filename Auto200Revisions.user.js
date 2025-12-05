@@ -9,7 +9,7 @@
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/Auto200Revisions.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/Auto200Revisions.user.js
-// @icon         https://volkerzell.de/favicon.ico
+// @icon         http://brucebase.wikidot.com/local--favicon/favicon.gif
 // @match        http://brucebase.wikidot.com/system:recent-changes
 // @match        https://brucebase.wikidot.com/system:recent-changes
 // @grant        none
