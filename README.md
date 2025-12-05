@@ -22,6 +22,7 @@
 - [SpringsteenLyrics - MusicBrainz UUID Validator](#sl_uuid_validator)
 ---
 - [BruceBase – Auto 200 Revisions](#bb_auto_200_revisions)
+---
 
 
 ## <a name="mb_customizable_selector"></a> MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages
@@ -157,7 +158,7 @@ Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website. E
 
 ## <a name="#bb_auto_200_revisions"></a> Brucebase – Auto 200 Revisions
 
-Select "200" for revisions per page and trigger update on brucebase recent-changes.
+Select "200" for revisions per page BruceBase recent-changes.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/Auto200Revisions.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/Auto200Revisions.user.js)

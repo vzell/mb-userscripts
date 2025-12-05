@@ -16861,7 +16861,7 @@ function addToggleWrapperButton(wrapperDiv) {
 *** recent changes
 
 Write a userscript which automatically selects on the following URL http://brucebase.wikidot.com/system:recent-changes
-in the "Revisions per page:" pull-down list the entry "200" and execute the button click on the "Update list" button
+in the "Revisions per page:" pull-down list the entry "200"
 
 *** 1
 
