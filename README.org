@@ -17047,3 +17047,57 @@ WIKIDOT.modules.SiteChangesModule.init	@	SiteChangesModule.js:1
 Wikidot Auto-200: Triggering updateList directly...
 #+end_example
 
+
+* SpringsteenLyrics
+** ChatGPT
+
+#+begin_example
+Is this pop-up dialog text from the browser itslef: The page that you're looking for used information that you entered. Returning to that page might cause any action you took to be repeated. Do you want to continue?
+#+end_example
+
+** avoid post
+
+#+begin_example
+// ==UserScript==
+// @name         Avoid Post-Back Dialog
+// @namespace    https://example.com/
+// @version      1.0
+// @description  Avoid "resubmit form" warning on a specific page
+// @match        https://www.springsteenlyrics.com/collection.php
+// @run-at       document-start
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Intercept form submissions
+    document.addEventListener('submit', function(event) {
+        const form = event.target;
+        event.preventDefault(); // Stop the normal POST
+
+        // Convert form data to URLSearchParams
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+        for (const [key, value] of formData.entries()) {
+            params.append(key, value);
+        }
+
+        // Use fetch instead of normal POST
+        fetch(form.action, {
+            method: form.method,
+            body: params,
+            credentials: 'same-origin'
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Redirect to a "safe" results page (or reload current page)
+            // Replace document content to avoid resubmission dialog
+            document.open();
+            document.write(html);
+            document.close();
+        })
+        .catch(err => console.error('Form submission failed:', err));
+    }, true);
+})();
+#+end_example
+
