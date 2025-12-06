@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Auto-Select External Link Types
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.2+2025-11-29
+// @version      1.3+2025-12-05
 // @description  Auto-Select External Link Types on release pages, allows configuration of link mappings (URL Regex -> Link Type ID)
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -40,9 +40,11 @@
     ];
 
     const DEFAULT_MAPPINGS = [
-        { regex: "^(https?://www\\.springsteenlyrics\\.com/bootlegs\\.php\\?item=\\d+)(&.*)?$", typeId: "288", description: "SpringsteenLyrics bootleg entry (cleaned)" },
-        { regex: "^https?://www\\.jungleland\.it/html/.*\\.htm$", typeId: "288", description: "Jungleland discography page" },
-        { regex: "^https?://nugs\\.net/", typeId: "74", description: "Nugs.net primary URL" },
+        { regex: "^(https://www\\.springsteenlyrics\\.com/bootlegs\\.php\\?item=\\d+)(&.*)?$", typeId: "288", description: "SpringsteenLyrics bootleg entry" },
+        { regex: "https://www\\.jungleland\.it/html/.*\\.htm$", typeId: "288", description: "Jungleland discography page" },
+        { regex: "https://web.archive.org/web/.*/http://bruceboots.com/", typeId: "288", description: "BruceBoots via archive.org" },
+        { regex: "https://archive.org/details/bs.*", typeId: "288", description: "Springsteen bootleg entry via archive.org" },
+        { regex: "https://www.nugs.net/live-download-of-bruce-springsteen-.*/.html$", typeId: "74", description: "Nugs.net primary Bruce Springsteen URL" },
     ];
 
     let linkMappings = [];
