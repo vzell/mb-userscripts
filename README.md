@@ -79,6 +79,7 @@ Insert buttons on the Release Edit Relationships page which add preconfigured Ar
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchAddRelationshipsToRecordings.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js)
+[![Screenshot](https://github.com/Aerozol/metabrainz-userscripts/raw/main/screenshots/Screenshot-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/screenshots/AddRelationships.png)
 
 ---
 
