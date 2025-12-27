@@ -9,6 +9,7 @@
 - [MusicBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release](#mb_import_from_discogs)
 - [MusicBrainz Relation Editor - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 ---
+Adapted from [loujine](https://github.com/loujine/musicbrainz-scripts)
 - [MusicBrainz Relation Editor - Guess Related Works In Batch](#mb_guess_related_works)
 - [MusicBrainz Relation Editor - Copy Dates On Recording Relations](#mb_copy_dates_on_recordings)
 - [MusicBrainz Relation Editor - Set Relation Attributes](#mb_set_relation_attributes)
@@ -82,6 +83,8 @@ Insert buttons on the Release Edit Relationships page which add preconfigured Ar
 [![Screenshot](https://github.com/Aerozol/metabrainz-userscripts/raw/main/screenshots/Screenshot-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/screenshots/AddRelationships.png)
 
 ---
+
+Adapted from [loujine](https://github.com/loujine/musicbrainz-scripts)
 
 ## <a name="mb_guess_related_works"></a> Guess Related Works In Batch
 
