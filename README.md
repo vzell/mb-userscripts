@@ -9,7 +9,7 @@
 - [MusicBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release](#mb_import_from_discogs)
 - [MusicBrainz Relation Editor - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 ---
-Adapted from [loujine](https://github.com/loujine/musicbrainz-scripts)
+**Adapted from [loujine](https://github.com/loujine/musicbrainz-scripts)**
 - [MusicBrainz Relation Editor - Replace Release Relations By Recording Relations](#mb_replace_release_relations_by_recording_relations)
 - [MusicBrainz Relation Editor - Clone Recording Relations Onto Other Recordings](#mb_clone_recording_relations_onto_other_relations)
 - [MusicBrainz Relation Editor - Set Role In Recording-Artist Relation](#mb_set_role_recording_artist_relation)
@@ -84,7 +84,7 @@ Insert buttons on the Release Edit Relationships page which add preconfigured Ar
 
 ---
 
-Adapted from [loujine](https://github.com/loujine/musicbrainz-scripts)
+**Adapted from [loujine](https://github.com/loujine/musicbrainz-scripts)**
 
 ## <a name="mb_replace_release_relations_by_recording_relations"></a> Replace Release Relations By Recording Relations
 
