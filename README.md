@@ -10,12 +10,12 @@
 - [MusicBrainz Relation Editor - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 ---
 Adapted from [loujine](https://github.com/loujine/musicbrainz-scripts)
-- [MusicBrainz Relation Editor - Guess Related Works In Batch](#mb_guess_related_works)
-- [MusicBrainz Relation Editor - Copy Dates On Recording Relations](#mb_copy_dates_on_recordings)
-- [MusicBrainz Relation Editor - Set Relation Attributes](#mb_set_relation_attributes)
 - [MusicBrainz Relation Editor - Replace Release Relations By Recording Relations](#mb_replace_release_relations_by_recording_relations)
-- [MusicBrainz Relation Editor - Set Role In Recording-Artist Relation](#mb_set_role_recording_artist_relation)
 - [MusicBrainz Relation Editor - Clone Recording Relations Onto Other Recordings](#mb_clone_recording_relations_onto_other_relations)
+- [MusicBrainz Relation Editor - Set Role In Recording-Artist Relation](#mb_set_role_recording_artist_relation)
+- [MusicBrainz Relation Editor - Guess Related Works In Batch](#mb_guess_related_works)
+- [MusicBrainz Relation Editor - Set Relation Attributes](#mb_set_relation_attributes)
+- [MusicBrainz Relation Editor - Copy Dates On Recording Relations](#mb_copy_dates_on_recordings)
 <!-- - [MusicBrainz: Customizable PrimaryType Selector](#mb_customizable_primarytype_selector) -->
 <!-- - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector) -->
 <!-- - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector) -->
@@ -86,33 +86,19 @@ Insert buttons on the Release Edit Relationships page which add preconfigured Ar
 
 Adapted from [loujine](https://github.com/loujine/musicbrainz-scripts)
 
-## <a name="mb_guess_related_works"></a> Guess Related Works In Batch
-
-Guess related works in batch in relation editor.
-
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/GuessRelatedWorks.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/GuessRelatedWorks.user.js)
-
-## <a name="mb_copy_dates_on_recordings"></a> Copy Dates On Recording Relations
-
-Copy/remove dates on recording relations in musicbrainz.relation editor
-
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CopyDatesOnRecordingRelations.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CopyDatesOnRecordingRelations.user.js)
-
-## <a name="mb_set_relation_attributes"></a> Set Relation Attributes
-
-Set attributes (live, partial, solo...) in relation editor.
-
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SetRelationAttributes.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRelationAttributes.user.js)
-
 ## <a name="mb_replace_release_relations_by_recording_relations"></a> Replace Release Relations By Recording Relations
 
 Replace release relations by recording relations in relation editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/MoveReleaseRelationsToRecordings.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/MoveReleaseRelationsToRecordings.user.js)
+
+## <a name="mb_clone_recording_relations_onto_other_relations"></a> Clone Recording Relations Onto Other Recordings
+
+Clone recording relations onto other recordings in the relation editor
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CloneRecordingRelations.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CloneRecordingRelations.user.js)
 
 ## <a name="mb_set_role_recording_artist_relation"></a> Set Role In Recording-Artist Relation
 
@@ -121,12 +107,27 @@ Set/unset role relations on selected recordings in relation editor.
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SetRoleInRecording-ArtistRelation.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRoleInRecording-ArtistRelation.user.js)
 
-## <a name="mb_clone_recording_relations_onto_other_relations"></a> Clone Recording Relations Onto Other Recordings
+## <a name="mb_guess_related_works"></a> Guess Related Works In Batch
 
-Clone recording relations onto other recordings in the relation editor
+Guess related works in batch in relation editor.
 
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CloneRecordingRelations.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CloneRecordingRelations.user.js)
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/GuessRelatedWorks.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/GuessRelatedWorks.user.js)
+
+## <a name="mb_set_relation_attributes"></a> Set Relation Attributes
+
+Set attributes (live, partial, solo...) in relation editor.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SetRelationAttributes.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SetRelationAttributes.user.js)
+
+## <a name="mb_copy_dates_on_recordings"></a> Copy Dates On Recording Relations
+
+Copy/remove dates on recording relations in musicbrainz.relation editor
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CopyDatesOnRecordingRelations.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CopyDatesOnRecordingRelations.user.js)
+
 
 <!-- ## <a name="mb_customizable_primarytype_selector"></a> Customizable PrimaryType Selector -->
 
