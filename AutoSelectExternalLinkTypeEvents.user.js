@@ -40,8 +40,7 @@
     ];
 
     const DEFAULT_MAPPINGS_EVENTS = [
-	# http://brucebase.wikidot.com/1996#190496
-        { regex: "http://brucebase.wikidot.com/\d+#\d+", typeId: "842", description: "BruceBase event entry" },
+        { regex: "http:\/\/brucebase\.wikidot\.com\/(\d{4})#(\d{2})(\d{2})(\d{2})$", typeId: "842", description: "BruceBase event entry" },
     ];
 
     let linkMappings = [];
@@ -542,7 +541,7 @@
         // 4. Start MutationObserver
         const observer = new MutationObserver(handleMutations);
         const waitForContainer = setInterval(() => {
-            const container = document.getElementById('external-links-editor-container');
+            const container = document.getElementById('external-links-editor');
             if (container) {
                 log("Container found, starting observer.");
                 clearInterval(waitForContainer);

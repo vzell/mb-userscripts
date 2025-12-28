@@ -537,7 +537,7 @@
         // 4. Start MutationObserver
         const observer = new MutationObserver(handleMutations);
         const waitForContainer = setInterval(() => {
-            const container = document.getElementById('external-links-editor-container');
+            const container = document.getElementById('external-links-editor');
             if (container) {
                 log("Container found, starting observer.");
                 clearInterval(waitForContainer);
