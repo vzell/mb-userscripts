@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Auto-Select External Link Types For Places
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.6+2025-12-28
+// @version      1.7+2025-12-28
 // @description  Auto-Select External Link Types on place pages, allows configuration of link mappings (URL Regex -> Link Type ID)
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -115,23 +115,7 @@
         if (target.tagName === 'INPUT' && target.placeholder && (target.placeholder.includes('Add link') || target.placeholder.includes('Add another link'))) {
 
             const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-//            const regexSpringsteenClean = /^(https?:\/\/www\.springsteenlyrics\.com\/bootlegs\.php\?item=\d+)(&.*)?$/i;
-//            const match = pastedText.match(regexSpringsteenClean);
-
             let urlToInsert = pastedText;
-
-            // if (match) {
-            //     e.preventDefault();
-            //     urlToInsert = match[1];
-            //     log("Cleaned URL on paste:", urlToInsert);
-
-            //     if (document.queryCommandSupported('insertText')) {
-            //         document.execCommand('insertText', false, urlToInsert);
-            //     } else {
-            //         setReactValue(target, urlToInsert);
-            //     }
-            // }
-
             const typeIdToSet = getLinkTypeForUrl(urlToInsert);
 
             if (typeIdToSet) {
