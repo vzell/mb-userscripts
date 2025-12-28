@@ -5,6 +5,7 @@
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
 - [MusicBrainz - Auto-Select External Link Types For Release Groups](#mb_auto_select_discography_link_type_release_groups)
 - [MusicBrainz - Auto-Select External Link Types For Releases](#mb_auto_select_discography_link_type_releases)
+- [MusicBrainz - Auto-Select External Link Types For Events](#mb_auto_select_discography_link_type_events)
 - [MusicBrainz - Auto-Select External Link Types For Places](#mb_auto_select_discography_link_type_places)
 - [MusicBrainz - Auto-Select External Link Types For Works](#mb_auto_select_discography_link_type_works)
 - [Musicbrainz - Generate Recording Comments For A Release](#mb_generate_recording_comments_for_a_release)
@@ -62,6 +63,13 @@ Auto-Select External Link Types on release pages, allows configuration of link m
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/AutoSelectExternalLinkTypeReleases.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkTypeReleases.user.js)
+
+## <a name="mb_auto_select_discography_link_type_events"></a> MusicBrainz - Auto-Select External Link Types For Events
+
+Auto-Select External Link Types on event pages, allows configuration of link mappings (URL Regex -> Link Type ID)
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/AutoSelectExternalLinkTypeEvents.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkTypeEvents.user.js)
 
 ## <a name="mb_auto_select_discography_link_type_places"></a> MusicBrainz - Auto-Select External Link Types For Places
 
