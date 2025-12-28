@@ -3,7 +3,7 @@
 - [MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages](#mb_customizable_selector)
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
-- [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
+- [MusicBrainz - Auto-Select External Link Types For Releases](#mb_auto_select_discography_link_type_releases)
 - [Musicbrainz - Generate Recording Comments For A Release](#mb_generate_recording_comments_for_a_release)
 - [MusicBrainz - Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
 - [MusicBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release](#mb_import_from_discogs)
@@ -46,12 +46,12 @@ Adds a "NO Label" & "NO Catalognumber" button to the MusicBrainz release editor.
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
 
-## <a name="mb_auto_select_discography_link_type"></a> MusicBrainz - Auto-Select External Link Types
+## <a name="mb_auto_select_discography_link_type_releases"></a> MusicBrainz - Auto-Select External Link Types For Releases
 
 Auto-Select External Link Types on release pages, allows configuration of link mappings (URL Regex -> Link Type ID)
 
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/AutoSelectExternalLinkType.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js)
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/AutoSelectExternalLinkTypeReleases.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkTypeReleases.user.js)
 
 ## <a name="mb_generate_recording_comments_for_a_release"></a> Generate Recording Comments For A Release
 

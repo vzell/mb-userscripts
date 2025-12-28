@@ -6,8 +6,8 @@
 // @author       Gemini with vzell
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkTypeReleases.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkTypeReleases.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        https://musicbrainz.org/release/add
 // @match        https://musicbrainz.org/release/*/edit
