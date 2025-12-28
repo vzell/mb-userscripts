@@ -9,8 +9,8 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/AutoSelectExternalLinkType.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @match        https://musicBrainz.org/release/add
-// @match        https://musicBrainz.org/release/*/edit
+// @match        https://musicbrainz.org/release/add
+// @match        https://musicbrainz.org/release/*/edit
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
