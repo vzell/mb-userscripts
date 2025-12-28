@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Auto-Select External Link Types For Release Groups
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.4+2025-12-05
+// @version      1.5+2025-12-28
 // @description  Auto-Select External Link Types on release group pages, allows configuration of link mappings (URL Regex -> Link Type ID)
 // @author       Gemini with vzell
 // @tag          AI generated
