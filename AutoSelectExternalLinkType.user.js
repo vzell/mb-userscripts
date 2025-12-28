@@ -335,7 +335,7 @@
                 position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                 backgroundColor: '#f9f9f9', border: '1px solid #aaa', padding: '20px', zIndex: '10000', boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
             });
-            
+
             let optionsHtml = config.options.map(o => `<option value="${o.id}" ${o.id === mapping.typeId ? 'selected' : ''}>${o.name}</option>`).join('');
             editModal.innerHTML = `
                 <h4>${index >= 0 ? 'Edit' : 'Add'} Mapping</h4>
