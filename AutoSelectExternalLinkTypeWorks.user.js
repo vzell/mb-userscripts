@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Auto-Select External Link Types For Works
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.6+2025-12-28
+// @version      1.7+2025-12-28
 // @description  Auto-Select External Link Types on work pages, allows configuration of link mappings (URL Regex -> Link Type ID)
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -25,7 +25,7 @@
         if (DEBUG) console.log(LOG_PREFIX, ...args);
     }
 
-    const STORAGE_KEY_WORKS = 'MB_AutoSelect_Mappings_Places';
+    const STORAGE_KEY_WORKS = 'MB_AutoSelect_Mappings_Works';
 
     const LINK_TYPES_OPTIONS_WORKS = [
         { id: "939", name: "license" },
