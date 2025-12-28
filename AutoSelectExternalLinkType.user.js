@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Auto-Select External Link Types
+// @name         VZ: MusicBrainz - Auto-Select External Link Types For Releases
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.4+2025-12-05
+// @version      1.5+2025-12-28
 // @description  Auto-Select External Link Types on release pages, allows configuration of link mappings (URL Regex -> Link Type ID)
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -19,14 +19,15 @@
     'use strict';
 
     const DEBUG = true; // Set to true to see logs in console
+    const LOG_PREFIX = '[VZ:discography-autoselect-R]';
 
     function log(...args) {
-        if (DEBUG) console.log('[MB-Discography-AutoSelect]', ...args);
+        if (DEBUG) console.log(LOG_PREFIX, ...args);
     }
 
-    const STORAGE_KEY = 'MB_AutoSelect_Mappings';
+    const STORAGE_KEY_RELEASES = 'MB_AutoSelect_Mappings_Releases';
 
-    const LINK_TYPES_OPTIONS = [
+    const LINK_TYPES_OPTIONS_RELEASES = [
         { id: "288", name: "discography entry" },
         { id: "301", name: "license" },
         { id: "79", name: "purchase for mail-order" },
@@ -39,7 +40,7 @@
         { id: "78", name: "cover art" },
     ];
 
-    const DEFAULT_MAPPINGS = [
+    const DEFAULT_MAPPINGS_RELEASES = [
         { regex: "^(https://www\\.springsteenlyrics\\.com/bootlegs\\.php\\?item=\\d+)(&.*)?$", typeId: "288", description: "SpringsteenLyrics bootleg entry" },
         { regex: "https://www\\.jungleland\.it/html/.*\\.htm$", typeId: "288", description: "Jungleland discography page" },
         { regex: "https://web.archive.org/web/.*/http://bruceboots.com/", typeId: "288", description: "BruceBoots via archive.org" },
@@ -54,19 +55,19 @@
 
     function loadMappings() {
         try {
-            const stored = localStorage.getItem(STORAGE_KEY);
+            const stored = localStorage.getItem(STORAGE_KEY_RELEASES);
             if (stored) {
-                return JSON.parse(stored) || DEFAULT_MAPPINGS;
+                return JSON.parse(stored) || DEFAULT_MAPPINGS_RELEASES;
             }
         } catch (e) {
             log("Failed to load mappings from localStorage. Using defaults.", e);
         }
-        return DEFAULT_MAPPINGS;
+        return DEFAULT_MAPPINGS_RELEASES;
     }
 
     function saveMappings(mappings) {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(mappings));
+            localStorage.setItem(STORAGE_KEY_RELEASES, JSON.stringify(mappings));
             linkMappings = mappings;
             log("Saved and updated link mappings.");
         } catch (e) {
@@ -161,7 +162,7 @@
                             const linkValueToSet = lastCleanedUrlData.typeId;
 
                             if (linkValueToSet) {
-                                const selectedOption = LINK_TYPES_OPTIONS.find(o => o.id === linkValueToSet);
+                                const selectedOption = LINK_TYPES_OPTIONS_RELEASES.find(o => o.id === linkValueToSet);
                                 if (selectedOption) {
                                     if (selectElement.value !== linkValueToSet) {
                                         setReactValue(selectElement, linkValueToSet);
@@ -213,7 +214,7 @@
         const tbody = table.querySelector('tbody');
 
         linkMappings.forEach((mapping, index) => {
-            const option = LINK_TYPES_OPTIONS.find(opt => opt.id === mapping.typeId);
+            const option = LINK_TYPES_OPTIONS_RELEASES.find(opt => opt.id === mapping.typeId);
             const name = option ? option.name.replace(/&nbsp;/g, '').trim() : `Unknown ID (${mapping.typeId})`;
 
             const tr = document.createElement('tr');
@@ -277,7 +278,7 @@
      */
     function openEditModal(index, reEnableMainEscape) {
         const isEditing = index !== null;
-        const currentMapping = isEditing ? linkMappings[index] : { regex: '', typeId: LINK_TYPES_OPTIONS[0].id, description: '' };
+        const currentMapping = isEditing ? linkMappings[index] : { regex: '', typeId: LINK_TYPES_OPTIONS_RELEASES[0].id, description: '' };
 
         // 1. Setup Modal DOM
         const overlay = document.createElement('div');
@@ -302,7 +303,7 @@
             <div style="margin-bottom: 20px;">
                 <label for="typeSelect" style="display: block; margin-bottom: 5px;"><strong>Maps To Link Type:</strong></label>
                 <select id="typeSelect" style="padding: 5px; border: 1px solid #ccc; width: 100%;">
-                    ${LINK_TYPES_OPTIONS.map(opt =>
+                    ${LINK_TYPES_OPTIONS_RELEASES.map(opt =>
                         `<option value="${opt.id}" ${currentMapping.typeId === opt.id ? 'selected' : ''}>${opt.name.replace(/&nbsp;/g, '').trim()} (${opt.id})</option>`
                     ).join('')}
                 </select>
