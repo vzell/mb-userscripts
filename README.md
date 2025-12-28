@@ -20,7 +20,7 @@
 <!-- - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector) -->
 <!-- - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector) -->
 ---
-- [SpringsteenLyrics - MusicBrainz UUID Validator](#sl_uuid_validator)
+- [SpringsteenLyrics - MusicBrainz UUID Paster](#sl_uuid_pastor)
 ---
 - [BruceBase – Auto 200 Revisions](#bb_auto_200_revisions)
 ---
@@ -152,9 +152,9 @@ Copy/remove dates on recording relations in musicbrainz.relation editor
 
 ---
 
-## <a name="sl_uuid_validator"></a> SpringstenLyrics - MusicBrainz UUID Validator
+## <a name="sl_uuid_pastor"></a> SpringstenLyrics - MusicBrainz UUID Pastor
 
-Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website. Ensures the MusicBrainz ID field accepts only valid, lowercase UUIDs.
+Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website, supports URL extraction. Ensures the MusicBrainz ID field accepts only valid, lowercase UUIDs.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/MusicbrainzUUIDValidator.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/MusicbrainzUUIDValidator.user.js)
