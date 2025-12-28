@@ -1,4 +1,5 @@
 * UUID upport in Springsteenlyrics
+** initial
 
 Given the following types of URLs
 
@@ -118,6 +119,16 @@ when pasting it in the following textfield (in the following example it's alread
     }
 })();
 #+end_example
+
+** extend pasting support
+
+In the uploaded userscript, please extend the functionality so that when pasting, in addition to plain UUIDs also
+complete URLs of the following forms should be supported, where the UUID part should be extracted from:
+
+https://musicbrainz.org/release/<UUID>/<optional virtual path>
+
+<UUID> is a supported UUID
+<optional virtual path> is an arbitrary query string like "edit"
 
 
 * Add external link to release
