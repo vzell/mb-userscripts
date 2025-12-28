@@ -489,7 +489,7 @@
      * Injects the configuration button into the page.
      */
     function insertConfigButton() {
-        const legend = Array.from(document.querySelectorAll('fieldset.information > legend')).find(
+        const legend = Array.from(document.querySelectorAll('fieldset > legend')).find(
             l => l.textContent.trim() === 'External links'
         );
 
