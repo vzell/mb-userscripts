@@ -156,8 +156,8 @@ Copy/remove dates on recording relations in musicbrainz.relation editor
 
 Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website, supports URL extraction. Ensures the MusicBrainz ID field accepts only valid, lowercase UUIDs.
 
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/MusicbrainzUUIDValidator.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/MusicbrainzUUIDValidator.user.js)
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SpringsteenLyricsUUIDPaster.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SpringsteenLyricsUUIDPaster.user.js)
 
 ---
 
