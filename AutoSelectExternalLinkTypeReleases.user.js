@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Auto-Select External Link Types For Releases
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.5+2025-12-28
+// @version      1.6+2025-12-28
 // @description  Auto-Select External Link Types on release pages, allows configuration of link mappings (URL Regex -> Link Type ID)
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -546,7 +546,7 @@
         // 4. Start MutationObserver
         const observer = new MutationObserver(handleMutations);
         const waitForContainer = setInterval(() => {
-            const container = document.getElementById('external-links-editor-container');
+            const container = document.getElementById('external-links-editor');
             if (container) {
                 log("Container found, starting observer.");
                 clearInterval(waitForContainer);
