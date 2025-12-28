@@ -40,7 +40,7 @@
     ];
 
     const DEFAULT_MAPPINGS_EVENTS = [
-        { regex: "http:\/\/brucebase\.wikidot\.com\/(\d{4})#(\d{2})(\d{2})(\d{2})$", typeId: "842", description: "BruceBase event entry" },
+        { regex: "http://brucebase.wikidot.com/.*#.*", typeId: "842", description: "BruceBase event entry" },
     ];
 
     let linkMappings = [];
