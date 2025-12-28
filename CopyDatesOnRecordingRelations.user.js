@@ -9,8 +9,8 @@
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/GuessRelatedWorks.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/GuessRelatedWorks.user.js
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/CopyDatesOnRecordingRelations.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/CopyDatesOnRecordingRelations.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        https://musicbrainz.org/release/*/edit-relationships
 // @grant        none
