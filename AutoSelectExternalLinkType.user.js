@@ -261,125 +261,345 @@
         });
     }
 
-    // --- Configuration UI ---
+    // --- Configuration Modal UI Functions ---
 
     function renderMappings(modalBody, openEditModalCallback) {
         modalBody.innerHTML = '';
+
         const table = document.createElement('table');
         table.className = 'tbl';
         table.style.width = '100%';
-        table.innerHTML = `<thead><tr><th>URL Regex</th><th>Maps To</th><th>Description</th><th>Actions</th></tr></thead><tbody></tbody>`;
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>URL Regex Pattern</th>
+                    <th style="width: 150px;">Maps To (Type ID)</th>
+                    <th style="width: 250px;">Description (Optional)</th>
+                    <th style="width: 100px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
         const tbody = table.querySelector('tbody');
 
         linkMappings.forEach((mapping, index) => {
-            const opt = config.options.find(o => o.id === mapping.typeId);
-            const typeLabel = opt ? opt.name.trim() : `ID: ${mapping.typeId}`;
+            const option = LINK_TYPES_OPTIONS_WORKS.find(opt => opt.id === mapping.typeId);
+            const name = option ? option.name.replace(/&nbsp;/g, '').trim() : `Unknown ID (${mapping.typeId})`;
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><code>${mapping.regex}</code></td>
-                <td>${typeLabel}</td>
-                <td>${mapping.description || ''}</td>
-                <td>
-                    <button class="edit-mapping" data-index="${index}">Edit</button>
-                    <button class="delete-mapping" data-index="${index}">Delete</button>
+                <td style="font-family: monospace; font-size: 0.9em; max-width: 300px; word-break: break-all; vertical-align: top; padding-right: 10px;">${mapping.regex}</td>
+                <td style="vertical-align: top;">${name} (${mapping.typeId})</td>
+                <td style="vertical-align: top;">${mapping.description || ''}</td>
+                <td style="vertical-align: top;">
+                    <button class="nobutton icon edit-item" type="button" data-index="${index}" title="Edit">✏️</button>
+                    <button class="nobutton icon remove-item" type="button" data-index="${index}" title="Delete">❌</button>
                 </td>
             `;
-            tr.querySelector('.edit-mapping').onclick = () => openEditModalCallback(index);
-            tr.querySelector('.delete-mapping').onclick = () => {
-                const newMappings = [...linkMappings];
-                newMappings.splice(index, 1);
-                saveMappings(newMappings);
-                renderMappings(modalBody, openEditModalCallback);
-            };
             tbody.appendChild(tr);
         });
+
+        table.addEventListener('click', (e) => {
+            const targetButton = e.target.closest('button.nobutton[data-index]');
+
+            if (!targetButton) return;
+
+            const index = parseInt(targetButton.dataset.index);
+
+            if (isNaN(index)) {
+                log("Error: Button clicked without valid data-index.");
+                return;
+            }
+
+            if (targetButton.classList.contains('edit-item')) {
+                log(`Edit button clicked for index: ${index}`);
+                // Use the passed callback
+                openEditModalCallback(index);
+            } else if (targetButton.classList.contains('remove-item')) {
+                log(`Remove button clicked for index: ${index}`);
+                deleteMapping(index);
+            }
+        });
+
         modalBody.appendChild(table);
+
+        const addButton = document.createElement('button');
+        addButton.className = 'submit';
+        addButton.textContent = 'Add New Mapping';
+        addButton.style.marginTop = '15px';
+        addButton.type = 'button';
+        addButton.onclick = () => openEditModalCallback(null); // Use the passed callback
+        modalBody.appendChild(addButton);
     }
 
+    function deleteMapping(index) {
+        linkMappings.splice(index, 1);
+        saveMappings(linkMappings);
+        const mainModalBody = document.getElementById('mb-autosel-modal-content');
+        if (mainModalBody) renderMappings(mainModalBody, window.__mb_autosel_openEditModal);
+        log(`Mapping at index ${index} deleted.`);
+    }
+
+    /**
+     * Opens the modal for adding or editing a single mapping with ESC key handling.
+     * @param {number|null} index - The index of the mapping to edit, or null to add a new one.
+     * @param {Function} reEnableMainEscape - Callback to re-enable the main modal's ESC listener.
+     */
+    function openEditModal(index, reEnableMainEscape) {
+        const isEditing = index !== null;
+        const currentMapping = isEditing ? linkMappings[index] : { regex: '', typeId: LINK_TYPES_OPTIONS_WORKS[0].id, description: '' };
+
+        // 1. Setup Modal DOM
+        const overlay = document.createElement('div');
+        overlay.id = 'mb-autosel-edit-modal-overlay';
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10002; display: flex; justify-content: center; align-items: center;';
+
+        const modalContainer = document.createElement('div');
+        modalContainer.style.cssText = 'background: white; padding: 20px; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 500px; max-height: 90vh; overflow-y: auto;';
+
+        modalContainer.innerHTML = `
+            <h2>${isEditing ? 'Edit Mapping' : 'Add New Mapping'}</h2>
+            <div id="esc-warning-container" style="min-height: 25px;"></div>
+            <p style="color: grey; font-size: 0.9em;">Use standard JavaScript RegExp syntax. Remember to escape special characters if necessary.</p>
+            <div style="margin-bottom: 10px;">
+                <label for="regexInput" style="display: block; margin-bottom: 5px;"><strong>URL Regex Pattern:</strong></label>
+                <input id="regexInput" type="text" value="${currentMapping.regex}" style="width: 98%; padding: 5px; border: 1px solid #ccc;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label for="descriptionInput" style="display: block; margin-bottom: 5px;"><strong>Description (Optional):</strong></label>
+                <input id="descriptionInput" type="text" value="${currentMapping.description || ''}" style="width: 98%; padding: 5px; border: 1px solid #ccc;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label for="typeSelect" style="display: block; margin-bottom: 5px;"><strong>Maps To Link Type:</strong></label>
+                <select id="typeSelect" style="padding: 5px; border: 1px solid #ccc; width: 100%;">
+                    ${LINK_TYPES_OPTIONS_WORKS.map(opt =>
+                        `<option value="${opt.id}" ${currentMapping.typeId === opt.id ? 'selected' : ''}>${opt.name.replace(/&nbsp;/g, '').trim()} (${opt.id})</option>`
+                    ).join('')}
+                </select>
+            </div>
+            <button id="saveEditButton" class="submit" type="button" style="margin-right: 10px;">${isEditing ? 'Save Changes' : 'Add Mapping'}</button>
+            <button id="cancelEditButton" type="button" class="btn">Cancel</button>
+        `;
+
+        overlay.appendChild(modalContainer);
+        document.body.appendChild(overlay);
+
+        // 2. Get References and Setup Handlers
+        const saveButton = modalContainer.querySelector('#saveEditButton');
+        const cancelButton = modalContainer.querySelector('#cancelEditButton');
+        const regexInput = modalContainer.querySelector('#regexInput');
+        const typeSelect = modalContainer.querySelector('#typeSelect');
+        const descriptionInput = modalContainer.querySelector('#descriptionInput');
+        const warningContainer = modalContainer.querySelector('#esc-warning-container');
+
+        const initialMappingSnapshot = {
+            regex: currentMapping.regex,
+            typeId: currentMapping.typeId,
+            description: currentMapping.description || ''
+        };
+        let isDiscardConfirmed = false;
+        let timeoutId = null;
+
+        const isDirty = () => {
+            return regexInput.value.trim() !== initialMappingSnapshot.regex ||
+                   typeSelect.value !== initialMappingSnapshot.typeId ||
+                   descriptionInput.value.trim() !== initialMappingSnapshot.description;
+        };
+
+        // Define the close function which handles cleanup and re-enabling the main modal's listener
+        const closeEditModal = () => {
+            document.removeEventListener('keydown', handleEditEscapeKey);
+            if (timeoutId) clearTimeout(timeoutId);
+            overlay.remove();
+
+            // CRITICAL STEP 3: Re-enable the main modal's escape handler
+            reEnableMainEscape();
+        };
+
+        const handleEditEscapeKey = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                // This is now redundant but kept for safety in case of non-document event listeners
+                e.stopImmediatePropagation();
+
+                if (!isDirty()) {
+                    // Nothing changed, close immediately
+                    closeEditModal();
+                    return;
+                }
+
+                // Changes exist (is dirty)
+                if (isDiscardConfirmed) {
+                    // Second press, discard changes and close
+                    closeEditModal();
+                } else {
+                    // First press, show warning and await confirmation
+                    warningContainer.innerHTML = `
+                        <p id="esc-warning" style="color: #c0392b; background: #fbebeb; padding: 5px; border-radius: 3px; text-align: center; font-weight: bold; margin: 0;">
+                            Unsaved changes. Press 'Esc' again or 'Cancel' to discard.
+                        </p>
+                    `;
+                    isDiscardConfirmed = true;
+
+                    // Reset the confirmation flag after 3 seconds
+                    if (timeoutId) clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => {
+                        if (overlay.isConnected) {
+                            isDiscardConfirmed = false;
+                            warningContainer.innerHTML = '';
+                        }
+                    }, 3000);
+                }
+            }
+        };
+
+        // CRITICAL STEP 2: Attach listener for ESC key (This overrides the main listener)
+        document.addEventListener('keydown', handleEditEscapeKey);
+
+
+        saveButton.onclick = () => {
+            const regex = regexInput.value.trim();
+            const typeId = typeSelect.value;
+            const description = descriptionInput.value.trim();
+
+            if (!regex || !typeId) {
+                console.error('Validation Error: Both Regex Pattern and Link Type are required.');
+                return;
+            }
+
+            try {
+                new RegExp(regex, 'i');
+            } catch (e) {
+                console.error(`Invalid Regular Expression: ${e.message}`);
+                return;
+            }
+
+            const newMapping = { regex, typeId, description };
+
+            if (isEditing) {
+                linkMappings[index] = newMapping;
+            } else {
+                linkMappings.push(newMapping);
+            }
+
+            saveMappings(linkMappings);
+            closeEditModal();
+            const mainModalBody = document.getElementById('mb-autosel-modal-content');
+            // Re-render the main modal content, ensuring the openEditModal callback is passed again
+            if(mainModalBody) renderMappings(mainModalBody, reEnableMainEscape);
+        };
+
+        cancelButton.onclick = closeEditModal;
+    }
+
+
+    /**
+     * Displays the main configuration modal with ESC key handling.
+     */
     function showConfigModal() {
         if (isModalOpen) return;
         isModalOpen = true;
 
-        const modal = document.createElement('div');
-        Object.assign(modal.style, {
-            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            width: '80%', maxHeight: '80%', backgroundColor: 'white', border: '1px solid #ccc',
-            zIndex: '9999', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.3)', overflowY: 'auto'
-        });
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'mb-autosel-modal-overlay';
+        modalOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; justify-content: center; align-items: flex-start;';
 
-        const header = document.createElement('div');
-        header.style.display = 'flex';
-        header.style.justifyContent = 'space-between';
-        header.innerHTML = `<h3>Link Type Mappings (${currentEntity})</h3><button id="close-modal">X</button>`;
-        modal.appendChild(header);
+        const modalContainer = document.createElement('div');
+        modalContainer.style.cssText = 'background: white; padding: 20px; border-radius: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); width: 80%; max-width: 1000px; margin-top: 50px; max-height: 80vh; overflow-y: auto;';
 
-        const body = document.createElement('div');
-        modal.appendChild(body);
+        modalContainer.innerHTML = `
+            <h1 style="border-bottom: 1px solid #ccc; padding-bottom: 10px;">MusicBrainz Auto-Select Configuration</h1>
+            <p>Define custom Regular Expressions to automatically select a link type when a matching URL is pasted.</p>
+            <div id="mb-autosel-modal-content"></div>
+            <div style="padding-top: 20px; text-align: right;">
+                <button id="closeModalButton" class="submit" type="button">Close</button>
+            </div>
+        `;
 
-        const footer = document.createElement('div');
-        footer.style.marginTop = '20px';
-        const addBtn = document.createElement('button');
-        addBtn.innerText = 'Add New Mapping';
-        footer.appendChild(addBtn);
-        modal.appendChild(footer);
+        modalOverlay.appendChild(modalContainer);
+        document.body.appendChild(modalOverlay);
 
-        document.body.appendChild(modal);
-
-        const closeModal = () => { modal.remove(); isModalOpen = false; };
-        header.querySelector('#close-modal').onclick = closeModal;
-
-        const openEditModal = (index = -1) => {
-            const mapping = index >= 0 ? linkMappings[index] : { regex: '', typeId: config.options[0].id, description: '' };
-            const editModal = document.createElement('div');
-            Object.assign(editModal.style, {
-                position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                backgroundColor: '#f9f9f9', border: '1px solid #aaa', padding: '20px', zIndex: '10000', boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
-            });
-
-            let optionsHtml = config.options.map(o => `<option value="${o.id}" ${o.id === mapping.typeId ? 'selected' : ''}>${o.name}</option>`).join('');
-            editModal.innerHTML = `
-                <h4>${index >= 0 ? 'Edit' : 'Add'} Mapping</h4>
-                <label>Regex: <input type="text" id="edit-regex" value="${mapping.regex}" style="width:300px"></label><br><br>
-                <label>Type: <select id="edit-type">${optionsHtml}</select></label><br><br>
-                <label>Desc: <input type="text" id="edit-desc" value="${mapping.description || ''}"></label><br><br>
-                <button id="save-edit">Save</button> <button id="cancel-edit">Cancel</button>
-            `;
-            document.body.appendChild(editModal);
-
-            editModal.querySelector('#cancel-edit').onclick = () => editModal.remove();
-            editModal.querySelector('#save-edit').onclick = () => {
-                const newMapping = {
-                    regex: editModal.querySelector('#edit-regex').value,
-                    typeId: editModal.querySelector('#edit-type').value,
-                    description: editModal.querySelector('#edit-desc').value
-                };
-                const newMappings = [...linkMappings];
-                if (index >= 0) newMappings[index] = newMapping;
-                else newMappings.push(newMapping);
-                saveMappings(newMappings);
-                editModal.remove();
-                renderMappings(body, openEditModal);
-            };
+        const closeMainModal = () => {
+            document.removeEventListener('keydown', handleMainEscapeKey);
+            modalOverlay.remove();
+            isModalOpen = false;
         };
 
-        addBtn.onclick = () => openEditModal();
-        renderMappings(body, openEditModal);
+        const handleMainEscapeKey = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closeMainModal();
+            }
+        };
+
+        // Function to remove the main handler (used when edit modal opens)
+        const disableMainEscape = () => {
+            document.removeEventListener('keydown', handleMainEscapeKey);
+        };
+
+        // Function to re-enable the main handler (used when edit modal closes)
+        const reEnableMainEscape = () => {
+            document.addEventListener('keydown', handleMainEscapeKey);
+        };
+
+        // Wrapper function for the edit modal, managing the listener hierarchy
+        const hierarchicalOpenEditModal = (index) => {
+            // CRITICAL STEP 1: Disable the main modal's listener before opening the child
+            disableMainEscape();
+            // Pass the re-enable function to the child modal
+            openEditModal(index, reEnableMainEscape);
+        };
+
+        // Store the hierarchical opener globally (as a property of window) for use in renderMappings
+        // This is a common pattern in user scripts to share functions without polluting the global scope too much.
+        window.__mb_autosel_openEditModal = hierarchicalOpenEditModal;
+
+        const modalBody = document.getElementById('mb-autosel-modal-content');
+        renderMappings(modalBody, hierarchicalOpenEditModal); // Pass the opener to render
+
+        // Attach main listener immediately (it will be disabled if the child opens)
+        reEnableMainEscape();
+
+        document.getElementById('closeModalButton').onclick = closeMainModal;
     }
 
+    /**
+     * Injects the configuration button into the page.
+     */
     function insertConfigButton() {
-        const legend = document.querySelector('#external-links-editor fieldset legend');
-        if (legend && !legend.querySelector('.autoselect-config-btn')) {
-            const btn = document.createElement('button');
-            btn.className = 'autoselect-config-btn';
-            btn.type = 'button';
-            btn.innerText = '⚙ Mappings';
-            Object.assign(btn.style, { marginLeft: '10px', padding: '2px 6px', cursor: 'pointer', fontSize: '0.8em' });
-            btn.onclick = showConfigModal;
-            legend.appendChild(btn);
+        const legend = Array.from(document.querySelectorAll('fieldset > legend')).find(
+            l => l.textContent.trim() === 'External links'
+        );
+
+        if (legend && !document.getElementById('mb-autosel-config-button')) {
+            const configButton = document.createElement('button');
+            configButton.id = 'mb-autosel-config-button';
+            configButton.type = 'button';
+            configButton.innerHTML = '⚙️ Configure mappings';
+
+            configButton.style.cssText = `
+                margin-left: 10px;
+                background: #f0f0f0;
+                border: 1px solid #ccc;
+                padding: 2px 8px;
+                border-radius: 3px;
+                font-weight: normal;
+                cursor: pointer;
+                font-size: 0.8em;
+                line-height: 1.2;
+                vertical-align: middle;
+            `;
+
+            configButton.onmouseover = function() { this.style.backgroundColor = '#e0e0e0'; };
+            configButton.onmouseout = function() { this.style.backgroundColor = '#f0f0f0'; };
+
+            configButton.onclick = showConfigModal;
+
+            legend.appendChild(configButton);
         }
     }
 
-    // --- Init ---
+    // --- Initialization ---
 
     function initialize() {
         linkMappings = loadMappings();
