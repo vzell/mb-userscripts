@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: SpringstenLyrics - MusicBrainz UUID Validator
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0+2025-11-29
+// @version      1.1+2026-01-02
 // @description  Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website
 // @author       vzell with help of Gemini
 // @tag          AI generated
@@ -11,6 +11,7 @@
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/MusicbrainzUUIDValidator.user.js
 // @icon         https://volkerzell.de/favicons/springsteenlyrics.ico
 // @match        https://www.springsteenlyrics.com/bootlegs.php?cmd=edit*
+// @match        https://www.springsteenlyrics.com/collection.php?cmd=edit*
 // @grant        none
 // @run-at       document-idle
 // @license      MIT
