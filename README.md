@@ -25,7 +25,7 @@
 <!-- - [MusicBrainz: Customizable Status Selector](#mb_customizable_status_selector) -->
 <!-- - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector) -->
 ---
-- [SpringsteenLyrics - MusicBrainz UUID Paster](#sl_uuid_pastor)
+- [SpringsteenLyrics - MusicBrainz UUID Paster](#sl_uuid_paster)
 ---
 - [BruceBase – Auto 200 Revisions](#bb_auto_200_revisions)
 ---
@@ -192,7 +192,7 @@ Copy/remove dates on recording relations in musicbrainz.relation editor
 
 ---
 
-## <a name="sl_uuid_pastor"></a> SpringstenLyrics - MusicBrainz UUID Pastor
+## <a name="sl_uuid_paster"></a> SpringstenLyrics - MusicBrainz UUID Paster
 
 Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website, supports URL extraction. Ensures the MusicBrainz ID field accepts only valid, lowercase UUIDs.
 
