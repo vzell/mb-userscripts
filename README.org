@@ -130,6 +130,381 @@ https://musicbrainz.org/release/<UUID>/<optional virtual path>
 <UUID> is a supported UUID
 <optional virtual path> is an arbitrary query string like "edit"
 
+** add button on main page
+
+Given URLS of type https://www.springsteenlyrics.com/bootlegs.php?item=<id>&category=<category>
+
+for example: https://www.springsteenlyrics.com/bootlegs.php?item=6214&category=aud_live1975
+
+create a user script which places a button with text "Add MusicBrainz MBID" after the "edit item" text (see following HTML snippet)
+
+#+begin_example
+ <i class="bi bi-pencil-square">
+		  </i>
+		  <a href="bootlegs.php?cmd=edit&amp;item=6214&amp;category=aud_live1975">edit item
+		  </a>
+#+end_example
+
+inside the the complete HTML structure:
+
+#+begin_example
+<div class="blog-post">
+	<div class="row">
+		<div class="col-md-2 margin20">
+		  <a href="bootlegs.php?item=6214&amp;category=aud_live1975">
+		    <img src="bootlegs/aud_live1975/6214.jpg" class="img-responsive" alt="The Lost New Year's Eve (31 Dec 1975)" title="The Lost New Year's Eve (31 Dec 1975)">
+		  </a>
+		</div>
+		<div class="col-md-10 margin20">
+		  <b>6214
+		  </b>
+		  <span class="text-primary">
+		    <i class="glyphicon glyphicon-option-vertical">
+		    </i>
+		  </span>
+		  <a href="bootlegs.php?item=6214&amp;category=aud_live1975">
+		    <b>The Lost New Year's Eve
+		    </b>
+		  </a>
+			
+		  <span class="text-primary">
+		    <i class="glyphicon glyphicon-option-vertical">
+		    </i>
+		  </span>
+		  <b>Vintage Masters
+		  </b>
+		  <br>
+		  <span class="text-primary">
+		    <em>Date:
+		    </em>
+		  </span> 31 Dec 1975
+		  <br>
+		  <span class="text-primary">
+		    <em>Location:
+		    </em>
+		  </span> Tower Theater, Upper Darby, PA
+		  <br>
+		  <span class="text-primary">
+		    <em>Format:
+		    </em>
+		  </span> FLAC
+		  <br>
+		  <span class="text-primary">
+		    <em>Duration:
+		    </em>
+		  </span> 60:26.70
+		  <br>
+		  <i class="bi bi-image">
+		  </i> artwork available |
+		  <i class="glyphicon glyphicon-file">
+		  </i> original info file available
+		  <br>
+		  <i class="bi bi-pencil-square">
+		  </i>
+		  <a href="bootlegs.php?cmd=edit&amp;item=6214&amp;category=aud_live1975">edit item
+		  </a>
+		</div>
+	</div>
+</div>
+#+end_example
+
+When the button is pressed a click on the hyperlink '<a href="bootlegs.php?cmd=edit&amp;item=6214&amp;category=aud_live1975">' of the "edit item" text should be generated
+
+** 1
+
+#+begin_example
+// ==UserScript==
+// @name         SpringsteenLyrics - Add MusicBrainz MBID Button
+// @namespace    http://tampermonkey.net/
+// @version      1.1
+// @description  Adds a button specifically after the "edit item" link in the blog-post section
+// @author       Gemini
+// @match        https://www.springsteenlyrics.com/bootlegs.php?item=*&category=*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // 1. Target all links, then filter for the one that specifically says "edit item"
+    // and is located within the blog-post content area.
+    const links = document.querySelectorAll('.blog-post a[href*="cmd=edit"]');
+    let editItemLink = null;
+
+    links.forEach(link => {
+        if (link.textContent.toLowerCase().includes('edit item')) {
+            editItemLink = link;
+        }
+    });
+
+    if (editItemLink) {
+        // 2. Create the button
+        const mbidButton = document.createElement('button');
+        mbidButton.innerText = 'Add MusicBrainz MBID';
+        mbidButton.type = 'button';
+
+        // Styling to match the context
+        mbidButton.style.marginLeft = '5px';
+        mbidButton.style.padding = '2px 5px';
+        mbidButton.style.fontSize = '12px';
+        mbidButton.style.cursor = 'pointer';
+        // Applying Bootstrap classes for better integration
+        mbidButton.className = 'btn btn-xs btn-outline-primary';
+
+        // 3. Add click event logic
+        mbidButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            editItemLink.click();
+        });
+
+        // 4. Insert after the "edit item" link
+        editItemLink.parentNode.insertBefore(mbidButton, editItemLink.nextSibling);
+    }
+})();
+#+end_example
+
+** 2
+
+#+begin_example
+// ==UserScript==
+// @name         SpringsteenLyrics - MBID Helper Integrated
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      2.1
+// @description  Adds "Add MusicBrainz MBID" button and validates UUID/URLs on the edit page
+// @author       vzell & Gemini
+// @match        https://www.springsteenlyrics.com/bootlegs.php?item=*&category=*
+// @match        https://www.springsteenlyrics.com/bootlegs.php?cmd=edit*
+// @icon         https://volkerzell.de/favicons/springsteenlyrics.ico
+// @grant        none
+// @run-at       document-idle
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const currentUrl = window.location.href;
+
+    // --- LOGIC FOR BOOTLEG VIEW PAGE ---
+    if (currentUrl.includes('item=') && !currentUrl.includes('cmd=edit')) {
+        const links = document.querySelectorAll('.blog-post a[href*="cmd=edit"]');
+        let editItemLink = null;
+
+        links.forEach(link => {
+            if (link.textContent.toLowerCase().includes('edit item')) {
+                editItemLink = link;
+            }
+        });
+
+        if (editItemLink) {
+            const mbidButton = document.createElement('button');
+            mbidButton.innerText = 'Add MusicBrainz MBID';
+            mbidButton.type = 'button';
+            mbidButton.className = 'btn btn-xs btn-outline-primary'; 
+            mbidButton.style.marginLeft = '5px';
+            mbidButton.style.cursor = 'pointer';
+
+            mbidButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                editItemLink.click();
+            });
+
+            editItemLink.parentNode.insertBefore(mbidButton, editItemLink.nextSibling);
+        }
+    }
+
+    // --- LOGIC FOR EDIT PAGE (MusicBrainz UUID Paster) ---
+    if (currentUrl.includes('cmd=edit')) {
+        const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+        const MB_URL_REGEX = /^https:\/\/musicbrainz\.org\/release\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(\/.*)?$/i;
+
+        const inputField = document.getElementById('db_musicbrainz');
+
+        if (inputField) {
+            const parentLabel = inputField.closest('.input');
+            const parentRow = inputField.closest('.row');
+
+            if (!parentLabel || !parentRow) return;
+
+            const setValidationFeedback = (isValid) => {
+                if (isValid) {
+                    parentLabel.style.border = '1px solid #ccc';
+                    let existingError = parentRow.querySelector('.validation-error-message');
+                    if (existingError) existingError.remove();
+                } else {
+                    parentLabel.style.border = '2px solid red';
+                    let existingError = parentRow.querySelector('.validation-error-message');
+                    if (!existingError) {
+                        const errorMessage = document.createElement('p');
+                        errorMessage.className = 'validation-error-message';
+                        errorMessage.style.color = 'red';
+                        errorMessage.style.fontSize = '12px';
+                        errorMessage.style.marginTop = '5px';
+                        errorMessage.textContent = 'Invalid MusicBrainz ID format. Must be a valid UUID or a musicbrainz.org/release URL.';
+                        parentRow.appendChild(errorMessage);
+                    }
+                }
+            };
+
+            inputField.addEventListener('paste', function(e) {
+                let pastedText = (e.clipboardData || window.clipboardData).getData('text').trim();
+                const urlMatch = pastedText.match(MB_URL_REGEX);
+
+                if (urlMatch) {
+                    e.preventDefault();
+                    const extractedUuid = urlMatch[1].toLowerCase();
+                    inputField.value = extractedUuid;
+                    setValidationFeedback(true);
+                } else if (pastedText && !UUID_REGEX.test(pastedText)) {
+                    e.preventDefault();
+                    setValidationFeedback(false);
+                    inputField.value = "PASTE BLOCKED: Invalid format.";
+                    setTimeout(() => {
+                        if (inputField.value === "PASTE BLOCKED: Invalid format.") {
+                            inputField.value = '';
+                        }
+                    }, 1500);
+                }
+            });
+
+            inputField.addEventListener('input', function() {
+                const currentValue = inputField.value.trim();
+                setValidationFeedback(currentValue === "" || UUID_REGEX.test(currentValue));
+            });
+
+            if (inputField.value.length > 0) {
+                setValidationFeedback(UUID_REGEX.test(inputField.value));
+            }
+        }
+    }
+})();
+#+end_example
+
+** 3
+
+#+begin_example
+// ==UserScript==
+// @name         SpringsteenLyrics - MBID Helper Integrated
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      2.3
+// @description  Adds button and automated clipboard paster for MusicBrainz IDs
+// @author       vzell & Gemini
+// @match        https://www.springsteenlyrics.com/bootlegs.php?item=*&category=*
+// @match        https://www.springsteenlyrics.com/bootlegs.php?cmd=edit*
+// @icon         https://volkerzell.de/favicons/springsteenlyrics.ico
+// @grant        none
+// @run-at       document-idle
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const currentUrl = window.location.href;
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+    const MB_URL_REGEX = /^https:\/\/musicbrainz\.org\/release\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(\/.*)?$/i;
+
+    // --- HELPER: Process text (Logic from your original script) ---
+    function processMbidText(text, inputField, feedbackFn) {
+        const cleanText = text.trim();
+        const urlMatch = cleanText.match(MB_URL_REGEX);
+
+        if (urlMatch) {
+            inputField.value = urlMatch[1].toLowerCase();
+            feedbackFn(true);
+            return true;
+        } else if (UUID_REGEX.test(cleanText)) {
+            inputField.value = cleanText.toLowerCase();
+            feedbackFn(true);
+            return true;
+        } else {
+            inputField.value = "INVALID FORMAT";
+            feedbackFn(false);
+            setTimeout(() => { if (inputField.value === "INVALID FORMAT") inputField.value = ''; }, 1500);
+            return false;
+        }
+    }
+
+    // --- LOGIC FOR BOOTLEG VIEW PAGE ---
+    if (currentUrl.includes('item=') && !currentUrl.includes('cmd=edit')) {
+        const editLink = document.querySelector('.blog-post a[href*="cmd=edit"]');
+        if (editLink && editLink.textContent.toLowerCase().includes('edit item')) {
+            const btn = document.createElement('button');
+            btn.innerText = 'Add MusicBrainz MBID';
+            btn.type = 'button';
+            btn.className = 'btn btn-xs btn-outline-primary';
+            btn.style.marginLeft = '5px';
+            btn.onclick = (e) => {
+                e.preventDefault();
+                sessionStorage.setItem('autoPasteMBID', 'true');
+                editLink.click();
+            };
+            editLink.parentNode.insertBefore(btn, editLink.nextSibling);
+        }
+    }
+
+    // --- LOGIC FOR EDIT PAGE ---
+    if (currentUrl.includes('cmd=edit')) {
+        const inputField = document.getElementById('db_musicbrainz');
+        if (!inputField) return;
+
+        const parentLabel = inputField.closest('.input');
+        const parentRow = inputField.closest('.row');
+
+        const setValidationFeedback = (isValid) => {
+            if (!parentRow) return;
+            if (parentLabel) parentLabel.style.border = isValid ? '1px solid #ccc' : '2px solid red';
+            let msg = parentRow.querySelector('.validation-error-message');
+            if (!isValid && !msg) {
+                msg = document.createElement('p');
+                msg.className = 'validation-error-message';
+                msg.style.color = 'red';
+                msg.style.fontSize = '12px';
+                msg.textContent = 'Invalid MusicBrainz ID format.';
+                parentRow.appendChild(msg);
+            } else if (isValid && msg) {
+                msg.remove();
+            }
+        };
+
+        // Create a "Paste" helper button on the edit page
+        const pasteBtn = document.createElement('button');
+        pasteBtn.innerText = '📋 Paste from Clipboard';
+        pasteBtn.type = 'button';
+        pasteBtn.style.cssText = 'margin-top: 5px; display: block; cursor: pointer; padding: 4px 8px; background: #e7f3ff; border: 1px solid #b2d7ff; border-radius: 4px; font-size: 11px;';
+
+        pasteBtn.onclick = async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                processMbidText(text, inputField, setValidationFeedback);
+            } catch (err) {
+                alert("Permission to read clipboard was denied. Please paste manually (Ctrl+V).");
+            }
+        };
+
+        inputField.parentNode.appendChild(pasteBtn);
+
+        // Auto-focus logic
+        if (sessionStorage.getItem('autoPasteMBID') === 'true') {
+            sessionStorage.removeItem('autoPasteMBID');
+            inputField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            inputField.focus();
+            pasteBtn.style.backgroundColor = '#fff9c4'; // Highlight the button to guide the user
+            pasteBtn.innerText = '📋 Click here to Paste MBID';
+        }
+
+        // Keep your original Manual Paste listener
+        inputField.addEventListener('paste', (e) => {
+            let pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            e.preventDefault();
+            processMbidText(pastedText, inputField, setValidationFeedback);
+        });
+
+        inputField.addEventListener('input', () => {
+            setValidationFeedback(inputField.value.trim() === "" || UUID_REGEX.test(inputField.value.trim()));
+        });
+    }
+})();
+#+end_example
+
 
 * Add external link to release
 ** Gemini
@@ -414,6 +789,17 @@ When pressing the "Esc" key in the UI dialogs, the dialogs should just close (if
 
 One last glich. When the "Add New Mapping" dialog is opend from the first dialog "MusicBrainz Auto-Select
 Configuration", pressing "Esc" closes both dialogs, but instead only the "Add New Mapping" dialog should be closed.
+
+*** rewrite regexp
+
+Rewrite the following regexp in userscripts
+
+^(https://www\\.springsteenlyrics\\.com/bootlegs\\.php\\?item=\\d+)(&.*)?$
+
+that the follwing to types of URLs should be matched
+
+https://www.springsteenlyrics.com/bootlegs.php?item=3578&category=aud_live1995
+https://www.springsteenlyrics.com/collection.php?item=9834&category=album
 
 ** ChatGPT
 *** question
