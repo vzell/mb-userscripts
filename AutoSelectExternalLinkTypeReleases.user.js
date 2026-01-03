@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Auto-Select External Link Types For Releases
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.7+2025-12-28
+// @version      2.0+2026-01-03
 // @description  Auto-Select External Link Types on release pages, allows configuration of link mappings (URL Regex -> Link Type ID)
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -41,7 +41,7 @@
     ];
 
     const DEFAULT_MAPPINGS_RELEASES = [
-        { regex: "^(https://www\\.springsteenlyrics\\.com/bootlegs\\.php\\?item=\\d+)(&.*)?$", typeId: "288", description: "SpringsteenLyrics bootleg entry" },
+        { regex: "^(https://www\\.springsteenlyrics\\.com/(bootlegs|collection)\\.php\\?item=\\d+)(&.*)?$", typeId: "288", description: "SpringsteenLyrics bootlegs and collection entries" },
         { regex: "https://www\\.jungleland\.it/html/.*\\.htm$", typeId: "288", description: "Jungleland discography page" },
         { regex: "https://web.archive.org/web/.*/http://bruceboots.com/", typeId: "288", description: "BruceBoots via archive.org" },
         { regex: "https://archive.org/details/bs.*", typeId: "288", description: "Springsteen bootleg entry via archive.org" },
@@ -119,7 +119,7 @@
         if (target.tagName === 'INPUT' && target.placeholder && (target.placeholder.includes('Add link') || target.placeholder.includes('Add another link'))) {
 
             const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-            const regexSpringsteenClean = /^(https?:\/\/www\.springsteenlyrics\.com\/bootlegs\.php\?item=\d+)(&.*)?$/i;
+            const regexSpringsteenClean = /^(https?:\/\/www\.springsteenlyrics\.com\/(bootlegs|collection)\.php\?item=\d+)(&.*)?$/i;
             const match = pastedText.match(regexSpringsteenClean);
 
             let urlToInsert = pastedText;
