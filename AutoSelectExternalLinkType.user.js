@@ -32,7 +32,7 @@
 
     const ENTITY_CONFIGS = {
         'event': {
-            logPrefix: '[VZ:autoselect-events]',
+            logPrefix: '[VZ:external-links-autoselect-events]',
             storageKey: 'MB_AutoSelect_Mappings_Events',
             options: [
                 { id: "782", name: "official homepages" },
@@ -50,7 +50,7 @@
             ]
         },
         'place': {
-            logPrefix: '[VZ:autoselect-places]',
+            logPrefix: '[VZ:external-links-autoselect-places]',
             storageKey: 'MB_AutoSelect_Mappings_Places',
             options: [
                 { id: "363", name: "official homepages" },
@@ -69,7 +69,7 @@
             ]
         },
         'release-group': {
-            logPrefix: '[VZ:autoselect-release-groups]',
+            logPrefix: '[VZ:external-links-autoselect-release-groups]',
             storageKey: 'MB_AutoSelect_Mappings_Release_Groups',
             options: [
                 { id: "287", name: "standalone website" },
@@ -83,7 +83,7 @@
             ]
         },
         'release': {
-            logPrefix: '[VZ:autoselect-releases]',
+            logPrefix: '[VZ:external-links-autoselect-releases]',
             storageKey: 'MB_AutoSelect_Mappings_Releases',
             options: [
                 { id: "288", name: "discography entry" },
@@ -106,7 +106,7 @@
             ]
         },
         'work': {
-            logPrefix: '[VZ:autoselect-works]',
+            logPrefix: '[VZ:external-links-autoselect-works]',
             storageKey: 'MB_AutoSelect_Mappings_Works',
             options: [
                 { id: "939", name: "license" },
@@ -283,7 +283,7 @@
         const tbody = table.querySelector('tbody');
 
         linkMappings.forEach((mapping, index) => {
-            const option = LINK_TYPES_OPTIONS_WORKS.find(opt => opt.id === mapping.typeId);
+            const option = config.options.find(opt => opt.id === mapping.typeId);
             const name = option ? option.name.replace(/&nbsp;/g, '').trim() : `Unknown ID (${mapping.typeId})`;
 
             const tr = document.createElement('tr');
@@ -347,7 +347,7 @@
      */
     function openEditModal(index, reEnableMainEscape) {
         const isEditing = index !== null;
-        const currentMapping = isEditing ? linkMappings[index] : { regex: '', typeId: LINK_TYPES_OPTIONS_WORKS[0].id, description: '' };
+        const currentMapping = isEditing ? linkMappings[index] : { regex: '', typeId: config.options[0].id, description: '' };
 
         // 1. Setup Modal DOM
         const overlay = document.createElement('div');
@@ -372,7 +372,7 @@
             <div style="margin-bottom: 20px;">
                 <label for="typeSelect" style="display: block; margin-bottom: 5px;"><strong>Maps To Link Type:</strong></label>
                 <select id="typeSelect" style="padding: 5px; border: 1px solid #ccc; width: 100%;">
-                    ${LINK_TYPES_OPTIONS_WORKS.map(opt =>
+                    ${config.options.map(opt =>
                         `<option value="${opt.id}" ${currentMapping.typeId === opt.id ? 'selected' : ''}>${opt.name.replace(/&nbsp;/g, '').trim()} (${opt.id})</option>`
                     ).join('')}
                 </select>
@@ -609,6 +609,7 @@
         const timer = setInterval(() => {
             const container = document.getElementById('external-links-editor');
             if (container) {
+                log("Container found, starting observer.");
                 clearInterval(timer);
                 const tbody = container.querySelector('tbody');
                 if (tbody) observer.observe(tbody, { childList: true, subtree: true });
