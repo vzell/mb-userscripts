@@ -98,7 +98,7 @@
                 { id: "78", name: "cover art" },
             ],
             defaults: [
-                { regex: "^(https://www\\.springsteenlyrics\\.com/bootlegs\\.php\\?item=\\d+)(&.*)?$", typeId: "288", description: "SpringsteenLyrics bootleg entry" },
+                { regex: "^(https://www\\.springsteenlyrics\\.com/(bootlegs|collection)\\.php\\?item=\\d+)(&.*)?$", typeId: "288", description: "SpringsteenLyrics bootleg and collection entries" },
                 { regex: "https://www\\.jungleland\\.it/html/.*\\.htm$", typeId: "288", description: "Jungleland discography page" },
                 { regex: "https://web.archive.org/web/.*/http://bruceboots.com/", typeId: "288", description: "BruceBoots via archive.org" },
                 { regex: "https://archive.org/details/bs.*", typeId: "288", description: "Springsteen bootleg entry via archive.org" },
@@ -210,7 +210,7 @@
 
             // Specialized Springsteen cleaning (formerly in Release script)
             if (currentEntity === 'release') {
-                const regexSpringsteenClean = /^(https?:\/\/www\.springsteenlyrics\.com\/bootlegs\.php\?item=\d+)(&.*)?$/i;
+                const regexSpringsteenClean = /^(https?:\/\/www\.springsteenlyrics\.com\/(bootlegs|collection)\.php\?item=\d+)(&.*)?$/i;
                 const match = pastedText.match(regexSpringsteenClean);
                 if (match) {
                     e.preventDefault();
