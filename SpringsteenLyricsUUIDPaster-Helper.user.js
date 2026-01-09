@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         VZ: SpringstenLyrics - Helper MusicBrainz UUID Paster
+// @name         VZ: SpringstenLyrics - MusicBrainz UUID Paster Helper
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-09
-// @description  Adds an edit button and shortcuts to SpringstenLyrics website edit page
+// @version      1.1+2026-01-09
+// @description  Adds auto-login and an Add MBID button to the SpringstenLyrics website and shortcuts to the corresponding edit page
 // @author       vzell with help of Gemini
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -26,7 +26,7 @@
     const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
     const MB_URL_REGEX = /^https:\/\/musicbrainz\.org\/release\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(\/.*)?$/i;
 
-    // --- HELPER: Process text (Logic from your original script) ---
+    // --- HELPER: Process text ---
     function processMbidText(text, inputField, feedbackFn) {
         const cleanText = text.trim();
         const urlMatch = cleanText.match(MB_URL_REGEX);
@@ -47,10 +47,12 @@
         }
     }
 
-    // --- LOGIC FOR BOOTLEG VIEW PAGE ---
-    if (currentUrl.includes('item=') && !currentUrl.includes('cmd=edit')) {
+    // --- LOGIC FOR VIEW PAGE (AUTO-LOGIN) ---
+    if ((currentUrl.includes('item=') || currentUrl.includes('collection.php')) && !currentUrl.includes('cmd=edit')) {
         const editLink = document.querySelector('.blog-post a[href*="cmd=edit"]');
+
         if (editLink && editLink.textContent.toLowerCase().includes('edit item')) {
+            // Success: User is logged in
             const btn = document.createElement('button');
             btn.innerText = 'Add MusicBrainz MBID';
             btn.type = 'button';
@@ -62,6 +64,36 @@
                 editLink.click();
             };
             editLink.parentNode.insertBefore(btn, editLink.nextSibling);
+        } else {
+            // Not logged in: Assisted Login
+            const loginToggle = document.querySelector('li.dropdown a.dropdown-toggle i.bi-lock')?.closest('a');
+            const loginSubmitBtn = document.querySelector('button[name="hBtnLogin"]');
+
+            if (loginToggle && loginSubmitBtn) {
+                // 1. Auto-open the dropdown so you can see the credentials filling
+                if (!document.querySelector('li.dropdown.open')) {
+                    loginToggle.click();
+                }
+
+                // 2. Add a helper button to the page content that triggers the login
+                // This counts as a "Trusted User Gesture"
+                const helperBtn = document.createElement('button');
+                helperBtn.innerText = '🔑 Click to Login & Add MBID';
+                helperBtn.style.cssText = 'display: block; margin: 20px 0; padding: 10px 20px; background: #007bff; color: #white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+                helperBtn.className = 'btn btn-primary';
+
+                helperBtn.onclick = (e) => {
+                    e.preventDefault();
+                    sessionStorage.setItem('autoPasteMBID', 'true');
+                    loginSubmitBtn.click();
+                };
+
+                const container = document.querySelector('.blog-post');
+                if (container && !document.getElementById('assisted-login-btn')) {
+                    helperBtn.id = 'assisted-login-btn';
+                    container.prepend(helperBtn);
+                }
+            }
         }
     }
 

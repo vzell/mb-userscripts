@@ -505,6 +505,113 @@ When the button is pressed a click on the hyperlink '<a href="bootlegs.php?cmd=e
 })();
 #+end_example
 
+** emulate login
+
+Analyze the following URL: https://www.springsteenlyrics.com/bootlegs.php?item=3062&category=aud_live1980
+
+Part of the URLs page functionality needs authentication. The uploaded user script expects a hyperlink, see
+
+#+begin_example
+document.querySelector('.blog-post a[href*="cmd=edit"]
+#+end_example
+
+in the code block after the comment line "// --- LOGIC FOR BOOTLEG VIEW PAGE ---"
+
+which is not there as long as the end user hasn't authenticated yet. Please adjust the uploaded user script to emulate
+pressing the authentication icon which can be found in the code at '<li class="dropdown">.
+
+The HTML code in the non-authenticated case looks like the following
+
+#+begin_example
+<li class="dropdown">
+<a href="#" class=" dropdown-toggle" data-toggle="dropdown"><i class="bi bi-lock"></i></a>
+ <div class="dropdown-menu dropdown-menu-right dropdown-login-box animated fadeInUp">
+ 	<form action="/bootlegs.php?item=3062&amp;category=aud_live1980" method="post" name="login_form">
+ 		<h4>Log in</h4>
+ 		<div class="form-group">
+ 			<div class="input-group">
+ 				<span class="input-group-addon"><i class="bi bi-person"></i></span>
+ 				<input type="text" name="hTxtUsername" id="hTxtUsername" class="form-control" placeholder="Username">
+ 			</div>
+ 			<br>
+ 			<div class="input-group">
+ 				<span class="input-group-addon"><i class="bi bi-lock"></i></span>
+ 				<input type="password" name="hTxtPassword" id="hTxtPassword" class="form-control" placeholder="Password">
+ 			</div>
+ 			<div class="checkbox pull-left">
+ 				<label>
+ 					<!--<input type="checkbox"> Remember me-->
+ 				</label>
+ 			</div>
+ 			<button type="submit" value="Login" name="hBtnLogin" class="btn btn-theme-bg pull-right">Log In</button>
+ 			<div class="clearfix"></div>
+ 		</div>
+ 	</form>
+ </div>
+</li>
+#+end_example
+
+and when the rendered icon (probably represented by the <li class="dropdown"> code) is pressed, the 
+HTML code looks like the following:
+
+#+begin_example
+<li class="dropdown open">
+<a href="#" class=" dropdown-toggle" data-toggle="dropdown" aria-expanded="true"><i class="bi bi-lock"></i></a>
+ <div class="dropdown-menu dropdown-menu-right dropdown-login-box animated fadeInUp">
+ 	<form action="/bootlegs.php?item=3062&amp;category=aud_live1980" method="post" name="login_form">
+ 		<h4>Log in</h4>
+ 		<div class="form-group">
+ 			<div class="input-group">
+ 				<span class="input-group-addon"><i class="bi bi-person"></i></span>
+ 				<input type="text" name="hTxtUsername" id="hTxtUsername" class="form-control" placeholder="Username">
+ 			</div>
+ 			<br>
+ 			<div class="input-group">
+ 				<span class="input-group-addon"><i class="bi bi-lock"></i></span>
+ 				<input type="password" name="hTxtPassword" id="hTxtPassword" class="form-control" placeholder="Password">
+ 			</div>
+ 			<div class="checkbox pull-left">
+ 				<label>
+ 					<!--<input type="checkbox"> Remember me-->
+ 				</label>
+ 			</div>
+ 			<button type="submit" value="Login" name="hBtnLogin" class="btn btn-theme-bg pull-right">Log In</button>
+ 			<div class="clearfix"></div>
+ 		</div>
+ 	</form>
+ </div>
+</li>
+#+end_example
+
+Also adjust the userscript code to then press the Submit button represented as
+
+#+begin_example
+<button type="submit" value="Login" name="hBtnLogin" class="btn btn-theme-bg pull-right">Log In</button>
+#+end_example
+
+(The browser already fills in username and password, as they are stored in it's security store)
+
+** 1
+
+Actually an auto-login should happen when the user is not authenticated yet. There shouldn't be an additional button,
+otherwise the user could just login the natural via by clicking the lock icon directly and pressing submit afterwards
+
+** 2
+
+Actually the logic seems right. At least the login dialog quickly pops up, and then vanishes again (as if the submit
+button has been clicked), BUT the username and password are not filled in yet. Also the helper button is not present
+yet, as wea re not authenticated yet.
+
+And afterwards the script execution cannot be triggered again. Instead I have to copy the URL in a completely new tab in
+the browser, but with the same effects
+
+** 3
+
+I can see the username and passwords get filled in now, but the authentication still does not happen.
+
+** 4
+
+Yes, I can see it focusing at least the password field, but I can't see the actual Submit button press. It also doesn't happen, Same result as before.
 
 * Add external link to release
 ** Gemini
