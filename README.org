@@ -613,6 +613,23 @@ I can see the username and passwords get filled in now, but the authentication s
 
 Yes, I can see it focusing at least the password field, but I can't see the actual Submit button press. It also doesn't happen, Same result as before.
 
+** auto submit
+
+In the uploaded user script add the following functionality:
+
+After pasting of the MBID in the "Musicbrain ID" text filed automatically advance to the "Submit" button of the page and emulate a click on the button. This is the HTML code where the button is located:
+
+#+begin_example
+<footer>
+  <input type="hidden" value="edit" name="previouscmd">
+  <button type="submit" class="btn border-black btn-lg">Submit</button>
+  <button type="reset" class="btn border-black btn-lg">Reset</button>
+  <a href="bootlegs.php?item=6212&amp;category=aud_live1975" class="btn border-black btn-lg">Cancel</a>
+  <a href="javascript:confirm_delete('bootlegs.php?cmd=delete&amp;item=6212&amp;category=aud_live1975')" class="btn border-black btn-lg">Delete</a>
+</footer>
+#+end_example
+
+
 * Add external link to release
 ** Gemini
 *** question

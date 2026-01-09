@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         VZ: SpringstenLyrics - MusicBrainz UUID Paster
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.1+2026-01-02
-// @description  Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website, supports URL extraction
+// @version      2.2+2026-01-09
+// @description  Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website, supports URL extraction and automatically submits the form on paste.
 // @author       vzell with help of Gemini
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -38,6 +38,14 @@
             return;
         }
 
+        // Helper function to find and click the submit button
+        function autoSubmit() {
+            const submitButton = document.querySelector('footer button[type="submit"]');
+            if (submitButton) {
+                submitButton.click();
+            }
+        }
+
         function setValidationFeedback(isValid) {
             if (isValid) {
                 parentLabel.style.border = '1px solid #ccc';
@@ -67,12 +75,17 @@
             const urlMatch = pastedText.match(MB_URL_REGEX);
 
             if (urlMatch) {
-                // If it's a URL, intercept the paste, extract the UUID group, and set the value
+                // If it's a URL, intercept the paste, extract the UUID, set value, and submit
                 e.preventDefault();
                 const extractedUuid = urlMatch[1].toLowerCase();
                 inputField.value = extractedUuid;
                 setValidationFeedback(true);
-            } else if (pastedText && !UUID_REGEX.test(pastedText)) {
+                autoSubmit();
+            } else if (UUID_REGEX.test(pastedText)) {
+                // If it's a valid plain UUID, we allow the paste and then submit
+                // Using a tiny timeout to ensure the value is actually in the field before clicking submit
+                setTimeout(autoSubmit, 50);
+            } else if (pastedText) {
                 // If it's not a URL and not a valid plain UUID, block it
                 e.preventDefault();
                 setValidationFeedback(false);
