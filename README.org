@@ -617,7 +617,7 @@ Yes, I can see it focusing at least the password field, but I can't see the actu
 
 In the uploaded user script add the following functionality:
 
-After pasting of the MBID in the "Musicbrain ID" text filed automatically advance to the "Submit" button of the page and emulate a click on the button. This is the HTML code where the button is located:
+After pasting of the MBID in the "Musicbrain ID" text field automatically advance to the "Submit" button of the page and emulate a click on the button. This is the HTML code where the button is located:
 
 #+begin_example
 <footer>
@@ -627,6 +627,21 @@ After pasting of the MBID in the "Musicbrain ID" text filed automatically advanc
   <a href="bootlegs.php?item=6212&amp;category=aud_live1975" class="btn border-black btn-lg">Cancel</a>
   <a href="javascript:confirm_delete('bootlegs.php?cmd=delete&amp;item=6212&amp;category=aud_live1975')" class="btn border-black btn-lg">Delete</a>
 </footer>
+#+end_example
+
+** alternate button text
+
+In the uploaded user script add the following functionality:
+
+The button text should be
+
+ - "Add MusicBrainz MBID" if the "Musicbrain ID" text field is empty
+ - "Edit MusicBrainz MBID" if the "Musicbrain ID" text field already has a value
+
+For example if the following HTML code is present
+
+#+begin_example
+<a href="https://musicbrainz.org/release/4ee36309-5877-449b-a53f-f532a7d96fc3" target="_blank"><img src="img/collection_musicbrainz.png" alt="MusicBrainz link"></a>
 #+end_example
 
 

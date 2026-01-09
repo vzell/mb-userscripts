@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         VZ: SpringstenLyrics - MusicBrainz UUID Paster Helper
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1+2026-01-09
-// @description  Adds auto-login and an Add MBID button to the SpringstenLyrics website and shortcuts to the corresponding edit page
+// @version      1.2+2026-01-09
+// @description  Adds auto-login and an Add/Edit MBID button to the SpringstenLyrics website and shortcuts to the corresponding edit page
 // @author       vzell with help of Gemini
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -53,8 +53,12 @@
 
         if (editLink && editLink.textContent.toLowerCase().includes('edit item')) {
             // Success: User is logged in
+
+            // Check if MBID already exists by looking for the MusicBrainz icon link
+            const hasMbid = !!document.querySelector('a[href*="musicbrainz.org/release/"] img[src*="collection_musicbrainz.png"]');
+
             const btn = document.createElement('button');
-            btn.innerText = 'Add MusicBrainz MBID';
+            btn.innerText = hasMbid ? 'Edit MusicBrainz MBID' : 'Add MusicBrainz MBID';
             btn.type = 'button';
             btn.className = 'btn btn-xs btn-outline-primary';
             btn.style.marginLeft = '5px';
@@ -70,16 +74,18 @@
             const loginSubmitBtn = document.querySelector('button[name="hBtnLogin"]');
 
             if (loginToggle && loginSubmitBtn) {
-                // 1. Auto-open the dropdown so you can see the credentials filling
                 if (!document.querySelector('li.dropdown.open')) {
                     loginToggle.click();
                 }
 
-                // 2. Add a helper button to the page content that triggers the login
-                // This counts as a "Trusted User Gesture"
                 const helperBtn = document.createElement('button');
-                helperBtn.innerText = '🔑 Click to Login & Add MBID';
-                helperBtn.style.cssText = 'display: block; margin: 20px 0; padding: 10px 20px; background: #007bff; color: #white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+
+                // Also update logic for the login helper button text
+                const hasMbid = !!document.querySelector('a[href*="musicbrainz.org/release/"] img[src*="collection_musicbrainz.png"]');
+                const actionText = hasMbid ? 'Edit MBID' : 'Add MBID';
+
+                helperBtn.innerText = `🔑 Click to Login & ${actionText}`;
+                helperBtn.style.cssText = 'display: block; margin: 20px 0; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
                 helperBtn.className = 'btn btn-primary';
 
                 helperBtn.onclick = (e) => {
