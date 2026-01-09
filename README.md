@@ -26,6 +26,7 @@
 <!-- - [MusicBrainz: Customizable Packaging Selector](#mb_customizable_packaging_selector) -->
 ---
 - [SpringsteenLyrics - MusicBrainz UUID Paster](#sl_uuid_paster)
+- [SpringsteenLyrics - MusicBrainz UUID Paster Helper](#sl_uuid_paster_helper)
 ---
 - [BruceBase – Auto 200 Revisions](#bb_auto_200_revisions)
 ---
@@ -198,6 +199,13 @@ Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website, s
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SpringsteenLyricsUUIDPaster.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SpringsteenLyricsUUIDPaster.user.js)
+
+## <a name="sl_uuid_paster_helper"></a> SpringstenLyrics - MusicBrainz UUID Paster Helper
+
+Adds an edit button and shortcuts to SpringstenLyrics website edit page.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SpringsteenLyricsUUIDPaster-Helper.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SpringsteenLyricsUUIDPaster-Helper.user.js)
 
 ---
 
