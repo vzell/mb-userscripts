@@ -1,4 +1,4 @@
-* UUID upport in Springsteenlyrics
+* UUID support in Springsteenlyrics
 ** initial
 
 Given the following types of URLs
@@ -17498,3 +17498,239 @@ Is this pop-up dialog text from the browser itslef: The page that you're looking
 })();
 #+end_example
 
+
+* Download images from links
+** BruceBase
+
+Extend the uploaded script for the following case:
+
+The TARGET_URL could be one of the following 2 formats
+
+ - https://www.springsteenlyrics.com/collection.php?item=<ITEM_ID>&category=<CATEGORY>&f_date_main=<DATE>
+ - https://www.springsteenlyrics.com/bootlegs.php?item=<ITEM_ID>&category=<CATEGORY>
+
+All the query parameters after the "item=<ITEM_ID>" are optional.
+
+Examples:
+
+ - https://www.springsteenlyrics.com/collection.php?item=6623&category=album&f_date_main=2006-04-25
+ - https://www.springsteenlyrics.com/bootlegs.php?item=3575&category=aud_live1995
+
+If the TARGET_URL is of type "collection.php" then additionally to calling the "lsix" command, also check for and call the "resize.sh" shell script.
+
+** Jungeland.it
+
+Extend the uploaded shell script for the following case:
+
+The TARGET_URL could also be of the following format:
+
+ - https://www.jungleland.it/html/<ITEM_ID>.htm
+
+Example:
+
+ - https://www.jungleland.it/html/19960419_5.htm
+
+
+in addition to URLs which start with "https://www.springsteenlyrics.com/"
+ 
+In the case of URLs starting with 
+
+"https://www.jungleland.it/" the ABS_OUTPUT_FOLDER should be "$BASE_DIR/junglelandit_downloads/$ITEM_ID" instead of "$BASE_DIR/springsteenlyrics_downloads/$ITEM_ID"
+
+** hotkey
+
+Extend the following AutoHotkey script to check for either "https://www.springsteenlyrics.com/" or "https://www.jungleland.it/" in the "Domain validation" part
+
+#+begin_example
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+
+; --- CONFIGURATION ---
+ScriptPathInWSL := "/home/vzell/.local/bin/image_downloader.sh"
+TargetDirInWSL  := "/mnt/share/scans/tmp"
+;TargetDirInWSL  := "/mnt/d/misc/download/images/tmp/springsteenlyrics_downloads"
+; ---------------------
+
+; Function to clear the floating Tooltip message
+RemoveTooltip() {
+    Tooltip("")
+}
+
+; Hotkey: Ctrl+Shift+D
+; ^ = Ctrl
+; + = Shift
+; d = D key
+^+d::
+{
+    ; Define the required starting domain
+    TargetDomain := "https://www.springsteenlyrics.com/"
+
+    ; Get URL from Clipboard (A_Clipboard is the v2 variable name)
+    Url := A_Clipboard
+
+    ; Basic validation: Check if clipboard is empty
+    if (Url = "") {
+        MsgBox("The clipboard is empty. Please copy a URL first!", "Error", 48)
+        return
+    }
+
+    ; Domain validation: Check if the URL starts with the specific domain
+    if (InStr(Url, TargetDomain) != 1) {
+        MsgBox("The URL must start with: " TargetDomain, "Error", 48)
+        return
+    }
+
+    ; 4. Construct the WSL command
+    Command := "wsl " . ScriptPathInWSL . " " . Chr(34) . Url . Chr(34) . " " . TargetDirInWSL
+
+    ; 5. Execute the command
+    ;MsgBox("Command to execute:`n" Command, "Debug Command", 64)
+    Run(Command)
+
+    ; Optional: Show a brief confirmation message
+    Tooltip("Image Downloader Triggered for: " Url, A_ScreenWidth/2, A_ScreenHeight/2)
+
+    ; Assigns the RemoveTooltip function to run once after 3000ms (3 seconds)
+    SetTimer(RemoveTooltip, -3000)
+}
+#+end_example
+
+** answer
+
+#+begin_example
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+
+; --- CONFIGURATION ---
+ScriptPathInWSL := "/home/vzell/.local/bin/image_downloader.sh"
+TargetDirInWSL  := "/mnt/share/scans/tmp"
+; ---------------------
+
+; Function to clear the floating Tooltip message
+RemoveTooltip() {
+    Tooltip("")
+}
+
+; Hotkey: Ctrl+Shift+D
+^+d::
+{
+    ; 1. Get URL from Clipboard
+    Url := A_Clipboard
+
+    ; 2. Basic validation: Check if clipboard is empty
+    if (Url = "") {
+        MsgBox("The clipboard is empty. Please copy a URL first!", "Error", 48)
+        return
+    }
+
+    ; 3. Domain validation: Check if the URL starts with either allowed domain
+    Domain1 := "https://www.springsteenlyrics.com/"
+    Domain2 := "https://www.jungleland.it/"
+
+    if (InStr(Url, Domain1) != 1 && InStr(Url, Domain2) != 1) {
+        MsgBox("The URL must start with:`n" Domain1 "`nor`n" Domain2, "Error", 48)
+        return
+    }
+
+    ; 4. Construct the WSL command
+    ; Chr(34) is used for double quotes around the URL to handle special characters
+    Command := "wsl " . ScriptPathInWSL . " " . Chr(34) . Url . Chr(34) . " " . TargetDirInWSL
+
+    ; 5. Execute the command
+    Run(Command)
+
+    ; Optional: Show a brief confirmation message
+    Tooltip("Image Downloader Triggered for: " Url, A_ScreenWidth/2, A_ScreenHeight/2)
+
+    ; Assigns the RemoveTooltip function to run once after 3000ms (3 seconds)
+    SetTimer(RemoveTooltip, -3000)
+}
+#+end_example
+
+** wrong output folder
+
+When using the uploaded shell script the current directory is "/mnt/share/scans/tmp"
+
+These are the outputs for a URL starting with "https://www.springsteenlyrics.com/"
+
+#+begin_example
+-- Starting Image Downloader ---
+Fetching HTML from: https://www.springsteenlyrics.com/collection.php?item=9843&category=all
+Base URL derived: https://www.springsteenlyrics.com
+Found 4 unique image paths for item 9843 to download.
+Saving images to: /mnt/share/scans/tmp/9843
+#+end_example
+
+and starting with
+
+#+begin_example
+--- Starting Image Downloader ---
+Fetching HTML from: https://www.jungleland.it/html/19960419_5.htm
+Base URL derived: https://www.jungleland.it
+Found 2 unique image paths for item 19960419_5 to download.
+Saving images to: /mnt/share/scans/tmp/19960419_5
+#+end_example
+
+In both cases the script saves directly to a subfolder of the current directory named with the ITEM_ID.
+
+But it should instead save (in this case) to
+
+ - /mnt/share/scans/tmp/springsteenlyrics_downloads/9843 for "https://www.springsteenlyrics.com/" downloads
+ - /mnt/share/scans/tmp/junglelandit_downloads/19960419_5 for "https://www.jungleland.it/" downloads
+
+** wrong hrefs
+
+Please refine the uploaded script:
+
+Downloading from https://www.springsteenlyrics.com/collection.php?item=9843&category=all
+where the HTML code for the pictures looks like
+
+#+begin_example
+<p><a href="collection/alb200604_weshallovercome/9843_01.jpg" target=_blank><img src="collection/alb200604_weshallovercome/9843_01_tn.jpg" width=100 height=100 border=0 title="9843_artwork_01.jpg" style="margin: 2px auto"></a>
+<a href="collection/alb200604_weshallovercome/9843_02.jpg" target=_blank><img src="collection/alb200604_weshallovercome/9843_02_tn.jpg" width=100 height=100 border=0 title="9843_artwork_02.jpg" style="margin: 2px auto"></a>
+<a href="collection/alb200604_weshallovercome/9843_03.jpg" target=_blank><img src="collection/alb200604_weshallovercome/9843_03_tn.jpg" width=91 height=100 border=0 title="9843_artwork_03.jpg" style="margin: 2px auto"></a>
+<a href="collection/alb200604_weshallovercome/9843_04.jpg" target=_blank><img src="collection/alb200604_weshallovercome/9843_04_tn.jpg" width=91 height=100 border=0 title="9843_artwork_04.jpg" style="margin: 2px auto"></a>
+</p>
+#+end_example
+
+gives the following output and it works OK
+
+#+begin_example
+--- Starting Image Downloader (SpringsteenLyrics) ---
+Fetching HTML from: https://www.springsteenlyrics.com/collection.php?item=9843&category=all
+Base URL derived: https://www.springsteenlyrics.com
+Found 4 unique image paths for item 9843 to download.
+Saving images to: /mnt/share/scans/tmp/springsteenlyrics_downloads/9843
+Downloading: 9843_01.jpg from https://www.springsteenlyrics.com/collection/alb200604_weshallovercome/9843_01.jpg
+Downloading: 9843_02.jpg from https://www.springsteenlyrics.com/collection/alb200604_weshallovercome/9843_02.jpg
+Downloading: 9843_03.jpg from https://www.springsteenlyrics.com/collection/alb200604_weshallovercome/9843_03.jpg
+Downloading: 9843_04.jpg from https://www.springsteenlyrics.com/collection/alb200604_weshallovercome/9843_04.jpg
+#+end_example
+
+The problem is with downloads from https://www.jungleland.it/html/19960419_5.htm
+where the HTML code for the pictures looks like
+
+#+begin_example
+      <br>
+      <a href="..\artwork\1990\19960419_5_front.jpg">
+	<img border="0" src="..\artwork\1990\thumb\tn_19960419_5_front.jpg" hspace="10" vspace="10" width="200" height="155">
+      </a>
+      <a href="..\artwork\1990\19960419_5_back.jpg">
+	<img border="0" src="..\artwork\1990\thumb\tn_19960419_5_back.jpg" hspace="10" vspace="10" width="200" height="155">
+      </a>
+      <br>
+#+end_example
+
+is NOT OK and gives:
+
+#+begin_example
+--- Starting Image Downloader ---
+Fetching HTML from: https://www.jungleland.it/html/19960419_5.htm
+Base URL derived: https://www.jungleland.it
+Found 2 unique image paths for item 19960419_5 to download.
+Saving images to: /mnt/share/scans/tmp/junglelandit_downloads/19960419_5
+Downloading: ..\artwork\1990\19960419_5_back.jpg from https://www.jungleland.it/..\artwork\1990\19960419_5_back.jpg
+  FAILED (Code 23) to download ..\artwork\1990\19960419_5_back.jpg. Removing incomplete file.
+Downloading: ..\artwork\1990\19960419_5_front.jpg from https://www.jungleland.it/..\artwork\1990\19960419_5_front.jpg
+  FAILED (Code 23) to download ..\artwork\1990\19960419_5_front.jpg. Removing incomplete file.
+#+end_example
