@@ -17734,3 +17734,177 @@ Downloading: ..\artwork\1990\19960419_5_back.jpg from https://www.jungleland.it/
 Downloading: ..\artwork\1990\19960419_5_front.jpg from https://www.jungleland.it/..\artwork\1990\19960419_5_front.jpg
   FAILED (Code 23) to download ..\artwork\1990\19960419_5_front.jpg. Removing incomplete file.
 #+end_example
+** BruceBase hrefs
+
+http://brucebase.wdfiles.com/local--files/files:news-tour-rvr/1981-RIVER_Itinerary_01a.jpg
+
+[!-- Images from other pages --]
+[[gallery]]
+: files:news-tour-rvr/1981-RIVER_Itinerary_01a.jpg
+: files:news-tour-rvr/1981-RIVER_Itinerary_01b.jpg
+: files:news-tour-rvr/1981-RIVER_Itinerary_01c.jpg
+: files:news-tour-rvr/1981-RIVER_Itinerary_01d.jpg
+: files:pass-1981/19810205_Pass_01.jpg
+: files:ticket-1981/19810205_Ticket_01.jpg
+: files:ticket-1981/19810205_Ticket_02.jpg
+[[/gallery]]
+
+[!-- Images on this page --]
+[[gallery]]
+
+[[include content:copyright-gallery]]
+
+<div class="gallery-box" id="gallery-box-338501">
+<div class="gallery-item thumbnail">
+<table>
+<tr>
+<td>
+<a  href="http://brucebase.wdfiles.com/local--files/files:news-tour-rvr/1981-RIVER_Itinerary_01a.jpg" class="with-lb">
+<img src="http://brucebase.wdfiles.com/local--resized-images/files:news-tour-rvr/1981-RIVER_Itinerary_01a.jpg/thumbnail.jpg" alt="" class="gallery-image-size-thumbnail" /></a></td>
+</tr>
+</table>
+</div>
+<div class="gallery-item thumbnail">
+<table>
+<tr>
+<td><a href="http://brucebase.wdfiles.com/local--files/files:news-tour-rvr/1981-RIVER_Itinerary_01b.jpg" class="with-lb"><img src="http://brucebase.wdfiles.com/local--resized-images/files:news-tour-rvr/1981-RIVER_Itinerary_01b.jpg/thumbnail.jpg" alt="" class="gallery-image-size-thumbnail" /></a></td>
+</tr>
+</table>
+</div>
+<div class="gallery-item thumbnail">
+<table>
+<tr>
+<td><a href="http://brucebase.wdfiles.com/local--files/files:news-tour-rvr/1981-RIVER_Itinerary_01c.jpg" class="with-lb"><img src="http://brucebase.wdfiles.com/local--resized-images/files:news-tour-rvr/1981-RIVER_Itinerary_01c.jpg/thumbnail.jpg" alt="" class="gallery-image-size-thumbnail" /></a></td>
+</tr>
+</table>
+</div>
+<div class="gallery-item thumbnail">
+<table>
+<tr>
+<td><a href="http://brucebase.wdfiles.com/local--files/files:news-tour-rvr/1981-RIVER_Itinerary_01d.jpg" class="with-lb"><img src="http://brucebase.wdfiles.com/local--resized-images/files:news-tour-rvr/1981-RIVER_Itinerary_01d.jpg/thumbnail.jpg" alt="" class="gallery-image-size-thumbnail" /></a></td>
+</tr>
+</table>
+</div>
+<div class="gallery-item thumbnail">
+<table>
+<tr>
+<td><a href="http://brucebase.wdfiles.com/local--files/files:pass-1981/19810205_Pass_01.jpg" class="with-lb"><img src="http://brucebase.wdfiles.com/local--resized-images/files:pass-1981/19810205_Pass_01.jpg/thumbnail.jpg" alt="" class="gallery-image-size-thumbnail" /></a></td>
+</tr>
+</table>
+</div>
+<div class="gallery-item thumbnail">
+<table>
+<tr>
+<td><a href="http://brucebase.wdfiles.com/local--files/files:ticket-1981/19810205_Ticket_01.jpg" class="with-lb"><img src="http://brucebase.wdfiles.com/local--resized-images/files:ticket-1981/19810205_Ticket_01.jpg/thumbnail.jpg" alt="" class="gallery-image-size-thumbnail" /></a></td>
+</tr>
+</table>
+</div>
+<div class="gallery-item thumbnail">
+<table>
+<tr>
+<td><a href="http://brucebase.wdfiles.com/local--files/files:ticket-1981/19810205_Ticket_02.jpg" class="with-lb"><img src="http://brucebase.wdfiles.com/local--resized-images/files:ticket-1981/19810205_Ticket_02.jpg/thumbnail.jpg" alt="" class="gallery-image-size-thumbnail" /></a></td>
+</tr>
+</table>
+</div>
+</div>
+<script type="text/javascript" src="http://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/lightbox-jquery.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+
+jQuery(function(){
+jQuery('#gallery-box-338501 a.with-lb').lightBox();    
+});         
+//]]>
+</script>
+<div class="gallery-box" id="gallery-box-309965">
+<div class="gallery-item thumbnail">
+<table>
+<tr>
+<td><a href="http://brucebase.wdfiles.com/local--resized-images/news:1981-02-05-kemper-arena-kansas-city-mo/19810205_AdPoster_01.jpg/medium.jpg"><img src="http://brucebase.wdfiles.com/local--resized-images/news:1981-02-05-kemper-arena-kansas-city-mo/19810205_AdPoster_01.jpg/thumbnail.jpg" alt="" /></a></td>
+</tr>
+</table>
+</div>
+<div class="gallery-item thumbnail">
+<table>
+<tr>
+<td><a href="http://brucebase.wdfiles.com/local--resized-images/news:1981-02-05-kemper-arena-kansas-city-mo/19810205_Article_01.jpg/medium.jpg"><img src="http://brucebase.wdfiles.com/local--resized-images/news:1981-02-05-kemper-arena-kansas-city-mo/19810205_Article_01.jpg/thumbnail.jpg" alt="" /></a></td>
+</tr>
+</table>
+</div>
+</div>
+<script type="text/javascript" src="http://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--javascript/lightbox-jquery.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+
+jQuery(function(){
+jQuery('#gallery-box-309965 a').lightBox();    
+});         
+//]]>
+</script>
+
+** discogs
+
+Lets assume the following 3 URLs are in the clipboard
+
+https://i.discogs.com/GB3P9uvsDXhKSvoJvXh8a3K2kWnv_oXdKc62NIa3Bfg/rs:fit/g:sm/q:90/h:535/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTE4MzQw/NTk0LTE3Njc4MTY3/MDQtNjA0Ni5qcGVn.jpeg
+https://i.discogs.com/_0SUn1ZUS4DhGQgFTDgVAUHyS3duWXnYfOWbKVy3c_s/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTE4MzQw/NTk0LTE3Njc4MTY3/MDUtNzM0Ny5qcGVn.jpeg
+https://i.discogs.com/1LyzBzPTzV9SlBZp2tcYag6zZKK5hSk_mlftKW_D3Pg/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTE4MzQw/NTk0LTE3Njc4MTY3/MDUtNzE4OC5qcGVn.jpeg
+
+When I call the uploaded slid.ahk AutoHotKey script which in turn calls the uploaded "image_downloader.sh" shell script, will the shell script work also the clipboard conatine newline separated URLs
+
+#+begin_example
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+
+; --- CONFIGURATION ---
+ScriptPathInWSL := "/home/vzell/.local/bin/image_downloader.sh"
+TargetDirInWSL  := "/mnt/share/scans/tmp"
+; ---------------------
+
+RemoveTooltip() {
+    Tooltip("")
+}
+
+; Hotkey: Ctrl+Shift+D
+^+d::
+{
+    ; 1. Get raw text from Clipboard
+    FullClipboard := A_Clipboard
+
+    if (FullClipboard = "") {
+        MsgBox("The clipboard is empty. Please copy URLs first!", "Error", 48)
+        return
+    }
+
+    ; 2. Split the clipboard by newlines to handle multiple URLs
+    UrlList := StrSplit(FullClipboard, ["`r`n", "`n"])
+
+    for index, Url in UrlList {
+        Url := Trim(Url)
+        if (Url = "")
+            continue
+
+        ; 3. Domain validation
+        Domain1 := "https://www.springsteenlyrics.com/"
+        Domain2 := "https://www.jungleland.it/"
+        Domain3 := "http://brucebase.wikidot.com/"
+        Domain4 := "https://i.discogs.com/"
+
+        if (InStr(Url, Domain1) != 1 && InStr(Url, Domain2) != 1 && InStr(Url, Domain3) != 1 && InStr(Url, Domain4) != 1) {
+            MsgBox("Invalid URL skipped: " . Url, "Error", 48)
+            continue
+        }
+
+        ; 4. Construct and Execute the WSL command for each URL
+        Command := "wsl " . ScriptPathInWSL . " " . Chr(34) . Url . Chr(34) . " " . TargetDirInWSL
+        Run(Command)
+
+        ; Show tooltip for the current item
+        Tooltip("Processing (" . index . "/" . UrlList.Length . "): " . Url)
+        Sleep(200) ; Small delay to ensure the shell handles the rapid calls
+    }
+
+    SetTimer(RemoveTooltip, -3000)
+}
+#+end_example
+
