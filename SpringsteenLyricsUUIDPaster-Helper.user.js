@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: SpringstenLyrics - MusicBrainz UUID Paster Helper
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.2+2026-01-09
+// @version      1.3+2026-01-09
 // @description  Adds auto-login and an Add/Edit MBID button to the SpringstenLyrics website and shortcuts to the corresponding edit page
 // @author       vzell with help of Gemini
 // @tag          AI generated
@@ -144,11 +144,17 @@
 
         inputField.parentNode.appendChild(pasteBtn);
 
-        // Auto-focus logic
+	// Auto-focus logic
         if (sessionStorage.getItem('autoPasteMBID') === 'true') {
             sessionStorage.removeItem('autoPasteMBID');
             inputField.scrollIntoView({ behavior: 'smooth', block: 'center' });
             inputField.focus();
+
+            // Preselect the MBID if already present
+            if (inputField.value.trim() !== "") {
+                inputField.select();
+            }
+
             pasteBtn.style.backgroundColor = '#fff9c4'; // Highlight the button to guide the user
             pasteBtn.innerText = '📋 Click here to Paste MBID';
         }

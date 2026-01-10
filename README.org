@@ -644,6 +644,23 @@ For example if the following HTML code is present
 <a href="https://musicbrainz.org/release/4ee36309-5877-449b-a53f-f532a7d96fc3" target="_blank"><img src="img/collection_musicbrainz.png" alt="MusicBrainz link"></a>
 #+end_example
 
+** preselect
+
+In the uploaded user script add the following functionality:
+
+In the Auto-focus logic also preselect the MBID in the "MusicBrainz MBID" text field if already present
+
+#+begin_example
+        // Auto-focus logic
+        if (sessionStorage.getItem('autoPasteMBID') === 'true') {
+            sessionStorage.removeItem('autoPasteMBID');
+            inputField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            inputField.focus();
+            pasteBtn.style.backgroundColor = '#fff9c4'; // Highlight the button to guide the user
+            pasteBtn.innerText = '📋 Click here to Paste MBID';
+        }
+#+end_example
+
 
 * Add external link to release
 ** Gemini
