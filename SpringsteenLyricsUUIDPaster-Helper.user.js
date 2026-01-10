@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: SpringstenLyrics - MusicBrainz UUID Paster Helper
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.3+2026-01-09
+// @version      1.4+2026-01-10
 // @description  Adds auto-login and an Add/Edit MBID button to the SpringstenLyrics website and shortcuts to the corresponding edit page
 // @author       vzell with help of Gemini
 // @tag          AI generated
@@ -25,6 +25,31 @@
     const currentUrl = window.location.href;
     const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
     const MB_URL_REGEX = /^https:\/\/musicbrainz\.org\/release\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(\/.*)?$/i;
+
+    // --- STYLES ---
+    // Reduced padding from 4px to 1px for a slim profile
+    const BUTTON_STYLE = `
+        text-transform: none !important;
+        background-color: #0056b3 !important;
+        color: white !important;
+        border: 1px solid #004494 !important;
+        padding: 1px 8px !important;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        margin-left: 5px;
+        line-height: 1.4;
+        display: inline-block;
+        vertical-align: middle;
+    `;
+
+    function applyButtonFeedback(btn) {
+        btn.onmouseover = () => { btn.style.backgroundColor = '#004494'; };
+        btn.onmouseout = () => { btn.style.backgroundColor = '#0056b3'; };
+        btn.onmousedown = () => { btn.style.backgroundColor = '#003366'; };
+        btn.onmouseup = () => { btn.style.backgroundColor = '#004494'; };
+    }
 
     // --- HELPER: Process text ---
     function processMbidText(text, inputField, feedbackFn) {
@@ -52,16 +77,15 @@
         const editLink = document.querySelector('.blog-post a[href*="cmd=edit"]');
 
         if (editLink && editLink.textContent.toLowerCase().includes('edit item')) {
-            // Success: User is logged in
-
-            // Check if MBID already exists by looking for the MusicBrainz icon link
             const hasMbid = !!document.querySelector('a[href*="musicbrainz.org/release/"] img[src*="collection_musicbrainz.png"]');
 
             const btn = document.createElement('button');
             btn.innerText = hasMbid ? 'Edit MusicBrainz MBID' : 'Add MusicBrainz MBID';
             btn.type = 'button';
-            btn.className = 'btn btn-xs btn-outline-primary';
-            btn.style.marginLeft = '5px';
+            btn.style.cssText = BUTTON_STYLE;
+
+            applyButtonFeedback(btn);
+
             btn.onclick = (e) => {
                 e.preventDefault();
                 sessionStorage.setItem('autoPasteMBID', 'true');
@@ -79,14 +103,12 @@
                 }
 
                 const helperBtn = document.createElement('button');
-
-                // Also update logic for the login helper button text
                 const hasMbid = !!document.querySelector('a[href*="musicbrainz.org/release/"] img[src*="collection_musicbrainz.png"]');
                 const actionText = hasMbid ? 'Edit MBID' : 'Add MBID';
 
                 helperBtn.innerText = `🔑 Click to Login & ${actionText}`;
-                helperBtn.style.cssText = 'display: block; margin: 20px 0; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
-                helperBtn.className = 'btn btn-primary';
+                // Specific styling for the large login helper button
+                helperBtn.style.cssText = 'display: block; margin: 20px 0; padding: 6px 15px; background: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-transform: none !important;';
 
                 helperBtn.onclick = (e) => {
                     e.preventDefault();
@@ -127,11 +149,10 @@
             }
         };
 
-        // Create a "Paste" helper button on the edit page
         const pasteBtn = document.createElement('button');
         pasteBtn.innerText = '📋 Paste from Clipboard';
         pasteBtn.type = 'button';
-        pasteBtn.style.cssText = 'margin-top: 5px; display: block; cursor: pointer; padding: 4px 8px; background: #e7f3ff; border: 1px solid #b2d7ff; border-radius: 4px; font-size: 11px;';
+        pasteBtn.style.cssText = 'margin-top: 5px; display: block; cursor: pointer; padding: 2px 8px; background: #e7f3ff; border: 1px solid #b2d7ff; border-radius: 4px; font-size: 11px; text-transform: none !important;';
 
         pasteBtn.onclick = async () => {
             try {

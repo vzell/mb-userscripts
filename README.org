@@ -661,6 +661,13 @@ In the Auto-focus logic also preselect the MBID in the "MusicBrainz MBID" text f
         }
 #+end_example
 
+** button text and color
+
+In the uploaded user script, why are the button texts in all UPPER case. Please change this to the actual text provided
+in the script. Also change the button appearance so that it can better be distinguished (its grey right now) from the
+grey backgound of the part of the web page where it's located. Pleas also add visual feedback when hovering over and
+pressing the button.
+
 
 * Add external link to release
 ** Gemini
