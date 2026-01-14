@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Quick Join Phrases
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1+2026-01-14
+// @version      1.2+2026-01-14
 // @description  Click to add common join phrases in the release editor
 // @author       ChatGPT (directed by Aerozol)
 // @tag          AI generated
@@ -9,7 +9,7 @@
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/QuickJoinPhrases.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/QuickJoinPhrases.user.js
-// @icon         http://brucebase.wikidot.com/local--favicon/favicon.gif
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        *://*.musicbrainz.org/release/add*
 // @match        *://*.musicbrainz.org/release/*/edit*
 // @grant        none
