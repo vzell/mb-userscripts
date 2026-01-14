@@ -18006,6 +18006,7 @@ jQuery('#gallery-box-309965 a').lightBox();
 </script>
 
 ** discogs
+*** 1
 
 Lets assume the following 3 URLs are in the clipboard
 
@@ -18013,7 +18014,7 @@ https://i.discogs.com/GB3P9uvsDXhKSvoJvXh8a3K2kWnv_oXdKc62NIa3Bfg/rs:fit/g:sm/q:
 https://i.discogs.com/_0SUn1ZUS4DhGQgFTDgVAUHyS3duWXnYfOWbKVy3c_s/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTE4MzQw/NTk0LTE3Njc4MTY3/MDUtNzM0Ny5qcGVn.jpeg
 https://i.discogs.com/1LyzBzPTzV9SlBZp2tcYag6zZKK5hSk_mlftKW_D3Pg/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTE4MzQw/NTk0LTE3Njc4MTY3/MDUtNzE4OC5qcGVn.jpeg
 
-When I call the uploaded slid.ahk AutoHotKey script which in turn calls the uploaded "image_downloader.sh" shell script, will the shell script work also the clipboard conatine newline separated URLs
+When I call the uploaded slid.ahk AutoHotKey script which in turn calls the uploaded "image_downloader.sh" shell script, will the shell script work also when the clipboard containing newline separated URLs
 
 #+begin_example
 #Requires AutoHotkey v2.0
@@ -18069,5 +18070,62 @@ RemoveTooltip() {
 
     SetTimer(RemoveTooltip, -3000)
 }
+#+end_example
+
+** Analyze the discogs image link
+
+https://www.discogs.com/settings/developers
+
+Analyze the discogs image link
+https://www.discogs.com/release/22139644-Bruce-Springsteen-The-E-Street-Band-Nassau-Coliseum-New-York-122880/image/SW1hZ2U6NzM1MjYwNjg=
+and generate a shell script for downloading all the referenced images
+
+** 2
+
+Adjust the script so that it accepts a RELEASE_ID and let it read the token from a file in the filesystem like "~/.discogs_token"
+
+** accept complete discogs URLs
+
+Adjust the uploaded script so that instead of just accepting plain RELEASE_IDs, it should also accept complete discogs URLs in the form
+
+https://www.discogs.com/release/<RELEASE_ID>-<lbum description>
+
+for example: https://www.discogs.com/release/22139644-Bruce-Springsteen-The-E-Street-Band-Nassau-Coliseum-New-York-122880
+
+and extract the RELEASE_ID from there
+
+** consoldate
+
+Adjust the "image_downloader.sh" to include the functionality of "image_downloader_discogs.sh"
+
+The RELEASE_ID in "image_downloader_discogs.sh" should map to ITEM_ID
+
+** one image error
+
+It seems when there is just one image to download the download doesn't happen:
+
+#+begin_example
+--- Starting Image Downloader ---
+Fetching HTML from: https://www.springsteenlyrics.com/bootlegs.php?item=8175&category=aud_official_live
+Context derived: https://www.springsteenlyrics.com/
+Found 1 unique image paths for item 8175 to download.
+Saving images to: /mnt/share/scans/tmp/springsteenlyrics_downloads/8175
+--- Download Complete! ---
+Press Enter to close window...
+#+end_example
+
+Compare this to a  multi image URL
+
+#+begin_example
+--- Starting Image Downloader ---
+Fetching metadata from Discogs API for Release: 22139644...
+Found 2 unique image paths for item 22139644 to download.
+Saving images to: /mnt/share/scans/tmp/discogs_downloads/22139644
+Downloading: NzYtNDMzMi5qcGVn.jpeg from https://i.discogs.com/puIYiUvaG-671ZV-KBmta176SpyprAy5CtGP6ySe2mg/rs:fit/g:sm/q:90/h:477/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTIyMTM5/NjQ0LTE2NDQ3NDg0/NzYtNDMzMi5qcGVn.jpeg
+Downloading: ODgtNzQyMy5qcGVn.jpeg from https://i.discogs.com/3fzbLz2OswbnhYk-8N7FBdKiJNmQwpn2wTHbQza9elY/rs:fit/g:sm/q:90/h:507/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTIyMTM5/NjQ0LTE2NDQ3NDg0/ODgtNzQyMy5qcGVn.jpeg
+--- Download Complete! ---
+Displaying downloaded files with lsix...
+
+Press Enter to close window...
 #+end_example
 
