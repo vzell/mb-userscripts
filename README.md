@@ -14,6 +14,9 @@
 - [MusicBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release](#mb_import_from_discogs)
 - [MusicBrainz Relation Editor - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 ---
+**Adapted from [Aerozol](https://github.com/Aerozol/metabrainz-userscripts)**
+- [MusicBrainz Release Editor - Quick Join Phrases](#mb_join_phrases)
+---
 **Adapted from [loujine](https://github.com/loujine/musicbrainz-scripts)**
 - [MusicBrainz Relation Editor - Replace Release Relations By Recording Relations](#mb_replace_release_relations_by_recording_relations)
 - [MusicBrainz Relation Editor - Clone Recording Relations Onto Other Recordings](#mb_clone_recording_relations_onto_other_relations)
@@ -122,6 +125,17 @@ Insert buttons on the Release Edit Relationships page which add preconfigured Ar
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchAddRelationshipsToRecordings.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js)
 [![Screenshot](https://github.com/Aerozol/metabrainz-userscripts/raw/main/screenshots/Screenshot-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/screenshots/AddRelationships.png)
+
+---
+
+**Adapted from [Aerozol](https://github.com/Aerozol/metabrainz-userscripts)**
+
+## <a name="mb_join_phrases"></a> Quick Join Phrases
+
+Click to add common join phrases in the release editor
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/QuickJoinPhrases.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/QuickJoinPhrases.user.js)
 
 ---
 
