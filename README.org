@@ -18499,3 +18499,15 @@ see, the following code of an edit-cover-art page of a single image
 please also add the missing types.
 
 
+** 5
+
+Yes this seems to work. Can you also place each image above it's corresponding "ID:".
+
+For example above "ID: 43679006067" in the code:
+
+#+begin_example
+<td style="padding: 15px; width: 120px; text-align: center; border-right: 1px solid #eee; background: #fafafa;">
+                        <img src="" style="max-width: 100px; max-height: 100px; border: 1px solid #ccc;">
+                        <small style="color: #666; display:block; margin-top:5px;">ID: 43679006067</small>
+</td>
+#+end_example
