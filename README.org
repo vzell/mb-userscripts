@@ -18515,3 +18515,20 @@ For example above "ID: 43679006067" in the code:
 ** 6
 
 Actually NO images are shown at all in the "Batch Edit Cover Art" dialog
+
+** 7
+
+We now get for example for the first image (it shows a broken image, not clickable on the web page), and heres the code:
+
+#+begin_example
+<td style="padding: 15px; width: 140px; text-align: center; border-right: 1px solid #eee; background: #fafafa; vertical-align: top;">
+                        <img src="" style="max-width: 120px; max-height: 120px; border: 1px solid #ccc; display: block; margin: 0 auto;" alt="Thumb 43679006067">
+                        <small style="color: #666; display:block; margin-top:5px;">ID: 43679006067</small>
+</td>
+#+end_example
+
+The real image looks like:
+
+#+begin_example
+<img src="//archive.org/download/mbid-6ccbd780-3eb1-48ff-8fe0-04d4669e8846/mbid-6ccbd780-3eb1-48ff-8fe0-04d4669e8846-43679006067_thumb500.jpg" title="Front" ropdebee_lazydimensions="Dimensions: 1623×1372">
+#+end_example

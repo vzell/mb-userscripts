@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MusicBrainz: Batch Edit Cover Art
 // @namespace    https://musicbrainz.org/
-// @version      1.5
+// @version      1.6
 // @description  Edit types and comments of all cover art images on one page.
 // @author       Gemini
 // @match        *://*.musicbrainz.org/release/*/cover-art
@@ -30,7 +30,7 @@
             batchBtn.id = 'batch-edit-trigger';
             batchBtn.href = '#';
             batchBtn.style.cursor = 'pointer';
-            batchBtn.style.marginLeft = '4px';
+            batchBtn.style.marginLeft = '10px';
             batchBtn.innerHTML = '<bdi>Batch Edit Cover Art</bdi>';
 
             downloadScansBtn.parentNode.insertBefore(batchBtn, downloadScansBtn.nextSibling);
@@ -61,9 +61,12 @@
         batchContainer.style.display = 'block';
 
         let html = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                 <h3 style="margin:0;">Batch Edit Cover Art</h3>
-                <button id="copy-first-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st image's types to all</button>
+                <div>
+                    <button id="copy-first-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st types to all</button>
+                    <button id="copy-first-comment" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; margin-left: 5px;">Copy 1st comment to all</button>
+                </div>
             </div>
             <table style="width:100%; border-collapse: collapse; background: white; border: 1px solid #ccc;">`;
 
@@ -71,14 +74,14 @@
             const data = await fetchImageData(img.editUrl);
             html += `
                 <tr style="border-bottom: 2px solid #ddd;" class="batch-row" data-id="${img.id}" data-edit-url="${img.editUrl}">
-                    <td style="padding: 15px; width: 120px; text-align: center; border-right: 1px solid #eee; background: #fafafa; vertical-align: top;">
-                        <img src="${img.thumb}" style="max-width: 100px; max-height: 100px; border: 1px solid #ccc; display: block; margin: 0 auto;">
+                    <td style="padding: 15px; width: 140px; text-align: center; border-right: 1px solid #eee; background: #fafafa; vertical-align: top;">
+                        <img src="${img.thumb}" style="max-width: 120px; max-height: 120px; border: 1px solid #ccc; display: block; margin: 0 auto;" alt="Thumb ${img.id}">
                         <small style="color: #666; display:block; margin-top:5px;">ID: ${img.id}</small>
                     </td>
                     <td style="padding: 15px; vertical-align: top;">
                         <div style="margin-bottom: 10px;">
                             <strong style="color: #555;">Types:</strong>
-                            <div class="type-checkboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 5px; margin-top: 8px;">
+                            <div class="type-checkboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 5px; margin-top: 8px;">
                                 ${TYPES.map(t => `
                                     <label style="font-size: 0.85em; cursor: pointer; display: flex; align-items: center; white-space: nowrap;">
                                         <input type="checkbox" value="${t}" ${data.types.includes(t) ? 'checked' : ''} style="margin-right: 4px;"> ${t}
@@ -103,7 +106,7 @@
 
         batchContainer.innerHTML = html;
 
-        // Helper: Copy types from first image logic
+        // Copy Types Logic
         document.getElementById('copy-first-types').onclick = () => {
             const firstRow = document.querySelector('.batch-row');
             if (!firstRow) return;
@@ -115,20 +118,42 @@
             });
         };
 
+        // Copy Comment Logic
+        document.getElementById('copy-first-comment').onclick = () => {
+            const firstRow = document.querySelector('.batch-row');
+            if (!firstRow) return;
+            const commentVal = firstRow.querySelector('.batch-comment').value;
+            document.querySelectorAll('.batch-comment').forEach(input => {
+                input.value = commentVal;
+            });
+        };
+
         document.getElementById('submit-batch-edit').onclick = submitAll;
     };
 
     const getImages = () => {
         const images = [];
         const editLinks = document.querySelectorAll('a[href*="/edit-cover-art/"]');
+
         editLinks.forEach(link => {
-            const container = link.closest('.cover-art-grid-item, tr, .thumbnail-wrapper, div');
-            const img = container ? container.querySelector('img') : null;
+            // Find the image by looking in the parent containers
+            const container = link.closest('.cover-art-grid-item, tr, .thumbnail-wrapper, .cover-art-image');
+            const imgElement = container ? container.querySelector('img') : null;
+
+            let thumbUrl = '';
+            if (imgElement) {
+                // Try standard src, then data-src (lazy load), then srcset
+                thumbUrl = imgElement.getAttribute('src') ||
+                           imgElement.getAttribute('data-src') ||
+                           imgElement.getAttribute('data-lazy-src') ||
+                           '';
+            }
+
             const id = link.href.split('/').pop();
-            // Fallback for lazy-loaded images or different attribute names
-            const thumbUrl = img ? (img.getAttribute('src') || img.getAttribute('data-src') || '') : '';
             images.push({ id: id, editUrl: link.href, thumb: thumbUrl });
         });
+
+        // Deduplicate
         return images.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
     };
 
