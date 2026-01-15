@@ -18511,3 +18511,7 @@ For example above "ID: 43679006067" in the code:
                         <small style="color: #666; display:block; margin-top:5px;">ID: 43679006067</small>
 </td>
 #+end_example
+
+** 6
+
+Actually NO images are shown at all in the "Batch Edit Cover Art" dialog

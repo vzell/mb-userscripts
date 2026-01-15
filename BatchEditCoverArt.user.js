@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MusicBrainz: Batch Edit Cover Art
 // @namespace    https://musicbrainz.org/
-// @version      1.4
+// @version      1.5
 // @description  Edit types and comments of all cover art images on one page.
 // @author       Gemini
 // @match        *://*.musicbrainz.org/release/*/cover-art
@@ -12,7 +12,6 @@
 (function() {
     'use strict';
 
-    // Updated with all types provided by the user
     const TYPES = [
         "Front", "Back", "Booklet", "Medium", "Obi", "Spine", "Track", "Tray",
         "Sticker", "Poster", "Liner", "Watermark", "Raw/Unedited",
@@ -58,17 +57,22 @@
             return;
         }
 
-        batchContainer.innerHTML = '<h3 style="color: #600;">Loading metadata for ' + images.length + ' images...</h3>';
+        batchContainer.innerHTML = '<h3 style="color: #600; padding: 10px;">Loading metadata for ' + images.length + ' images...</h3>';
         batchContainer.style.display = 'block';
 
-        let html = '<h3 style="margin-top:0;">Batch Edit Cover Art</h3><table style="width:100%; border-collapse: collapse; background: white; border: 1px solid #ccc;">';
+        let html = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin:0;">Batch Edit Cover Art</h3>
+                <button id="copy-first-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st image's types to all</button>
+            </div>
+            <table style="width:100%; border-collapse: collapse; background: white; border: 1px solid #ccc;">`;
 
         for (const img of images) {
             const data = await fetchImageData(img.editUrl);
             html += `
                 <tr style="border-bottom: 2px solid #ddd;" class="batch-row" data-id="${img.id}" data-edit-url="${img.editUrl}">
-                    <td style="padding: 15px; width: 120px; text-align: center; border-right: 1px solid #eee; background: #fafafa;">
-                        <img src="${img.thumb}" style="max-width: 100px; max-height: 100px; border: 1px solid #ccc;">
+                    <td style="padding: 15px; width: 120px; text-align: center; border-right: 1px solid #eee; background: #fafafa; vertical-align: top;">
+                        <img src="${img.thumb}" style="max-width: 100px; max-height: 100px; border: 1px solid #ccc; display: block; margin: 0 auto;">
                         <small style="color: #666; display:block; margin-top:5px;">ID: ${img.id}</small>
                     </td>
                     <td style="padding: 15px; vertical-align: top;">
@@ -98,6 +102,19 @@
             </div>`;
 
         batchContainer.innerHTML = html;
+
+        // Helper: Copy types from first image logic
+        document.getElementById('copy-first-types').onclick = () => {
+            const firstRow = document.querySelector('.batch-row');
+            if (!firstRow) return;
+            const selected = Array.from(firstRow.querySelectorAll('.type-checkboxes input:checked')).map(i => i.value);
+            document.querySelectorAll('.batch-row').forEach(row => {
+                row.querySelectorAll('.type-checkboxes input').forEach(checkbox => {
+                    checkbox.checked = selected.includes(checkbox.value);
+                });
+            });
+        };
+
         document.getElementById('submit-batch-edit').onclick = submitAll;
     };
 
@@ -108,7 +125,9 @@
             const container = link.closest('.cover-art-grid-item, tr, .thumbnail-wrapper, div');
             const img = container ? container.querySelector('img') : null;
             const id = link.href.split('/').pop();
-            images.push({ id: id, editUrl: link.href, thumb: img ? img.src : '' });
+            // Fallback for lazy-loaded images or different attribute names
+            const thumbUrl = img ? (img.getAttribute('src') || img.getAttribute('data-src') || '') : '';
+            images.push({ id: id, editUrl: link.href, thumb: thumbUrl });
         });
         return images.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
     };
@@ -122,14 +141,8 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(res.responseText, "text/html");
                     const comment = doc.querySelector('input[name="edit-cover-art.comment"]')?.value || "";
-
-                    // Improved type extraction: find checked inputs and get their label text
                     const checkedCheckboxes = doc.querySelectorAll('input[name="edit-cover-art.type_id"]:checked');
-                    const types = Array.from(checkedCheckboxes).map(cb => {
-                        // Get text from the parent <label> and clean it up
-                        return cb.parentElement.textContent.trim();
-                    });
-
+                    const types = Array.from(checkedCheckboxes).map(cb => cb.parentElement.textContent.trim());
                     resolve({ comment, types });
                 }
             });
