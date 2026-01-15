@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MusicBrainz: Batch Edit Cover Art
 // @namespace    https://musicbrainz.org/
-// @version      1.7
+// @version      1.8
 // @description  Edit types and comments of all cover art images on one page.
 // @author       Gemini
 // @match        *://*.musicbrainz.org/release/*/cover-art
@@ -23,22 +23,27 @@
     batchContainer.style = 'margin: 20px 0; padding: 20px; border: 2px solid #600; display: none; background: #f9f9f9; clear: both; font-family: sans-serif;';
 
     const injectButton = () => {
-        const downloadScansBtn = document.querySelector('.ame-download-scans');
+        // Find the "Reorder cover art" button
+        const reorderBtn = document.querySelector('a[href*="/reorder-cover-art"]');
+        const buttonRow = document.querySelector('.buttons.ui-helper-clearfix');
 
-        if (downloadScansBtn && !document.getElementById('batch-edit-trigger')) {
+        if (reorderBtn && !document.getElementById('batch-edit-trigger')) {
             const batchBtn = document.createElement('a');
             batchBtn.id = 'batch-edit-trigger';
             batchBtn.href = '#';
             batchBtn.style.cursor = 'pointer';
-            batchBtn.style.marginLeft = '10px';
-            batchBtn.innerHTML = '<bdi>Batch Edit Cover Art</bdi>';
+            batchBtn.style.marginLeft = '4px'; // Consistent spacing
+            batchBtn.innerHTML = '<bdi>Batch edit cover art</bdi>';
 
-            downloadScansBtn.parentNode.insertBefore(batchBtn, downloadScansBtn.nextSibling);
+            // Insert after the Reorder button
+            reorderBtn.parentNode.insertBefore(batchBtn, reorderBtn.nextSibling);
             batchBtn.onclick = toggleBatchMode;
 
-            const content = document.querySelector('#content');
-            content.insertBefore(batchContainer, content.querySelector('.cover-art-grid') || content.querySelector('table.details') || content.firstChild);
-        } else if (!downloadScansBtn) {
+            // Place the container specifically below the button row
+            if (buttonRow) {
+                buttonRow.parentNode.insertBefore(batchContainer, buttonRow.nextSibling);
+            }
+        } else if (!reorderBtn) {
             setTimeout(injectButton, 500);
         }
     };
@@ -106,7 +111,6 @@
 
         batchContainer.innerHTML = html;
 
-        // Buttons logic
         document.getElementById('copy-first-types').onclick = () => {
             const firstRow = document.querySelector('.batch-row');
             if (!firstRow) return;
@@ -136,13 +140,10 @@
 
         editLinks.forEach(link => {
             const id = link.href.split('/').pop();
-
-            // NEW SELECTOR: Look for any image on the page whose src or data-src contains the ID
             const imgElement = document.querySelector(`img[src*="${id}"], img[data-src*="${id}"]`);
 
             let thumbUrl = '';
             if (imgElement) {
-                // Return the property 'src' which gives the full URL even if the HTML is protocol-relative
                 thumbUrl = imgElement.src || imgElement.getAttribute('data-src') || '';
             }
 
