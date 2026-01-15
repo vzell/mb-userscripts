@@ -18565,3 +18565,10 @@ Also place the whole "id="batch-edit-container" below the row with the current a
   </a>
 </div>
 #+end_example
+
+** 9
+
+It works perfect now.
+
+But please adjust the script for the case if the user hasn't made any changes but still presses the "Submit" button. In
+that case a popup should explain the fact, with a chance to cancel the popup window.

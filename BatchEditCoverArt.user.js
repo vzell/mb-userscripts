@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1+2026-01-15
+// @version      1.0+2026-01-15
 // @description  Batch edit types and comments of cover art images
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -23,7 +23,6 @@
         "Matrix/Runout", "Top", "Bottom", "Panel", "Other"
     ];
 
-    // Store original values to detect changes
     let originalData = {};
 
     let batchContainer = document.createElement('div');
@@ -73,16 +72,17 @@
         let html = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                 <h3 style="margin:0;">Batch Edit Cover Art</h3>
-                <div>
-                    <button id="copy-first-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st types to all</button>
-                    <button id="copy-first-comment" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; margin-left: 5px;">Copy 1st comment to all</button>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button id="copy-first-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st types</button>
+                    <button id="copy-first-comment" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st comment</button>
+                    <button id="clear-all-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">Clear all types</button>
+                    <button id="reset-batch" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">Reset to original</button>
                 </div>
             </div>
             <table style="width:100%; border-collapse: collapse; background: white; border: 1px solid #ccc;">`;
 
         for (const img of images) {
             const data = await fetchImageData(img.editUrl);
-            // Save original state
             originalData[img.id] = data;
 
             html += `
@@ -119,6 +119,7 @@
 
         batchContainer.innerHTML = html;
 
+        // --- Helper Button Listeners ---
         document.getElementById('copy-first-types').onclick = () => {
             const firstRow = document.querySelector('.batch-row');
             if (!firstRow) return;
@@ -137,6 +138,25 @@
             document.querySelectorAll('.batch-comment').forEach(input => {
                 input.value = commentVal;
             });
+        };
+
+        document.getElementById('clear-all-types').onclick = () => {
+            if (confirm("This will uncheck all types for all images in this list. Proceed?")) {
+                document.querySelectorAll('.type-checkboxes input').forEach(cb => cb.checked = false);
+            }
+        };
+
+        document.getElementById('reset-batch').onclick = () => {
+            if (confirm("Discard all changes and revert to original metadata?")) {
+                document.querySelectorAll('.batch-row').forEach(row => {
+                    const id = row.getAttribute('data-id');
+                    const orig = originalData[id];
+                    row.querySelector('.batch-comment').value = orig.comment;
+                    row.querySelectorAll('.type-checkboxes input').forEach(cb => {
+                        cb.checked = orig.types.includes(cb.value);
+                    });
+                });
+            }
         };
 
         document.getElementById('submit-batch-edit').onclick = submitAll;
@@ -179,7 +199,6 @@
         const editNote = document.getElementById('batch-edit-note').value;
         const btn = document.getElementById('submit-batch-edit');
 
-        // 1. Check for changes
         let hasChanges = false;
         rows.forEach(row => {
             const id = row.getAttribute('data-id');
@@ -212,7 +231,6 @@
         btn.innerText = 'Submitting...';
 
         for (const row of rows) {
-            // Only submit if the row was actually changed
             if (row.getAttribute('data-changed') === 'false') continue;
 
             const editUrl = row.getAttribute('data-edit-url');
