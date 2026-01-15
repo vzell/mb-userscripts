@@ -13,6 +13,7 @@
 - [MusicBrainz - Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
 - [MusicBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release](#mb_import_from_discogs)
 - [MusicBrainz Relation Editor - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
+- [MusicBrainz - Batch Edit Cover Art](#mb_batch_edit_coverart)
 ---
 **Adapted from [Aerozol](https://github.com/Aerozol/metabrainz-userscripts)**
 - [MusicBrainz Release Editor - Quick Join Phrases](#mb_join_phrases)
@@ -125,6 +126,14 @@ Insert buttons on the Release Edit Relationships page which add preconfigured Ar
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchAddRelationshipsToRecordings.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchAddRelationshipsToRecordings.user.js)
 [![Screenshot](https://github.com/Aerozol/metabrainz-userscripts/raw/main/screenshots/Screenshot-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/screenshots/AddRelationships.png)
+
+## <a name="mb_batch_edit_coverart"></a> Batch Edit Cover Art
+
+Batch edit types and comments of cover art images
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/gBatchEditCoverArt.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchEditCoverArt.user.js)
+[![Screenshot](https://github.com/Aerozol/metabrainz-userscripts/raw/main/screenshots/Screenshot-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/screenshots/BatchEditCoverArt.png)
 
 ---
 
