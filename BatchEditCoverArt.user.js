@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MusicBrainz: Batch Edit Cover Art
 // @namespace    https://musicbrainz.org/
-// @version      1.6
+// @version      1.7
 // @description  Edit types and comments of all cover art images on one page.
 // @author       Gemini
 // @match        *://*.musicbrainz.org/release/*/cover-art
@@ -106,7 +106,7 @@
 
         batchContainer.innerHTML = html;
 
-        // Copy Types Logic
+        // Buttons logic
         document.getElementById('copy-first-types').onclick = () => {
             const firstRow = document.querySelector('.batch-row');
             if (!firstRow) return;
@@ -118,7 +118,6 @@
             });
         };
 
-        // Copy Comment Logic
         document.getElementById('copy-first-comment').onclick = () => {
             const firstRow = document.querySelector('.batch-row');
             if (!firstRow) return;
@@ -136,24 +135,20 @@
         const editLinks = document.querySelectorAll('a[href*="/edit-cover-art/"]');
 
         editLinks.forEach(link => {
-            // Find the image by looking in the parent containers
-            const container = link.closest('.cover-art-grid-item, tr, .thumbnail-wrapper, .cover-art-image');
-            const imgElement = container ? container.querySelector('img') : null;
+            const id = link.href.split('/').pop();
+
+            // NEW SELECTOR: Look for any image on the page whose src or data-src contains the ID
+            const imgElement = document.querySelector(`img[src*="${id}"], img[data-src*="${id}"]`);
 
             let thumbUrl = '';
             if (imgElement) {
-                // Try standard src, then data-src (lazy load), then srcset
-                thumbUrl = imgElement.getAttribute('src') ||
-                           imgElement.getAttribute('data-src') ||
-                           imgElement.getAttribute('data-lazy-src') ||
-                           '';
+                // Return the property 'src' which gives the full URL even if the HTML is protocol-relative
+                thumbUrl = imgElement.src || imgElement.getAttribute('data-src') || '';
             }
 
-            const id = link.href.split('/').pop();
             images.push({ id: id, editUrl: link.href, thumb: thumbUrl });
         });
 
-        // Deduplicate
         return images.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
     };
 
