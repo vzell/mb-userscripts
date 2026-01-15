@@ -18129,3 +18129,373 @@ Displaying downloaded files with lsix...
 Press Enter to close window...
 #+end_example
 
+* cover-art batch editing
+** gemini
+
+Given the following URL https://musicbrainz.org/release/ee42732a-383b-4175-a007-e4773f618a00/cover-art
+
+Emulate pressing the "Edit" button for each cover image and create one aggegated web page to edit all images
+simultaneously (types and comment for each image), instead of showing the edit-cover-art page for each image individually like
+for example the image
+
+https://musicbrainz.org/release/ee42732a-383b-4175-a007-e4773f618a00/edit-cover-art/30876987005
+
+The "Edit cover art" parts to edit "Types:" and "Comment:" for each image should be placed below each other for each
+image. There should be a submit button at the end of the page named "Enter edit" (together with an "Edit note: text
+field) which iterates over all images and submits changes to each changed image.
+
+The iteration and submit logic could be grabbed from a similar user script at https://update.greasyfork.org/scripts/541232/MusicBrainz%3A%20Batch%20Remove%20Cover%20Art.user.js which submits removals of tagged images.
+
+** answer
+
+#+begin_example
+// ==UserScript==
+// @name         MusicBrainz: Batch Edit Cover Art
+// @namespace    https://musicbrainz.org/
+// @version      1.0
+// @description  Edit types and comments of all cover art images on one page.
+// @author       Gemini
+// @match        *://*.musicbrainz.org/release/*/cover-art
+// @grant        GM_xmlhttpRequest
+// @connect      musicbrainz.org
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const RELEASE_MBID = window.location.pathname.split('/')[2];
+    const TYPES = ["Front", "Back", "Booklet", "Medium", "Tray", "Liner", "Sticker", "Other", "Watermark", "Icon", "Track"];
+
+    // UI Elements
+    let batchContainer = document.createElement('div');
+    batchContainer.id = 'batch-edit-container';
+    batchContainer.style = 'margin-top: 20px; padding: 20px; border: 2px solid #600; display: none; background: #f2f2f2;';
+
+    const init = () => {
+        const coverArtHeader = document.querySelector('.tabs');
+        if (!coverArtHeader) return;
+
+        let batchBtn = document.createElement('button');
+        batchBtn.innerText = 'Batch Edit Types/Comments';
+        batchBtn.className = 'styled-button';
+        batchBtn.style.marginLeft = '10px';
+        batchBtn.onclick = toggleBatchMode;
+
+        document.querySelector('.subnav').appendChild(batchBtn);
+        document.querySelector('#content').insertBefore(batchContainer, document.querySelector('.cover-art-grid'));
+    };
+
+    const toggleBatchMode = async (e) => {
+        e.preventDefault();
+        if (batchContainer.style.display === 'block') {
+            batchContainer.style.display = 'none';
+            return;
+        }
+
+        batchContainer.innerHTML = '<h3>Loading image data...</h3>';
+        batchContainer.style.display = 'block';
+
+        const images = getImages();
+        if (images.length === 0) {
+            batchContainer.innerHTML = 'No images found.';
+            return;
+        }
+
+        let html = '<h3>Batch Edit Cover Art</h3><table style="width:100%; border-collapse: collapse;">';
+        
+        for (const img of images) {
+            const data = await fetchImageData(img.editUrl);
+            html += `
+                <tr style="border-bottom: 1px solid #ccc;" class="batch-row" data-id="${img.id}" data-edit-url="${img.editUrl}">
+                    <td style="padding: 10px; width: 150px;">
+                        <img src="${img.thumb}" style="max-width: 120px;">
+                    </td>
+                    <td style="padding: 10px;">
+                        <strong>Types:</strong><br>
+                        <div class="type-checkboxes">
+                            ${TYPES.map(t => `
+                                <label style="margin-right: 8px; display: inline-block;">
+                                    <input type="checkbox" value="${t}" ${data.types.includes(t) ? 'checked' : ''}> ${t}
+                                </label>
+                            `).join('')}
+                        </div>
+                        <br>
+                        <strong>Comment:</strong><br>
+                        <input type="text" class="batch-comment" style="width: 100%;" value="${data.comment}">
+                    </td>
+                </tr>`;
+        }
+
+        html += `</table>
+            <div style="margin-top: 20px;">
+                <strong>Edit Note:</strong><br>
+                <textarea id="batch-edit-note" style="width: 100%; height: 60px;"></textarea><br><br>
+                <button id="submit-batch-edit" class="styled-button">Enter edit</button>
+            </div>`;
+
+        batchContainer.innerHTML = html;
+        document.getElementById('submit-batch-edit').onclick = submitAll;
+    };
+
+    const getImages = () => {
+        const images = [];
+        document.querySelectorAll('.cover-art-image').forEach(div => {
+            const editLink = div.parentElement.querySelector('a[href*="/edit-cover-art/"]');
+            if (editLink) {
+                images.push({
+                    id: editLink.getAttribute('href').split('/').pop(),
+                    editUrl: editLink.href,
+                    thumb: div.querySelector('img').src
+                });
+            }
+        });
+        return images;
+    };
+
+    const fetchImageData = (url) => {
+        return new Promise((resolve) => {
+            GM_xmlhttpRequest({
+                method: "GET",
+                url: url,
+                onload: (res) => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(res.responseText, "text/html");
+                    const comment = doc.querySelector('input[name="edit-cover-art.comment"]')?.value || "";
+                    const types = Array.from(doc.querySelectorAll('input[name="edit-cover-art.type_id"]:checked'))
+                        .map(cb => cb.parentElement.textContent.trim());
+                    resolve({ comment, types });
+                }
+            });
+        });
+    };
+
+    const submitAll = async () => {
+        const rows = document.querySelectorAll('.batch-row');
+        const editNote = document.getElementById('batch-edit-note').value;
+        const btn = document.getElementById('submit-batch-edit');
+        
+        btn.disabled = true;
+        btn.innerText = 'Submitting...';
+
+        for (const row of rows) {
+            const id = row.getAttribute('data-id');
+            const editUrl = row.getAttribute('data-edit-url');
+            const comment = row.querySelector('.batch-comment').value;
+            const selectedTypes = Array.from(row.querySelectorAll('.type-checkboxes input:checked')).map(cb => cb.value);
+
+            // Fetch the page first to get the CSRF/Edit tokens and type IDs
+            const formInfo = await getFormPayload(editUrl);
+            
+            const formData = new FormData();
+            formData.append('edit-cover-art.comment', comment);
+            formData.append('edit-cover-art.edit_note', editNote);
+            
+            // Map type names back to the internal IDs found on the page
+            formInfo.typeMapping.forEach(mapping => {
+                if (selectedTypes.includes(mapping.name)) {
+                    formData.append('edit-cover-art.type_id', mapping.id);
+                }
+            });
+
+            // Add hidden validation fields required by MusicBrainz
+            formInfo.hiddenFields.forEach(field => {
+                formData.append(field.name, field.value);
+            });
+
+            await postEdit(editUrl, formData);
+            row.style.backgroundColor = '#dff0d8'; // Success color
+        }
+
+        btn.innerText = 'Finished! Reloading...';
+        setTimeout(() => window.location.reload(), 1000);
+    };
+
+    const getFormPayload = (url) => {
+        return new Promise((resolve) => {
+            GM_xmlhttpRequest({
+                method: "GET",
+                url: url,
+                onload: (res) => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(res.responseText, "text/html");
+                    const hiddenFields = Array.from(doc.querySelectorAll('form input[type="hidden"]'))
+                        .map(input => ({ name: input.name, value: input.value }));
+                    
+                    const typeMapping = Array.from(doc.querySelectorAll('input[name="edit-cover-art.type_id"]'))
+                        .map(input => ({
+                            name: input.parentElement.textContent.trim(),
+                            id: input.value
+                        }));
+                    
+                    resolve({ hiddenFields, typeMapping });
+                }
+            });
+        });
+    };
+
+    const postEdit = (url, formData) => {
+        return new Promise((resolve) => {
+            GM_xmlhttpRequest({
+                method: "POST",
+                url: url,
+                data: formData,
+                onload: () => resolve()
+            });
+        });
+    };
+
+    init();
+})();
+#+end_example
+
+** 1
+
+There is NO "Batch Edit Types/Comments" at all on the page
+
+** 2
+
+Now I get "No editable images found on this page"
+
+** 3
+
+Again no more button
+
+Place the button after the "Download scans" button to the right, see the following code:
+
+#+begin_example
+<div class="buttons ui-helper-clearfix">
+  <a href="/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846/add-cover-art">
+    <bdi>Add cover art
+    </bdi>
+  </a>
+  <a href="/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846/reorder-cover-art">
+    <bdi>Reorder cover art
+    </bdi>
+  </a>
+  <a class="ame-download-scans">
+    <bdi>Download scans
+    </bdi>
+  </a>
+  <a title="https://www.discogs.com/release/6889744" href="https://musicbrainz.org/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846/add-cover-art?x_seed.image.0.url=https%3A%2F%2Fwww.discogs.com%2Frelease%2F6889744">
+    <img src="https://catalog-assets.discogs.com/e95f0cd9.png" alt="Discogs">
+    <span>Import from Discogs
+    </span>
+  </a>
+</div>
+#+end_example
+
+** 4
+
+The button now works, it now loads the metadata for each image but not complete. When there is more then one type ticked
+for an image it only loads the first one.
+
+There are alos more types than what you have included in the variable TYPES
+
+#+begin_example
+const TYPES = ["Front", "Back", "Booklet", "Medium", "Tray", "Liner", "Sticker", "Other", "Watermark", "Icon", "Track"];
+#+end_example
+
+see, the following code of an edit-cover-art page of a single image
+
+#+begin_example
+<fieldset class="cover-art-types row">
+  <legend>Types:
+  </legend>
+  <ul class="cover-art-type-checkboxes">
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" checked="" value="1">Front
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="2">Back
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="3">Booklet
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="4">Medium
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="5">Obi
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="6">Spine
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="7">Track
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="9">Tray
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="10">Sticker
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="11">Poster
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="12">Liner
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="13">Watermark
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="14">Raw/Unedited
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="15">Matrix/Runout
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="48">Top
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="49">Bottom
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="81">Panel
+      </label>
+    </li>
+    <li>
+      <label>
+	<input name="edit-cover-art.type_id" type="checkbox" value="8">Other
+      </label>
+    </li>
+  </ul>
+</fieldset>
+#+end_example
+
+please also add the missing types.
+
+
