@@ -1,12 +1,17 @@
 // ==UserScript==
-// @name         MusicBrainz: Batch Edit Cover Art
-// @namespace    https://musicbrainz.org/
-// @version      1.8
-// @description  Edit types and comments of all cover art images on one page.
-// @author       Gemini
+// @name         VZ: MusicBrainz - Batch Edit Cover Art
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      1.0+2026-01-15
+// @description  Batch edit types and comments of cover art images
+// @author       Gemini with vzell
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchEditCoverArt.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchEditCoverArt.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        *://*.musicbrainz.org/release/*/cover-art
 // @grant        GM_xmlhttpRequest
-// @connect      musicbrainz.org
+// @run-at       document-idle
 // ==/UserScript==
 
 (function() {
