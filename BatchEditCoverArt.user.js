@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0+2026-01-15
+// @version      1.1+2026-01-15
 // @description  Batch edit types and comments of cover art images
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -23,12 +23,14 @@
         "Matrix/Runout", "Top", "Bottom", "Panel", "Other"
     ];
 
+    // Store original values to detect changes
+    let originalData = {};
+
     let batchContainer = document.createElement('div');
     batchContainer.id = 'batch-edit-container';
     batchContainer.style = 'margin: 20px 0; padding: 20px; border: 2px solid #600; display: none; background: #f9f9f9; clear: both; font-family: sans-serif;';
 
     const injectButton = () => {
-        // Find the "Reorder cover art" button
         const reorderBtn = document.querySelector('a[href*="/reorder-cover-art"]');
         const buttonRow = document.querySelector('.buttons.ui-helper-clearfix');
 
@@ -37,14 +39,12 @@
             batchBtn.id = 'batch-edit-trigger';
             batchBtn.href = '#';
             batchBtn.style.cursor = 'pointer';
-            batchBtn.style.marginLeft = '4px'; // Consistent spacing
+            batchBtn.style.marginLeft = '4px';
             batchBtn.innerHTML = '<bdi>Batch edit cover art</bdi>';
 
-            // Insert after the Reorder button
             reorderBtn.parentNode.insertBefore(batchBtn, reorderBtn.nextSibling);
             batchBtn.onclick = toggleBatchMode;
 
-            // Place the container specifically below the button row
             if (buttonRow) {
                 buttonRow.parentNode.insertBefore(batchContainer, buttonRow.nextSibling);
             }
@@ -82,6 +82,9 @@
 
         for (const img of images) {
             const data = await fetchImageData(img.editUrl);
+            // Save original state
+            originalData[img.id] = data;
+
             html += `
                 <tr style="border-bottom: 2px solid #ddd;" class="batch-row" data-id="${img.id}" data-edit-url="${img.editUrl}">
                     <td style="padding: 15px; width: 140px; text-align: center; border-right: 1px solid #eee; background: #fafafa; vertical-align: top;">
@@ -142,19 +145,15 @@
     const getImages = () => {
         const images = [];
         const editLinks = document.querySelectorAll('a[href*="/edit-cover-art/"]');
-
         editLinks.forEach(link => {
             const id = link.href.split('/').pop();
             const imgElement = document.querySelector(`img[src*="${id}"], img[data-src*="${id}"]`);
-
             let thumbUrl = '';
             if (imgElement) {
                 thumbUrl = imgElement.src || imgElement.getAttribute('data-src') || '';
             }
-
             images.push({ id: id, editUrl: link.href, thumb: thumbUrl });
         });
-
         return images.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
     };
 
@@ -168,7 +167,7 @@
                     const doc = parser.parseFromString(res.responseText, "text/html");
                     const comment = doc.querySelector('input[name="edit-cover-art.comment"]')?.value || "";
                     const checkedCheckboxes = doc.querySelectorAll('input[name="edit-cover-art.type_id"]:checked');
-                    const types = Array.from(checkedCheckboxes).map(cb => cb.parentElement.textContent.trim());
+                    const types = Array.from(checkedCheckboxes).map(cb => cb.parentElement.textContent.trim()).sort();
                     resolve({ comment, types });
                 }
             });
@@ -180,6 +179,30 @@
         const editNote = document.getElementById('batch-edit-note').value;
         const btn = document.getElementById('submit-batch-edit');
 
+        // 1. Check for changes
+        let hasChanges = false;
+        rows.forEach(row => {
+            const id = row.getAttribute('data-id');
+            const currentComment = row.querySelector('.batch-comment').value;
+            const currentTypes = Array.from(row.querySelectorAll('.type-checkboxes input:checked')).map(cb => cb.value).sort();
+
+            const orig = originalData[id];
+            const typesChanged = JSON.stringify(currentTypes) !== JSON.stringify(orig.types);
+            const commentChanged = currentComment !== orig.comment;
+
+            if (typesChanged || commentChanged) {
+                hasChanges = true;
+                row.setAttribute('data-changed', 'true');
+            } else {
+                row.setAttribute('data-changed', 'false');
+            }
+        });
+
+        if (!hasChanges) {
+            const proceed = confirm("No changes detected for any image. Do you want to submit anyway?");
+            if (!proceed) return;
+        }
+
         if (!editNote.trim()) {
             alert('Please provide an edit note.');
             return;
@@ -189,6 +212,9 @@
         btn.innerText = 'Submitting...';
 
         for (const row of rows) {
+            // Only submit if the row was actually changed
+            if (row.getAttribute('data-changed') === 'false') continue;
+
             const editUrl = row.getAttribute('data-edit-url');
             const comment = row.querySelector('.batch-comment').value;
             const selectedTypes = Array.from(row.querySelectorAll('.type-checkboxes input:checked')).map(cb => cb.value);
