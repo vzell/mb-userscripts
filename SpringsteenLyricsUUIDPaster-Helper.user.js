@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         VZ: SpringstenLyrics - MusicBrainz UUID Paster Helper
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.4+2026-01-10
-// @description  Adds auto-login and an Add/Edit MBID button to the SpringstenLyrics website and shortcuts to the corresponding edit page
+// @version      1.5+2026-01-16
+// @description  Adds auto-login and an Add/Edit MBID button to the SpringstenLyrics website and shortcuts to the corresponding edit page with auto-submit
 // @author       vzell with help of Gemini
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -49,6 +49,14 @@
         btn.onmouseout = () => { btn.style.backgroundColor = '#0056b3'; };
         btn.onmousedown = () => { btn.style.backgroundColor = '#003366'; };
         btn.onmouseup = () => { btn.style.backgroundColor = '#004494'; };
+    }
+
+    // --- HELPER: Auto Submit ---
+    function autoSubmit() {
+        const submitButton = document.querySelector('footer button[type="submit"]');
+        if (submitButton) {
+            submitButton.click();
+        }
     }
 
     // --- HELPER: Process text ---
@@ -157,7 +165,11 @@
         pasteBtn.onclick = async () => {
             try {
                 const text = await navigator.clipboard.readText();
-                processMbidText(text, inputField, setValidationFeedback);
+                const success = processMbidText(text, inputField, setValidationFeedback);
+                // If the paste was successful and format is valid, auto-submit
+                if (success) {
+                    setTimeout(autoSubmit, 50);
+                }
             } catch (err) {
                 alert("Permission to read clipboard was denied. Please paste manually (Ctrl+V).");
             }

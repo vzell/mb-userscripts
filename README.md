@@ -225,7 +225,7 @@ Validates MusicBrainz UUIDs when pasting them on the SpringstenLyrics website, s
 
 ## <a name="sl_uuid_paster_helper"></a> SpringstenLyrics - MusicBrainz UUID Paster Helper
 
-Adds an edit button and shortcuts to SpringstenLyrics website edit page.
+Adds auto-login and an Add/Edit MBID button to the SpringstenLyrics website and shortcuts to the corresponding edit page with auto-submit.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SpringsteenLyricsUUIDPaster-Helper.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SpringsteenLyricsUUIDPaster-Helper.user.js)
