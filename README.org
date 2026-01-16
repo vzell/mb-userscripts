@@ -18036,7 +18036,6 @@ see, the following code of an edit-cover-art page of a single image
 
 please also add the missing types.
 
-
 ** 5
 
 Yes this seems to work. Can you also place each image above it's corresponding "ID:".
@@ -18110,3 +18109,17 @@ It works perfect now.
 
 But please adjust the script for the case if the user hasn't made any changes but still presses the "Submit" button. In
 that case a popup should explain the fact, with a chance to cancel the popup window.
+
+** implement history
+
+Please implement for the uploaded user script in the "Comment" text field autocomplete history for already typed in text comments
+
+#+begin_example
+                        <div style="margin-top: 10px;">
+                            <strong style="color: #555;">Comment:</strong>
+                            <input type="text" class="batch-comment" style="width: 100%; padding: 6px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px;" value="${data.comment}">
+#+end_example
+
+Initially when clicking in one of the "Comment" text fields for an image, a popup should show up with the last 20
+entries type in (the rest scrollable, up to a predefined maixmum). When starting typing autocomplete should kick in
+showing only entries which have the typed text in the comment.

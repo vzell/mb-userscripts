@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0+2026-01-15
-// @description  Batch edit types and comments of cover art images
+// @version      1.2+2026-01-16
+// @description  Batch edit types and comments of cover art images with comment history autocomplete
 // @author       Gemini with vzell
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -23,8 +23,83 @@
         "Matrix/Runout", "Top", "Bottom", "Panel", "Other"
     ];
 
+    const HISTORY_KEY = 'mb_batch_comment_history';
+    const MAX_HISTORY = 50;
+    const DISPLAY_LIMIT = 20;
+
     let originalData = {};
 
+    // --- History Management ---
+    const HistoryManager = {
+        get: () => JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"),
+        save: (comment) => {
+            if (!comment || !comment.trim()) return;
+            let history = HistoryManager.get();
+            history = [comment, ...history.filter(item => item !== comment)];
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
+        }
+    };
+
+    // --- Autocomplete UI ---
+    const suggestionList = document.createElement('div');
+    suggestionList.id = 'batch-comment-suggestions';
+    suggestionList.style = `
+        position: absolute;
+        background: white;
+        border: 1px solid #999;
+        border-radius: 3px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 100001;
+        display: none;
+        max-height: 250px;
+        overflow-y: auto;
+        font-family: sans-serif;
+        font-size: 13px;
+        color: #333;
+    `;
+    document.body.appendChild(suggestionList);
+
+    const hideSuggestions = () => {
+        setTimeout(() => { suggestionList.style.display = 'none'; }, 200);
+    };
+
+    const showSuggestions = (input) => {
+        const history = HistoryManager.get();
+        const val = input.value.toLowerCase().trim();
+        const filtered = val
+            ? history.filter(h => h.toLowerCase().includes(val))
+            : history;
+
+        if (filtered.length === 0) {
+            suggestionList.style.display = 'none';
+            return;
+        }
+
+        const rect = input.getBoundingClientRect();
+        suggestionList.innerHTML = '';
+        suggestionList.style.width = `${rect.width}px`;
+        suggestionList.style.top = `${rect.bottom + window.scrollY}px`;
+        suggestionList.style.left = `${rect.left + window.scrollX}px`;
+        suggestionList.style.display = 'block';
+
+        filtered.forEach((text, index) => {
+            const item = document.createElement('div');
+            item.textContent = text;
+            item.style = 'padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+            if (index >= DISPLAY_LIMIT) item.style.display = 'none';
+
+            item.onclick = () => {
+                input.value = text;
+                suggestionList.style.display = 'none';
+                input.dispatchEvent(new Event('change'));
+            };
+            item.onmouseover = () => { item.style.background = '#0066cc'; item.style.color = 'white'; };
+            item.onmouseout = () => { item.style.background = 'white'; item.style.color = '#333'; };
+            suggestionList.appendChild(item);
+        });
+    };
+
+    // --- Core Script Logic ---
     let batchContainer = document.createElement('div');
     batchContainer.id = 'batch-edit-container';
     batchContainer.style = 'margin: 20px 0; padding: 20px; border: 2px solid #600; display: none; background: #f9f9f9; clear: both; font-family: sans-serif;';
@@ -104,7 +179,7 @@
                         </div>
                         <div style="margin-top: 10px;">
                             <strong style="color: #555;">Comment:</strong>
-                            <input type="text" class="batch-comment" style="width: 100%; padding: 6px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px;" value="${data.comment}">
+                            <input type="text" class="batch-comment" autocomplete="off" style="width: 100%; padding: 6px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px;" value="${data.comment}">
                         </div>
                     </td>
                 </tr>`;
@@ -118,6 +193,14 @@
             </div>`;
 
         batchContainer.innerHTML = html;
+
+        // Re-attach autocomplete listeners after HTML injection
+        const commentInputs = batchContainer.querySelectorAll('.batch-comment');
+        commentInputs.forEach(input => {
+            input.addEventListener('focus', () => showSuggestions(input));
+            input.addEventListener('input', () => showSuggestions(input));
+            input.addEventListener('blur', hideSuggestions);
+        });
 
         // --- Helper Button Listeners ---
         document.getElementById('copy-first-types').onclick = () => {
@@ -212,6 +295,7 @@
             if (typesChanged || commentChanged) {
                 hasChanges = true;
                 row.setAttribute('data-changed', 'true');
+                HistoryManager.save(currentComment);
             } else {
                 row.setAttribute('data-changed', 'false');
             }
