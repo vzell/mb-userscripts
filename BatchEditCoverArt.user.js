@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.9+2026-01-18
+// @version      1.11+2026-01-18
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -22,6 +22,12 @@
         "Sticker", "Poster", "Liner", "Watermark", "Raw/Unedited",
         "Matrix/Runout", "Top", "Bottom", "Panel", "Other"
     ];
+
+    const DIACRITIC_MAP = {
+        '-': ['‐', '‒', '–', '—'],
+        '"': ['“', '”'],
+        "'": ['‘', '’']
+    };
 
     const HISTORY_KEY = 'mb_batch_comment_history';
     const IMMUTABLE_KEY = 'mb_batch_comment_immutable';
@@ -112,10 +118,26 @@
         // Since both are stored sorted, combined order is naturally sorted per group
         const combined = [...new Set([...immutables, ...history])];
 
-        const val = input.value.toLowerCase().trim();
-        const filtered = val
-            ? combined.filter(h => h.toLowerCase().includes(val))
-            : combined;
+        const rawVal = input.value.trim();
+        let filtered;
+
+        if (!rawVal) {
+            // If field is empty, show all candidates
+            filtered = combined;
+        } else {
+            // Create a regex pattern that treats ASCII as equivalent to its diacritics
+            let patternStr = "";
+            for (const char of rawVal) {
+                const diacritics = DIACRITIC_MAP[char];
+                if (diacritics) {
+                    patternStr += `[${char}${diacritics.join('')}]`;
+                } else {
+                    patternStr += char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+            }
+            const regex = new RegExp(patternStr, 'i');
+            filtered = combined.filter(h => regex.test(h));
+        }
 
         if (filtered.length === 0) {
             suggestionList.style.display = 'none';

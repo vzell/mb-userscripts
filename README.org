@@ -18181,3 +18181,38 @@ Don't touch the rest of the code.
 
 Please add the "Batch edit cover art" button after the "Add cover art" instead of the "Reorder cover art" button.
 Don't touch the rest of the code or the existing comments (only when necessary).
+
+** unicode symbols
+
+Add the following association table to the uploaded userscript in a javascript variable
+
+| diacritic | ascii equivalent |
+|-----------+------------------|
+| ‐         | -                |
+| ‒         | -                |
+| –         | -                |
+| —         | -                |
+| “         | "                |
+| ”         | "                |
+| ‘         | '                |
+| ’         | '                |
+
+and add the following functionality:
+
+ - when typing in the "Comment:" text field of an image, and one of the "ascii equivalent" characters are encountered the
+   autocompletion should also in addition try to display candidates using the "diacritic" versions.
+ - When a "diacritic" charachter is typed in directly, use that unconditionally
+
+** 1
+
+There is an additional problem now. When clicking in an EMPTY "Comment:" field of an image, the complete auto-completion
+list is NOT shown at all (it was before).
+
+Otherwise when starting typing in an EMPYT "Comment:" field of an image, the auto-completion list candidates show up
+properly. Also the diacritics logic works fine.
+
+Please change
+
+** 2
+
+Yes it's working now. But please add the same diacritic logic also in the "Configure Immutable Comments" popup dialog 
