@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.8+2026-01-18
+// @version      1.9+2026-01-18
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -196,8 +196,9 @@
 
             let html = `
                 <h3 style="margin-top:0;">⚙️ Configure Immutable Comments</h3>
-                <div style="margin-bottom: 15px;">
-                    <input type="text" id="imm-search" placeholder="Search comments..." value="${currentSearch}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                <div style="margin-bottom: 15px; position: relative; display: flex; align-items: center;">
+                    <input type="text" id="imm-search" placeholder="Search comments..." value="${currentSearch}" style="width: 100%; padding: 8px 30px 8px 8px; border: 1px solid #ccc; border-radius: 3px;">
+                    <span id="clear-search" style="position: absolute; right: 8px; cursor: pointer; color: #999; font-size: 14px; user-select: none;">❌</span>
                 </div>
                 <div style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; margin-bottom: 15px;">
                     <table style="width: 100%; border-collapse: collapse;">`;
@@ -232,6 +233,11 @@
 
             searchInput.oninput = (e) => {
                 currentSearch = e.target.value;
+                renderList();
+            };
+
+            container.querySelector('#clear-search').onclick = () => {
+                currentSearch = "";
                 renderList();
             };
 

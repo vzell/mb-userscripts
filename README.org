@@ -18177,3 +18177,7 @@ Add a ❌ button also at the end inside the search filed in the "Configure Immut
 empties the search field.
 Don't touch the rest of the code.
 
+** placement
+
+Please add the "Batch edit cover art" button after the "Reorder cover art" button.
+Don't touch the rest of the code.
