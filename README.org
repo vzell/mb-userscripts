@@ -18123,3 +18123,8 @@ Please implement for the uploaded user script in the "Comment" text field autoco
 Initially when clicking in one of the "Comment" text fields for an image, a popup should show up with the last 20
 entries type in (the rest scrollable, up to a predefined maixmum). When starting typing autocomplete should kick in
 showing only entries which have the typed text in the comment.
+
+** 10
+
+It works so far. Please also implement, beside clicking on a autocompletion (whic works), keyboard navigation with the
+up/down arrow keys in the completion list + accepting an entry when pressing "Return"

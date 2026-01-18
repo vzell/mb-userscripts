@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.2+2026-01-16
-// @description  Batch edit types and comments of cover art images with comment history autocomplete
+// @version      1.3+2026-01-16
+// @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete
 // @author       Gemini with vzell
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -28,6 +28,7 @@
     const DISPLAY_LIMIT = 20;
 
     let originalData = {};
+    let selectedIndex = -1;
 
     // --- History Management ---
     const HistoryManager = {
@@ -60,7 +61,24 @@
     document.body.appendChild(suggestionList);
 
     const hideSuggestions = () => {
-        setTimeout(() => { suggestionList.style.display = 'none'; }, 200);
+        setTimeout(() => {
+            suggestionList.style.display = 'none';
+            selectedIndex = -1;
+        }, 200);
+    };
+
+    const updateHighlight = () => {
+        const items = suggestionList.querySelectorAll('div');
+        items.forEach((item, index) => {
+            if (index === selectedIndex) {
+                item.style.background = '#0066cc';
+                item.style.color = 'white';
+                item.scrollIntoView({ block: 'nearest' });
+            } else {
+                item.style.background = 'white';
+                item.style.color = '#333';
+            }
+        });
     };
 
     const showSuggestions = (input) => {
@@ -81,22 +99,48 @@
         suggestionList.style.top = `${rect.bottom + window.scrollY}px`;
         suggestionList.style.left = `${rect.left + window.scrollX}px`;
         suggestionList.style.display = 'block';
+        selectedIndex = -1;
 
         filtered.forEach((text, index) => {
             const item = document.createElement('div');
             item.textContent = text;
             item.style = 'padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
-            if (index >= DISPLAY_LIMIT) item.style.display = 'none';
 
             item.onclick = () => {
                 input.value = text;
                 suggestionList.style.display = 'none';
                 input.dispatchEvent(new Event('change'));
             };
-            item.onmouseover = () => { item.style.background = '#0066cc'; item.style.color = 'white'; };
-            item.onmouseout = () => { item.style.background = 'white'; item.style.color = '#333'; };
+            item.onmouseover = () => {
+                selectedIndex = index;
+                updateHighlight();
+            };
             suggestionList.appendChild(item);
         });
+    };
+
+    const handleKeydown = (e, input) => {
+        const items = suggestionList.querySelectorAll('div');
+        if (suggestionList.style.display === 'none' || items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedIndex = (selectedIndex + 1) % items.length;
+            updateHighlight();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+            updateHighlight();
+        } else if (e.key === 'Enter') {
+            if (selectedIndex > -1) {
+                e.preventDefault();
+                input.value = items[selectedIndex].textContent;
+                suggestionList.style.display = 'none';
+                input.dispatchEvent(new Event('change'));
+            }
+        } else if (e.key === 'Escape') {
+            suggestionList.style.display = 'none';
+        }
     };
 
     // --- Core Script Logic ---
@@ -194,12 +238,12 @@
 
         batchContainer.innerHTML = html;
 
-        // Re-attach autocomplete listeners after HTML injection
         const commentInputs = batchContainer.querySelectorAll('.batch-comment');
         commentInputs.forEach(input => {
             input.addEventListener('focus', () => showSuggestions(input));
             input.addEventListener('input', () => showSuggestions(input));
             input.addEventListener('blur', hideSuggestions);
+            input.addEventListener('keydown', (e) => handleKeydown(e, input));
         });
 
         // --- Helper Button Listeners ---
