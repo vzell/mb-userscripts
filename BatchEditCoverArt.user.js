@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.13+2026-01-18
+// @version      1.14+2026-01-18
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -59,7 +59,6 @@
             const sortedList = trimmed.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
             localStorage.setItem(IMMUTABLE_KEY, JSON.stringify(sortedList));
 
-            // Requirement: If it exists in history, remove it from history
             let history = HistoryManager.get();
             const updatedHistory = history.filter(h => !sortedList.includes(h));
             if (history.length !== updatedHistory.length) {
@@ -78,31 +77,30 @@
 
     const HistoryManager = {
         get: () => JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"),
+        // Returns true if saved, false if blocked by regex/immutable
         save: (comment) => {
             const val = comment ? comment.trim() : "";
-            if (!val) return;
+            if (!val) return false;
 
             const immutables = ImmutableManager.get();
-            if (immutables.includes(val)) return;
+            if (immutables.includes(val)) return false;
 
-            // Check against regex list
             const regexPatterns = RegexManager.get();
             for (const p of regexPatterns) {
                 try {
                     const re = new RegExp(p, 'i');
-                    if (re.test(val)) return;
+                    if (re.test(val)) return false;
                 } catch (e) {
                     console.error("Invalid regex pattern:", p);
                 }
             }
 
             let history = HistoryManager.get();
-            // Add new and deduplicate
             history = [...new Set([val, ...history])];
-            // Requirement: Store non-immutable comments sorted
             history.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
             localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
+            return true;
         }
     };
 
@@ -298,6 +296,14 @@
             container.querySelector('#add-new-cfg').onclick = () => {
                 const val = prompt(placeholder);
                 if (val && val.trim()) {
+                    if (!useDiacritics) {
+                        try {
+                            new RegExp(val.trim());
+                        } catch (e) {
+                            alert("Invalid regular expression: " + e.message);
+                            return;
+                        }
+                    }
                     const current = manager.get();
                     if (!current.includes(val.trim())) {
                         current.push(val.trim());
@@ -313,6 +319,14 @@
                     const list = manager.get();
                     const newVal = prompt("Edit entry:", list[idx]);
                     if (newVal && newVal.trim()) {
+                        if (!useDiacritics) {
+                            try {
+                                new RegExp(newVal.trim());
+                            } catch (e) {
+                                alert("Invalid regular expression: " + e.message);
+                                return;
+                            }
+                        }
                         list[idx] = newVal.trim();
                         manager.saveAll(list);
                         renderList();
@@ -442,7 +456,10 @@
             <div style="margin-top: 20px; background: #eee; padding: 20px; border-radius: 4px; border: 1px solid #ccc;">
                 <label><strong>Edit Note:</strong></label>
                 <textarea id="batch-edit-note" placeholder="Explain your changes..." style="width: 100%; height: 60px; margin: 10px 0; padding: 8px; border: 1px solid #ccc;"></textarea><br>
-                <button id="submit-batch-edit" class="styled-button" style="background: #600; color: white; padding: 10px 20px; font-weight: bold; border: none; cursor: pointer;">Enter edit</button>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button id="submit-batch-edit" class="styled-button" style="background: #600; color: white; padding: 10px 20px; font-weight: bold; border: none; cursor: pointer;">Enter edit</button>
+                    <span id="regex-info-text" style="color: #666; font-size: 0.9em; font-style: italic;"></span>
+                </div>
             </div>`;
 
         batchContainer.innerHTML = html;
@@ -536,8 +553,12 @@
         const rows = document.querySelectorAll('.batch-row');
         const editNote = document.getElementById('batch-edit-note').value;
         const btn = document.getElementById('submit-batch-edit');
+        const regexInfoText = document.getElementById('regex-info-text');
 
-        let hasChanges = false;
+        let rowsToChange = [];
+        let uniqueCommentsProcessed = new Set();
+        let regexMatchCount = 0;
+
         rows.forEach(row => {
             const id = row.getAttribute('data-id');
             const currentComment = row.querySelector('.batch-comment').value;
@@ -548,15 +569,22 @@
             const commentChanged = currentComment !== orig.comment;
 
             if (typesChanged || commentChanged) {
-                hasChanges = true;
                 row.setAttribute('data-changed', 'true');
-                HistoryManager.save(currentComment);
+                rowsToChange.push(row);
+
+                if (!uniqueCommentsProcessed.has(currentComment)) {
+                    const wasSaved = HistoryManager.save(currentComment);
+                    if (!wasSaved && currentComment.trim()) {
+                        regexMatchCount++;
+                    }
+                    uniqueCommentsProcessed.add(currentComment);
+                }
             } else {
                 row.setAttribute('data-changed', 'false');
             }
         });
 
-        if (!hasChanges) {
+        if (rowsToChange.length === 0) {
             const proceed = confirm("No changes detected for any image. Do you want to submit anyway?");
             if (!proceed) return;
         }
@@ -566,11 +594,19 @@
             return;
         }
 
-        btn.disabled = true;
-        btn.innerText = 'Submitting...';
+        // Show info about blocked storage
+        if (regexMatchCount > 0) {
+            regexInfoText.innerText = `${regexMatchCount} unique comment(s) matched regexps and so will not be stored in browser storage`;
+        } else {
+            regexInfoText.innerText = "";
+        }
 
-        for (const row of rows) {
-            if (row.getAttribute('data-changed') === 'false') continue;
+        btn.disabled = true;
+        const total = rowsToChange.length;
+
+        for (let i = 0; i < total; i++) {
+            const row = rowsToChange[i];
+            btn.innerText = `Submitting...(${i + 1}/${total})`;
 
             const editUrl = row.getAttribute('data-edit-url');
             const comment = row.querySelector('.batch-comment').value;

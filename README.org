@@ -18237,6 +18237,8 @@ The pattern aber the colon : could have numbers, uppercase letters and hyphens i
 
 run‐out groove side [A-Z]: [A-Z0-9-]+
 
+CD Mirror Band (disc 1): 
+
 ** change button text
 
 Add the following logic:
