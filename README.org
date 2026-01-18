@@ -18262,3 +18262,8 @@ and
 #+end_example
 
 into the "BatchEditCoverArt.user.js" user script
+
+** 1
+
+Please check the user script logic in the uploaded userscript "BatchRemoveCoverArt.user.js" for the elephant logic which remembers the last type in text in the textarea field
+and compare why in the uploaded script "BatchEditCoverArt.user.js" the '<div class="buttons">' doesn't show up above the texarea field with the id="batch-edit-note"
