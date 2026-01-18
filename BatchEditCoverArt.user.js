@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.5+2026-01-18
+// @version      1.6+2026-01-18
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable immutable comments
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -208,10 +208,8 @@
 
             container.innerHTML = html;
 
-            // Search logic
             const searchInput = container.querySelector('#imm-search');
             searchInput.focus();
-            // Move cursor to end
             searchInput.setSelectionRange(currentSearch.length, currentSearch.length);
 
             searchInput.oninput = (e) => {
@@ -319,12 +317,14 @@
 
         let html = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                <h3 style="margin:0;">Batch Edit Cover Art</h3>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <h3 style="margin:0;">Batch Edit Cover Art</h3>
+                    <button id="config-immutable" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">⚙️ Configure immutable comments</button>
+                </div>
                 <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                     <button id="copy-first-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st types</button>
                     <button id="copy-first-comment" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st comment</button>
                     <button id="clear-all-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">Clear all types</button>
-                    <button id="config-immutable" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">⚙️ Configure immutable comments</button>
                     <button id="reset-batch" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">Reset to original</button>
                 </div>
             </div>
