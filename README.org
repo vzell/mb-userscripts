@@ -18179,5 +18179,5 @@ Don't touch the rest of the code.
 
 ** placement
 
-Please add the "Batch edit cover art" button after the "Reorder cover art" button.
-Don't touch the rest of the code.
+Please add the "Batch edit cover art" button after the "Add cover art" instead of the "Reorder cover art" button.
+Don't touch the rest of the code or the existing comments (only when necessary).

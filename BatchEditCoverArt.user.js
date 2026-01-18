@@ -300,10 +300,10 @@
     batchContainer.style = 'margin: 20px 0; padding: 20px; border: 2px solid #600; display: none; background: #f9f9f9; clear: both; font-family: sans-serif;';
 
     const injectButton = () => {
-        const reorderBtn = document.querySelector('a[href*="/reorder-cover-art"]');
+        const addBtn = document.querySelector('a[href*="/add-cover-art"]');
         const buttonRow = document.querySelector('.buttons.ui-helper-clearfix');
 
-        if (reorderBtn && !document.getElementById('batch-edit-trigger')) {
+        if (addBtn && !document.getElementById('batch-edit-trigger')) {
             const batchBtn = document.createElement('a');
             batchBtn.id = 'batch-edit-trigger';
             batchBtn.href = '#';
@@ -311,13 +311,13 @@
             batchBtn.style.marginLeft = '4px';
             batchBtn.innerHTML = '<bdi>Batch edit cover art</bdi>';
 
-            reorderBtn.parentNode.insertBefore(batchBtn, reorderBtn.nextSibling);
+            addBtn.parentNode.insertBefore(batchBtn, addBtn.nextSibling);
             batchBtn.onclick = toggleBatchMode;
 
             if (buttonRow) {
                 buttonRow.parentNode.insertBefore(batchContainer, buttonRow.nextSibling);
             }
-        } else if (!reorderBtn) {
+        } else if (!addBtn) {
             setTimeout(injectButton, 500);
         }
     };
