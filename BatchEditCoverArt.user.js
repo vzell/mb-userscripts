@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.3+2026-01-16
+// @version      1.3+2026-01-18
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -36,6 +36,7 @@
         save: (comment) => {
             if (!comment || !comment.trim()) return;
             let history = HistoryManager.get();
+            // Move to top if exists, otherwise prepend
             history = [comment, ...history.filter(item => item !== comment)];
             localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
         }
@@ -61,6 +62,7 @@
     document.body.appendChild(suggestionList);
 
     const hideSuggestions = () => {
+        // Small timeout so click events on list items fire before the list vanishes
         setTimeout(() => {
             suggestionList.style.display = 'none';
             selectedIndex = -1;
@@ -73,6 +75,7 @@
             if (index === selectedIndex) {
                 item.style.background = '#0066cc';
                 item.style.color = 'white';
+                // Ensure the highlighted item is visible if list is long (scrollable)
                 item.scrollIntoView({ block: 'nearest' });
             } else {
                 item.style.background = 'white';
@@ -123,23 +126,28 @@
         const items = suggestionList.querySelectorAll('div');
         if (suggestionList.style.display === 'none' || items.length === 0) return;
 
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            selectedIndex = (selectedIndex + 1) % items.length;
-            updateHighlight();
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            selectedIndex = (selectedIndex - 1 + items.length) % items.length;
-            updateHighlight();
-        } else if (e.key === 'Enter') {
-            if (selectedIndex > -1) {
+        switch (e.key) {
+            case 'ArrowDown':
                 e.preventDefault();
-                input.value = items[selectedIndex].textContent;
+                selectedIndex = (selectedIndex + 1) % items.length;
+                updateHighlight();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+                updateHighlight();
+                break;
+            case 'Enter':
+                if (selectedIndex > -1) {
+                    e.preventDefault();
+                    input.value = items[selectedIndex].textContent;
+                    suggestionList.style.display = 'none';
+                    input.dispatchEvent(new Event('change'));
+                }
+                break;
+            case 'Escape':
                 suggestionList.style.display = 'none';
-                input.dispatchEvent(new Event('change'));
-            }
-        } else if (e.key === 'Escape') {
-            suggestionList.style.display = 'none';
+                break;
         }
     };
 
@@ -238,6 +246,7 @@
 
         batchContainer.innerHTML = html;
 
+        // Wire up comment fields
         const commentInputs = batchContainer.querySelectorAll('.batch-comment');
         commentInputs.forEach(input => {
             input.addEventListener('focus', () => showSuggestions(input));
@@ -339,6 +348,7 @@
             if (typesChanged || commentChanged) {
                 hasChanges = true;
                 row.setAttribute('data-changed', 'true');
+                // Save unique comments from the batch into history
                 HistoryManager.save(currentComment);
             } else {
                 row.setAttribute('data-changed', 'false');
