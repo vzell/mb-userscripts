@@ -5501,7 +5501,7 @@ userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.use
 userscript.html?name=AA-Add-Instrument-Buttons-React-Release-Editor-Extended.user.js&id=685ef80c-cb44-4a9c-a75b-1a985d1501c8:22
 #+end_example
 
-*** mult instruments working code
+*** multi instruments working code
 
 #+begin_example
 // ==UserScript==
@@ -18128,3 +18128,33 @@ showing only entries which have the typed text in the comment.
 
 It works so far. Please also implement, beside clicking on a autocompletion (whic works), keyboard navigation with the
 up/down arrow keys in the completion list + accepting an entry when pressing "Return"
+
+** add predefined comments
+
+In the uploaded userscript "BatchEditCoverArt.user.js" add another button with the title "⚙️ Configure immutable comments"
+to the "id="batch-edit-container" container with the following logic when pressed (see also an example of such
+an implementation in the uploaded user script "AutoSelectExternalLinkTypeReleases.user.js"):
+
+It should be possible to configure predefined comments in a popup GUI when pressing a button "Add New Comment" (also
+removal and editing should be possible by clicking on ✏️ ❌ buttons). A "Close" button or pressing the "Escape" key
+should close the dialog.
+
+In the "Comment" text field autocomplete history should also include the predefined comments above. These predefined
+comments should also be stored in browser storage together with already stored entries but should never be overwritten
+and also should not count in the MAX_HISTORY variable.
+
+** 1
+
+Yes, add a search/filter field inside the configuration popup to help manage the list if it grows very large and place
+the ✏️ and ❌ buttons after each other and not above.
+
+** 2
+
+Place the "⚙️ Configure immutable comments" to the right of the text "Batch Edit Cover Art"
+Don't touch the rest of the code.
+
+** 3
+
+Store and display the comments sorted, in the configuratin dialog and the autocomplete listing.
+Don't touch the rest of the code.
+

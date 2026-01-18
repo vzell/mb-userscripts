@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.3+2026-01-18
-// @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete
+// @version      1.5+2026-01-18
+// @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable immutable comments
 // @author       Gemini with vzell
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -24,19 +24,26 @@
     ];
 
     const HISTORY_KEY = 'mb_batch_comment_history';
+    const IMMUTABLE_KEY = 'mb_batch_comment_immutable';
     const MAX_HISTORY = 50;
-    const DISPLAY_LIMIT = 20;
 
     let originalData = {};
     let selectedIndex = -1;
 
-    // --- History Management ---
+    // --- Persistence Managers ---
+    const ImmutableManager = {
+        get: () => JSON.parse(localStorage.getItem(IMMUTABLE_KEY) || "[]"),
+        saveAll: (list) => localStorage.setItem(IMMUTABLE_KEY, JSON.stringify(list))
+    };
+
     const HistoryManager = {
         get: () => JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"),
         save: (comment) => {
             if (!comment || !comment.trim()) return;
+            const immutables = ImmutableManager.get();
+            if (immutables.includes(comment)) return;
+
             let history = HistoryManager.get();
-            // Move to top if exists, otherwise prepend
             history = [comment, ...history.filter(item => item !== comment)];
             localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
         }
@@ -62,7 +69,6 @@
     document.body.appendChild(suggestionList);
 
     const hideSuggestions = () => {
-        // Small timeout so click events on list items fire before the list vanishes
         setTimeout(() => {
             suggestionList.style.display = 'none';
             selectedIndex = -1;
@@ -75,7 +81,6 @@
             if (index === selectedIndex) {
                 item.style.background = '#0066cc';
                 item.style.color = 'white';
-                // Ensure the highlighted item is visible if list is long (scrollable)
                 item.scrollIntoView({ block: 'nearest' });
             } else {
                 item.style.background = 'white';
@@ -85,11 +90,14 @@
     };
 
     const showSuggestions = (input) => {
+        const immutables = ImmutableManager.get();
         const history = HistoryManager.get();
+        const combined = [...new Set([...immutables, ...history])];
+
         const val = input.value.toLowerCase().trim();
         const filtered = val
-            ? history.filter(h => h.toLowerCase().includes(val))
-            : history;
+            ? combined.filter(h => h.toLowerCase().includes(val))
+            : combined;
 
         if (filtered.length === 0) {
             suggestionList.style.display = 'none';
@@ -106,7 +114,8 @@
 
         filtered.forEach((text, index) => {
             const item = document.createElement('div');
-            item.textContent = text;
+            const isImmutable = immutables.includes(text);
+            item.innerHTML = isImmutable ? `<b>📌 ${text}</b>` : text;
             item.style = 'padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
 
             item.onclick = () => {
@@ -140,7 +149,7 @@
             case 'Enter':
                 if (selectedIndex > -1) {
                     e.preventDefault();
-                    input.value = items[selectedIndex].textContent;
+                    input.value = items[selectedIndex].textContent.replace('📌 ', '');
                     suggestionList.style.display = 'none';
                     input.dispatchEvent(new Event('change'));
                 }
@@ -151,7 +160,119 @@
         }
     };
 
-    // --- Core Script Logic ---
+    // --- Configuration Modal (Searchable GUI) ---
+    function showImmutableConfig() {
+        const overlay = document.createElement('div');
+        overlay.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100002; display: flex; justify-content: center; align-items: flex-start; padding-top: 50px;';
+
+        const container = document.createElement('div');
+        container.style = 'background: white; padding: 20px; border-radius: 5px; width: 550px; max-height: 85vh; overflow-y: auto; font-family: sans-serif; box-shadow: 0 0 25px rgba(0,0,0,0.5);';
+
+        let currentSearch = "";
+
+        const renderList = () => {
+            const list = ImmutableManager.get();
+            const filtered = list
+                .map((text, originalIndex) => ({ text, originalIndex }))
+                .filter(item => item.text.toLowerCase().includes(currentSearch.toLowerCase()));
+
+            let html = `
+                <h3 style="margin-top:0;">⚙️ Configure Immutable Comments</h3>
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="imm-search" placeholder="Search comments..." value="${currentSearch}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                </div>
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; margin-bottom: 15px;">
+                    <table style="width: 100%; border-collapse: collapse;">`;
+
+            if (filtered.length === 0) {
+                html += `<tr><td style="padding: 20px; text-align: center; color: #999;">${currentSearch ? 'No matches found.' : 'No comments defined.'}</td></tr>`;
+            } else {
+                filtered.forEach((item) => {
+                    html += `
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px; word-break: break-all;">${item.text}</td>
+                        <td style="text-align: right; width: 80px; white-space: nowrap; padding-right: 10px;">
+                            <button class="edit-imm" data-index="${item.originalIndex}" title="Edit" style="cursor:pointer; border:none; background:none; font-size: 1.2em; padding: 0 4px;">✏️</button>
+                            <button class="del-imm" data-index="${item.originalIndex}" title="Delete" style="cursor:pointer; border:none; background:none; font-size: 1.2em; padding: 0 4px;">❌</button>
+                        </td>
+                    </tr>`;
+                });
+            }
+
+            html += `</table>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <button id="add-new-imm" style="padding: 8px 16px; cursor:pointer; background: #0066cc; color: white; border: none; border-radius: 3px; font-weight: bold;">Add New Comment</button>
+                    <button id="close-imm" style="padding: 8px 16px; cursor:pointer; background: #eee; border: 1px solid #ccc; border-radius: 3px;">Close</button>
+                </div>`;
+
+            container.innerHTML = html;
+
+            // Search logic
+            const searchInput = container.querySelector('#imm-search');
+            searchInput.focus();
+            // Move cursor to end
+            searchInput.setSelectionRange(currentSearch.length, currentSearch.length);
+
+            searchInput.oninput = (e) => {
+                currentSearch = e.target.value;
+                renderList();
+            };
+
+            container.querySelector('#add-new-imm').onclick = () => {
+                const val = prompt("Enter new immutable comment:");
+                if (val && val.trim()) {
+                    const current = ImmutableManager.get();
+                    if (!current.includes(val.trim())) {
+                        current.push(val.trim());
+                        ImmutableManager.saveAll(current);
+                        renderList();
+                    }
+                }
+            };
+
+            container.querySelectorAll('.edit-imm').forEach(btn => {
+                btn.onclick = () => {
+                    const idx = btn.dataset.index;
+                    const list = ImmutableManager.get();
+                    const newVal = prompt("Edit immutable comment:", list[idx]);
+                    if (newVal && newVal.trim()) {
+                        list[idx] = newVal.trim();
+                        ImmutableManager.saveAll(list);
+                        renderList();
+                    }
+                };
+            });
+
+            container.querySelectorAll('.del-imm').forEach(btn => {
+                btn.onclick = () => {
+                    const idx = btn.dataset.index;
+                    const list = ImmutableManager.get();
+                    if (confirm(`Remove "${list[idx]}"?`)) {
+                        list.splice(idx, 1);
+                        ImmutableManager.saveAll(list);
+                        renderList();
+                    }
+                };
+            });
+
+            container.querySelector('#close-imm').onclick = () => overlay.remove();
+        };
+
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                document.removeEventListener('keydown', handleEsc);
+                overlay.remove();
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+
+        renderList();
+        overlay.appendChild(container);
+        document.body.appendChild(overlay);
+    }
+
+    // --- Core Script Injection ---
     let batchContainer = document.createElement('div');
     batchContainer.id = 'batch-edit-container';
     batchContainer.style = 'margin: 20px 0; padding: 20px; border: 2px solid #600; display: none; background: #f9f9f9; clear: both; font-family: sans-serif;';
@@ -203,6 +324,7 @@
                     <button id="copy-first-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st types</button>
                     <button id="copy-first-comment" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st comment</button>
                     <button id="clear-all-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">Clear all types</button>
+                    <button id="config-immutable" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">⚙️ Configure immutable comments</button>
                     <button id="reset-batch" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">Reset to original</button>
                 </div>
             </div>
@@ -246,7 +368,6 @@
 
         batchContainer.innerHTML = html;
 
-        // Wire up comment fields
         const commentInputs = batchContainer.querySelectorAll('.batch-comment');
         commentInputs.forEach(input => {
             input.addEventListener('focus', () => showSuggestions(input));
@@ -255,7 +376,8 @@
             input.addEventListener('keydown', (e) => handleKeydown(e, input));
         });
 
-        // --- Helper Button Listeners ---
+        document.getElementById('config-immutable').onclick = showImmutableConfig;
+
         document.getElementById('copy-first-types').onclick = () => {
             const firstRow = document.querySelector('.batch-row');
             if (!firstRow) return;
@@ -348,7 +470,6 @@
             if (typesChanged || commentChanged) {
                 hasChanges = true;
                 row.setAttribute('data-changed', 'true');
-                // Save unique comments from the batch into history
                 HistoryManager.save(currentComment);
             } else {
                 row.setAttribute('data-changed', 'false');
