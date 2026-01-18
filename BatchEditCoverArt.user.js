@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.6+2026-01-18
-// @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable immutable comments
+// @version      1.8+2026-01-18
+// @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -33,18 +33,35 @@
     // --- Persistence Managers ---
     const ImmutableManager = {
         get: () => JSON.parse(localStorage.getItem(IMMUTABLE_KEY) || "[]"),
-        saveAll: (list) => localStorage.setItem(IMMUTABLE_KEY, JSON.stringify(list))
+        saveAll: (list) => {
+            const trimmed = [...new Set(list.map(s => s.trim()).filter(s => s))];
+            const sortedList = trimmed.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+            localStorage.setItem(IMMUTABLE_KEY, JSON.stringify(sortedList));
+
+            // Requirement: If it exists in history, remove it from history
+            let history = HistoryManager.get();
+            const updatedHistory = history.filter(h => !sortedList.includes(h));
+            if (history.length !== updatedHistory.length) {
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(updatedHistory));
+            }
+        }
     };
 
     const HistoryManager = {
         get: () => JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"),
         save: (comment) => {
-            if (!comment || !comment.trim()) return;
+            const val = comment ? comment.trim() : "";
+            if (!val) return;
+
             const immutables = ImmutableManager.get();
-            if (immutables.includes(comment)) return;
+            if (immutables.includes(val)) return;
 
             let history = HistoryManager.get();
-            history = [comment, ...history.filter(item => item !== comment)];
+            // Add new and deduplicate
+            history = [...new Set([val, ...history])];
+            // Requirement: Store non-immutable comments sorted
+            history.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
             localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
         }
     };
@@ -92,6 +109,7 @@
     const showSuggestions = (input) => {
         const immutables = ImmutableManager.get();
         const history = HistoryManager.get();
+        // Since both are stored sorted, combined order is naturally sorted per group
         const combined = [...new Set([...immutables, ...history])];
 
         const val = input.value.toLowerCase().trim();

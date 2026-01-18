@@ -18158,3 +18158,22 @@ Don't touch the rest of the code.
 Store and display the comments sorted, in the configuratin dialog and the autocomplete listing.
 Don't touch the rest of the code.
 
+** sorting
+
+Somehow the sorting doesn't seem to work properly:
+
+ - When adding a new immutable comment, the list of configured immutable comments should be sorted right away for display
+   purposes and stored sorted in browser storage
+ - For the non immutable comments, the newly entered comments should also be stored sorted in browser storage, but also
+   displayed sorted when first clicked in a "Comment:" text field.
+ - When a newly entered immutable comment is added and the same comment exists in the list of non immutable comments, it
+   should be removed from the list of non immutable comments
+
+   
+** add delete button
+
+Everything works up to now.
+Add a ❌ button also at the end inside the search filed in the "Configure Immutable Comments" popup dialog which quickly
+empties the search field.
+Don't touch the rest of the code.
+
