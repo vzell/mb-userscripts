@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.12+2026-01-18
+// @version      1.13+2026-01-18
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -31,6 +31,7 @@
 
     const HISTORY_KEY = 'mb_batch_comment_history';
     const IMMUTABLE_KEY = 'mb_batch_comment_immutable';
+    const REGEX_KEY = 'mb_batch_comment_regex';
     const MAX_HISTORY = 50;
 
     let originalData = {};
@@ -67,6 +68,14 @@
         }
     };
 
+    const RegexManager = {
+        get: () => JSON.parse(localStorage.getItem(REGEX_KEY) || "[]"),
+        saveAll: (list) => {
+            const trimmed = [...new Set(list.map(s => s.trim()).filter(s => s))];
+            localStorage.setItem(REGEX_KEY, JSON.stringify(trimmed.sort()));
+        }
+    };
+
     const HistoryManager = {
         get: () => JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"),
         save: (comment) => {
@@ -75,6 +84,17 @@
 
             const immutables = ImmutableManager.get();
             if (immutables.includes(val)) return;
+
+            // Check against regex list
+            const regexPatterns = RegexManager.get();
+            for (const p of regexPatterns) {
+                try {
+                    const re = new RegExp(p, 'i');
+                    if (re.test(val)) return;
+                } catch (e) {
+                    console.error("Invalid regex pattern:", p);
+                }
+            }
 
             let history = HistoryManager.get();
             // Add new and deduplicate
@@ -204,8 +224,8 @@
         }
     };
 
-    // --- Configuration Modal (Searchable GUI) ---
-    function showImmutableConfig() {
+    // --- Configuration Modals ---
+    function showConfigModal(title, manager, placeholder, useDiacritics = true) {
         const overlay = document.createElement('div');
         overlay.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100002; display: flex; justify-content: center; align-items: flex-start; padding-top: 50px;';
 
@@ -215,38 +235,38 @@
         let currentSearch = "";
 
         const renderList = () => {
-            const list = ImmutableManager.get();
+            const list = manager.get();
             const searchVal = currentSearch.trim();
 
             let filtered;
             if (!searchVal) {
                 filtered = list.map((text, originalIndex) => ({ text, originalIndex }));
             } else {
-                const regex = getDiacriticRegex(searchVal);
+                const regex = useDiacritics ? getDiacriticRegex(searchVal) : new RegExp(searchVal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
                 filtered = list
                     .map((text, originalIndex) => ({ text, originalIndex }))
                     .filter(item => regex.test(item.text));
             }
 
             let html = `
-                <h3 style="margin-top:0;">⚙️ Configure Immutable Comments</h3>
+                <h3 style="margin-top:0;">${title}</h3>
                 <div style="margin-bottom: 15px; position: relative; display: flex; align-items: center;">
-                    <input type="text" id="imm-search" placeholder="Search comments..." value="${currentSearch}" style="width: 100%; padding: 8px 30px 8px 8px; border: 1px solid #ccc; border-radius: 3px;">
+                    <input type="text" id="cfg-search" placeholder="Search..." value="${currentSearch}" style="width: 100%; padding: 8px 30px 8px 8px; border: 1px solid #ccc; border-radius: 3px;">
                     <span id="clear-search" style="position: absolute; right: 8px; cursor: pointer; color: #999; font-size: 14px; user-select: none;">❌</span>
                 </div>
                 <div style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; margin-bottom: 15px;">
                     <table style="width: 100%; border-collapse: collapse;">`;
 
             if (filtered.length === 0) {
-                html += `<tr><td style="padding: 20px; text-align: center; color: #999;">${currentSearch ? 'No matches found.' : 'No comments defined.'}</td></tr>`;
+                html += `<tr><td style="padding: 20px; text-align: center; color: #999;">${currentSearch ? 'No matches found.' : 'No entries defined.'}</td></tr>`;
             } else {
                 filtered.forEach((item) => {
                     html += `
                     <tr style="border-bottom: 1px solid #eee;">
                         <td style="padding: 10px; word-break: break-all;">${item.text}</td>
                         <td style="text-align: right; width: 80px; white-space: nowrap; padding-right: 10px;">
-                            <button class="edit-imm" data-index="${item.originalIndex}" title="Edit" style="cursor:pointer; border:none; background:none; font-size: 1.2em; padding: 0 4px;">✏️</button>
-                            <button class="del-imm" data-index="${item.originalIndex}" title="Delete" style="cursor:pointer; border:none; background:none; font-size: 1.2em; padding: 0 4px;">❌</button>
+                            <button class="edit-cfg" data-index="${item.originalIndex}" title="Edit" style="cursor:pointer; border:none; background:none; font-size: 1.2em; padding: 0 4px;">✏️</button>
+                            <button class="del-cfg" data-index="${item.originalIndex}" title="Delete" style="cursor:pointer; border:none; background:none; font-size: 1.2em; padding: 0 4px;">❌</button>
                         </td>
                     </tr>`;
                 });
@@ -255,13 +275,13 @@
             html += `</table>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                    <button id="add-new-imm" style="padding: 8px 16px; cursor:pointer; background: #0066cc; color: white; border: none; border-radius: 3px; font-weight: bold;">Add New Comment</button>
-                    <button id="close-imm" style="padding: 8px 16px; cursor:pointer; background: #eee; border: 1px solid #ccc; border-radius: 3px;">Close</button>
+                    <button id="add-new-cfg" style="padding: 8px 16px; cursor:pointer; background: #0066cc; color: white; border: none; border-radius: 3px; font-weight: bold;">Add New</button>
+                    <button id="close-cfg" style="padding: 8px 16px; cursor:pointer; background: #eee; border: 1px solid #ccc; border-radius: 3px;">Close</button>
                 </div>`;
 
             container.innerHTML = html;
 
-            const searchInput = container.querySelector('#imm-search');
+            const searchInput = container.querySelector('#cfg-search');
             searchInput.focus();
             searchInput.setSelectionRange(currentSearch.length, currentSearch.length);
 
@@ -275,44 +295,44 @@
                 renderList();
             };
 
-            container.querySelector('#add-new-imm').onclick = () => {
-                const val = prompt("Enter new immutable comment:");
+            container.querySelector('#add-new-cfg').onclick = () => {
+                const val = prompt(placeholder);
                 if (val && val.trim()) {
-                    const current = ImmutableManager.get();
+                    const current = manager.get();
                     if (!current.includes(val.trim())) {
                         current.push(val.trim());
-                        ImmutableManager.saveAll(current);
+                        manager.saveAll(current);
                         renderList();
                     }
                 }
             };
 
-            container.querySelectorAll('.edit-imm').forEach(btn => {
+            container.querySelectorAll('.edit-cfg').forEach(btn => {
                 btn.onclick = () => {
                     const idx = btn.dataset.index;
-                    const list = ImmutableManager.get();
-                    const newVal = prompt("Edit immutable comment:", list[idx]);
+                    const list = manager.get();
+                    const newVal = prompt("Edit entry:", list[idx]);
                     if (newVal && newVal.trim()) {
                         list[idx] = newVal.trim();
-                        ImmutableManager.saveAll(list);
+                        manager.saveAll(list);
                         renderList();
                     }
                 };
             });
 
-            container.querySelectorAll('.del-imm').forEach(btn => {
+            container.querySelectorAll('.del-cfg').forEach(btn => {
                 btn.onclick = () => {
                     const idx = btn.dataset.index;
-                    const list = ImmutableManager.get();
+                    const list = manager.get();
                     if (confirm(`Remove "${list[idx]}"?`)) {
                         list.splice(idx, 1);
-                        ImmutableManager.saveAll(list);
+                        manager.saveAll(list);
                         renderList();
                     }
                 };
             });
 
-            container.querySelector('#close-imm').onclick = () => overlay.remove();
+            container.querySelector('#close-cfg').onclick = () => overlay.remove();
         };
 
         const handleEsc = (e) => {
@@ -375,9 +395,10 @@
 
         let html = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
                     <h3 style="margin:0;">Batch Edit Cover Art</h3>
                     <button id="config-immutable" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">⚙️ Configure immutable comments</button>
+                    <button id="config-regex" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">⚙️ Configure regexps</button>
                 </div>
                 <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                     <button id="copy-first-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st types</button>
@@ -434,7 +455,8 @@
             input.addEventListener('keydown', (e) => handleKeydown(e, input));
         });
 
-        document.getElementById('config-immutable').onclick = showImmutableConfig;
+        document.getElementById('config-immutable').onclick = () => showConfigModal("⚙️ Configure Immutable Comments", ImmutableManager, "Enter new immutable comment:", true);
+        document.getElementById('config-regex').onclick = () => showConfigModal("⚙️ Configure Regular Expressions", RegexManager, "Enter new regex pattern:", false);
 
         document.getElementById('copy-first-types').onclick = () => {
             const firstRow = document.querySelector('.batch-row');

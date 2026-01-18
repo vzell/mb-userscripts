@@ -18216,3 +18216,47 @@ Please change
 ** 2
 
 Yes it's working now. But please add the same diacritic logic also in the "Configure Immutable Comments" popup dialog 
+
+** regexp
+
+Create another configuration button for "Regular expressions" titled "⚙️ Configure regexps" with the same functionality like the "⚙️ Configure immutable comments"
+but without the diacritics handling.
+
+When pressing the "Enter edit" button, the changed "Comment:" entries of all the images should be compared against the
+list of regexps (starting with an intitial empty list) and they SHOULD NOT be stored in browser storage when matching a regexp.
+
+** generate regexp
+
+Generate a regexp which matches "Matrix / Runout (disc 1): 8258-BS751018D1" and "Matrix / Runout (disc 2): 8258-BS751018D2"
+disc can have an arbitrary discnumber after it the pattern aber the colon : could have numbers,
+uppercase letters and hyphens in it
+
+Generate a regexp which matches "run‐out groove side A: 377275A" and "run‐out groove side B: 377275B"
+"side" can have an arbitrary uppercase letter A-Z after it.
+The pattern aber the colon : could have numbers, uppercase letters and hyphens in it
+
+run‐out groove side [A-Z]: [A-Z0-9-]+
+
+** change button text
+
+Add the following logic:
+
+ - The button text should change from "Submitting..." to "Submitting...(<current image number>/<total change image number>)"
+ - Place the text "<n number of images> matching regexps and so will not be stored in browser storage" after the "Submitting..." button.
+
+** add remember logic for edit notes
+
+Please integrate the same remember logic for edit notes, which is part of the uploaded user script "BatchRemoveCoverArt.user.js"
+between
+
+#+begin_example
+ // --- START OF ELEPHANT EDITOR LOGIC (adapted from original) ---
+#+end_example
+
+and
+
+#+begin_example
+// --- END OF ELEPHANT EDITOR LOGIC ---
+#+end_example
+
+into the "BatchEditCoverArt.user.js" user script
