@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.11+2026-01-18
+// @version      1.12+2026-01-18
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -35,6 +35,20 @@
 
     let originalData = {};
     let selectedIndex = -1;
+
+    // --- Helper for Diacritic Regex ---
+    const getDiacriticRegex = (text) => {
+        let patternStr = "";
+        for (const char of text) {
+            const diacritics = DIACRITIC_MAP[char];
+            if (diacritics) {
+                patternStr += `[${char}${diacritics.join('')}]`;
+            } else {
+                patternStr += char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+        }
+        return new RegExp(patternStr, 'i');
+    };
 
     // --- Persistence Managers ---
     const ImmutableManager = {
@@ -125,17 +139,7 @@
             // If field is empty, show all candidates
             filtered = combined;
         } else {
-            // Create a regex pattern that treats ASCII as equivalent to its diacritics
-            let patternStr = "";
-            for (const char of rawVal) {
-                const diacritics = DIACRITIC_MAP[char];
-                if (diacritics) {
-                    patternStr += `[${char}${diacritics.join('')}]`;
-                } else {
-                    patternStr += char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                }
-            }
-            const regex = new RegExp(patternStr, 'i');
+            const regex = getDiacriticRegex(rawVal);
             filtered = combined.filter(h => regex.test(h));
         }
 
@@ -212,9 +216,17 @@
 
         const renderList = () => {
             const list = ImmutableManager.get();
-            const filtered = list
-                .map((text, originalIndex) => ({ text, originalIndex }))
-                .filter(item => item.text.toLowerCase().includes(currentSearch.toLowerCase()));
+            const searchVal = currentSearch.trim();
+
+            let filtered;
+            if (!searchVal) {
+                filtered = list.map((text, originalIndex) => ({ text, originalIndex }));
+            } else {
+                const regex = getDiacriticRegex(searchVal);
+                filtered = list
+                    .map((text, originalIndex) => ({ text, originalIndex }))
+                    .filter(item => regex.test(item.text));
+            }
 
             let html = `
                 <h3 style="margin-top:0;">⚙️ Configure Immutable Comments</h3>
