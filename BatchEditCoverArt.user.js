@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.17+2026-01-19
+// @version      1.19+2026-01-19
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell (elephant editor functionality by chaban, jesus2099)
 // @tag          AI generated
@@ -10,6 +10,7 @@
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchEditCoverArt.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        *://*.musicbrainz.org/release/*/cover-art
+// @match        *://*.musicbrainz.org/release/*/add-cover-art
 // @grant        GM_xmlhttpRequest
 // @run-at       document-idle
 // ==/UserScript==
@@ -690,7 +691,47 @@
     batchContainer.id = 'batch-edit-container';
     batchContainer.style = 'margin: 20px 0; padding: 20px; border: 2px solid #600; display: none; background: #f9f9f9; clear: both; font-family: sans-serif;';
 
+    const setupAutocomplete = (input) => {
+        if (input.dataset.autocompleteBound) return;
+        input.dataset.autocompleteBound = 'true';
+        input.addEventListener('focus', () => showSuggestions(input));
+        input.addEventListener('input', () => showSuggestions(input));
+        input.addEventListener('blur', hideSuggestions);
+        input.addEventListener('keydown', (e) => handleKeydown(e, input));
+    };
+
     const injectButton = () => {
+        const isAddPage = window.location.pathname.endsWith('/add-cover-art');
+
+        if (isAddPage) {
+            const h2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.trim() === 'Add cover art');
+            if (h2 && !document.getElementById('config-immutable')) {
+                const btnImmutable = createTag('button', {
+                    a: { id: 'config-immutable', style: 'cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999; margin-left: 10px;' }
+                }, '⚙️ Configure immutable comments');
+                const btnRegex = createTag('button', {
+                    a: { id: 'config-regex', style: 'cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999; margin-left: 5px;' }
+                }, '⚙️ Configure regexps');
+
+                h2.appendChild(btnImmutable);
+                h2.appendChild(btnRegex);
+
+                btnImmutable.onclick = () => showConfigModal("⚙️ Configure Immutable Comments", ImmutableManager, "Enter new immutable comment:", true);
+                btnRegex.onclick = () => showConfigModal("⚙️ Configure Regular Expressions", RegexManager, "Enter new regex pattern:", false);
+
+                // Use MutationObserver to handle dynamically added comment fields
+                const observer = new MutationObserver((mutations) => {
+                    document.querySelectorAll('input.comment').forEach(setupAutocomplete);
+                });
+                const container = document.getElementById('add-cover-art') || document.body;
+                observer.observe(container, { childList: true, subtree: true });
+
+                // Initial run
+                document.querySelectorAll('input.comment').forEach(setupAutocomplete);
+            }
+            return;
+        }
+
         const addBtn = document.querySelector('a[href*="/add-cover-art"]');
         const buttonRow = document.querySelector('.buttons.ui-helper-clearfix');
 
@@ -802,19 +843,13 @@
 
         batchContainer.innerHTML = html;
 
-        // NEW: Initialize Elephant Editor after the HTML is injected
+        // Initialize Elephant Editor after the HTML is injected
         const editNoteTextarea = document.getElementById('batch-edit-note');
         const submitBtn = document.getElementById('submit-batch-edit');
         editNoteMemory = initElephantEditor(editNoteTextarea);
         editNoteMemory.setSubmitButton(submitBtn);
 
-        const commentInputs = batchContainer.querySelectorAll('.batch-comment');
-        commentInputs.forEach(input => {
-            input.addEventListener('focus', () => showSuggestions(input));
-            input.addEventListener('input', () => showSuggestions(input));
-            input.addEventListener('blur', hideSuggestions);
-            input.addEventListener('keydown', (e) => handleKeydown(e, input));
-        });
+        batchContainer.querySelectorAll('.batch-comment').forEach(setupAutocomplete);
 
         document.getElementById('config-immutable').onclick = () => showConfigModal("⚙️ Configure Immutable Comments", ImmutableManager, "Enter new immutable comment:", true);
         document.getElementById('config-regex').onclick = () => showConfigModal("⚙️ Configure Regular Expressions", RegexManager, "Enter new regex pattern:", false);

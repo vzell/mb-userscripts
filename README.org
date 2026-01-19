@@ -18291,6 +18291,44 @@ See the following HTML code as an example
 
 ** add autocomplete also to add-cover-art
 
+In the uploaded userscript, please also add support for the following pages
+
+#+begin_example
+// @match        *://*.musicbrainz.org/release/*/add-cover-art
+#+end_example
+
+in the following ways:
+
+On the "/add-cover-art" page the two buttons
+
+#+begin_example
+<button id="config-immutable" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">⚙️ Configure immutable comments</button>
+<button id="config-regex" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">⚙️ Configure regexps</button>
+#+end_example
+
+should be created right after the heading (to the right)
+
+#+begin_example
+<h2>Add cover art</h2>
+#+end_example
+
+Otherwise the same configuration action for the two buttons should apply.
+
+Additionally on the "/add-cover-art" page the same autocomplete logic for the "Comment" textfield should apply as on the "/cover-art" page.
+
+** 1
+
+The buttons are there and working, but the autocompletion doesn't work at all, probably because on the "/add-cover-art"
+page the "Comment:" field is located according to the following HTML code:
+
+#+begin_example
+<div class="comment row" data-bind="visible: status() == 'waiting'" style="">
+  <label>Comment:</label>
+  <input class="comment" type="text" size="47" data-bind="value: comment">
+</div>
+#+end_example
+
+
 
 * Add submitting...(n/m) also to disambiguation script
 
