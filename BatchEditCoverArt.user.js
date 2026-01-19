@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.19+2026-01-19
+// @version      2.0+2026-01-19
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell (elephant editor functionality by chaban, jesus2099)
 // @tag          AI generated
