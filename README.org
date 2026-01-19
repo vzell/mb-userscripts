@@ -18276,3 +18276,23 @@ In the uploaded userscript after pressing the "Batch edit cover art" button chec
 #+end_example
 
 is present and temporarily hide it from display as long as the "Batch Edit Cover Art" functionality is about to execute.
+
+** dont add the batch edit cover art when no images are present
+
+Add a check to the uploaded userscript, so that the "Batch edit cover art" button is not added when no images are present.
+This can be checked if the text "We do not currently have any cover art for " can be found after the heading "Cover art"
+
+See the following HTML code as an example
+
+#+begin_example
+<h2>Cover art</h2>
+<p>We do not currently have any cover art for <a href="/release/e450f184-3ea7-423b-912f-5ecc68115f6f"><bdi>The Roxy 18 Oct 1975 (Early Show)</bdi></a>.</p>
+#+end_example
+
+** add autocomplete also to add-cover-art
+
+
+* Add submitting...(n/m) also to disambiguation script
+
+* add reload functionality to batch remove cover art
+

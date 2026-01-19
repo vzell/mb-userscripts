@@ -694,7 +694,12 @@
         const addBtn = document.querySelector('a[href*="/add-cover-art"]');
         const buttonRow = document.querySelector('.buttons.ui-helper-clearfix');
 
-        if (addBtn && !document.getElementById('batch-edit-trigger')) {
+        // Check if there is a message indicating no cover art is present
+        const coverArtHeading = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.trim() === 'Cover art');
+        const noArtMessage = coverArtHeading ? getSibling(coverArtHeading, 'P', null, false, 1) : null;
+        const hasNoImages = noArtMessage && noArtMessage.textContent.includes('We do not currently have any cover art for');
+
+        if (addBtn && !document.getElementById('batch-edit-trigger') && !hasNoImages) {
             const batchBtn = document.createElement('a');
             batchBtn.id = 'batch-edit-trigger';
             batchBtn.href = '#';
@@ -708,7 +713,7 @@
             if (buttonRow) {
                 buttonRow.parentNode.insertBefore(batchContainer, buttonRow.nextSibling);
             }
-        } else if (!addBtn) {
+        } else if (!addBtn && !hasNoImages) {
             setTimeout(injectButton, 500);
         }
     };
