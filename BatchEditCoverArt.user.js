@@ -3,7 +3,7 @@
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      1.17+2026-01-19
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
-// @author       Gemini with vzell
+// @author       Gemini with vzell (elephant editor functionality by chaban, jesus2099)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchEditCoverArt.user.js
