@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.16+2026-01-18
+// @version      1.17+2026-01-19
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell
 // @tag          AI generated
@@ -716,8 +716,13 @@
     const toggleBatchMode = async (e) => {
         if (e) e.preventDefault();
 
+        const batchRemoveContainer = document.querySelector('.batch-remove-container');
+
         if (batchContainer.style.display === 'block') {
             batchContainer.style.display = 'none';
+            if (batchRemoveContainer) {
+                batchRemoveContainer.style.display = 'block';
+            }
             return;
         }
 
@@ -725,6 +730,11 @@
         if (images.length === 0) {
             alert('No editable images found.');
             return;
+        }
+
+        // Hide Batch Remove while Batch Edit is active
+        if (batchRemoveContainer) {
+            batchRemoveContainer.style.display = 'none';
         }
 
         batchContainer.innerHTML = '<h3 style="color: #600; padding: 10px;">Loading metadata for ' + images.length + ' images...</h3>';

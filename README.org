@@ -18169,7 +18169,6 @@ Somehow the sorting doesn't seem to work properly:
  - When a newly entered immutable comment is added and the same comment exists in the list of non immutable comments, it
    should be removed from the list of non immutable comments
 
-   
 ** add delete button
 
 Everything works up to now.
@@ -18267,3 +18266,13 @@ into the "BatchEditCoverArt.user.js" user script
 
 Please check the user script logic in the uploaded userscript "BatchRemoveCoverArt.user.js" for the elephant logic which remembers the last type in text in the textarea field
 and compare why in the uploaded script "BatchEditCoverArt.user.js" the '<div class="buttons">' doesn't show up above the texarea field with the id="batch-edit-note"
+
+** remove batch-remove-container
+
+In the uploaded userscript after pressing the "Batch edit cover art" button check if the container
+
+#+begin_example
+<div class="batch-remove-container">
+#+end_example
+
+is present and temporarily hide it from display as long as the "Batch Edit Cover Art" functionality is about to execute.
