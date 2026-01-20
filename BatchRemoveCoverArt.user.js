@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MusicBrainz: Batch Remove Cover Art
 // @namespace    https://musicbrainz.org/user/chaban
-// @version      0.5.6
+// @version      0.5.7
 // @description  Allows batch removing cover art from MusicBrainz releases.
 // @tag          ai-created
 // @author       chaban, jesus2099
@@ -591,6 +591,8 @@
             resetUI(isAborting);
             if (!isAborting) {
                 statusMessages.innerHTML += `<p>Batch removal complete. Processed ${completedRemovals} of ${totalRemovals} selected images.</p>`;
+                removeSelectedBtn.innerText = 'Finished! Reloading...';
+                setTimeout(() => window.location.reload(), 1000);
             }
         });
 
