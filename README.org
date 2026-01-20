@@ -18334,6 +18334,16 @@ page the "Comment:" field is located according to the following HTML code:
 
 * add reload functionality to batch remove cover art
 
+In the uploaded "BatchRemoveCoverArt.user.js" user script please also add the following functionality from the uploaded
+user script "BatchEditCoverArt.user.js"
+
+#+begin_example
+        btn.innerText = 'Finished! Reloading...';
+        setTimeout(() => window.location.reload(), 1000);
+#+end_example
+
+to reload the page after removeing images
+
 
 * I once mentioned this new userscript in the
 https://community.metabrainz.org/t/chabans-userscripts-and-bookmarklet-support-thread/768583/53 topic, but I think it
