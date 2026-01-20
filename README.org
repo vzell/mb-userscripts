@@ -18334,3 +18334,28 @@ page the "Comment:" field is located according to the following HTML code:
 
 * add reload functionality to batch remove cover art
 
+
+*
+
+I once mentioned this new userscript in the
+https://community.metabrainz.org/t/chabans-userscripts-and-bookmarklet-support-thread/768583/53 topic, but I think it
+belongs to here, as I recently made some more changes to it.
+
+This userscript adds a "Batch edit cover art" button after the standard "Add cover art" button.
+
+When pressed it loads the metadata off all the images in a new container (it also offers a couple of convenience buttons
+like "Clear all types" and "Reset to original"). In that container you can add/remove/change types and comments of all
+the images as usual, and submit them all at once. The script remembers the last 50 different comments and offers
+auto-completion for these during the new edits. There is a button "⚙️ Configure immutable comments" in the container
+where comments can be specified which should always be offered for auto-completion. With another button "⚙️ Configure
+regexps" a list of regular expressions can be defined so that comments matching these are never stored in browser
+storage and don't count to the latest 50 entered comments.
+
+The auto-completion functionality together with the configuration options are now also supported when entering new
+images to a release.
+
+Additionally for entering edit notes as a whole, the Elephant functionality (developed by jesus2099 and adopted by
+chaban in his userscript "Batch remove cover art") is now also included.
+
+You can get the script at https://github.com/vzell/mb-userscripts under [Batch Edit Cover
+Art](https://github.com/vzell/mb-userscripts?tab=readme-ov-file#mb_batch_edit_coverart)

@@ -129,7 +129,7 @@ Insert buttons on the Release Edit Relationships page which add preconfigured Ar
 
 ## <a name="mb_batch_edit_coverart"></a> Batch Edit Cover Art
 
-Batch edit types and comments of cover art images
+Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchEditCoverArt.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchEditCoverArt.user.js)
