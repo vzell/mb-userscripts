@@ -18335,9 +18335,7 @@ page the "Comment:" field is located according to the following HTML code:
 * add reload functionality to batch remove cover art
 
 
-*
-
-I once mentioned this new userscript in the
+* I once mentioned this new userscript in the
 https://community.metabrainz.org/t/chabans-userscripts-and-bookmarklet-support-thread/768583/53 topic, but I think it
 belongs to here, as I recently made some more changes to it.
 
