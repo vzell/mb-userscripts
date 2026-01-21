@@ -743,10 +743,10 @@
             const h2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.trim() === 'Add cover art');
             if (h2 && !document.getElementById('config-immutable')) {
                 const btnImmutable = createTag('button', {
-                    a: { id: 'config-immutable', style: 'cursor:pointer; padding: 4px 8px; font-size: 0.85em; margin-left: 10px;' }
+                    a: { id: 'config-immutable', style: 'cursor:pointer; padding: 1px 8px; font-size: 0.85em; margin-left: 10px;' }
                 }, '⚙️ Configure immutable comments');
                 const btnRegex = createTag('button', {
-                    a: { id: 'config-regex', style: 'cursor:pointer; padding: 4px 8px; font-size: 0.85em; margin-left: 5px;' }
+                    a: { id: 'config-regex', style: 'cursor:pointer; padding: 1px 8px; font-size: 0.85em; margin-left: 5px;' }
                 }, '⚙️ Configure regexps');
 
                 h2.appendChild(btnImmutable);
