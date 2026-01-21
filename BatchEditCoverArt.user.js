@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.0+2026-01-19
+// @version      2.1+2026-01-21
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell (elephant editor functionality by chaban, jesus2099)
 // @tag          AI generated
@@ -507,7 +507,7 @@
             item.onclick = () => {
                 input.value = text;
                 suggestionList.style.display = 'none';
-                input.dispatchEvent(new Event('change'));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
             };
             item.onmouseover = () => {
                 selectedIndex = index;
@@ -537,7 +537,7 @@
                     e.preventDefault();
                     input.value = items[selectedIndex].textContent.replace('📌 ', '');
                     suggestionList.style.display = 'none';
-                    input.dispatchEvent(new Event('change'));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
                 break;
             case 'Escape':
@@ -695,13 +695,39 @@
         if (input.dataset.autocompleteBound) return;
         input.dataset.autocompleteBound = 'true';
         input.addEventListener('focus', () => showSuggestions(input));
-        input.addEventListener('input', () => showSuggestions(input));
+        input.addEventListener('input', () => {
+            showSuggestions(input);
+            highlightModifiedComment(input);
+        });
+        input.addEventListener('change', () => highlightModifiedComment(input));
         input.addEventListener('blur', hideSuggestions);
         input.addEventListener('keydown', (e) => handleKeydown(e, input));
     };
 
+    const highlightModifiedComment = (input) => {
+        const row = getParent(input, 'TR', 'batch-row');
+        if (!row) return;
+        const id = row.getAttribute('data-id');
+        const original = originalData[id];
+        if (original && input.value !== original.comment) {
+            input.classList.add('modified');
+        } else {
+            input.classList.remove('modified');
+        }
+    };
+
     const injectButton = () => {
         const isAddPage = window.location.pathname.endsWith('/add-cover-art');
+
+        // Add CSS for modified inputs
+        if (!document.getElementById('batch-edit-styles')) {
+            const style = document.createElement('style');
+            style.id = 'batch-edit-styles';
+            style.textContent = `
+                input.batch-comment.modified { border-color: red !important; border-width: 2px !important; }
+            `;
+            document.head.appendChild(style);
+        }
 
         if (isAddPage) {
             const h2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.trim() === 'Add cover art');
@@ -871,6 +897,7 @@
             const commentVal = firstRow.querySelector('.batch-comment').value;
             document.querySelectorAll('.batch-comment').forEach(input => {
                 input.value = commentVal;
+                highlightModifiedComment(input);
             });
         };
 
@@ -885,7 +912,9 @@
                 document.querySelectorAll('.batch-row').forEach(row => {
                     const id = row.getAttribute('data-id');
                     const orig = originalData[id];
-                    row.querySelector('.batch-comment').value = orig.comment;
+                    const commentInput = row.querySelector('.batch-comment');
+                    commentInput.value = orig.comment;
+                    highlightModifiedComment(commentInput);
                     row.querySelectorAll('.type-checkboxes input').forEach(cb => {
                         cb.checked = orig.types.includes(cb.value);
                     });
@@ -942,7 +971,8 @@
 
         rows.forEach(row => {
             const id = row.getAttribute('data-id');
-            const currentComment = row.querySelector('.batch-comment').value;
+            const commentInput = row.querySelector('.batch-comment');
+            const currentComment = commentInput.value;
             const currentTypes = Array.from(row.querySelectorAll('.type-checkboxes input:checked')).map(cb => cb.value).sort();
 
             const orig = originalData[id];
@@ -994,7 +1024,8 @@
             btn.innerText = `Submitting...(${i + 1}/${total})`;
 
             const editUrl = row.getAttribute('data-edit-url');
-            const comment = row.querySelector('.batch-comment').value;
+            const commentInput = row.querySelector('.batch-comment');
+            const comment = commentInput.value;
             const selectedTypes = Array.from(row.querySelectorAll('.type-checkboxes input:checked')).map(cb => cb.value);
 
             const formInfo = await getFormPayload(editUrl);
@@ -1014,6 +1045,9 @@
             });
 
             await postEdit(editUrl, formData);
+
+            // Reset visual state
+            commentInput.classList.remove('modified');
             row.style.backgroundColor = '#dff0d8';
             row.style.opacity = '0.5';
         }
