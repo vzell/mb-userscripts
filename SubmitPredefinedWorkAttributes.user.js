@@ -10,27 +10,19 @@
 (function() {
     'use strict';
 
-    console.log('[MB-Debug] Script initialized');
-
-    // The set of attributes handled by this script
     const MANAGED_ATTRIBUTES = ['cover', 'live', 'partial'];
 
     /**
      * Ensures only the attributes in the list are checked
      */
     function applyAttributes(dialog, targetAttributes) {
-        console.log('[MB-Debug] Aligning attributes to:', targetAttributes);
-
         MANAGED_ATTRIBUTES.forEach(attr => {
             const container = dialog.querySelector(`.attribute-container.${attr}`);
             if (container) {
                 const checkbox = container.querySelector('input[type="checkbox"]');
                 if (checkbox) {
                     const shouldBeChecked = targetAttributes.includes(attr);
-
-                    // If it should be checked but isn't, OR should be unchecked but is, click it
                     if (checkbox.checked !== shouldBeChecked) {
-                        console.log(`[MB-Debug] Syncing ${attr} to ${shouldBeChecked}`);
                         checkbox.click();
                     }
                 }
@@ -39,29 +31,28 @@
 
         const doneBtn = dialog.querySelector('.buttons button.positive');
         if (doneBtn) {
-            console.log('[MB-Debug] Clicking Done button');
             doneBtn.click();
         }
     }
 
     /**
-     * Creates and injects the shortcut buttons
+     * Creates and injects the shortcut buttons on a new row with spacing
      */
     function injectButtons(dialog) {
-        if (dialog.querySelector('.custom-attr-buttons')) return;
+        if (dialog.querySelector('.custom-attr-row')) return;
 
         const footer = dialog.querySelector('.buttons');
         if (!footer) return;
 
-        const footerRightGroup = footer.querySelector('.buttons-right');
-        if (!footerRightGroup) return;
-
-        console.log('[MB-Debug] Injecting custom buttons');
-        const container = document.createElement('span');
-        container.className = 'custom-attr-buttons';
-        container.style.marginLeft = '10px';
-        container.style.display = 'inline-flex';
-        container.style.gap = '4px';
+        // Create a wrapper div to force a new line with clear vertical spacing
+        const rowContainer = document.createElement('div');
+        rowContainer.className = 'custom-attr-row';
+        rowContainer.style.marginTop = '15px';
+        rowContainer.style.paddingTop = '5px';
+        rowContainer.style.display = 'flex';
+        rowContainer.style.flexWrap = 'wrap';
+        rowContainer.style.gap = '6px';
+        rowContainer.style.width = '100%';
 
         const presets = [
             { text: 'cover', attrs: ['cover'] },
@@ -76,17 +67,26 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.innerText = preset.text;
-            btn.style.fontSize = '0.8em';
-            btn.style.padding = '2px 6px';
+            btn.style.fontSize = '0.85em';
+            btn.style.padding = '3px 10px';
             btn.style.cursor = 'pointer';
+            btn.style.backgroundColor = '#f8f9fa';
+            btn.style.border = '1px solid #ced4da';
+            btn.style.borderRadius = '4px';
+            btn.style.color = '#333';
+            
+            btn.onmouseover = () => { btn.style.backgroundColor = '#e2e6ea'; };
+            btn.onmouseout = () => { btn.style.backgroundColor = '#f8f9fa'; };
+            
             btn.onclick = (e) => {
                 e.preventDefault();
                 applyAttributes(dialog, preset.attrs);
             };
-            container.appendChild(btn);
+            rowContainer.appendChild(btn);
         });
 
-        footer.insertBefore(container, footerRightGroup);
+        // Append to the end of the footer container
+        footer.appendChild(rowContainer);
     }
 
     /**
@@ -101,9 +101,7 @@
 
                 if (dialog) {
                     const header = dialog.querySelector('h1');
-                    const headerText = header ? header.innerText.trim() : '';
-
-                    if (headerText === 'Edit relationship') {
+                    if (header && header.innerText.trim() === 'Edit relationship') {
                         const rows = Array.from(dialog.querySelectorAll('table.relationship-details tr'));
                         const isWork = rows.some(row => {
                             const section = row.querySelector('.required.section')?.innerText.trim();
@@ -122,5 +120,4 @@
 
     const observer = new MutationObserver(checkDialog);
     observer.observe(document.body, { childList: true, subtree: true });
-    console.log('[MB-Debug] Observer attached to document.body');
 })();

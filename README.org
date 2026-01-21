@@ -18962,4 +18962,10 @@ Only the presing of the DONE button should always happen
 
 Almost perfect. But when pressing one of the generated buttons, make sure that ONLY the checkboxes are checked that are actually mentioned on the button text.
 
+** 7
 
+The logic works now.  But please generate the new buttons one row below the "Done" button under the "Cancel" button
+
+** 8
+
+leave a little space between the "Cancel button and the new row of buttons, because the "Cancel" and "cover" button touch each other
