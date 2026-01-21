@@ -18336,6 +18336,23 @@ Add the following logic to the uploaded userscript "BatchEditCoverArt.user.js" s
 When a change happens to one of the image "Comment:" text fields, the text field should get a red border to highlight
 that change. When successfully submitting a comment, the border should get the oroginal color again.
 
+** 1
+
+In the uploaded userscript:
+
+It look's like on the pages "*://*.musicbrainz.org/release/*/add-cover-art" the comments do not get the red border when edits are made
+
+#+begin_example
+<div class="comment row" data-bind="visible: status() == 'waiting'" style="">
+              <label>Comment:</label>
+              <input class="comment" type="text" size="47" data-bind="value: comment" data-autocomplete-bound="true">
+            </div>
+#+end_example
+
+whereas on the "*://*.musicbrainz.org/release/*/cover-art" everything works fine.
+
+Please add that behaviour but don't touch the functioning code
+
 ** add button color
 
 In the uploaded userscript:

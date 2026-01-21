@@ -705,6 +705,16 @@
     };
 
     const highlightModifiedComment = (input) => {
+        const isAddPage = window.location.pathname.endsWith('/add-cover-art');
+        if (isAddPage) {
+            if (input.value.trim() !== "") {
+                input.classList.add('modified');
+            } else {
+                input.classList.remove('modified');
+            }
+            return;
+        }
+
         const row = getParent(input, 'TR', 'batch-row');
         if (!row) return;
         const id = row.getAttribute('data-id');
@@ -724,7 +734,7 @@
             const style = document.createElement('style');
             style.id = 'batch-edit-styles';
             style.textContent = `
-                input.batch-comment.modified { border-color: red !important; border-width: 2px !important; }
+                input.comment.modified, input.batch-comment.modified { border-color: red !important; border-width: 2px !important; }
             `;
             document.head.appendChild(style);
         }
