@@ -15,6 +15,9 @@
 - [MusicBrainz Relation Editor - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 - [MusicBrainz - Batch Edit Cover Art](#mb_batch_edit_coverart)
 ---
+**Adapted from [chaban](https://github.com/chaban-mb/userscripts)**
+- [MusicBrainz - Batch Remove Cover Art](#mb_batch_remove_coverart)
+---
 **Adapted from [Aerozol](https://github.com/Aerozol/metabrainz-userscripts)**
 - [MusicBrainz Release Editor - Quick Join Phrases](#mb_join_phrases)
 ---
@@ -137,11 +140,22 @@ Batch edit types and comments of cover art images with keyboard-navigable autoco
 
 ---
 
+**Adapted from [chaban](https://github.com/chaban-mb/userscripts)**
+
+## <a name="mb_batch_remove_coverart"></a> Batch Remove Cover Art
+
+Allows batch removing cover art from MusicBrainz releases.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchRemoveCoverArt.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchRemoveCoverArt.user.js)
+
+---
+
 **Adapted from [Aerozol](https://github.com/Aerozol/metabrainz-userscripts)**
 
 ## <a name="mb_join_phrases"></a> Quick Join Phrases
 
-Click to add common join phrases in the release editor
+Click to add common join phrases in the release editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/QuickJoinPhrases.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/QuickJoinPhrases.user.js)
@@ -159,7 +173,7 @@ Replace release relations by recording relations in relation editor.
 
 ## <a name="mb_clone_recording_relations_onto_other_relations"></a> Clone Recording Relations Onto Other Recordings
 
-Clone recording relations onto other recordings in the relation editor
+Clone recording relations onto other recordings in the relation editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CloneRecordingRelations.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CloneRecordingRelations.user.js)
@@ -187,7 +201,7 @@ Set attributes (live, partial, solo...) in relation editor.
 
 ## <a name="mb_copy_dates_on_recordings"></a> Copy Dates On Recording Relations
 
-Copy/remove dates on recording relations in musicbrainz.relation editor
+Copy/remove dates on recording relations in musicbrainz.relation editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/CopyDatesOnRecordingRelations.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/CopyDatesOnRecordingRelations.user.js)

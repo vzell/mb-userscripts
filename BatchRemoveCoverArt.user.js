@@ -1,18 +1,19 @@
 // ==UserScript==
-// @name         MusicBrainz: Batch Remove Cover Art
-// @namespace    https://musicbrainz.org/user/chaban
-// @version      0.5.7
-// @description  Allows batch removing cover art from MusicBrainz releases.
-// @tag          ai-created
+// @name         VZ: MusicBrainz - Batch Remove Cover Art
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      0.5.6+2026-01-21
+// @description  Allows batch removing cover art from MusicBrainz releases
 // @author       chaban, jesus2099
+// @tag          ai-created
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchRemoveCoverArt.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchRemoveCoverArt.user.js
+// @icon         https://musicbrainz.org/static/images/favicons/android-chrome-512x512.png
 // @license      GPL-3.0-or-later; http://www.gnu.org/licenses/gpl-3.0.txt
 // @match        *://*.musicbrainz.org/release/*/cover-art
-// @connect      self
 // @grant        GM.xmlHttpRequest
 // @grant        GM.addStyle
-// @icon         https://musicbrainz.org/static/images/favicons/android-chrome-512x512.png
-// @downloadURL https://update.greasyfork.org/scripts/541232/MusicBrainz%3A%20Batch%20Remove%20Cover%20Art.user.js
-// @updateURL https://update.greasyfork.org/scripts/541232/MusicBrainz%3A%20Batch%20Remove%20Cover%20Art.meta.js
+// @connect      self
 // ==/UserScript==
 
 (function() {
