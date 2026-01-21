@@ -19073,4 +19073,15 @@ Collect all the table entries after the different headings which look like the f
 
 and create one final page where each subheader, like "Official", "Promotion, Bootleg", etc exist only one time.
 
+** 2
+
+Thx, it works.
+Add two things:
+
+ - Please add console logging to the code.
+ - Make the final page sortable by the headers definde in
+
+#+begin_example
+<thead><tr><th class="checkbox-cell"><input type="checkbox"></th><th>Release</th><th>Relationships</th><th>Artist</th><th>Format</th><th>Tracks</th><th>Country/Date</th><th>Label</th><th>Catalog#</th><th>Barcode</th><th>Tagger</th></tr></thead>
+#+end_example
 

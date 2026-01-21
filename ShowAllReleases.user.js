@@ -24,13 +24,17 @@
 
     headerLink.parentNode.appendChild(btn);
 
+    // Track sorting state
+    let sortAscending = true;
+    let lastSortIndex = -1;
+
     btn.addEventListener('click', async () => {
+        console.log('[MB Show All] Button clicked. Starting accumulation...');
         btn.disabled = true;
         btn.textContent = 'Loading...';
 
         const paginationLinks = document.querySelectorAll('ul.pagination li a');
         const urls = new Set();
-        // Ensure we include the current page as well
         urls.add(window.location.href);
 
         paginationLinks.forEach(link => {
@@ -40,14 +44,18 @@
             }
         });
 
-        // Map to store: Key = Subheader Text (e.g., "Official"), Value = Array of TR elements
+        console.log(`[MB Show All] Found ${urls.size} pages to fetch.`);
+
         const groupedRows = new Map();
 
         try {
             const sortedUrls = Array.from(urls).sort();
 
             for (const url of sortedUrls) {
-                btn.textContent = `Fetching ${new URL(url).searchParams.get('page') || '1'}...`;
+                const pageNum = new URL(url).searchParams.get('page') || '1';
+                console.log(`[MB Show All] Fetching page ${pageNum}...`);
+                btn.textContent = `Fetching page ${pageNum}...`;
+
                 const html = await fetchHtml(url);
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
@@ -57,7 +65,6 @@
 
                 rows.forEach(row => {
                     if (row.classList.contains('subh')) {
-                        // Extract category name from the second TH
                         currentCategory = row.querySelector('th[colspan]')?.textContent.trim() || "Unknown";
                     } else {
                         if (!groupedRows.has(currentCategory)) {
@@ -68,14 +75,17 @@
                 });
             }
 
+            console.log('[MB Show All] All pages fetched. Categories identified:', Array.from(groupedRows.keys()));
             renderFinalTable(groupedRows);
+            makeSortable(groupedRows);
 
             const nav = document.querySelector('nav');
             if (nav) nav.remove();
 
             btn.textContent = 'All releases loaded';
+            console.log('[MB Show All] UI updated and sorting enabled.');
         } catch (error) {
-            console.error('Error fetching releases:', error);
+            console.error('[MB Show All] Error during process:', error);
             btn.textContent = 'Error loading';
             btn.disabled = false;
         }
@@ -85,19 +95,51 @@
         const tableBody = document.querySelector('table.tbl.mergeable-table tbody');
         if (!tableBody) return;
 
-        // Clear existing content
         tableBody.innerHTML = '';
 
-        // Iterate through the Map and rebuild the table
         groupedRows.forEach((rows, category) => {
-            // Create the subheader row
             const subhTr = document.createElement('tr');
             subhTr.className = 'subh';
-            subhTr.innerHTML = `<th></th><th colspan="9">${category}</th>`;
+            subhTr.innerHTML = `<th></th><th colspan="10">${category}</th>`;
             tableBody.appendChild(subhTr);
 
-            // Append all release rows for this category
             rows.forEach(row => tableBody.appendChild(row));
+        });
+    }
+
+    function makeSortable(groupedRows) {
+        const headers = document.querySelectorAll('table.tbl.mergeable-table thead th');
+
+        headers.forEach((th, index) => {
+            if (index === 0) return; // Skip checkbox column
+
+            th.style.cursor = 'pointer';
+            th.title = 'Click to sort';
+
+            th.addEventListener('click', () => {
+                console.log(`[MB Show All] Sorting by column index ${index}...`);
+
+                if (lastSortIndex === index) {
+                    sortAscending = !sortAscending;
+                } else {
+                    sortAscending = true;
+                }
+                lastSortIndex = index;
+
+                // Sort the rows within each group
+                groupedRows.forEach((rows, category) => {
+                    rows.sort((a, b) => {
+                        const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
+                        const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
+
+                        if (valA < valB) return sortAscending ? -1 : 1;
+                        if (valA > valB) return sortAscending ? 1 : -1;
+                        return 0;
+                    });
+                });
+
+                renderFinalTable(groupedRows);
+            });
         });
     }
 
