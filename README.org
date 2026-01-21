@@ -12594,7 +12594,7 @@ userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f
 userscript.html?name=Batch-Add-Relationships-To-Recordings.user.js&id=fb0ca461-f2ac-4e46-8869-a35c80afece8:35 [AA-add-instrument] Update visibility check called
 #+end_example
 
-**** final working version - buttons are preconfigured - show onyl if at least one recording is checked
+**** final working version - buttons are preconfigured - show only if at least one recording is checked
 
 #+begin_example
 // ==UserScript==
@@ -16451,7 +16451,7 @@ below the line with the "Track relationships" header
 
 Please DO NOT make any code changes, as everything works ok.
 
-** 1
+** button doubling
 
 In the uploaded userscript, can you double the following
 
@@ -16467,6 +16467,15 @@ together with its button '<button id="aa-config-btn"' with a little space after 
 
 and NOT touch the rest of the script
 
+** direct MBID handling
+
+In the uploaded userscript, if the config.artist is an MBID directly instead of  just the artist name
+(for example MBID=70248960-cb53-4ea4-943a-edb18f7d336f for artist="Bruce Springsteen")
+
+adjust the logic in the function "sync function typeAndSelect" so that instead of typing each character of the MBID,
+insert it as is and wait for completion on the whole MBID string, instead of typing char by char of an artist name and wait for completion after each inserted char.
+
+It should be much faster.
 
 * Guess Related Works
 ** Gemini
