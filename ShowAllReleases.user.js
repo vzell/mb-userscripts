@@ -24,18 +24,16 @@
 
     headerLink.parentNode.appendChild(btn);
 
-    // Track sorting state
     let sortAscending = true;
     let lastSortIndex = -1;
 
     btn.addEventListener('click', async () => {
-        console.log('[MB Show All] Button clicked. Starting accumulation...');
+        console.log('[MB Show All] Starting process...');
         btn.disabled = true;
         btn.textContent = 'Loading...';
 
         const paginationLinks = document.querySelectorAll('ul.pagination li a');
-        const urls = new Set();
-        urls.add(window.location.href);
+        const urls = new Set([window.location.href]);
 
         paginationLinks.forEach(link => {
             const href = link.getAttribute('href');
@@ -44,9 +42,9 @@
             }
         });
 
-        console.log(`[MB Show All] Found ${urls.size} pages to fetch.`);
-
         const groupedRows = new Map();
+        let relIdx = -1;
+        let tagIdx = -1;
 
         try {
             const sortedUrls = Array.from(urls).sort();
@@ -54,13 +52,23 @@
             for (const url of sortedUrls) {
                 const pageNum = new URL(url).searchParams.get('page') || '1';
                 console.log(`[MB Show All] Fetching page ${pageNum}...`);
-                btn.textContent = `Fetching page ${pageNum}...`;
-
+                
                 const html = await fetchHtml(url);
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
-                const rows = doc.querySelectorAll('table.tbl.mergeable-table tbody tr');
+                
+                // On the first page/iteration, identify column indices by header text
+                if (relIdx === -1) {
+                    const ths = doc.querySelectorAll('table.tbl.mergeable-table thead th');
+                    ths.forEach((th, i) => {
+                        const text = th.textContent.trim();
+                        if (text === 'Relationships') relIdx = i;
+                        if (text === 'Tagger') tagIdx = i;
+                    });
+                    console.log(`[MB Show All] Column mapping - Relationships: ${relIdx}, Tagger: ${tagIdx}`);
+                }
 
+                const rows = doc.querySelectorAll('table.tbl.mergeable-table tbody tr');
                 let currentCategory = "Unknown";
 
                 rows.forEach(row => {
@@ -70,12 +78,25 @@
                         if (!groupedRows.has(currentCategory)) {
                             groupedRows.set(currentCategory, []);
                         }
-                        groupedRows.get(currentCategory).push(document.importNode(row, true));
+
+                        const cleanRow = document.importNode(row, true);
+                        
+                        // Remove Tagger first (higher index) so it doesn't shift the Relationship index
+                        if (tagIdx !== -1 && cleanRow.cells[tagIdx]) cleanRow.deleteCell(tagIdx);
+                        if (relIdx !== -1 && cleanRow.cells[relIdx]) cleanRow.deleteCell(relIdx);
+
+                        groupedRows.get(currentCategory).push(cleanRow);
                     }
                 });
             }
 
-            console.log('[MB Show All] All pages fetched. Categories identified:', Array.from(groupedRows.keys()));
+            // Update the visible table header once
+            const theadRow = document.querySelector('table.tbl.mergeable-table thead tr');
+            if (theadRow) {
+                if (tagIdx !== -1 && theadRow.cells[tagIdx]) theadRow.deleteCell(tagIdx);
+                if (relIdx !== -1 && theadRow.cells[relIdx]) theadRow.deleteCell(relIdx);
+            }
+
             renderFinalTable(groupedRows);
             makeSortable(groupedRows);
 
@@ -83,9 +104,9 @@
             if (nav) nav.remove();
 
             btn.textContent = 'All releases loaded';
-            console.log('[MB Show All] UI updated and sorting enabled.');
+            console.log('[MB Show All] Done.');
         } catch (error) {
-            console.error('[MB Show All] Error during process:', error);
+            console.error('[MB Show All] Error:', error);
             btn.textContent = 'Error loading';
             btn.disabled = false;
         }
@@ -94,15 +115,14 @@
     function renderFinalTable(groupedRows) {
         const tableBody = document.querySelector('table.tbl.mergeable-table tbody');
         if (!tableBody) return;
-
         tableBody.innerHTML = '';
 
         groupedRows.forEach((rows, category) => {
             const subhTr = document.createElement('tr');
             subhTr.className = 'subh';
-            subhTr.innerHTML = `<th></th><th colspan="10">${category}</th>`;
+            // 11 original columns - 2 removed = 9 total. 1 for checkbox, 8 for colspan.
+            subhTr.innerHTML = `<th></th><th colspan="8">${category}</th>`;
             tableBody.appendChild(subhTr);
-
             rows.forEach(row => tableBody.appendChild(row));
         });
     }
@@ -111,30 +131,28 @@
         const headers = document.querySelectorAll('table.tbl.mergeable-table thead th');
 
         headers.forEach((th, index) => {
-            if (index === 0) return; // Skip checkbox column
-
+            if (index === 0) return; // Ignore checkbox
             th.style.cursor = 'pointer';
-            th.title = 'Click to sort';
+            th.style.whiteSpace = 'nowrap';
 
             th.addEventListener('click', () => {
-                console.log(`[MB Show All] Sorting by column index ${index}...`);
-
                 if (lastSortIndex === index) {
                     sortAscending = !sortAscending;
                 } else {
                     sortAscending = true;
+                    lastSortIndex = index;
                 }
-                lastSortIndex = index;
 
-                // Sort the rows within each group
-                groupedRows.forEach((rows, category) => {
+                headers.forEach((h, i) => {
+                    h.innerHTML = h.innerHTML.replace(/ [▴▾]$/, '');
+                    if (i === index) h.innerHTML += sortAscending ? ' ▴' : ' ▾';
+                });
+
+                groupedRows.forEach((rows) => {
                     rows.sort((a, b) => {
                         const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
                         const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
-
-                        if (valA < valB) return sortAscending ? -1 : 1;
-                        if (valA > valB) return sortAscending ? 1 : -1;
-                        return 0;
+                        return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                     });
                 });
 

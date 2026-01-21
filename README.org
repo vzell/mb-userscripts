@@ -19085,3 +19085,116 @@ Add two things:
 <thead><tr><th class="checkbox-cell"><input type="checkbox"></th><th>Release</th><th>Relationships</th><th>Artist</th><th>Format</th><th>Tracks</th><th>Country/Date</th><th>Label</th><th>Catalog#</th><th>Barcode</th><th>Tagger</th></tr></thead>
 #+end_example
 
+** 3
+
+- Ignore the "Relationships" and "Tagger" columns wenn accumulating the data. Also do not display this two headers in the final accumulated table.
+- Place a up/down unicode trinagle symbol afer each column header to show the direction of sorting
+
+** 4
+
+Somehow the handling of the "Relationship" column is not right. See complete row example below
+
+#+begin_example
+<tr class="odd" id="9875993c-8cbe-42b3-a8ff-76d1148f6a5c">
+  <td>
+    <input name="add-to-merge" type="checkbox" value="2956217">
+  </td>
+  <td>
+    <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+    </span>
+    <a href="/release/9875993c-8cbe-42b3-a8ff-76d1148f6a5c/cover-art">
+      <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive" style="background-size: contain; background-image: url(&quot;//coverartarchive.org/release/9875993c-8cbe-42b3-a8ff-76d1148f6a5c/front-250&quot;);">
+      </span>
+    </a>
+    <a class="wrap-anywhere" href="/release/9875993c-8cbe-42b3-a8ff-76d1148f6a5c">
+      <bdi>Greetings From Asbury Park, N.J.
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>“Nice Price” reissue
+      </bdi>)
+    </span>
+  </td>
+  <td class="relationships">
+    <span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
+    </span>
+    <a href="https://www.springsteenlyrics.com/collection.php?item=7992">
+      <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+    </a>
+  </td>
+  <td>
+    <bdi>
+      <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+      </a>
+    </bdi>
+  </td>
+  <td>Cassette
+  </td>
+  <td>9
+  </td>
+  <td>
+    <script type="application/json">{"events":[{"country":{"entityType":"area","last_updated":"2013-08-28T11:55:13Z","iso_3166_3_codes":[],"iso_3166_1_codes":["XE"],"primaryAlias":"Europe","primary_code":"XE","iso_3166_2_codes":[],"id":241,"begin_date":null,"name":"Europe","typeID":null,"gid":"89a675c2-3e37-3518-b83c-418bad59a85a","end_date":null,"editsPending":false,"country_code":"XE","comment":"","ended":false},"date":{"year":null,"day":null,"month":null}}]}
+    </script>
+    <div class="release-events-container">
+      <ul aria-label="Release events" class="release-events abbreviated">
+	<li aria-label="Release event" class="release-event">
+	  <span class="flag flag-XE release-country">
+	    <a href="/area/89a675c2-3e37-3518-b83c-418bad59a85a">
+	      <abbr title="Europe">XE
+	      </abbr>
+	    </a>
+	  </span>
+	  <span class="release-date no-date" title="Missing date">-
+	  </span>
+	</li>
+      </ul>
+    </div>
+  </td>
+  <td>
+    <a href="/label/b8d33bec-92cc-40d9-bd92-4eb089b401a9">
+      <bdi>CBS
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>CBS Records’ international imprint from 1962–1990; renamed since 1991 as Columbia
+      </bdi>)
+    </span>
+  </td>
+  <td>
+    <span class="catalog-number">40-32210
+    </span>
+  </td>
+  <td class="barcode-cell">[none]
+  </td>
+  <td>
+    <script type="application/json">{"entityType":"release","gid":"9875993c-8cbe-42b3-a8ff-76d1148f6a5c"}
+    </script>
+    <span class="tagger-icon">
+      <a class="tagger-icon" href="http://127.0.0.1:8000/openalbum?id=9875993c-8cbe-42b3-a8ff-76d1148f6a5c" title="Open in tagger">
+	<img alt="Tagger" src="https://static.metabrainz.org/MB/mblookup-tagger-5a66953.png">
+      </a>
+    </span>
+  </td>
+</tr>
+#+end_example
+
+Is it because of the 'class="relationships"' ?
+
+#+begin_example
+  <td class="relationships">
+    <span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
+    </span>
+    <a href="https://www.springsteenlyrics.com/collection.php?item=7992">
+      <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+    </a>
+  </td>
+#+end_example
+
+When this colum is ignored, according to the current code, actually the "artist" column which normall should show the artist name, now shows the value of the "Format" column.
+
+** 5
+
+OK, the table data now looks ok, but in the header row there is still the "Relationships" column, which should be remove from the header.
+Also the "Barcode" header is missing, but the "Tagger" header is there instead.
+Please fix
+
