@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.3+2026-01-21
+// @version      2.4+2026-01-21
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell (elephant editor functionality by chaban, jesus2099)
 // @tag          AI generated
@@ -742,6 +742,21 @@
         });
     };
 
+    const setupTypeHighlightingAddPage = (checkbox) => {
+        if (checkbox.dataset.highlightBound) return;
+        checkbox.dataset.highlightBound = 'true';
+        checkbox.addEventListener('change', () => {
+            const label = checkbox.closest('label');
+            if (label) {
+                if (checkbox.checked) {
+                    label.classList.add('modified');
+                } else {
+                    label.classList.remove('modified');
+                }
+            }
+        });
+    };
+
     const injectButton = () => {
         const isAddPage = window.location.pathname.endsWith('/add-cover-art');
 
@@ -772,15 +787,17 @@
                 btnImmutable.onclick = () => showConfigModal("⚙️ Configure Immutable Comments", ImmutableManager, "Enter new immutable comment:", true);
                 btnRegex.onclick = () => showConfigModal("⚙️ Configure Regular Expressions", RegexManager, "Enter new regex pattern:", false);
 
-                // Use MutationObserver to handle dynamically added comment fields
+                // Use MutationObserver to handle dynamically added comment fields and type checkboxes
                 const observer = new MutationObserver((mutations) => {
                     document.querySelectorAll('input.comment').forEach(setupAutocomplete);
+                    document.querySelectorAll('.cover-art-type-checkboxes input.type').forEach(setupTypeHighlightingAddPage);
                 });
                 const container = document.getElementById('add-cover-art') || document.body;
                 observer.observe(container, { childList: true, subtree: true });
 
                 // Initial run
                 document.querySelectorAll('input.comment').forEach(setupAutocomplete);
+                document.querySelectorAll('.cover-art-type-checkboxes input.type').forEach(setupTypeHighlightingAddPage);
             }
             return;
         }
