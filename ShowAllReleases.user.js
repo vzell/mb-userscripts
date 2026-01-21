@@ -28,7 +28,7 @@
     let lastSortIndex = -1;
 
     btn.addEventListener('click', async () => {
-        console.log('[MB Show All] Starting process...');
+        console.log('[MB Show All] Starting accumulation and header cleanup...');
         btn.disabled = true;
         btn.textContent = 'Loading...';
 
@@ -52,12 +52,12 @@
             for (const url of sortedUrls) {
                 const pageNum = new URL(url).searchParams.get('page') || '1';
                 console.log(`[MB Show All] Fetching page ${pageNum}...`);
-                
+
                 const html = await fetchHtml(url);
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
-                
-                // On the first page/iteration, identify column indices by header text
+
+                // Identify indices once based on the source document
                 if (relIdx === -1) {
                     const ths = doc.querySelectorAll('table.tbl.mergeable-table thead th');
                     ths.forEach((th, i) => {
@@ -65,7 +65,7 @@
                         if (text === 'Relationships') relIdx = i;
                         if (text === 'Tagger') tagIdx = i;
                     });
-                    console.log(`[MB Show All] Column mapping - Relationships: ${relIdx}, Tagger: ${tagIdx}`);
+                    console.log(`[MB Show All] Found Relationships at ${relIdx}, Tagger at ${tagIdx}`);
                 }
 
                 const rows = doc.querySelectorAll('table.tbl.mergeable-table tbody tr');
@@ -80,8 +80,7 @@
                         }
 
                         const cleanRow = document.importNode(row, true);
-                        
-                        // Remove Tagger first (higher index) so it doesn't shift the Relationship index
+                        // Delete higher index first to maintain index stability
                         if (tagIdx !== -1 && cleanRow.cells[tagIdx]) cleanRow.deleteCell(tagIdx);
                         if (relIdx !== -1 && cleanRow.cells[relIdx]) cleanRow.deleteCell(relIdx);
 
@@ -90,13 +89,19 @@
                 });
             }
 
-            // Update the visible table header once
-            const theadRow = document.querySelector('table.tbl.mergeable-table thead tr');
-            if (theadRow) {
-                if (tagIdx !== -1 && theadRow.cells[tagIdx]) theadRow.deleteCell(tagIdx);
-                if (relIdx !== -1 && theadRow.cells[relIdx]) theadRow.deleteCell(relIdx);
+            // CLEAN UP HEADER: Find and remove headers by text to avoid index mismatch
+            const thead = document.querySelector('table.tbl.mergeable-table thead');
+            if (thead) {
+                const headerCells = thead.querySelectorAll('th');
+                headerCells.forEach(th => {
+                    const text = th.textContent.trim();
+                    if (text === 'Relationships' || text === 'Tagger') {
+                        th.remove();
+                    }
+                });
             }
 
+            console.log('[MB Show All] Headers cleaned. Rendering final table.');
             renderFinalTable(groupedRows);
             makeSortable(groupedRows);
 
@@ -104,7 +109,6 @@
             if (nav) nav.remove();
 
             btn.textContent = 'All releases loaded';
-            console.log('[MB Show All] Done.');
         } catch (error) {
             console.error('[MB Show All] Error:', error);
             btn.textContent = 'Error loading';
@@ -113,15 +117,20 @@
     });
 
     function renderFinalTable(groupedRows) {
-        const tableBody = document.querySelector('table.tbl.mergeable-table tbody');
+        const table = document.querySelector('table.tbl.mergeable-table');
+        const tableBody = table.querySelector('tbody');
         if (!tableBody) return;
+
+        // Calculate actual columns remaining for the colspan
+        const activeColumns = table.querySelectorAll('thead th').length;
+        const subhColspan = activeColumns - 1; // -1 for the checkbox column
+
         tableBody.innerHTML = '';
 
         groupedRows.forEach((rows, category) => {
             const subhTr = document.createElement('tr');
             subhTr.className = 'subh';
-            // 11 original columns - 2 removed = 9 total. 1 for checkbox, 8 for colspan.
-            subhTr.innerHTML = `<th></th><th colspan="8">${category}</th>`;
+            subhTr.innerHTML = `<th></th><th colspan="${subhColspan}">${category}</th>`;
             tableBody.appendChild(subhTr);
             rows.forEach(row => tableBody.appendChild(row));
         });
@@ -131,7 +140,7 @@
         const headers = document.querySelectorAll('table.tbl.mergeable-table thead th');
 
         headers.forEach((th, index) => {
-            if (index === 0) return; // Ignore checkbox
+            if (index === 0 || th.classList.contains('checkbox-cell')) return;
             th.style.cursor = 'pointer';
             th.style.whiteSpace = 'nowrap';
 
@@ -143,6 +152,7 @@
                     lastSortIndex = index;
                 }
 
+                // Update indicators using text content to avoid destroying the header element
                 headers.forEach((h, i) => {
                     h.innerHTML = h.innerHTML.replace(/ [▴▾]$/, '');
                     if (i === index) h.innerHTML += sortAscending ? ' ▴' : ' ▾';
