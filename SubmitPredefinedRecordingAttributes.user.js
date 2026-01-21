@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Work Relationship Fast-Attributes
-// @description  Adds shortcut buttons to the Edit Relationship dialog for Works
+// @name         VZ: MusicBrainz - Recording Relationship Fast-Attributes
+// @description  Adds shortcut buttons to the Edit Relationship dialog for Recording of Works
 // @version      1.0
 // @author       Gemini
 // @match        https://musicbrainz.org/release/*/edit-relationships
