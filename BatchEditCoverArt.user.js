@@ -733,10 +733,10 @@
             const h2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.trim() === 'Add cover art');
             if (h2 && !document.getElementById('config-immutable')) {
                 const btnImmutable = createTag('button', {
-                    a: { id: 'config-immutable', style: 'cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999; margin-left: 10px;' }
+                    a: { id: 'config-immutable', style: 'cursor:pointer; padding: 4px 8px; font-size: 0.85em; margin-left: 10px;' }
                 }, '⚙️ Configure immutable comments');
                 const btnRegex = createTag('button', {
-                    a: { id: 'config-regex', style: 'cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999; margin-left: 5px;' }
+                    a: { id: 'config-regex', style: 'cursor:pointer; padding: 4px 8px; font-size: 0.85em; margin-left: 5px;' }
                 }, '⚙️ Configure regexps');
 
                 h2.appendChild(btnImmutable);
@@ -816,8 +816,8 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <h3 style="margin:0;">Batch Edit Cover Art</h3>
-                    <button id="config-immutable" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">⚙️ Configure immutable comments</button>
-                    <button id="config-regex" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">⚙️ Configure regexps</button>
+                    <button id="config-immutable" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">⚙️ Configure immutable comments</button>
+                    <button id="config-regex" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">⚙️ Configure regexps</button>
                 </div>
                 <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                     <button id="copy-first-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st types</button>
