@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Generate Recording Comments For A Release
 // @namespace    https://musicbrainz.org/user/vzell
-// @version      1.0+2025-12-01
+// @version      1.1+2026-01-21
 // @description  Batch set recording comments from a Release page, prefilling from "recorded at:" prefixed with "live, " if comment is empty. Prefills edit note with user supplied configurable text.
 // @author       Michael Wiencek, Gemini (directed by vzell)
 // @tag          AI generated
@@ -287,7 +287,7 @@ function setRecordingComments() {
   </tr>\
   <tr>\
     <td colspan="2">\
-      <button id="submit-recording-comments" class="styled-button">Submit changes (visible and marked red)</button>\
+      <button id="submit-recording-comments" class="styled-button">Submit changes (marked red)</button>\
     </td>\
   </tr>\
 </table>',
@@ -344,10 +344,6 @@ function setRecordingComments() {
             return;
         }
 
-        // Change button text and disable inputs during submission
-        $submitButton.text('Submitting...click to cancel!');
-        $inputs.prop('disabled', true);
-
         let editData = [],
             deferred = $.Deferred(); // For managing async operations
 
@@ -384,6 +380,10 @@ function setRecordingComments() {
             $inputs.prop('disabled', false);
             $submitButton.prop('disabled', false).text('Submit changes (marked red)');
         } else {
+            // Change button text and disable inputs during submission
+            $submitButton.text(`Submitting...(0/${editData.length})`);
+            $inputs.prop('disabled', true);
+
             let editNote = $('#recording-comments-edit-note').val();
             let makeVotable = document.getElementById('make-recording-comments-votable').checked;
 
@@ -400,6 +400,8 @@ function setRecordingComments() {
                     $submitButton.prop('disabled', false).text('Submit changes (marked red)');
                 })
                 .done(function () {
+                    // Update text to show completion before the .always block resets it
+                    $submitButton.text(`Submitting...(${editData.length}/${editData.length})`);
                     // Resolve deferred on success
                     deferred.resolve();
                 })

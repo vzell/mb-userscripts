@@ -18242,7 +18242,7 @@ CD Mirror Band (disc 1):
 
 Add the following logic:
 
- - The button text should change from "Submitting..." to "Submitting...(<current image number>/<total change image number>)"
+ - The button text should change from "Submit changes (marked red)" to "Submitting...(<current change number>/<total change number>)"
  - Place the text "<n number of images> matching regexps and so will not be stored in browser storage" after the "Submitting..." button.
 
 ** add remember logic for edit notes
@@ -18329,8 +18329,25 @@ page the "Comment:" field is located according to the following HTML code:
 #+end_example
 
 
+** add edited indicator (in red)
 
-* Add submitting...(n/m) also to disambiguation script
+
+* Add submitting...(n/m) also to the disambiguation script
+** gemini
+
+Add the following logic to the uploaded userscript:
+
+ - The button text should change from "Submit changes (marked red)" to "Submitting...(<current change number>/<total change number>)"
+
+when submitting the changed recording comments.   
+
+** 1
+
+Assuming 14 as "<total change number>":
+
+Right now it says "Submitting...(0/14)" and then changing to "Submitting...(14/14)" when all changes have been submitted.
+Could you display the progress for the individual tracks in the button.
+
 
 * add reload functionality to batch remove cover art
 
