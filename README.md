@@ -14,6 +14,7 @@
 - [MusicBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release](#mb_import_from_discogs)
 - [MusicBrainz Relation Editor - Batch Add Relationships To Recordings](#mb_batch_add_relationships_to_recordings)
 - [MusicBrainz - Batch Edit Cover Art](#mb_batch_edit_coverart)
+- [MusicBrainz - Recording Relationship Fast-Attributes](#mb_fast_attributes)
 ---
 **Adapted from [chaban](https://github.com/chaban-mb/userscripts)**
 - [MusicBrainz - Batch Remove Cover Art](#mb_batch_remove_coverart)
@@ -137,6 +138,13 @@ Batch edit types and comments of cover art images with keyboard-navigable autoco
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/BatchEditCoverArt.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/BatchEditCoverArt.user.js)
 [![Screenshot](https://github.com/Aerozol/metabrainz-userscripts/raw/main/screenshots/Screenshot-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/screenshots/BatchEditCoverArt.png)
+
+## <a name="mb_fast_attributes"></a> Recording Relationship Fast-Attributes
+
+Adds shortcut buttons to the Edit Relationship dialog for Recording of Works
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SubmitPredefinedRecordingAttributes.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SubmitPredefinedRecordingAttributes.user.js)
 
 ---
 
