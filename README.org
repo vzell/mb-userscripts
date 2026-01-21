@@ -18558,3 +18558,405 @@ chaban in his userscript "Batch remove cover art") is now also included.
 
 You can get the script at https://github.com/vzell/mb-userscripts under [Batch Edit Cover
 Art](https://github.com/vzell/mb-userscripts?tab=readme-ov-file#mb_batch_edit_coverart)
+
+
+* add convenience buttons
+
+Create a Tampermonkey userscript for "// @match        https://musicbrainz.org/release/*/edit-relationships"
+
+that should kick in when the following popup UI appears
+
+basically the header should be
+
+#+begin_example
+      <h1>Edit relationship
+      </h1>
+#+end_example
+
+the 'class="required section"' MUST be of "Related type" Work
+
+#+begin_example
+<td class="required section">Related type
+	  </td>
+#+end_example
+
+#+begin_example
+<td class="fields">Work
+	  </td>
+#+end_example
+
+Here as an example a complete HTML popup dialog
+
+#+begin_example
+<div tabindex="-1" data-floating-ui-focusable="" class="dialog popover relationship-dialog" id="edit-relationship-dialog" role="dialog" style="position: absolute; left: 0px; top: 0px; transform: translate(252px, 2432.8px);">
+  <div class="form">
+    <div class="dialog-titlebar">
+      <h1>Edit relationship
+      </h1>
+      <div class="buttons-right">
+	<span style="font-weight: normal;">(
+	  <a href="#">help
+	  </a>)
+	</span>
+      </div>
+    </div>
+    <table class="relationship-details">
+      <tbody>
+	<tr>
+	  <td class="required section">Recording
+	  </td>
+	  <td class="fields">
+	    <a class="wrap-anywhere" target="_blank" href="/recording/7e2eedbe-0951-472f-b5b7-fffe50ccc909">
+	      <bdi>Sha La La
+	      </bdi>
+	    </a>
+	    <div class="error">
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	  <td class="required section">Related type
+	  </td>
+	  <td class="fields">Work
+	  </td>
+	</tr>
+      </tbody>
+    </table>
+    <h2>
+      <div class="heading-line">
+      </div>
+      <span class="heading-text">Relationship
+      </span>
+    </h2>
+    <table class="relationship-details">
+      <tbody>
+	<tr>
+	  <td class="required section">Relationship type
+	  </td>
+	  <td class="fields">
+	    <label class="autocomplete2-label required" for="relationship-type-recording-work--496" id="relationship-type-recording-work--496-label">Type or click to search:
+	    </label>
+	    <div class="autocomplete2 relationship-type">
+	      <div aria-expanded="false" aria-haspopup="listbox" aria-owns="relationship-type-recording-work--496-menu" class="required" role="combobox">
+		<input aria-autocomplete="list" aria-controls="relationship-type-recording-work--496-menu" aria-labelledby="relationship-type-recording-work--496-label" aria-required="true" autocomplete="off" class="relationship-type lookup-performed" id="relationship-type-recording-work--496" placeholder="Type or click to search" type="text" value="recording of / recordings">
+		<button aria-controls="relationship-type-recording-work--496-menu" aria-haspopup="true" aria-label="Search" class="search" data-toggle="true" role="button" tabindex="-1" title="Search" type="button">
+		</button>
+	      </div>
+	      <ul aria-controls="relationship-type-recording-work--496-status" aria-labelledby="relationship-type-recording-work--496-label" id="relationship-type-recording-work--496-menu" role="listbox" tabindex="-1">
+		<li aria-disabled="false" aria-selected="false" class="selected option-item " id="relationship-type-recording-work--496-item-278" role="option">recording of / recordings
+		  <br>
+		  <span class="autocomplete-comment">This is used to link works to their recordings.
+		  </span>
+		</li>
+		<li aria-disabled="false" aria-selected="false" class="separator action-item " id="relationship-type-recording-work--496-item-toggle-descriptions" role="option">Hide descriptions
+		</li>
+	      </ul>
+	      <div aria-live="assertive" aria-relevant="additions text" id="relationship-type-recording-work--496-status" role="status">performance
+	      </div>
+	    </div>
+	    <div aria-atomic="true" class="error" role="alert">
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	  <td class="required section">Work
+	  </td>
+	  <td class="fields">
+	    <label class="autocomplete2-label required" for="relationship-target--496" id="relationship-target--496-label">Search for a work:
+	    </label>
+	    <div class="autocomplete2 relationship-target">
+	      <div aria-expanded="false" aria-haspopup="listbox" aria-owns="relationship-target--496-menu" class="required" role="combobox">
+		<input aria-autocomplete="list" aria-controls="relationship-target--496-menu" aria-labelledby="relationship-target--496-label" aria-required="true" autocomplete="off" class="relationship-target lookup-performed" id="relationship-target--496" placeholder="Type to search, or paste an MBID" type="text" value="Sha‐La‐La">
+		<button aria-controls="relationship-target--496-menu" aria-haspopup="true" aria-label="Search" class="search" data-toggle="true" role="button" tabindex="-1" title="Search" type="button">
+		</button>
+	      </div>
+	      <ul aria-controls="relationship-target--496-status" aria-labelledby="relationship-target--496-label" id="relationship-target--496-menu" role="listbox" tabindex="-1">
+	      </ul>
+	      <div aria-live="assertive" aria-relevant="additions text" id="relationship-target--496-status" role="status">Sha‐La‐La
+	      </div>
+	    </div>
+	    <div class="error">
+	    </div>
+	  </td>
+	</tr>
+	<tr class="link-order">
+	  <td class="section">Order
+	  </td>
+	  <td class="fields">
+	    <input max="2147483647" min="0" type="number" value="0">
+	    <span class="tooltip-wrapper">
+	      <span class="img icon help" style="display: inline-block; margin-left: 10px; vertical-align: text-top;">
+	      </span>
+	      <span class="tooltip-container">
+		<span class="tooltip-triangle">
+		</span>
+		<span class="tooltip-content">If this relationship has a specific order among others of the same type, you may set its position in the list here (as an alternative to the up- and down-arrow buttons).
+		</span>
+	      </span>
+	    </span>
+	  </td>
+	</tr>
+      </tbody>
+    </table>
+    <h2>
+      <div class="heading-line">
+      </div>
+      <span class="heading-text">Attributes
+      </span>
+    </h2>
+    <table class="relationship-details">
+      <tbody>
+	<tr>
+	  <td class="section">
+	  </td>
+	  <td class="fields">
+	    <div class="attribute-container checkbox acappella">
+	      <label>
+		<input class="boolean" id="acappella-checkbox" type="checkbox"> acappella
+	      </label>
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	  <td class="section">
+	  </td>
+	  <td class="fields">
+	    <div class="attribute-container checkbox cover">
+	      <label>
+		<input class="boolean" id="cover-checkbox" type="checkbox"> cover
+	      </label>
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	  <td class="section">
+	  </td>
+	  <td class="fields">
+	    <div class="attribute-container checkbox demo">
+	      <label>
+		<input class="boolean" id="demo-checkbox" type="checkbox"> demo
+	      </label>
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	  <td class="section">
+	  </td>
+	  <td class="fields">
+	    <div class="attribute-container checkbox instrumental">
+	      <label>
+		<input class="boolean" id="instrumental-checkbox" type="checkbox"> instrumental
+	      </label>
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	  <td class="section">
+	  </td>
+	  <td class="fields">
+	    <div class="attribute-container checkbox karaoke">
+	      <label>
+		<input class="boolean" id="karaoke-checkbox" type="checkbox"> karaoke
+	      </label>
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	  <td class="section">
+	  </td>
+	  <td class="fields">
+	    <div class="attribute-container checkbox live">
+	      <label>
+		<input class="boolean" id="live-checkbox" type="checkbox"> live
+	      </label>
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	  <td class="section">
+	  </td>
+	  <td class="fields">
+	    <div class="attribute-container checkbox medley">
+	      <label>
+		<input class="boolean" id="medley-checkbox" type="checkbox"> medley
+	      </label>
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	  <td class="section">
+	  </td>
+	  <td class="fields">
+	    <div class="attribute-container checkbox partial">
+	      <label>
+		<input class="boolean" id="partial-checkbox" type="checkbox"> partial
+	      </label>
+	    </div>
+	  </td>
+	</tr>
+	<tr>
+	  <td class="section">
+	    <label for="id-period.begin_date.year">Begin date
+	    </label>
+	  </td>
+	  <td class="fields">
+	    <span class="partial-date">
+	      <input class="partial-date-year" id="id-period.begin_date.year" maxlength="4" name="period.begin_date.year" placeholder="YYYY" size="4" type="text" value="">-
+	      <input class="partial-date-month" id="id-period.begin_date.month" maxlength="2" name="period.begin_date.month" placeholder="MM" size="2" type="text" value="">-
+	      <input class="partial-date-day" id="id-period.begin_date.day" maxlength="2" name="period.begin_date.day" placeholder="DD" size="2" type="text" value="">
+	    </span>
+	    <button class="icon copy-date" title="Copy to end date" type="button">
+	    </button>
+	  </td>
+	</tr>
+	<tr>
+	  <td class="section">
+	    <label for="id-period.end_date.year">End date
+	    </label>
+	  </td>
+	  <td class="fields end-date">
+	    <span class="partial-date">
+	      <input class="partial-date-year" id="id-period.end_date.year" maxlength="4" name="period.end_date.year" placeholder="YYYY" size="4" type="text" value="">-
+	      <input class="partial-date-month" id="id-period.end_date.month" maxlength="2" name="period.end_date.month" placeholder="MM" size="2" type="text" value="">-
+	      <input class="partial-date-day" id="id-period.end_date.day" maxlength="2" name="period.end_date.day" placeholder="DD" size="2" type="text" value="">
+	    </span>
+	    <br>
+	    <div class="row">
+	      <label class="inline">
+		<input id="id-period.ended" name="period.ended" type="checkbox" value="1"> This relationship has ended.
+	      </label>
+	    </div>
+	  </td>
+	</tr>
+      </tbody>
+    </table>
+    <h2>
+      <div class="heading-line">
+      </div>
+      <span class="heading-text">Preview
+      </span>
+    </h2>
+    <table class="preview details add-relationship">
+      <tbody>
+	<tr>
+	  <th>Relationship:
+	  </th>
+	  <td>
+	    <a class="wrap-anywhere" target="_blank" href="/recording/7e2eedbe-0951-472f-b5b7-fffe50ccc909">
+	      <bdi>Sha La La
+	      </bdi>
+	    </a> is a  live    cover   recording of
+	    <a class="wrap-anywhere" target="_blank" href="/work/53838f9a-6d1a-3dc3-bb15-40f80c4510e7">
+	      <bdi>Sha‐La‐La
+	      </bdi>
+	    </a>
+	  </td>
+	</tr>
+      </tbody>
+    </table>
+    <div class="buttons" style="margin-top: 1em;">
+      <button class="negative" type="button">Cancel
+      </button>
+      <div class="buttons-right">
+	<button class="positive" type="button">Done
+	</button>
+      </div>
+    </div>
+  </div>
+  <svg fill="currentColor" aria-hidden="true" width="26" height="24" viewBox="0 0 24 24" style="position: absolute; pointer-events: none; transform: rotate(90deg); top: 279px; right: calc(100% - 1px);">
+    <path clip-path="url(#:rhc:)" fill="none" stroke="#AAA" stroke-width="3" d="M0,0 H24 L12,12 Q12,12 12,12 Z">
+    </path>
+    <path stroke="currentColor" d="M0,0 H24 L12,12 Q12,12 12,12 Z">
+    </path>
+    <clipPath id=":rhc:">
+      <rect x="-1" y="1" width="26" height="24">
+      </rect>
+    </clipPath>
+  </svg>
+</div>
+#+end_example
+
+Add additional buttons between the "Cancel" and "Done" buttons with the following text and actions:
+
+The button text maps to the following generic action: Toggle the corresponding "Attribute" checkbox which has the same checkbox description and in all cases press the "Done" button at the end
+
+- Button Text: "cover" --> Action: Toggle the "cover" checkbox
+- Button Text: "live"  --> Action: Toggle the "live" checkbox
+- Button Text: "live/cover" --> Action: Toggle the "live" and "cover" checkboxes
+- Button Text: "partial" --> Action: Toggle the "partial" checkbox
+- Button Text: "partial/live" --> Action: Toggle the "partial" and "live" checkboxes
+- Button Text: "partial/live/cover" --> Action: Toggle the "partial", "live" and "cover" checkboxes
+
+Remember to press the DONE button after toggling all the checkboxes.
+
+** 1
+
+Implement console debug logging, as nothing happened, now buttons appear.
+
+** 2
+
+[MB-Debug] Relationship dialog detected in DOM
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:105 [MB-Debug] Header text: "Edit relationship"
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:115 [MB-Debug] Is Related type "Work"? true
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:59 [MB-Debug] Injecting custom buttons
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:87 Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+    at injectButtons (userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:87:33)
+    at MutationObserver.checkDialog (userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:118:29)
+    
+** 3
+
+Here the popup HTML code again
+
+#+begin_example
+<div tabindex="-1" data-floating-ui-focusable="" class="dialog popover relationship-dialog" id="edit-relationship-dialog" role="dialog" style="position: absolute; left: 0px; top: 0px; transform: translate(252px, 524px);"><div class="form"><div class="dialog-titlebar"><h1>Edit relationship</h1><div class="buttons-right"><span style="font-weight: normal;">(<a href="#">help</a>)</span></div></div><table class="relationship-details"><tbody><tr><td class="required section">Recording</td><td class="fields"><a class="wrap-anywhere" target="_blank" href="/recording/96853f8b-da57-438a-b3b3-0eaf44f8597c"><bdi>Out in the Street</bdi></a><div class="error"></div></td></tr><tr><td class="required section">Related type</td><td class="fields">Work</td></tr></tbody></table><h2><div class="heading-line"></div><span class="heading-text">Relationship</span></h2><table class="relationship-details"><tbody><tr><td class="required section">Relationship type</td><td class="fields"><label class="autocomplete2-label required" for="relationship-type-recording-work-3496682" id="relationship-type-recording-work-3496682-label">Type or click to search:</label><div class="autocomplete2 relationship-type"><div aria-expanded="false" aria-haspopup="listbox" aria-owns="relationship-type-recording-work-3496682-menu" class="required" role="combobox"><input aria-autocomplete="list" aria-controls="relationship-type-recording-work-3496682-menu" aria-labelledby="relationship-type-recording-work-3496682-label" aria-required="true" autocomplete="off" class="relationship-type lookup-performed" id="relationship-type-recording-work-3496682" placeholder="Type or click to search" type="text" value="recording of / recordings"><button aria-controls="relationship-type-recording-work-3496682-menu" aria-haspopup="true" aria-label="Search" class="search" data-toggle="true" role="button" tabindex="-1" title="Search" type="button"></button></div><ul aria-controls="relationship-type-recording-work-3496682-status" aria-labelledby="relationship-type-recording-work-3496682-label" id="relationship-type-recording-work-3496682-menu" role="listbox" tabindex="-1"><li aria-disabled="false" aria-selected="false" class="selected option-item " id="relationship-type-recording-work-3496682-item-278" role="option">recording of / recordings<br><span class="autocomplete-comment">This is used to link works to their recordings.</span></li><li aria-disabled="false" aria-selected="false" class="separator action-item " id="relationship-type-recording-work-3496682-item-toggle-descriptions" role="option">Hide descriptions</li></ul><div aria-live="assertive" aria-relevant="additions text" id="relationship-type-recording-work-3496682-status" role="status">performance</div></div><div aria-atomic="true" class="error" role="alert"></div></td></tr><tr><td class="required section">Work</td><td class="fields"><label class="autocomplete2-label required" for="relationship-target-3496682" id="relationship-target-3496682-label">Search for a work:</label><div class="autocomplete2 relationship-target"><div aria-expanded="false" aria-haspopup="listbox" aria-owns="relationship-target-3496682-menu" class="required" role="combobox"><input aria-autocomplete="list" aria-controls="relationship-target-3496682-menu" aria-labelledby="relationship-target-3496682-label" aria-required="true" autocomplete="off" class="relationship-target lookup-performed" id="relationship-target-3496682" placeholder="Type to search, or paste an MBID" type="text" value="Out in the Street"><button aria-controls="relationship-target-3496682-menu" aria-haspopup="true" aria-label="Search" class="search" data-toggle="true" role="button" tabindex="-1" title="Search" type="button"></button></div><ul aria-controls="relationship-target-3496682-status" aria-labelledby="relationship-target-3496682-label" id="relationship-target-3496682-menu" role="listbox" tabindex="-1"></ul><div aria-live="assertive" aria-relevant="additions text" id="relationship-target-3496682-status" role="status">Out in the Street</div></div><div class="error"></div></td></tr><tr class="link-order"><td class="section">Order</td><td class="fields"><input max="2147483647" min="0" type="number" value="0"><span class="tooltip-wrapper"><span class="img icon help" style="display: inline-block; margin-left: 10px; vertical-align: text-top;"></span><span class="tooltip-container"><span class="tooltip-triangle"></span><span class="tooltip-content">If this relationship has a specific order among others of the same type, you may set its position in the list here (as an alternative to the up- and down-arrow buttons).</span></span></span></td></tr></tbody></table><h2><div class="heading-line"></div><span class="heading-text">Attributes</span></h2><table class="relationship-details"><tbody><tr><td class="section"></td><td class="fields"><div class="attribute-container checkbox acappella"><label><input class="boolean" id="acappella-checkbox" type="checkbox"> acappella</label></div></td></tr><tr><td class="section"></td><td class="fields"><div class="attribute-container checkbox cover"><label><input class="boolean" id="cover-checkbox" type="checkbox"> cover</label></div></td></tr><tr><td class="section"></td><td class="fields"><div class="attribute-container checkbox demo"><label><input class="boolean" id="demo-checkbox" type="checkbox"> demo</label></div></td></tr><tr><td class="section"></td><td class="fields"><div class="attribute-container checkbox instrumental"><label><input class="boolean" id="instrumental-checkbox" type="checkbox"> instrumental</label></div></td></tr><tr><td class="section"></td><td class="fields"><div class="attribute-container checkbox karaoke"><label><input class="boolean" id="karaoke-checkbox" type="checkbox"> karaoke</label></div></td></tr><tr><td class="section"></td><td class="fields"><div class="attribute-container checkbox live"><label><input class="boolean" id="live-checkbox" type="checkbox" checked=""> live</label></div></td></tr><tr><td class="section"></td><td class="fields"><div class="attribute-container checkbox medley"><label><input class="boolean" id="medley-checkbox" type="checkbox"> medley</label></div></td></tr><tr><td class="section"></td><td class="fields"><div class="attribute-container checkbox partial"><label><input class="boolean" id="partial-checkbox" type="checkbox"> partial</label></div></td></tr><tr><td class="section"><label for="id-period.begin_date.year">Begin date</label></td><td class="fields"><span class="partial-date"><input class="partial-date-year" id="id-period.begin_date.year" maxlength="4" name="period.begin_date.year" placeholder="YYYY" size="4" type="text" value="1981">-<input class="partial-date-month" id="id-period.begin_date.month" maxlength="2" name="period.begin_date.month" placeholder="MM" size="2" type="text" value="1">-<input class="partial-date-day" id="id-period.begin_date.day" maxlength="2" name="period.begin_date.day" placeholder="DD" size="2" type="text" value="26"></span><button class="icon copy-date" title="Copy to end date" type="button"></button></td></tr><tr><td class="section"><label for="id-period.end_date.year">End date</label></td><td class="fields end-date"><span class="partial-date"><input class="partial-date-year" id="id-period.end_date.year" maxlength="4" name="period.end_date.year" placeholder="YYYY" size="4" type="text" value="1981">-<input class="partial-date-month" id="id-period.end_date.month" maxlength="2" name="period.end_date.month" placeholder="MM" size="2" type="text" value="1">-<input class="partial-date-day" id="id-period.end_date.day" maxlength="2" name="period.end_date.day" placeholder="DD" size="2" type="text" value="26"></span><br><div class="row"><label class="inline"><input disabled="" id="id-period.ended" name="period.ended" type="checkbox" value="1" checked=""> This relationship has ended.</label></div></td></tr></tbody></table><h2><div class="heading-line"></div><span class="heading-text">Preview</span></h2><table class="preview details"><tbody><tr><th>Relationship:</th><td><a class="wrap-anywhere" target="_blank" href="/recording/96853f8b-da57-438a-b3b3-0eaf44f8597c"><bdi>Out in the Street</bdi></a> <span class="comment">(<bdi>live, 1981‐01‐26: Athletic &amp; Convocation Center, University of Notre Dame, South Bend, IN, USA</bdi>)</span> is a  live       recording of <a class="wrap-anywhere" target="_blank" href="/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac"><bdi>Out in the Street</bdi></a> on 1981-01-26 </td></tr></tbody></table><div class="buttons" style="margin-top: 1em;"><button class="negative" type="button">Cancel</button><div class="buttons-right"><button class="positive" type="button">Done</button></div></div></div><svg fill="currentColor" aria-hidden="true" width="26" height="24" viewBox="0 0 24 24" style="position: absolute; pointer-events: none; transform: rotate(90deg); top: 293px; right: calc(100% - 1px);"><path clip-path="url(#:rv8:)" fill="none" stroke="#AAA" stroke-width="3" d="M0,0 H24 L12,12 Q12,12 12,12 Z"></path><path stroke="currentColor" d="M0,0 H24 L12,12 Q12,12 12,12 Z"></path><clipPath id=":rv8:"><rect x="-1" y="1" width="26" height="24"></rect></clipPath></svg></div>
+#+end_example
+
+and the console log
+
+#+begin_example
+[MB-Debug] Relationship dialog detected in DOM
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:107 [MB-Debug] Header text: "Edit relationship"
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:117 [MB-Debug] Is Related type "Work"? true
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:60 [MB-Debug] Injecting custom buttons
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:89 Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+    at injectButtons (userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:89:26)
+    at MutationObserver.checkDialog (userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:120:29)
+#+end_example
+
+** 4
+
+Now the buttons appear, but the checkbox state is actually NOT toggled.
+
+#+begin_example
+[MB-Debug] Script initialized
+[MB-Debug] Observer attached to document.body
+[MB-Debug] Relationship dialog detected in DOM
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:124 [MB-Debug] Is Related type "Work"? true
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:66 [MB-Debug] Injecting custom buttons
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:111 [MB-Debug] Relationship dialog detected in DOM
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:124 [MB-Debug] Is Related type "Work"? true
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:47 [MB-Debug] Buttons already exist, skipping injection
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:20 [MB-Debug] Applying attributes: (3) ['partial', 'live', 'cover']0: "partial"1: "live"2: "cover"length: 3[[Prototype]]: Array(0)
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:27 [MB-Debug] Toggled checkbox: partial
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:27 [MB-Debug] Toggled checkbox: live
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:27 [MB-Debug] Toggled checkbox: cover
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:37 [MB-Debug] Clicking Done button
+userscript.html?name=VZ%253A-MusicBrainz-Work-Relationship-Fast-Attributes.user.js&id=5bd51035-6db2-4103-9618-cd009aa18a65:111 [MB-Debug] Relationship dialog detected in DOM
+#+end_example
+
+** 5
+
+The toggling now works.
+
+But I actually made an error during my description of the actions.
+
+Pressing the generated buttons should make sure that the state of the checkboxes is actually "checked", so if for
+example a specific work already has the "live" checkbox checked, the pressing of for example the
+
+- button "partial/live/cover" should only additionally check the "partial" and "cover" checkboxes
+- button "live" should actually do nothing with the checkboxes
+
+Only the presing of the DONE button should always happen
+
+
+
