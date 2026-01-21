@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.2+2026-01-21
+// @version      2.3+2026-01-21
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell (elephant editor functionality by chaban, jesus2099)
 // @tag          AI generated
@@ -726,15 +726,32 @@
         }
     };
 
+    const highlightModifiedTypes = (row) => {
+        const id = row.getAttribute('data-id');
+        const original = originalData[id];
+        if (!original) return;
+
+        row.querySelectorAll('.type-checkboxes input').forEach(checkbox => {
+            const label = checkbox.parentElement;
+            const isOriginallyChecked = original.types.includes(checkbox.value);
+            if (checkbox.checked !== isOriginallyChecked) {
+                label.classList.add('modified');
+            } else {
+                label.classList.remove('modified');
+            }
+        });
+    };
+
     const injectButton = () => {
         const isAddPage = window.location.pathname.endsWith('/add-cover-art');
 
-        // Add CSS for modified inputs
+        // Add CSS for modified inputs and labels
         if (!document.getElementById('batch-edit-styles')) {
             const style = document.createElement('style');
             style.id = 'batch-edit-styles';
             style.textContent = `
                 input.comment.modified, input.batch-comment.modified { border-color: red !important; border-width: 2px !important; }
+                label.modified { color: red !important; font-weight: bold; }
             `;
             document.head.appendChild(style);
         }
@@ -887,6 +904,14 @@
 
         batchContainer.querySelectorAll('.batch-comment').forEach(setupAutocomplete);
 
+        // Add listeners for type highlighting
+        batchContainer.querySelectorAll('.type-checkboxes input').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const row = getParent(e.target, 'TR', 'batch-row');
+                if (row) highlightModifiedTypes(row);
+            });
+        });
+
         document.getElementById('config-immutable').onclick = () => showConfigModal("⚙️ Configure Immutable Comments", ImmutableManager, "Enter new immutable comment:", true);
         document.getElementById('config-regex').onclick = () => showConfigModal("⚙️ Configure Regular Expressions", RegexManager, "Enter new regex pattern:", false);
 
@@ -898,6 +923,7 @@
                 row.querySelectorAll('.type-checkboxes input').forEach(checkbox => {
                     checkbox.checked = selected.includes(checkbox.value);
                 });
+                highlightModifiedTypes(row);
             });
         };
 
@@ -913,7 +939,10 @@
 
         document.getElementById('clear-all-types').onclick = () => {
             if (confirm("This will uncheck all types for all images in this list. Proceed?")) {
-                document.querySelectorAll('.type-checkboxes input').forEach(cb => cb.checked = false);
+                document.querySelectorAll('.batch-row').forEach(row => {
+                    row.querySelectorAll('.type-checkboxes input').forEach(cb => cb.checked = false);
+                    highlightModifiedTypes(row);
+                });
             }
         };
 
@@ -928,6 +957,7 @@
                     row.querySelectorAll('.type-checkboxes input').forEach(cb => {
                         cb.checked = orig.types.includes(cb.value);
                     });
+                    highlightModifiedTypes(row);
                 });
             }
         };
@@ -1058,6 +1088,7 @@
 
             // Reset visual state
             commentInput.classList.remove('modified');
+            row.querySelectorAll('.type-checkboxes label').forEach(label => label.classList.remove('modified'));
             row.style.backgroundColor = '#dff0d8';
             row.style.opacity = '0.5';
         }

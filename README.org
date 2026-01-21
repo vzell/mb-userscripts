@@ -18328,7 +18328,6 @@ page the "Comment:" field is located according to the following HTML code:
 </div>
 #+end_example
 
-
 ** add edited indicator (in red)
 
 Add the following logic to the uploaded userscript "BatchEditCoverArt.user.js" similar to the uploaded userscript "GenerateRecordingCommentForRelease.user.js":
@@ -18359,6 +18358,147 @@ In the uploaded userscript:
 
 - Make the button colors of the two buttons "⚙️ Configure immutable comments" and "⚙️ Configure regexps" the same as the
 button color of "Copy 1st types" but don't touch the "Clear all types" and "Reset to original" buttons
+
+** add red border to changed checkboxes
+
+In the uploaded userscript:
+
+When a change happens to one of the image "Type:" checkboxes, configured in the following variable
+
+#+begin_example
+    const TYPES = [
+        "Front", "Back", "Booklet", "Medium", "Obi", "Spine", "Track", "Tray",
+        "Sticker", "Poster", "Liner", "Watermark", "Raw/Unedited",
+        "Matrix/Runout", "Top", "Bottom", "Panel", "Other"
+    ];
+#+end_example
+
+change the description of the changed checkboxes to red. So for example if the "Front" checkbox was toggled, the text
+"Front" should become red. When successfully submitting data for an image, the red text should get the original color
+again.
+
+** 1
+
+In the uploaded userscript:
+
+Also add that functionality if the page is of type "// @match        *://*.musicbrainz.org/release/*/add-cover-art".
+In that case remember that the "types" and "labels" are located in the following HTML structure
+
+#+begin_example
+<div class="cover-art-types row" data-bind="visible: status() == 'waiting'" style="">
+              <label>Types:</label>
+              <ul class="cover-art-type-checkboxes" data-bind="foreach: types">
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="1">
+                    <span data-bind="text: name">Front</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="2">
+                    <span data-bind="text: name">Back</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="3">
+                    <span data-bind="text: name">Booklet</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="4">
+                    <span data-bind="text: name">Medium</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="5">
+                    <span data-bind="text: name">Obi</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="6">
+                    <span data-bind="text: name">Spine</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="7">
+                    <span data-bind="text: name">Track</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="8">
+                    <span data-bind="text: name">Other</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="9">
+                    <span data-bind="text: name">Tray</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="10">
+                    <span data-bind="text: name">Sticker</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="11">
+                    <span data-bind="text: name">Poster</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="12">
+                    <span data-bind="text: name">Liner</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="13">
+                    <span data-bind="text: name">Watermark</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="14">
+                    <span data-bind="text: name">Raw/Unedited</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="15">
+                    <span data-bind="text: name">Matrix/Runout</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="48">
+                    <span data-bind="text: name">Top</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="49">
+                    <span data-bind="text: name">Bottom</span></label>
+                </li>
+              
+                <li>
+                  <label>
+                    <input type="checkbox" class="type" data-bind="checked: checked, value: id" value="81">
+                    <span data-bind="text: name">Panel</span></label>
+                </li>
+              </ul>
+            </div>
+#+end_example
+
 
 * Add submitting...(n/m) also to the disambiguation script
 ** gemini
