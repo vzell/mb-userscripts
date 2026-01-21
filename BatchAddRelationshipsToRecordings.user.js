@@ -225,6 +225,7 @@
         }
     }
     function clearInput(el) { setReactValueAndDispatch(el, ''); }
+
     async function typeAndSelect($input, text, {
         charDelay = GLOBAL_CHAR_DELAY_MS,
         postSelectWait = GLOBAL_POST_SELECT_WAIT_MS,
@@ -235,25 +236,47 @@
         el.focus();
         clearInput(el);
         await sleep(50);
-        for (let i = 0; i < text.length; i++) {
-            const ch = text[i];
-            const newValue = el.value + ch;
-            setReactValueAndDispatch(el, newValue);
-            await sleep(charDelay);
+
+        // Check if the text is an MBID (36 chars, hex with hyphens)
+        const isMBID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(text.trim());
+
+        if (isMBID) {
+            log(`Directly inserting MBID: ${text}`);
+            setReactValueAndDispatch(el, text.trim());
+        } else {
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                const newValue = el.value + ch;
+                setReactValueAndDispatch(el, newValue);
+                await sleep(charDelay);
+            }
         }
+
         await sleep(100);
         const found = await waitForCondition(() => {
             const $opts = $(optionSelector).filter(':visible');
             if (!$opts.length) return false;
-            const match = $opts.toArray().find(o => $(o).text().trim().toLowerCase().startsWith(text.toLowerCase()));
-            if (match) { match.click(); return true; }
-            const match2 = $opts.toArray().find(o => $(o).text().trim().toLowerCase().includes(text.toLowerCase()));
-            if (match2) { match2.click(); return true; }
+
+            if (isMBID) {
+                // For MBID, we usually expect a single specific result; click the first visible option
+                const firstOpt = $opts.first();
+                if (firstOpt.length) {
+                    firstOpt.click();
+                    return true;
+                }
+            } else {
+                const match = $opts.toArray().find(o => $(o).text().trim().toLowerCase().startsWith(text.toLowerCase()));
+                if (match) { match.click(); return true; }
+                const match2 = $opts.toArray().find(o => $(o).text().trim().toLowerCase().includes(text.toLowerCase()));
+                if (match2) { match2.click(); return true; }
+            }
             return false;
         }, {timeout: 3000, interval: 80});
+
         if (!found) { log(`Warning: option for "${text}" not found in suggestions after timeout.`); }
         await sleep(postSelectWait);
     }
+
     async function openBatchAddDialog() {
         await waitDialogClosed(2000);
         const $batch = $("button.add-item.with-label.batch-add-recording-relationship, button.add-item.batch-add-recording-relationship, button.add-item.with-label").filter(function() {
