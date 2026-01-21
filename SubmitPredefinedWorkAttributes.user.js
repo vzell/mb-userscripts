@@ -12,26 +12,28 @@
 
     console.log('[MB-Debug] Script initialized');
 
+    // The set of attributes handled by this script
+    const MANAGED_ATTRIBUTES = ['cover', 'live', 'partial'];
+
     /**
-     * Logic to ensure checkboxes are checked (not toggled) and finishing
+     * Ensures only the attributes in the list are checked
      */
-    function applyAttributes(dialog, attributeLabels) {
-        console.log('[MB-Debug] Ensuring attributes are checked:', attributeLabels);
-        attributeLabels.forEach(label => {
-            const container = dialog.querySelector(`.attribute-container.${label}`);
+    function applyAttributes(dialog, targetAttributes) {
+        console.log('[MB-Debug] Aligning attributes to:', targetAttributes);
+
+        MANAGED_ATTRIBUTES.forEach(attr => {
+            const container = dialog.querySelector(`.attribute-container.${attr}`);
             if (container) {
                 const checkbox = container.querySelector('input[type="checkbox"]');
                 if (checkbox) {
-                    // Only click if it is NOT already checked
-                    if (!checkbox.checked) {
-                        console.log(`[MB-Debug] Checking checkbox: ${label}`);
+                    const shouldBeChecked = targetAttributes.includes(attr);
+
+                    // If it should be checked but isn't, OR should be unchecked but is, click it
+                    if (checkbox.checked !== shouldBeChecked) {
+                        console.log(`[MB-Debug] Syncing ${attr} to ${shouldBeChecked}`);
                         checkbox.click();
-                    } else {
-                        console.log(`[MB-Debug] Checkbox already set: ${label}`);
                     }
                 }
-            } else {
-                console.warn(`[MB-Debug] Could not find container for attribute: ${label}`);
             }
         });
 
@@ -46,9 +48,7 @@
      * Creates and injects the shortcut buttons
      */
     function injectButtons(dialog) {
-        if (dialog.querySelector('.custom-attr-buttons')) {
-            return;
-        }
+        if (dialog.querySelector('.custom-attr-buttons')) return;
 
         const footer = dialog.querySelector('.buttons');
         if (!footer) return;
@@ -90,7 +90,7 @@
     }
 
     /**
-     * Validates if the dialog is the correct one (Edit Work Relationship)
+     * Validates if the dialog is the correct one
      */
     function checkDialog(mutationList) {
         for (const mutation of mutationList) {

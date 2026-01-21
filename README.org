@@ -18958,5 +18958,8 @@ example a specific work already has the "live" checkbox checked, the pressing of
 
 Only the presing of the DONE button should always happen
 
+** 6
+
+Almost perfect. But when pressing one of the generated buttons, make sure that ONLY the checkboxes are checked that are actually mentioned on the button text.
 
 
