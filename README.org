@@ -18569,7 +18569,7 @@ You can get the script at https://github.com/vzell/mb-userscripts under [Batch E
 Art](https://github.com/vzell/mb-userscripts?tab=readme-ov-file#mb_batch_edit_coverart)
 
 
-* add convenience buttons
+* add convenience buttons to edit-relationships
 
 Create a Tampermonkey userscript for "// @match        https://musicbrainz.org/release/*/edit-relationships"
 
@@ -18978,3 +18978,99 @@ The logic works now.  But please generate the new buttons one row below the "Don
 ** 8
 
 leave a little space between the "Cancel button and the new row of buttons, because the "Cancel" and "cover" button touch each other
+
+
+* ShowAllReleases
+
+Create a Tampermonkey userscript for "// @match        https://musicbrainz.org/release-group/*"
+
+that creates a button at the starting page with text "Show all releases" after the release group title between the
+following tags "<bdi>Greetings From Asbury Park, N.J.</bdi>"
+
+Complete HTML snippet:
+
+#+begin_example
+<div class="wrap-anywhere rgheader">
+  <h1>
+    <a href="/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c">
+      <bdi>Greetings From Asbury Park, N.J.
+      </bdi>
+    </a>
+  </h1>
+  <p class="subheader">
+    <span class="prefix">~
+    </span>
+    <!-- -->Release group by
+    <bdi>
+      <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+      </a>
+    </bdi>
+  </p>
+</div>
+#+end_example
+
+When pressed, the following action should be done:
+
+Generate a final "release group page" which includes all information from all the sub release group pages by iterating through
+all the links "https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c?page=<pagenumber>"
+in the following pagination HTML snippet at the starting page
+
+#+begin_example
+<nav>
+  <ul class="pagination">
+    <li>
+      <span>Previous
+      </span>
+    </li>
+    <li class="separator">
+    </li>
+    <li>
+      <a class="sel" href="https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c?page=1">
+	<strong>1
+	</strong>
+      </a>
+    </li>
+    <li>
+      <a href="https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c?page=2">2
+      </a>
+    </li>
+    <li class="separator">
+    </li>
+    <li>
+      <a href="https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c?page=2">Next
+      </a>
+    </li>
+  </ul>
+</nav>
+#+end_example
+
+accumulating all the tabular information and present the final accumulated page with the same headers found in the initial starting page at
+
+#+begin_example
+<table class="tbl mergeable-table">
+<thead><tr><th class="checkbox-cell"><input type="checkbox"></th><th>Release</th><th>Relationships</th><th>Artist</th><th>Format</th><th>Tracks</th><th>Country/Date</th><th>Label</th><th>Catalog#</th><th>Barcode</th><th>Tagger</th></tr></thead>
+#+end_example
+
+** 1
+
+Collect all the table entries after the different headings which look like the following
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Official</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Promotion</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">(unknown)</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Bootleg</th></tr>
+#+end_example
+
+and create one final page where each subheader, like "Official", "Promotion, Bootleg", etc exist only one time.
+
+
