@@ -19501,6 +19501,21 @@ The display should be next to the button on the right side.
 
 Please add timings for just the loading of pages AND the rendering of the resulting table separately
 
+** stop/cancel button
+
+add a cancel button
+
+** add sort icon
+
+Add 
+#+begin_example
+<th title="Click to sort" style="cursor: pointer; white-space: nowrap;" class="sortable">Date<span>↕</span></th>
+#+end_example
+
+** search filter
+
+yes, please add a search filter box next to the button that lets you filter the recordings by title or year instantly after they've loaded?
+
 * ShowAllRecordingsInWorks
 ** initial try
 

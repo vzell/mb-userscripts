@@ -33,6 +33,20 @@
     btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
     btn.type = 'button';
 
+    // Create Stop Button (initially hidden)
+    const stopBtn = document.createElement('button');
+    stopBtn.textContent = 'Stop';
+    stopBtn.style.display = 'none';
+    stopBtn.style.marginLeft = '5px';
+    stopBtn.style.fontSize = '0.5em';
+    stopBtn.style.padding = '2px 6px';
+    stopBtn.style.verticalAlign = 'middle';
+    stopBtn.style.cursor = 'pointer';
+    stopBtn.style.backgroundColor = '#f44336';
+    stopBtn.style.color = 'white';
+    stopBtn.style.border = '1px solid #d32f2f';
+    stopBtn.type = 'button';
+
     // Create Timer Display
     const timerDisplay = document.createElement('span');
     timerDisplay.style.marginLeft = '10px';
@@ -56,8 +70,9 @@
     document.head.appendChild(style);
     btn.classList.add('mb-show-all-btn');
 
-    // Append button and timer to the h1
+    // Append UI elements to the h1
     headerH1.appendChild(btn);
+    headerH1.appendChild(stopBtn);
     headerH1.appendChild(timerDisplay);
 
     // State Variables
@@ -65,6 +80,13 @@
     let lastSortIndex = -1;
     let allRows = [];
     let isLoaded = false;
+    let stopRequested = false;
+
+    stopBtn.addEventListener('click', () => {
+        stopRequested = true;
+        stopBtn.disabled = true;
+        stopBtn.textContent = 'Stopping...';
+    });
 
     btn.addEventListener('click', async () => {
         if (isLoaded) return;
@@ -93,25 +115,28 @@
 
         // Popup warning for > 100 pages
         if (maxPage > 100) {
-            const proceed = confirm(`Warning: This artist has ${maxPage} pages of recordings. Loading everything might impact browser performance. Do you want to proceed?`);
+            const proceed = confirm(`Warning: This artist has ${maxPage} pages of recordings. Proceed?`);
             if (!proceed) return;
         }
 
         const startFetch = performance.now();
-        console.log('[MB Show All Recordings] Starting accumulation...');
+        stopRequested = false;
+        allRows = [];
 
-        // Visual loading state
+        // UI updates for loading
         btn.disabled = true;
         btn.style.color = '#000';
-        btn.style.cursor = 'default';
-        btn.style.transform = 'translateY(1px)';
-        btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
+        stopBtn.style.display = 'inline-block';
+        stopBtn.disabled = false;
+        stopBtn.textContent = 'Stop';
         timerDisplay.textContent = 'Fetching pages...';
 
         const baseUrl = window.location.href.split('?')[0];
 
         try {
             for (let p = 1; p <= maxPage; p++) {
+                if (stopRequested) break;
+
                 btn.textContent = `Loading: Page ${p}/${maxPage}...`;
                 const targetUrl = `${baseUrl}?page=${p}`;
 
@@ -131,6 +156,7 @@
             const endFetch = performance.now();
             const fetchTime = ((endFetch - startFetch) / 1000).toFixed(2);
 
+            stopBtn.style.display = 'none';
             timerDisplay.textContent = `Fetch: ${fetchTime}s | Rendering...`;
 
             // Start Render Timing
@@ -143,23 +169,18 @@
             const renderTime = ((endRender - startRender) / 1000).toFixed(2);
 
             isLoaded = true;
-            btn.textContent = `Loaded ${allRows.length} recordings`;
-            btn.style.color = '';
-            btn.style.cursor = 'pointer';
-            btn.style.transform = '';
-            btn.style.boxShadow = '';
+            btn.textContent = stopRequested ? `Partial: ${allRows.length} loaded` : `Loaded ${allRows.length} recordings`;
             btn.disabled = false;
-
             timerDisplay.textContent = `(Fetch: ${fetchTime}s, Render: ${renderTime}s)`;
 
-            // Remove pagination UI elements
+            // Remove pagination
             const nav = document.querySelector('nav.pagination') || document.querySelector('ul.pagination');
             if (nav) nav.remove();
 
         } catch (error) {
             console.error('[MB Show All Recordings] Error:', error);
             btn.textContent = 'Error loading';
-            timerDisplay.textContent = '';
+            stopBtn.style.display = 'none';
             btn.disabled = false;
         }
     });
