@@ -19507,7 +19507,10 @@ add a cancel button
 
 ** add sort icon
 
-Add 
+When the final page is rendered, 
+add the generic sort icon "↕" concatenated after the colums names and a popup hint "Click to sort" when hovering over
+the column headers like in the following example for the "Date" header:
+
 #+begin_example
 <th title="Click to sort" style="cursor: pointer; white-space: nowrap;" class="sortable">Date<span>↕</span></th>
 #+end_example
@@ -19515,6 +19518,27 @@ Add
 ** search filter
 
 yes, please add a search filter box next to the button that lets you filter the recordings by title or year instantly after they've loaded?
+
+** Hide table container
+
+Hide the following table container if present when pressing the "Show all recordings" button
+
+#+begin_example
+<table style="margin: 0.5em 0.5em 2em; background: rgb(242, 242, 242); border: 1px solid rgb(153, 153, 153);">
+  <tbody>
+    <tr>
+      <td style="padding: 0.5em; vertical-align: top;">
+	<h3>Relate checked recordings to…
+	</h3>
+      </td>
+      <td style="padding: 0.5em; vertical-align: top;">
+	<h3>Cached works
+	</h3>
+	<span style="font-size: 0.9em;">(These are used to auto-suggest works.)
+	</span>
+      </td>
+    </tr>
+#+end_example
 
 * ShowAllRecordingsInWorks
 ** initial try

@@ -231,9 +231,17 @@
         headers.forEach((th, index) => {
             if (th.classList.contains('checkbox-cell') || th.querySelector('input[type="checkbox"]')) return;
 
+            // Apply requested styles and default icon
+            th.title = "Click to sort";
             th.style.cursor = 'pointer';
             th.style.whiteSpace = 'nowrap';
-            th.title = "Click to sort";
+            th.classList.add('sortable');
+
+            // Add the default sorting icon
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'sort-icon';
+            iconSpan.textContent = '↕';
+            th.appendChild(iconSpan);
 
             th.addEventListener('click', () => {
                 if (lastSortIndex === index) {
@@ -243,16 +251,17 @@
                     lastSortIndex = index;
                 }
 
+                // Update all icons
                 headers.forEach((h, i) => {
-                    const existingIcon = h.querySelector('.sort-icon');
-                    if (existingIcon) existingIcon.remove();
+                    const span = h.querySelector('.sort-icon');
+                    if (!span) return;
 
                     if (i === index) {
-                        const iconSpan = document.createElement('span');
-                        iconSpan.className = 'sort-icon';
-                        iconSpan.style.fontSize = '1.2em';
-                        iconSpan.textContent = sortAscending ? ' ▲' : ' ▼';
-                        h.appendChild(iconSpan);
+                        span.textContent = sortAscending ? ' ▲' : ' ▼';
+                        span.style.fontSize = '1.2em';
+                    } else {
+                        span.textContent = '↕';
+                        span.style.fontSize = '';
                     }
                 });
 
@@ -262,7 +271,6 @@
                     return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 });
 
-                // Respect current filter when sorting
                 const query = filterInput.value.toLowerCase();
                 const rowsToDisplay = query
                     ? allRows.filter(r => r.textContent.toLowerCase().includes(query))
