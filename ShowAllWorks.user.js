@@ -43,7 +43,7 @@
         .mb-show-all-btn:disabled {
             background-color: #ddd !important;
             border-color: #bbb !important;
-            cursor: default;
+            cursor: default !important;
         }
     `;
     document.head.appendChild(style);
@@ -66,6 +66,7 @@
         // Visual "Button Down" state during load
         btn.disabled = true;
         btn.style.color = '#000';
+        btn.style.cursor = 'default'; // Explicitly set to default during load
         btn.style.transform = 'translateY(1px)';
         btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
 
@@ -146,6 +147,7 @@
             // Update UI
             btn.textContent = `All ${allRows.length} works loaded`;
             btn.style.color = '';
+            btn.style.cursor = 'pointer'; // Restore pointer after loading
             btn.style.transform = '';
             btn.style.boxShadow = '';
             btn.disabled = false;
@@ -162,6 +164,7 @@
             console.error('[MB Show All Works] Error:', error);
             btn.textContent = 'Error loading';
             btn.style.color = '';
+            btn.style.cursor = 'pointer';
             btn.style.transform = '';
             btn.style.boxShadow = '';
             btn.disabled = false;
