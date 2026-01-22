@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Releases in ReleaseGroups
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-22
+// @version      0.9.1+2026-01-22
 // @description  Accumulates all releases from paginated release group pages into a single view with filtering and sorting
 // @author       Gemini & ChatGPT (directed by vzell)
 // @tag          AI generated
@@ -101,7 +101,6 @@
         btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
 
         let relIdx = -1;
-        let tagIdx = -1;
 
         try {
             for (let i = 0; i < sortedUrls.length; i++) {
@@ -121,7 +120,6 @@
                     ths.forEach((th, i) => {
                         const text = th.textContent.trim();
                         if (text === 'Relationships') relIdx = i;
-                        if (text === 'Tagger') tagIdx = i;
                     });
                 }
 
@@ -137,9 +135,10 @@
                         }
 
                         const cleanRow = document.importNode(row, true);
-                        // Delete higher index first to maintain index stability
-                        if (tagIdx !== -1 && cleanRow.cells[tagIdx]) cleanRow.deleteCell(tagIdx);
-                        if (relIdx !== -1 && cleanRow.cells[relIdx]) cleanRow.deleteCell(relIdx);
+                        // Remove Relationships cell if found
+                        if (relIdx !== -1 && cleanRow.cells[relIdx]) {
+                            cleanRow.deleteCell(relIdx);
+                        }
 
                         groupedRows.get(currentCategory).push(cleanRow);
                     }
@@ -152,7 +151,7 @@
                 const headerCells = thead.querySelectorAll('th');
                 headerCells.forEach(th => {
                     const text = th.textContent.trim();
-                    if (text === 'Relationships' || text === 'Tagger') {
+                    if (text === 'Relationships') {
                         th.remove();
                     }
                 });
