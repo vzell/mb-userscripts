@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Show All Releases in ReleseGroups
+// @name         VZ: MusicBrainz - Show All Releases in ReleaseGroups
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      0.9+2026-01-22
 // @description  Accumulates all releases from paginated release group pages into a single view with filtering and sorting

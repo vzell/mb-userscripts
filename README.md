@@ -4,7 +4,7 @@
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
 
-- [MusicBrainz - Show All Releases in ReleseGroups](#mb_show_all_releases_in_releasegroups)
+- [MusicBrainz - Show All Releases in ReleaseGroups](#mb_show_all_releases_in_releasegroups)
 - [MusicBrainz - Show All Releases Works](#mb_show_all_works)
 
 
@@ -66,7 +66,7 @@ Adds a "NO Label" & "NO Catalognumber" button to the MusicBrainz release editor.
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
 
-## <a name="mb_show_all_releases_in_releasegroups"></a> MusicBrainz - Show All Releases in ReleseGroups
+## <a name="mb_show_all_releases_in_releasegroups"></a> MusicBrainz - Show All Releases in ReleaseGroups
 
 Accumulates all releases from paginated release group pages into a single view with filtering and sorting.
 
