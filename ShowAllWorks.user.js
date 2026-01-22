@@ -8,7 +8,7 @@
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllWorks.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllAllWorks.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllWorks.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        *://*.musicbrainz.org/artist/*/works*
 // @grant        GM_xmlhttpRequest
@@ -29,7 +29,25 @@
     btn.style.fontSize = '0.5em';
     btn.style.padding = '2px 6px';
     btn.style.verticalAlign = 'middle';
+    btn.style.cursor = 'pointer';
+    btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
     btn.type = 'button';
+
+    // Inject CSS for button-down effect
+    const style = document.createElement('style');
+    style.textContent = `
+        .mb-show-all-btn:active {
+            transform: translateY(1px);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .mb-show-all-btn:disabled {
+            background-color: #ddd !important;
+            border-color: #bbb !important;
+            cursor: default;
+        }
+    `;
+    document.head.appendChild(style);
+    btn.classList.add('mb-show-all-btn');
 
     // Append button to the h1 (appearing after the artist name link)
     headerH1.appendChild(btn);
@@ -44,8 +62,12 @@
         if (isLoaded) return;
 
         console.log('[MB Show All Works] Starting accumulation...');
+
+        // Visual "Button Down" state during load
         btn.disabled = true;
-        btn.textContent = 'Loading...';
+        btn.style.color = '#000';
+        btn.style.transform = 'translateY(1px)';
+        btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
 
         // Logic to find the maximum page number
         let maxPage = 1;
@@ -76,6 +98,8 @@
         try {
             // Iterate from 1 to maxPage
             for (let p = 1; p <= maxPage; p++) {
+                // Update button text with current progress
+                btn.textContent = `Loading page ${p} of ${maxPage}...`;
                 const targetUrl = `${baseUrl}?page=${p}`;
                 console.log(`[MB Show All Works] Fetching page ${p} of ${maxPage}...`);
 
@@ -121,6 +145,9 @@
 
             // Update UI
             btn.textContent = `All ${allRows.length} works loaded`;
+            btn.style.color = '';
+            btn.style.transform = '';
+            btn.style.boxShadow = '';
             btn.disabled = false;
 
             // Remove Pagination
@@ -134,6 +161,9 @@
         } catch (error) {
             console.error('[MB Show All Works] Error:', error);
             btn.textContent = 'Error loading';
+            btn.style.color = '';
+            btn.style.transform = '';
+            btn.style.boxShadow = '';
             btn.disabled = false;
         }
     });
