@@ -19424,7 +19424,7 @@ In the uploaded userscripts add the functionality from the userscript "ShowAllRe
 - add a search filter box next to the button that lets you filter the events by the different columns (for example Type, Role, Location, Date, etc) instantly after they've loaded?
  
 
-* Show All Releases
+* ShowAllReleases
 
 Create a new Tampermonkey userscript based on the uploaded one, but it should match
 
@@ -19477,7 +19477,7 @@ table-structure for "Album + Compilation"
 and so on, whereas in the uploaded script there is just ONE table.
 
 Please leave these different structures intact for the finale "release groups" pages, only combine tabledata for a
-specific heading if it extens over more than on iterated page.
+specific heading if it extents over more than one iterated page.
 
 Also remove the "Relationships" column for the final page for all tables
 
@@ -19585,7 +19585,7 @@ Somehow nothing (nor number of recordings) is shown in the following button
 What I see is "Show all recording (Recordings)"
 
 
-* ShowAllRecordingsInWorks
+* ShowAllRecordings in Works
 ** initial try
 
 "// @match        https://musicbrainz.org/work/*?direction=2&link_type_id=278"
@@ -19667,6 +19667,7 @@ Can you make the userscript when entering a URL like "https://musicbrainz.org/wo
 automatically redirect to "https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac?direction=2&link_type_id=278&page=1"
 
 * ShowAll
+** initial
 
 Please consolidate the uploaded userscripts in a common one which works on all @match URLs (also use the broader type
 with '*://*.musicbrainz.org/' instead of 'https://musicbrainz.org/'
@@ -19681,3 +19682,11 @@ all other types to (Recordings, Works, Releases, etc.):
   time for rendering the resulting table in the browser. The display should be next to the button on the right
   side. Please add timings for just the loading of pages AND the rendering of the resulting table separately
 - add a search filter box next to the button that lets you filter the events by the different columns (for example Type, Role, Location, Date, etc) instantly after they've loaded?
+
+** better button
+
+The button text during loading is almost invisible. Please make it exactly like in the uploaded script "ShowAllEvents.user.js"
+
+** missing
+
+RG: "Relationship" column should be filtered out.
