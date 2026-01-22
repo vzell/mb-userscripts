@@ -19666,6 +19666,7 @@ which should sty there, other wise we start all over
 Can you make the userscript when entering a URL like "https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac"
 automatically redirect to "https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac?direction=2&link_type_id=278&page=1"
 
+
 * ShowAll
 ** initial
 
@@ -19739,3 +19740,38 @@ But, please hide the following table container if present when pressing the "Sho
 #+end_example
 
 See also the implementation in the uploaded userscript "ShowAllRecordings.user.js"
+
+** 5
+
+Please make the "<div class="jesus2099userjs154481bigbox"> container invisible when clicking the "Show all releases" button.
+It's still present for example in
+ - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+   
+See the successfull implementation in the uploaded userscript "ShowAllReleases.user.js" 
+
+** 6
+
+OK, the "<div class="jesus2099userjs154481bigbox"> container stuff works now.
+
+But please, for the following type of URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c which shows all release in a release-group,
+collect all the table entries after the different headings which look like the following
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Official</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Promotion</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">(unknown)</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Bootleg</th></tr>
+#+end_example
+
+and create the final page where each subheader, like "Official", "Promotion, Bootleg", etc exist only one time.
+
+See successfull implementation in uploaded userscript "ShowAllReleasesInReleaseGroups.user.js"

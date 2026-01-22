@@ -25,8 +25,8 @@
     const path = currentUrl.pathname;
 
     let pageType = '';
-    let headerContainer = document.querySelector('.artistheader h1') ||
-                          document.querySelector('.rgheader h1') ||
+    let headerContainer = document.querySelector('.artistheader h1') || 
+                          document.querySelector('.rgheader h1') || 
                           document.querySelector('h1 a bdi')?.parentNode;
 
     if (path.includes('/events')) pageType = 'events';
@@ -133,16 +133,16 @@
         stopRequested = false;
         allRows = [];
 
+        // Hide Jesus2099 Bigbox if present (as implemented in ShowAllReleases.user.js)
+        const bigBox = document.querySelector('div.jesus2099userjs154481bigbox');
+        if (bigBox) bigBox.style.display = 'none';
+
         // Hide specific relationship table containers (as implemented in ShowAllRecordings.user.js)
-        document.querySelectorAll('table[style*=\"background: rgb(242, 242, 242)\"]').forEach(table => {
+        document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
             if (table.textContent.includes('Relate checked recordings to')) {
                 table.style.display = 'none';
             }
         });
-
-        // Hide Jesus2099 Bigbox if present
-        const bigBox = document.querySelector('div.jesus2099userjs154481bigbox');
-        if (bigBox) bigBox.style.display = 'none';
 
         btn.disabled = true;
         btn.style.color = '#000';
@@ -156,17 +156,16 @@
         try {
             for (let p = 1; p <= maxPage; p++) {
                 if (stopRequested) break;
-
+                
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
                 const html = await fetchHtml(`${baseUrl}?page=${p}`);
                 const doc = new DOMParser().parseFromString(html, 'text/html');
-
+                
                 // Identify indices to remove for THIS specific page content
                 let indicesToExclude = [];
                 const ths = doc.querySelectorAll('table.tbl thead th');
                 ths.forEach((th, idx) => {
                     const txt = th.textContent.trim();
-                    // Matching "Relationship", "Relationships", or "Performance Attributes"
                     if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') {
                         indicesToExclude.push(idx);
                     }
@@ -176,7 +175,6 @@
                 pageRows.forEach(row => {
                     if (row.cells.length > 1) {
                         const newRow = document.importNode(row, true);
-                        // Delete cells from right-to-left based on page-specific discovery
                         [...indicesToExclude].sort((a, b) => b - a).forEach(idx => {
                             if (newRow.cells[idx]) newRow.deleteCell(idx);
                         });
@@ -185,7 +183,7 @@
                 });
             }
 
-            // Final UI Cleanup: Remove the headers from the live table
+            // Final UI Cleanup: Remove headers
             const liveTable = document.querySelector('table.tbl');
             if (liveTable && liveTable.tHead) {
                 const liveHeaders = Array.from(liveTable.tHead.rows[0].cells);
@@ -233,10 +231,10 @@
     function makeSortable() {
         const headers = document.querySelectorAll('table.tbl thead th');
         headers.forEach((th, index) => {
-            if (th.querySelector('input[type=\"checkbox\"]')) return;
+            if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'pointer';
             th.title = 'Click to sort';
-
+            
             if (!th.querySelector('.sort-icon')) {
                 const s = document.createElement('span');
                 s.className = 'sort-icon';
@@ -247,7 +245,7 @@
             th.onclick = () => {
                 if (lastSortIndex === index) sortAscending = !sortAscending;
                 else { sortAscending = true; lastSortIndex = index; }
-
+                
                 headers.forEach((h, i) => {
                     const icon = h.querySelector('.sort-icon');
                     if (icon) {
@@ -261,7 +259,7 @@
                     const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
                     return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 });
-
+                
                 const query = filterInput.value.toLowerCase();
                 renderFinalTable(query ? allRows.filter(r => r.textContent.toLowerCase().includes(query)) : allRows);
             };
@@ -270,11 +268,11 @@
 
     function fetchHtml(url) {
         return new Promise((resolve, reject) => {
-            GM_xmlhttpRequest({
-                method: 'GET',
-                url: url,
-                onload: (res) => resolve(res.responseText),
-                onerror: reject
+            GM_xmlhttpRequest({ 
+                method: 'GET', 
+                url: url, 
+                onload: (res) => resolve(res.responseText), 
+                onerror: reject 
             });
         });
     }
