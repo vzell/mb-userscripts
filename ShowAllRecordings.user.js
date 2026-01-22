@@ -1,16 +1,16 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Show All Releases
+// @name         VZ: MusicBrainz - Show All Recordings
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      0.9+2026-01-22
-// @description  Accumulates all releases from paginated artist release pages into a single view with sorting
-// @author       Gemini & ChatGPT (directed by vzell)
+// @description  Accumulates all recordings from paginated artist recording pages into a single view with sorting
+// @author       Gemini
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleases.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleases.user.js
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllRecordings.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllRecordings.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @match        https://musicbrainz.org/artist/*/releases
+// @match        https://musicbrainz.org/artist/*/recordings
 // @grant        GM_xmlhttpRequest
 // @license      MIT
 // ==/UserScript==
@@ -24,7 +24,7 @@
 
     // Create Main Button
     const btn = document.createElement('button');
-    btn.textContent = 'Show all releases';
+    btn.textContent = 'Show all recordings';
     btn.style.marginLeft = '10px';
     btn.style.fontSize = '0.5em';
     btn.style.padding = '2px 6px';
@@ -49,32 +49,17 @@
     document.head.appendChild(style);
     btn.classList.add('mb-show-all-btn');
 
-    // Append button to the h1 (appearing after the artist name link)
+    // Append button to the h1
     headerH1.appendChild(btn);
 
     // State Variables
     let sortAscending = true;
     let lastSortIndex = -1;
-    let allRows = []; // Stores all data (flat list for Releases)
+    let allRows = [];
     let isLoaded = false;
 
     btn.addEventListener('click', async () => {
         if (isLoaded) return;
-
-        console.log('[MB Show All Releases] Starting accumulation...');
-
-        // Additionally make the "<div class="jesus2099userjs154481bigbox"> container invisible
-        const bigBox = document.querySelector('div.jesus2099userjs154481bigbox');
-        if (bigBox) {
-            bigBox.style.display = 'none';
-        }
-
-        // Visual "Button Down" state during load
-        btn.disabled = true;
-        btn.style.color = '#000';
-        btn.style.cursor = 'default';
-        btn.style.transform = 'translateY(1px)';
-        btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
 
         // Logic to find the maximum page number
         let maxPage = 1;
@@ -91,7 +76,6 @@
                     maxPage = parseInt(pageParam, 10);
                 }
             } else if (links.length > 0) {
-                // Fallback: get the highest page number from any link if "Next" isn't found
                 links.forEach(link => {
                     const p = new URL(link.href, window.location.origin).searchParams.get('page');
                     if (p) maxPage = Math.max(maxPage, parseInt(p, 10));
@@ -99,55 +83,39 @@
             }
         }
 
+        // Popup warning for large datasets
+        if (maxPage > 100) {
+            const proceed = confirm(`Warning: This artist has ${maxPage} pages of recordings. Loading all of them may take a while and could slow down your browser. Do you want to proceed?`);
+            if (!proceed) return;
+        }
+
+        console.log('[MB Show All Recordings] Starting accumulation...');
+
+        // Visual loading state
+        btn.disabled = true;
+        btn.style.color = '#000';
+        btn.style.cursor = 'default';
+        btn.style.transform = 'translateY(1px)';
+        btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
+
         const baseUrl = window.location.href.split('?')[0];
-        let relIdx = -1;
 
         try {
-            // Iterate from 1 to maxPage
             for (let p = 1; p <= maxPage; p++) {
-                // Update button text with current progress
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
                 const targetUrl = `${baseUrl}?page=${p}`;
-                console.log(`[MB Show All Releases] Fetching page ${p} of ${maxPage}...`);
+                console.log(`[MB Show All Recordings] Fetching page ${p} of ${maxPage}...`);
 
                 const html = await fetchHtml(targetUrl);
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
 
-                // Identify index for "Relationships" once
-                // Note: Releases table structure might differ slightly from Works,
-                // but we search for the specific header text to be safe.
-                if (relIdx === -1) {
-                    const ths = doc.querySelectorAll('table.tbl thead th');
-                    ths.forEach((th, i) => {
-                        const text = th.textContent.trim();
-                        if (text === 'Relationships') relIdx = i;
-                    });
-                }
-
                 const rows = doc.querySelectorAll('table.tbl tbody tr');
                 rows.forEach(row => {
-                    // Check if row actually has data (ignore placeholders/empty rows)
+                    // Filter out "No recordings found" or empty rows
                     if (row.cells.length > 1) {
                         const cleanRow = document.importNode(row, true);
-                        // Remove Relationships cell if found
-                        if (relIdx !== -1 && cleanRow.cells[relIdx]) {
-                            cleanRow.deleteCell(relIdx);
-                        }
                         allRows.push(cleanRow);
-                    }
-                });
-            }
-
-            // CLEAN UP HEADER
-            const table = document.querySelector('table.tbl');
-            const thead = table.querySelector('thead');
-            if (thead) {
-                const headerCells = thead.querySelectorAll('th');
-                headerCells.forEach(th => {
-                    const text = th.textContent.trim();
-                    if (text === 'Relationships') {
-                        th.remove();
                     }
                 });
             }
@@ -156,7 +124,7 @@
             isLoaded = true;
 
             // Update UI
-            btn.textContent = `All ${allRows.length} releases loaded`;
+            btn.textContent = `All ${allRows.length} recordings loaded`;
             btn.style.color = '';
             btn.style.cursor = 'pointer';
             btn.style.transform = '';
@@ -172,7 +140,7 @@
             makeSortable();
 
         } catch (error) {
-            console.error('[MB Show All Releases] Error:', error);
+            console.error('[MB Show All Recordings] Error:', error);
             btn.textContent = 'Error loading';
             btn.style.color = '';
             btn.style.cursor = 'pointer';
@@ -195,7 +163,8 @@
         const headers = document.querySelectorAll('table.tbl thead th');
 
         headers.forEach((th, index) => {
-            if (th.classList.contains('checkbox-cell')) return;
+            // Standard MusicBrainz recording tables usually have checkboxes in the first or last columns
+            if (th.classList.contains('checkbox-cell') || th.querySelector('input[type="checkbox"]')) return;
 
             th.style.cursor = 'pointer';
             th.style.whiteSpace = 'nowrap';

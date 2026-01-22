@@ -19421,7 +19421,7 @@ that creates a button at the starting page with text "Show all releases" after t
 When pressed, the following action should be done:
 
 Generate a final "releases page" which includes all information from all the sub release pages by iterating through
-all the links "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releasess?page=<pagenumber>"
+all the links "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?page=<pagenumber>"
 
 Also remove the "Relationships" column for the final page
 
@@ -19475,6 +19475,31 @@ They are located right after the '<h3><type></h3>'
 All tables below each <type> (like for example "Album" or "Single") should also be sortable like in the before uploaded userscript
 
 
+* ShowAllRecordings
+
+Create a new Tampermonkey userscript based on the uploaded one, but it should match
+
+"// @match        https://musicbrainz.org/artist/*/recordings"
+
+that creates a button at the starting page with text "Show all recordings" after the artist title
+
+When pressed, the following action should be done:
+
+Generate a final "recordings page" which includes all information from all the sub recording pages by iterating through
+all the links "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings?page=<pagenumber>"
+
+Generate a popup warning and ask the user if he really want to proceed it the maximum pagenumber deduced from the pagination is greater than 100.
+
+** 2
+
+Start 3:34
+
+** 3
+
+Implement a time counter when pressing the "Show all recordings" button and display the total execution time, plus time for rendering the resulting table in the browser.
+The display should be next to the button on the right side.
+
+
 * ShowAllRecordingsInWorks
 ** initial try
 
@@ -19485,7 +19510,7 @@ Create a new Tampermonkey userscript based on the uploaded one, but it should ma
 
 "// @match        https://musicbrainz.org/work/*"
 
-that creates a button at the starting page with text "Show all recordingss" after the work title between the
+that creates a button at the starting page with text "Show all recordings" after the work title between the
 following tags "<bdi>Born in the U.S.A.</bdi>" or in general "<bdi><work title></bdi>"
 
 Complete HTML snippet:
@@ -19527,7 +19552,7 @@ Create a new Tampermonkey userscript based on the uploaded one, but it should ma
 
 "// @match        https://musicbrainz.org/work/*"
 
-that creates a button at the starting page with text "Show all recordingss" after the work title between the
+that creates a button at the starting page with text "Show all recordings" after the work title between the
 following tags "<bdi>Born in the U.S.A.</bdi>" or in general "<bdi><work title></bdi>"
 
 Complete HTML snippet:
