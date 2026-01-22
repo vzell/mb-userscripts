@@ -18981,6 +18981,7 @@ leave a little space between the "Cancel button and the new row of buttons, beca
 
 
 * ShowAllReleases
+** initial
 
 Create a Tampermonkey userscript for "// @match        https://musicbrainz.org/release-group/*"
 
@@ -19211,3 +19212,120 @@ In the uploaded user script add the following functionality:
 
 The sort up/down symbol gets rendered again and again per column and column header click. It should be replaced after
 each click and onyl display on the column where the actual sorting takes place.
+
+** pagination logic
+
+Apply the same logic to find the maximum page number and logic for iteration always from pagnumber 1 up to the maximum
+found from the uploaded userscript "ShowAllWorks.users.js" to the uploaded user script "ShowAllReleases.user.js"
+
+
+* ShowAllWorks
+
+Create a new Tampermonkey userscript based on the uploaded one, but it should match
+
+"// @match        https://musicbrainz.org/artist/*/works"
+
+that creates a button at the starting page with text "Show all works" after the artist title between the
+following tags "<bdi>Bruce Springsteen</bdi>" or in general "<bdi><artist name></bdi>"
+
+Complete HTML snippet:
+
+#+begin_example
+<div class="wrap-anywhere artistheader person-icon">
+  <h1>
+    <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">
+      <bdi>Bruce Springsteen
+      </bdi>
+    </a>
+  </h1>
+  <p class="subheader">
+    <span class="prefix">~
+    </span>
+    <!-- -->Person
+  </p>
+</div>
+#+end_example
+
+When pressed, the following action should be done:
+
+Generate a final "works page" which includes all information from all the sub release work pages by iterating through
+all the links "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works?page=<pagenumber>"
+in the following pagination HTML snippet at the starting page
+
+#+begin_example
+<ul class="pagination">
+  <li>
+    <span>Previous
+    </span>
+  </li>
+  <li class="separator">
+  </li>
+  <li>
+    <a class="sel" href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works?page=1">
+      <strong>1
+      </strong>
+    </a>
+  </li>
+  <li>
+    <a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works?page=2">2
+    </a>
+  </li>
+  <li>
+    <a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works?page=3">3
+    </a>
+  </li>
+  <li>
+    <a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works?page=4">4
+    </a>
+  </li>
+  <li>
+    <a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works?page=5">5
+    </a>
+  </li>
+  <li>
+    <span>…
+    </span>
+  </li>
+  <li>
+    <a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works?page=16">16
+    </a>
+  </li>
+  <li class="separator">
+  </li>
+  <li>
+    <a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works?page=2">Next
+    </a>
+  </li>
+</ul>
+#+end_example
+
+accumulating all the tabular information and present the final accumulated page with the same headers found in the initial starting page at
+
+#+begin_example
+<table class="tbl mergeable-table">
+<thead><tr><th colspan="1" class="checkbox-cell"><input type="checkbox"></th><th colspan="1">Work</th><th>Relationships</th><th colspan="1">Authors</th><th colspan="1">Recording artists</th><th colspan="1">Other artists</th><th colspan="1">ISWC</th><th colspan="1">Type</th><th colspan="1">Lyrics languages</th><th colspan="1">Attributes</th><th colspan="1" class="rating c">Rating</th></tr></thead>
+#+end_example
+
+But for this userscript please remove only the "Relationships" column, as the "Tagger" columns doesn't exist.
+There are also NO subheaders (like "Official" or "Bootleg") on work pages. So that logic part doesn't apply here.
+
+** 2
+
+Actually we need to change how to look at the pagination
+
+Always iterate by starting from pagenumber 1 up to the pagenumber which can be accessed by looking up the 
+pagenumber from the href tag right before the one with the display text of "Next", for example in the following HTML pagination snippet, it's 16
+
+#+begin_example
+  <li>
+    <a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works?page=16">16
+    </a>
+  </li>
+  <li class="separator">
+  </li>
+  <li>
+    <a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works?page=2">Next
+    </a>
+  </li>
+
+#+end_example
