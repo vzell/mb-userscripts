@@ -20,6 +20,7 @@
 (function() {
     'use strict';
 
+    // --- Configuration & Detection ---
     const currentUrl = new URL(window.location.href);
     const path = currentUrl.pathname;
 
@@ -41,20 +42,44 @@
     // --- UI Creation ---
     const btn = document.createElement('button');
     btn.textContent = `C: Show all ${pageType.replace('-', ' ')}`;
-    btn.style.cssText = 'margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s;';
+    btn.style.marginLeft = '10px';
+    btn.style.fontSize = '0.5em';
+    btn.style.padding = '2px 6px';
+    btn.style.verticalAlign = 'middle';
+    btn.style.cursor = 'pointer';
+    btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
     btn.type = 'button';
     btn.classList.add('mb-show-all-btn');
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
-    stopBtn.style.cssText = 'display:none; margin-left:5px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f;';
+    stopBtn.style.display = 'none';
+    stopBtn.style.marginLeft = '5px';
+    stopBtn.style.fontSize = '0.5em';
+    stopBtn.style.padding = '2px 6px';
+    stopBtn.style.verticalAlign = 'middle';
+    stopBtn.style.cursor = 'pointer';
+    stopBtn.style.backgroundColor = '#f44336';
+    stopBtn.style.color = 'white';
+    stopBtn.style.border = '1px solid #d32f2f';
+    stopBtn.type = 'button';
 
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Filter ${pageType}...`;
-    filterInput.style.cssText = 'display:none; margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; border:1px solid #ccc; border-radius:3px;';
+    filterInput.style.display = 'none';
+    filterInput.style.marginLeft = '10px';
+    filterInput.style.fontSize = '0.5em';
+    filterInput.style.padding = '2px 6px';
+    filterInput.style.verticalAlign = 'middle';
+    filterInput.style.border = '1px solid #ccc';
+    filterInput.style.borderRadius = '3px';
+    filterInput.type = 'text';
 
     const timerDisplay = document.createElement('span');
-    timerDisplay.style.cssText = 'margin-left:10px; font-size:0.5em; color:#666; vertical-align:middle;';
+    timerDisplay.style.marginLeft = '10px';
+    timerDisplay.style.fontSize = '0.5em';
+    timerDisplay.style.color = '#666';
+    timerDisplay.style.verticalAlign = 'middle';
 
     const style = document.createElement('style');
     style.textContent = `
@@ -103,9 +128,21 @@
 
         if (maxPage > 100 && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) return;
 
+        // --- Start Loading Logic ---
         isLoaded = true;
         stopRequested = false;
         allRows = [];
+
+        // Hide specific relationship table containers (as implemented in ShowAllRecordings.user.js)
+        document.querySelectorAll('table[style*=\"background: rgb(242, 242, 242)\"]').forEach(table => {
+            if (table.textContent.includes('Relate checked recordings to')) {
+                table.style.display = 'none';
+            }
+        });
+
+        // Hide Jesus2099 Bigbox if present
+        const bigBox = document.querySelector('div.jesus2099userjs154481bigbox');
+        if (bigBox) bigBox.style.display = 'none';
 
         btn.disabled = true;
         btn.style.color = '#000';
@@ -129,6 +166,7 @@
                 const ths = doc.querySelectorAll('table.tbl thead th');
                 ths.forEach((th, idx) => {
                     const txt = th.textContent.trim();
+                    // Matching "Relationship", "Relationships", or "Performance Attributes"
                     if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') {
                         indicesToExclude.push(idx);
                     }
@@ -175,7 +213,7 @@
             makeSortable();
 
             const endRender = performance.now();
-            const renderTime = ((endRender - startTime - (endFetch - startTime)) / 1000).toFixed(2);
+            const renderTime = ((endRender - endFetch) / 1000).toFixed(2);
             timerDisplay.textContent = `(Fetch: ${fetchTime}s, Render: ${renderTime}s)`;
 
         } catch (err) {
@@ -195,9 +233,9 @@
     function makeSortable() {
         const headers = document.querySelectorAll('table.tbl thead th');
         headers.forEach((th, index) => {
-            if (th.querySelector('input[type="checkbox"]')) return;
+            if (th.querySelector('input[type=\"checkbox\"]')) return;
             th.style.cursor = 'pointer';
-            th.title = "Click to sort";
+            th.title = 'Click to sort';
 
             if (!th.querySelector('.sort-icon')) {
                 const s = document.createElement('span');
@@ -233,7 +271,7 @@
     function fetchHtml(url) {
         return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({
-                method: "GET",
+                method: 'GET',
                 url: url,
                 onload: (res) => resolve(res.responseText),
                 onerror: reject
