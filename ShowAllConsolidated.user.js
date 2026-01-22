@@ -24,8 +24,8 @@
     const path = currentUrl.pathname;
 
     let pageType = '';
-    let headerContainer = document.querySelector('.artistheader h1') || 
-                          document.querySelector('.rgheader h1') || 
+    let headerContainer = document.querySelector('.artistheader h1') ||
+                          document.querySelector('.rgheader h1') ||
                           document.querySelector('h1 a bdi')?.parentNode;
 
     if (path.includes('/events')) pageType = 'events';
@@ -43,7 +43,6 @@
     btn.textContent = `C: Show all ${pageType.replace('-', ' ')}`;
     btn.style.cssText = 'margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s;';
     btn.type = 'button';
-    btn.classList.add('mb-show-all-btn');
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
@@ -58,7 +57,7 @@
 
     const style = document.createElement('style');
     style.textContent = `
-        .mb-show-all-btn:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+        .mb-show-all-btn-active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
         .mb-show-all-btn:disabled { background-color: #ddd !important; border-color: #bbb !important; cursor: default !important; color: #000 !important; }
         .sort-icon { cursor: pointer; margin-left: 4px; }
     `;
@@ -69,12 +68,13 @@
     headerContainer.appendChild(filterInput);
     headerContainer.appendChild(timerDisplay);
 
-    let allRows = []; 
-    let groupedRows = new Map(); // For rg-details grouping
+    let allRows = [];
+    let groupedRows = new Map(); // Maps Category (h3) -> Array of Rows
     let isLoaded = false;
     let stopRequested = false;
-    let sortAscending = true;
-    let lastSortIndex = -1;
+
+    // Sorting states for multi-table layout (artist-main)
+    let multiTableSortStates = new Map();
 
     stopBtn.addEventListener('click', () => {
         stopRequested = true;
@@ -84,13 +84,13 @@
 
     filterInput.addEventListener('input', () => {
         const query = filterInput.value.toLowerCase();
-        if (pageType === 'rg-details') {
+        if (pageType === 'rg-details' || pageType === 'artist-main') {
             const filteredMap = new Map();
-            groupedRows.forEach((rows, status) => {
+            groupedRows.forEach((rows, key) => {
                 const matches = rows.filter(r => r.textContent.toLowerCase().includes(query));
-                if (matches.length > 0) filteredMap.set(status, matches);
+                if (matches.length > 0) filteredMap.set(key, matches);
             });
-            renderGroupedTable(filteredMap);
+            renderGroupedTable(filteredMap, pageType === 'artist-main');
         } else {
             renderFinalTable(allRows.filter(row => row.textContent.toLowerCase().includes(query)));
         }
@@ -118,10 +118,8 @@
         allRows = [];
         groupedRows = new Map();
 
-        // UI Cleanups
-        const bigBox = document.querySelector('div.jesus2099userjs154481bigbox');
-        if (bigBox) bigBox.style.display = 'none';
-
+        // Hide all Bigboxes and Batch tables
+        document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
             if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
         });
@@ -138,64 +136,75 @@
         try {
             for (let p = 1; p <= maxPage; p++) {
                 if (stopRequested) break;
-                
+
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
                 const html = await fetchHtml(`${baseUrl}?page=${p}`);
                 const doc = new DOMParser().parseFromString(html, 'text/html');
-                
+
                 let indicesToExclude = [];
-                const ths = doc.querySelectorAll('table.tbl thead th');
-                ths.forEach((th, idx) => {
-                    const txt = th.textContent.trim();
-                    if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') {
-                        indicesToExclude.push(idx);
-                    }
-                });
+                const referenceTable = doc.querySelector('table.tbl');
+                if (referenceTable) {
+                    referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
+                        const txt = th.textContent.trim();
+                        if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') indicesToExclude.push(idx);
+                    });
+                }
 
-                const tableBody = doc.querySelector('table.tbl tbody');
-                if (!tableBody) continue;
+                if (pageType === 'artist-main') {
+                    doc.querySelectorAll('table.tbl').forEach(table => {
+                        let h3 = table.previousElementSibling;
+                        while (h3 && h3.nodeName !== 'H3') h3 = h3.previousElementSibling;
+                        const category = h3 ? h3.textContent.trim() : 'Other';
 
-                let currentStatus = 'Unknown';
-                const nodes = Array.from(tableBody.childNodes);
+                        if (!groupedRows.has(category)) groupedRows.set(category, []);
 
-                nodes.forEach(node => {
-                    if (node.nodeName === 'TR') {
-                        if (node.classList.contains('subh')) {
-                            currentStatus = node.textContent.trim() || 'Unknown';
-                        } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
-                            const newRow = document.importNode(node, true);
-                            [...indicesToExclude].sort((a, b) => b - a).forEach(idx => {
-                                if (newRow.cells[idx]) newRow.deleteCell(idx);
-                            });
-
-                            if (pageType === 'rg-details') {
-                                if (!groupedRows.has(currentStatus)) groupedRows.set(currentStatus, []);
-                                groupedRows.get(currentStatus).push(newRow);
-                            } else {
-                                allRows.push(newRow);
+                        table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
+                            if (row.cells.length > 1) {
+                                const newRow = document.importNode(row, true);
+                                [...indicesToExclude].sort((a, b) => b - a).forEach(idx => {
+                                    if (newRow.cells[idx]) newRow.deleteCell(idx);
+                                });
+                                groupedRows.get(category).push(newRow);
                             }
-                        }
+                        });
+                    });
+                } else {
+                    const tableBody = doc.querySelector('table.tbl tbody');
+                    if (tableBody) {
+                        let currentStatus = 'Unknown';
+                        tableBody.childNodes.forEach(node => {
+                            if (node.nodeName === 'TR') {
+                                if (node.classList.contains('subh')) {
+                                    currentStatus = node.textContent.trim() || 'Unknown';
+                                } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+                                    const newRow = document.importNode(node, true);
+                                    [...indicesToExclude].sort((a, b) => b - a).forEach(idx => {
+                                        if (newRow.cells[idx]) newRow.deleteCell(idx);
+                                    });
+                                    if (pageType === 'rg-details') {
+                                        if (!groupedRows.has(currentStatus)) groupedRows.set(currentStatus, []);
+                                        groupedRows.get(currentStatus).push(newRow);
+                                    } else allRows.push(newRow);
+                                }
+                            }
+                        });
                     }
-                });
+                }
             }
 
-            // Cleanup Headers
-            const liveTable = document.querySelector('table.tbl');
-            if (liveTable?.tHead) {
-                const liveHeaders = Array.from(liveTable.tHead.rows[0].cells);
-                const liveIndicesToRemove = [];
-                liveHeaders.forEach((th, idx) => {
-                    const txt = th.textContent.trim();
-                    if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') {
-                        liveIndicesToRemove.push(idx);
-                    }
-                });
-                liveIndicesToRemove.sort((a, b) => b - a).forEach(idx => liveTable.tHead.rows[0].deleteCell(idx));
-            }
+            // Cleanup headers of live tables
+            document.querySelectorAll('table.tbl').forEach(table => {
+                if (table.tHead) {
+                    const toRemove = [];
+                    Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
+                        const txt = th.textContent.trim();
+                        if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') toRemove.push(idx);
+                    });
+                    toRemove.sort((a, b) => b - a).forEach(idx => table.tHead.rows[0].deleteCell(idx));
+                }
+            });
 
             const endFetch = performance.now();
-            const fetchTime = ((endFetch - startTime) / 1000).toFixed(2);
-
             btn.textContent = stopRequested ? 'Partial Load' : 'All Loaded';
             btn.disabled = false;
             stopBtn.style.display = 'none';
@@ -203,22 +212,21 @@
 
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
-            if (pageType === 'rg-details') {
-                renderGroupedTable(groupedRows);
+            if (pageType === 'rg-details' || pageType === 'artist-main') {
+                renderGroupedTable(groupedRows, pageType === 'artist-main');
             } else {
                 renderFinalTable(allRows);
             }
-            
+
             makeSortable();
 
             const endRender = performance.now();
-            const renderTime = ((endRender - endFetch) / 1000).toFixed(2);
-            timerDisplay.textContent = `(Fetch: ${fetchTime}s, Render: ${renderTime}s)`;
+            timerDisplay.textContent = `(Fetch: ${((endFetch - startTime) / 1000).toFixed(2)}s, Render: ${((endRender - endFetch) / 1000).toFixed(2)}s)`;
 
         } catch (err) {
             console.error(err);
-            btn.disabled = false;
             btn.textContent = 'Error';
+            btn.disabled = false;
         }
     });
 
@@ -229,29 +237,100 @@
         rows.forEach(r => tbody.appendChild(r));
     }
 
-    function renderGroupedTable(map) {
-        const tbody = document.querySelector('table.tbl tbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+    function renderGroupedTable(map, isArtistMain) {
+        if (isArtistMain) {
+            const firstTable = document.querySelector('table.tbl');
+            if (!firstTable) return;
+            const container = firstTable.parentNode;
 
-        const colCount = document.querySelectorAll('table.tbl thead th').length;
+            // Clear previous structure
+            let sibling = firstTable.previousElementSibling;
+            while (sibling && sibling.nodeName !== 'H2') {
+                const toRemove = sibling;
+                sibling = sibling.previousElementSibling;
+                if (toRemove.nodeName === 'H3' || toRemove.nodeName === 'TABLE' || toRemove.classList?.contains('jesus2099userjs154481bigbox')) toRemove.remove();
+            }
+            firstTable.remove();
 
-        map.forEach((rows, status) => {
-            const subh = document.createElement('tr');
-            subh.className = 'subh';
-            subh.innerHTML = `<th></th><th colspan="${colCount - 1}">${status}</th>`;
-            tbody.appendChild(subh);
-            rows.forEach(r => tbody.appendChild(r));
+            map.forEach((rows, category) => {
+                const h3 = document.createElement('h3');
+                h3.textContent = category;
+                container.appendChild(h3);
+
+                const table = document.createElement('table');
+                table.className = 'tbl';
+                table.dataset.category = category;
+                table.innerHTML = `<thead>${document.querySelector('thead')?.innerHTML || ''}</thead><tbody></tbody>`;
+                rows.forEach(r => table.querySelector('tbody').appendChild(r));
+                container.appendChild(table);
+                makeTableSortable(table, category);
+            });
+        } else {
+            const tbody = document.querySelector('table.tbl tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const colCount = document.querySelectorAll('table.tbl thead th').length;
+            map.forEach((rows, status) => {
+                const subh = document.createElement('tr');
+                subh.className = 'subh';
+                subh.innerHTML = `<th></th><th colspan="${colCount - 1}">${status}</th>`;
+                tbody.appendChild(subh);
+                rows.forEach(r => tbody.appendChild(r));
+            });
+        }
+    }
+
+    function makeTableSortable(table, category) {
+        const headers = table.querySelectorAll('thead th');
+        if (!multiTableSortStates.has(category)) {
+            multiTableSortStates.set(category, { lastSortIndex: -1, sortAscending: true });
+        }
+        const state = multiTableSortStates.get(category);
+
+        headers.forEach((th, index) => {
+            if (th.querySelector('input[type="checkbox"]')) return;
+            th.style.cursor = 'pointer';
+            if (!th.querySelector('.sort-icon')) {
+                const s = document.createElement('span');
+                s.className = 'sort-icon';
+                s.textContent = ' ↕';
+                th.appendChild(s);
+            }
+
+            th.onclick = () => {
+                if (state.lastSortIndex === index) state.sortAscending = !state.sortAscending;
+                else { state.sortAscending = true; state.lastSortIndex = index; }
+
+                headers.forEach((h, i) => {
+                    const icon = h.querySelector('.sort-icon');
+                    if (icon) icon.textContent = (i === index) ? (state.sortAscending ? ' ▲' : ' ▼') : ' ↕';
+                });
+
+                const rows = groupedRows.get(category);
+                rows.sort((a, b) => {
+                    const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
+                    const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
+                    return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                });
+
+                const query = filterInput.value.toLowerCase();
+                const tbody = table.querySelector('tbody');
+                tbody.innerHTML = '';
+                rows.filter(r => r.textContent.toLowerCase().includes(query)).forEach(r => tbody.appendChild(r));
+            };
         });
     }
 
     function makeSortable() {
+        if (pageType === 'artist-main') return; // Handled by makeTableSortable per table
+
         const headers = document.querySelectorAll('table.tbl thead th');
+        let lastSortIndex = -1;
+        let sortAscending = true;
+
         headers.forEach((th, index) => {
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'pointer';
-            th.title = 'Click to sort';
-            
             if (!th.querySelector('.sort-icon')) {
                 const s = document.createElement('span');
                 s.className = 'sort-icon';
@@ -262,13 +341,10 @@
             th.onclick = () => {
                 if (lastSortIndex === index) sortAscending = !sortAscending;
                 else { sortAscending = true; lastSortIndex = index; }
-                
+
                 headers.forEach((h, i) => {
                     const icon = h.querySelector('.sort-icon');
-                    if (icon) {
-                        icon.textContent = (i === index) ? (sortAscending ? ' ▲' : ' ▼') : ' ↕';
-                        icon.style.fontSize = (i === index) ? '1.2em' : '';
-                    }
+                    if (icon) icon.textContent = (i === index) ? (sortAscending ? ' ▲' : ' ▼') : ' ↕';
                 });
 
                 const sortFn = (a, b) => {
@@ -278,15 +354,14 @@
                 };
 
                 const query = filterInput.value.toLowerCase();
-
                 if (pageType === 'rg-details') {
                     groupedRows.forEach(rows => rows.sort(sortFn));
                     const filteredMap = new Map();
-                    groupedRows.forEach((rows, status) => {
+                    groupedRows.forEach((rows, key) => {
                         const matches = rows.filter(r => r.textContent.toLowerCase().includes(query));
-                        if (matches.length > 0) filteredMap.set(status, matches);
+                        if (matches.length > 0) filteredMap.set(key, matches);
                     });
-                    renderGroupedTable(filteredMap);
+                    renderGroupedTable(filteredMap, false);
                 } else {
                     allRows.sort(sortFn);
                     renderFinalTable(query ? allRows.filter(r => r.textContent.toLowerCase().includes(query)) : allRows);
@@ -297,10 +372,10 @@
 
     function fetchHtml(url) {
         return new Promise((resolve, reject) => {
-            GM_xmlhttpRequest({ 
-                method: 'GET', url: url, 
-                onload: (res) => resolve(res.responseText), 
-                onerror: reject 
+            GM_xmlhttpRequest({
+                method: 'GET', url: url,
+                onload: (res) => resolve(res.responseText),
+                onerror: reject
             });
         });
     }

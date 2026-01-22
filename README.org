@@ -19484,9 +19484,14 @@ Also remove the "Relationships" column for the final page for all tables
 Additionally make ALL the "<div class="jesus2099userjs154481bigbox"> containers invisible when clicking the "Show all release groups" button.
 They are located right after the '<h3><type></h3>'
 
-** 1
-
 All tables below each <type> (like for example "Album" or "Single") should also be sortable like in the before uploaded userscript
+
+** remove sanojas stuff
+
+#+begin_example
+<div id="bottom1" style="overflow-x: auto; width: 804px;"><h2>Instrument Table</h2><br><table class="sanojjonas" border="1px solid black">
+#+end_example
+
 
 
 * ShowAllRecordings
@@ -19612,7 +19617,6 @@ and parse the pagination part to get tha max pages
 Generate a final "recordings page" which includes all information from all the sub recordings pages by iterating through
 all the links "https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&amp;link_type_id=278&amp;page=<pagenumber>"
 
-
 ** 1
 
 The first time the button is pressed, parse the resulting page for the text "See all <n> relationships" in the following HTML fragment
@@ -19655,11 +19659,11 @@ Please also implement the sorting functionality + console logging.
 
 ** 1
 
-It seems to work, the logging looks good, but somehow and the end a redirect occurs to the root of the page without the query parameters
+It seems to work, the logging looks good, but somehow at the end a redirect occurs to the root of the page without the query parameters
 
 https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac?direction=2&link_type_id=278&page=1
 
-which should sty there, other wise we start all over
+which should stay there, otherwise we start all over
 
 ** redirect
 
@@ -19775,3 +19779,39 @@ collect all the table entries after the different headings which look like the f
 and create the final page where each subheader, like "Official", "Promotion, Bootleg", etc exist only one time.
 
 See successfull implementation in uploaded userscript "ShowAllReleasesInReleaseGroups.user.js"
+
+** 7
+
+Thx, the subheader stuff now also works.
+
+There is a problem with URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f where all the
+release groups are shown. Remember there actually multiple tables for release groups which all have a specific heading
+'<h3><type></h3>', like the following ones
+
+#+begin_example
+<h3>Album</h3>
+#+end_example
+
+#+begin_example
+table-structure for "Album"
+#+end_example
+
+#+begin_example
+<h3>Album + Compilation</h3>
+#+end_example
+
+#+begin_example
+table-structure for "Album + Compilation"
+#+end_example
+
+Let me refrase my last instructions, because I forget some important point.
+
+Please leave these different structures intact for the finale "release groups" pages, only combine tabledata for a
+specific heading if it extents over more than one iterated page.
+
+Additionally make ALL the "<div class="jesus2099userjs154481bigbox"> containers invisible when clicking the "Show all release groups" button.
+They are located right after the '<h3><type></h3>'
+
+All tables below each <type> (like for example "Album" or "Single") should also be sortable like in the before uploaded userscript
+
+For a successfull implementation see the uploaded userscript "ShowAllReleaseGroups.user.js"
