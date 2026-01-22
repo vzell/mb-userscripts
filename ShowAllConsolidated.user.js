@@ -20,7 +20,6 @@
 (function() {
     'use strict';
 
-    // --- Configuration & Detection ---
     const currentUrl = new URL(window.location.href);
     const path = currentUrl.pathname;
 
@@ -39,47 +38,23 @@
 
     if (!pageType || !headerContainer) return;
 
-    // --- UI Creation ---
+    // --- UI ---
     const btn = document.createElement('button');
     btn.textContent = `C: Show all ${pageType.replace('-', ' ')}`;
-    btn.style.marginLeft = '10px';
-    btn.style.fontSize = '0.5em';
-    btn.style.padding = '2px 6px';
-    btn.style.verticalAlign = 'middle';
-    btn.style.cursor = 'pointer';
-    btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
+    btn.style.cssText = 'margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s;';
     btn.type = 'button';
     btn.classList.add('mb-show-all-btn');
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
-    stopBtn.style.display = 'none';
-    stopBtn.style.marginLeft = '5px';
-    stopBtn.style.fontSize = '0.5em';
-    stopBtn.style.padding = '2px 6px';
-    stopBtn.style.verticalAlign = 'middle';
-    stopBtn.style.cursor = 'pointer';
-    stopBtn.style.backgroundColor = '#f44336';
-    stopBtn.style.color = 'white';
-    stopBtn.style.border = '1px solid #d32f2f';
-    stopBtn.type = 'button';
+    stopBtn.style.cssText = 'display:none; margin-left:5px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f;';
 
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Filter ${pageType}...`;
-    filterInput.style.display = 'none';
-    filterInput.style.marginLeft = '10px';
-    filterInput.style.fontSize = '0.5em';
-    filterInput.style.padding = '2px 6px';
-    filterInput.style.verticalAlign = 'middle';
-    filterInput.style.border = '1px solid #ccc';
-    filterInput.style.borderRadius = '3px';
-    filterInput.type = 'text';
+    filterInput.style.cssText = 'display:none; margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; border:1px solid #ccc; border-radius:3px;';
 
     const timerDisplay = document.createElement('span');
-    timerDisplay.style.marginLeft = '10px';
-    timerDisplay.style.fontSize = '0.5em';
-    timerDisplay.style.color = '#666';
-    timerDisplay.style.verticalAlign = 'middle';
+    timerDisplay.style.cssText = 'margin-left:10px; font-size:0.5em; color:#666; vertical-align:middle;';
 
     const style = document.createElement('style');
     style.textContent = `
@@ -94,7 +69,8 @@
     headerContainer.appendChild(filterInput);
     headerContainer.appendChild(timerDisplay);
 
-    let allRows = [];
+    let allRows = []; 
+    let groupedRows = new Map(); // For rg-details grouping
     let isLoaded = false;
     let stopRequested = false;
     let sortAscending = true;
@@ -108,7 +84,16 @@
 
     filterInput.addEventListener('input', () => {
         const query = filterInput.value.toLowerCase();
-        renderFinalTable(allRows.filter(row => row.textContent.toLowerCase().includes(query)));
+        if (pageType === 'rg-details') {
+            const filteredMap = new Map();
+            groupedRows.forEach((rows, status) => {
+                const matches = rows.filter(r => r.textContent.toLowerCase().includes(query));
+                if (matches.length > 0) filteredMap.set(status, matches);
+            });
+            renderGroupedTable(filteredMap);
+        } else {
+            renderFinalTable(allRows.filter(row => row.textContent.toLowerCase().includes(query)));
+        }
     });
 
     btn.addEventListener('click', async () => {
@@ -128,20 +113,17 @@
 
         if (maxPage > 100 && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) return;
 
-        // --- Start Loading Logic ---
         isLoaded = true;
         stopRequested = false;
         allRows = [];
+        groupedRows = new Map();
 
-        // Hide Jesus2099 Bigbox if present (as implemented in ShowAllReleases.user.js)
+        // UI Cleanups
         const bigBox = document.querySelector('div.jesus2099userjs154481bigbox');
         if (bigBox) bigBox.style.display = 'none';
 
-        // Hide specific relationship table containers (as implemented in ShowAllRecordings.user.js)
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
-            if (table.textContent.includes('Relate checked recordings to')) {
-                table.style.display = 'none';
-            }
+            if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
         });
 
         btn.disabled = true;
@@ -161,7 +143,6 @@
                 const html = await fetchHtml(`${baseUrl}?page=${p}`);
                 const doc = new DOMParser().parseFromString(html, 'text/html');
                 
-                // Identify indices to remove for THIS specific page content
                 let indicesToExclude = [];
                 const ths = doc.querySelectorAll('table.tbl thead th');
                 ths.forEach((th, idx) => {
@@ -171,21 +152,36 @@
                     }
                 });
 
-                const pageRows = doc.querySelectorAll('table.tbl tbody tr:not(.explanation)');
-                pageRows.forEach(row => {
-                    if (row.cells.length > 1) {
-                        const newRow = document.importNode(row, true);
-                        [...indicesToExclude].sort((a, b) => b - a).forEach(idx => {
-                            if (newRow.cells[idx]) newRow.deleteCell(idx);
-                        });
-                        allRows.push(newRow);
+                const tableBody = doc.querySelector('table.tbl tbody');
+                if (!tableBody) continue;
+
+                let currentStatus = 'Unknown';
+                const nodes = Array.from(tableBody.childNodes);
+
+                nodes.forEach(node => {
+                    if (node.nodeName === 'TR') {
+                        if (node.classList.contains('subh')) {
+                            currentStatus = node.textContent.trim() || 'Unknown';
+                        } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+                            const newRow = document.importNode(node, true);
+                            [...indicesToExclude].sort((a, b) => b - a).forEach(idx => {
+                                if (newRow.cells[idx]) newRow.deleteCell(idx);
+                            });
+
+                            if (pageType === 'rg-details') {
+                                if (!groupedRows.has(currentStatus)) groupedRows.set(currentStatus, []);
+                                groupedRows.get(currentStatus).push(newRow);
+                            } else {
+                                allRows.push(newRow);
+                            }
+                        }
                     }
                 });
             }
 
-            // Final UI Cleanup: Remove headers
+            // Cleanup Headers
             const liveTable = document.querySelector('table.tbl');
-            if (liveTable && liveTable.tHead) {
+            if (liveTable?.tHead) {
                 const liveHeaders = Array.from(liveTable.tHead.rows[0].cells);
                 const liveIndicesToRemove = [];
                 liveHeaders.forEach((th, idx) => {
@@ -200,14 +196,19 @@
             const endFetch = performance.now();
             const fetchTime = ((endFetch - startTime) / 1000).toFixed(2);
 
-            btn.textContent = stopRequested ? `Partial: ${allRows.length} loaded` : `All ${allRows.length} loaded`;
+            btn.textContent = stopRequested ? 'Partial Load' : 'All Loaded';
             btn.disabled = false;
             stopBtn.style.display = 'none';
             filterInput.style.display = 'inline-block';
 
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
-            renderFinalTable(allRows);
+            if (pageType === 'rg-details') {
+                renderGroupedTable(groupedRows);
+            } else {
+                renderFinalTable(allRows);
+            }
+            
             makeSortable();
 
             const endRender = performance.now();
@@ -226,6 +227,22 @@
         if (!tbody) return;
         tbody.innerHTML = '';
         rows.forEach(r => tbody.appendChild(r));
+    }
+
+    function renderGroupedTable(map) {
+        const tbody = document.querySelector('table.tbl tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const colCount = document.querySelectorAll('table.tbl thead th').length;
+
+        map.forEach((rows, status) => {
+            const subh = document.createElement('tr');
+            subh.className = 'subh';
+            subh.innerHTML = `<th></th><th colspan="${colCount - 1}">${status}</th>`;
+            tbody.appendChild(subh);
+            rows.forEach(r => tbody.appendChild(r));
+        });
     }
 
     function makeSortable() {
@@ -254,14 +271,26 @@
                     }
                 });
 
-                allRows.sort((a, b) => {
+                const sortFn = (a, b) => {
                     const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
                     const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
                     return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                });
-                
+                };
+
                 const query = filterInput.value.toLowerCase();
-                renderFinalTable(query ? allRows.filter(r => r.textContent.toLowerCase().includes(query)) : allRows);
+
+                if (pageType === 'rg-details') {
+                    groupedRows.forEach(rows => rows.sort(sortFn));
+                    const filteredMap = new Map();
+                    groupedRows.forEach((rows, status) => {
+                        const matches = rows.filter(r => r.textContent.toLowerCase().includes(query));
+                        if (matches.length > 0) filteredMap.set(status, matches);
+                    });
+                    renderGroupedTable(filteredMap);
+                } else {
+                    allRows.sort(sortFn);
+                    renderFinalTable(query ? allRows.filter(r => r.textContent.toLowerCase().includes(query)) : allRows);
+                }
             };
         });
     }
@@ -269,8 +298,7 @@
     function fetchHtml(url) {
         return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({ 
-                method: 'GET', 
-                url: url, 
+                method: 'GET', url: url, 
                 onload: (res) => resolve(res.responseText), 
                 onerror: reject 
             });
