@@ -19540,6 +19540,8 @@ Hide the following table container if present when pressing the "Show all record
     </tr>
 #+end_example
 
+** remove the "Performance Attributes" column at the end of the table from the final table
+
 * ShowAllRecordingsInWorks
 ** initial try
 

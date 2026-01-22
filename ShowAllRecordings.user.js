@@ -148,6 +148,14 @@
             if (!proceed) return;
         }
 
+        // Logic to hide the "Relate checked recordings to..." table
+        const tables = document.querySelectorAll('table');
+        tables.forEach(t => {
+            if (t.textContent.includes('Relate checked recordings to…')) {
+                t.style.display = 'none';
+            }
+        });
+
         const startFetch = performance.now();
         stopRequested = false;
         allRows = [];
@@ -231,13 +239,11 @@
         headers.forEach((th, index) => {
             if (th.classList.contains('checkbox-cell') || th.querySelector('input[type="checkbox"]')) return;
 
-            // Apply requested styles and default icon
             th.title = "Click to sort";
             th.style.cursor = 'pointer';
             th.style.whiteSpace = 'nowrap';
             th.classList.add('sortable');
 
-            // Add the default sorting icon
             const iconSpan = document.createElement('span');
             iconSpan.className = 'sort-icon';
             iconSpan.textContent = '↕';
@@ -251,7 +257,6 @@
                     lastSortIndex = index;
                 }
 
-                // Update all icons
                 headers.forEach((h, i) => {
                     const span = h.querySelector('.sort-icon');
                     if (!span) return;
