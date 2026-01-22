@@ -19422,9 +19422,54 @@ When pressed, the following action should be done:
 
 Generate a final "releases page" which includes all information from all the sub release pages by iterating through
 all the links "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releasess?page=<pagenumber>"
-in the following pagination HTML snippet at the starting page
 
 Also remove the "Relationships" column for the final page
 
 Additionally make the "<div class="jesus2099userjs154481bigbox"> container invisible when clicking the "Show all releases" button
 
+
+* ShowAllReleaseGroups
+
+Create a new Tampermonkey userscript based on the uploaded one, but it should match
+
+"// @match        https://musicbrainz.org/artist"
+
+that creates a button at the starting page with text "Show all release groups" after the artist title
+
+When pressed, the following action should be done:
+
+Generate a final "release groups page" which includes all information from all the sub release groups pages by iterating through
+all the links "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=<pagenumber>"
+
+There is specific difference to the uploaded userscript. There actually multiple tables for release groups which all have
+a specific heading '<h3><type></h3>', like the following ones
+
+#+begin_example
+<h3>Album</h3>
+#+end_example
+
+#+begin_example
+table-structure for "Album"
+#+end_example
+
+#+begin_example
+<h3>Album + Compilation</h3>
+#+end_example
+
+#+begin_example
+table-structure for "Album + Compilation"
+#+end_example
+
+and so on, whereas in the uploaded script there is just ONE table.
+
+Please leave these different structures intact for the finale "release groups" pages, only combine tabledata for a
+specific heading if it extens over more than on iterated page.
+
+Also remove the "Relationships" column for the final page for all tables
+
+Additionally make ALL the "<div class="jesus2099userjs154481bigbox"> containers invisible when clicking the "Show all release groups" button.
+They are located right after the '<h3><type></h3>'
+
+** 1
+
+All tables below each <type> (like for example "Album" or "Single") should also be sortable like in the before uploaded userscript
