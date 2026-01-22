@@ -19198,3 +19198,16 @@ OK, the table data now looks ok, but in the header row there is still the "Relat
 Also the "Barcode" header is missing, but the "Tagger" header is there instead.
 Please fix
 
+** 6
+
+In the uploaded user script add the following functionality:
+
+1) add bigger unicode symbols for the sortable up/down icons
+2) Change the button text "All releases loaded" to "All <total number of releases> releases" loaded
+3) Add the text "Load only" after the "All <total number of releases> releases" button and after the text add buttons
+   with text "<number of releases in subtype> <subtype>" for each subtype like "Official", "Promotion", "Bootleg" etc.
+   
+** 7
+
+The sort up/down symbol gets rendered again and again per column and column header click. It should be replaced after
+each click and onyl display on the column where the actual sorting takes place.

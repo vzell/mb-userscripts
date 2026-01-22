@@ -2,7 +2,7 @@
 // @name         VZ: MusicBrainz - Show All Releases in Group
 // @namespace    http://tampermonkey.net/
 // @version      1.0
-// @description  Accumulates all releases from paginated release group pages into a single view.
+// @description  Accumulates all releases from paginated release group pages into a single view with filtering and sorting.
 // @author       Assistant
 // @match        https://musicbrainz.org/release-group/*
 // @grant        GM_xmlhttpRequest
@@ -14,6 +14,7 @@
     const headerLink = document.querySelector('.rgheader h1 a');
     if (!headerLink) return;
 
+    // Create Main Button
     const btn = document.createElement('button');
     btn.textContent = 'Show all releases';
     btn.style.marginLeft = '10px';
@@ -22,12 +23,30 @@
     btn.style.verticalAlign = 'middle';
     btn.type = 'button';
 
-    headerLink.parentNode.appendChild(btn);
+    // Create Container for Filter Buttons (hidden initially)
+    const filterContainer = document.createElement('span');
+    filterContainer.style.display = 'none';
+    filterContainer.style.marginLeft = '10px';
+    filterContainer.style.fontSize = '0.8rem';
 
+    headerLink.parentNode.appendChild(btn);
+    headerLink.parentNode.appendChild(filterContainer);
+
+    // State Variables
     let sortAscending = true;
     let lastSortIndex = -1;
+    let groupedRows = new Map(); // Stores all data
+    let currentRenderMap = new Map(); // Stores currently displayed data
+    let isLoaded = false;
 
     btn.addEventListener('click', async () => {
+        // If already loaded, this button acts as a "Reset / Show All"
+        if (isLoaded) {
+            currentRenderMap = groupedRows;
+            renderFinalTable(currentRenderMap);
+            return;
+        }
+
         console.log('[MB Show All] Starting accumulation and header cleanup...');
         btn.disabled = true;
         btn.textContent = 'Loading...';
@@ -42,7 +61,6 @@
             }
         });
 
-        const groupedRows = new Map();
         let relIdx = -1;
         let tagIdx = -1;
 
@@ -65,7 +83,6 @@
                         if (text === 'Relationships') relIdx = i;
                         if (text === 'Tagger') tagIdx = i;
                     });
-                    console.log(`[MB Show All] Found Relationships at ${relIdx}, Tagger at ${tagIdx}`);
                 }
 
                 const rows = doc.querySelectorAll('table.tbl.mergeable-table tbody tr');
@@ -89,7 +106,7 @@
                 });
             }
 
-            // CLEAN UP HEADER: Find and remove headers by text to avoid index mismatch
+            // CLEAN UP HEADER
             const thead = document.querySelector('table.tbl.mergeable-table thead');
             if (thead) {
                 const headerCells = thead.querySelectorAll('th');
@@ -102,13 +119,31 @@
             }
 
             console.log('[MB Show All] Headers cleaned. Rendering final table.');
-            renderFinalTable(groupedRows);
-            makeSortable(groupedRows);
 
+            // Calculate total count
+            let totalCount = 0;
+            groupedRows.forEach(rows => totalCount += rows.length);
+
+            // Update State
+            isLoaded = true;
+            currentRenderMap = groupedRows;
+
+            // Update UI
+            btn.textContent = `All ${totalCount} releases`;
+            btn.disabled = false; // Re-enable to allow resetting filter
+
+            // Generate Filter Buttons
+            generateFilterButtons(groupedRows, filterContainer);
+            filterContainer.style.display = 'inline';
+
+            // Remove Nav
             const nav = document.querySelector('nav');
             if (nav) nav.remove();
 
-            btn.textContent = 'All releases loaded';
+            // Initial Render
+            renderFinalTable(currentRenderMap);
+            makeSortable();
+
         } catch (error) {
             console.error('[MB Show All] Error:', error);
             btn.textContent = 'Error loading';
@@ -116,18 +151,43 @@
         }
     });
 
-    function renderFinalTable(groupedRows) {
+    function generateFilterButtons(dataMap, container) {
+        container.innerHTML = ' Load only '; // Reset text
+
+        dataMap.forEach((rows, category) => {
+            const count = rows.length;
+            const subBtn = document.createElement('button');
+            subBtn.type = 'button';
+            subBtn.textContent = `${count} ${category}`;
+            subBtn.style.marginLeft = '5px';
+            subBtn.style.fontSize = '0.85em';
+            subBtn.style.padding = '1px 5px';
+            subBtn.style.cursor = 'pointer';
+
+            subBtn.addEventListener('click', () => {
+                // Create a subset map containing only this category
+                const subset = new Map();
+                subset.set(category, rows);
+                currentRenderMap = subset;
+                renderFinalTable(currentRenderMap);
+            });
+
+            container.appendChild(subBtn);
+        });
+    }
+
+    function renderFinalTable(mapToRender) {
         const table = document.querySelector('table.tbl.mergeable-table');
         const tableBody = table.querySelector('tbody');
         if (!tableBody) return;
 
         // Calculate actual columns remaining for the colspan
         const activeColumns = table.querySelectorAll('thead th').length;
-        const subhColspan = activeColumns - 1; // -1 for the checkbox column
+        const subhColspan = activeColumns - 1;
 
         tableBody.innerHTML = '';
 
-        groupedRows.forEach((rows, category) => {
+        mapToRender.forEach((rows, category) => {
             const subhTr = document.createElement('tr');
             subhTr.className = 'subh';
             subhTr.innerHTML = `<th></th><th colspan="${subhColspan}">${category}</th>`;
@@ -136,13 +196,14 @@
         });
     }
 
-    function makeSortable(groupedRows) {
+    function makeSortable() {
         const headers = document.querySelectorAll('table.tbl.mergeable-table thead th');
 
         headers.forEach((th, index) => {
             if (index === 0 || th.classList.contains('checkbox-cell')) return;
             th.style.cursor = 'pointer';
             th.style.whiteSpace = 'nowrap';
+            th.title = "Click to sort";
 
             th.addEventListener('click', () => {
                 if (lastSortIndex === index) {
@@ -152,12 +213,25 @@
                     lastSortIndex = index;
                 }
 
-                // Update indicators using text content to avoid destroying the header element
+                // Update indicators using strict DOM manipulation
                 headers.forEach((h, i) => {
-                    h.innerHTML = h.innerHTML.replace(/ [▴▾]$/, '');
-                    if (i === index) h.innerHTML += sortAscending ? ' ▴' : ' ▾';
+                    // Find any existing sort icon in this header and remove it
+                    const existingIcon = h.querySelector('.sort-icon');
+                    if (existingIcon) {
+                        existingIcon.remove();
+                    }
+
+                    // Append new icon only to the active header
+                    if (i === index) {
+                        const iconSpan = document.createElement('span');
+                        iconSpan.className = 'sort-icon';
+                        iconSpan.style.fontSize = '1.2em';
+                        iconSpan.textContent = sortAscending ? ' ▲' : ' ▼';
+                        h.appendChild(iconSpan);
+                    }
                 });
 
+                // Sort ALL lists in the master group to ensure consistency across filters
                 groupedRows.forEach((rows) => {
                     rows.sort((a, b) => {
                         const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
@@ -166,7 +240,8 @@
                     });
                 });
 
-                renderFinalTable(groupedRows);
+                // Re-render only what is currently being viewed (filtered or all)
+                renderFinalTable(currentRenderMap);
             });
         });
     }
