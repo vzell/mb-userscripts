@@ -172,6 +172,13 @@
         const baseUrl = window.location.href.split('?')[0];
 
         try {
+            // Identify which column is "Performance Attributes" to remove it correctly
+            let perfAttrIndex = -1;
+            const headerCells = document.querySelectorAll('table.tbl thead tr th');
+            headerCells.forEach((th, idx) => {
+                if (th.textContent.includes('Performance Attributes')) perfAttrIndex = idx;
+            });
+
             for (let p = 1; p <= maxPage; p++) {
                 if (stopRequested) break;
 
@@ -186,6 +193,15 @@
                 rows.forEach(row => {
                     if (row.cells.length > 1) {
                         const cleanRow = document.importNode(row, true);
+
+                        // Remove Performance Attributes column if found
+                        if (perfAttrIndex !== -1 && cleanRow.cells[perfAttrIndex]) {
+                            cleanRow.deleteCell(perfAttrIndex);
+                        } else if (perfAttrIndex === -1) {
+                            // Fallback: delete last cell if index not explicitly found
+                            cleanRow.deleteCell(-1);
+                        }
+
                         allRows.push(cleanRow);
                     }
                 });
@@ -199,6 +215,16 @@
 
             // Start Render Timing
             const startRender = performance.now();
+
+            // Prepare table header: Remove column header
+            const tableHead = document.querySelector('table.tbl thead tr');
+            if (tableHead) {
+                if (perfAttrIndex !== -1 && tableHead.cells[perfAttrIndex]) {
+                    tableHead.deleteCell(perfAttrIndex);
+                } else {
+                    tableHead.deleteCell(-1);
+                }
+            }
 
             renderFinalTable(allRows);
             makeSortable();
@@ -215,6 +241,11 @@
             // Remove pagination
             const nav = document.querySelector('nav.pagination') || document.querySelector('ul.pagination');
             if (nav) nav.remove();
+
+            // Trigger MB's internal scripts to populate Release Groups for the new rows
+            if (window.MB && window.MB.releaseGroupIcons) {
+                window.MB.releaseGroupIcons();
+            }
 
         } catch (error) {
             console.error('[MB Show All Recordings] Error:', error);

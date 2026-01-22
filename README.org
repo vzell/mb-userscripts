@@ -19542,6 +19542,10 @@ Hide the following table container if present when pressing the "Show all record
 
 ** remove the "Performance Attributes" column at the end of the table from the final table
 
+Somehow the "Release Groups" colum is now empty
+
+
+
 * ShowAllRecordingsInWorks
 ** initial try
 
