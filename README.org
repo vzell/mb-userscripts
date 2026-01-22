@@ -19697,3 +19697,45 @@ So for example: "C: Show all events"
 
 If existing, the "Relationship" and "Performance Attributes" columns should be filtered out.
 See the uploaded userscripts for implentation.
+
+** 1
+
+Actually nothing changed, the "Relationship" and "Performance Attributes" columns are still there.  See the userscripts
+"ShowAllWorks.user.js" for "Relationship" and "ShowAllRecordings.user.js" for "Performance Attributes" successfull
+implementation.
+
+** 2
+
+The "Performance Attributes" column stuff is fixed now. But the the "Relationship" column is still present (actually just the header) for example
+for the following URL:
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+** 3
+
+No, still not working. Please see the implementation for this in the userscript which was uploaded in the beginning "ShowAllWorks.user.js"
+
+** 4
+
+OK It's working now.
+
+But, please hide the following table container if present when pressing the "Show all recordings" button
+
+#+begin_example
+<table style="margin: 0.5em 0.5em 2em; background: rgb(242, 242, 242); border: 1px solid rgb(153, 153, 153);">
+  <tbody>
+    <tr>
+      <td style="padding: 0.5em; vertical-align: top;">
+	<h3>Relate checked recordings to…
+	</h3>
+      </td>
+      <td style="padding: 0.5em; vertical-align: top;">
+	<h3>Cached works
+	</h3>
+	<span style="font-size: 0.9em;">(These are used to auto-suggest works.)
+	</span>
+      </td>
+    </tr>
+#+end_example
+
+See also the implementation in the uploaded userscript "ShowAllRecordings.user.js"

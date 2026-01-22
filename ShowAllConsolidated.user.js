@@ -20,7 +20,6 @@
 (function() {
     'use strict';
 
-    // --- Configuration & Detection ---
     const currentUrl = new URL(window.location.href);
     const path = currentUrl.pathname;
 
@@ -41,51 +40,26 @@
 
     // --- UI Creation ---
     const btn = document.createElement('button');
-    // Prepend "C: " to distinguish from non-consolidated scripts
     btn.textContent = `C: Show all ${pageType.replace('-', ' ')}`;
-    btn.style.marginLeft = '10px';
-    btn.style.fontSize = '0.5em';
-    btn.style.padding = '2px 6px';
-    btn.style.verticalAlign = 'middle';
-    btn.style.cursor = 'pointer';
-    btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
+    btn.style.cssText = 'margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s;';
     btn.type = 'button';
     btn.classList.add('mb-show-all-btn');
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
-    stopBtn.style.display = 'none';
-    stopBtn.style.marginLeft = '5px';
-    stopBtn.style.fontSize = '0.5em';
-    stopBtn.style.padding = '2px 6px';
-    stopBtn.style.verticalAlign = 'middle';
-    stopBtn.style.cursor = 'pointer';
-    stopBtn.style.backgroundColor = '#f44336';
-    stopBtn.style.color = 'white';
-    stopBtn.style.border = '1px solid #d32f2f';
-    stopBtn.type = 'button';
+    stopBtn.style.cssText = 'display:none; margin-left:5px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f;';
 
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Filter ${pageType}...`;
-    filterInput.style.display = 'none';
-    filterInput.style.marginLeft = '10px';
-    filterInput.style.fontSize = '0.5em';
-    filterInput.style.padding = '2px 6px';
-    filterInput.style.verticalAlign = 'middle';
-    filterInput.style.border = '1px solid #ccc';
-    filterInput.style.borderRadius = '3px';
-    filterInput.type = 'text';
+    filterInput.style.cssText = 'display:none; margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; border:1px solid #ccc; border-radius:3px;';
 
     const timerDisplay = document.createElement('span');
-    timerDisplay.style.marginLeft = '10px';
-    timerDisplay.style.fontSize = '0.5em';
-    timerDisplay.style.color = '#666';
-    timerDisplay.style.verticalAlign = 'middle';
+    timerDisplay.style.cssText = 'margin-left:10px; font-size:0.5em; color:#666; vertical-align:middle;';
 
     const style = document.createElement('style');
     style.textContent = `
         .mb-show-all-btn:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-        .mb-show-all-btn:disabled { background-color: #ddd !important; border-color: #bbb !important; cursor: default !important; }
+        .mb-show-all-btn:disabled { background-color: #ddd !important; border-color: #bbb !important; cursor: default !important; color: #000 !important; }
         .sort-icon { cursor: pointer; margin-left: 4px; }
     `;
     document.head.appendChild(style);
@@ -95,7 +69,6 @@
     headerContainer.appendChild(filterInput);
     headerContainer.appendChild(timerDisplay);
 
-    // --- State & Logic ---
     let allRows = [];
     let isLoaded = false;
     let stopRequested = false;
@@ -110,8 +83,7 @@
 
     filterInput.addEventListener('input', () => {
         const query = filterInput.value.toLowerCase();
-        const filteredRows = allRows.filter(row => row.textContent.toLowerCase().includes(query));
-        renderFinalTable(filteredRows);
+        renderFinalTable(allRows.filter(row => row.textContent.toLowerCase().includes(query)));
     });
 
     btn.addEventListener('click', async () => {
@@ -124,7 +96,8 @@
             const nextIdx = links.findIndex(a => a.textContent.trim() === 'Next');
             if (nextIdx > 0) {
                 const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
-                maxPage = parseInt(urlObj.searchParams.get('page') || '1', 10);
+                const p = urlObj.searchParams.get('page');
+                if (p) maxPage = parseInt(p, 10);
             }
         }
 
@@ -134,14 +107,11 @@
         stopRequested = false;
         allRows = [];
 
-        // Visual state during load
         btn.disabled = true;
         btn.style.color = '#000';
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
-        stopBtn.textContent = 'Stop';
-        filterInput.style.display = 'none';
-        timerDisplay.textContent = 'Fetching pages...';
+        timerDisplay.textContent = 'Fetching...';
 
         const startTime = performance.now();
         const baseUrl = window.location.href.split('?')[0];
@@ -151,71 +121,89 @@
                 if (stopRequested) break;
 
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
-                const targetUrl = `${baseUrl}?page=${p}`;
-
-                const html = await fetchHtml(targetUrl);
+                const html = await fetchHtml(`${baseUrl}?page=${p}`);
                 const doc = new DOMParser().parseFromString(html, 'text/html');
-                const pageRows = Array.from(doc.querySelectorAll('table.tbl tbody tr:not(.explanation)'));
 
-                pageRows.forEach(row => {
-                    if (row.cells.length > 1) {
-                        allRows.push(document.importNode(row, true));
+                // Identify indices to remove for THIS specific page content
+                let indicesToExclude = [];
+                const ths = doc.querySelectorAll('table.tbl thead th');
+                ths.forEach((th, idx) => {
+                    const txt = th.textContent.trim();
+                    if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') {
+                        indicesToExclude.push(idx);
                     }
                 });
+
+                const pageRows = doc.querySelectorAll('table.tbl tbody tr:not(.explanation)');
+                pageRows.forEach(row => {
+                    if (row.cells.length > 1) {
+                        const newRow = document.importNode(row, true);
+                        // Delete cells from right-to-left based on page-specific discovery
+                        [...indicesToExclude].sort((a, b) => b - a).forEach(idx => {
+                            if (newRow.cells[idx]) newRow.deleteCell(idx);
+                        });
+                        allRows.push(newRow);
+                    }
+                });
+            }
+
+            // Final UI Cleanup: Remove the headers from the live table
+            const liveTable = document.querySelector('table.tbl');
+            if (liveTable && liveTable.tHead) {
+                const liveHeaders = Array.from(liveTable.tHead.rows[0].cells);
+                const liveIndicesToRemove = [];
+                liveHeaders.forEach((th, idx) => {
+                    const txt = th.textContent.trim();
+                    if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') {
+                        liveIndicesToRemove.push(idx);
+                    }
+                });
+                liveIndicesToRemove.sort((a, b) => b - a).forEach(idx => liveTable.tHead.rows[0].deleteCell(idx));
             }
 
             const endFetch = performance.now();
             const fetchTime = ((endFetch - startTime) / 1000).toFixed(2);
 
-            stopBtn.style.display = 'none';
-            timerDisplay.textContent = `Fetch: ${fetchTime}s | Rendering...`;
-
-            const startRender = performance.now();
-
-            // UI Finalization
             btn.textContent = stopRequested ? `Partial: ${allRows.length} loaded` : `All ${allRows.length} loaded`;
-            btn.style.color = '';
             btn.disabled = false;
+            stopBtn.style.display = 'none';
             filterInput.style.display = 'inline-block';
 
-            // Remove existing pagination
-            document.querySelectorAll('ul.pagination, nav.pagination, div.pageselector').forEach(el => el.remove());
+            document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
             renderFinalTable(allRows);
             makeSortable();
 
             const endRender = performance.now();
-            const renderTime = ((endRender - startRender) / 1000).toFixed(2);
+            const renderTime = ((endRender - startTime - (endFetch - startTime)) / 1000).toFixed(2);
             timerDisplay.textContent = `(Fetch: ${fetchTime}s, Render: ${renderTime}s)`;
 
         } catch (err) {
-            console.error('Error:', err);
+            console.error(err);
             btn.disabled = false;
-            btn.textContent = 'Error loading';
+            btn.textContent = 'Error';
         }
     });
 
-    function renderFinalTable(rowsToRender) {
-        const table = document.querySelector('table.tbl');
-        if (!table) return;
-        const tbody = table.querySelector('tbody');
+    function renderFinalTable(rows) {
+        const tbody = document.querySelector('table.tbl tbody');
+        if (!tbody) return;
         tbody.innerHTML = '';
-        rowsToRender.forEach(row => tbody.appendChild(row));
+        rows.forEach(r => tbody.appendChild(r));
     }
 
     function makeSortable() {
         const headers = document.querySelectorAll('table.tbl thead th');
         headers.forEach((th, index) => {
-            if (th.classList.contains('checkbox-cell') || th.querySelector('input[type="checkbox"]')) return;
-
+            if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'pointer';
             th.title = "Click to sort";
 
             if (!th.querySelector('.sort-icon')) {
-                const iconSpan = document.createElement('span');
-                iconSpan.className = 'sort-icon';
-                iconSpan.textContent = ' ↕';
-                th.appendChild(iconSpan);
+                const s = document.createElement('span');
+                s.className = 'sort-icon';
+                s.textContent = ' ↕';
+                th.appendChild(s);
             }
 
             th.onclick = () => {
@@ -223,15 +211,10 @@
                 else { sortAscending = true; lastSortIndex = index; }
 
                 headers.forEach((h, i) => {
-                    const s = h.querySelector('.sort-icon');
-                    if (s) {
-                        if (i === index) {
-                            s.textContent = sortAscending ? ' ▲' : ' ▼';
-                            s.style.fontSize = '1.2em';
-                        } else {
-                            s.textContent = ' ↕';
-                            s.style.fontSize = '';
-                        }
+                    const icon = h.querySelector('.sort-icon');
+                    if (icon) {
+                        icon.textContent = (i === index) ? (sortAscending ? ' ▲' : ' ▼') : ' ↕';
+                        icon.style.fontSize = (i === index) ? '1.2em' : '';
                     }
                 });
 
@@ -253,7 +236,7 @@
                 method: "GET",
                 url: url,
                 onload: (res) => resolve(res.responseText),
-                onerror: (err) => reject(err)
+                onerror: reject
             });
         });
     }
