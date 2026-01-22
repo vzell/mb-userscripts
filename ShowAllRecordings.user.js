@@ -2,7 +2,7 @@
 // @name         VZ: MusicBrainz - Show All Recordings
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      0.9+2026-01-22
-// @description  Accumulates all recordings from paginated artist recording pages into a single view with sorting
+// @description  Accumulates all recordings from paginated artist recording pages into a single view with sorting and progress tracking
 // @author       Gemini
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -83,9 +83,9 @@
             }
         }
 
-        // Popup warning for large datasets
+        // Popup warning for > 100 pages
         if (maxPage > 100) {
-            const proceed = confirm(`Warning: This artist has ${maxPage} pages of recordings. Loading all of them may take a while and could slow down your browser. Do you want to proceed?`);
+            const proceed = confirm(`Warning: This artist has ${maxPage} pages of recordings. Loading everything might impact browser performance. Do you want to proceed?`);
             if (!proceed) return;
         }
 
@@ -102,9 +102,8 @@
 
         try {
             for (let p = 1; p <= maxPage; p++) {
-                btn.textContent = `Loading page ${p} of ${maxPage}...`;
+                btn.textContent = `Loading: Page ${p}/${maxPage} (${allRows.length} items)...`;
                 const targetUrl = `${baseUrl}?page=${p}`;
-                console.log(`[MB Show All Recordings] Fetching page ${p} of ${maxPage}...`);
 
                 const html = await fetchHtml(targetUrl);
                 const parser = new DOMParser();
@@ -112,7 +111,6 @@
 
                 const rows = doc.querySelectorAll('table.tbl tbody tr');
                 rows.forEach(row => {
-                    // Filter out "No recordings found" or empty rows
                     if (row.cells.length > 1) {
                         const cleanRow = document.importNode(row, true);
                         allRows.push(cleanRow);
@@ -120,32 +118,24 @@
                 });
             }
 
-            // Update State
             isLoaded = true;
-
-            // Update UI
-            btn.textContent = `All ${allRows.length} recordings loaded`;
+            btn.textContent = `Loaded ${allRows.length} recordings`;
             btn.style.color = '';
             btn.style.cursor = 'pointer';
             btn.style.transform = '';
             btn.style.boxShadow = '';
             btn.disabled = false;
 
-            // Remove Pagination
+            // Remove pagination UI elements
             const nav = document.querySelector('nav.pagination') || document.querySelector('ul.pagination');
             if (nav) nav.remove();
 
-            // Render
             renderFinalTable(allRows);
             makeSortable();
 
         } catch (error) {
             console.error('[MB Show All Recordings] Error:', error);
             btn.textContent = 'Error loading';
-            btn.style.color = '';
-            btn.style.cursor = 'pointer';
-            btn.style.transform = '';
-            btn.style.boxShadow = '';
             btn.disabled = false;
         }
     });
@@ -163,7 +153,7 @@
         const headers = document.querySelectorAll('table.tbl thead th');
 
         headers.forEach((th, index) => {
-            // Standard MusicBrainz recording tables usually have checkboxes in the first or last columns
+            // Avoid making checkbox columns sortable
             if (th.classList.contains('checkbox-cell') || th.querySelector('input[type="checkbox"]')) return;
 
             th.style.cursor = 'pointer';
