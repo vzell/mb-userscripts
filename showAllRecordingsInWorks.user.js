@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Show All Recordings
+// @name         VZ: MusicBrainz - Show All Recordings In Works
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.2+2026-01-22
+// @version      0.9+2026-01-22
 // @description  Accumulates all recordings from paginated work recording pages into a single view with sorting
 // @author       Gemini & ChatGPT (directed by vzell)
 // @tag          AI generated
@@ -18,9 +18,9 @@
 (function() {
     'use strict';
 
-    // Target the work title bdi inside the h1 link
-    const workBdi = document.querySelector('h1 a bdi');
-    if (!workBdi) return;
+    // Target the bdi tag inside the h1 a
+    const titleBdi = document.querySelector('h1 a bdi');
+    if (!titleBdi) return;
 
     // Create Main Button
     const btn = document.createElement('button');
@@ -31,7 +31,7 @@
     btn.style.verticalAlign = 'middle';
     btn.style.cursor = 'pointer';
     btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
-    btn.type = 'button';
+    btn.type = 'button'; // Explicitly set to button to prevent form submission
 
     // Inject CSS for button-down effect
     const style = document.createElement('style');
@@ -49,8 +49,8 @@
     document.head.appendChild(style);
     btn.classList.add('mb-show-all-btn');
 
-    // Append button after the <bdi> tag
-    workBdi.parentNode.insertBefore(btn, workBdi.nextSibling);
+    // Append button after the title bdi
+    titleBdi.parentNode.insertBefore(btn, titleBdi.nextSibling);
 
     // State Variables
     let sortAscending = true;
@@ -58,7 +58,11 @@
     let allRows = [];
     let isLoaded = false;
 
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async (e) => {
+        // Prevent any default behavior or parent link navigation
+        e.preventDefault();
+        e.stopPropagation();
+
         if (isLoaded) return;
 
         console.log('[MB Show All Recordings] Starting accumulation...');
@@ -70,71 +74,45 @@
         btn.style.transform = 'translateY(1px)';
         btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
 
-        // Base URL for the recording relationship
-        const workUrl = window.location.href.split(/[?#]/)[0];
-        const recordingBaseUrl = `${workUrl}?direction=2&link_type_id=278`;
+        // Identify the base URL and pagination
+        const baseUrl = window.location.origin + window.location.pathname;
+        const queryParams = new URLSearchParams(window.location.search);
+
+        // Ensure we preserve direction and link_type_id if present, or use defaults
+        const direction = queryParams.get('direction') || '2';
+        const linkTypeId = queryParams.get('link_type_id') || '278';
+
+        let maxPage = 1;
+        const paginationList = document.querySelector('ul.pagination');
+        if (paginationList) {
+            const links = Array.from(paginationList.querySelectorAll('li a'));
+            links.forEach(link => {
+                const p = new URL(link.href, window.location.origin).searchParams.get('page');
+                if (p) maxPage = Math.max(maxPage, parseInt(p, 10));
+            });
+        }
 
         try {
-            // Step 1: Call Page 1 initially
-            btn.textContent = 'Checking relationships...';
-            let initialHtml = await fetchHtml(`${recordingBaseUrl}&page=1`);
-            let parser = new DOMParser();
-            let doc = parser.parseFromString(initialHtml, 'text/html');
-
-            // Step 2: Check for "See all <n> relationships" link
-            const seeAllLink = Array.from(doc.querySelectorAll('td.treleases a'))
-                .find(a => a.textContent.includes('See all') && a.textContent.includes('relationships'));
-
-            if (seeAllLink) {
-                console.log('[MB Show All Recordings] Found "See all" link, fetching full list...');
-                const fullListUrl = seeAllLink.href;
-                initialHtml = await fetchHtml(fullListUrl);
-                doc = parser.parseFromString(initialHtml, 'text/html');
-            }
-
-            // Step 3: Logic to find the maximum page number from pagination
-            let maxPage = 1;
-            const paginationList = doc.querySelector('ul.pagination');
-            if (paginationList) {
-                const links = Array.from(paginationList.querySelectorAll('li a'));
-                const nextLinkIndex = links.findIndex(a => a.textContent.trim() === 'Next');
-
-                if (nextLinkIndex > 0) {
-                    const lastPageLink = links[nextLinkIndex - 1];
-                    const urlObj = new URL(lastPageLink.href, window.location.origin);
-                    const pageParam = urlObj.searchParams.get('page');
-                    if (pageParam) {
-                        maxPage = parseInt(pageParam, 10);
-                    }
-                } else if (links.length > 0) {
-                    links.forEach(link => {
-                        const p = new URL(link.href, window.location.origin).searchParams.get('page');
-                        if (p) maxPage = Math.max(maxPage, parseInt(p, 10));
-                    });
-                }
-            }
-
-            // Step 4: Iterate through all pages
             for (let p = 1; p <= maxPage; p++) {
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
-                const targetUrl = `${recordingBaseUrl}&page=${p}`;
+                const targetUrl = `${baseUrl}?direction=${direction}&link_type_id=${linkTypeId}&page=${p}`;
                 console.log(`[MB Show All Recordings] Fetching page ${p} of ${maxPage}...`);
 
-                // Use the already fetched doc for the first page of the expanded list
-                const pageDoc = (p === 1) ? doc : parser.parseFromString(await fetchHtml(targetUrl), 'text/html');
+                const html = await fetchHtml(targetUrl);
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
 
-                const rows = pageDoc.querySelectorAll('table.tbl tbody tr');
+                const rows = doc.querySelectorAll('table.tbl tbody tr');
                 rows.forEach(row => {
-                    // Skip the "See all relationships" row and empty rows
-                    if (row.cells.length > 1 && !row.querySelector('td.treleases')) {
+                    if (row.cells.length > 1) {
                         const cleanRow = document.importNode(row, true);
                         allRows.push(cleanRow);
                     }
                 });
             }
 
-            // Update State
             isLoaded = true;
+            console.log(`[MB Show All Recordings] Successfully loaded ${allRows.length} rows.`);
 
             // Update UI
             btn.textContent = `All ${allRows.length} recordings loaded`;
@@ -144,39 +122,27 @@
             btn.style.boxShadow = '';
             btn.disabled = false;
 
-            // Find current table or create container
-            let table = document.querySelector('table.tbl');
-            if (!table) {
-                const contentDiv = document.querySelector('#content');
-                const tableContainer = document.createElement('div');
-                tableContainer.innerHTML = '<h2>All Recordings</h2><table class="tbl"><thead></thead><tbody></tbody></table>';
-                contentDiv.appendChild(tableContainer);
-                table = tableContainer.querySelector('table.tbl');
-                const sampleHeader = doc.querySelector('table.tbl thead');
-                if (sampleHeader) table.querySelector('thead').innerHTML = sampleHeader.innerHTML;
-            }
-
-            // Remove Pagination
+            // Remove existing pagination navigation
             const nav = document.querySelector('nav.pagination') || document.querySelector('ul.pagination');
             if (nav) nav.remove();
 
-            // Render
+            // Render and initialize sorting
             renderFinalTable(allRows);
             makeSortable();
 
         } catch (error) {
             console.error('[MB Show All Recordings] Error:', error);
             btn.textContent = 'Error loading';
-            btn.style.color = '';
-            btn.style.cursor = 'pointer';
+            btn.disabled = false;
             btn.style.transform = '';
             btn.style.boxShadow = '';
-            btn.disabled = false;
         }
     });
 
     function renderFinalTable(rowsToRender) {
-        const tableBody = document.querySelector('table.tbl tbody');
+        const table = document.querySelector('table.tbl');
+        if (!table) return;
+        const tableBody = table.querySelector('tbody');
         if (!tableBody) return;
 
         tableBody.innerHTML = '';
@@ -193,7 +159,9 @@
             th.style.whiteSpace = 'nowrap';
             th.title = "Click to sort";
 
-            th.addEventListener('click', () => {
+            th.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log(`[MB Show All Recordings] Sorting by column index ${index}...`);
                 if (lastSortIndex === index) {
                     sortAscending = !sortAscending;
                 } else {

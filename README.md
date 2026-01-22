@@ -8,6 +8,7 @@
 - [MusicBrainz - Show All Releases in ReleaseGroups](#mb_show_all_releases_in_releasegroups)
 - [MusicBrainz - Show All Releases](#mb_show_all_releases)
 - [MusicBrainz - Show All Works](#mb_show_all_works)
+- [MusicBrainz - Show All Recordings In Works](#mb_show_all_recordings_in_works)
 - [MusicBrainz - Show All Events](#mb_show_all_events)
 
 
@@ -96,6 +97,13 @@ Accumulates all works from paginated artist work pages into a single view with s
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllWorks.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllWorks.user.js)
+
+## <a name="mb_show_all_recordings_in_works"></a> MusicBrainz - Show All Recordings In Works
+
+Accumulates all recordings from paginated work recording pages into a single view with sorting.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllRecordingsInWorks.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllRecordingsInWorks.user.js)
 
 ## <a name="mb_show_all_eventss"></a> MusicBrainz - Show All Events
 
