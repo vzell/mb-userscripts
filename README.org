@@ -19377,6 +19377,7 @@ NO, the mouse pointer ist still the ponting finger when hovering over the `Loadi
 
 
 * ShowAllEvents
+** initial
 
 Create a new Tampermonkey userscript based on the uploaded one, but it should match
 
@@ -19409,6 +19410,19 @@ Generate a final "events page" which includes all information from all the sub e
 all the links "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=<pagenumber>"
 in the following pagination HTML snippet at the starting page
 
+** add fkt from ShowAllRecordings
+
+In the uploaded userscripts add the functionality from the userscript "ShowAllRecordings.user.js" to
+"ShowAllEvents.user.js";
+
+- When the final page is rendered, add the generic sort icon "↕" concatenated after the colums names and a popup hint "Click to sort" when hovering over
+- Add a "Stop" button, to cancel iterating through all the pages
+- Generate a popup warning and ask the user if he really want to proceed it the maximum pagenumber deduced from the pagination is greater than 100.
+- Implement a time counter when pressing the "Show all events" button and display the total execution time, plus
+  time for rendering the resulting table in the browser. The display should be next to the button on the right
+  side. Please add timings for just the loading of pages AND the rendering of the resulting table separately
+- add a search filter box next to the button that lets you filter the events by the different columns (for example Type, Role, Location, Date, etc) instantly after they've loaded?
+ 
 
 * Show All Releases
 
@@ -19569,6 +19583,7 @@ Somehow nothing (nor number of recordings) is shown in the following button
 #+end_example
 
 What I see is "Show all recording (Recordings)"
+
 
 * ShowAllRecordingsInWorks
 ** initial try

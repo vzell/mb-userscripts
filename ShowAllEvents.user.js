@@ -2,7 +2,7 @@
 // @name         VZ: MusicBrainz - Show All Events
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      0.9+2026-01-22
-// @description  Accumulates all events from paginated artist event pages into a single view with sorting
+// @description  Accumulates all events from paginated artist event pages into a single view with timing, stop button, and real-time search filter
 // @author       Gemini & ChatGPT (directed by vzell)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -33,6 +33,39 @@
     btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
     btn.type = 'button';
 
+    // Create Stop Button (initially hidden)
+    const stopBtn = document.createElement('button');
+    stopBtn.textContent = 'Stop';
+    stopBtn.style.display = 'none';
+    stopBtn.style.marginLeft = '5px';
+    stopBtn.style.fontSize = '0.5em';
+    stopBtn.style.padding = '2px 6px';
+    stopBtn.style.verticalAlign = 'middle';
+    stopBtn.style.cursor = 'pointer';
+    stopBtn.style.backgroundColor = '#f44336';
+    stopBtn.style.color = 'white';
+    stopBtn.style.border = '1px solid #d32f2f';
+    stopBtn.type = 'button';
+
+    // Create Search Filter (initially hidden)
+    const filterInput = document.createElement('input');
+    filterInput.placeholder = 'Filter events...';
+    filterInput.style.display = 'none';
+    filterInput.style.marginLeft = '10px';
+    filterInput.style.fontSize = '0.5em';
+    filterInput.style.padding = '2px 6px';
+    filterInput.style.verticalAlign = 'middle';
+    filterInput.style.border = '1px solid #ccc';
+    filterInput.style.borderRadius = '3px';
+    filterInput.type = 'text';
+
+    // Create Timer Display
+    const timerDisplay = document.createElement('span');
+    timerDisplay.style.marginLeft = '10px';
+    timerDisplay.style.fontSize = '0.5em';
+    timerDisplay.style.color = '#666';
+    timerDisplay.style.verticalAlign = 'middle';
+
     // Inject CSS for button-down effect
     const style = document.createElement('style');
     style.textContent = `
@@ -49,26 +82,36 @@
     document.head.appendChild(style);
     btn.classList.add('mb-show-all-btn');
 
-    // Append button to the h1 (appearing after the artist name link)
+    // Append UI elements to the h1
     headerH1.appendChild(btn);
+    headerH1.appendChild(stopBtn);
+    headerH1.appendChild(filterInput);
+    headerH1.appendChild(timerDisplay);
 
     // State Variables
     let sortAscending = true;
     let lastSortIndex = -1;
     let allRows = [];
     let isLoaded = false;
+    let stopRequested = false;
+
+    // Filter Logic
+    filterInput.addEventListener('input', () => {
+        const query = filterInput.value.toLowerCase();
+        const filteredRows = allRows.filter(row =>
+            row.textContent.toLowerCase().includes(query)
+        );
+        renderFinalTable(filteredRows);
+    });
+
+    stopBtn.addEventListener('click', () => {
+        stopRequested = true;
+        stopBtn.disabled = true;
+        stopBtn.textContent = 'Stopping...';
+    });
 
     btn.addEventListener('click', async () => {
         if (isLoaded) return;
-
-        console.log('[MB Show All Events] Starting accumulation...');
-
-        // Visual "Button Down" state during load
-        btn.disabled = true;
-        btn.style.color = '#000';
-        btn.style.cursor = 'default';
-        btn.style.transform = 'translateY(1px)';
-        btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
 
         // Logic to find the maximum page number
         let maxPage = 1;
@@ -92,10 +135,33 @@
             }
         }
 
+        // Popup warning for > 100 pages
+        if (maxPage > 100) {
+            const proceed = confirm(`Warning: This artist has ${maxPage} pages of events. Proceed?`);
+            if (!proceed) return;
+        }
+
+        const startFetch = performance.now();
+        stopRequested = false;
+        allRows = [];
+
+        console.log('[MB Show All Events] Starting accumulation...');
+
+        // Visual "Button Down" state during load
+        btn.disabled = true;
+        btn.style.color = '#000';
+        stopBtn.style.display = 'inline-block';
+        stopBtn.disabled = false;
+        stopBtn.textContent = 'Stop';
+        filterInput.style.display = 'none';
+        timerDisplay.textContent = 'Fetching pages...';
+
         const baseUrl = window.location.href.split('?')[0];
 
         try {
             for (let p = 1; p <= maxPage; p++) {
+                if (stopRequested) break;
+
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
                 const targetUrl = `${baseUrl}?page=${p}`;
                 console.log(`[MB Show All Events] Fetching page ${p} of ${maxPage}...`);
@@ -114,16 +180,26 @@
                 });
             }
 
+            const endFetch = performance.now();
+            const fetchTime = ((endFetch - startFetch) / 1000).toFixed(2);
+
+            stopBtn.style.display = 'none';
+            timerDisplay.textContent = `Fetch: ${fetchTime}s | Rendering...`;
+
+            // Start Render Timing
+            const startRender = performance.now();
+
             // Update State
             isLoaded = true;
 
             // Update UI
-            btn.textContent = `All ${allRows.length} events loaded`;
+            btn.textContent = stopRequested ? `Partial: ${allRows.length} loaded` : `All ${allRows.length} events loaded`;
             btn.style.color = '';
             btn.style.cursor = 'pointer';
             btn.style.transform = '';
             btn.style.boxShadow = '';
             btn.disabled = false;
+            filterInput.style.display = 'inline-block';
 
             // Remove Pagination
             const nav = document.querySelector('nav.pagination') || document.querySelector('ul.pagination');
@@ -133,6 +209,10 @@
             renderFinalTable(allRows);
             makeSortable();
 
+            const endRender = performance.now();
+            const renderTime = ((endRender - startRender) / 1000).toFixed(2);
+            timerDisplay.textContent = `(Fetch: ${fetchTime}s, Render: ${renderTime}s)`;
+
         } catch (error) {
             console.error('[MB Show All Events] Error:', error);
             btn.textContent = 'Error loading';
@@ -141,6 +221,7 @@
             btn.style.transform = '';
             btn.style.boxShadow = '';
             btn.disabled = false;
+            stopBtn.style.display = 'none';
         }
     });
 
@@ -157,11 +238,20 @@
         const headers = document.querySelectorAll('table.tbl thead th');
 
         headers.forEach((th, index) => {
-            if (th.classList.contains('checkbox-cell')) return;
+            if (th.classList.contains('checkbox-cell') || th.querySelector('input[type="checkbox"]')) return;
 
             th.style.cursor = 'pointer';
             th.style.whiteSpace = 'nowrap';
             th.title = "Click to sort";
+            th.classList.add('sortable');
+
+            // Add generic sort icon if not already present
+            if (!th.querySelector('.sort-icon')) {
+                const iconSpan = document.createElement('span');
+                iconSpan.className = 'sort-icon';
+                iconSpan.textContent = ' ↕';
+                th.appendChild(iconSpan);
+            }
 
             th.addEventListener('click', () => {
                 if (lastSortIndex === index) {
@@ -172,26 +262,31 @@
                 }
 
                 headers.forEach((h, i) => {
-                    const existingIcon = h.querySelector('.sort-icon');
-                    if (existingIcon) existingIcon.remove();
+                    const span = h.querySelector('.sort-icon');
+                    if (!span) return;
 
                     if (i === index) {
-                        const iconSpan = document.createElement('span');
-                        iconSpan.className = 'sort-icon';
-                        iconSpan.style.fontSize = '1.2em';
-                        iconSpan.textContent = sortAscending ? ' ▲' : ' ▼';
-                        h.appendChild(iconSpan);
+                        span.textContent = sortAscending ? ' ▲' : ' ▼';
+                        span.style.fontSize = '1.2em';
+                    } else {
+                        span.textContent = ' ↕';
+                        span.style.fontSize = '';
                     }
                 });
 
                 allRows.sort((a, b) => {
                     const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
                     const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
-                    // Handle numeric/date sorting roughly via localeCompare, or specific logic if needed
+                    // Handle numeric/date sorting roughly via localeCompare
                     return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 });
 
-                renderFinalTable(allRows);
+                const query = filterInput.value.toLowerCase();
+                const rowsToDisplay = query
+                    ? allRows.filter(r => r.textContent.toLowerCase().includes(query))
+                    : allRows;
+
+                renderFinalTable(rowsToDisplay);
             });
         });
     }
