@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Release Groups
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.2+2026-01-22
+// @version      0.9+2026-01-22
 // @description  Accumulates all release groups from paginated artist pages into a single view grouped by type with sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated

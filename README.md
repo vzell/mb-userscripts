@@ -4,8 +4,11 @@
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
 
+- [MusicBrainz - Show All ReleaseGroups](#mb_show_all_releasegroups)
 - [MusicBrainz - Show All Releases in ReleaseGroups](#mb_show_all_releases_in_releasegroups)
-- [MusicBrainz - Show All Releases Works](#mb_show_all_works)
+- [MusicBrainz - Show All Releases](#mb_show_all_releases)
+- [MusicBrainz - Show All Works](#mb_show_all_works)
+- [MusicBrainz - Show All Events](#mb_show_all_events)
 
 
 - [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
@@ -66,6 +69,13 @@ Adds a "NO Label" & "NO Catalognumber" button to the MusicBrainz release editor.
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
 
+## <a name="mb_show_all_releasegroups"></a> MusicBrainz - Show All ReleaseGroups
+
+Accumulates all release groups from paginated artist pages into a single view grouped by type with sorting.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllReleaseGroups.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleaseGroups.user.js)
+
 ## <a name="mb_show_all_releases_in_releasegroups"></a> MusicBrainz - Show All Releases in ReleaseGroups
 
 Accumulates all releases from paginated release group pages into a single view with filtering and sorting.
@@ -73,12 +83,26 @@ Accumulates all releases from paginated release group pages into a single view w
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllReleasesInReleaseGroups.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleasesInReleaseGroups.user.js)
 
+## <a name="mb_show_all_releases"></a> MusicBrainz - Show All Releases
+
+Accumulates all releasess from paginated artist work pages into a single view with sorting.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllReleasess.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleases.user.js)
+
 ## <a name="mb_show_all_works"></a> MusicBrainz - Show All Works
 
 Accumulates all works from paginated artist work pages into a single view with sorting.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllWorks.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllWorks.user.js)
+
+## <a name="mb_show_all_eventss"></a> MusicBrainz - Show All Events
+
+Accumulates all events from paginated artist work pages into a single view with sorting.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllEvents.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllEvents.user.js)
 
 ## <a name="mb_auto_select_discography_link_type"></a> MusicBrainz - Auto-Select External Link Types
 
