@@ -42,7 +42,7 @@
         .mb-show-all-btn:disabled {
             background-color: #ddd !important;
             border-color: #bbb !important;
-            cursor: wait;
+            cursor: default !important;
         }
     `;
     document.head.appendChild(style);
@@ -96,6 +96,7 @@
         // Visual "Button Down" state during load
         btn.disabled = true;
         btn.style.color = '#000';
+        btn.style.cursor = 'default';
         btn.style.transform = 'translateY(1px)';
         btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
 
@@ -170,6 +171,7 @@
             // Update UI
             btn.textContent = `All ${totalCount} releases`;
             btn.style.color = '';
+            btn.style.cursor = 'pointer';
             btn.style.transform = ''; // Release "down" state
             btn.style.boxShadow = '';
             btn.disabled = false; // Re-enable to allow resetting filter
@@ -190,6 +192,7 @@
             console.error('[MB Show All] Error:', error);
             btn.textContent = 'Error loading';
             btn.style.color = '';
+            btn.style.cursor = 'pointer';
             btn.style.transform = '';
             btn.style.boxShadow = '';
             btn.disabled = false;

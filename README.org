@@ -19233,6 +19233,13 @@ Create a button down effect when clicking the "Show all releases" button
 
 Make the "<div class="jesus2099userjs154481bigbox"> container invisible when clicking the "Show all releases" button
 
+** permit finger pointer
+
+In the uploaded userscript "ShowAllReleasesInReleaseGroups.user.js" do not change the mouse pointer to a hand with pointing finger during page loding, leave as the default
+
+Use the same Implementation logic like in the uploaded user script "ShowAllWorks.user.js"
+
+
 
 * ShowAllWorks
 
