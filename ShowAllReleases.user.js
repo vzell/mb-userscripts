@@ -1,16 +1,16 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Show All Works
+// @name         VZ: MusicBrainz - Show All Releases
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-22
-// @description  Accumulates all works from paginated artist work pages into a single view with sorting
+// @version      0.1+2026-01-22
+// @description  Accumulates all releases from paginated artist release pages into a single view with sorting
 // @author       Gemini & ChatGPT (directed by vzell)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllWorks.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllWorks.user.js
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleases.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleases.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @match        *://*.musicbrainz.org/artist/*/works
+// @match        https://musicbrainz.org/artist/*/releases
 // @grant        GM_xmlhttpRequest
 // @license      MIT
 // ==/UserScript==
@@ -24,7 +24,7 @@
 
     // Create Main Button
     const btn = document.createElement('button');
-    btn.textContent = 'Show all works';
+    btn.textContent = 'Show all releases';
     btn.style.marginLeft = '10px';
     btn.style.fontSize = '0.5em';
     btn.style.padding = '2px 6px';
@@ -55,18 +55,24 @@
     // State Variables
     let sortAscending = true;
     let lastSortIndex = -1;
-    let allRows = []; // Stores all data (flat list for Works)
+    let allRows = []; // Stores all data (flat list for Releases)
     let isLoaded = false;
 
     btn.addEventListener('click', async () => {
         if (isLoaded) return;
 
-        console.log('[MB Show All Works] Starting accumulation...');
+        console.log('[MB Show All Releases] Starting accumulation...');
+
+        // Additionally make the "<div class="jesus2099userjs154481bigbox"> container invisible
+        const bigBox = document.querySelector('div.jesus2099userjs154481bigbox');
+        if (bigBox) {
+            bigBox.style.display = 'none';
+        }
 
         // Visual "Button Down" state during load
         btn.disabled = true;
         btn.style.color = '#000';
-        btn.style.cursor = 'default'; // Explicitly set to default during load
+        btn.style.cursor = 'default';
         btn.style.transform = 'translateY(1px)';
         btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
 
@@ -102,34 +108,39 @@
                 // Update button text with current progress
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
                 const targetUrl = `${baseUrl}?page=${p}`;
-                console.log(`[MB Show All Works] Fetching page ${p} of ${maxPage}...`);
+                console.log(`[MB Show All Releases] Fetching page ${p} of ${maxPage}...`);
 
                 const html = await fetchHtml(targetUrl);
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
 
                 // Identify index for "Relationships" once
+                // Note: Releases table structure might differ slightly from Works,
+                // but we search for the specific header text to be safe.
                 if (relIdx === -1) {
-                    const ths = doc.querySelectorAll('table.tbl.mergeable-table thead th');
+                    const ths = doc.querySelectorAll('table.tbl thead th');
                     ths.forEach((th, i) => {
                         const text = th.textContent.trim();
                         if (text === 'Relationships') relIdx = i;
                     });
                 }
 
-                const rows = doc.querySelectorAll('table.tbl.mergeable-table tbody tr');
+                const rows = doc.querySelectorAll('table.tbl tbody tr');
                 rows.forEach(row => {
-                    const cleanRow = document.importNode(row, true);
-                    // Remove Relationships cell if found
-                    if (relIdx !== -1 && cleanRow.cells[relIdx]) {
-                        cleanRow.deleteCell(relIdx);
+                    // Check if row actually has data (ignore placeholders/empty rows)
+                    if (row.cells.length > 1) {
+                        const cleanRow = document.importNode(row, true);
+                        // Remove Relationships cell if found
+                        if (relIdx !== -1 && cleanRow.cells[relIdx]) {
+                            cleanRow.deleteCell(relIdx);
+                        }
+                        allRows.push(cleanRow);
                     }
-                    allRows.push(cleanRow);
                 });
             }
 
             // CLEAN UP HEADER
-            const table = document.querySelector('table.tbl.mergeable-table');
+            const table = document.querySelector('table.tbl');
             const thead = table.querySelector('thead');
             if (thead) {
                 const headerCells = thead.querySelectorAll('th');
@@ -145,9 +156,9 @@
             isLoaded = true;
 
             // Update UI
-            btn.textContent = `All ${allRows.length} works loaded`;
+            btn.textContent = `All ${allRows.length} releases loaded`;
             btn.style.color = '';
-            btn.style.cursor = 'pointer'; // Restore pointer after loading
+            btn.style.cursor = 'pointer';
             btn.style.transform = '';
             btn.style.boxShadow = '';
             btn.disabled = false;
@@ -161,7 +172,7 @@
             makeSortable();
 
         } catch (error) {
-            console.error('[MB Show All Works] Error:', error);
+            console.error('[MB Show All Releases] Error:', error);
             btn.textContent = 'Error loading';
             btn.style.color = '';
             btn.style.cursor = 'pointer';
@@ -172,7 +183,7 @@
     });
 
     function renderFinalTable(rowsToRender) {
-        const table = document.querySelector('table.tbl.mergeable-table');
+        const table = document.querySelector('table.tbl');
         const tableBody = table.querySelector('tbody');
         if (!tableBody) return;
 
@@ -181,7 +192,7 @@
     }
 
     function makeSortable() {
-        const headers = document.querySelectorAll('table.tbl.mergeable-table thead th');
+        const headers = document.querySelectorAll('table.tbl thead th');
 
         headers.forEach((th, index) => {
             if (th.classList.contains('checkbox-cell')) return;

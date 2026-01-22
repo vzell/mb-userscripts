@@ -18980,7 +18980,7 @@ The logic works now.  But please generate the new buttons one row below the "Don
 leave a little space between the "Cancel button and the new row of buttons, because the "Cancel" and "cover" button touch each other
 
 
-* ShowAllReleases
+* ShowAllReleases in ReleaseGroups
 ** initial
 
 Create a Tampermonkey userscript for "// @match        https://musicbrainz.org/release-group/*"
@@ -19239,6 +19239,10 @@ In the uploaded userscript "ShowAllReleasesInReleaseGroups.user.js" do not chang
 
 Use the same Implementation logic like in the uploaded user script "ShowAllWorks.user.js"
 
+** do not remove the tagger column
+
+In the uploaded userscript "ShowAllReleasesInReleaseGroups.user.js" actually DO NOT remove the "Tagger" column, only the
+"Relationships" column, like in the uploaded userscript "ShowAllReleases.user.js"
 
 
 * ShowAllWorks
@@ -19370,3 +19374,57 @@ Do not change the mouse pointer to a hand with pointing finger during page lodin
 ** 2
 
 NO, the mouse pointer ist still the ponting finger when hovering over the `Loading page ${p} of ${maxPage}...` button during load.
+
+
+* ShowAllEvents
+
+Create a new Tampermonkey userscript based on the uploaded one, but it should match
+
+"// @match        https://musicbrainz.org/artist/*/events"
+
+that creates a button at the starting page with text "Show all events" after the artist title between the
+following tags "<bdi>Bruce Springsteen</bdi>" or in general "<bdi><artist name></bdi>"
+
+Complete HTML snippet:
+
+#+begin_example
+<div class="wrap-anywhere artistheader person-icon">
+  <h1>
+    <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">
+      <bdi>Bruce Springsteen
+      </bdi>
+    </a>
+  </h1>
+  <p class="subheader">
+    <span class="prefix">~
+    </span>
+    <!-- -->Person
+  </p>
+</div>
+#+end_example
+
+When pressed, the following action should be done:
+
+Generate a final "events page" which includes all information from all the sub event pages by iterating through
+all the links "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=<pagenumber>"
+in the following pagination HTML snippet at the starting page
+
+
+* Show All Releases
+
+Create a new Tampermonkey userscript based on the uploaded one, but it should match
+
+"// @match        https://musicbrainz.org/artist/*/releases"
+
+that creates a button at the starting page with text "Show all releases" after the artist title
+
+When pressed, the following action should be done:
+
+Generate a final "releases page" which includes all information from all the sub release pages by iterating through
+all the links "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releasess?page=<pagenumber>"
+in the following pagination HTML snippet at the starting page
+
+Also remove the "Relationships" column for the final page
+
+Additionally make the "<div class="jesus2099userjs154481bigbox"> container invisible when clicking the "Show all releases" button
+
