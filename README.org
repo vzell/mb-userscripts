@@ -19473,3 +19473,49 @@ They are located right after the '<h3><type></h3>'
 ** 1
 
 All tables below each <type> (like for example "Album" or "Single") should also be sortable like in the before uploaded userscript
+
+
+* ShowAllRecordingsInWorks
+
+"// @match        https://musicbrainz.org/work/*?direction=2&link_type_id=278"
+
+
+Create a new Tampermonkey userscript based on the uploaded one, but it should match
+
+"// @match        https://musicbrainz.org/work/*"
+
+that creates a button at the starting page with text "Show all recordingss" after the work title between the
+following tags "<bdi>Born in the U.S.A.</bdi>" or in general "<bdi><work title></bdi>"
+
+Complete HTML snippet:
+
+#+begin_example
+<h1><a href="/work/55d593ce-52cc-30ec-9494-eca1ab879f5c"><bdi>Born in the U.S.A.</bdi></a></h1>
+#+end_example
+
+When pressed, the following action should be done:
+
+Call one time the link "https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&amp;link_type_id=278&amp;page=1" with explicit pagenumber 1
+and parse the pagination part to get tha max pages
+
+Generate a final "recordings page" which includes all information from all the sub recordings pages by iterating through
+all the links "https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&amp;link_type_id=278&amp;page=<pagenumber>"
+
+
+** 1
+
+The first time the button is pressed, parse the resulting page for the text "See all <n> relationships" in the following HTML fragment
+
+#+begin_example
+<tr>
+  <td>
+  </td>
+  <td colspan="4" style="padding: 1em; text-align: right;" class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO">
+    <a href="https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac?direction=2&amp;link_type_id=278&amp;page=1">See all 851 relationships
+    </a>
+  </td>
+</tr>
+#+end_example
+
+and emulate a click on that link to get another page which has the pagination buttons at the end as usual, so you can
+get the max number of pages from there.
