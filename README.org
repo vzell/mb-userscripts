@@ -19544,7 +19544,31 @@ Hide the following table container if present when pressing the "Show all record
 
 Somehow the "Release Groups" colum is now empty
 
+** answer
 
+The "Release Groups" column is appearing empty because that specific column in MusicBrainz uses asynchronous loading (it
+fetches the data via a separate internal API call after the initial page load). When the script grabs the HTML for
+subsequent pages via fetchHtml, that data hasn't been populated yet.
+
+To fix this, we need to modify the script to extract the recording MBID from each row and manually construct the
+link/text for the Release Group column, or simply ensure we are capturing the content if it's already there (though for
+background pages, it usually isn't).
+
+However, a more robust way to ensure we don't lose data and to keep the "Performance Attributes" removal logic clean is
+to specifically target the "Release Group" cell and preserve its internal structure.
+
+Here is the corrected version. I have also refined the row-cleaning logic to ensure that if a Release Group link exists
+in the source, it is preserved properly.
+
+** wrong logic for     btn.textContent = `Show all recordings${totalRecordingsCount}`;
+
+Somehow nothing (nor number of recordings) is shown in the following button
+
+#+begin_example
+    btn.textContent = `Show all recordings${totalRecordingsCount}`;
+#+end_example
+
+What I see is "Show all recording (Recordings)"
 
 * ShowAllRecordingsInWorks
 ** initial try

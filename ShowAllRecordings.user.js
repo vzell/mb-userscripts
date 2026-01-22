@@ -24,9 +24,17 @@
 
     // Try to find the total recording count from the tab link
     let totalRecordingsCount = "";
-    const recordingTab = document.querySelector('ul.tabs a[href$="/recordings"] bdi');
-    if (recordingTab) {
-        totalRecordingsCount = ` (${recordingTab.textContent.trim()})`;
+    // Target the specifically formatted number inside the recordings tab
+    const recordingTabBdi = document.querySelector('ul.tabs a[href$="/recordings"] span.count bdi');
+    const fallbackBdi = document.querySelector('ul.tabs a[href$="/recordings"] bdi');
+
+    const countElem = recordingTabBdi || fallbackBdi;
+    if (countElem) {
+        const countText = countElem.textContent.trim();
+        // Only append if the text is actually a number or contains digits
+        if (/\d/.test(countText)) {
+            totalRecordingsCount = ` (${countText})`;
+        }
     }
 
     // Create Main Button
