@@ -5,6 +5,11 @@
 // @description  Accumulates all release groups from paginated artist pages into a single view grouped by type with sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleaseGroups.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleaseGroups.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        https://musicbrainz.org/artist/*
 // @exclude      https://musicbrainz.org/artist/*/releases
 // @exclude      https://musicbrainz.org/artist/*/recordings
