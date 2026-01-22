@@ -32,7 +32,7 @@
     btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
     btn.type = 'button';
 
-    // Inject CSS for button-down effect
+    // Inject CSS for button-down effect and sorting icons
     const style = document.createElement('style');
     style.textContent = `
         .mb-show-all-btn:active {
@@ -44,6 +44,10 @@
             border-color: #bbb !important;
             cursor: default !important;
         }
+        .sort-icon {
+            font-size: 1.2em;
+            margin-left: 4px;
+        }
     `;
     document.head.appendChild(style);
     btn.classList.add('mb-show-all-btn');
@@ -51,7 +55,7 @@
     headerH1.appendChild(btn);
 
     let isLoaded = false;
-    // Map to store rows grouped by their H3 header text
+    // Map to store tables and their rows: { typeTitle: { table: DOMElement, rows: [DOMElements], relIndex: number } }
     const releaseGroupsByType = new Map();
 
     btn.addEventListener('click', async () => {
@@ -66,7 +70,6 @@
         btn.style.transform = 'translateY(1px)';
         btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
 
-        // Logic to find max page
         let maxPage = 1;
         const paginationList = document.querySelector('ul.pagination');
         if (paginationList) {
@@ -89,7 +92,6 @@
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
 
-                // Process headers and tables
                 const headers = doc.querySelectorAll('#content h3');
                 headers.forEach(h3 => {
                     const typeTitle = h3.textContent.trim();
@@ -97,12 +99,10 @@
 
                     if (table && table.tagName === 'TABLE' && table.classList.contains('tbl')) {
                         if (!releaseGroupsByType.has(typeTitle)) {
-                            // Clone table structure (header) once
                             const tableClone = document.importNode(table, true);
                             const tbody = tableClone.querySelector('tbody');
                             if (tbody) tbody.innerHTML = '';
 
-                            // Remove Relationships header
                             const relIdx = findRelColumnIndex(tableClone);
                             if (relIdx !== -1) {
                                 tableClone.querySelectorAll('thead th')[relIdx].remove();
@@ -110,7 +110,10 @@
 
                             releaseGroupsByType.set(typeTitle, {
                                 table: tableClone,
-                                relIndex: relIdx
+                                rows: [],
+                                relIndex: relIdx,
+                                lastSortIndex: -1,
+                                sortAscending: true
                             });
                         }
 
@@ -122,7 +125,7 @@
                                 if (state.relIndex !== -1 && cleanRow.cells[state.relIndex]) {
                                     cleanRow.deleteCell(state.relIndex);
                                 }
-                                state.table.querySelector('tbody').appendChild(cleanRow);
+                                state.rows.push(cleanRow);
                             }
                         });
                     }
@@ -130,7 +133,7 @@
             }
 
             renderFinalContent();
-            hideBigBoxes(); // Ensure newly added boxes are hidden
+            hideBigBoxes();
 
             isLoaded = true;
             btn.textContent = `All release groups loaded`;
@@ -164,22 +167,67 @@
         const container = document.querySelector('#content');
         if (!container) return;
 
-        // Clear existing tables/headers/pagination from the main content area
         const nav = document.querySelector('nav.pagination') || document.querySelector('ul.pagination');
         if (nav) nav.remove();
 
-        // Remove existing release group headers and tables to replace with consolidated ones
         const existingH3s = container.querySelectorAll('h3');
         const existingTbls = container.querySelectorAll('table.tbl');
         existingH3s.forEach(el => el.remove());
         existingTbls.forEach(el => el.remove());
 
-        // Append consolidated data
-        releaseGroupsByType.forEach((data, title) => {
+        releaseGroupsByType.forEach((state, title) => {
             const h3 = document.createElement('h3');
             h3.textContent = title;
             container.appendChild(h3);
-            container.appendChild(data.table);
+
+            const tableBody = state.table.querySelector('tbody');
+            state.rows.forEach(row => tableBody.appendChild(row));
+
+            container.appendChild(state.table);
+            makeTableSortable(state);
+        });
+    }
+
+    function makeTableSortable(state) {
+        const headers = state.table.querySelectorAll('thead th');
+
+        headers.forEach((th, index) => {
+            if (th.classList.contains('checkbox-cell')) return;
+
+            th.style.cursor = 'pointer';
+            th.style.whiteSpace = 'nowrap';
+            th.title = "Click to sort";
+
+            th.addEventListener('click', () => {
+                if (state.lastSortIndex === index) {
+                    state.sortAscending = !state.sortAscending;
+                } else {
+                    state.sortAscending = true;
+                    state.lastSortIndex = index;
+                }
+
+                headers.forEach((h, i) => {
+                    const existingIcon = h.querySelector('.sort-icon');
+                    if (existingIcon) existingIcon.remove();
+
+                    if (i === index) {
+                        const iconSpan = document.createElement('span');
+                        iconSpan.className = 'sort-icon';
+                        iconSpan.textContent = state.sortAscending ? ' ▲' : ' ▼';
+                        h.appendChild(iconSpan);
+                    }
+                });
+
+                state.rows.sort((a, b) => {
+                    const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
+                    const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
+                    return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                });
+
+                const tbody = state.table.querySelector('tbody');
+                tbody.innerHTML = '';
+                state.rows.forEach(row => tbody.appendChild(row));
+            });
         });
     }
 
