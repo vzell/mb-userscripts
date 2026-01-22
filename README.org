@@ -19218,6 +19218,21 @@ each click and onyl display on the column where the actual sorting takes place.
 Apply the same logic to find the maximum page number and logic for iteration always from pagnumber 1 up to the maximum
 found from the uploaded userscript "ShowAllWorks.users.js" to the uploaded user script "ShowAllReleases.user.js"
 
+** 1
+
+In the uploaded userscript change the title of the "Show all releases" during loading to "Loading page <current> of <total>"
+
+Also make the button text more visible during load. Right now because the button changes colour to show that it's not
+clickable during load.
+
+** 2
+
+Create a button down effect when clicking the "Show all releases" button
+
+** remove jesus images
+
+Make the "<div class="jesus2099userjs154481bigbox"> container invisible when clicking the "Show all releases" button
+
 
 * ShowAllWorks
 
@@ -19329,3 +19344,22 @@ pagenumber from the href tag right before the one with the display text of "Next
   </li>
 
 #+end_example
+
+** 3
+
+In the uploaded userscript change the title of the "Show all works" during loading to "Loading page <current> of <total>"
+
+** button text more visible
+
+In the uploaded userscript "ShowAllWorks.user.js" make the button text more visible during load. Right now because the
+button changes colour to show that it's not clickable during load.
+
+Use the same Implementation logic like in the uploaded user script "ShowAllReleasesInReleaseGroups.user.js"
+
+** 1
+
+Do not change the mouse pointer to a hand with pointing finger during page loding, leave as the default 
+
+** 2
+
+NO, the mouse pointer ist still the ponting finger when hovering over the `Loading page ${p} of ${maxPage}...` button during load.

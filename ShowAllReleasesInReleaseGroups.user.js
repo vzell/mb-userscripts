@@ -28,7 +28,25 @@
     btn.style.fontSize = '0.5em';
     btn.style.padding = '2px 6px';
     btn.style.verticalAlign = 'middle';
+    btn.style.cursor = 'pointer';
+    btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
     btn.type = 'button';
+
+    // Inject CSS for button-down effect
+    const style = document.createElement('style');
+    style.textContent = `
+        .mb-show-all-btn:active {
+            transform: translateY(1px);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .mb-show-all-btn:disabled {
+            background-color: #ddd !important;
+            border-color: #bbb !important;
+            cursor: wait;
+        }
+    `;
+    document.head.appendChild(style);
+    btn.classList.add('mb-show-all-btn');
 
     // Create Container for Filter Buttons (hidden initially)
     const filterContainer = document.createElement('span');
@@ -55,28 +73,42 @@
         }
 
         console.log('[MB Show All] Starting accumulation and header cleanup...');
-        btn.disabled = true;
-        btn.textContent = 'Loading...';
+
+        // Hide specific external container if present
+        const externalBox = document.querySelector('div.jesus2099userjs154481bigbox');
+        if (externalBox) {
+            externalBox.style.display = 'none';
+        }
 
         const paginationLinks = document.querySelectorAll('ul.pagination li a');
-        const urls = new Set([window.location.href]);
+        const urlsSet = new Set([window.location.href]);
 
         paginationLinks.forEach(link => {
             const href = link.getAttribute('href');
             if (href && href.includes('page=')) {
-                urls.add(new URL(href, window.location.origin).href);
+                urlsSet.add(new URL(href, window.location.origin).href);
             }
         });
+
+        const sortedUrls = Array.from(urlsSet).sort();
+        const totalPages = sortedUrls.length;
+
+        // Visual "Button Down" state during load
+        btn.disabled = true;
+        btn.style.color = '#000';
+        btn.style.transform = 'translateY(1px)';
+        btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
 
         let relIdx = -1;
         let tagIdx = -1;
 
         try {
-            const sortedUrls = Array.from(urls).sort();
+            for (let i = 0; i < sortedUrls.length; i++) {
+                const url = sortedUrls[i];
+                const currentPageNum = i + 1;
 
-            for (const url of sortedUrls) {
-                const pageNum = new URL(url).searchParams.get('page') || '1';
-                console.log(`[MB Show All] Fetching page ${pageNum}...`);
+                btn.textContent = `Loading page ${currentPageNum} of ${totalPages}...`;
+                console.log(`[MB Show All] Fetching page ${currentPageNum}...`);
 
                 const html = await fetchHtml(url);
                 const parser = new DOMParser();
@@ -137,6 +169,9 @@
 
             // Update UI
             btn.textContent = `All ${totalCount} releases`;
+            btn.style.color = '';
+            btn.style.transform = ''; // Release "down" state
+            btn.style.boxShadow = '';
             btn.disabled = false; // Re-enable to allow resetting filter
 
             // Generate Filter Buttons
@@ -154,6 +189,9 @@
         } catch (error) {
             console.error('[MB Show All] Error:', error);
             btn.textContent = 'Error loading';
+            btn.style.color = '';
+            btn.style.transform = '';
+            btn.style.boxShadow = '';
             btn.disabled = false;
         }
     });
