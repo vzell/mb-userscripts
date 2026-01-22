@@ -3,12 +3,18 @@
 - [MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages](#mb_customizable_selector)
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
+
+- [MusicBrainz - Show All Releases in ReleseGroups](#mb_show_all_releases_in_releasegroups)
+- [MusicBrainz - Show All Releases Works](#mb_show_all_works)
+
+
 - [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
 - [MusicBrainz - Auto-Select External Link Types For Release Groups](#mb_auto_select_discography_link_type_release_groups)
 - [MusicBrainz - Auto-Select External Link Types For Releases](#mb_auto_select_discography_link_type_releases)
 - [MusicBrainz - Auto-Select External Link Types For Events](#mb_auto_select_discography_link_type_events)
 - [MusicBrainz - Auto-Select External Link Types For Places](#mb_auto_select_discography_link_type_places)
 - [MusicBrainz - Auto-Select External Link Types For Works](#mb_auto_select_discography_link_type_works)
+
 - [Musicbrainz - Generate Recording Comments For A Release](#mb_generate_recording_comments_for_a_release)
 - [MusicBrainz - Display shortcut for relationships on MusicBrainz](#mb_relationship_shortcuts)
 - [MusicBrainz - Import Relationships From A Discogs Release In To A Musicbrainz Release](#mb_import_from_discogs)
@@ -59,6 +65,20 @@ Adds a "NO Label" & "NO Catalognumber" button to the MusicBrainz release editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
+
+## <a name="mb_show_all_releases_in_releasegroups"></a> MusicBrainz - Show All Releases in ReleseGroups
+
+Accumulates all releases from paginated release group pages into a single view with filtering and sorting.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllReleasesInReleaseGroups.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleasesInReleaseGroups.user.js)
+
+## <a name="mb_show_all_works"></a> MusicBrainz - Show All Works
+
+Accumulates all works from paginated artist work pages into a single view with sorting.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllWorks.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllWorks.user.js)
 
 ## <a name="mb_auto_select_discography_link_type"></a> MusicBrainz - Auto-Select External Link Types
 

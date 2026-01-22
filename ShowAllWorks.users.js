@@ -1,11 +1,18 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Works
-// @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  Accumulates all works from paginated artist work pages into a single view with sorting.
-// @author       Assistant
-// @match        https://musicbrainz.org/artist/*/works*
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      0.9+2026-01-22
+// @description  Accumulates all works from paginated artist work pages into a single view with sorting
+// @author       Gemini & ChatGPT (directed by vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllWorks.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllAllWorks.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @match        *://*.musicbrainz.org/artist/*/works*
 // @grant        GM_xmlhttpRequest
+// @license      MIT
 // ==/UserScript==
 
 (function() {

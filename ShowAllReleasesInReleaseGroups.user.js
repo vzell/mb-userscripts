@@ -1,11 +1,18 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Show All Releases in Group
-// @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  Accumulates all releases from paginated release group pages into a single view with filtering and sorting.
-// @author       Assistant
-// @match        https://musicbrainz.org/release-group/*
+// @name         VZ: MusicBrainz - Show All Releases in ReleseGroups
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      0.9+2026-01-22
+// @description  Accumulates all releases from paginated release group pages into a single view with filtering and sorting
+// @author       Gemini & ChatGPT (directed by vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleasesInReleaseGroups.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleasesInReleaseGroups.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @match        *://*.musicbrainz.org/release-group/*
 // @grant        GM_xmlhttpRequest
+// @license      MIT
 // ==/UserScript==
 
 (function() {
