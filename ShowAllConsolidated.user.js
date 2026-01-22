@@ -24,7 +24,6 @@
     const currentUrl = new URL(window.location.href);
     const path = currentUrl.pathname;
 
-    // Detect Page Type and Target Headers
     let pageType = '';
     let headerContainer = document.querySelector('.artistheader h1') ||
                           document.querySelector('.rgheader h1') ||
@@ -40,35 +39,53 @@
 
     if (!pageType || !headerContainer) return;
 
-    // Special Redirect Logic for Work Details (ensure we are on relationship view)
-    if (pageType === 'work-details' && (!currentUrl.searchParams.has('direction') || !currentUrl.searchParams.has('link_type_id'))) {
-        currentUrl.searchParams.set('direction', '2');
-        currentUrl.searchParams.set('link_type_id', '278');
-        window.location.replace(currentUrl.toString());
-        return;
-    }
-
     // --- UI Creation ---
     const btn = document.createElement('button');
-    btn.textContent = `Show all ${pageType.replace('-', ' ')}`;
-    btn.style.cssText = 'margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer;';
+    // Prepend "C: " to distinguish from non-consolidated scripts
+    btn.textContent = `C: Show all ${pageType.replace('-', ' ')}`;
+    btn.style.marginLeft = '10px';
+    btn.style.fontSize = '0.5em';
+    btn.style.padding = '2px 6px';
+    btn.style.verticalAlign = 'middle';
+    btn.style.cursor = 'pointer';
+    btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
+    btn.type = 'button';
     btn.classList.add('mb-show-all-btn');
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
-    stopBtn.style.cssText = 'display:none; margin-left:5px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f;';
+    stopBtn.style.display = 'none';
+    stopBtn.style.marginLeft = '5px';
+    stopBtn.style.fontSize = '0.5em';
+    stopBtn.style.padding = '2px 6px';
+    stopBtn.style.verticalAlign = 'middle';
+    stopBtn.style.cursor = 'pointer';
+    stopBtn.style.backgroundColor = '#f44336';
+    stopBtn.style.color = 'white';
+    stopBtn.style.border = '1px solid #d32f2f';
+    stopBtn.type = 'button';
 
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Filter ${pageType}...`;
-    filterInput.style.cssText = 'display:none; margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; border:1px solid #ccc; border-radius:3px; width:150px;';
+    filterInput.style.display = 'none';
+    filterInput.style.marginLeft = '10px';
+    filterInput.style.fontSize = '0.5em';
+    filterInput.style.padding = '2px 6px';
+    filterInput.style.verticalAlign = 'middle';
+    filterInput.style.border = '1px solid #ccc';
+    filterInput.style.borderRadius = '3px';
+    filterInput.type = 'text';
 
     const timerDisplay = document.createElement('span');
-    timerDisplay.style.cssText = 'margin-left:10px; font-size:0.5em; color:#666; vertical-align:middle;';
+    timerDisplay.style.marginLeft = '10px';
+    timerDisplay.style.fontSize = '0.5em';
+    timerDisplay.style.color = '#666';
+    timerDisplay.style.verticalAlign = 'middle';
 
     const style = document.createElement('style');
     style.textContent = `
         .mb-show-all-btn:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-        .mb-show-all-btn:disabled { background-color: #ddd !important; cursor: default !important; }
+        .mb-show-all-btn:disabled { background-color: #ddd !important; border-color: #bbb !important; cursor: default !important; }
         .sort-icon { cursor: pointer; margin-left: 4px; }
     `;
     document.head.appendChild(style);
@@ -94,13 +111,12 @@
     filterInput.addEventListener('input', () => {
         const query = filterInput.value.toLowerCase();
         const filteredRows = allRows.filter(row => row.textContent.toLowerCase().includes(query));
-        renderTable(filteredRows);
+        renderFinalTable(filteredRows);
     });
 
     btn.addEventListener('click', async () => {
         if (isLoaded) return;
 
-        // 1. Pagination Check
         let maxPage = 1;
         const pagination = document.querySelector('ul.pagination');
         if (pagination) {
@@ -112,102 +128,122 @@
             }
         }
 
-        if (maxPage > 100 && !confirm(`This will iterate through ${maxPage} pages. Do you really want to proceed?`)) return;
+        if (maxPage > 100 && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) return;
 
-        // 2. Setup Loading
         isLoaded = true;
+        stopRequested = false;
+        allRows = [];
+
+        // Visual state during load
         btn.disabled = true;
+        btn.style.color = '#000';
         stopBtn.style.display = 'inline-block';
+        stopBtn.disabled = false;
+        stopBtn.textContent = 'Stop';
+        filterInput.style.display = 'none';
+        timerDisplay.textContent = 'Fetching pages...';
+
         const startTime = performance.now();
+        const baseUrl = window.location.href.split('?')[0];
 
-        // Hide Jesus2099 Bigbox if present
-        const bigBox = document.querySelector('div.jesus2099userjs154481bigbox');
-        if (bigBox) bigBox.style.display = 'none';
+        try {
+            for (let p = 1; p <= maxPage; p++) {
+                if (stopRequested) break;
 
-        // 3. Page Iteration
-        const baseUrl = new URL(window.location.href);
-        for (let p = 1; p <= maxPage; p++) {
-            if (stopRequested) break;
+                btn.textContent = `Loading page ${p} of ${maxPage}...`;
+                const targetUrl = `${baseUrl}?page=${p}`;
 
-            btn.textContent = `Loading ${p}/${maxPage}...`;
-            baseUrl.searchParams.set('page', p);
-
-            try {
-                const html = await fetchHtml(baseUrl.toString());
+                const html = await fetchHtml(targetUrl);
                 const doc = new DOMParser().parseFromString(html, 'text/html');
                 const pageRows = Array.from(doc.querySelectorAll('table.tbl tbody tr:not(.explanation)'));
 
-                // Filter out empty rows/placeholders
-                const validRows = pageRows.filter(r => r.querySelector('td'));
-                allRows.push(...validRows);
-            } catch (err) {
-                console.error('Fetch error:', err);
+                pageRows.forEach(row => {
+                    if (row.cells.length > 1) {
+                        allRows.push(document.importNode(row, true));
+                    }
+                });
             }
+
+            const endFetch = performance.now();
+            const fetchTime = ((endFetch - startTime) / 1000).toFixed(2);
+
+            stopBtn.style.display = 'none';
+            timerDisplay.textContent = `Fetch: ${fetchTime}s | Rendering...`;
+
+            const startRender = performance.now();
+
+            // UI Finalization
+            btn.textContent = stopRequested ? `Partial: ${allRows.length} loaded` : `All ${allRows.length} loaded`;
+            btn.style.color = '';
+            btn.disabled = false;
+            filterInput.style.display = 'inline-block';
+
+            // Remove existing pagination
+            document.querySelectorAll('ul.pagination, nav.pagination, div.pageselector').forEach(el => el.remove());
+
+            renderFinalTable(allRows);
+            makeSortable();
+
+            const endRender = performance.now();
+            const renderTime = ((endRender - startRender) / 1000).toFixed(2);
+            timerDisplay.textContent = `(Fetch: ${fetchTime}s, Render: ${renderTime}s)`;
+
+        } catch (err) {
+            console.error('Error:', err);
+            btn.disabled = false;
+            btn.textContent = 'Error loading';
         }
-
-        const loadEndTime = performance.now();
-        const loadTime = ((loadEndTime - startTime) / 1000).toFixed(2);
-
-        // 4. Rendering
-        btn.textContent = 'Rendering...';
-        const renderStartTime = performance.now();
-
-        renderTable(allRows);
-
-        const renderEndTime = performance.now();
-        const renderTime = ((renderEndTime - renderStartTime) / 1000).toFixed(2);
-
-        // 5. Finalize UI
-        btn.textContent = `Finished (${allRows.length} items)`;
-        stopBtn.style.display = 'none';
-        filterInput.style.display = 'inline-block';
-        timerDisplay.textContent = `Load: ${loadTime}s | Render: ${renderTime}s`;
     });
 
-    function renderTable(rowsToDisplay) {
+    function renderFinalTable(rowsToRender) {
         const table = document.querySelector('table.tbl');
         if (!table) return;
-
-        // Clean up pagination/header icons
-        document.querySelectorAll('ul.pagination, div.pageselector').forEach(el => el.style.display = 'none');
-
         const tbody = table.querySelector('tbody');
         tbody.innerHTML = '';
-        rowsToDisplay.forEach(row => tbody.appendChild(row));
+        rowsToRender.forEach(row => tbody.appendChild(row));
+    }
 
-        // Add sorting functionality to headers
-        const headers = Array.from(table.querySelectorAll('thead th'));
+    function makeSortable() {
+        const headers = document.querySelectorAll('table.tbl thead th');
         headers.forEach((th, index) => {
-            if (!th.textContent.trim()) return;
+            if (th.classList.contains('checkbox-cell') || th.querySelector('input[type="checkbox"]')) return;
 
-            let icon = th.querySelector('.sort-icon');
-            if (!icon) {
-                icon = document.createElement('span');
-                icon.className = 'sort-icon';
-                icon.textContent = ' ↕';
-                icon.title = 'Click to sort';
-                th.appendChild(icon);
-                th.style.cursor = 'pointer';
+            th.style.cursor = 'pointer';
+            th.title = "Click to sort";
 
-                th.onclick = () => {
-                    if (lastSortIndex === index) sortAscending = !sortAscending;
-                    else { sortAscending = true; lastSortIndex = index; }
-
-                    // Update all icons
-                    headers.forEach((h, i) => {
-                        const s = h.querySelector('.sort-icon');
-                        if (s) s.textContent = (i === index) ? (sortAscending ? ' ▲' : ' ▼') : ' ↕';
-                    });
-
-                    allRows.sort((a, b) => {
-                        const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
-                        const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
-                        return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                    });
-
-                    renderTable(filterInput.value ? allRows.filter(r => r.textContent.toLowerCase().includes(filterInput.value.toLowerCase())) : allRows);
-                };
+            if (!th.querySelector('.sort-icon')) {
+                const iconSpan = document.createElement('span');
+                iconSpan.className = 'sort-icon';
+                iconSpan.textContent = ' ↕';
+                th.appendChild(iconSpan);
             }
+
+            th.onclick = () => {
+                if (lastSortIndex === index) sortAscending = !sortAscending;
+                else { sortAscending = true; lastSortIndex = index; }
+
+                headers.forEach((h, i) => {
+                    const s = h.querySelector('.sort-icon');
+                    if (s) {
+                        if (i === index) {
+                            s.textContent = sortAscending ? ' ▲' : ' ▼';
+                            s.style.fontSize = '1.2em';
+                        } else {
+                            s.textContent = ' ↕';
+                            s.style.fontSize = '';
+                        }
+                    }
+                });
+
+                allRows.sort((a, b) => {
+                    const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
+                    const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
+                    return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                });
+
+                const query = filterInput.value.toLowerCase();
+                renderFinalTable(query ? allRows.filter(r => r.textContent.toLowerCase().includes(query)) : allRows);
+            };
         });
     }
 

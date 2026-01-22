@@ -19687,6 +19687,13 @@ all other types to (Recordings, Works, Releases, etc.):
 
 The button text during loading is almost invisible. Please make it exactly like in the uploaded script "ShowAllEvents.user.js"
 
+** add C
+
+Add "C: " in front of the initial text in the Submit button, to distinguish it from the button of the non consolidated userscripts
+
+So for example: "C: Show all events"
+
 ** missing
 
-RG: "Relationship" column should be filtered out.
+If existing, the "Relationship" and "Performance Attributes" columns should be filtered out.
+See the uploaded userscripts for implentation.
