@@ -19499,6 +19499,7 @@ Start 3:34
 Implement a time counter when pressing the "Show all recordings" button and display the total execution time, plus time for rendering the resulting table in the browser.
 The display should be next to the button on the right side.
 
+Please add timings for just the loading of pages AND the rendering of the resulting table separately
 
 * ShowAllRecordingsInWorks
 ** initial try

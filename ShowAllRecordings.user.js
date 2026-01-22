@@ -33,6 +33,13 @@
     btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
     btn.type = 'button';
 
+    // Create Timer Display
+    const timerDisplay = document.createElement('span');
+    timerDisplay.style.marginLeft = '10px';
+    timerDisplay.style.fontSize = '0.5em';
+    timerDisplay.style.color = '#666';
+    timerDisplay.style.verticalAlign = 'middle';
+
     // Inject CSS for button-down effect
     const style = document.createElement('style');
     style.textContent = `
@@ -49,8 +56,9 @@
     document.head.appendChild(style);
     btn.classList.add('mb-show-all-btn');
 
-    // Append button to the h1
+    // Append button and timer to the h1
     headerH1.appendChild(btn);
+    headerH1.appendChild(timerDisplay);
 
     // State Variables
     let sortAscending = true;
@@ -89,6 +97,7 @@
             if (!proceed) return;
         }
 
+        const startFetch = performance.now();
         console.log('[MB Show All Recordings] Starting accumulation...');
 
         // Visual loading state
@@ -97,12 +106,13 @@
         btn.style.cursor = 'default';
         btn.style.transform = 'translateY(1px)';
         btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
+        timerDisplay.textContent = 'Fetching pages...';
 
         const baseUrl = window.location.href.split('?')[0];
 
         try {
             for (let p = 1; p <= maxPage; p++) {
-                btn.textContent = `Loading: Page ${p}/${maxPage} (${allRows.length} items)...`;
+                btn.textContent = `Loading: Page ${p}/${maxPage}...`;
                 const targetUrl = `${baseUrl}?page=${p}`;
 
                 const html = await fetchHtml(targetUrl);
@@ -118,6 +128,20 @@
                 });
             }
 
+            const endFetch = performance.now();
+            const fetchTime = ((endFetch - startFetch) / 1000).toFixed(2);
+
+            timerDisplay.textContent = `Fetch: ${fetchTime}s | Rendering...`;
+
+            // Start Render Timing
+            const startRender = performance.now();
+
+            renderFinalTable(allRows);
+            makeSortable();
+
+            const endRender = performance.now();
+            const renderTime = ((endRender - startRender) / 1000).toFixed(2);
+
             isLoaded = true;
             btn.textContent = `Loaded ${allRows.length} recordings`;
             btn.style.color = '';
@@ -126,16 +150,16 @@
             btn.style.boxShadow = '';
             btn.disabled = false;
 
+            timerDisplay.textContent = `(Fetch: ${fetchTime}s, Render: ${renderTime}s)`;
+
             // Remove pagination UI elements
             const nav = document.querySelector('nav.pagination') || document.querySelector('ul.pagination');
             if (nav) nav.remove();
 
-            renderFinalTable(allRows);
-            makeSortable();
-
         } catch (error) {
             console.error('[MB Show All Recordings] Error:', error);
             btn.textContent = 'Error loading';
+            timerDisplay.textContent = '';
             btn.disabled = false;
         }
     });
@@ -153,7 +177,6 @@
         const headers = document.querySelectorAll('table.tbl thead th');
 
         headers.forEach((th, index) => {
-            // Avoid making checkbox columns sortable
             if (th.classList.contains('checkbox-cell') || th.querySelector('input[type="checkbox"]')) return;
 
             th.style.cursor = 'pointer';
