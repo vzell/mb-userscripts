@@ -19666,3 +19666,18 @@ which should sty there, other wise we start all over
 Can you make the userscript when entering a URL like "https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac"
 automatically redirect to "https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac?direction=2&link_type_id=278&page=1"
 
+* ShowAll
+
+Please consolidate the uploaded userscripts in a common one which works on all @match URLs (also use the broader type
+with '*://*.musicbrainz.org/' instead of 'https://musicbrainz.org/'
+
+Specifically the consolidated script should have the following functionalities included in 'ShowAllEvents.user.js' for
+all other types to (Recordings, Works, Releases, etc.):
+
+- When the final page is rendered, add the generic sort icon "↕" concatenated after the colums names and a popup hint "Click to sort" when hovering over
+- Add a "Stop" button, to cancel iterating through all the pages
+- Generate a popup warning and ask the user if he really want to proceed it the maximum pagenumber deduced from the pagination is greater than 100.
+- Implement a time counter when pressing the "Show all events" button and display the total execution time, plus
+  time for rendering the resulting table in the browser. The display should be next to the button on the right
+  side. Please add timings for just the loading of pages AND the rendering of the resulting table separately
+- add a search filter box next to the button that lets you filter the events by the different columns (for example Type, Role, Location, Date, etc) instantly after they've loaded?
