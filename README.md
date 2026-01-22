@@ -85,9 +85,9 @@ Accumulates all releases from paginated release group pages into a single view w
 
 ## <a name="mb_show_all_releases"></a> MusicBrainz - Show All Releases
 
-Accumulates all releasess from paginated artist work pages into a single view with sorting.
+Accumulates all releases from paginated artist work pages into a single view with sorting.
 
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllReleasess.user.js)
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllReleases.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleases.user.js)
 
 ## <a name="mb_show_all_works"></a> MusicBrainz - Show All Works
