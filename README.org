@@ -19550,3 +19550,9 @@ It seems to work, the logging looks good, but somehow and the end a redirect occ
 https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac?direction=2&link_type_id=278&page=1
 
 which should sty there, other wise we start all over
+
+** redirect
+
+Can you make the userscript when entering a URL like "https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac"
+automatically redirect to "https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac?direction=2&link_type_id=278&page=1"
+

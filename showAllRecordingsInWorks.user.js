@@ -2,7 +2,7 @@
 // @name         VZ: MusicBrainz - Show All Recordings In Works
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      0.9+2026-01-22
-// @description  Accumulates all recordings from paginated work recording pages into a single view with sorting
+// @description  Accumulates all recordings from paginated work recording pages into a single view with sorting and auto-redirect
 // @author       Gemini & ChatGPT (directed by vzell)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -18,6 +18,22 @@
 (function() {
     'use strict';
 
+    // Auto-redirect logic to ensure we are on the recording relationship view
+    const currentUrl = new URL(window.location.href);
+    const params = currentUrl.searchParams;
+
+    if (!params.has('direction') || !params.has('link_type_id')) {
+        console.log('[MB Show All Recordings] Redirecting to recording relationship view...');
+        params.set('direction', '2');
+        params.set('link_type_id', '278');
+        // Ensure we start on page 1 if no page is specified
+        if (!params.has('page')) {
+            params.set('page', '1');
+        }
+        window.location.replace(currentUrl.toString());
+        return; // Stop execution of the rest of the script until reload
+    }
+
     // Target the bdi tag inside the h1 a
     const titleBdi = document.querySelector('h1 a bdi');
     if (!titleBdi) return;
@@ -31,7 +47,7 @@
     btn.style.verticalAlign = 'middle';
     btn.style.cursor = 'pointer';
     btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
-    btn.type = 'button'; // Explicitly set to button to prevent form submission
+    btn.type = 'button';
 
     // Inject CSS for button-down effect
     const style = document.createElement('style');
@@ -59,7 +75,6 @@
     let isLoaded = false;
 
     btn.addEventListener('click', async (e) => {
-        // Prevent any default behavior or parent link navigation
         e.preventDefault();
         e.stopPropagation();
 
@@ -67,20 +82,15 @@
 
         console.log('[MB Show All Recordings] Starting accumulation...');
 
-        // Visual "Button Down" state during load
         btn.disabled = true;
         btn.style.color = '#000';
         btn.style.cursor = 'default';
         btn.style.transform = 'translateY(1px)';
         btn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
 
-        // Identify the base URL and pagination
         const baseUrl = window.location.origin + window.location.pathname;
-        const queryParams = new URLSearchParams(window.location.search);
-
-        // Ensure we preserve direction and link_type_id if present, or use defaults
-        const direction = queryParams.get('direction') || '2';
-        const linkTypeId = queryParams.get('link_type_id') || '278';
+        const direction = params.get('direction');
+        const linkTypeId = params.get('link_type_id');
 
         let maxPage = 1;
         const paginationList = document.querySelector('ul.pagination');
@@ -114,7 +124,6 @@
             isLoaded = true;
             console.log(`[MB Show All Recordings] Successfully loaded ${allRows.length} rows.`);
 
-            // Update UI
             btn.textContent = `All ${allRows.length} recordings loaded`;
             btn.style.color = '';
             btn.style.cursor = 'pointer';
@@ -122,11 +131,9 @@
             btn.style.boxShadow = '';
             btn.disabled = false;
 
-            // Remove existing pagination navigation
             const nav = document.querySelector('nav.pagination') || document.querySelector('ul.pagination');
             if (nav) nav.remove();
 
-            // Render and initialize sorting
             renderFinalTable(allRows);
             makeSortable();
 
