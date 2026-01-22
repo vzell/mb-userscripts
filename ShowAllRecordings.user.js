@@ -2,7 +2,7 @@
 // @name         VZ: MusicBrainz - Show All Recordings
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      0.9+2026-01-22
-// @description  Accumulates all recordings from paginated artist recording pages into a single view with sorting and progress tracking
+// @description  Accumulates all recordings from paginated artist recording pages into a single view with separate timing, stop button, pre-load count, and real-time search filter
 // @author       Gemini
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -22,9 +22,16 @@
     const headerH1 = document.querySelector('.artistheader h1');
     if (!headerH1) return;
 
+    // Try to find the total recording count from the tab link
+    let totalRecordingsCount = "";
+    const recordingTab = document.querySelector('ul.tabs a[href$="/recordings"] bdi');
+    if (recordingTab) {
+        totalRecordingsCount = ` (${recordingTab.textContent.trim()})`;
+    }
+
     // Create Main Button
     const btn = document.createElement('button');
-    btn.textContent = 'Show all recordings';
+    btn.textContent = `Show all recordings${totalRecordingsCount}`;
     btn.style.marginLeft = '10px';
     btn.style.fontSize = '0.5em';
     btn.style.padding = '2px 6px';
@@ -46,6 +53,18 @@
     stopBtn.style.color = 'white';
     stopBtn.style.border = '1px solid #d32f2f';
     stopBtn.type = 'button';
+
+    // Create Search Filter (initially hidden)
+    const filterInput = document.createElement('input');
+    filterInput.placeholder = 'Filter recordings...';
+    filterInput.style.display = 'none';
+    filterInput.style.marginLeft = '10px';
+    filterInput.style.fontSize = '0.5em';
+    filterInput.style.padding = '2px 6px';
+    filterInput.style.verticalAlign = 'middle';
+    filterInput.style.border = '1px solid #ccc';
+    filterInput.style.borderRadius = '3px';
+    filterInput.type = 'text';
 
     // Create Timer Display
     const timerDisplay = document.createElement('span');
@@ -73,6 +92,7 @@
     // Append UI elements to the h1
     headerH1.appendChild(btn);
     headerH1.appendChild(stopBtn);
+    headerH1.appendChild(filterInput);
     headerH1.appendChild(timerDisplay);
 
     // State Variables
@@ -81,6 +101,15 @@
     let allRows = [];
     let isLoaded = false;
     let stopRequested = false;
+
+    // Filter Logic
+    filterInput.addEventListener('input', () => {
+        const query = filterInput.value.toLowerCase();
+        const filteredRows = allRows.filter(row =>
+            row.textContent.toLowerCase().includes(query)
+        );
+        renderFinalTable(filteredRows);
+    });
 
     stopBtn.addEventListener('click', () => {
         stopRequested = true;
@@ -129,6 +158,7 @@
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
         stopBtn.textContent = 'Stop';
+        filterInput.style.display = 'none';
         timerDisplay.textContent = 'Fetching pages...';
 
         const baseUrl = window.location.href.split('?')[0];
@@ -171,6 +201,7 @@
             isLoaded = true;
             btn.textContent = stopRequested ? `Partial: ${allRows.length} loaded` : `Loaded ${allRows.length} recordings`;
             btn.disabled = false;
+            filterInput.style.display = 'inline-block';
             timerDisplay.textContent = `(Fetch: ${fetchTime}s, Render: ${renderTime}s)`;
 
             // Remove pagination
@@ -231,7 +262,13 @@
                     return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 });
 
-                renderFinalTable(allRows);
+                // Respect current filter when sorting
+                const query = filterInput.value.toLowerCase();
+                const rowsToDisplay = query
+                    ? allRows.filter(r => r.textContent.toLowerCase().includes(query))
+                    : allRows;
+
+                renderFinalTable(rowsToDisplay);
             });
         });
     }
