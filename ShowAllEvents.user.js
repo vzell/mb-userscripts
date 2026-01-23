@@ -110,8 +110,25 @@
         stopBtn.textContent = 'Stopping...';
     });
 
+    /**
+     * Removes specific containers from sanojjonas's visualize userscript
+     */
+    function removeVisualizeContainers() {
+        const idsToRemove = [
+            'load', 'load2', 'load3', 'load4',
+            'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'
+        ];
+        idsToRemove.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        });
+    }
+
     btn.addEventListener('click', async () => {
         if (isLoaded) return;
+
+        // Clean up external visualization containers
+        removeVisualizeContainers();
 
         // Logic to find the maximum page number
         let maxPage = 1;
