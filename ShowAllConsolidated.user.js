@@ -59,7 +59,6 @@
     else if (path.includes('/place')) pageType = 'place-events';
     else if (path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
 
-    // Update prefix with known pageType
     if (pageType) logPrefix = `[MB-ShowAll-Debug: ${pageType}]`;
     log('Initializing script for path:', path);
 
@@ -68,7 +67,7 @@
         return;
     }
 
-    // --- UI ---
+    // --- UI Elements ---
     const btn = document.createElement('button');
     btn.textContent = `C: Show all ${pageType.replace('-', ' ')}`;
     btn.style.cssText = 'margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s;';
@@ -91,9 +90,11 @@
         .mb-show-all-btn:disabled { background-color: #ddd !important; border-color: #bbb !important; cursor: default !important; color: #000 !important; }
         .sort-icon { cursor: pointer; margin-left: 4px; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
-        .mb-toggle-h3 { cursor: pointer; user-select: none; }
-        .mb-toggle-h3:hover { color: #222; }
-        .mb-toggle-icon { font-size: 0.8em; margin-right: 5px; color: #666; }
+        .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; }
+        .mb-toggle-h3:hover { color: #222; background-color: #f9f9f9; }
+        .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; }
+        .mb-master-toggle { cursor: pointer; color: #0066cc; font-weight: bold; margin-bottom: 15px; display: inline-block; font-size: 1.1em; }
+        .mb-master-toggle:hover { text-decoration: underline; }
     `;
     document.head.appendChild(style);
 
@@ -128,7 +129,6 @@
                     if (p) maxPage = parseInt(p, 10);
                 }
             }
-            console.log(`${logPrefix} Detected maxPage for Work: ${maxPage}`);
             return maxPage;
         } catch (err) {
             log('Error fetching maxPage for Work:', err);
@@ -147,18 +147,13 @@
     function updateH2Count(count) {
         const table = document.querySelector('table.tbl');
         if (!table) return;
-
         let allH2s = Array.from(document.querySelectorAll('h2'));
         let targetH2 = null;
-
         for (let i = 0; i < allH2s.length; i++) {
             if (allH2s[i].compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING) {
                 targetH2 = allH2s[i];
-            } else {
-                break;
-            }
+            } else break;
         }
-
         if (targetH2) {
             const existing = targetH2.querySelector('.mb-row-count-stat');
             if (existing) existing.remove();
@@ -240,7 +235,6 @@
             for (let p = 1; p <= maxPage; p++) {
                 if (stopRequested) break;
                 pagesProcessed++;
-                log(`Fetching page ${p}...`);
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
 
                 const fetchUrl = new URL(baseUrl);
@@ -270,11 +264,7 @@
                         let h3 = table.previousElementSibling;
                         while (h3 && h3.nodeName !== 'H3') h3 = h3.previousElementSibling;
                         const category = h3 ? h3.textContent.trim() : 'Other';
-                        if (!groupedRows.has(category)) {
-                            log(`New ReleaseGroup type detected: ${category}`);
-                            groupedRows.set(category, []);
-                        }
-                        let countBefore = groupedRows.get(category).length;
+                        if (!groupedRows.has(category)) groupedRows.set(category, []);
                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
                             if (row.cells.length > 1) {
                                 const newRow = document.importNode(row, true);
@@ -290,9 +280,7 @@
                         tableBody.childNodes.forEach(node => {
                             if (node.nodeName === 'TR') {
                                 if (node.classList.contains('subh')) {
-                                    const oldStatus = currentStatus;
                                     currentStatus = node.textContent.trim() || 'Unknown';
-                                    if (oldStatus !== currentStatus) log(`Status change: "${oldStatus}" -> "${currentStatus}"`);
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
@@ -348,18 +336,37 @@
             const firstTable = container.querySelector('table.tbl');
             if (firstTable && firstTable.tHead) headerHtml = firstTable.tHead.innerHTML;
 
-            container.querySelectorAll('h3, table.tbl').forEach(el => el.remove());
+            container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => el.remove());
+
+            // Master Toggle
+            const masterToggle = document.createElement('div');
+            masterToggle.className = 'mb-master-toggle';
+            masterToggle.textContent = 'Show▼/Hide▲ all discography types or click the individual type';
+            let allCollapsed = true;
+            masterToggle.onclick = () => {
+                const subTables = container.querySelectorAll('table.tbl');
+                const subHeaders = container.querySelectorAll('.mb-toggle-h3');
+                allCollapsed = !allCollapsed;
+                subTables.forEach(t => t.style.display = allCollapsed ? 'none' : '');
+                subHeaders.forEach(h => h.querySelector('.mb-toggle-icon').textContent = allCollapsed ? '▲' : '▼');
+            };
+            container.appendChild(masterToggle);
 
             map.forEach((rows, category) => {
                 const h3 = document.createElement('h3');
                 h3.className = 'mb-toggle-h3';
-                h3.innerHTML = `<span class="mb-toggle-icon">▼</span>${category} <span class="mb-row-count-stat">(${rows.length})</span>`;
-                container.appendChild(h3);
-
                 const table = document.createElement('table');
                 table.className = 'tbl';
                 table.innerHTML = `<thead>${headerHtml}</thead><tbody></tbody>`;
                 rows.forEach(r => table.querySelector('tbody').appendChild(r));
+
+                // Collapse logic
+                const isAlbum = category.toLowerCase() === 'album';
+                const shouldStayOpen = isAlbum && rows.length < 40;
+                table.style.display = shouldStayOpen ? '' : 'none';
+
+                h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${category} <span class="mb-row-count-stat">(${rows.length})</span>`;
+                container.appendChild(h3);
                 container.appendChild(table);
 
                 h3.addEventListener('click', () => {
