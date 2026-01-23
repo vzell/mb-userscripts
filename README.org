@@ -19244,6 +19244,18 @@ Use the same Implementation logic like in the uploaded user script "ShowAllWorks
 In the uploaded userscript "ShowAllReleasesInReleaseGroups.user.js" actually DO NOT remove the "Tagger" column, only the
 "Relationships" column, like in the uploaded userscript "ShowAllReleases.user.js"
 
+** console.log('[MB Show All] Starting accumulation and header cleanup...');
+
+In the uploaded userscript refactor the console log statements to look like
+
+console.log('[MB Show All Releases in ReleaseGroup] Starting accumulation and header cleanup...');
+
+instead of
+
+console.log('[MB Show All] Starting accumulation and header cleanup...');
+
+but create a variable for the text "[MB Show All Releases in ReleaseGroup] " and concatenate this in the actual consol.log call
+
 
 * ShowAllWorks
 ** initial
@@ -19424,6 +19436,25 @@ In the uploaded userscripts add the functionality from the userscript "ShowAllRe
   side. Please add timings for just the loading of pages AND the rendering of the resulting table separately
 - add a search filter box next to the button that lets you filter the events by the different columns (for example Type, Role, Location, Date, etc) instantly after they've loaded?
  
+** remove sanojjonas visualize stuff userscript
+
+In the uploaded userscript, when pressing the "Show all events" button remove all container (if present) which look like
+
+#+begin_example
+<div id="load"><h1>deeper 3471</h1></div>
+<div id="load2">
+<div id="load3">
+<div id="load4">
+<div id="bottom1">
+<div id="bottom2">
+<div id="bottom3">
+<div id="bottom4">
+<div id="bottom6">
+<div id="bottom6">
+#+end_example
+
+coming from sanojjonas visualize stuff userscript
+
 
 * ShowAllReleases
 
@@ -20781,6 +20812,27 @@ t @ content.js:10
 #+end_example
 
 ** TODO:
+*** remove from events sanojjonas visualize stuff userscript
+
+In the uploaded userscript, when pressing the "C: Show all artist main" button remove all container (if present) which look like
+
+#+begin_example
+<div id="load">
+<div id="load2">
+<div id="load3">
+<div id="load4">
+<div id="bottom1">
+<div id="bottom2">
+<div id="bottom3">
+<div id="bottom4">
+<div id="bottom5">
+<div id="bottom6">
+#+end_example
+
+coming from sanojjonas visualize stuff userscript
+for the pagetype: "artist-main"
+
 *** debugging: info about read release types,
 *** Submit button text: show number of rows
 *** On rg pages show debugging info about number per type and also number of types per type block
+*** on RG page do not remove the bottom of the page and remove the everything between "Discography" and the first type "Album"

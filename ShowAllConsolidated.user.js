@@ -59,8 +59,7 @@
     else if (path.includes('/recordings')) pageType = 'recordings';
     else if (path.includes('/releases')) pageType = 'releases';
     else if (path.includes('/works')) pageType = 'works';
-    else if (path.includes('/release-group/')) pageType = 'rg-details';
-    else if (path.includes('/work/')) pageType = 'work-details';
+    else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
     else if (path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-main';
 
     log('Detected pageType:', pageType);
@@ -136,7 +135,7 @@
     filterInput.addEventListener('input', () => {
         const query = filterInput.value.toLowerCase();
         log('Filtering with query:', query);
-        if (pageType === 'rg-details' || pageType === 'artist-main') {
+        if (pageType === 'releasegroup-releases' || pageType === 'artist-main') {
             const filteredMap = new Map();
             groupedRows.forEach((rows, key) => {
                 const matches = rows.filter(r => r.textContent.toLowerCase().includes(query));
@@ -254,7 +253,7 @@
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => {
                                         if (newRow.cells[idx]) newRow.deleteCell(idx);
                                     });
-                                    if (pageType === 'rg-details') {
+                                    if (pageType === 'releasegroup-releases') {
                                         if (!groupedRows.has(currentStatus)) groupedRows.set(currentStatus, []);
                                         groupedRows.get(currentStatus).push(newRow);
                                     } else allRows.push(newRow);
@@ -288,7 +287,7 @@
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
             log('Starting final render.');
-            if (pageType === 'rg-details' || pageType === 'artist-main') {
+            if (pageType === 'releasegroup-releases' || pageType === 'artist-main') {
                 renderGroupedTable(groupedRows, pageType === 'artist-main');
             } else {
                 renderFinalTable(allRows);
@@ -440,7 +439,7 @@
                 };
 
                 const query = filterInput.value.toLowerCase();
-                if (pageType === 'rg-details') {
+                if (pageType === 'releasegroup-releases') {
                     groupedRows.forEach(rows => rows.sort(sortFn));
                     const filteredMap = new Map();
                     groupedRows.forEach((rows, key) => {
