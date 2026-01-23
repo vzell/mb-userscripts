@@ -108,6 +108,24 @@
     // Sorting states for multi-table layout (artist-main)
     let multiTableSortStates = new Map();
 
+    /**
+     * Removes specific containers from the sanojjonas visualize stuff userscript
+     */
+    function removeSanojjonasContainers() {
+        const idsToRemove = [
+            'load', 'load2', 'load3', 'load4',
+            'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'
+        ];
+        log('Cleaning up sanojjonas containers if present.');
+        idsToRemove.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                log(`Removing container: #${id}`);
+                el.remove();
+            }
+        });
+    }
+
     stopBtn.addEventListener('click', () => {
         log('Stop requested by user.');
         stopRequested = true;
@@ -162,6 +180,11 @@
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
             if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
         });
+
+        // Remove sanojjonas containers for specific page types
+        if (pageType === 'events' || pageType === 'artist-main') {
+            removeSanojjonasContainers();
+        }
 
         btn.disabled = true;
         btn.style.color = '#000';
@@ -311,12 +334,6 @@
             const existingTbls = container.querySelectorAll('table.tbl');
             existingH3s.forEach(el => el.remove());
             existingTbls.forEach(el => el.remove());
-
-            const instrumentDiv = document.getElementById('bottom1');
-            if (instrumentDiv) {
-                log('Removing Instrument Table.');
-                instrumentDiv.remove();
-            }
 
             map.forEach((rows, category) => {
                 const h3 = document.createElement('h3');
