@@ -21027,3 +21027,7 @@ their own table headings) and put the subheader in a '<h3><subheader></h3>' righ
 structure of URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f when they are finally
 rendered.
 
+*** button text
+
+adjust the button text when Loading datapages to not be greyed out, but change the mousepointer to just a standard mousepointer instead of a finger
+actually ist should still be diabled during load, but still make the visual changes

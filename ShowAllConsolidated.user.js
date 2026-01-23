@@ -101,7 +101,14 @@
     const style = document.createElement('style');
     style.textContent = `
         .mb-show-all-btn-active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-        .mb-show-all-btn:disabled { background-color: #ddd !important; border-color: #bbb !important; cursor: default !important; color: #000 !important; }
+        /* Target disabled state explicitly to prevent greying out */
+        button.mb-show-all-btn-loading:disabled {
+            cursor: default !important;
+            color: buttontext !important;
+            background-color: buttonface !important;
+            opacity: 1 !important;
+            border: 1px solid #767676 !important;
+        }
         .sort-icon { cursor: pointer; margin-left: 4px; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; }
@@ -250,6 +257,7 @@
         if (pageType === 'events' || pageType === 'artist-releasegroups') removeSanojjonasContainers();
 
         btn.disabled = true;
+        btn.classList.add('mb-show-all-btn-loading');
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
         timerDisplay.textContent = 'Fetching...';
@@ -338,6 +346,7 @@
             updateH2Count(totalRows);
             btn.textContent = `Loaded ${totalRows} rows from ${pagesProcessed} pages`;
             btn.disabled = false;
+            btn.classList.remove('mb-show-all-btn-loading');
             stopBtn.style.display = 'none';
             filterContainer.style.display = 'inline-block';
 
@@ -356,6 +365,7 @@
             log('Critical Error during fetch:', err);
             btn.textContent = 'Error';
             btn.disabled = false;
+            btn.classList.remove('mb-show-all-btn-loading');
         }
     });
 
@@ -400,7 +410,6 @@
             table.innerHTML = `<thead>${headerHtml}</thead><tbody></tbody>`;
             rows.forEach(r => table.querySelector('tbody').appendChild(r));
 
-            // Logic to stay open if category is 'album' or 'official' (common main sections)
             const catLower = category.toLowerCase();
             const shouldStayOpen = (catLower === 'album' || catLower === 'official') && rows.length < 40;
             table.style.display = shouldStayOpen ? '' : 'none';
