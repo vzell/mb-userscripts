@@ -17,11 +17,32 @@
 // @license      MIT
 // ==/UserScript==
 
+// ==UserScript==
+// @name         VZ: MusicBrainz - Show All Consolidated
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      0.9+2026-01-23
+// @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
+// @author       Gemini (directed by vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @match        *://*.musicbrainz.org/artist/*
+// @match        *://*.musicbrainz.org/release-group/*
+// @match        *://*.musicbrainz.org/work/*
+// @grant        GM_xmlhttpRequest
+// @license      MIT
+// ==/UserScript==
+
 (function() {
     'use strict';
 
     const currentUrl = new URL(window.location.href);
     const path = currentUrl.pathname;
+
+    console.debug('[ShowAllConsolidated] Initializing script for:', path);
 
     let pageType = '';
     let headerContainer = document.querySelector('.artistheader h1') ||
@@ -36,7 +57,12 @@
     else if (path.includes('/work/')) pageType = 'work-details';
     else if (path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-main';
 
-    if (!pageType || !headerContainer) return;
+    console.debug('[ShowAllConsolidated] Detected pageType:', pageType);
+
+    if (!pageType || !headerContainer) {
+        console.debug('[ShowAllConsolidated] Required elements not found. Terminating.');
+        return;
+    }
 
     // --- UI ---
     const btn = document.createElement('button');
@@ -77,6 +103,7 @@
     let multiTableSortStates = new Map();
 
     stopBtn.addEventListener('click', () => {
+        console.debug('[ShowAllConsolidated] Stop requested by user.');
         stopRequested = true;
         stopBtn.disabled = true;
         stopBtn.textContent = 'Stopping...';
@@ -84,6 +111,7 @@
 
     filterInput.addEventListener('input', () => {
         const query = filterInput.value.toLowerCase();
+        console.debug('[ShowAllConsolidated] Filtering with query:', query);
         if (pageType === 'rg-details' || pageType === 'artist-main') {
             const filteredMap = new Map();
             groupedRows.forEach((rows, key) => {
@@ -99,6 +127,8 @@
     btn.addEventListener('click', async () => {
         if (isLoaded) return;
 
+        console.debug('[ShowAllConsolidated] Start button clicked.');
+
         let maxPage = 1;
         const pagination = document.querySelector('ul.pagination');
         if (pagination) {
@@ -111,6 +141,8 @@
             }
         }
 
+        console.debug('[ShowAllConsolidated] Total pages to fetch:', maxPage);
+
         if (maxPage > 100 && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) return;
 
         isLoaded = true;
@@ -119,6 +151,7 @@
         groupedRows = new Map();
 
         // Hide all Bigboxes and Batch tables
+        console.debug('[ShowAllConsolidated] Hiding auxiliary UI elements.');
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
             if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
@@ -135,8 +168,12 @@
 
         try {
             for (let p = 1; p <= maxPage; p++) {
-                if (stopRequested) break;
+                if (stopRequested) {
+                    console.debug('[ShowAllConsolidated] Loop broken due to stop request.');
+                    break;
+                }
 
+                console.debug(`[ShowAllConsolidated] Fetching page ${p}...`);
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
                 const html = await fetchHtml(`${baseUrl}?page=${p}`);
                 const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -193,6 +230,7 @@
             }
 
             // Cleanup headers of live tables
+            console.debug('[ShowAllConsolidated] Cleaning up table headers.');
             document.querySelectorAll('table.tbl').forEach(table => {
                 if (table.tHead) {
                     const toRemove = [];
@@ -210,8 +248,10 @@
             stopBtn.style.display = 'none';
             filterInput.style.display = 'inline-block';
 
+            console.debug('[ShowAllConsolidated] Removing pagination elements.');
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
+            console.debug('[ShowAllConsolidated] Starting final render.');
             if (pageType === 'rg-details' || pageType === 'artist-main') {
                 renderGroupedTable(groupedRows, pageType === 'artist-main');
             } else {
@@ -222,9 +262,10 @@
 
             const endRender = performance.now();
             timerDisplay.textContent = `(Fetch: ${((endFetch - startTime) / 1000).toFixed(2)}s, Render: ${((endRender - endFetch) / 1000).toFixed(2)}s)`;
+            console.debug(`[ShowAllConsolidated] Complete. Fetch: ${timerDisplay.textContent}`);
 
         } catch (err) {
-            console.error(err);
+            console.error('[ShowAllConsolidated] Error during execution:', err);
             btn.textContent = 'Error';
             btn.disabled = false;
         }
@@ -242,25 +283,25 @@
             const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
             if (!container) return;
 
-            // Capture the header HTML from the first valid table BEFORE deleting everything
             let headerHtml = '';
             const firstTable = container.querySelector('table.tbl');
             if (firstTable && firstTable.tHead) {
                 headerHtml = firstTable.tHead.innerHTML;
             } else if (document.querySelector('thead')) {
-                // Fallback for edge cases
                 headerHtml = document.querySelector('thead').innerHTML;
             }
 
-            // Now perform cleanup
+            console.debug('[ShowAllConsolidated] Cleaning up existing artist-main tables.');
             const existingH3s = container.querySelectorAll('h3');
             const existingTbls = container.querySelectorAll('table.tbl');
             existingH3s.forEach(el => el.remove());
             existingTbls.forEach(el => el.remove());
 
-            // Remove special container "Instrument Table"
             const instrumentDiv = document.getElementById('bottom1');
-            if (instrumentDiv) instrumentDiv.remove();
+            if (instrumentDiv) {
+                console.debug('[ShowAllConsolidated] Removing Instrument Table.');
+                instrumentDiv.remove();
+            }
 
             map.forEach((rows, category) => {
                 const h3 = document.createElement('h3');
@@ -270,7 +311,6 @@
                 const table = document.createElement('table');
                 table.className = 'tbl';
                 table.dataset.category = category;
-                // Use the captured headerHtml
                 table.innerHTML = `<thead>${headerHtml}</thead><tbody></tbody>`;
                 rows.forEach(r => table.querySelector('tbody').appendChild(r));
                 container.appendChild(table);
@@ -309,6 +349,7 @@
             }
 
             th.onclick = () => {
+                console.debug(`[ShowAllConsolidated] Sorting table [${category}] by column [${index}]`);
                 if (state.lastSortIndex === index) state.sortAscending = !state.sortAscending;
                 else { state.sortAscending = true; state.lastSortIndex = index; }
 
@@ -333,7 +374,7 @@
     }
 
     function makeSortable() {
-        if (pageType === 'artist-main') return; // Handled by makeTableSortable per table
+        if (pageType === 'artist-main') return;
 
         const headers = document.querySelectorAll('table.tbl thead th');
         let lastSortIndex = -1;
@@ -350,6 +391,7 @@
             }
 
             th.onclick = () => {
+                console.debug(`[ShowAllConsolidated] Sorting by column [${index}]`);
                 if (lastSortIndex === index) sortAscending = !sortAscending;
                 else { sortAscending = true; lastSortIndex = index; }
 

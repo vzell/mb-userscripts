@@ -19862,3 +19862,6 @@ Please also remove for these types of URLs, the following container (if present)
 <div id="bottom1" style="overflow-x: auto; width: 804px;"><h2>Instrument Table</h2><br><table class="sanojjonas" border="1px solid black"> .....
 #+end_example
 
+** 3
+
+Implement comprehensive debug logging, but do not touch the code logic and the rest
