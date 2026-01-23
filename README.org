@@ -19865,3 +19865,557 @@ Please also remove for these types of URLs, the following container (if present)
 ** 3
 
 Implement comprehensive debug logging, but do not touch the code logic and the rest
+
+** works
+
+Please check the uploaded user script, specifically the code "Auto-redirect logic to ensure we are on the recording relationship view"
+and the special fetching of data for these types of URLs, example https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db
+
+#+begin_example
+        try {
+            for (let p = 1; p <= maxPage; p++) {
+                btn.textContent = `Loading page ${p} of ${maxPage}...`;
+                const targetUrl = `${baseUrl}?direction=${direction}&link_type_id=${linkTypeId}&page=${p}`;
+                console.log(`[MB Show All Recordings] Fetching page ${p} of ${maxPage}...`);
+#+end_example
+
+and implement it in the current script, as right now it's not working
+
+** 1
+
+Please add debug statements. It looks like its fetching data, but in the end it seems there is a redirect to where we start off. The button has again the same initial text
+
+** 2
+
+Please use the implementation from the uploaded script, as that one works perfect
+
+[MB-ShowAll-Debug] Script initialized. Checking environment... 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Detection completed. {pageType: 'work-details', hasHeader: true}
+react-dom.production.min.js:132 Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+fo @ react-dom.production.min.js:132
+Qs @ react-dom.production.min.js:225
+ku @ react-dom.production.min.js:280
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+react-dom.production.min.js:292 Uncaught Error: Minified React error #423; visit https://reactjs.org/docs/error-decoder.html?invariant=423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Sl @ react-dom.production.min.js:292
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+ou @ react-dom.production.min.js:270
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+favicon-ico:1  GET https://brucebase.wikidot.com/favicon-ico net::ERR_TOO_MANY_REDIRECTS
+Image
+setFavicon @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1684
+addExternalLink @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1333
+xhr.onreadystatechange @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1376
+(anonymous) @ xhr.js:88
+XMLHttpRequest.send
+(anonymous) @ trycatch.js:164
+(anonymous) @ xhr.js:135
+addHiddenLinks @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1392
+main @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1227
+(anonymous) @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1158
+At @ VM4452:10
+(anonymous) @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1
+window.__f__mkqf4bnj.2q @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1
+At @ VM4452:10
+r.setMessageListener.r @ VM4452:90
+(anonymous) @ VM4452:93
+_ @ VM4452:22
+$t @ content.js:9
+h @ content.js:65
+d @ content.js:68
+(anonymous) @ content.js:68
+Xn @ content.js:15
+send @ content.js:68
+w @ content.js:63
+(anonymous) @ content.js:64
+(anonymous) @ content.js:2
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Button clicked. Starting fetch process. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Pagination check done. Max page: 3 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Fetching page 1... 
+Navigated to https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db
+userscript.html?name=MB%253A-Supercharged-Cover-Art-Edits.user.js&id=0c53d926-6032-49a1-9002-908a5d53bc1a:10503 Will not be able to get dimensions, script not installed?
+userscript.html?name=sanojjonas-visualise-stuff.user.js&id=39cb5d25-a89a-401b-9c61-6d1089d68abe:1065 work & overview not allowed yet
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Script initialized. Checking environment... 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Work page detected without params. Redirecting to recording relationship view... 
+react-dom.production.min.js:132 Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+fo @ react-dom.production.min.js:132
+Qs @ react-dom.production.min.js:225
+ku @ react-dom.production.min.js:280
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+react-dom.production.min.js:292 Uncaught Error: Minified React error #423; visit https://reactjs.org/docs/error-decoder.html?invariant=423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Sl @ react-dom.production.min.js:292
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+ou @ react-dom.production.min.js:270
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+Navigated to https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db?direction=2&link_type_id=278&page=1
+userscript.html?name=MB%253A-Supercharged-Cover-Art-Edits.user.js&id=0c53d926-6032-49a1-9002-908a5d53bc1a:10503 Will not be able to get dimensions, script not installed?
+userscript.html?name=sanojjonas-visualise-stuff.user.js&id=39cb5d25-a89a-401b-9c61-6d1089d68abe:1065 work & overview not allowed yet
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Script initialized. Checking environment... 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Detection completed. {pageType: 'work-details', hasHeader: true}
+
+** why
+
+This is the debug from the woking script "ShowAllRecordingsInWorks.user.js"
+
+#+begin_example
+[MB Show All Recordings] Redirecting to recording relationship view...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Script initialized. Checking environment... 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Work page detected without params. Redirecting to recording relationship view... 
+react-dom.production.min.js:132 Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+fo @ react-dom.production.min.js:132
+Qs @ react-dom.production.min.js:225
+ku @ react-dom.production.min.js:280
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+react-dom.production.min.js:292 Uncaught Error: Minified React error #423; visit https://reactjs.org/docs/error-decoder.html?invariant=423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Sl @ react-dom.production.min.js:292
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+ou @ react-dom.production.min.js:270
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+Navigated to https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db?direction=2&link_type_id=278&page=1
+userscript.html?name=MB%253A-Supercharged-Cover-Art-Edits.user.js&id=0c53d926-6032-49a1-9002-908a5d53bc1a:10503 Will not be able to get dimensions, script not installed?
+userscript.html?name=sanojjonas-visualise-stuff.user.js&id=39cb5d25-a89a-401b-9c61-6d1089d68abe:1065 work & overview not allowed yet
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Script initialized. Checking environment... 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Detection completed. {pageType: 'work-details', hasHeader: true}
+react-dom.production.min.js:132 Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+fo @ react-dom.production.min.js:132
+Qs @ react-dom.production.min.js:225
+ku @ react-dom.production.min.js:280
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+react-dom.production.min.js:292 Uncaught Error: Minified React error #423; visit https://reactjs.org/docs/error-decoder.html?invariant=423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Sl @ react-dom.production.min.js:292
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+ou @ react-dom.production.min.js:270
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+favicon-ico:1  GET https://brucebase.wikidot.com/favicon-ico net::ERR_TOO_MANY_REDIRECTS
+Image
+setFavicon @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1684
+addExternalLink @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1333
+xhr.onreadystatechange @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1376
+(anonymous) @ xhr.js:88
+XMLHttpRequest.send
+(anonymous) @ trycatch.js:164
+(anonymous) @ xhr.js:135
+addHiddenLinks @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1392
+main @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1227
+(anonymous) @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1158
+At @ VM4776:10
+(anonymous) @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1
+window.__f__mkqbl1r6.mlh @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1
+At @ VM4776:10
+r.setMessageListener.r @ VM4776:90
+(anonymous) @ VM4776:93
+_ @ VM4776:22
+$t @ content.js:9
+h @ content.js:65
+d @ content.js:68
+(anonymous) @ content.js:68
+Xn @ content.js:15
+send @ content.js:68
+w @ content.js:63
+(anonymous) @ content.js:64
+(anonymous) @ content.js:2
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Recordings-In-Works.user.js&id=a472f993-2124-4a50-b4bf-c4b3f3873fdf:84 [MB Show All Recordings] Starting accumulation...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Recordings-In-Works.user.js&id=a472f993-2124-4a50-b4bf-c4b3f3873fdf:110 [MB Show All Recordings] Fetching page 1 of 3...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Recordings-In-Works.user.js&id=a472f993-2124-4a50-b4bf-c4b3f3873fdf:110 [MB Show All Recordings] Fetching page 2 of 3...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Recordings-In-Works.user.js&id=a472f993-2124-4a50-b4bf-c4b3f3873fdf:110 [MB Show All Recordings] Fetching page 3 of 3...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Recordings-In-Works.user.js&id=a472f993-2124-4a50-b4bf-c4b3f3873fdf:126 [MB Show All Recordings] Successfully loaded 674 rows.
+#+end_example
+
+everything is fine here. Why can*t we just include the saem logic ??
+
+**
+
+Please fix the functionality in the uploaded userscript for URLs of type https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db
+with previous findings of you
+
+
+
+see also the following snippet
+
+#+begin_example
+(function() {
+    'use strict';
+
+    const DEBUG = true;
+    const log = (msg, data = '') => { if (DEBUG) console.log(`[MB-ShowAll-Debug] ${msg}`, data); };
+
+    const currentUrl = new URL(window.location.href);
+    const path = currentUrl.pathname;
+    const params = currentUrl.searchParams;
+
+    // --- EXACT LOGIC FROM ShowAllRecordingsInWorks.user.js ---
+    if (path.includes('/work/') && !path.includes('/recordings') && !path.includes('/releases')) {
+        if (!params.has('direction') || !params.has('link_type_id')) {
+            console.log('[MB Show All Recordings] Redirecting to recording relationship view...');
+            params.set('direction', '2');
+            params.set('link_type_id', '278');
+            if (!params.has('page')) params.set('page', '1');
+            window.location.replace(currentUrl.toString());
+            return;
+        }
+    }
+
+    log('Script initialized. Checking environment...');
+
+    let pageType = '';
+    let headerContainer = document.querySelector('.artistheader h1') ||
+                          document.querySelector('.rgheader h1') ||
+                          document.querySelector('h1 a bdi')?.parentNode;
+
+    if (path.includes('/events')) pageType = 'events';
+    else if (path.includes('/recordings')) pageType = 'recordings';
+    else if (path.includes('/releases')) pageType = 'releases';
+    else if (path.includes('/works')) pageType = 'works';
+    else if (path.includes('/release-group/')) pageType = 'rg-details';
+    else if (path.includes('/work/')) pageType = 'work-details';
+    else if (path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-main';
+
+    log('Detection completed.', { pageType, hasHeader: !!headerContainer });
+
+    if (!pageType || !headerContainer) {
+        log('Termination: pageType or headerContainer missing.');
+        return;
+    }
+
+    // --- UI Setup ---
+    const btn = document.createElement('button');
+    btn.textContent = `C: Show all ${pageType.replace('-', ' ')}`;
+    btn.style.cssText = 'margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer;';
+    btn.type = 'button';
+
+    const stopBtn = document.createElement('button');
+    stopBtn.textContent = 'Stop';
+    stopBtn.style.cssText = 'display:none; margin-left:5px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; background-color:#f44336; color:white;';
+
+    const filterInput = document.createElement('input');
+    filterInput.placeholder = `Filter ${pageType}...`;
+    filterInput.style.cssText = 'display:none; margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; border:1px solid #ccc; border-radius:3px;';
+
+    const timerDisplay = document.createElement('span');
+    timerDisplay.style.cssText = 'margin-left:10px; font-size:0.5em; color:#666; vertical-align:middle;';
+
+    headerContainer.appendChild(btn);
+    headerContainer.appendChild(stopBtn);
+    headerContainer.appendChild(filterInput);
+    headerContainer.appendChild(timerDisplay);
+
+    let allRows = [];
+    let isLoaded = false;
+    let stopRequested = false;
+
+    btn.addEventListener('click', async () => {
+        const prefix = pageType === 'work-details' ? '[MB Show All Recordings]' : '[MB-ShowAll-Debug]';
+        console.log(`${prefix} Starting accumulation...`);
+        
+        if (isLoaded) return;
+
+        let maxPage = 1;
+        const pagination = document.querySelector('ul.pagination');
+        if (pagination) {
+            const links = Array.from(pagination.querySelectorAll('li a'));
+            links.forEach(link => {
+                const p = new URL(link.href, window.location.origin).searchParams.get('page');
+                if (p) maxPage = Math.max(maxPage, parseInt(p, 10));
+            });
+        }
+        log(`Max page detected: ${maxPage}`);
+
+        isLoaded = true;
+        stopRequested = false;
+        btn.disabled = true;
+        stopBtn.style.display = 'inline-block';
+        timerDisplay.textContent = 'Fetching...';
+
+        const startTime = performance.now();
+        const baseUrl = window.location.origin + path;
+
+        try {
+            for (let p = 1; p <= maxPage; p++) {
+                if (stopRequested) {
+                    console.log(`${prefix} Stop requested at page ${p}`);
+                    break;
+                }
+
+                console.log(`${prefix} Fetching page ${p} of ${maxPage}...`);
+                btn.textContent = `Loading ${p}/${maxPage}`;
+                
+                let fetchUrl = new URL(baseUrl);
+                fetchUrl.searchParams.set('page', p);
+                // Carry over work specific params if they exist
+                if (params.has('direction')) fetchUrl.searchParams.set('direction', params.get('direction'));
+                if (params.has('link_type_id')) fetchUrl.searchParams.set('link_type_id', params.get('link_type_id'));
+
+                const html = await fetchHtml(fetchUrl.toString());
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const tableBody = doc.querySelector('table.tbl tbody');
+
+                if (tableBody) {
+                    const rows = tableBody.querySelectorAll('tr:not(.explanation)');
+                    rows.forEach(row => {
+                        if (row.cells.length > 1) {
+                            allRows.push(document.importNode(row, true));
+                        }
+                    });
+                }
+            }
+
+            console.log(`${prefix} Successfully loaded ${allRows.length} rows.`);
+            renderFinalTable(allRows);
+            
+            btn.textContent = 'All Loaded';
+            stopBtn.style.display = 'none';
+            filterInput.style.display = 'inline-block';
+            
+            const endTime = performance.now();
+            timerDisplay.textContent = `(${((endTime - startTime) / 1000).toFixed(2)}s)`;
+        } catch (err) {
+            console.error(`${prefix} Error:`, err);
+            btn.textContent = 'Error';
+            btn.disabled = false;
+        }
+    });
+
+    function renderFinalTable(rows) {
+        const table = document.querySelector('table.tbl');
+        const tbody = table?.querySelector('tbody');
+        if (!tbody) return;
+
+        document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
+        
+        tbody.innerHTML = '';
+        rows.forEach(r => tbody.appendChild(r));
+    }
+
+    function fetchHtml(url) {
+        return new Promise((resolve, reject) => {
+            GM_xmlhttpRequest({
+                method: 'GET', url: url,
+                onload: (res) => resolve(res.responseText),
+                onerror: (err) => reject(err)
+            });
+        });
+    }
+})();
+#+end_example
+
+
+** finally
+
+Adjust the code in the uploaded script "ShowAllConsolidated.user.js" for the case that URLs are of type
+https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db
+
+with the working implementation for the same case in the uploaded script "ShowAllConsolidatedWorking.user.js"
+
+The relevant code seems to be
+
+#+begin_example
+    const currentUrl = new URL(location.href);
+    const path = currentUrl.pathname;
+    const params = currentUrl.searchParams;
+
+    /* ---------------------------------------------------------
+     * Redirect: Work → Recording relationships
+     * --------------------------------------------------------- */
+    if (
+        path.startsWith('/work/') &&
+        (!params.has('direction') || !params.has('link_type_id'))
+    ) {
+        params.set('direction', '2');
+        params.set('link_type_id', '278');
+        params.set('page', '1');
+        location.replace(currentUrl.toString());
+        return;
+    }
+
+    /* ---------------------------------------------------------
+     * Page type detection
+     * --------------------------------------------------------- */
+    const isWorkRecordings =
+        path.startsWith('/work/') &&
+        params.get('direction') === '2' &&
+        params.get('link_type_id') === '278';
+
+    let pageType = '';
+
+    if (isWorkRecordings) pageType = 'work-recordings';
+    else if (path.includes('/events')) pageType = 'events';
+    else if (path.includes('/recordings')) pageType = 'recordings';
+    else if (path.includes('/releases')) pageType = 'releases';
+    else if (path.includes('/works')) pageType = 'works';
+    else if (path.includes('/release-group/')) pageType = 'rg-details';
+    else if (path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-main';
+#+end_example
+
+and
+
+#+begin_example
+                const u = new URL(baseUrl);
+                u.searchParams.set('page', page);
+                if (params.has('direction')) u.searchParams.set('direction', params.get('direction'));
+                if (params.has('link_type_id')) u.searchParams.set('link_type_id', params.get('link_type_id'));
+#+end_example
+
+don't touch other code and UI logic
