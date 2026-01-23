@@ -39,7 +39,6 @@
                           document.querySelector('.labelheader h1') ||
                           document.querySelector('.seriesheader h1') ||
                           document.querySelector('.placeheader h1') ||
-                          document.querySelector('.recordingheader h1') ||
                           document.querySelector('h1 a bdi')?.parentNode ||
                           document.querySelector('h1');
 
@@ -142,14 +141,28 @@
     }
 
     function updateH2Count(count) {
-        const h2 = document.querySelector('h2');
-        if (h2) {
-            const existing = h2.querySelector('.mb-row-count-stat');
+        const table = document.querySelector('table.tbl');
+        if (!table) return;
+
+        let allH2s = Array.from(document.querySelectorAll('h2'));
+        let targetH2 = null;
+
+        for (let i = 0; i < allH2s.length; i++) {
+            if (allH2s[i].compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                targetH2 = allH2s[i];
+            } else {
+                break;
+            }
+        }
+
+        if (targetH2) {
+            const existing = targetH2.querySelector('.mb-row-count-stat');
             if (existing) existing.remove();
             const span = document.createElement('span');
             span.className = 'mb-row-count-stat';
             span.textContent = `(${count})`;
-            h2.appendChild(span);
+            targetH2.appendChild(span);
+            log(`Updated H2 count on: "${targetH2.textContent.replace(/\(\d+\)/, '').trim()}"`);
         }
     }
 
@@ -255,9 +268,10 @@
                         while (h3 && h3.nodeName !== 'H3') h3 = h3.previousElementSibling;
                         const category = h3 ? h3.textContent.trim() : 'Other';
                         if (!groupedRows.has(category)) {
-                            log(`New ReleaseGroup type: ${category}`);
+                            log(`New ReleaseGroup type detected: ${category}`);
                             groupedRows.set(category, []);
                         }
+                        let countBefore = groupedRows.get(category).length;
                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
                             if (row.cells.length > 1) {
                                 const newRow = document.importNode(row, true);
@@ -265,6 +279,7 @@
                                 groupedRows.get(category).push(newRow);
                             }
                         });
+                        log(`Found ${groupedRows.get(category).length - countBefore} rows for type "${category}" on page ${p}`);
                     });
                 } else {
                     const tableBody = doc.querySelector('table.tbl tbody');
@@ -273,7 +288,11 @@
                         tableBody.childNodes.forEach(node => {
                             if (node.nodeName === 'TR') {
                                 if (node.classList.contains('subh')) {
+                                    const oldStatus = currentStatus;
                                     currentStatus = node.textContent.trim() || 'Unknown';
+                                    if (oldStatus !== currentStatus) {
+                                        log(`Status change detected: "${oldStatus}" -> "${currentStatus}"`);
+                                    }
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
@@ -315,6 +334,7 @@
     });
 
     function renderFinalTable(rows) {
+        log('Rendering final flat table', { rowCount: rows.length });
         const tbody = document.querySelector('table.tbl tbody');
         if (!tbody) return;
         tbody.innerHTML = '';

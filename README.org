@@ -20946,7 +20946,21 @@ instead of
 <h2>Releases</h2>
 #+end_example
 
-
 *** On rg pages show debugging info about number per type and also number of types per type block
+
+The logic of finding the h2 headers does not work on all pages. It for example works on https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+but NOT on https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c or https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and the others
+
 *** on RG page do not remove the bottom of the page and remove the everything between "Discography" and the first type "Album"
+*** switch the logging prefix
+
+switch the logging prefix from "[MB-ShowAll-Debug] " to "[MB-ShowAll-Debug: <pageType>] " as soon as pageType is known
+
+*** Implement hide/show functionality
+
+Implement hide/show functionality for pages (e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f)
+which have h3 subtype headers like '<h3>Album</h3>', '<h3>Album + Compilation</h3>' by clicking on the headername. Also
+make adjust the UI so that it's obvious that these headername can toogle the display of the corresponding tabledata
+
+
 
