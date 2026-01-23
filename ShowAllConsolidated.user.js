@@ -13,6 +13,7 @@
 // @match        *://*.musicbrainz.org/artist/*
 // @match        *://*.musicbrainz.org/release-group/*
 // @match        *://*.musicbrainz.org/work/*
+// @match        *://*.musicbrainz.org/recording/*
 // @match        *://*.musicbrainz.org/label/*
 // @match        *://*.musicbrainz.org/series/*
 // @match        *://*.musicbrainz.org/place/*/events
@@ -38,6 +39,7 @@
                           document.querySelector('.labelheader h1') ||
                           document.querySelector('.seriesheader h1') ||
                           document.querySelector('.placeheader h1') ||
+                          document.querySelector('.recordingheader h1') ||
                           document.querySelector('h1 a bdi')?.parentNode ||
                           document.querySelector('h1');
 
@@ -56,6 +58,7 @@
     else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
     else if (path.includes('/label')) pageType = 'label';
     else if (path.includes('/series')) pageType = 'series';
+    else if (path.includes('/recording')) pageType = 'recording';
     else if (path.includes('/place')) pageType = 'place-events';
     else if (path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
 
