@@ -101,7 +101,6 @@
     const style = document.createElement('style');
     style.textContent = `
         .mb-show-all-btn-active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-        /* Target disabled state explicitly to prevent greying out */
         button.mb-show-all-btn-loading:disabled {
             cursor: default !important;
             color: buttontext !important;
@@ -219,6 +218,25 @@
         runFilter();
     });
 
+    // Helper to cleanup specific headers from a table
+    function cleanupHeaders(table) {
+        if (!table) return;
+        const thead = table.querySelector('thead tr');
+        if (!thead) return;
+        const headers = Array.from(thead.cells);
+        const indicesToRemove = [];
+        headers.forEach((th, idx) => {
+            const txt = th.textContent.trim();
+            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+                indicesToExcludeGlobal.add(idx); // Track for data row cleanup
+                indicesToRemove.push(idx);
+            }
+        });
+        indicesToRemove.sort((a, b) => b - a).forEach(idx => thead.deleteCell(idx));
+    }
+
+    let indicesToExcludeGlobal = new Set();
+
     btn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -248,6 +266,7 @@
         stopRequested = false;
         allRows = [];
         groupedRows = new Map();
+        indicesToExcludeGlobal.clear();
 
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
@@ -294,7 +313,7 @@
                 if (referenceTable) {
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
-                        if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') indicesToExclude.push(idx);
+                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) indicesToExclude.push(idx);
                     });
                 }
 
@@ -356,6 +375,10 @@
             } else {
                 renderFinalTable(allRows);
             }
+
+            // Final logic: Remove headers from all active tables on the page after rendering
+            document.querySelectorAll('table.tbl').forEach(cleanupHeaders);
+
             makeSortable();
 
             const endRender = performance.now();

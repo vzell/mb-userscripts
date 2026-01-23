@@ -21031,3 +21031,45 @@ rendered.
 
 adjust the button text when Loading datapages to not be greyed out, but change the mousepointer to just a standard mousepointer instead of a finger
 actually ist should still be diabled during load, but still make the visual changes
+
+** add timing info for sorting and processsing
+
+** add predictiv timing how long it probably will take to load all the pages
+
+** for numerical columns adjust the sorting to be numeric and not character based
+
+Please adjust the sorting for numerical columns to be numeric and not character based for the folowing URL types
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+- year
+- releases
+  
+https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+- tracks
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+- tracks
+
+https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+- tracks
+
+  
+** "Relationships"  
+
+In the uploaded userscript, after the introduction of the "↕" symbol after the header columns names, the functionality of 
+
+#+begin_example
+                        if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') indicesToExclude.push(idx);
+#+end_example
+
+still works, so the data columns are deleted, but not the headers
+Please remove the corresponding headers
+
+The header column
+
+#+begin_example
+<th style="cursor: pointer;">Relationships<span class="sort-icon"> ↕</span></th>
+#+end_example
+
+is still present
+
