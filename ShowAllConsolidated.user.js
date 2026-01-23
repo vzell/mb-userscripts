@@ -17,7 +17,6 @@
 // @license      MIT
 // ==/UserScript==
 
-
 (function() {
     'use strict';
 
@@ -258,6 +257,10 @@
             const existingTbls = container.querySelectorAll('table.tbl');
             existingH3s.forEach(el => el.remove());
             existingTbls.forEach(el => el.remove());
+
+            // Remove special container "Instrument Table"
+            const instrumentDiv = document.getElementById('bottom1');
+            if (instrumentDiv) instrumentDiv.remove();
 
             map.forEach((rows, category) => {
                 const h3 = document.createElement('h3');
