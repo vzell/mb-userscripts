@@ -20920,7 +20920,33 @@ during Collection all the table entries after the different headings which look 
 
 change, and also log how many rows are under each heading
 
-*** Submit button text: show number of rows
+*** Submit button text: show number of rows, and number of rows all over thapges
+
+Now that we have all kind of statistics about number of rows on different pages and types, please place them also on the
+resulting pages ot the following places:
+
+- for all pages: total number of rows after the h2 heading '<h2><type></h2>' (in bold and blue), for example '<h2>Events</h2>', '<h2>Releases</h2>', etc. The h2 heading '<h2><type></h2>' can generally be found right before the actual datatable
+- for pages (e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f) which have h3 subtype headers like '<h3>Album</h3>', '<h3>Album + Compilation</h3>', etc, place the number of rows after that heading
+- for pages (e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c) which have '<th colspan="8">Official</th>', '<th colspan="8">Promotion</th>' etc. subtypes inside a datatable, place the number of rows after that subtype (e.g. '<th colspan="8">Promotion (4)</th>' again in bold and blue
+
+Also change the final button text from "All Loaded" to "Loaded <number of rows> from <number of pages>".
+
+**** 1
+
+If there are many h2 headings '<h2><type></h2>' before the datatable, place it on the last one right before the
+datatable. For example, the web pahe https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 has it on
+
+#+begin_example
+<h2 class="annotation">Annotation<span class="mb-row-count-stat">(354)</span></h2>
+#+end_example
+
+instead of
+
+#+begin_example
+<h2>Releases</h2>
+#+end_example
+
+
 *** On rg pages show debugging info about number per type and also number of types per type block
 *** on RG page do not remove the bottom of the page and remove the everything between "Discography" and the first type "Album"
 
