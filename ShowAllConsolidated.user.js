@@ -60,7 +60,7 @@
     else if (path.includes('/releases')) pageType = 'releases';
     else if (path.includes('/works')) pageType = 'works';
     else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
-    else if (path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-main';
+    else if (path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
 
     log('Detected pageType:', pageType);
 
@@ -104,7 +104,7 @@
     let isLoaded = false;
     let stopRequested = false;
 
-    // Sorting states for multi-table layout (artist-main)
+    // Sorting states for multi-table layout (artist-releasegroups)
     let multiTableSortStates = new Map();
 
     /**
@@ -135,13 +135,13 @@
     filterInput.addEventListener('input', () => {
         const query = filterInput.value.toLowerCase();
         log('Filtering with query:', query);
-        if (pageType === 'releasegroup-releases' || pageType === 'artist-main') {
+        if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
             const filteredMap = new Map();
             groupedRows.forEach((rows, key) => {
                 const matches = rows.filter(r => r.textContent.toLowerCase().includes(query));
                 if (matches.length > 0) filteredMap.set(key, matches);
             });
-            renderGroupedTable(filteredMap, pageType === 'artist-main');
+            renderGroupedTable(filteredMap, pageType === 'artist-releasegroups');
         } else {
             renderFinalTable(allRows.filter(row => row.textContent.toLowerCase().includes(query)));
         }
@@ -181,7 +181,7 @@
         });
 
         // Remove sanojjonas containers for specific page types
-        if (pageType === 'events' || pageType === 'artist-main') {
+        if (pageType === 'events' || pageType === 'artist-releasegroups') {
             removeSanojjonasContainers();
         }
 
@@ -222,7 +222,7 @@
                     });
                 }
 
-                if (pageType === 'artist-main') {
+                if (pageType === 'artist-releasegroups') {
                     doc.querySelectorAll('table.tbl').forEach(table => {
                         let h3 = table.previousElementSibling;
                         while (h3 && h3.nodeName !== 'H3') h3 = h3.previousElementSibling;
@@ -287,8 +287,8 @@
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
             log('Starting final render.');
-            if (pageType === 'releasegroup-releases' || pageType === 'artist-main') {
-                renderGroupedTable(groupedRows, pageType === 'artist-main');
+            if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
+                renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
             } else {
                 renderFinalTable(allRows);
             }
@@ -328,7 +328,7 @@
                 headerHtml = document.querySelector('thead').innerHTML;
             }
 
-            log('Cleaning up existing artist-main tables.');
+            log('Cleaning up existing artist-releasegroups tables.');
             const existingH3s = container.querySelectorAll('h3');
             const existingTbls = container.querySelectorAll('table.tbl');
             existingH3s.forEach(el => el.remove());
@@ -405,7 +405,7 @@
     }
 
     function makeSortable() {
-        if (pageType === 'artist-main') return;
+        if (pageType === 'artist-releasegroups') return;
 
         log('Making main table sortable.');
         const headers = document.querySelectorAll('table.tbl thead th');
