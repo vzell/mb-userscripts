@@ -20962,5 +20962,7 @@ Implement hide/show functionality for pages (e.g. https://musicbrainz.org/artist
 which have h3 subtype headers like '<h3>Album</h3>', '<h3>Album + Compilation</h3>' by clicking on the headername. Also
 make adjust the UI so that it's obvious that these headername can toogle the display of the corresponding tabledata
 
+**** 1
 
-
+Include a main toggle above the subtype headers to hide/show all subtypes at once. Place the text "Show▼/Hide▲ all discography types or click the individual type"
+The rendered page should havae all subtypes collapsed by default, except the "Album" one as long as the rpwcound for albums is less then 40

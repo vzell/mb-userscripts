@@ -25,13 +25,12 @@
     'use strict';
 
     const DEBUG = true;
-    const log = (msg, data = '') => { if (DEBUG) console.log(`[MB-ShowAll-Debug] ${msg}`, data); };
+    let logPrefix = "[MB-ShowAll-Debug]";
+    const log = (msg, data = '') => { if (DEBUG) console.log(`${logPrefix} ${msg}`, data); };
 
     const currentUrl = new URL(window.location.href);
     const path = currentUrl.pathname;
     const params = currentUrl.searchParams;
-
-    log('Initializing script for path:', path);
 
     let pageType = '';
     let headerContainer = document.querySelector('.artistheader h1') ||
@@ -60,7 +59,9 @@
     else if (path.includes('/place')) pageType = 'place-events';
     else if (path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
 
-    log('Detected pageType:', pageType);
+    // Update prefix with known pageType
+    if (pageType) logPrefix = `[MB-ShowAll-Debug: ${pageType}]`;
+    log('Initializing script for path:', path);
 
     if (!pageType || !headerContainer) {
         log('Required elements not found. Terminating.', { pageType, hasHeader: !!headerContainer });
@@ -90,6 +91,9 @@
         .mb-show-all-btn:disabled { background-color: #ddd !important; border-color: #bbb !important; cursor: default !important; color: #000 !important; }
         .sort-icon { cursor: pointer; margin-left: 4px; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
+        .mb-toggle-h3 { cursor: pointer; user-select: none; }
+        .mb-toggle-h3:hover { color: #222; }
+        .mb-toggle-icon { font-size: 0.8em; margin-right: 5px; color: #666; }
     `;
     document.head.appendChild(style);
 
@@ -124,7 +128,7 @@
                     if (p) maxPage = parseInt(p, 10);
                 }
             }
-            console.log(`[MB-ShowAll-Debug] Detected maxPage for Work: ${maxPage}`);
+            console.log(`${logPrefix} Detected maxPage for Work: ${maxPage}`);
             return maxPage;
         } catch (err) {
             log('Error fetching maxPage for Work:', err);
@@ -162,7 +166,6 @@
             span.className = 'mb-row-count-stat';
             span.textContent = `(${count})`;
             targetH2.appendChild(span);
-            log(`Updated H2 count on: "${targetH2.textContent.replace(/\(\d+\)/, '').trim()}"`);
         }
     }
 
@@ -279,7 +282,6 @@
                                 groupedRows.get(category).push(newRow);
                             }
                         });
-                        log(`Found ${groupedRows.get(category).length - countBefore} rows for type "${category}" on page ${p}`);
                     });
                 } else {
                     const tableBody = doc.querySelector('table.tbl tbody');
@@ -290,9 +292,7 @@
                                 if (node.classList.contains('subh')) {
                                     const oldStatus = currentStatus;
                                     currentStatus = node.textContent.trim() || 'Unknown';
-                                    if (oldStatus !== currentStatus) {
-                                        log(`Status change detected: "${oldStatus}" -> "${currentStatus}"`);
-                                    }
+                                    if (oldStatus !== currentStatus) log(`Status change: "${oldStatus}" -> "${currentStatus}"`);
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
@@ -334,7 +334,6 @@
     });
 
     function renderFinalTable(rows) {
-        log('Rendering final flat table', { rowCount: rows.length });
         const tbody = document.querySelector('table.tbl tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
@@ -353,13 +352,22 @@
 
             map.forEach((rows, category) => {
                 const h3 = document.createElement('h3');
-                h3.innerHTML = `${category} <span class="mb-row-count-stat">(${rows.length})</span>`;
+                h3.className = 'mb-toggle-h3';
+                h3.innerHTML = `<span class="mb-toggle-icon">▼</span>${category} <span class="mb-row-count-stat">(${rows.length})</span>`;
                 container.appendChild(h3);
+
                 const table = document.createElement('table');
                 table.className = 'tbl';
                 table.innerHTML = `<thead>${headerHtml}</thead><tbody></tbody>`;
                 rows.forEach(r => table.querySelector('tbody').appendChild(r));
                 container.appendChild(table);
+
+                h3.addEventListener('click', () => {
+                    const isHidden = table.style.display === 'none';
+                    table.style.display = isHidden ? '' : 'none';
+                    h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
+                });
+
                 makeTableSortable(table, category);
             });
         } else {
