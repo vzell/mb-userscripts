@@ -30,20 +30,6 @@
     const path = currentUrl.pathname;
     const params = currentUrl.searchParams;
 
-    log('Checking for Work -> Recording redirect', { path, params: params.toString() });
-    // --- Redirect: Work -> Recording relationships ---
-    if (
-        path.startsWith('/work/') &&
-        (!params.has('direction') || !params.has('link_type_id'))
-    ) {
-        log('Redirect conditions met. Setting params and replacing location.');
-        params.set('direction', '2');
-        params.set('link_type_id', '278');
-        params.set('page', '1');
-        window.location.replace(currentUrl.toString());
-        return;
-    }
-
     log('Initializing script for path:', path);
 
     let pageType = '';
@@ -60,7 +46,9 @@
         params.get('direction') === '2' &&
         params.get('link_type_id') === '278';
 
-    if (isWorkRecordings) pageType = 'work-recordings';
+    const isWorkBase = path.match(/\/work\/[a-f0-9-]{36}$/) && !isWorkRecordings;
+
+    if (isWorkRecordings || isWorkBase) pageType = 'work-recordings';
     else if (path.includes('/events')) pageType = 'events';
     else if (path.includes('/recordings')) pageType = 'recordings';
     else if (path.includes('/releases')) pageType = 'releases';
@@ -109,33 +97,57 @@
     headerContainer.appendChild(timerDisplay);
 
     let allRows = [];
-    let groupedRows = new Map(); // Maps Category (h3) -> Array of Rows
+    let groupedRows = new Map();
     let isLoaded = false;
     let stopRequested = false;
-
-    // Sorting states for multi-table layout (artist-releasegroups)
     let multiTableSortStates = new Map();
 
-    /**
-     * Removes specific containers from the sanojjonas visualize stuff userscript
-     */
+    async function fetchWorkRecordingsMaxPage(workPath) {
+        const url = new URL(window.location.origin + workPath);
+        url.searchParams.set('direction', '2');
+        url.searchParams.set('link_type_id', '278');
+        url.searchParams.set('page', '1');
+
+        log('Fetching maxPage for Work recordings from:', url.toString());
+
+        try {
+            const html = await fetchHtml(url.toString());
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+
+            let maxPage = 1;
+            const pagination = doc.querySelector('ul.pagination');
+            if (pagination) {
+                const links = Array.from(pagination.querySelectorAll('li a'));
+                const nextIdx = links.findIndex(a => a.textContent.trim() === 'Next');
+                if (nextIdx > 0) {
+                    const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
+                    const p = urlObj.searchParams.get('page');
+                    if (p) maxPage = parseInt(p, 10);
+                }
+            }
+
+            console.log(`[MB-ShowAll-Debug] Detected maxPage for Work: ${maxPage}`);
+            return maxPage;
+        } catch (err) {
+            log('Error fetching maxPage for Work:', err);
+            return 1;
+        }
+    }
+
     function removeSanojjonasContainers() {
         const idsToRemove = [
             'load', 'load2', 'load3', 'load4',
             'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'
         ];
-        log('Cleaning up sanojjonas containers if present.');
         idsToRemove.forEach(id => {
             const el = document.getElementById(id);
-            if (el) {
-                log(`Removing container: #${id}`);
-                el.remove();
-            }
+            if (el) el.remove();
         });
     }
 
-    stopBtn.addEventListener('click', () => {
-        log('Stop requested by user.');
+    stopBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         stopRequested = true;
         stopBtn.disabled = true;
         stopBtn.textContent = 'Stopping...';
@@ -143,7 +155,6 @@
 
     filterInput.addEventListener('input', () => {
         const query = filterInput.value.toLowerCase();
-        log('Filtering with query:', query);
         if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
             const filteredMap = new Map();
             groupedRows.forEach((rows, key) => {
@@ -156,25 +167,30 @@
         }
     });
 
-    btn.addEventListener('click', async () => {
-        if (isLoaded) return;
+    btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
 
+        if (isLoaded) return;
         log('Start button clicked.');
 
         let maxPage = 1;
-        const pagination = document.querySelector('ul.pagination');
-        if (pagination) {
-            const links = Array.from(pagination.querySelectorAll('li a'));
-            const nextIdx = links.findIndex(a => a.textContent.trim() === 'Next');
-            if (nextIdx > 0) {
-                const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
-                const p = urlObj.searchParams.get('page');
-                if (p) maxPage = parseInt(p, 10);
+        if (isWorkBase) {
+            maxPage = await fetchWorkRecordingsMaxPage(path);
+        } else {
+            const pagination = document.querySelector('ul.pagination');
+            if (pagination) {
+                const links = Array.from(pagination.querySelectorAll('li a'));
+                const nextIdx = links.findIndex(a => a.textContent.trim() === 'Next');
+                if (nextIdx > 0) {
+                    const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
+                    const p = urlObj.searchParams.get('page');
+                    if (p) maxPage = parseInt(p, 10);
+                }
             }
         }
 
         log('Total pages to fetch:', maxPage);
-
         if (maxPage > 100 && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) return;
 
         isLoaded = true;
@@ -182,14 +198,11 @@
         allRows = [];
         groupedRows = new Map();
 
-        // Hide all Bigboxes and Batch tables
-        log('Hiding auxiliary UI elements.');
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
             if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
         });
 
-        // Remove sanojjonas containers for specific page types
         if (pageType === 'events' || pageType === 'artist-releasegroups') {
             removeSanojjonasContainers();
         }
@@ -205,20 +218,22 @@
 
         try {
             for (let p = 1; p <= maxPage; p++) {
-                if (stopRequested) {
-                    log('Loop broken due to stop request at page:', p);
-                    break;
-                }
+                if (stopRequested) break;
 
                 log(`Fetching page ${p}...`);
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
 
                 const fetchUrl = new URL(baseUrl);
                 fetchUrl.searchParams.set('page', p.toString());
-                if (params.has('direction')) fetchUrl.searchParams.set('direction', params.get('direction'));
-                if (params.has('link_type_id')) fetchUrl.searchParams.set('link_type_id', params.get('link_type_id'));
 
-                log('Target URL:', fetchUrl.toString());
+                if (pageType === 'work-recordings') {
+                    fetchUrl.searchParams.set('direction', '2');
+                    fetchUrl.searchParams.set('link_type_id', '278');
+                } else {
+                    if (params.has('direction')) fetchUrl.searchParams.set('direction', params.get('direction'));
+                    if (params.has('link_type_id')) fetchUrl.searchParams.set('link_type_id', params.get('link_type_id'));
+                }
+
                 const html = await fetchHtml(fetchUrl.toString());
                 const doc = new DOMParser().parseFromString(html, 'text/html');
 
@@ -236,7 +251,6 @@
                         let h3 = table.previousElementSibling;
                         while (h3 && h3.nodeName !== 'H3') h3 = h3.previousElementSibling;
                         const category = h3 ? h3.textContent.trim() : 'Other';
-
                         if (!groupedRows.has(category)) groupedRows.set(category, []);
 
                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
@@ -273,7 +287,6 @@
                 }
             }
 
-            // Cleanup headers of live tables
             log('Cleaning up table headers.');
             document.querySelectorAll('table.tbl').forEach(table => {
                 if (table.tHead) {
@@ -292,7 +305,6 @@
             stopBtn.style.display = 'none';
             filterInput.style.display = 'inline-block';
 
-            log('Removing pagination elements.');
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
             log('Starting final render.');
@@ -306,7 +318,7 @@
 
             const endRender = performance.now();
             timerDisplay.textContent = `(Fetch: ${((endFetch - startTime) / 1000).toFixed(2)}s, Render: ${((endRender - endFetch) / 1000).toFixed(2)}s)`;
-            log('Complete.', { fetchTime: (endFetch - startTime), renderTime: (endRender - endFetch) });
+            log('Complete.');
 
         } catch (err) {
             log('Error during execution:', err);
@@ -318,17 +330,18 @@
     function renderFinalTable(rows) {
         log('Rendering final flat table', { rowCount: rows.length });
         const tbody = document.querySelector('table.tbl tbody');
-        if (!tbody) return;
+        if (!tbody) {
+            log('Error: Could not find table body for rendering.');
+            return;
+        }
         tbody.innerHTML = '';
         rows.forEach(r => tbody.appendChild(r));
     }
 
     function renderGroupedTable(map, isArtistMain) {
-        log('Rendering grouped table', { isArtistMain, categories: Array.from(map.keys()) });
         if (isArtistMain) {
             const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
             if (!container) return;
-
             let headerHtml = '';
             const firstTable = container.querySelector('table.tbl');
             if (firstTable && firstTable.tHead) {
@@ -337,7 +350,6 @@
                 headerHtml = document.querySelector('thead').innerHTML;
             }
 
-            log('Cleaning up existing artist-releasegroups tables.');
             const existingH3s = container.querySelectorAll('h3');
             const existingTbls = container.querySelectorAll('table.tbl');
             existingH3s.forEach(el => el.remove());
@@ -347,7 +359,6 @@
                 const h3 = document.createElement('h3');
                 h3.textContent = category;
                 container.appendChild(h3);
-
                 const table = document.createElement('table');
                 table.className = 'tbl';
                 table.dataset.category = category;
@@ -387,24 +398,20 @@
                 s.textContent = ' ↕';
                 th.appendChild(s);
             }
-
-            th.onclick = () => {
-                log(`Sorting table [${category}] by column [${index}]`);
+            th.onclick = (e) => {
+                e.preventDefault();
                 if (state.lastSortIndex === index) state.sortAscending = !state.sortAscending;
                 else { state.sortAscending = true; state.lastSortIndex = index; }
-
                 headers.forEach((h, i) => {
                     const icon = h.querySelector('.sort-icon');
                     if (icon) icon.textContent = (i === index) ? (state.sortAscending ? ' ▲' : ' ▼') : ' ↕';
                 });
-
                 const rows = groupedRows.get(category);
                 rows.sort((a, b) => {
                     const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
                     const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
                     return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 });
-
                 const query = filterInput.value.toLowerCase();
                 const tbody = table.querySelector('tbody');
                 tbody.innerHTML = '';
@@ -415,8 +422,6 @@
 
     function makeSortable() {
         if (pageType === 'artist-releasegroups') return;
-
-        log('Making main table sortable.');
         const headers = document.querySelectorAll('table.tbl thead th');
         let lastSortIndex = -1;
         let sortAscending = true;
@@ -430,23 +435,19 @@
                 s.textContent = ' ↕';
                 th.appendChild(s);
             }
-
-            th.onclick = () => {
-                log(`Sorting by column [${index}]`);
+            th.onclick = (e) => {
+                e.preventDefault();
                 if (lastSortIndex === index) sortAscending = !sortAscending;
                 else { sortAscending = true; lastSortIndex = index; }
-
                 headers.forEach((h, i) => {
                     const icon = h.querySelector('.sort-icon');
                     if (icon) icon.textContent = (i === index) ? (sortAscending ? ' ▲' : ' ▼') : ' ↕';
                 });
-
                 const sortFn = (a, b) => {
                     const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
                     const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
                     return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 };
-
                 const query = filterInput.value.toLowerCase();
                 if (pageType === 'releasegroup-releases') {
                     groupedRows.forEach(rows => rows.sort(sortFn));

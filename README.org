@@ -20811,6 +20811,68 @@ t @ content.js:10
 (anonymous) @ content.js:72
 #+end_example
 
+** create function which gets maxnumber
+
+In the uploaded userscript create a function which for URLs of type
+
+https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac
+
+makes a GM_xmlhttpRequest call to 
+
+https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac?direction=2&link_type_id=278&page=1
+
+and parses the maxPage from the resulting webpage with the following code
+
+#+begin_example
+        let maxPage = 1;
+        const pagination = document.querySelector('ul.pagination');
+        if (pagination) {
+            const links = Array.from(pagination.querySelectorAll('li a'));
+            const nextIdx = links.findIndex(a => a.textContent.trim() === 'Next');
+            if (nextIdx > 0) {
+                const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
+                const p = urlObj.searchParams.get('page');
+                if (p) maxPage = parseInt(p, 10);
+            }
+#+end_example
+
+Add a debug stement and show the maxPage value in the console
+
+** 1
+
+Yes.
+
+Remove the actual redirect for pages of type https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac and
+adjust the logic for these URL types to get the maxPage with the "fetchWorkRecordingsMaxPage" function. Then use the standard fetching of data but adjusted for the
+
+#+begin_example
+        params.set('direction', '2');
+        params.set('link_type_id', '278');
+#+end_example
+
+in case of https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac URLs
+
+** 2
+
+Log output:
+
+#+begin_example
+[MB-ShowAll-Debug] Detected pageType: work-recordings
+[MB-ShowAll-Debug] Initializing script for path: /work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac
+[MB-ShowAll-Debug] Detected pageType: work-recordings
+[MB-ShowAll-Debug] Start button clicked. 
+[MB-ShowAll-Debug] Fetching maxPage for Work recordings from: https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac?direction=2&link_type_id=278&page=1
+[MB-ShowAll-Debug] Detected maxPage for Work: 4
+[MB-ShowAll-Debug] Total pages to fetch: 4
+[MB-ShowAll-Debug] Hiding auxiliary UI elements. 
+[MB-ShowAll-Debug] Fetching page 1... 
+[MB-ShowAll-Debug] Target URL: https://musicbrainz.org/work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac?page=1&direction=2&link_type_id=278
+[MB-ShowAll-Debug] Initializing script for path: /work/35fdc4a9-fd0a-3a68-a539-5b377464a3ac
+[MB-ShowAll-Debug] Detected pageType: work-recordings
+#+end_example
+
+It doesn't work right, after pressing the button, it does somehting, see log, but at the end it still stays on the same initial page and nothg happend
+
 ** TODO:
 *** remove from events sanojjonas visualize stuff userscript
 
@@ -20836,3 +20898,4 @@ for the pagetype: "artist-main"
 *** Submit button text: show number of rows
 *** On rg pages show debugging info about number per type and also number of types per type block
 *** on RG page do not remove the bottom of the page and remove the everything between "Discography" and the first type "Album"
+
