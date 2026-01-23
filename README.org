@@ -19246,6 +19246,7 @@ In the uploaded userscript "ShowAllReleasesInReleaseGroups.user.js" actually DO 
 
 
 * ShowAllWorks
+** initial
 
 Create a new Tampermonkey userscript based on the uploaded one, but it should match
 
@@ -19488,10 +19489,13 @@ All tables below each <type> (like for example "Album" or "Single") should also 
 
 ** remove sanojas stuff
 
+In the uploaded user script, please remove the following container
+
 #+begin_example
 <div id="bottom1" style="overflow-x: auto; width: 804px;"><h2>Instrument Table</h2><br><table class="sanojjonas" border="1px solid black">
 #+end_example
 
+when pressing the "Show all release groups button"
 
 
 * ShowAllRecordings
@@ -20361,7 +20365,6 @@ see also the following snippet
 })();
 #+end_example
 
-
 ** finally
 
 Adjust the code in the uploaded script "ShowAllConsolidated.user.js" for the case that URLs are of type
@@ -20776,3 +20779,8 @@ t @ content.js:10
 (anonymous) @ content.js:15
 (anonymous) @ content.js:72
 #+end_example
+
+** TODO:
+*** debugging: info about read release types,
+*** Submit button text: show number of rows
+*** On rg pages show debugging info about number per type and also number of types per type block

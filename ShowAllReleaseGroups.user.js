@@ -68,6 +68,12 @@
 
         console.log('[MB Show All Release Groups] Starting accumulation...');
 
+        // Remove the instrument table container if it exists
+        const instrumentTable = document.getElementById('bottom1');
+        if (instrumentTable) {
+            instrumentTable.remove();
+        }
+
         // Hide bigbox containers immediately
         hideBigBoxes();
 
