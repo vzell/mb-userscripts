@@ -20951,7 +20951,14 @@ instead of
 The logic of finding the h2 headers does not work on all pages. It for example works on https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
 but NOT on https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c or https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and the others
 
-*** on RG page do not remove the bottom of the page and remove the everything between "Discography" and the first type "Album"
+*** on RG page do not remove the bottom of the page
+
+*** remove the everything between "Discography" and the first type "Album"
+
+create a function which removes everything after the last h2 header and the actual datatable. Run that function after
+rendering the datatable but do NOT remove the "main toggle above the subtype headers to hide/show all subtypes" in case
+we are on pages of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
 *** switch the logging prefix
 
 switch the logging prefix from "[MB-ShowAll-Debug] " to "[MB-ShowAll-Debug: <pageType>] " as soon as pageType is known
@@ -20966,3 +20973,18 @@ make adjust the UI so that it's obvious that these headername can toogle the dis
 
 Include a main toggle above the subtype headers to hide/show all subtypes at once. Place the text "Show▼/Hide▲ all discography types or click the individual type"
 The rendered page should havae all subtypes collapsed by default, except the "Album" one as long as the rpwcound for albums is less then 40
+
+*** clean <br>
+
+In the uploaded script, 
+remove all <br> tags between the text "Showing official release groups by this artist" and "<div class="mb-master-toggle">Show▼/Hide▲ all discography types or click the individual type</div>"
+after rendering the final page
+
+
+Remove all <br> tags above "Showing official release groups by this artist" and "<div class="mb-master-toggle">Show▼/Hide▲ all discography types or click the individual type</div>"
+after rendering the final page
+
+*** debug logging
+
+Also reintroduce comprehensive debug logging for all steps in the userscript, with timeing, number of rows processed etc.
+

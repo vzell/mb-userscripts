@@ -38,6 +38,7 @@
                           document.querySelector('.labelheader h1') ||
                           document.querySelector('.seriesheader h1') ||
                           document.querySelector('.placeheader h1') ||
+                          document.querySelector('.recordingheader h1') ||
                           document.querySelector('h1 a bdi')?.parentNode ||
                           document.querySelector('h1');
 
@@ -56,6 +57,7 @@
     else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
     else if (path.includes('/label')) pageType = 'label';
     else if (path.includes('/series')) pageType = 'series';
+    else if (path.includes('/recording')) pageType = 'recording';
     else if (path.includes('/place')) pageType = 'place-events';
     else if (path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
 
@@ -129,6 +131,7 @@
                     if (p) maxPage = parseInt(p, 10);
                 }
             }
+            log(`Determined maxPage for Work: ${maxPage}`);
             return maxPage;
         } catch (err) {
             log('Error fetching maxPage for Work:', err);
@@ -137,6 +140,7 @@
     }
 
     function removeSanojjonasContainers() {
+        log('Removing Sanojjonas containers...');
         const idsToRemove = ['load', 'load2', 'load3', 'load4', 'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'];
         idsToRemove.forEach(id => {
             const el = document.getElementById(id);
@@ -161,12 +165,14 @@
             span.className = 'mb-row-count-stat';
             span.textContent = `(${count})`;
             targetH2.appendChild(span);
+            log(`Updated H2 header count: ${count}`);
         }
     }
 
     stopBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        log('Stop requested by user.');
         stopRequested = true;
         stopBtn.disabled = true;
         stopBtn.textContent = 'Stopping...';
@@ -174,6 +180,7 @@
 
     filterInput.addEventListener('input', () => {
         const query = filterInput.value.toLowerCase();
+        log(`Filtering rows with query: "${query}"`);
         if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
             const filteredMap = new Map();
             groupedRows.forEach((rows, key) => {
@@ -191,6 +198,7 @@
         e.stopPropagation();
         if (isLoaded) return;
 
+        log('Starting fetch process...');
         let maxPage = 1;
         if (isWorkBase) {
             maxPage = await fetchWorkRecordingsMaxPage(path);
@@ -233,10 +241,14 @@
 
         try {
             for (let p = 1; p <= maxPage; p++) {
-                if (stopRequested) break;
+                if (stopRequested) {
+                    log('Fetch loop stopped at page ' + p);
+                    break;
+                }
                 pagesProcessed++;
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
 
+                const pageStartTime = performance.now();
                 const fetchUrl = new URL(baseUrl);
                 fetchUrl.searchParams.set('page', p.toString());
                 if (pageType === 'work-recordings') {
@@ -259,6 +271,7 @@
                     });
                 }
 
+                let rowsInThisPage = 0;
                 if (pageType === 'artist-releasegroups') {
                     doc.querySelectorAll('table.tbl').forEach(table => {
                         let h3 = table.previousElementSibling;
@@ -270,6 +283,7 @@
                                 const newRow = document.importNode(row, true);
                                 [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
                                 groupedRows.get(category).push(newRow);
+                                rowsInThisPage++;
                             }
                         });
                     });
@@ -288,16 +302,20 @@
                                         if (!groupedRows.has(currentStatus)) groupedRows.set(currentStatus, []);
                                         groupedRows.get(currentStatus).push(newRow);
                                     } else allRows.push(newRow);
+                                    rowsInThisPage++;
                                 }
                             }
                         });
                     }
                 }
+                const pageEndTime = performance.now();
+                log(`Page ${p} processed: ${rowsInThisPage} rows in ${((pageEndTime - pageStartTime) / 1000).toFixed(3)}s`);
             }
 
             const totalRows = (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') ?
                              Array.from(groupedRows.values()).reduce((a, b) => a + b.length, 0) : allRows.length;
 
+            log(`Finished fetching. Total rows: ${totalRows} across ${pagesProcessed} pages.`);
             updateH2Count(totalRows);
             btn.textContent = `Loaded ${totalRows} rows from ${pagesProcessed} pages`;
             btn.disabled = false;
@@ -314,14 +332,16 @@
 
             const endRender = performance.now();
             timerDisplay.textContent = `(Fetch/Render: ${((endRender - startTime) / 1000).toFixed(2)}s)`;
+            log(`Full process completed in ${((endRender - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
-            log('Error:', err);
+            log('Critical Error during fetch:', err);
             btn.textContent = 'Error';
             btn.disabled = false;
         }
     });
 
     function renderFinalTable(rows) {
+        log(`Rendering flat table with ${rows.length} rows.`);
         const tbody = document.querySelector('table.tbl tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
@@ -329,6 +349,7 @@
     }
 
     function renderGroupedTable(map, isArtistMain) {
+        log(`Rendering grouped table. Map size: ${map.size}, isArtistMain: ${isArtistMain}`);
         if (isArtistMain) {
             const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
             if (!container) return;
@@ -377,6 +398,27 @@
 
                 makeTableSortable(table, category);
             });
+
+            // Specific request: Remove <br> tags between text and master toggle
+            log('Cleaning up <br> tags before master toggle...');
+            const mainContent = document.getElementById('content');
+            if (mainContent) {
+                let current = mainContent.firstChild;
+                let collecting = false;
+                const nodesToRemove = [];
+                while (current) {
+                    if (current.nodeType === Node.TEXT_NODE && current.textContent.includes('Showing official release groups by this artist')) {
+                        collecting = true;
+                    } else if (current === masterToggle) {
+                        break;
+                    } else if (collecting && current.nodeName === 'BR') {
+                        nodesToRemove.push(current);
+                    }
+                    current = current.nextSibling;
+                }
+                nodesToRemove.forEach(n => n.remove());
+                log(`Removed ${nodesToRemove.length} <br> tags.`);
+            }
         } else {
             const tbody = document.querySelector('table.tbl tbody');
             if (!tbody) return;
@@ -408,6 +450,7 @@
             }
             th.onclick = (e) => {
                 e.preventDefault();
+                log(`Sorting category "${category}" by column ${index}`);
                 if (state.lastSortIndex === index) state.sortAscending = !state.sortAscending;
                 else { state.sortAscending = true; state.lastSortIndex = index; }
                 headers.forEach((h, i) => {
@@ -430,6 +473,7 @@
 
     function makeSortable() {
         if (pageType === 'artist-releasegroups') return;
+        log('Initializing sort handlers for main table.');
         const headers = document.querySelectorAll('table.tbl thead th');
         let lastSortIndex = -1;
         let sortAscending = true;
@@ -444,6 +488,7 @@
             }
             th.onclick = (e) => {
                 e.preventDefault();
+                log(`Sorting main table by column ${index}`);
                 if (lastSortIndex === index) sortAscending = !sortAscending;
                 else { sortAscending = true; lastSortIndex = index; }
                 headers.forEach((h, i) => {
