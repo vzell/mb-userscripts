@@ -262,8 +262,13 @@
                         let h3 = table.previousElementSibling;
                         while (h3 && h3.nodeName !== 'H3') h3 = h3.previousElementSibling;
                         const category = h3 ? h3.textContent.trim() : 'Other';
-                        if (!groupedRows.has(category)) groupedRows.set(category, []);
 
+                        if (!groupedRows.has(category)) {
+                            log(`New ReleaseGroup type detected: ${category}`);
+                            groupedRows.set(category, []);
+                        }
+
+                        let countBefore = groupedRows.get(category).length;
                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
                             if (row.cells.length > 1) {
                                 const newRow = document.importNode(row, true);
@@ -273,6 +278,7 @@
                                 groupedRows.get(category).push(newRow);
                             }
                         });
+                        log(`Found ${groupedRows.get(category).length - countBefore} rows for type "${category}" on page ${p}`);
                     });
                 } else {
                     const tableBody = doc.querySelector('table.tbl tbody');
@@ -281,7 +287,11 @@
                         tableBody.childNodes.forEach(node => {
                             if (node.nodeName === 'TR') {
                                 if (node.classList.contains('subh')) {
+                                    const oldStatus = currentStatus;
                                     currentStatus = node.textContent.trim() || 'Unknown';
+                                    if (oldStatus !== currentStatus) {
+                                        log(`Status change detected: "${oldStatus}" -> "${currentStatus}"`);
+                                    }
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => {
@@ -296,6 +306,13 @@
                         });
                     }
                 }
+            }
+
+            // Secondary log to summarize counts per group/status after collection
+            if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') {
+                groupedRows.forEach((rows, key) => {
+                    log(`Total rows collected for "${key}": ${rows.length}`);
+                });
             }
 
             log('Cleaning up table headers.');
