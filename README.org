@@ -19841,3 +19841,24 @@ NO, still the same problem. Could you alos additionally implement debug logging 
 ** 12
 
 Actually now the cleanup worked, but lots of other stuff which used to work is broken. The "Stop" button doesn't work anymore, the table headings are not there anymore, nothing is sortable.
+
+** with better engine
+
+In the uploaded userscript "ShowAllConsolidated.user.js" when calling with URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+three original tables are still left in the resulting page. These are the types: "Album + Compilation", "Album + Compilation + Live" and "Album + Live"
+
+A working implementation can be found in the uploaded sript "ShowAllReleaseGroups.user.js"
+
+** 1
+
+Well the cleanup now works, but the sortable headers for the different tables are missing
+
+** 2
+
+Please also remove for these types of URLs, the following container (if present) in the resulting page, it starts with the header text '<h2>Instrument Table</h2>':
+
+#+begin_example
+<div id="bottom1" style="overflow-x: auto; width: 804px;"><h2>Instrument Table</h2><br><table class="sanojjonas" border="1px solid black"> .....
+#+end_example
+

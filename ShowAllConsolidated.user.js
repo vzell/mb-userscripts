@@ -17,6 +17,7 @@
 // @license      MIT
 // ==/UserScript==
 
+
 (function() {
     'use strict';
 
@@ -239,18 +240,24 @@
 
     function renderGroupedTable(map, isArtistMain) {
         if (isArtistMain) {
-            const firstTable = document.querySelector('table.tbl');
-            if (!firstTable) return;
-            const container = firstTable.parentNode;
+            const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
+            if (!container) return;
 
-            // Clear previous structure
-            let sibling = firstTable.previousElementSibling;
-            while (sibling && sibling.nodeName !== 'H2') {
-                const toRemove = sibling;
-                sibling = sibling.previousElementSibling;
-                if (toRemove.nodeName === 'H3' || toRemove.nodeName === 'TABLE' || toRemove.classList?.contains('jesus2099userjs154481bigbox')) toRemove.remove();
+            // Capture the header HTML from the first valid table BEFORE deleting everything
+            let headerHtml = '';
+            const firstTable = container.querySelector('table.tbl');
+            if (firstTable && firstTable.tHead) {
+                headerHtml = firstTable.tHead.innerHTML;
+            } else if (document.querySelector('thead')) {
+                // Fallback for edge cases
+                headerHtml = document.querySelector('thead').innerHTML;
             }
-            firstTable.remove();
+
+            // Now perform cleanup
+            const existingH3s = container.querySelectorAll('h3');
+            const existingTbls = container.querySelectorAll('table.tbl');
+            existingH3s.forEach(el => el.remove());
+            existingTbls.forEach(el => el.remove());
 
             map.forEach((rows, category) => {
                 const h3 = document.createElement('h3');
@@ -260,7 +267,8 @@
                 const table = document.createElement('table');
                 table.className = 'tbl';
                 table.dataset.category = category;
-                table.innerHTML = `<thead>${document.querySelector('thead')?.innerHTML || ''}</thead><tbody></tbody>`;
+                // Use the captured headerHtml
+                table.innerHTML = `<thead>${headerHtml}</thead><tbody></tbody>`;
                 rows.forEach(r => table.querySelector('tbody').appendChild(r));
                 container.appendChild(table);
                 makeTableSortable(table, category);
