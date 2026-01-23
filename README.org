@@ -19815,3 +19815,22 @@ They are located right after the '<h3><type></h3>'
 All tables below each <type> (like for example "Album" or "Single") should also be sortable like in the before uploaded userscript
 
 For a successfull implementation see the uploaded userscript "ShowAllReleaseGroups.user.js"
+
+** 8
+
+It actually works, but there are three of the original tables still left in the resulting page. These are the types: "Album + Compilation", "Album + Compilation + Live" and "Album + Live"
+
+Please also remove for these types of URLs, the following container (if present) in the resulting page, it starts with the header text '<h2>Instrument Table</h2>':
+
+#+begin_example
+<div id="bottom1" style="overflow-x: auto; width: 804px;"><h2>Instrument Table</h2><br><table class="sanojjonas" border="1px solid black"> .....
+#+end_example
+
+** 9
+
+The '<h2>Instrument Table</h2>' worked, but the three original tables are still left in the resulting page. These are the types: "Album + Compilation", "Album + Compilation + Live" and "Album + Live"
+
+** 10
+
+No, three original tables are still left in the resulting page. These are the types: "Album + Compilation", "Album + Compilation + Live" and "Album + Live"
+
