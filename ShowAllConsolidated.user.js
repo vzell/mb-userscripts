@@ -139,15 +139,20 @@
             'load', 'load2', 'load3', 'load4',
             'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'
         ];
+        log('Cleaning up sanojjonas containers if present.');
         idsToRemove.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.remove();
+            if (el) {
+                log(`Removing container: #${id}`);
+                el.remove();
+            }
         });
     }
 
     stopBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        log('Stop requested by user.');
         stopRequested = true;
         stopBtn.disabled = true;
         stopBtn.textContent = 'Stopping...';
@@ -155,6 +160,7 @@
 
     filterInput.addEventListener('input', () => {
         const query = filterInput.value.toLowerCase();
+        log('Filtering with query:', query);
         if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
             const filteredMap = new Map();
             groupedRows.forEach((rows, key) => {
@@ -198,6 +204,7 @@
         allRows = [];
         groupedRows = new Map();
 
+        log('Hiding auxiliary UI elements.');
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
             if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
@@ -218,7 +225,10 @@
 
         try {
             for (let p = 1; p <= maxPage; p++) {
-                if (stopRequested) break;
+                if (stopRequested) {
+                    log('Loop broken due to stop request at page:', p);
+                    break;
+                }
 
                 log(`Fetching page ${p}...`);
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
@@ -234,6 +244,7 @@
                     if (params.has('link_type_id')) fetchUrl.searchParams.set('link_type_id', params.get('link_type_id'));
                 }
 
+                log('Target URL:', fetchUrl.toString());
                 const html = await fetchHtml(fetchUrl.toString());
                 const doc = new DOMParser().parseFromString(html, 'text/html');
 
@@ -305,6 +316,7 @@
             stopBtn.style.display = 'none';
             filterInput.style.display = 'inline-block';
 
+            log('Removing pagination elements.');
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
             log('Starting final render.');
@@ -318,7 +330,7 @@
 
             const endRender = performance.now();
             timerDisplay.textContent = `(Fetch: ${((endFetch - startTime) / 1000).toFixed(2)}s, Render: ${((endRender - endFetch) / 1000).toFixed(2)}s)`;
-            log('Complete.');
+            log('Complete.', { fetchTime: (endFetch - startTime), renderTime: (endRender - endFetch) });
 
         } catch (err) {
             log('Error during execution:', err);
@@ -339,6 +351,7 @@
     }
 
     function renderGroupedTable(map, isArtistMain) {
+        log('Rendering grouped table', { isArtistMain, categories: Array.from(map.keys()) });
         if (isArtistMain) {
             const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
             if (!container) return;
@@ -350,6 +363,7 @@
                 headerHtml = document.querySelector('thead').innerHTML;
             }
 
+            log('Cleaning up existing artist-releasegroups tables.');
             const existingH3s = container.querySelectorAll('h3');
             const existingTbls = container.querySelectorAll('table.tbl');
             existingH3s.forEach(el => el.remove());
@@ -400,6 +414,7 @@
             }
             th.onclick = (e) => {
                 e.preventDefault();
+                log(`Sorting table [${category}] by column [${index}]`);
                 if (state.lastSortIndex === index) state.sortAscending = !state.sortAscending;
                 else { state.sortAscending = true; state.lastSortIndex = index; }
                 headers.forEach((h, i) => {
@@ -422,6 +437,7 @@
 
     function makeSortable() {
         if (pageType === 'artist-releasegroups') return;
+        log('Making main table sortable.');
         const headers = document.querySelectorAll('table.tbl thead th');
         let lastSortIndex = -1;
         let sortAscending = true;
@@ -437,6 +453,7 @@
             }
             th.onclick = (e) => {
                 e.preventDefault();
+                log(`Sorting by column [${index}]`);
                 if (lastSortIndex === index) sortAscending = !sortAscending;
                 else { sortAscending = true; lastSortIndex = index; }
                 headers.forEach((h, i) => {

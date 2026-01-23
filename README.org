@@ -20894,7 +20894,32 @@ In the uploaded userscript, when pressing the "C: Show all artist main" button r
 coming from sanojjonas visualize stuff userscript
 for the pagetype: "artist-main"
 
-*** debugging: info about read release types,
+*** debugging: info about read release types
+
+Also add debug statements for URL types of https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+and log a line when a new ReleaseGroup type like "Album", "Album + Compilation" etc. are detected, also log how many rows are being found for each type.
+
+For URLs of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c also add a log line when 
+during Collection all the table entries after the different headings which look like the following
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Official</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Promotion</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">(unknown)</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Bootleg</th></tr>
+#+end_example
+
+change, and also log how many rows are under each heading
+
 *** Submit button text: show number of rows
 *** On rg pages show debugging info about number per type and also number of types per type block
 *** on RG page do not remove the bottom of the page and remove the everything between "Discography" and the first type "Album"
