@@ -20419,3 +20419,360 @@ and
 #+end_example
 
 don't touch other code and UI logic
+
+** logging
+
+It still doesn show the complete resulting page, but it seems to fetch everything. At the end we are again at the page https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db?direction=2&link_type_id=278&page=1
+
+#+begin_example
+Will not be able to get dimensions, script not installed?
+console.js:36 work & overview not allowed yet
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Checking for Work -> Recording redirect Object
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Initializing script for path: /work/b1528b3f-0c0e-3977-ba98-5cb5b38108db
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Detected pageType: work-recordings
+brucebase.wikidot.com/favicon-ico:1  Failed to load resource: net::ERR_TOO_MANY_REDIRECTS
+userscript.html?name=sanojjonas-visualise-stuff.user.js&id=39cb5d25-a89a-401b-9c61-6d1089d68abe:1137 Uncaught TypeError: Cannot set properties of null (setting 'style')
+    at window.onresize (userscript.html?name=sanojjonas-visualise-stuff.user.js&id=39cb5d25-a89a-401b-9c61-6d1089d68abe:1137:15)
+Navigated to https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db
+userscript.html?name=MB%253A-Supercharged-Cover-Art-Edits.user.js&id=0c53d926-6032-49a1-9002-908a5d53bc1a:10503 Will not be able to get dimensions, script not installed?
+userscript.html?name=sanojjonas-visualise-stuff.user.js&id=39cb5d25-a89a-401b-9c61-6d1089d68abe:1065 work & overview not allowed yet
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Checking for Work -> Recording redirect {path: '/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db', params: ''}
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Redirect conditions met. Setting params and replacing location. 
+react-dom.production.min.js:132 Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+fo @ react-dom.production.min.js:132
+Qs @ react-dom.production.min.js:225
+ku @ react-dom.production.min.js:280
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+react-dom.production.min.js:292 Uncaught Error: Minified React error #423; visit https://reactjs.org/docs/error-decoder.html?invariant=423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Sl @ react-dom.production.min.js:292
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+ou @ react-dom.production.min.js:270
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+Navigated to https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db?direction=2&link_type_id=278&page=1
+userscript.html?name=MB%253A-Supercharged-Cover-Art-Edits.user.js&id=0c53d926-6032-49a1-9002-908a5d53bc1a:10503 Will not be able to get dimensions, script not installed?
+userscript.html?name=sanojjonas-visualise-stuff.user.js&id=39cb5d25-a89a-401b-9c61-6d1089d68abe:1065 work & overview not allowed yet
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Checking for Work -> Recording redirect {path: '/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db', params: 'direction=2&link_type_id=278&page=1'}
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Initializing script for path: /work/b1528b3f-0c0e-3977-ba98-5cb5b38108db
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Detected pageType: work-recordings
+react-dom.production.min.js:132 Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+fo @ react-dom.production.min.js:132
+Qs @ react-dom.production.min.js:225
+ku @ react-dom.production.min.js:280
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+react-dom.production.min.js:292 Uncaught Error: Minified React error #423; visit https://reactjs.org/docs/error-decoder.html?invariant=423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Sl @ react-dom.production.min.js:292
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+ou @ react-dom.production.min.js:270
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+favicon-ico:1  GET https://brucebase.wikidot.com/favicon-ico net::ERR_TOO_MANY_REDIRECTS
+Image
+setFavicon @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1684
+addExternalLink @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1333
+xhr.onreadystatechange @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1376
+(anonymous) @ xhr.js:88
+XMLHttpRequest.send
+(anonymous) @ trycatch.js:164
+(anonymous) @ xhr.js:135
+addHiddenLinks @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1392
+main @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1227
+(anonymous) @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1158
+At @ VM6847:10
+(anonymous) @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1
+window.__f__mkqftiwz.1m8 @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1
+At @ VM6847:10
+r.setMessageListener.r @ VM6847:90
+(anonymous) @ VM6847:93
+_ @ VM6847:22
+$t @ content.js:9
+h @ content.js:65
+d @ content.js:68
+(anonymous) @ content.js:68
+Xn @ content.js:15
+send @ content.js:68
+w @ content.js:63
+(anonymous) @ content.js:64
+(anonymous) @ content.js:2
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Start button clicked. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Total pages to fetch: 3
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Hiding auxiliary UI elements. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Fetching page 1... 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Target URL: https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db?page=1&direction=2&link_type_id=278
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Fetching page 2... 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Target URL: https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db?page=2&direction=2&link_type_id=278
+Navigated to https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db
+userscript.html?name=MB%253A-Supercharged-Cover-Art-Edits.user.js&id=0c53d926-6032-49a1-9002-908a5d53bc1a:10503 Will not be able to get dimensions, script not installed?
+userscript.html?name=sanojjonas-visualise-stuff.user.js&id=39cb5d25-a89a-401b-9c61-6d1089d68abe:1065 work & overview not allowed yet
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Checking for Work -> Recording redirect {path: '/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db', params: ''}
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Redirect conditions met. Setting params and replacing location. 
+react-dom.production.min.js:132 Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+fo @ react-dom.production.min.js:132
+Qs @ react-dom.production.min.js:225
+ku @ react-dom.production.min.js:280
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+react-dom.production.min.js:292 Uncaught Error: Minified React error #423; visit https://reactjs.org/docs/error-decoder.html?invariant=423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Sl @ react-dom.production.min.js:292
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+ou @ react-dom.production.min.js:270
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+favicon-ico:1  GET https://brucebase.wikidot.com/favicon-ico net::ERR_TOO_MANY_REDIRECTS
+Image
+setFavicon @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1684
+addExternalLink @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1333
+xhr.onreadystatechange @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1376
+(anonymous) @ xhr.js:88
+XMLHttpRequest.send
+(anonymous) @ trycatch.js:164
+(anonymous) @ xhr.js:135
+addHiddenLinks @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1392
+main @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1227
+(anonymous) @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1158
+At @ VM6950:10
+(anonymous) @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1
+window.__f__mkql9la2.kb8 @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1
+At @ VM6950:10
+r.setMessageListener.r @ VM6950:90
+(anonymous) @ VM6950:93
+_ @ VM6950:22
+$t @ content.js:9
+h @ content.js:65
+d @ content.js:68
+(anonymous) @ content.js:68
+Xn @ content.js:15
+send @ content.js:68
+w @ content.js:63
+(anonymous) @ content.js:64
+(anonymous) @ content.js:2
+Navigated to https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db?direction=2&link_type_id=278&page=1
+userscript.html?name=MB%253A-Supercharged-Cover-Art-Edits.user.js&id=0c53d926-6032-49a1-9002-908a5d53bc1a:10503 Will not be able to get dimensions, script not installed?
+userscript.html?name=sanojjonas-visualise-stuff.user.js&id=39cb5d25-a89a-401b-9c61-6d1089d68abe:1065 work & overview not allowed yet
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Checking for Work -> Recording redirect {path: '/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db', params: 'direction=2&link_type_id=278&page=1'}
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Initializing script for path: /work/b1528b3f-0c0e-3977-ba98-5cb5b38108db
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Consolidated.user.js&id=42d0e630-9608-4996-a1a9-486fb6952bec:25 [MB-ShowAll-Debug] Detected pageType: work-recordings
+react-dom.production.min.js:132 Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+fo @ react-dom.production.min.js:132
+Qs @ react-dom.production.min.js:225
+ku @ react-dom.production.min.js:280
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+react-dom.production.min.js:292 Uncaught Error: Minified React error #423; visit https://reactjs.org/docs/error-decoder.html?invariant=423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Sl @ react-dom.production.min.js:292
+bu @ react-dom.production.min.js:279
+vu @ react-dom.production.min.js:279
+gu @ react-dom.production.min.js:279
+ou @ react-dom.production.min.js:270
+lu @ react-dom.production.min.js:272
+Va @ react-dom.production.min.js:127
+cu @ react-dom.production.min.js:273
+t.flushSync @ react-dom.production.min.js:319
+(anonymous) @ hydrate.js:132
+u @ jquery.js:3143
+add @ jquery.js:3189
+EVdnBjI.m.fn.ready @ jquery.js:3423
+EVdnBjI.m.fn.init @ jquery.js:2863
+m @ jquery.js:73
+h @ hydrate.js:108
+uGm1N2M @ TagEditor.js:649
+i @ bootstrap:19
+(anonymous) @ TagEditor-6ad26cd.js:1
+i.O @ chunk loaded:23
+(anonymous) @ TagEditor-6ad26cd.js:1
+r @ jsonp chunk loading:34
+(anonymous) @ TagEditor-6ad26cd.js:1
+userscript.html?name=MusicBrainz-Nuclear-Tags.user.js&id=9f413413-b24c-40ae-9bdd-97f6d9c6f0c7:936 [ElephantTags] addTaggingUI: Injecting Custom UI...
+favicon-ico:1  GET https://brucebase.wikidot.com/favicon-ico net::ERR_TOO_MANY_REDIRECTS
+Image
+setFavicon @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1684
+addExternalLink @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1333
+xhr.onreadystatechange @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1376
+(anonymous) @ xhr.js:88
+XMLHttpRequest.send
+(anonymous) @ trycatch.js:164
+(anonymous) @ xhr.js:135
+addHiddenLinks @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1392
+main @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1227
+(anonymous) @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1158
+At @ VM7005:10
+(anonymous) @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1
+window.__f__mkqcvzhs.pj @ userscript.html?name=mb.-ALL-LINKS.user.js&id=b0ab684b-0e44-42b6-9683-ed8b9b41ed33:1
+At @ VM7005:10
+r.setMessageListener.r @ VM7005:90
+(anonymous) @ VM7005:93
+_ @ VM7005:22
+$t @ content.js:9
+h @ content.js:65
+d @ content.js:68
+(anonymous) @ content.js:68
+Xn @ content.js:15
+send @ content.js:68
+w @ content.js:63
+(anonymous) @ content.js:64
+(anonymous) @ content.js:2
+Xn @ content.js:15
+n @ content.js:1
+c @ content.js:64
+hs @ content.js:64
+(anonymous) @ content.js:63
+$t @ content.js:9
+t @ content.js:10
+e @ content.js:1
+i @ content.js:1
+(anonymous) @ content.js:1
+n @ content.js:1
+$t @ content.js:9
+(anonymous) @ content.js:1
+(anonymous) @ content.js:63
+$t @ content.js:9
+t @ content.js:10
+fs @ content.js:58
+Rs @ content.js:77
+(anonymous) @ content.js:77
+(anonymous) @ content.js:15
+$t @ content.js:9
+t @ content.js:10
+(anonymous) @ content.js:15
+(anonymous) @ content.js:72
+#+end_example
