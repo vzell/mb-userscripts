@@ -21013,3 +21013,6 @@ So also collect all the table entries after the different headings which look li
 
 and create one final page where each subheader, like "Official", "Promotion, Bootleg", etc exist only one time.
 
+*** add x icon
+
+In the "Filter" text box insert a unicode x icon on the right side of the text box , so tha when pressed, we can quickly delet the contents of the filter text box

@@ -55,7 +55,7 @@
     else if (path.includes('/releases')) pageType = 'releases';
     else if (path.includes('/works')) pageType = 'works';
     else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
-    else if (path.match(/\/recording\/[a-f0-9-]{36}$/)) pageType = 'releasegroup-releases'; // Handle recording base page like release-groups
+    else if (path.match(/\/recording\/[a-f0-9-]{36}$/)) pageType = 'releasegroup-releases';
     else if (path.includes('/label')) pageType = 'label';
     else if (path.includes('/series')) pageType = 'series';
     else if (path.includes('/recording')) pageType = 'recording';
@@ -80,9 +80,20 @@
     stopBtn.textContent = 'Stop';
     stopBtn.style.cssText = 'display:none; margin-left:5px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f;';
 
+    const filterContainer = document.createElement('span');
+    filterContainer.style.cssText = 'display:none; position:relative; margin-left:10px; vertical-align:middle;';
+
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Filter ${pageType}...`;
-    filterInput.style.cssText = 'display:none; margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; border:1px solid #ccc; border-radius:3px;';
+    filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; vertical-align:middle; border:1px solid #ccc; border-radius:3px;';
+
+    const filterClear = document.createElement('span');
+    filterClear.textContent = '✕';
+    filterClear.style.cssText = 'position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:0.6em; color:#999; user-select:none;';
+    filterClear.title = 'Clear filter';
+
+    filterContainer.appendChild(filterInput);
+    filterContainer.appendChild(filterClear);
 
     const timerDisplay = document.createElement('span');
     timerDisplay.style.cssText = 'margin-left:10px; font-size:0.5em; color:#666; vertical-align:middle;';
@@ -103,7 +114,7 @@
 
     headerContainer.appendChild(btn);
     headerContainer.appendChild(stopBtn);
-    headerContainer.appendChild(filterInput);
+    headerContainer.appendChild(filterContainer);
     headerContainer.appendChild(timerDisplay);
 
     let allRows = [];
@@ -170,16 +181,7 @@
         }
     }
 
-    stopBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        log('Stop requested by user.');
-        stopRequested = true;
-        stopBtn.disabled = true;
-        stopBtn.textContent = 'Stopping...';
-    });
-
-    filterInput.addEventListener('input', () => {
+    function runFilter() {
         const query = filterInput.value.toLowerCase();
         log(`Filtering rows with query: "${query}"`);
         if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
@@ -192,6 +194,22 @@
         } else {
             renderFinalTable(allRows.filter(row => row.textContent.toLowerCase().includes(query)));
         }
+    }
+
+    stopBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        log('Stop requested by user.');
+        stopRequested = true;
+        stopBtn.disabled = true;
+        stopBtn.textContent = 'Stopping...';
+    });
+
+    filterInput.addEventListener('input', runFilter);
+
+    filterClear.addEventListener('click', () => {
+        filterInput.value = '';
+        runFilter();
     });
 
     btn.addEventListener('click', async (e) => {
@@ -321,7 +339,7 @@
             btn.textContent = `Loaded ${totalRows} rows from ${pagesProcessed} pages`;
             btn.disabled = false;
             stopBtn.style.display = 'none';
-            filterInput.style.display = 'inline-block';
+            filterContainer.style.display = 'inline-block';
 
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
             if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
