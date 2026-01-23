@@ -19834,3 +19834,10 @@ The '<h2>Instrument Table</h2>' worked, but the three original tables are still 
 
 No, three original tables are still left in the resulting page. These are the types: "Album + Compilation", "Album + Compilation + Live" and "Album + Live"
 
+** 11
+
+NO, still the same problem. Could you alos additionally implement debug logging for the whole script
+
+** 12
+
+Actually now the cleanup worked, but lots of other stuff which used to work is broken. The "Stop" button doesn't work anymore, the table headings are not there anymore, nothing is sortable.

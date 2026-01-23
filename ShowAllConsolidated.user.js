@@ -69,9 +69,11 @@
     headerContainer.appendChild(timerDisplay);
 
     let allRows = [];
-    let groupedRows = new Map();
+    let groupedRows = new Map(); // Maps Category (h3) -> Array of Rows
     let isLoaded = false;
     let stopRequested = false;
+
+    // Sorting states for multi-table layout (artist-main)
     let multiTableSortStates = new Map();
 
     stopBtn.addEventListener('click', () => {
@@ -116,14 +118,10 @@
         allRows = [];
         groupedRows = new Map();
 
-        // Immediate Pre-cleanup
+        // Hide all Bigboxes and Batch tables
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
             if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
-        });
-
-        document.querySelectorAll('div[id^="bottom"]').forEach(div => {
-            if (div.querySelector('h2')?.textContent === 'Instrument Table') div.style.display = 'none';
         });
 
         btn.disabled = true;
@@ -144,9 +142,9 @@
                 const doc = new DOMParser().parseFromString(html, 'text/html');
 
                 let indicesToExclude = [];
-                const firstTbl = doc.querySelector('table.tbl');
-                if (firstTbl) {
-                    firstTbl.querySelectorAll('thead th').forEach((th, idx) => {
+                const referenceTable = doc.querySelector('table.tbl');
+                if (referenceTable) {
+                    referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
                         if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') indicesToExclude.push(idx);
                     });
@@ -194,6 +192,18 @@
                 }
             }
 
+            // Cleanup headers of live tables
+            document.querySelectorAll('table.tbl').forEach(table => {
+                if (table.tHead) {
+                    const toRemove = [];
+                    Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
+                        const txt = th.textContent.trim();
+                        if (txt === 'Relationship' || txt === 'Relationships' || txt === 'Performance Attributes') toRemove.push(idx);
+                    });
+                    toRemove.sort((a, b) => b - a).forEach(idx => table.tHead.rows[0].deleteCell(idx));
+                }
+            });
+
             const endFetch = performance.now();
             btn.textContent = stopRequested ? 'Partial Load' : 'All Loaded';
             btn.disabled = false;
@@ -233,21 +243,14 @@
             if (!firstTable) return;
             const container = firstTable.parentNode;
 
-            // Remove all existing release group structures
-            const existingH3s = Array.from(container.querySelectorAll('h3'));
-            existingH3s.forEach(h3 => {
-                let next = h3.nextElementSibling;
-                // Delete everything between headers or until the end of the section
-                while (next && (next.nodeName === 'TABLE' || next.classList.contains('jesus2099userjs154481bigbox') || next.nodeName === 'DIV')) {
-                    const toRemove = next;
-                    next = next.nextElementSibling;
-                    toRemove.remove();
-                }
-                h3.remove();
-            });
-
-            // Final sweep for any tbl tables or bigboxes left behind
-            container.querySelectorAll('table.tbl, .jesus2099userjs154481bigbox').forEach(t => t.remove());
+            // Clear previous structure
+            let sibling = firstTable.previousElementSibling;
+            while (sibling && sibling.nodeName !== 'H2') {
+                const toRemove = sibling;
+                sibling = sibling.previousElementSibling;
+                if (toRemove.nodeName === 'H3' || toRemove.nodeName === 'TABLE' || toRemove.classList?.contains('jesus2099userjs154481bigbox')) toRemove.remove();
+            }
+            firstTable.remove();
 
             map.forEach((rows, category) => {
                 const h3 = document.createElement('h3');
@@ -256,6 +259,7 @@
 
                 const table = document.createElement('table');
                 table.className = 'tbl';
+                table.dataset.category = category;
                 table.innerHTML = `<thead>${document.querySelector('thead')?.innerHTML || ''}</thead><tbody></tbody>`;
                 rows.forEach(r => table.querySelector('tbody').appendChild(r));
                 container.appendChild(table);
@@ -318,7 +322,8 @@
     }
 
     function makeSortable() {
-        if (pageType === 'artist-main') return;
+        if (pageType === 'artist-main') return; // Handled by makeTableSortable per table
+
         const headers = document.querySelectorAll('table.tbl thead th');
         let lastSortIndex = -1;
         let sortAscending = true;
