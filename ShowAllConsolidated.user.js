@@ -55,6 +55,7 @@
     else if (path.includes('/releases')) pageType = 'releases';
     else if (path.includes('/works')) pageType = 'works';
     else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
+    else if (path.match(/\/recording\/[a-f0-9-]{36}$/)) pageType = 'releasegroup-releases'; // Handle recording base page like release-groups
     else if (path.includes('/label')) pageType = 'label';
     else if (path.includes('/series')) pageType = 'series';
     else if (path.includes('/recording')) pageType = 'recording';
