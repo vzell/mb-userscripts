@@ -21016,3 +21016,14 @@ and create one final page where each subheader, like "Official", "Promotion, Boo
 *** add x icon
 
 In the "Filter" text box insert a unicode x icon on the right side of the text box , so tha when pressed, we can quickly delet the contents of the filter text box
+
+*** render inline headers as external
+
+For URLs of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c and https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63
+in the final rendered page make an additional transformation:
+
+Transfer the rows under each subheader, like "Official", "Promotion, Bootleg" to separate sortable datatables (each with
+their own table headings) and put the subheader in a '<h3><subheader></h3>' right before the datatables, mimic the
+structure of URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f when they are finally
+rendered.
+

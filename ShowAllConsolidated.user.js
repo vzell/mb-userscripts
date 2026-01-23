@@ -369,67 +369,54 @@
 
     function renderGroupedTable(map, isArtistMain) {
         log(`Rendering grouped table. Map size: ${map.size}, isArtistMain: ${isArtistMain}`);
-        if (isArtistMain) {
-            const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
-            if (!container) return;
-            let headerHtml = '';
-            const firstTable = container.querySelector('table.tbl');
-            if (firstTable && firstTable.tHead) headerHtml = firstTable.tHead.innerHTML;
+        const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
+        if (!container) return;
 
-            container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => el.remove());
+        let headerHtml = '';
+        const firstTable = document.querySelector('table.tbl');
+        if (firstTable && firstTable.tHead) headerHtml = firstTable.tHead.innerHTML;
 
-            // Master Toggle
-            const masterToggle = document.createElement('div');
-            masterToggle.className = 'mb-master-toggle';
-            masterToggle.textContent = 'Show▼/Hide▲ all discography types or click the individual type';
-            let allCollapsed = true;
-            masterToggle.onclick = () => {
-                const subTables = container.querySelectorAll('table.tbl');
-                const subHeaders = container.querySelectorAll('.mb-toggle-h3');
-                allCollapsed = !allCollapsed;
-                subTables.forEach(t => t.style.display = allCollapsed ? 'none' : '');
-                subHeaders.forEach(h => h.querySelector('.mb-toggle-icon').textContent = allCollapsed ? '▲' : '▼');
-            };
-            container.appendChild(masterToggle);
+        container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => el.remove());
 
-            map.forEach((rows, category) => {
-                const h3 = document.createElement('h3');
-                h3.className = 'mb-toggle-h3';
-                const table = document.createElement('table');
-                table.className = 'tbl';
-                table.innerHTML = `<thead>${headerHtml}</thead><tbody></tbody>`;
-                rows.forEach(r => table.querySelector('tbody').appendChild(r));
+        // Master Toggle
+        const masterToggle = document.createElement('div');
+        masterToggle.className = 'mb-master-toggle';
+        masterToggle.textContent = 'Show▼/Hide▲ all types or click the individual type';
+        let allCollapsed = true;
+        masterToggle.onclick = () => {
+            const subTables = container.querySelectorAll('table.tbl');
+            const subHeaders = container.querySelectorAll('.mb-toggle-h3');
+            allCollapsed = !allCollapsed;
+            subTables.forEach(t => t.style.display = allCollapsed ? 'none' : '');
+            subHeaders.forEach(h => h.querySelector('.mb-toggle-icon').textContent = allCollapsed ? '▲' : '▼');
+        };
+        container.appendChild(masterToggle);
 
-                // Collapse logic
-                const isAlbum = category.toLowerCase() === 'album';
-                const shouldStayOpen = isAlbum && rows.length < 40;
-                table.style.display = shouldStayOpen ? '' : 'none';
+        map.forEach((rows, category) => {
+            const h3 = document.createElement('h3');
+            h3.className = 'mb-toggle-h3';
+            const table = document.createElement('table');
+            table.className = 'tbl';
+            table.innerHTML = `<thead>${headerHtml}</thead><tbody></tbody>`;
+            rows.forEach(r => table.querySelector('tbody').appendChild(r));
 
-                h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${category} <span class="mb-row-count-stat">(${rows.length})</span>`;
-                container.appendChild(h3);
-                container.appendChild(table);
+            // Logic to stay open if category is 'album' or 'official' (common main sections)
+            const catLower = category.toLowerCase();
+            const shouldStayOpen = (catLower === 'album' || catLower === 'official') && rows.length < 40;
+            table.style.display = shouldStayOpen ? '' : 'none';
 
-                h3.addEventListener('click', () => {
-                    const isHidden = table.style.display === 'none';
-                    table.style.display = isHidden ? '' : 'none';
-                    h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
-                });
+            h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${category} <span class="mb-row-count-stat">(${rows.length})</span>`;
+            container.appendChild(h3);
+            container.appendChild(table);
 
-                makeTableSortable(table, category);
+            h3.addEventListener('click', () => {
+                const isHidden = table.style.display === 'none';
+                table.style.display = isHidden ? '' : 'none';
+                h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
             });
-        } else {
-            const tbody = document.querySelector('table.tbl tbody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            const colCount = document.querySelectorAll('table.tbl thead th').length;
-            map.forEach((rows, status) => {
-                const subh = document.createElement('tr');
-                subh.className = 'subh';
-                subh.innerHTML = `<th></th><th colspan="${colCount - 1}">${status} <span class="mb-row-count-stat">(${rows.length})</span></th>`;
-                tbody.appendChild(subh);
-                rows.forEach(r => tbody.appendChild(r));
-            });
-        }
+
+            makeTableSortable(table, category);
+        });
     }
 
     function makeTableSortable(table, category) {
@@ -470,7 +457,7 @@
     }
 
     function makeSortable() {
-        if (pageType === 'artist-releasegroups') return;
+        if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') return;
         log('Initializing sort handlers for main table.');
         const headers = document.querySelectorAll('table.tbl thead th');
         let lastSortIndex = -1;
@@ -499,13 +486,8 @@
                     return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 };
                 const query = filterInput.value.toLowerCase();
-                if (pageType === 'releasegroup-releases') {
-                    groupedRows.forEach(rows => rows.sort(sortFn));
-                    renderGroupedTable(groupedRows, false);
-                } else {
-                    allRows.sort(sortFn);
-                    renderFinalTable(query ? allRows.filter(r => r.textContent.toLowerCase().includes(query)) : allRows);
-                }
+                allRows.sort(sortFn);
+                renderFinalTable(query ? allRows.filter(r => r.textContent.toLowerCase().includes(query)) : allRows);
             };
         });
     }
