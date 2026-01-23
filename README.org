@@ -20988,3 +20988,27 @@ after rendering the final page
 
 Also reintroduce comprehensive debug logging for all steps in the userscript, with timeing, number of rows processed etc.
 
+*** add recording type
+
+Handle URLs of type https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63 the same as URLs of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+So also collect all the table entries after the different headings which look like the following
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Official</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Promotion</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">(unknown)</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Bootleg</th></tr>
+#+end_example
+
+and create one final page where each subheader, like "Official", "Promotion, Bootleg", etc exist only one time.
+

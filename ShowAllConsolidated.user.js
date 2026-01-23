@@ -398,27 +398,6 @@
 
                 makeTableSortable(table, category);
             });
-
-            // Specific request: Remove <br> tags between text and master toggle
-            log('Cleaning up <br> tags before master toggle...');
-            const mainContent = document.getElementById('content');
-            if (mainContent) {
-                let current = mainContent.firstChild;
-                let collecting = false;
-                const nodesToRemove = [];
-                while (current) {
-                    if (current.nodeType === Node.TEXT_NODE && current.textContent.includes('Showing official release groups by this artist')) {
-                        collecting = true;
-                    } else if (current === masterToggle) {
-                        break;
-                    } else if (collecting && current.nodeName === 'BR') {
-                        nodesToRemove.push(current);
-                    }
-                    current = current.nextSibling;
-                }
-                nodesToRemove.forEach(n => n.remove());
-                log(`Removed ${nodesToRemove.length} <br> tags.`);
-            }
         } else {
             const tbody = document.querySelector('table.tbl tbody');
             if (!tbody) return;
