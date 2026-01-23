@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Releases in ReleaseGroups
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.1+2026-01-22
+// @version      0.9+2026-01-23
 // @description  Accumulates all releases from paginated release group pages into a single view with filtering and sorting
 // @author       Gemini & ChatGPT (directed by vzell)
 // @tag          AI generated
@@ -17,6 +17,8 @@
 
 (function() {
     'use strict';
+
+    const LOG_PREFIX = '[MB Show All Releases in ReleaseGroup] ';
 
     const headerLink = document.querySelector('.rgheader h1 a');
     if (!headerLink) return;
@@ -72,7 +74,7 @@
             return;
         }
 
-        console.log('[MB Show All] Starting accumulation and header cleanup...');
+        console.log(LOG_PREFIX + 'Starting accumulation and header cleanup...');
 
         // Hide specific external container if present
         const externalBox = document.querySelector('div.jesus2099userjs154481bigbox');
@@ -108,7 +110,7 @@
                 const currentPageNum = i + 1;
 
                 btn.textContent = `Loading page ${currentPageNum} of ${totalPages}...`;
-                console.log(`[MB Show All] Fetching page ${currentPageNum}...`);
+                console.log(LOG_PREFIX + `Fetching page ${currentPageNum}...`);
 
                 const html = await fetchHtml(url);
                 const parser = new DOMParser();
@@ -157,7 +159,7 @@
                 });
             }
 
-            console.log('[MB Show All] Headers cleaned. Rendering final table.');
+            console.log(LOG_PREFIX + 'Headers cleaned. Rendering final table.');
 
             // Calculate total count
             let totalCount = 0;
@@ -188,7 +190,7 @@
             makeSortable();
 
         } catch (error) {
-            console.error('[MB Show All] Error:', error);
+            console.error(LOG_PREFIX + 'Error:', error);
             btn.textContent = 'Error loading';
             btn.style.color = '';
             btn.style.cursor = 'pointer';
