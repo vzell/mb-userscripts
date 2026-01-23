@@ -20,7 +20,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-23
+// @version      0.9+2026-01-22
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -41,15 +41,35 @@
 
     const currentUrl = new URL(window.location.href);
     const path = currentUrl.pathname;
+    const params = currentUrl.searchParams;
+
+    // --- Redirect: Work -> Recording relationships ---
+    if (
+        path.startsWith('/work/') &&
+        (!params.has('direction') || !params.has('link_type_id'))
+    ) {
+        params.set('direction', '2');
+        params.set('link_type_id', '278');
+        params.set('page', '1');
+        window.location.replace(currentUrl.toString());
+        return;
+    }
 
     console.debug('[ShowAllConsolidated] Initializing script for:', path);
 
     let pageType = '';
     let headerContainer = document.querySelector('.artistheader h1') ||
                           document.querySelector('.rgheader h1') ||
-                          document.querySelector('h1 a bdi')?.parentNode;
+                          document.querySelector('h1 a bdi')?.parentNode ||
+                          document.querySelector('h1');
 
-    if (path.includes('/events')) pageType = 'events';
+    const isWorkRecordings =
+        path.startsWith('/work/') &&
+        params.get('direction') === '2' &&
+        params.get('link_type_id') === '278';
+
+    if (isWorkRecordings) pageType = 'work-recordings';
+    else if (path.includes('/events')) pageType = 'events';
     else if (path.includes('/recordings')) pageType = 'recordings';
     else if (path.includes('/releases')) pageType = 'releases';
     else if (path.includes('/works')) pageType = 'works';
@@ -164,7 +184,7 @@
         timerDisplay.textContent = 'Fetching...';
 
         const startTime = performance.now();
-        const baseUrl = window.location.href.split('?')[0];
+        const baseUrl = window.location.origin + path;
 
         try {
             for (let p = 1; p <= maxPage; p++) {
@@ -175,7 +195,13 @@
 
                 console.debug(`[ShowAllConsolidated] Fetching page ${p}...`);
                 btn.textContent = `Loading page ${p} of ${maxPage}...`;
-                const html = await fetchHtml(`${baseUrl}?page=${p}`);
+
+                const fetchUrl = new URL(baseUrl);
+                fetchUrl.searchParams.set('page', p.toString());
+                if (params.has('direction')) fetchUrl.searchParams.set('direction', params.get('direction'));
+                if (params.has('link_type_id')) fetchUrl.searchParams.set('link_type_id', params.get('link_type_id'));
+
+                const html = await fetchHtml(fetchUrl.toString());
                 const doc = new DOMParser().parseFromString(html, 'text/html');
 
                 let indicesToExclude = [];
