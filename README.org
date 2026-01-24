@@ -21053,7 +21053,13 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
 https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
 - tracks
 
-  
+*** 1
+
+For https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+- year   - WORKS
+- releases   - nothing happens at all
+
 ** "Relationships"  
 
 In the uploaded userscript, after the introduction of the "↕" symbol after the header columns names, the functionality of 
@@ -21072,4 +21078,50 @@ The header column
 #+end_example
 
 is still present
+
+** split column in two separate columns
+
+In the uploaded userscript, implement the following:
+
+In URLs of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+split the column values of the "Country/Date" column in the "Country" and "Date" values and generate two more columns for the latter two in the finale generated page
+
+Example value:
+
+#+begin_example
+<li aria-label="Release event" class="release-event"><span class="flag flag-IT release-country"><a href="/area/c6500277-9a3d-349b-bf30-41afdbf42add"><abbr title="Italy">IT</abbr></a></span><span class="release-date">2009-01-07</span></li>
+#+end_example
+
+*** 1
+
+In the uploaded userscript, implement the following:
+
+Change the debug logging from
+
+[MB-ShowAll-Debug: releasegroup-releases] Sorting category "Official" by column 2
+
+to
+
+[MB-ShowAll-Debug: releasegroup-releases] Sorting category "Official" by "<column name>" (column <index>)
+
+*** tackle relationships
+
+In the uploaded userscript "ShowAllConsolidated.user.js" the functionality of removing the "Relationships" column works
+for the column-data itself, but the column header for that column is still there, which is wrong. The column header
+should also be removed. It probably is related to the introduction of the "↕" symbol after the header columns names in
+the final rendered table ?
+
+Please compare this functionality with a working version in the uploaded userscript
+"ShowAllConsolidated-without-relationships.user.js" and fix accordingly.
+
+**** 1
+
+not working. is it probably because of the introduction of the "↕" symbol after the header columns names in the final rendered table ?
+
+**** 2
+
+NO, the "Relationships ↕" header is still there
+
+**** ChatGPT
 

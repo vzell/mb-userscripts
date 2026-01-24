@@ -218,25 +218,6 @@
         runFilter();
     });
 
-    // Helper to cleanup specific headers from a table
-    function cleanupHeaders(table) {
-        if (!table) return;
-        const thead = table.querySelector('thead tr');
-        if (!thead) return;
-        const headers = Array.from(thead.cells);
-        const indicesToRemove = [];
-        headers.forEach((th, idx) => {
-            const txt = th.textContent.trim();
-            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
-                indicesToExcludeGlobal.add(idx); // Track for data row cleanup
-                indicesToRemove.push(idx);
-            }
-        });
-        indicesToRemove.sort((a, b) => b - a).forEach(idx => thead.deleteCell(idx));
-    }
-
-    let indicesToExcludeGlobal = new Set();
-
     btn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -266,7 +247,6 @@
         stopRequested = false;
         allRows = [];
         groupedRows = new Map();
-        indicesToExcludeGlobal.clear();
 
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
@@ -370,14 +350,34 @@
             filterContainer.style.display = 'inline-block';
 
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
+
+            // --- Cleanup headers of live tables BEFORE rendering/cloning ---
+            // This ensures that when renderGroupedTable grabs the header HTML, it is clean.
+            // It also ensures renderFinalTable reuses a table with clean headers.
+            log('Cleaning up table headers on active DOM...');
+            document.querySelectorAll('table.tbl').forEach(table => {
+                if (table.tHead) {
+                    const toRemove = [];
+                    // Using rows[0] covers the main header row
+                    const headerRow = table.tHead.rows[0];
+                    if (headerRow) {
+                        Array.from(headerRow.cells).forEach((th, idx) => {
+                            const txt = th.textContent.trim();
+                            // Check for Relationship columns to remove
+                            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+                                toRemove.push(idx);
+                            }
+                        });
+                        toRemove.sort((a, b) => b - a).forEach(idx => headerRow.deleteCell(idx));
+                    }
+                }
+            });
+
             if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
                 renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
             } else {
                 renderFinalTable(allRows);
             }
-
-            // Final logic: Remove headers from all active tables on the page after rendering
-            document.querySelectorAll('table.tbl').forEach(cleanupHeaders);
 
             makeSortable();
 
