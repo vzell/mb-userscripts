@@ -21373,6 +21373,10 @@ https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
   </span>
 </td>
 
+*** 1
+
+NO, the two headers "Name" and "Comment" are there but the data cells are empty.
+See for example the working logic to split the "Country/Date" and "Location" columns. 
 
 ** DONE fix releases per release group
 

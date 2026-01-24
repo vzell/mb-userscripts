@@ -237,7 +237,7 @@
 
         indicesToRemove.sort((a, b) => b - a).forEach(idx => theadRow.deleteCell(idx));
 
-        const headerBgColor = '#d3d3d3'; // Dark grey background for custom headers
+        const headerBgColor = '#d3d3d3';
 
         if (typesWithSplitCD.includes(pageType)) {
             const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
@@ -265,6 +265,22 @@
                     theadRow.appendChild(th);
                 }
             });
+        }
+
+        if (pageType !== 'artist-releasegroups') {
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
+            if (!headersText.includes('MB-Name')) {
+                const thN = document.createElement('th');
+                thN.textContent = 'MB-Name';
+                thN.style.backgroundColor = headerBgColor;
+                theadRow.appendChild(thN);
+            }
+            if (!headersText.includes('Comment')) {
+                const thC = document.createElement('th');
+                thC.textContent = 'Comment';
+                thC.style.backgroundColor = headerBgColor;
+                theadRow.appendChild(thC);
+            }
         }
     }
 
@@ -314,7 +330,7 @@
         const startTime = performance.now();
         const baseUrl = window.location.origin + path;
         let pagesProcessed = 0;
-        let cumulativeFetchTime = 0; // Track time for predictive estimation
+        let cumulativeFetchTime = 0;
 
         try {
             for (let p = 1; p <= maxPage; p++) {
@@ -341,7 +357,10 @@
 
                 let countryDateIdx = -1;
                 let locationIdx = -1;
+                let mainColIdx = -1;
                 let indicesToExclude = [];
+                const mainHeaders = ['Recording', 'Event', 'Release', 'Work', 'Title', 'Name'];
+
                 const referenceTable = doc.querySelector('table.tbl');
                 if (referenceTable) {
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
@@ -353,8 +372,14 @@
                         } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
                             locationIdx = idx;
                         }
+
+                        if (mainHeaders.includes(txt)) {
+                            mainColIdx = idx;
+                        }
                     });
                 }
+
+                if (mainColIdx === -1 && pageType === 'releasegroup-releases') mainColIdx = 0;
 
                 let rowsInThisPage = 0;
                 if (pageType === 'artist-releasegroups') {
@@ -382,6 +407,18 @@
                                     currentStatus = node.textContent.trim() || 'Unknown';
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
+
+                                    const tdName = document.createElement('td');
+                                    const tdComment = document.createElement('td');
+                                    if (mainColIdx !== -1 && pageType !== 'artist-releasegroups') {
+                                        const targetCell = newRow.cells[mainColIdx];
+                                        if (targetCell) {
+                                            const nameLink = targetCell.querySelector('a bdi')?.closest('a');
+                                            if (nameLink) tdName.appendChild(nameLink.cloneNode(true));
+                                            const commentBdi = targetCell.querySelector('.comment bdi');
+                                            if (commentBdi) tdComment.textContent = commentBdi.textContent.trim();
+                                        }
+                                    }
 
                                     const tdSplitC = document.createElement('td');
                                     const tdSplitD = document.createElement('td');
@@ -438,17 +475,20 @@
                                     if (typesWithSplitCD.includes(pageType)) {
                                         newRow.appendChild(tdSplitC);
                                         newRow.appendChild(tdSplitD);
-                                        if (pageType === 'releasegroup-releases') {
-                                            if (!groupedRows.has(currentStatus)) groupedRows.set(currentStatus, []);
-                                            groupedRows.get(currentStatus).push(newRow);
-                                        } else {
-                                            allRows.push(newRow);
-                                        }
                                     } else if (typesWithSplitLocation.includes(pageType)) {
                                         newRow.appendChild(tdP);
                                         newRow.appendChild(tdA);
                                         newRow.appendChild(tdC);
-                                        allRows.push(newRow);
+                                    }
+
+                                    if (pageType !== 'artist-releasegroups') {
+                                        newRow.appendChild(tdName);
+                                        newRow.appendChild(tdComment);
+                                    }
+
+                                    if (pageType === 'releasegroup-releases') {
+                                        if (!groupedRows.has(currentStatus)) groupedRows.set(currentStatus, []);
+                                        groupedRows.get(currentStatus).push(newRow);
                                     } else {
                                         allRows.push(newRow);
                                     }
@@ -462,7 +502,6 @@
                 const pageDuration = pageEndTime - pageStartTime;
                 cumulativeFetchTime += pageDuration;
 
-                // Predictive Timing Logic
                 const avgPageTime = cumulativeFetchTime / pagesProcessed;
                 const remainingPages = maxPage - p;
                 const estRemainingSeconds = (avgPageTime * remainingPages) / 1000;
