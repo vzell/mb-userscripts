@@ -314,6 +314,7 @@
         const startTime = performance.now();
         const baseUrl = window.location.origin + path;
         let pagesProcessed = 0;
+        let currentStatus = 'Official'; // Persist status across multiple page loads
 
         try {
             for (let p = 1; p <= maxPage; p++) {
@@ -374,11 +375,13 @@
                 } else {
                     const tableBody = doc.querySelector('table.tbl tbody');
                     if (tableBody) {
-                        let currentStatus = 'Unknown';
                         tableBody.childNodes.forEach(node => {
                             if (node.nodeName === 'TR') {
                                 if (node.classList.contains('subh')) {
-                                    currentStatus = node.textContent.trim() || 'Unknown';
+                                    // Target the TH for more robust category name detection
+                                    const th = node.querySelector('th');
+                                    currentStatus = (th ? th.textContent : node.textContent).trim() || 'Official';
+                                    log(`Page ${p}: Found sub-header "${currentStatus}"`);
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
 

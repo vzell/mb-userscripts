@@ -21034,9 +21034,7 @@ actually ist should still be diabled during load, but still make the visual chan
 
 ** add timing info for sorting and processsing
 
-** TODO add predictiv timing how long it probably will take to load all the pages
-
-** TODO for numerical columns adjust the sorting to be numeric and not character based
+** for numerical columns adjust the sorting to be numeric and not character based
 
 In the uploaded userscript, implement the following:
 
@@ -21114,7 +21112,7 @@ to
 
 [MB-ShowAll-Debug: releasegroup-releases] Sorting category "Official" by "<column name>" (column <index>)
 
-** TODO split column in two separate columns
+** split column in two separate columns
 
 In the uploaded userscript, implement the following:
 
@@ -21233,3 +21231,184 @@ Complete example value for the "Country/Date" column:
 
 For the extracted columns "Country", "Date", "Place" and "Area", make the backgound of the corresponding header cell
 light grey, to distinguish them from standard columns
+
+** TODO add predictiv timing how long it probably will take to load all the pages
+
+** TODO split first column
+
+https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db?direction=2&link_type_id=278&page=1
+
+<td>
+  <span class="recordinglink">
+  </span>
+  <a href="/recording/44b947bb-01fc-4db1-ba41-b20b75f89c54">
+    <bdi>4th of July, Asbury Park (Sandy) / Growin’ Up
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>live, 1981‐01‐26: Athletic &amp; Convocation Center, University of Notre Dame, South Bend, IN, USA
+    </bdi>)
+  </span>
+</td>
+
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+
+<td>
+  <a href="/event/b0466931-607d-4033-aff3-022c3122ea2d/event-art">
+    <span class="artwork-icon eaa-icon" title="This event has artwork in the Event Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/event/b0466931-607d-4033-aff3-022c3122ea2d">
+    <bdi>2025‐12‐14: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Hungerthon Benefit
+    </bdi>)
+  </span>
+</td>
+
+https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+
+<td>
+  <a class="wrap-anywhere" href="/release/947e47b8-a771-4bb7-b672-8662cc2b396e">
+    <bdi>1975‐12‐31: Tower Theater, Upper Darby, Philadelphia, PA, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>50th anniversary edition
+    </bdi>)
+  </span>
+</td>
+
+https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
+
+<td>
+  <a href="/release/8deccee7-8300-440a-9df2-15e4f29a7b9a/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
+    </span>
+  </a>
+  <span class="mp">
+    <a class="wrap-anywhere" href="/release/8deccee7-8300-440a-9df2-15e4f29a7b9a">
+      <bdi>L’Olympia
+      </bdi>
+    </a>
+  </span>
+  <span class="comment">(
+    <bdi>1969‐10‐10: Musicorama, L’Olympia, Paris, France
+    </bdi>)
+  </span>
+</td>
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+
+<td>
+  <a class="wrap-anywhere" href="/work/6c0edf2e-3df6-31c2-855d-eb0cd62e184f">
+    <bdi>Angel Eyes
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>1946 jazz standard
+    </bdi>)
+  </span>
+</td>
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+
+<td>
+  <a class="wrap-anywhere" href="/recording/a2091b47-6721-408f-b8f3-f3d180337e6d">
+    <bdi>“Vote for Change” Finale
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>live, 2004‐10‐02: Gund Arena, Cleveland, OH, USA
+    </bdi>)
+  </span>
+</td>
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+<td>
+  <a href="/release/2188d333-0486-4bb1-9472-c92b5ee2d402/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/release/2188d333-0486-4bb1-9472-c92b5ee2d402">
+    <bdi>Bruce Springsteen in Atlanta, Georgia, 1975
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>standard cover, black vinyl
+    </bdi>)
+  </span>
+</td>
+
+https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+<td>
+  <a href="/release/7c995767-1517-4dc2-9f9d-41200458e92e/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/release/7c995767-1517-4dc2-9f9d-41200458e92e">
+    <bdi>Greetings From Asbury Park, N.J.
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>CD 32210 on disc
+    </bdi>)
+  </span>
+</td>
+
+except: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+** fix releases per release group
+
+On URLs of type https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
+
+Check for example the following three pages:
+
+https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23?page=1
+https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23?page=2
+https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23?page=3
+
+The collection all the table entries after the different headings which look like the following
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Official</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Promotion</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">(unknown)</th></tr>
+#+end_example
+
+#+begin_example
+<tr class="subh"><th></th><th colspan="9">Bootleg</th></tr>
+#+end_example
+
+only appears to happen on the page=1
+
+The fact is on each of the pages there could be rows of type "Official", "Promotion", "Bootleg", etc
+
+*** 1
+
+Still not working.
+
+I think the problem is that a specific subheader like for example "Promotion" and its rows can appear on different pages.
+For example
+
+on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c?page=1
+
+it starts with lots of entries for "Official", then there are 3 entries for "Promotion" and then 1 entry for "Bootleg"
+
+on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c?page=2
+
+there are again lots of entries for "Official" and at the end there is again 1 entry for "Promotion"
+
+*** 2
+
+please don't touch existing code, only change the behaviour of the data accumulation of pages of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
