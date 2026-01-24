@@ -237,16 +237,20 @@
 
         indicesToRemove.sort((a, b) => b - a).forEach(idx => theadRow.deleteCell(idx));
 
+        const headerBgColor = '#d3d3d3'; // Dark grey background for custom headers
+
         if (typesWithSplitCD.includes(pageType)) {
             const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
             if (!headersText.includes('Country')) {
                 const thC = document.createElement('th');
                 thC.textContent = 'Country';
+                thC.style.backgroundColor = headerBgColor;
                 theadRow.appendChild(thC);
             }
             if (!headersText.includes('Date')) {
                 const thD = document.createElement('th');
                 thD.textContent = 'Date';
+                thD.style.backgroundColor = headerBgColor;
                 theadRow.appendChild(thD);
             }
         }
@@ -257,6 +261,7 @@
                 if (!headersText.includes(col)) {
                     const th = document.createElement('th');
                     th.textContent = col;
+                    th.style.backgroundColor = headerBgColor;
                     theadRow.appendChild(th);
                 }
             });

@@ -21225,3 +21225,8 @@ Complete example value for the "Country/Date" column:
   </span>
 </li>
 #+end_example
+
+*** color
+
+For the extracted columns "Country", "Date", "Place" and "Area", make the backgound of the corresponding header cell
+light grey, to distinguish them from standard columns
