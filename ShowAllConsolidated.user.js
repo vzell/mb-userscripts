@@ -579,10 +579,19 @@
                     const icon = h.querySelector('.sort-icon');
                     if (icon) icon.textContent = (i === index) ? (state.sortAscending ? ' ▲' : ' ▼') : ' ↕';
                 });
+
+                const isNumeric = colName === 'Year' || colName === 'Releases';
+
                 const rows = Array.from(table.querySelectorAll('tbody tr'));
                 rows.sort((a, b) => {
                     const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
                     const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
+
+                    if (isNumeric) {
+                        const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
+                        const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
+                        return state.sortAscending ? numA - numB : numB - numA;
+                    }
                     return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 });
                 const tbody = table.querySelector('tbody');
@@ -617,9 +626,18 @@
                     const icon = h.querySelector('.sort-icon');
                     if (icon) icon.textContent = (i === index) ? (sortAscending ? ' ▲' : ' ▼') : ' ↕';
                 });
+
+                const isNumeric = colName === 'Year' || colName === 'Releases';
+
                 allRows.sort((a, b) => {
                     const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
                     const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
+
+                    if (isNumeric) {
+                        const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
+                        const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
+                        return sortAscending ? numA - numB : numB - numA;
+                    }
                     return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 });
                 const query = filterInput.value.toLowerCase();

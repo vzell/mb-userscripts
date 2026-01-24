@@ -21038,9 +21038,12 @@ actually ist should still be diabled during load, but still make the visual chan
 
 ** TODO for numerical columns adjust the sorting to be numeric and not character based
 
+In the uploaded userscript, implement the following:
+
 Please adjust the sorting for numerical columns to be numeric and not character based for the folowing URL types
 
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+numerical columns:
 - year
 - releases
   
