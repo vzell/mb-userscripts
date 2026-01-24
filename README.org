@@ -21234,7 +21234,20 @@ light grey, to distinguish them from standard columns
 
 ** TODO add predictiv timing how long it probably will take to load all the pages
 
+add predictiv timing how long it probably will take to load all the pages, after the submit button (as soon as it's known how long it takes to load a single page, refine after page download)
+
 ** TODO split first column
+
+For the following types of URLs, except: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+split the column values of the initial column in the "Name" and "Comment" values and generate two more columns
+for the latter two in the finale generated page. Leave the original initial column in the table. The two new
+colums should also be sortabel like the rest of the table (and the headers should have a dark grey background).
+
+- The "Comment" column should be extracted from the '<span class="comment">' inside a <bdi> structure
+- The "Name" column should be extracted from the <bdi> structure after the '<a href=' element. Also preserve the a=href in the new "Name" column
+  
+Here are examples for the initial column per URL type:
 
 https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db?direction=2&link_type_id=278&page=1
 
@@ -21360,9 +21373,8 @@ https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
   </span>
 </td>
 
-except: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
-** fix releases per release group
+** DONE fix releases per release group
 
 On URLs of type https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
 

@@ -314,7 +314,7 @@
         const startTime = performance.now();
         const baseUrl = window.location.origin + path;
         let pagesProcessed = 0;
-        let currentStatus = 'Official'; // Persist status across multiple page loads
+        let cumulativeFetchTime = 0; // Track time for predictive estimation
 
         try {
             for (let p = 1; p <= maxPage; p++) {
@@ -375,13 +375,11 @@
                 } else {
                     const tableBody = doc.querySelector('table.tbl tbody');
                     if (tableBody) {
+                        let currentStatus = 'Unknown';
                         tableBody.childNodes.forEach(node => {
                             if (node.nodeName === 'TR') {
                                 if (node.classList.contains('subh')) {
-                                    // Target the TH for more robust category name detection
-                                    const th = node.querySelector('th');
-                                    currentStatus = (th ? th.textContent : node.textContent).trim() || 'Official';
-                                    log(`Page ${p}: Found sub-header "${currentStatus}"`);
+                                    currentStatus = node.textContent.trim() || 'Unknown';
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
 
@@ -461,6 +459,20 @@
                     }
                 }
                 const pageEndTime = performance.now();
+                const pageDuration = pageEndTime - pageStartTime;
+                cumulativeFetchTime += pageDuration;
+
+                // Predictive Timing Logic
+                const avgPageTime = cumulativeFetchTime / pagesProcessed;
+                const remainingPages = maxPage - p;
+                const estRemainingSeconds = (avgPageTime * remainingPages) / 1000;
+
+                if (maxPage > 1 && p < maxPage) {
+                    timerDisplay.textContent = `Est. remaining: ${estRemainingSeconds.toFixed(1)}s`;
+                } else if (p === maxPage) {
+                    timerDisplay.textContent = 'Finalizing...';
+                }
+
                 log(`Page ${p} processed: ${rowsInThisPage} rows in ${((pageEndTime - pageStartTime) / 1000).toFixed(3)}s`);
             }
 
