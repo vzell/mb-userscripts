@@ -75,7 +75,7 @@
 
     // --- UI Elements ---
     const btn = document.createElement('button');
-    btn.textContent = `C: Show all ${pageType.replace('-', ' ')}`;
+    btn.textContent = `Show all ${pageType.replace('-', ' ')}`;
     btn.style.cssText = 'margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s;';
     btn.type = 'button';
 

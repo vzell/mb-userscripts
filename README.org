@@ -21232,11 +21232,11 @@ Complete example value for the "Country/Date" column:
 For the extracted columns "Country", "Date", "Place" and "Area", make the backgound of the corresponding header cell
 light grey, to distinguish them from standard columns
 
-** TODO add predictiv timing how long it probably will take to load all the pages
+** DONE add predictiv timing how long it probably will take to load all the pages
 
 add predictiv timing how long it probably will take to load all the pages, after the submit button (as soon as it's known how long it takes to load a single page, refine after page download)
 
-** TODO split first column
+** DONE split first column
 
 For the following types of URLs, except: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
@@ -21428,3 +21428,4 @@ there are again lots of entries for "Official" and at the end there is again 1 e
 *** 2
 
 please don't touch existing code, only change the behaviour of the data accumulation of pages of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+** search per column
