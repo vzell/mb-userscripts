@@ -20920,7 +20920,7 @@ during Collection all the table entries after the different headings which look 
 
 change, and also log how many rows are under each heading
 
-*** Submit button text: show number of rows, and number of rows all over thapges
+*** Submit button text: show number of rows, and number of rows all over the pages
 
 Now that we have all kind of statistics about number of rows on different pages and types, please place them also on the
 resulting pages ot the following places:
@@ -21034,9 +21034,9 @@ actually ist should still be diabled during load, but still make the visual chan
 
 ** add timing info for sorting and processsing
 
-** add predictiv timing how long it probably will take to load all the pages
+** TODO add predictiv timing how long it probably will take to load all the pages
 
-** for numerical columns adjust the sorting to be numeric and not character based
+** TODO for numerical columns adjust the sorting to be numeric and not character based
 
 Please adjust the sorting for numerical columns to be numeric and not character based for the folowing URL types
 
@@ -21079,7 +21079,28 @@ The header column
 
 is still present
 
-** split column in two separate columns
+*** tackle relationships
+
+In the uploaded userscript "ShowAllConsolidated.user.js" the functionality of removing the "Relationships" column works
+for the column-data itself, but the column header for that column is still there, which is wrong. The column header
+should also be removed. It probably is related to the introduction of the "↕" symbol after the header columns names in
+the final rendered table ?
+
+Please compare this functionality with a working version in the uploaded userscript
+"ShowAllConsolidated-without-relationships.user.js" and fix accordingly.
+
+**** 1
+
+not working. is it probably because of the introduction of the "↕" symbol after the header columns names in the final rendered table ?
+
+**** 2
+
+NO, the "Relationships ↕" header is still there
+
+**** ChatGPT
+
+
+** TODO split column in two separate columns
 
 In the uploaded userscript, implement the following:
 
@@ -21113,7 +21134,16 @@ Example value for the "Country/Date" column:
 
 The problem is: The column headers for the two new columns "Country" and "Date" are missing, also the data cells are properly filled
 
-*** 1
+*** add more pages
+
+In the uploaded userscript, please also add the 'split the column values of the "Country/Date" column in separate
+"Country" and "Date" columns' functionality also for the following URL types:
+
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+- https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
+- https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+
+** logging
 
 In the uploaded userscript, implement the following:
 
@@ -21124,24 +21154,4 @@ Change the debug logging from
 to
 
 [MB-ShowAll-Debug: releasegroup-releases] Sorting category "Official" by "<column name>" (column <index>)
-
-*** tackle relationships
-
-In the uploaded userscript "ShowAllConsolidated.user.js" the functionality of removing the "Relationships" column works
-for the column-data itself, but the column header for that column is still there, which is wrong. The column header
-should also be removed. It probably is related to the introduction of the "↕" symbol after the header columns names in
-the final rendered table ?
-
-Please compare this functionality with a working version in the uploaded userscript
-"ShowAllConsolidated-without-relationships.user.js" and fix accordingly.
-
-**** 1
-
-not working. is it probably because of the introduction of the "↕" symbol after the header columns names in the final rendered table ?
-
-**** 2
-
-NO, the "Relationships ↕" header is still there
-
-**** ChatGPT
 
