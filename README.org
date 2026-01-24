@@ -21124,7 +21124,16 @@ colums should also be sortabel like the rest of the table
 Example value for the "Country/Date" column:
 
 #+begin_example
-<li aria-label="Release event" class="release-event"><span class="flag flag-IT release-country"><a href="/area/c6500277-9a3d-349b-bf30-41afdbf42add"><abbr title="Italy">IT</abbr></a></span><span class="release-date">2009-01-07</span></li>
+<li aria-label="Release event" class="release-event">
+  <span class="flag flag-IT release-country">
+    <a href="/area/c6500277-9a3d-349b-bf30-41afdbf42add">
+      <abbr title="Italy">IT
+      </abbr>
+    </a>
+  </span>
+  <span class="release-date">2009-01-07
+  </span>
+</li>
 #+end_example
 
 *** 1
@@ -21193,3 +21202,26 @@ So basically do the same as has already be done for the "Country/Date" column
 
 Please extract also the hyperlinks 'a=href' from the "Location" column and include them in the "Place", "Area" and
 "Country" columns. For the country column also include the flag see for example 'span class="flag flag-US"'
+
+*** href in Country/Date
+
+For URLs of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+when splitting the column values of the "Country/Date" column in the "Country" and "Date" values please extract also the
+hyperlinks 'a=href' from the "Country/Date" column and include them in the "Country" column. Also include the flag see
+for example '<span class="flag flag-IT release-country">'
+
+Complete example value for the "Country/Date" column:
+
+#+begin_example
+<li aria-label="Release event" class="release-event">
+  <span class="flag flag-IT release-country">
+    <a href="/area/c6500277-9a3d-349b-bf30-41afdbf42add">
+      <abbr title="Italy">IT
+      </abbr>
+    </a>
+  </span>
+  <span class="release-date">2009-01-07
+  </span>
+</li>
+#+end_example

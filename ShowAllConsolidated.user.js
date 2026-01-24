@@ -71,7 +71,7 @@
     }
 
     const typesWithSplitCD = ['releasegroup-releases', 'releases', 'label', 'series'];
-    const typesWithSplitLocation = ['events', 'place-events'];
+    const typesWithSplitLocation = ['events'];
 
     // --- UI Elements ---
     const btn = document.createElement('button');
@@ -377,21 +377,26 @@
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
 
-                                    let countriesStr = '';
-                                    let datesStr = '';
+                                    const tdSplitC = document.createElement('td');
+                                    const tdSplitD = document.createElement('td');
+
                                     if (typesWithSplitCD.includes(pageType) && countryDateIdx !== -1) {
                                         const cdCell = newRow.cells[countryDateIdx];
                                         if (cdCell) {
-                                            const countries = [];
-                                            const dates = [];
-                                            cdCell.querySelectorAll('.release-event').forEach(ev => {
-                                                const c = ev.querySelector('.release-country abbr')?.textContent || ev.querySelector('.release-country')?.textContent;
-                                                const d = ev.querySelector('.release-date')?.textContent;
-                                                if (c) countries.push(c.trim());
-                                                if (d) dates.push(d.trim());
+                                            const events = Array.from(cdCell.querySelectorAll('.release-event'));
+                                            events.forEach((ev, i) => {
+                                                const countrySpan = ev.querySelector('.release-country');
+                                                const dateSpan = ev.querySelector('.release-date');
+
+                                                if (countrySpan) {
+                                                    if (i > 0) tdSplitC.appendChild(document.createTextNode(', '));
+                                                    tdSplitC.appendChild(countrySpan.cloneNode(true));
+                                                }
+                                                if (dateSpan) {
+                                                    if (i > 0) tdSplitD.appendChild(document.createTextNode(', '));
+                                                    tdSplitD.appendChild(document.createTextNode(dateSpan.textContent.trim()));
+                                                }
                                             });
-                                            countriesStr = countries.join(', ');
-                                            datesStr = dates.join(', ');
                                         }
                                     }
 
@@ -425,8 +430,6 @@
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
 
                                     if (typesWithSplitCD.includes(pageType)) {
-                                        const tdSplitC = document.createElement('td'); tdSplitC.textContent = countriesStr;
-                                        const tdSplitD = document.createElement('td'); tdSplitD.textContent = datesStr;
                                         newRow.appendChild(tdSplitC);
                                         newRow.appendChild(tdSplitD);
                                         if (pageType === 'releasegroup-releases') {
