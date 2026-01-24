@@ -71,6 +71,7 @@
     }
 
     const typesWithSplitCD = ['releasegroup-releases', 'releases', 'label', 'series'];
+    const typesWithSplitLocation = ['events', 'place-events'];
 
     // --- UI Elements ---
     const btn = document.createElement('button');
@@ -249,6 +250,17 @@
                 theadRow.appendChild(thD);
             }
         }
+
+        if (typesWithSplitLocation.includes(pageType)) {
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
+            ['Place', 'Area', 'Country'].forEach(col => {
+                if (!headersText.includes(col)) {
+                    const th = document.createElement('th');
+                    th.textContent = col;
+                    theadRow.appendChild(th);
+                }
+            });
+        }
     }
 
     btn.addEventListener('click', async (e) => {
@@ -322,6 +334,7 @@
                 const doc = new DOMParser().parseFromString(html, 'text/html');
 
                 let countryDateIdx = -1;
+                let locationIdx = -1;
                 let indicesToExclude = [];
                 const referenceTable = doc.querySelector('table.tbl');
                 if (referenceTable) {
@@ -331,6 +344,8 @@
                             indicesToExclude.push(idx);
                         } else if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
                             countryDateIdx = idx;
+                        } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
+                            locationIdx = idx;
                         }
                     });
                 }
@@ -380,20 +395,51 @@
                                         }
                                     }
 
+                                    const tdP = document.createElement('td');
+                                    const tdA = document.createElement('td');
+                                    const tdC = document.createElement('td');
+
+                                    if (typesWithSplitLocation.includes(pageType) && locationIdx !== -1) {
+                                        const locCell = newRow.cells[locationIdx];
+                                        if (locCell) {
+                                            const links = Array.from(locCell.querySelectorAll('a'));
+                                            links.forEach(a => {
+                                                const href = a.getAttribute('href');
+                                                const clonedA = a.cloneNode(true);
+                                                if (href.includes('/place/')) {
+                                                    tdP.appendChild(clonedA);
+                                                } else if (href.includes('/area/')) {
+                                                    const flagSpan = a.closest('.flag');
+                                                    if (flagSpan) {
+                                                        const clonedFlag = flagSpan.cloneNode(true);
+                                                        tdC.appendChild(clonedFlag);
+                                                    } else {
+                                                        if (tdA.hasChildNodes()) tdA.appendChild(document.createTextNode(', '));
+                                                        tdA.appendChild(clonedA);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
 
                                     if (typesWithSplitCD.includes(pageType)) {
-                                        const tdC = document.createElement('td'); tdC.textContent = countriesStr;
-                                        const tdD = document.createElement('td'); tdD.textContent = datesStr;
-                                        newRow.appendChild(tdC);
-                                        newRow.appendChild(tdD);
-
+                                        const tdSplitC = document.createElement('td'); tdSplitC.textContent = countriesStr;
+                                        const tdSplitD = document.createElement('td'); tdSplitD.textContent = datesStr;
+                                        newRow.appendChild(tdSplitC);
+                                        newRow.appendChild(tdSplitD);
                                         if (pageType === 'releasegroup-releases') {
                                             if (!groupedRows.has(currentStatus)) groupedRows.set(currentStatus, []);
                                             groupedRows.get(currentStatus).push(newRow);
                                         } else {
                                             allRows.push(newRow);
                                         }
+                                    } else if (typesWithSplitLocation.includes(pageType)) {
+                                        newRow.appendChild(tdP);
+                                        newRow.appendChild(tdA);
+                                        newRow.appendChild(tdC);
+                                        allRows.push(newRow);
                                     } else {
                                         allRows.push(newRow);
                                     }
