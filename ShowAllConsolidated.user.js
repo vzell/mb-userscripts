@@ -108,7 +108,7 @@
             opacity: 1 !important;
             border: 1px solid #767676 !important;
         }
-        .sort-icon { cursor: pointer; margin-left: 4px; }
+        .sort-icon { cursor: pointer; margin-left: 4px; color: #0066cc; font-weight: bold; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; }
         .mb-toggle-h3:hover { color: #222; background-color: #f9f9f9; }
@@ -218,6 +218,37 @@
         runFilter();
     });
 
+    function cleanupHeaders(headerElement) {
+        if (!headerElement) return;
+        const theadRow = (headerElement.tagName === 'THEAD') ? headerElement.querySelector('tr') : headerElement;
+        if (!theadRow) return;
+
+        const headers = Array.from(theadRow.cells);
+        const indicesToRemove = [];
+        headers.forEach((th, idx) => {
+            const txt = th.textContent.trim();
+            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+                indicesToRemove.push(idx);
+            }
+        });
+
+        indicesToRemove.sort((a, b) => b - a).forEach(idx => theadRow.deleteCell(idx));
+
+        if (pageType === 'releasegroup-releases') {
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
+            if (!headersText.includes('Country')) {
+                const thC = document.createElement('th');
+                thC.textContent = 'Country';
+                theadRow.appendChild(thC);
+            }
+            if (!headersText.includes('Date')) {
+                const thD = document.createElement('th');
+                thD.textContent = 'Date';
+                theadRow.appendChild(thD);
+            }
+        }
+    }
+
     btn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -288,12 +319,17 @@
                 const html = await fetchHtml(fetchUrl.toString());
                 const doc = new DOMParser().parseFromString(html, 'text/html');
 
+                let countryDateIdx = -1;
                 let indicesToExclude = [];
                 const referenceTable = doc.querySelector('table.tbl');
                 if (referenceTable) {
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
-                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) indicesToExclude.push(idx);
+                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+                            indicesToExclude.push(idx);
+                        } else if (pageType === 'releasegroup-releases' && txt === 'Country/Date') {
+                            countryDateIdx = idx;
+                        }
                     });
                 }
 
@@ -323,11 +359,38 @@
                                     currentStatus = node.textContent.trim() || 'Unknown';
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
+
+                                    let countriesStr = '';
+                                    let datesStr = '';
+                                    if (pageType === 'releasegroup-releases' && countryDateIdx !== -1) {
+                                        const cdCell = newRow.cells[countryDateIdx];
+                                        if (cdCell) {
+                                            const countries = [];
+                                            const dates = [];
+                                            cdCell.querySelectorAll('.release-event').forEach(ev => {
+                                                const c = ev.querySelector('.release-country abbr')?.textContent || ev.querySelector('.release-country')?.textContent;
+                                                const d = ev.querySelector('.release-date')?.textContent;
+                                                if (c) countries.push(c.trim());
+                                                if (d) dates.push(d.trim());
+                                            });
+                                            countriesStr = countries.join(', ');
+                                            datesStr = dates.join(', ');
+                                        }
+                                    }
+
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
+
                                     if (pageType === 'releasegroup-releases') {
+                                        const tdC = document.createElement('td'); tdC.textContent = countriesStr;
+                                        const tdD = document.createElement('td'); tdD.textContent = datesStr;
+                                        newRow.appendChild(tdC);
+                                        newRow.appendChild(tdD);
+
                                         if (!groupedRows.has(currentStatus)) groupedRows.set(currentStatus, []);
                                         groupedRows.get(currentStatus).push(newRow);
-                                    } else allRows.push(newRow);
+                                    } else {
+                                        allRows.push(newRow);
+                                    }
                                     rowsInThisPage++;
                                 }
                             }
@@ -351,35 +414,13 @@
 
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
-            // --- Cleanup headers of live tables BEFORE rendering/cloning ---
-            // This ensures that when renderGroupedTable grabs the header HTML, it is clean.
-            // It also ensures renderFinalTable reuses a table with clean headers.
-            log('Cleaning up table headers on active DOM...');
-            document.querySelectorAll('table.tbl').forEach(table => {
-                if (table.tHead) {
-                    const toRemove = [];
-                    // Using rows[0] covers the main header row
-                    const headerRow = table.tHead.rows[0];
-                    if (headerRow) {
-                        Array.from(headerRow.cells).forEach((th, idx) => {
-                            const txt = th.textContent.trim();
-                            // Check for Relationship columns to remove
-                            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
-                                toRemove.push(idx);
-                            }
-                        });
-                        toRemove.sort((a, b) => b - a).forEach(idx => headerRow.deleteCell(idx));
-                    }
-                }
-            });
-
             if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
                 renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
             } else {
                 renderFinalTable(allRows);
+                document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+                makeSortable();
             }
-
-            makeSortable();
 
             const endRender = performance.now();
             timerDisplay.textContent = `(Fetch/Render: ${((endRender - startTime) / 1000).toFixed(2)}s)`;
@@ -388,7 +429,6 @@
             log('Critical Error during fetch:', err);
             btn.textContent = 'Error';
             btn.disabled = false;
-            btn.classList.remove('mb-show-all-btn-loading');
         }
     });
 
@@ -405,13 +445,15 @@
         const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
         if (!container) return;
 
-        let headerHtml = '';
+        let templateHead = null;
         const firstTable = document.querySelector('table.tbl');
-        if (firstTable && firstTable.tHead) headerHtml = firstTable.tHead.innerHTML;
+        if (firstTable && firstTable.tHead) {
+            templateHead = firstTable.tHead.cloneNode(true);
+            cleanupHeaders(templateHead);
+        }
 
         container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => el.remove());
 
-        // Master Toggle
         const masterToggle = document.createElement('div');
         masterToggle.className = 'mb-master-toggle';
         masterToggle.textContent = 'Show▼/Hide▲ all types or click the individual type';
@@ -430,8 +472,10 @@
             h3.className = 'mb-toggle-h3';
             const table = document.createElement('table');
             table.className = 'tbl';
-            table.innerHTML = `<thead>${headerHtml}</thead><tbody></tbody>`;
-            rows.forEach(r => table.querySelector('tbody').appendChild(r));
+            if (templateHead) table.appendChild(templateHead.cloneNode(true));
+            const tbody = document.createElement('tbody');
+            table.appendChild(tbody);
+            rows.forEach(r => tbody.appendChild(r));
 
             const catLower = category.toLowerCase();
             const shouldStayOpen = (catLower === 'album' || catLower === 'official') && rows.length < 40;
@@ -475,16 +519,15 @@
                     const icon = h.querySelector('.sort-icon');
                     if (icon) icon.textContent = (i === index) ? (state.sortAscending ? ' ▲' : ' ▼') : ' ↕';
                 });
-                const rows = groupedRows.get(category);
+                const rows = Array.from(table.querySelectorAll('tbody tr'));
                 rows.sort((a, b) => {
                     const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
                     const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
                     return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 });
-                const query = filterInput.value.toLowerCase();
                 const tbody = table.querySelector('tbody');
                 tbody.innerHTML = '';
-                rows.filter(r => r.textContent.toLowerCase().includes(query)).forEach(r => tbody.appendChild(r));
+                rows.forEach(r => tbody.appendChild(r));
             };
         });
     }
@@ -507,20 +550,19 @@
             th.onclick = (e) => {
                 e.preventDefault();
                 const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
-                log(`Sorting main table by "${colName}" (column ${index})`);
+                log(`Sorting main table by ${colName} (column ${index})`);
                 if (lastSortIndex === index) sortAscending = !sortAscending;
                 else { sortAscending = true; lastSortIndex = index; }
                 headers.forEach((h, i) => {
                     const icon = h.querySelector('.sort-icon');
                     if (icon) icon.textContent = (i === index) ? (sortAscending ? ' ▲' : ' ▼') : ' ↕';
                 });
-                const sortFn = (a, b) => {
+                allRows.sort((a, b) => {
                     const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
                     const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
                     return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                };
+                });
                 const query = filterInput.value.toLowerCase();
-                allRows.sort(sortFn);
                 renderFinalTable(query ? allRows.filter(r => r.textContent.toLowerCase().includes(query)) : allRows);
             };
         });

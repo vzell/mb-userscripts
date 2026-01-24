@@ -21097,6 +21097,24 @@ Example value for the "Country/Date" column:
 
 *** 1
 
+In the uploaded userscript, the following is implemented
+
+In URLs of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+split the column values of the "Country/Date" column in the "Country" and "Date" values and generate two more columns
+for the latter two in the finale generated page. Leave the original "Country/Date" column in the table. The two new
+colums should also be sortabel like the rest of the table
+
+Example value for the "Country/Date" column:
+
+#+begin_example
+<li aria-label="Release event" class="release-event"><span class="flag flag-IT release-country"><a href="/area/c6500277-9a3d-349b-bf30-41afdbf42add"><abbr title="Italy">IT</abbr></a></span><span class="release-date">2009-01-07</span></li>
+#+end_example
+
+The problem is: The column headers for the two new columns "Country" and "Date" are missing, also the data cells are properly filled
+
+*** 1
+
 In the uploaded userscript, implement the following:
 
 Change the debug logging from
