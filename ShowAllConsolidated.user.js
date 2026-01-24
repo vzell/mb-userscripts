@@ -467,7 +467,8 @@
             }
             th.onclick = (e) => {
                 e.preventDefault();
-                log(`Sorting category "${category}" by column ${index}`);
+                const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
+                log(`Sorting category "${category}" by "${colName}" (column ${index})`);
                 if (state.lastSortIndex === index) state.sortAscending = !state.sortAscending;
                 else { state.sortAscending = true; state.lastSortIndex = index; }
                 headers.forEach((h, i) => {
@@ -505,7 +506,8 @@
             }
             th.onclick = (e) => {
                 e.preventDefault();
-                log(`Sorting main table by column ${index}`);
+                const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
+                log(`Sorting main table by "${colName}" (column ${index})`);
                 if (lastSortIndex === index) sortAscending = !sortAscending;
                 else { sortAscending = true; lastSortIndex = index; }
                 headers.forEach((h, i) => {
