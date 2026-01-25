@@ -84,7 +84,10 @@
     stopBtn.style.cssText = 'display:none; margin-left:5px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f;';
 
     const filterContainer = document.createElement('span');
-    filterContainer.style.cssText = 'display:none; position:relative; margin-left:10px; vertical-align:middle;';
+    filterContainer.style.cssText = 'display:none; margin-left:10px; vertical-align:middle; white-space:nowrap;';
+
+    const filterWrapper = document.createElement('span');
+    filterWrapper.style.cssText = 'position:relative; display:inline-block; vertical-align:middle;';
 
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Filter ${pageType}...`;
@@ -95,8 +98,20 @@
     filterClear.style.cssText = 'position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:0.6em; color:#999; user-select:none;';
     filterClear.title = 'Clear filter';
 
-    filterContainer.appendChild(filterInput);
-    filterContainer.appendChild(filterClear);
+    filterWrapper.appendChild(filterInput);
+    filterWrapper.appendChild(filterClear);
+
+    const caseLabel = document.createElement('label');
+    caseLabel.style.cssText = 'font-size:0.4em; margin-left:5px; vertical-align:middle; cursor:pointer; font-weight:normal;';
+    const caseCheckbox = document.createElement('input');
+    caseCheckbox.type = 'checkbox';
+    caseCheckbox.style.cssText = 'vertical-align:middle; margin-right:2px;';
+    caseLabel.appendChild(caseCheckbox);
+    caseLabel.appendChild(document.createTextNode('Cc'));
+    caseLabel.title = 'Case Sensitive';
+
+    filterContainer.appendChild(filterWrapper);
+    filterContainer.appendChild(caseLabel);
 
     const timerDisplay = document.createElement('span');
     timerDisplay.style.cssText = 'margin-left:10px; font-size:0.5em; color:#666; vertical-align:middle;';
@@ -192,15 +207,18 @@
         }
     }
 
-    function highlightText(row, query) {
+    function highlightText(row, query, isCaseSensitive) {
         if (!query) return;
-        const regex = new RegExp(`(${query})`, 'gi');
+        const flags = isCaseSensitive ? 'g' : 'gi';
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, flags);
         row.querySelectorAll('td').forEach(td => {
             const walker = document.createTreeWalker(td, NodeFilter.SHOW_TEXT, null, false);
             let node;
             const nodesToReplace = [];
             while (node = walker.nextNode()) {
-                if (node.nodeValue.toLowerCase().includes(query)) {
+                const val = node.nodeValue;
+                const match = isCaseSensitive ? val.includes(query) : val.toLowerCase().includes(query.toLowerCase());
+                if (match) {
                     nodesToReplace.push(node);
                 }
             }
@@ -214,8 +232,10 @@
     }
 
     function runFilter() {
-        const query = filterInput.value.toLowerCase();
-        log(`Filtering rows with query: "${query}"`);
+        const isCaseSensitive = caseCheckbox.checked;
+        const query = isCaseSensitive ? filterInput.value : filterInput.value.toLowerCase();
+        log(`Filtering rows with query: "${query}" (Case Sensitive: ${isCaseSensitive})`);
+
         if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
             const filteredMap = new Map();
             let totalFiltered = 0;
@@ -223,8 +243,9 @@
             groupedRows.forEach((rows, key) => {
                 totalAbsolute += rows.length;
                 const matches = rows.map(r => r.cloneNode(true)).filter(r => {
-                    const hit = r.textContent.toLowerCase().includes(query);
-                    if (hit && query) highlightText(r, query);
+                    const text = r.textContent;
+                    const hit = isCaseSensitive ? text.includes(query) : text.toLowerCase().includes(query);
+                    if (hit && query) highlightText(r, filterInput.value, isCaseSensitive);
                     return hit;
                 });
                 if (matches.length > 0) {
@@ -237,8 +258,9 @@
         } else {
             const totalAbsolute = allRows.length;
             const filteredRows = allRows.map(r => r.cloneNode(true)).filter(row => {
-                const hit = row.textContent.toLowerCase().includes(query);
-                if (hit && query) highlightText(row, query);
+                const text = row.textContent;
+                const hit = isCaseSensitive ? text.includes(query) : text.toLowerCase().includes(query);
+                if (hit && query) highlightText(row, filterInput.value, isCaseSensitive);
                 return hit;
             });
             renderFinalTable(filteredRows);
@@ -256,6 +278,7 @@
     });
 
     filterInput.addEventListener('input', runFilter);
+    caseCheckbox.addEventListener('change', runFilter);
 
     filterClear.addEventListener('click', () => {
         filterInput.value = '';

@@ -21438,13 +21438,35 @@ Artist release groups).
 
 Also display the filter string in the data rows with a red color and a lighyellow background
 
+In the uploaded script, there is already a filter input field which filters rows globally.
+
+Please adjust for case sensitive filtering
+
+*** 1
+
+The unicode X for emptying the filter is misplaced now. It should be inside the filterbox
+
+This is how it looks like now
+
+#+begin_example
+<span style="display: inline-block; position: relative; margin-left: 10px; vertical-align: middle;">
+  <input placeholder="Filter events..." style="font-size: 0.5em; padding: 2px 20px 2px 6px; vertical-align: middle; border: 1px solid rgb(204, 204, 204); border-radius: 3px;">
+  <span title="Clear filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
+  </span>
+  <label title="Case Sensitive" style="font-size: 0.4em; margin-left: 5px; vertical-align: middle; cursor: pointer; font-weight: normal;">
+    <input type="checkbox" style="vertical-align: middle; margin-right: 2px;">Cc
+  </label>
+</span>
+#+end_example
+
 ** filter per column
 
 In the uploaded script, there is already a filter input field which filters rows globally.
 
-Include such a filter field above each column header (aligned with it), which filters rows based on just the column
-where a filter string has been entered. The matching of the filter string should only be done against data cells of the
-column where it is entered.
+Include such a filter field above each column header (aligned with it), which ADDITIONALLY filters rows based on just
+the column where a filter string has been entered (or if a global filter is NOT already activ, which filters just based
+on this column). The matching of the filter string should only be done against data cells of the column where it is
+entered.
 
 Also include a unix X to quickly empty a filter field.
 
