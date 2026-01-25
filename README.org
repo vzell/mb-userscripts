@@ -21567,6 +21567,28 @@ lighyellow background.
 
 ** filter per column also in the grouped table display
 
+In the uploaded script, there is already a filter input field which filters rows globally.
+
+Please also add filter per column functionality on the
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
+https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a URL types where grouped table display is
+active.
+
+Include such a filter field above each column header (aligned with it), which ADDITIONALLY filters rows based on just
+the column where a filter string has been entered (or if a global filter is NOT already activ, which filters just based
+on this column). The matching of the filter string should only be done against data cells of the column where it is
+entered.
+
+Also include a unicode X to quickly empty a filter field.
+
+Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
+lighyellow background.
+
+The per column filtering should only be done in the grouped table where it is entered, not synchronized over column
+filters across all tables.
+
+Make sure you don't break the existing filering functionality for not grouped tables
+
 ** timings for sorting
 
 The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
@@ -21578,9 +21600,7 @@ The text for the timing information for sorting should change during sorting to 
 In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
 
 ** sync functionality like on the old Releases in RG implementation
-** add all RGs (bootlegs) functionality
-
-** TODO why is filtering for numeric columns not always working - removing filtering in Flas abbrevs for example
+** TODO why is filtering for numeric columns not always working - removing filtering in Flags abbrevs for example
 
 On the URLs of type
 
@@ -22171,3 +22191,18 @@ before the "Australia (AU)"
 
     <span class="flag flag-AU release-country">
 before the "Australia (AU)"
+** add all RGs (bootlegs) functionality
+
+In the uploaded user script for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+instead of generating just one "Show all artist releasegroups" button, generate 4 buttons with the title taken from the following table:
+
+| Title                                              | Base URL                                                                       |
+|----------------------------------------------------+--------------------------------------------------------------------------------|
+| Show all official artist releasegroups             | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=0&va=0 |
+| Show all non-official artist releasegroups         | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0 |
+| Show all official various qartist releasegroups    | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=0&va=1 |
+| Show all non-official various artist releasegroups | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=1 |
+
+
+* || txt.startsWith('Tagger') || txt.startsWith('Rating'))
