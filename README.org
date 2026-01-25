@@ -22164,3 +22164,10 @@ When extracting the "Country" column from the "Country/Date" column, not only ex
 #+end_example
 
 In the data cell for the new "Country" column the value should be concatenated like "Australia (AU)"
+
+Actually prepend the actual flag image fromActually prepend the actual flag image from
+    <span class="flag flag-AU release-country">
+before the "Australia (AU)"
+
+    <span class="flag flag-AU release-country">
+before the "Australia (AU)"

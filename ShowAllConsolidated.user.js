@@ -601,16 +601,23 @@
                                         if (cdCell) {
                                             const events = Array.from(cdCell.querySelectorAll('.release-event'));
                                             events.forEach((ev, i) => {
+                                                const countrySpan = ev.querySelector('.release-country');
                                                 const countryAbbr = ev.querySelector('.release-country abbr');
                                                 const dateSpan = ev.querySelector('.release-date');
 
-                                                if (countryAbbr) {
+                                                if (countrySpan && countryAbbr) {
                                                     if (i > 0) tdSplitC.appendChild(document.createTextNode(', '));
-                                                    // Logic update: Concatenate full name from title and abbreviated code
+                                                    // Clone the original span to keep the flag image
+                                                    const flagClone = countrySpan.cloneNode(true);
+                                                    // Clear the internal content to rebuild it specifically
+                                                    flagClone.innerHTML = '';
+
                                                     const fullName = countryAbbr.getAttribute('title');
                                                     const code = countryAbbr.textContent.trim();
-                                                    const countryText = fullName ? `${fullName} (${code})` : code;
-                                                    tdSplitC.appendChild(document.createTextNode(countryText));
+                                                    const formattedText = fullName ? `${fullName} (${code})` : code;
+
+                                                    flagClone.appendChild(document.createTextNode(formattedText));
+                                                    tdSplitC.appendChild(flagClone);
                                                 }
                                                 if (dateSpan) {
                                                     if (i > 0) tdSplitD.appendChild(document.createTextNode(', '));
