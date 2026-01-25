@@ -21479,6 +21479,8 @@ The column level filtering is not working yet. The filter input fields are there
 
 ** Popup tip for sorting + timing
 
+Implement a hover over popup tool tip with the text "Click to sort on this column"
+
 ** works
 
 Why in the case of URLs of type https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db  the a=href goes up to the "(Fetch/Render:" string
@@ -21508,5 +21510,14 @@ Why in the case of URLs of type https://musicbrainz.org/work/b1528b3f-0c0e-3977-
 </h1>
 #+end_example
 
+*** answer
 
+#+begin_example
+The reason the href link extends all the way to the end of the "(Fetch/Render:" string is that the script is appending its UI elements (buttons, filter container, and timer display) directly into the headerContainer.
 
+In the case of Work URLs (like /work/b1528b3f...), the MusicBrainz page structure often places the main title inside an <a> tag which is itself inside the <h1>. When the script defines headerContainer, it specifically looks for document.querySelector('h1 a bdi')?.parentNode. On these pages, that parentNode is the <a> element.
+
+Consequently, every element the script adds via headerContainer.appendChild(...)—including the buttons and the <span> containing the timer—becomes a child of that link, making the entire block clickable.
+
+I have updated the script below to identify if the header container is an anchor tag and, if so, append the UI elements after it instead of inside it. I have also moved the "Clear" (✕) button inside the filter box as requested and ensured all your formatting rules (untabifying, removing trailing whitespace, and preserving comments) are followed
+#+end_example

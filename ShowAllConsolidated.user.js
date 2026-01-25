@@ -137,10 +137,19 @@
     `;
     document.head.appendChild(style);
 
-    headerContainer.appendChild(btn);
-    headerContainer.appendChild(stopBtn);
-    headerContainer.appendChild(filterContainer);
-    headerContainer.appendChild(timerDisplay);
+    // If the container is a link (common on Work pages), insert elements AFTER it
+    // to prevent them from becoming part of the clickable URL.
+    if (headerContainer.tagName === 'A') {
+        headerContainer.after(timerDisplay);
+        headerContainer.after(filterContainer);
+        headerContainer.after(stopBtn);
+        headerContainer.after(btn);
+    } else {
+        headerContainer.appendChild(btn);
+        headerContainer.appendChild(stopBtn);
+        headerContainer.appendChild(filterContainer);
+        headerContainer.appendChild(timerDisplay);
+    }
 
     let allRows = [];
     let groupedRows = new Map();
