@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-22
+// @version      0.9+2026-01-25
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -693,6 +693,7 @@
         headers.forEach((th, index) => {
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'pointer';
+            th.title = 'Click to sort on this column';
             if (!th.querySelector('.sort-icon')) {
                 const s = document.createElement('span');
                 s.className = 'sort-icon';
@@ -740,6 +741,7 @@
         headers.forEach((th, index) => {
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'pointer';
+            th.title = 'Click to sort on this column';
             if (!th.querySelector('.sort-icon')) {
                 const s = document.createElement('span');
                 s.className = 'sort-icon';

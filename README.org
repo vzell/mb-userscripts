@@ -21459,29 +21459,7 @@ This is how it looks like now
 </span>
 #+end_example
 
-** filter per column
-
-In the uploaded script, there is already a filter input field which filters rows globally.
-
-Include such a filter field above each column header (aligned with it), which ADDITIONALLY filters rows based on just
-the column where a filter string has been entered (or if a global filter is NOT already activ, which filters just based
-on this column). The matching of the filter string should only be done against data cells of the column where it is
-entered.
-
-Also include a unix X to quickly empty a filter field.
-
-Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
-lighyellow background
-
-*** 1
-
-The column level filtering is not working yet. The filter input fields are there. also include a unix X to quickly empty a filter field
-
-** Popup tip for sorting + timing
-
-Implement a hover over popup tool tip with the text "Click to sort on this column"
-
-** works
+** DONE fix works
 
 Why in the case of URLs of type https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db  the a=href goes up to the "(Fetch/Render:" string
 
@@ -21521,3 +21499,30 @@ Consequently, every element the script adds via headerContainer.appendChild(...)
 
 I have updated the script below to identify if the header container is an anchor tag and, if so, append the UI elements after it instead of inside it. I have also moved the "Clear" (✕) button inside the filter box as requested and ensured all your formatting rules (untabifying, removing trailing whitespace, and preserving comments) are followed
 #+end_example
+** Popup tip for sorting + timing
+
+In the uploaded userscript,
+implement a hover over popup tool tip with the text "Click to sort on this column" when hovering over a sortable columns
+
+** filter per column
+
+In the uploaded script, there is already a filter input field which filters rows globally.
+
+Include such a filter field above each column header (aligned with it), which ADDITIONALLY filters rows based on just
+the column where a filter string has been entered (or if a global filter is NOT already activ, which filters just based
+on this column). The matching of the filter string should only be done against data cells of the column where it is
+entered.
+
+Also include a unix X to quickly empty a filter field.
+
+Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
+lighyellow background
+
+*** 1
+
+The column level filtering is not working yet. The filter input fields are there. also include a unix X to quickly empty a filter field
+
+** add all RGs functionality
+
+** sync functionaliyt right ow in the old Releases in RG implementation
+
