@@ -94,13 +94,13 @@
     filterWrapper.style.cssText = 'position:relative; display:inline-block;';
 
     const filterInput = document.createElement('input');
-    filterInput.placeholder = `Filter ${pageType}...`;
+    filterInput.placeholder = `Global Filter...`;
     filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box;';
 
     const filterClear = document.createElement('span');
     filterClear.textContent = '✕';
     filterClear.style.cssText = 'position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:0.6em; color:#999; user-select:none;';
-    filterClear.title = 'Clear filter';
+    filterClear.title = 'Clear global filter';
 
     filterWrapper.appendChild(filterInput);
     filterWrapper.appendChild(filterClear);
@@ -147,6 +147,10 @@
         .mb-master-toggle { cursor: pointer; color: #0066cc; font-weight: bold; margin-bottom: 15px; display: inline-block; font-size: 1.1em; }
         .mb-master-toggle:hover { text-decoration: underline; }
         .mb-filter-highlight { color: red; background-color: #FFD700; }
+        .mb-col-filter-highlight { color: green; background-color: #FFFFE0; }
+        .mb-col-filter-input { font-size: 0.8em; width: 90%; box-sizing: border-box; padding: 1px 18px 1px 2px; }
+        .mb-col-filter-wrapper { position: relative; width: 100%; display: block; }
+        .mb-col-filter-clear { position: absolute; right: 8%; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.8em; color: #999; user-select: none; }
     `;
     document.head.appendChild(style);
 
@@ -161,6 +165,7 @@
     let isLoaded = false;
     let stopRequested = false;
     let multiTableSortStates = new Map();
+    let columnFilters = {}; // Keyed by column index
 
     async function fetchWorkRecordingsMaxPage(workPath) {
         const url = new URL(window.location.origin + workPath);
@@ -221,11 +226,15 @@
         }
     }
 
-    function highlightText(row, query, isCaseSensitive) {
+    function highlightText(row, query, isCaseSensitive, isColumnFilter = false, colIdx = -1) {
         if (!query) return;
         const flags = isCaseSensitive ? 'g' : 'gi';
         const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, flags);
-        row.querySelectorAll('td').forEach(td => {
+        const cssClass = isColumnFilter ? 'mb-col-filter-highlight' : 'mb-filter-highlight';
+
+        row.querySelectorAll('td').forEach((td, idx) => {
+            if (isColumnFilter && colIdx !== -1 && idx !== colIdx) return;
+
             const walker = document.createTreeWalker(td, NodeFilter.SHOW_TEXT, null, false);
             let node;
             const nodesToReplace = [];
@@ -238,7 +247,7 @@
             }
             nodesToReplace.forEach(textNode => {
                 const span = document.createElement('span');
-                span.innerHTML = textNode.nodeValue.replace(regex, '<span class="mb-filter-highlight">$1</span>');
+                span.innerHTML = textNode.nodeValue.replace(regex, `<span class="${cssClass}">$1</span>`);
                 textNode.parentNode.replaceChild(span, textNode);
             });
         });
@@ -246,8 +255,43 @@
 
     function runFilter() {
         const isCaseSensitive = caseCheckbox.checked;
-        const query = isCaseSensitive ? filterInput.value : filterInput.value.toLowerCase();
-        log(`Filtering rows with query: "${query}" (Case Sensitive: ${isCaseSensitive})`);
+        const globalQuery = isCaseSensitive ? filterInput.value : filterInput.value.toLowerCase();
+        log(`Filtering rows with global query: "${globalQuery}" (Case Sensitive: ${isCaseSensitive})`);
+
+        // Prepare active column filters
+        const activeColFilters = Object.entries(columnFilters)
+            .filter(([_, val]) => val.trim().length > 0)
+            .map(([idx, val]) => ({
+                index: parseInt(idx, 10),
+                query: isCaseSensitive ? val : val.toLowerCase()
+            }));
+
+        const filterPredicate = (row) => {
+            // Check global filter
+            if (globalQuery) {
+                const text = row.textContent;
+                const hit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
+                if (!hit) return false;
+            }
+
+            // Check column filters
+            for (const f of activeColFilters) {
+                const cell = row.cells[f.index];
+                if (!cell) return false;
+                const cellText = cell.textContent;
+                const hit = isCaseSensitive ? cellText.includes(f.query) : cellText.toLowerCase().includes(f.query);
+                if (!hit) return false;
+            }
+
+            return true;
+        };
+
+        const applyHighlights = (clonedRow) => {
+            if (globalQuery) highlightText(clonedRow, filterInput.value, isCaseSensitive, false);
+            activeColFilters.forEach(f => {
+                highlightText(clonedRow, columnFilters[f.index], isCaseSensitive, true, f.index);
+            });
+        };
 
         if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
             const filteredMap = new Map();
@@ -255,26 +299,24 @@
             let totalAbsolute = 0;
             groupedRows.forEach((rows, key) => {
                 totalAbsolute += rows.length;
-                const matches = rows.map(r => r.cloneNode(true)).filter(r => {
-                    const text = r.textContent;
-                    const hit = isCaseSensitive ? text.includes(query) : text.toLowerCase().includes(query);
-                    if (hit && query) highlightText(r, filterInput.value, isCaseSensitive);
-                    return hit;
+                const matches = rows.filter(filterPredicate).map(r => {
+                    const clone = r.cloneNode(true);
+                    applyHighlights(clone);
+                    return clone;
                 });
                 if (matches.length > 0) {
                     filteredMap.set(key, matches);
                     totalFiltered += matches.length;
                 }
             });
-            renderGroupedTable(filteredMap, pageType === 'artist-releasegroups', query);
+            renderGroupedTable(filteredMap, pageType === 'artist-releasegroups', globalQuery || activeColFilters.length > 0);
             updateH2Count(totalFiltered, totalAbsolute);
         } else {
             const totalAbsolute = allRows.length;
-            const filteredRows = allRows.map(r => r.cloneNode(true)).filter(row => {
-                const text = row.textContent;
-                const hit = isCaseSensitive ? text.includes(query) : text.toLowerCase().includes(query);
-                if (hit && query) highlightText(row, filterInput.value, isCaseSensitive);
-                return hit;
+            const filteredRows = allRows.filter(filterPredicate).map(r => {
+                const clone = r.cloneNode(true);
+                applyHighlights(clone);
+                return clone;
             });
             renderFinalTable(filteredRows);
             updateH2Count(filteredRows.length, totalAbsolute);
@@ -297,6 +339,53 @@
         filterInput.value = '';
         runFilter();
     });
+
+    function addColumnFilterRow(thead) {
+        if (!thead || thead.querySelector('.mb-col-filter-row')) return;
+        const mainRow = thead.querySelector('tr');
+        if (!mainRow) return;
+
+        const filterRow = document.createElement('tr');
+        filterRow.className = 'mb-col-filter-row';
+
+        Array.from(mainRow.cells).forEach((_, idx) => {
+            const td = document.createElement('td');
+            td.style.padding = '2px';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'mb-col-filter-wrapper';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'mb-col-filter-input';
+            input.placeholder = 'Filter...';
+
+            const clearBtn = document.createElement('span');
+            clearBtn.className = 'mb-col-filter-clear';
+            clearBtn.textContent = '✕';
+            clearBtn.style.display = 'none';
+
+            input.addEventListener('input', () => {
+                columnFilters[idx] = input.value;
+                clearBtn.style.display = input.value ? 'inline' : 'none';
+                runFilter();
+            });
+
+            clearBtn.addEventListener('click', () => {
+                input.value = '';
+                columnFilters[idx] = '';
+                clearBtn.style.display = 'none';
+                runFilter();
+            });
+
+            wrapper.appendChild(input);
+            wrapper.appendChild(clearBtn);
+            td.appendChild(wrapper);
+            filterRow.appendChild(td);
+        });
+
+        thead.appendChild(filterRow);
+    }
 
     function cleanupHeaders(headerElement) {
         if (!headerElement) return;
@@ -359,6 +448,11 @@
                 theadRow.appendChild(thC);
             }
         }
+
+        // Add column filters after cleanup
+        if (headerElement.tagName === 'THEAD') {
+            addColumnFilterRow(headerElement);
+        }
     }
 
     btn.addEventListener('click', async (e) => {
@@ -390,6 +484,7 @@
         stopRequested = false;
         allRows = [];
         groupedRows = new Map();
+        columnFilters = {}; // Reset column filters on new fetch
 
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
@@ -631,7 +726,7 @@
         rows.forEach(r => tbody.appendChild(r));
     }
 
-    function renderGroupedTable(map, isArtistMain, query = '') {
+    function renderGroupedTable(map, isArtistMain, isFiltering = false) {
         log(`Rendering grouped table. Map size: ${map.size}, isArtistMain: ${isArtistMain}`);
         const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
         if (!container) return;
@@ -640,7 +735,7 @@
         const firstTable = document.querySelector('table.tbl');
         if (firstTable && firstTable.tHead) {
             templateHead = firstTable.tHead.cloneNode(true);
-            cleanupHeaders(templateHead);
+            // templateHead already has filter row from cleanupHeaders or initial addition
         }
 
         container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => el.remove());
@@ -663,19 +758,37 @@
             h3.className = 'mb-toggle-h3';
             const table = document.createElement('table');
             table.className = 'tbl';
-            if (templateHead) table.appendChild(templateHead.cloneNode(true));
+            if (templateHead) {
+                const head = templateHead.cloneNode(true);
+                // Synchronize inputs in the cloned header with current state
+                head.querySelectorAll('.mb-col-filter-input').forEach((input, idx) => {
+                    input.value = columnFilters[idx] || '';
+                    const clear = input.parentNode.querySelector('.mb-col-filter-clear');
+                    if (clear) clear.style.display = input.value ? 'inline' : 'none';
+
+                    // Re-attach listeners to the cloned inputs
+                    input.addEventListener('input', () => {
+                        columnFilters[idx] = input.value;
+                        runFilter();
+                    });
+                    if (clear) clear.addEventListener('click', () => {
+                        input.value = ''; columnFilters[idx] = ''; runFilter();
+                    });
+                });
+                table.appendChild(head);
+            }
             const tbody = document.createElement('tbody');
             table.appendChild(tbody);
             rows.forEach(r => tbody.appendChild(r));
 
             const catLower = category.toLowerCase();
             const shouldStayOpen = (catLower === 'album' || catLower === 'official') && rows.length < 40;
-            table.style.display = (shouldStayOpen || query) ? '' : 'none';
+            table.style.display = (shouldStayOpen || isFiltering) ? '' : 'none';
 
             const totalInCategory = groupedRows.get(category)?.length || rows.length;
             const countDisplay = (rows.length === totalInCategory) ? `(${rows.length})` : `(${rows.length} of ${totalInCategory})`;
 
-            h3.innerHTML = `<span class="mb-toggle-icon">${(shouldStayOpen || query) ? '▼' : '▲'}</span>${category} <span class="mb-row-count-stat">${countDisplay}</span>`;
+            h3.innerHTML = `<span class="mb-toggle-icon">${(shouldStayOpen || isFiltering) ? '▼' : '▲'}</span>${category} <span class="mb-row-count-stat">${countDisplay}</span>`;
             container.appendChild(h3);
             container.appendChild(table);
 
@@ -690,7 +803,7 @@
     }
 
     function makeTableSortable(table, category) {
-        const headers = table.querySelectorAll('thead th');
+        const headers = table.querySelectorAll('thead tr:first-child th');
         if (!multiTableSortStates.has(category)) multiTableSortStates.set(category, { lastSortIndex: -1, sortAscending: true });
         const state = multiTableSortStates.get(category);
 
@@ -736,18 +849,7 @@
 
                     const tbody = table.querySelector('tbody');
                     tbody.innerHTML = '';
-                    const query = filterInput.value;
-                    const isCaseSensitive = caseCheckbox.checked;
-
-                    rows.forEach(r => {
-                        if (query) {
-                            const cloned = r.cloneNode(true);
-                            highlightText(cloned, query, isCaseSensitive);
-                            tbody.appendChild(cloned);
-                        } else {
-                            tbody.appendChild(r);
-                        }
-                    });
+                    runFilter(); // Re-run filter to handle highlights/visibility after sort
 
                     const endSort = performance.now();
                     sortTimerDisplay.textContent = `(Sort: ${((endSort - startSort) / 1000).toFixed(2)}s)`;
@@ -759,7 +861,7 @@
     function makeSortable() {
         if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') return;
         log('Initializing sort handlers for main table.');
-        const headers = document.querySelectorAll('table.tbl thead th');
+        const headers = document.querySelectorAll('table.tbl thead tr:first-child th');
         let lastSortIndex = -1;
         let sortAscending = true;
         headers.forEach((th, index) => {
@@ -801,20 +903,7 @@
                         return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                     });
 
-                    const query = filterInput.value;
-                    const isCaseSensitive = caseCheckbox.checked;
-                    const queryLower = query.toLowerCase();
-
-                    if (query) {
-                        const filtered = allRows.map(r => r.cloneNode(true)).filter(r => {
-                            const hit = isCaseSensitive ? r.textContent.includes(query) : r.textContent.toLowerCase().includes(queryLower);
-                            if (hit) highlightText(r, query, isCaseSensitive);
-                            return hit;
-                        });
-                        renderFinalTable(filtered);
-                    } else {
-                        renderFinalTable(allRows);
-                    }
+                    runFilter();
 
                     const endSort = performance.now();
                     sortTimerDisplay.textContent = `(Sort: ${((endSort - startSort) / 1000).toFixed(2)}s)`;

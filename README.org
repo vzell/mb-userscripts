@@ -22078,24 +22078,6 @@ I have updated the script below to identify if the header container is an anchor
 In the uploaded userscript,
 implement a hover over popup tool tip with the text "Click to sort on this column" when hovering over a sortable columns
 
-** filter per column
-
-In the uploaded script, there is already a filter input field which filters rows globally.
-
-Include such a filter field above each column header (aligned with it), which ADDITIONALLY filters rows based on just
-the column where a filter string has been entered (or if a global filter is NOT already activ, which filters just based
-on this column). The matching of the filter string should only be done against data cells of the column where it is
-entered.
-
-Also include a unicode X to quickly empty a filter field.
-
-Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
-lighyellow background.
-
-*** 1
-
-The column level filtering is not working yet. The filter input fields are there. also include a unix X to quickly empty a filter field
-
 ** add all RGs (bootlegs) functionality
 
 ** sync functionality like on the old Releases in RG implementation
@@ -22142,12 +22124,27 @@ Place all of them in a singel <div> container
 Give the div container a meaningfull name. Additionally the checkbox and the (Fetch/Remove) text should be aligned in the middle of the div container (right now it looks like it's shifted a little bit up from the middle)
 Also implement a timing counter functionality for the duration of the sorting of a column. Place the duration information in the dame <div> container as the rest of the button and filter container.
 
+** DONE retain the highlighting if sorted during filtering
+
+In the uploaded user script retain the highlighting of filter strings in the data cells if rows are sorted during filtering
+
 ** timings for sorting
 
 The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
 
 ** separate timing for fetching and initial rendering
 
-** retain the highlighting if sorted during filtering
+** filter per column
 
-In the uploaded user script retain the highlighting of filter strings in the data cells if rows are sorted during filtering
+In the uploaded script, there is already a filter input field which filters rows globally.
+
+Include such a filter field above each column header (aligned with it), which ADDITIONALLY filters rows based on just
+the column where a filter string has been entered (or if a global filter is NOT already activ, which filters just based
+on this column). The matching of the filter string should only be done against data cells of the column where it is
+entered.
+
+Also include a unicode X to quickly empty a filter field.
+
+Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
+lighyellow background.
+
