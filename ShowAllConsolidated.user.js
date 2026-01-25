@@ -169,7 +169,7 @@
         });
     }
 
-    function updateH2Count(count) {
+    function updateH2Count(filteredCount, totalCount) {
         const table = document.querySelector('table.tbl');
         if (!table) return;
         let allH2s = Array.from(document.querySelectorAll('h2'));
@@ -184,10 +184,31 @@
             if (existing) existing.remove();
             const span = document.createElement('span');
             span.className = 'mb-row-count-stat';
-            span.textContent = `(${count})`;
+            const countText = (filteredCount === totalCount) ? `(${totalCount})` : `(${filteredCount} of ${totalCount})`;
+            span.textContent = countText;
             targetH2.appendChild(span);
-            log(`Updated H2 header count: ${count}`);
+            log(`Updated H2 header count: ${countText}`);
         }
+    }
+
+    function highlightText(row, query) {
+        if (!query) return;
+        const regex = new RegExp(`(${query})`, 'gi');
+        row.querySelectorAll('td').forEach(td => {
+            const walker = document.createTreeWalker(td, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+            const nodesToReplace = [];
+            while (node = walker.nextNode()) {
+                if (node.nodeValue.toLowerCase().includes(query)) {
+                    nodesToReplace.push(node);
+                }
+            }
+            nodesToReplace.forEach(textNode => {
+                const span = document.createElement('span');
+                span.innerHTML = textNode.nodeValue.replace(regex, '<span style="color:red;">$1</span>');
+                textNode.parentNode.replaceChild(span, textNode);
+            });
+        });
     }
 
     function runFilter() {
@@ -195,13 +216,31 @@
         log(`Filtering rows with query: "${query}"`);
         if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
             const filteredMap = new Map();
+            let totalFiltered = 0;
+            let totalAbsolute = 0;
             groupedRows.forEach((rows, key) => {
-                const matches = rows.filter(r => r.textContent.toLowerCase().includes(query));
-                if (matches.length > 0) filteredMap.set(key, matches);
+                totalAbsolute += rows.length;
+                const matches = rows.map(r => r.cloneNode(true)).filter(r => {
+                    const hit = r.textContent.toLowerCase().includes(query);
+                    if (hit && query) highlightText(r, query);
+                    return hit;
+                });
+                if (matches.length > 0) {
+                    filteredMap.set(key, matches);
+                    totalFiltered += matches.length;
+                }
             });
-            renderGroupedTable(filteredMap, pageType === 'artist-releasegroups');
+            renderGroupedTable(filteredMap, pageType === 'artist-releasegroups', query);
+            updateH2Count(totalFiltered, totalAbsolute);
         } else {
-            renderFinalTable(allRows.filter(row => row.textContent.toLowerCase().includes(query)));
+            const totalAbsolute = allRows.length;
+            const filteredRows = allRows.map(r => r.cloneNode(true)).filter(row => {
+                const hit = row.textContent.toLowerCase().includes(query);
+                if (hit && query) highlightText(row, query);
+                return hit;
+            });
+            renderFinalTable(filteredRows);
+            updateH2Count(filteredRows.length, totalAbsolute);
         }
     }
 
@@ -519,7 +558,7 @@
                              Array.from(groupedRows.values()).reduce((a, b) => a + b.length, 0) : allRows.length;
 
             log(`Finished fetching. Total rows: ${totalRows} across ${pagesProcessed} pages.`);
-            updateH2Count(totalRows);
+            updateH2Count(totalRows, totalRows);
             btn.textContent = `Loaded ${totalRows} rows from ${pagesProcessed} pages`;
             btn.disabled = false;
             btn.classList.remove('mb-show-all-btn-loading');
@@ -554,7 +593,7 @@
         rows.forEach(r => tbody.appendChild(r));
     }
 
-    function renderGroupedTable(map, isArtistMain) {
+    function renderGroupedTable(map, isArtistMain, query = '') {
         log(`Rendering grouped table. Map size: ${map.size}, isArtistMain: ${isArtistMain}`);
         const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
         if (!container) return;
@@ -593,9 +632,12 @@
 
             const catLower = category.toLowerCase();
             const shouldStayOpen = (catLower === 'album' || catLower === 'official') && rows.length < 40;
-            table.style.display = shouldStayOpen ? '' : 'none';
+            table.style.display = (shouldStayOpen || query) ? '' : 'none';
 
-            h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${category} <span class="mb-row-count-stat">(${rows.length})</span>`;
+            const totalInCategory = groupedRows.get(category)?.length || rows.length;
+            const countDisplay = (rows.length === totalInCategory) ? `(${rows.length})` : `(${rows.length} of ${totalInCategory})`;
+
+            h3.innerHTML = `<span class="mb-toggle-icon">${(shouldStayOpen || query) ? '▼' : '▲'}</span>${category} <span class="mb-row-count-stat">${countDisplay}</span>`;
             container.appendChild(h3);
             container.appendChild(table);
 
