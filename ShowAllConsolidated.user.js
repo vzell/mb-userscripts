@@ -396,7 +396,8 @@
         const indicesToRemove = [];
         headers.forEach((th, idx) => {
             const txt = th.textContent.trim();
-            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+            // Handle Tagger column as requested, alongside Relationships and Performance Attributes
+            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes') || txt === 'Tagger') {
                 indicesToRemove.push(idx);
             }
         });
@@ -537,7 +538,7 @@
                 if (referenceTable) {
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
-                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes') || txt === 'Tagger') {
                             indicesToExclude.push(idx);
                         } else if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
                             countryDateIdx = idx;

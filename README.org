@@ -22148,3 +22148,7 @@ Also include a unicode X to quickly empty a filter field.
 Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
 lighyellow background.
 
+** remove "Tagger" column
+
+In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
+
