@@ -427,6 +427,15 @@
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
             if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
         });
+        // Hide Slick slider containers and large details blocks
+        document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').forEach(div => {
+            const parent = div.parentElement;
+            if (parent && parent.style.width === '700px') parent.style.display = 'none';
+        });
+        document.querySelectorAll('details').forEach(det => {
+            // Target details blocks containing many images (likely the cover art gallery)
+            if (det.querySelectorAll('img').length > 5) det.style.display = 'none';
+        });
 
         if (pageType === 'events' || pageType === 'artist-releasegroups') removeSanojjonasContainers();
 

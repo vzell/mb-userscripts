@@ -22227,7 +22227,28 @@ instead of generating just one "Show all artist releasegroups" button, generate 
 * || txt.startsWith('Tagger') || txt.startsWith('Rating'))
 
 
-*
+* fix filtering for just visible data
 
 When entering numerical values in the filter field, sometimes there are rows shown which actually do NOT have these
 values at all (so there is also nothing higlighted). When entering string data this behaviour is NOT observed.
+
+* display none for timeline plugin
+
+In the uploaded user script, adjust the following part of the code
+
+#+begin_example
+
+        document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
+        document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
+            if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
+        });
+#+end_example
+
+to also hide the following div containers
+
+#+begin_example
+<div style="width: 700px;">
+  <div id="slider0" class="slider multiple-items slick-initialized slick-slider">
+#+end_example
+
+and the very large '<details>...</details>' block with lots of image refernces in it.
