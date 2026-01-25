@@ -118,6 +118,7 @@
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; }
         .mb-master-toggle { cursor: pointer; color: #0066cc; font-weight: bold; margin-bottom: 15px; display: inline-block; font-size: 1.1em; }
         .mb-master-toggle:hover { text-decoration: underline; }
+        .mb-filter-highlight { color: red; background-color: #FFD700; }
     `;
     document.head.appendChild(style);
 
@@ -205,7 +206,8 @@
             }
             nodesToReplace.forEach(textNode => {
                 const span = document.createElement('span');
-                span.innerHTML = textNode.nodeValue.replace(regex, '<span style="color:red;">$1</span>');
+                // Red color and darkyellow background via class defined in style tag
+                span.innerHTML = textNode.nodeValue.replace(regex, '<span class="mb-filter-highlight">$1</span>');
                 textNode.parentNode.replaceChild(span, textNode);
             });
         });

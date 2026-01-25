@@ -21428,7 +21428,7 @@ there are again lots of entries for "Official" and at the end there is again 1 e
 *** 2
 
 please don't touch existing code, only change the behaviour of the data accumulation of pages of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-** global filter
+** DONE global filter
 
 In the uploaded script, there is already a filter input field which filters rows globally.
 
@@ -21442,9 +21442,14 @@ Also display the filter string in the data rows with a red color and a lighyello
 
 In the uploaded script, there is already a filter input field which filters rows globally.
 
-Include such a filter field above each column header (aligned with it), which filters rows based on just the column where a filter string has been entered.
-also include a unix X to quickly empty a filter field
+Include such a filter field above each column header (aligned with it), which filters rows based on just the column
+where a filter string has been entered. The matching of the filter string should only be done against data cells of the
+column where it is entered.
 
+Also include a unix X to quickly empty a filter field.
+
+Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
+lighyellow background
 
 *** 1
 
@@ -21452,6 +21457,6 @@ The column level filtering is not working yet. The filter input fields are there
 
 ** Popup tip for sorting + timing
 
-** highlight
+
 
 
