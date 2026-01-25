@@ -22176,8 +22176,28 @@ The problem is here
 
 *** solution
 
-In the uploaded user script, when extracting the "Country" column from the "Country/Date" column, not only extract the
-abbreviated country name like "AU" but also "Australia" from the title attribute of the <abbr> tag
+In the uploaded user script "ShowAllConsolidated.user.js", change the cell data for the extracted "Country" column from
+the "Country/Date" column
+
+from the current format "<country flag> <country abbreviation>" to "<country flag> <full country name> (<country abbreviation>)" like in the uploaded userscrip flag.js
+
+The <full country name> like for example "Australia" can be extracted from the title attribute of the <abbr> tag
+
+#+begin_example
+<li aria-label="Release event" class="release-event">
+  <span class="flag flag-IT release-country">
+    <a href="/area/c6500277-9a3d-349b-bf30-41afdbf42add">
+      <abbr title="Italy">IT
+      </abbr>
+    </a>
+  </span>
+  <span class="release-date">2009-01-07
+  </span>
+</li>
+#+end_example
+
+Please prepend the flag icon '<span class="flag flag-IT release-country">' in front of the currently extracted data and
+also use the <a=href> url to make the data after the flag cklickable. Also use ""Australia (AU)"" instead of "[Australia] (AU)" as the format.
 
 #+begin_example
 <abbr title="Australia">AU
