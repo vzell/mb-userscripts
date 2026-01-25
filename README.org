@@ -22148,7 +22148,6 @@ The text for the timing information for sorting should change during sorting to 
 
 ** separate timing for fetching and initial rendering
 
-** retain the highlighting if filtered during sort
+** retain the highlighting if sorted during filtering
 
-
-
+In the uploaded user script retain the highlighting of filter strings in the data cells if rows are sorted during filtering

@@ -76,7 +76,6 @@
     // --- UI Elements ---
     const controlsContainer = document.createElement('div');
     controlsContainer.id = 'mb-show-all-controls-container';
-    // Use flex and align-items: center for middle vertical alignment
     controlsContainer.style.cssText = 'display:inline-flex; align-items:center; gap:8px; margin-left:10px; vertical-align:middle; line-height:1;';
 
     const btn = document.createElement('button');
@@ -96,7 +95,6 @@
 
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Filter ${pageType}...`;
-    // Height matched to buttons for alignment
     filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box;';
 
     const filterClear = document.createElement('span');
@@ -738,7 +736,18 @@
 
                     const tbody = table.querySelector('tbody');
                     tbody.innerHTML = '';
-                    rows.forEach(r => tbody.appendChild(r));
+                    const query = filterInput.value;
+                    const isCaseSensitive = caseCheckbox.checked;
+
+                    rows.forEach(r => {
+                        if (query) {
+                            const cloned = r.cloneNode(true);
+                            highlightText(cloned, query, isCaseSensitive);
+                            tbody.appendChild(cloned);
+                        } else {
+                            tbody.appendChild(r);
+                        }
+                    });
 
                     const endSort = performance.now();
                     sortTimerDisplay.textContent = `(Sort: ${((endSort - startSort) / 1000).toFixed(2)}s)`;
@@ -792,8 +801,20 @@
                         return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                     });
 
-                    const query = filterInput.value.toLowerCase();
-                    renderFinalTable(query ? allRows.filter(r => r.textContent.toLowerCase().includes(query)) : allRows);
+                    const query = filterInput.value;
+                    const isCaseSensitive = caseCheckbox.checked;
+                    const queryLower = query.toLowerCase();
+
+                    if (query) {
+                        const filtered = allRows.map(r => r.cloneNode(true)).filter(r => {
+                            const hit = isCaseSensitive ? r.textContent.includes(query) : r.textContent.toLowerCase().includes(queryLower);
+                            if (hit) highlightText(r, query, isCaseSensitive);
+                            return hit;
+                        });
+                        renderFinalTable(filtered);
+                    } else {
+                        renderFinalTable(allRows);
+                    }
 
                     const endSort = performance.now();
                     sortTimerDisplay.textContent = `(Sort: ${((endSort - startSort) / 1000).toFixed(2)}s)`;
