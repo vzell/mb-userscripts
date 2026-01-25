@@ -21459,6 +21459,580 @@ This is how it looks like now
 </span>
 #+end_example
 
+*** why is filtering for numeric columsn not always working
+
+On the URLs of type
+
+https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
+
+when filtering for example for "Unit" NO rows which are shown have "Unit" are shown with the filter text in red and dark yellow background.
+But there are additional rows shown which doesn't seem to have "Unit" in them.
+
+Example row which belongs to the filter expression
+
+**** bad
+
+#+begin_example
+<tr class="odd">
+  <td>
+    <input name="add-to-merge" type="checkbox" value="5034393">
+  </td>
+  <td>
+    <a href="/release/a756aef7-8909-4f66-b3b0-4ebb0cb64296/cover-art">
+      <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
+      </span>
+    </a>
+    <a class="wrap-anywhere" href="/release/a756aef7-8909-4f66-b3b0-4ebb0cb64296">
+      <bdi>Coup de Grace
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>jewel case version
+      </bdi>)
+    </span>
+  </td>
+  <td>
+    <bdi>
+      <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+      </a> &amp;
+      <a href="/artist/d6652e7b-33fe-49ef-8336-4c863b4f996f" title="E Street Band, The">The E Street Band
+      </a>
+    </bdi>
+  </td>
+  <td>3×CD
+  </td>
+  <td>11 + 11 + 5
+  </td>
+  <td>
+    <script type="application/json">
+    <span>{"events":[{"country":{"begin_date":null,"name":"
+<span class="mb-filter-highlight">Unite
+</span>d States","typeID":1,"id":222,"country_code":"US","comment":"","ended":false,"gid":"489ce91b-6658-3307-9877-795b68554c98","end_date":null,"editsPending":false,"iso_3166_3_codes":[],"iso_3166_1_codes":["US"],"primary_code":"US","iso_3166_2_codes":[],"entityType":"area","last_updated":"2013-06-15T18:06:39Z"},"date":{"month":2,"day":null,"year":2012}}]}
+      </span>
+    </script>
+    <div class="release-events-container">
+      <ul aria-label="Release events" class="release-events abbreviated">
+	<li aria-label="Release event" class="release-event">
+	  <span class="flag flag-US release-country">
+	    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	      <abbr title="United States">US
+	      </abbr>
+	    </a>
+	  </span>
+	  <span class="release-date">2012-02
+	  </span>
+	</li>
+      </ul>
+    </div>
+  </td>
+  <td>
+    <span class="catalog-number">[none]
+    </span>
+  </td>
+  <td class="barcode-cell">[none]
+  </td>
+  <td>
+    <span class="flag flag-US release-country">
+      <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	<abbr title="United States">US
+	</abbr>
+      </a>
+    </span>
+  </td>
+  <td>2012-02
+  </td>
+  <td>
+    <a class="wrap-anywhere" href="/release/a756aef7-8909-4f66-b3b0-4ebb0cb64296">
+      <bdi>Coup de Grace
+      </bdi>
+    </a>
+  </td>
+  <td>jewel case version
+  </td>
+</tr>
+#+end_example
+
+Problem:
+
+#+begin_example
+  <td>
+    <span class="flag flag-US release-country">
+      <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	<abbr title="United States">US
+	</abbr>
+      </a>
+    </span>
+  </td>
+#+end_example
+
+On the URLs of type
+
+ - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+ 
+when filtering for example for "2025" the rows which really have "2025" are shown with the filter text in red and dark yellow background.
+But there are additional rows shown which doesn't seem to have "2025" in them.
+
+#+begin_example
+<tr class="even">
+  <td>
+    <input name="add-to-merge" type="checkbox" value="107680">
+  </td>
+  <td>
+    <a href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/event-art">
+      <span class="artwork-icon eaa-icon" title="This event has artwork in the Event Art Archive">
+      </span>
+    </a>
+    <a class="wrap-anywhere" href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f">
+      <bdi>
+	<span>
+	  <span class="mb-filter-highlight">2025
+	  </span>‐10‐26: The Stone Pony, Asbury Park, NJ, USA
+	</span>
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>Birthday Party at The Pony
+      </bdi>)
+    </span>
+  </td>
+  <td>
+  </td>
+  <td>
+    <script type="application/json">
+    <span>{"relations":[{"roles":["main performer"],"credit":"Steven Van Zandt","entity":{"sort_name":"Little Steven","ended":false,"begin_area":null,"last_updated":"2026-01-21T07:40:58Z","ipi_codes":[],"area":null,"name":"Little Steven","gender_id":1,"id":433395,"end_area_id":null,"end_date":null,"gender":null,"entityType":"artist","gid":"de53495e-ad5a-4c30-82ab-05e7e3ec7b4d","begin_date":{"year":1950,"month":11,"day":22},"comment":"","typeID":1,"isni_codes":[],"editsPending":true,"begin_area_id":5075,"end_area":null}},{"entity":{"entityType":"artist","begin_date":{"year":1949,"month":9,"day":23},"gid":"70248960-cb53-4ea4-943a-edb18f7d336f","comment":"","typeID":1,"id":813,"end_date":null,"end_area_id":null,"gender":null,"editsPending":false,"end_area":null,"begin_area_id":28034,"isni_codes":[],"area":null,"ended":false,"sort_name":"Springsteen, Bruce","begin_area":null,"last_updated":"2023-12-23T16:00:34Z","ipi_codes":[],"gender_id":1,"name":"Bruce Springsteen"},"roles":["guest performer"],"credit":""},{"entity":{"gid":"9b29b47f-5004-4863-92c0-058b621dcea8","begin_date":{"day":null,"year":1982,"month":null},"entityType":"artist","typeID":2,"comment":"","end_area_id":null,"end_date":null,"id":48823,"gender":null,"editsPending":false,"begin_area_id":null,"end_area":null,"isni_codes":[],"area":null,"begin_area":null,"sort_name":"Little Steven and the Disciples of Soul","ended":false,"ipi_codes":[],"last_updated":"
+<span class="mb-filter-highlight">2025
+</span>-02-14T22:58:48Z","gender_id":null,"name":"Little Steven and the Disciples of Soul"},"credit":"","roles":["main performer"]}]}
+      </span>
+    </script>
+    <div class="artist-roles-container">
+      <ul aria-label="Artist roles" class="artist-roles">
+	<li>
+	  <span class="mp">
+	    <span class="name-variation">
+	      <a href="/artist/de53495e-ad5a-4c30-82ab-05e7e3ec7b4d" title="Little Steven – Little Steven">
+		<bdi>Steven Van Zandt
+		</bdi>
+	      </a>
+	    </span>
+	  </span> (main performer)
+	</li>
+	<li>
+	  <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">
+	    <bdi>Bruce Springsteen
+	    </bdi>
+	  </a> (guest performer)
+	</li>
+	<li>
+	  <a href="/artist/9b29b47f-5004-4863-92c0-058b621dcea8" title="Little Steven and the Disciples of Soul">
+	    <bdi>Little Steven and the Disciples of Soul
+	    </bdi>
+	  </a> (main performer)
+	</li>
+      </ul>
+    </div>
+  </td>
+  <td>
+    <span>
+      <span class="mb-filter-highlight">2025
+      </span>-10-26
+    </span>
+  </td>
+  <td>
+  </td>
+  <td class="c">
+    <span class="inline-rating">
+      <span class="star-rating" tabindex="-1">
+	<a class="stars-1 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=107680&amp;rating=20&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents%3Fpage%3D1" title="Rate: 1 star">1
+	</a>
+	<a class="stars-2 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=107680&amp;rating=40&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents%3Fpage%3D1" title="Rate: 2 stars">2
+	</a>
+	<a class="stars-3 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=107680&amp;rating=60&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents%3Fpage%3D1" title="Rate: 3 stars">3
+	</a>
+	<a class="stars-4 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=107680&amp;rating=80&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents%3Fpage%3D1" title="Rate: 4 stars">4
+	</a>
+	<a class="stars-5 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=107680&amp;rating=100&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents%3Fpage%3D1" title="Rate: 5 stars">5
+	</a>
+      </span>
+    </span>
+  </td>
+  <td>
+  </td>
+  <td>
+  </td>
+  <td>
+  </td>
+  <td>
+    <a class="wrap-anywhere" href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f">
+      <bdi>
+	<span>
+	  <span class="mb-filter-highlight">2025
+	  </span>‐10‐26: The Stone Pony, Asbury Park, NJ, USA
+	</span>
+      </bdi>
+    </a>
+  </td>
+  <td>Birthday Party at The Pony
+  </td>
+</tr>
+
+
+<tr class="odd">
+  <td>
+    <input name="add-to-merge" type="checkbox" value="21233">
+  </td>
+  <td>
+    <span class="blank-icon">
+    </span>
+    <a class="wrap-anywhere" href="/event/f3381b69-6648-47b6-b00e-5be0183cac20">
+      <bdi>1989‐09‐22: The Stone Pony, Asbury Park, NJ, USA
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>Jimmy Cliff
+      </bdi>)
+    </span>
+  </td>
+  <td>Concert
+  </td>
+  <td>
+    <script type="application/json">
+    <span>{"relations":[{"roles":["guest performer"],"credit":"","entity":{"gender_id":1,"name":"Bruce Springsteen","area":null,"ipi_codes":[],"last_updated":"2023-12-23T16:00:34Z","begin_area":null,"ended":false,"sort_name":"Springsteen, Bruce","begin_area_id":28034,"end_area":null,"editsPending":false,"isni_codes":[],"typeID":1,"comment":"","begin_date":{"day":23,"month":9,"year":1949},"gid":"70248960-cb53-4ea4-943a-edb18f7d336f","entityType":"artist","gender":null,"end_date":null,"end_area_id":null,"id":813}},{"entity":{"isni_codes":[],"editsPending":false,"begin_area_id":88641,"end_area":null,"end_area_id":null,"end_date":{"month":11,"year":
+																																																																															   <span class="mb-filter-highlight">2025
+																																																																															   </span>,"day":null},"id":1626,"gender":null,"gid":"2caa54a7-b08c-41da-b892-3a41abe778be","begin_date":{"day":30,"month":7,"year":1944},"entityType":"artist","typeID":1,"comment":"","name":"Jimmy Cliff","gender_id":1,"begin_area":null,"sort_name":"Cliff, Jimmy","ended":true,"ipi_codes":[],"last_updated":"
+<span class="mb-filter-highlight">2025
+</span>-12-01T02:02:28Z","area":null},"credit":"","roles":["main performer"]}]}
+      </span>
+    </script>
+    <div class="artist-roles-container">
+      <ul aria-label="Artist roles" class="artist-roles">
+	<li>
+	  <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">
+	    <bdi>Bruce Springsteen
+	    </bdi>
+	  </a> (guest performer)
+	</li>
+	<li>
+	  <a href="/artist/2caa54a7-b08c-41da-b892-3a41abe778be" title="Cliff, Jimmy">
+	    <bdi>Jimmy Cliff
+	    </bdi>
+	  </a> (main performer)
+	</li>
+      </ul>
+    </div>
+  </td>
+  <td>1989-09-22
+  </td>
+  <td>
+  </td>
+  <td class="c">
+    <span class="inline-rating">
+      <span class="star-rating" tabindex="-1">
+	<a class="stars-1 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=21233&amp;rating=20&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents%3Fpage%3D1" title="Rate: 1 star">1
+	</a>
+	<a class="stars-2 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=21233&amp;rating=40&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents%3Fpage%3D1" title="Rate: 2 stars">2
+	</a>
+	<a class="stars-3 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=21233&amp;rating=60&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents%3Fpage%3D1" title="Rate: 3 stars">3
+	</a>
+	<a class="stars-4 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=21233&amp;rating=80&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents%3Fpage%3D1" title="Rate: 4 stars">4
+	</a>
+	<a class="stars-5 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=21233&amp;rating=100&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents%3Fpage%3D1" title="Rate: 5 stars">5
+	</a>
+      </span>
+    </span>
+  </td>
+  <td>
+  </td>
+  <td>
+  </td>
+  <td>
+  </td>
+  <td>
+    <a class="wrap-anywhere" href="/event/f3381b69-6648-47b6-b00e-5be0183cac20">
+      <bdi>1989‐09‐22: The Stone Pony, Asbury Park, NJ, USA
+      </bdi>
+    </a>
+  </td>
+  <td>Jimmy Cliff
+  </td>
+</tr>
+
+**** naked
+
+<tr class="odd">
+  <td>
+    <input name="add-to-merge" type="checkbox" value="21233">
+  </td>
+  <td>
+    <span class="blank-icon">
+    </span>
+    <a class="wrap-anywhere" href="/event/f3381b69-6648-47b6-b00e-5be0183cac20">
+      <bdi>1989‐09‐22: The Stone Pony, Asbury Park, NJ, USA
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>Jimmy Cliff
+      </bdi>)
+    </span>
+  </td>
+  <td>Concert
+  </td>
+  <td>
+    <script type="application/json">{"relations":[{"entity":{"entityType":"artist","name":"Bruce Springsteen","ipi_codes":[],"begin_area_id":28034,"end_area":null,"begin_area":null,"gender":null,"area":null,"gender_id":1,"isni_codes":[],"end_date":null,"ended":false,"typeID":1,"begin_date":{"month":9,"day":23,"year":1949},"sort_name":"Springsteen, Bruce","end_area_id":null,"editsPending":false,"id":813,"last_updated":"2023-12-23T16:00:34Z","comment":"","gid":"70248960-cb53-4ea4-943a-edb18f7d336f"},"credit":"","roles":["guest performer"]},{"entity":{"sort_name":"Cliff, Jimmy","begin_date":{"year":1944,"month":7,"day":30},"typeID":1,"gid":"2caa54a7-b08c-41da-b892-3a41abe778be","id":1626,"end_area_id":null,"editsPending":false,"last_updated":"2025-12-01T02:02:28Z","comment":"","end_area":null,"begin_area_id":88641,"area":null,"gender":null,"begin_area":null,"name":"Jimmy Cliff","entityType":"artist","ipi_codes":[],"ended":true,"end_date":{"year":2025,"month":11,"day":null},"gender_id":1,"isni_codes":[]},"roles":["main performer"],"credit":""}]}
+    </script>
+    <div class="artist-roles-container">
+      <ul aria-label="Artist roles" class="artist-roles">
+	<li>
+	  <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">1
+	    <bdi>Bruce Springsteen
+	    </bdi>
+	  </a> (guest performer)
+	</li>
+	<li>
+	  <a href="/artist/2caa54a7-b08c-41da-b892-3a41abe778be" title="Cliff, Jimmy">
+	    <bdi>Jimmy Cliff
+	    </bdi>
+	  </a> (main performer)
+	</li>
+      </ul>
+    </div>
+  </td>
+  <td>1989-09-22
+  </td>
+  <td>
+  </td>
+  <td class="c">
+    <span class="inline-rating">
+      <span class="star-rating" tabindex="-1">
+	<a class="stars-1 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=21233&amp;rating=20&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents" title="Rate: 1 star">1
+	</a>
+	<a class="stars-2 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=21233&amp;rating=40&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents" title="Rate: 2 stars">2
+	</a>
+	<a class="stars-3 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=21233&amp;rating=60&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents" title="Rate: 3 stars">3
+	</a>
+	<a class="stars-4 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=21233&amp;rating=80&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents" title="Rate: 4 stars">4
+	</a>
+	<a class="stars-5 set-rating" href="/rating/rate/?entity_type=event&amp;entity_id=21233&amp;rating=100&amp;returnto=%2Fplace%2F6a59a67c-fcc5-491f-949c-bfc45bc97463%2Fevents" title="Rate: 5 stars">5
+	</a>
+      </span>
+    </span>
+  </td>
+</tr>
+#+end_example
+
+And for URLs of type
+
+ - https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63
+
+when filtering for example for "2013" the rows which really have "2013" are shown with the filter text in red and dark yellow background.
+But there are additional rows shown which doesn't seem to have "2013" in them.
+
+And for URLs of type
+
+ - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+
+when filtering for example for "Brian" the rows which really have "Brian" are shown with the filter text in red and dark yellow background.
+But there are additional rows shown which doesn't seem to have "Brian" in them.
+
+Example row which belongs to the filter expression
+
+#+begin_example
+
+#+end_example
+
+And for URLs of type
+
+ - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+
+when filtering for example for "Tra" the rows which really have "Tra" are shown with the filter text in red and dark yellow background.
+But there are additional rows shown which doesn't seem to have "Tra" in them.
+
+Example row which belongs to the filter expression
+
+**** good
+
+#+begin_example
+<tr class="even">
+  <td>
+    <input name="add-to-merge" type="checkbox" value="2444237">
+  </td>
+  <td>
+    <a href="/release/68136206-2939-42ed-a39d-f9c41b0defb1/cover-art">
+      <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
+      </span>
+    </a>
+    <a class="wrap-anywhere" href="/release/68136206-2939-42ed-a39d-f9c41b0defb1">
+      <bdi>The Wild, the Innocent and the E Street Shuffle
+      </bdi>
+    </a>
+  </td>
+  <td>
+    <bdi>
+      <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+      </a>
+    </bdi>
+  </td>
+  <td>
+    <span>8-
+      <span class="mb-filter-highlight">Tra
+      </span>ck Cartridge
+    </span>
+  </td>
+  <td>8
+  </td>
+  <td>
+    <script type="application/json">{"events":[{"date":{"month":11,"year":1973,"day":null},"country":{"ended":false,"last_updated":"2013-06-15T18:06:39Z","iso_3166_1_codes":["US"],"name":"United States","primary_code":"US","end_date":null,"iso_3166_2_codes":[],"id":222,"gid":"489ce91b-6658-3307-9877-795b68554c98","begin_date":null,"entityType":"area","typeID":1,"comment":"","country_code":"US","editsPending":false,"iso_3166_3_codes":[]}}]}
+    </script>
+    <div class="release-events-container">
+      <ul aria-label="Release events" class="release-events abbreviated">
+	<li aria-label="Release event" class="release-event">
+	  <span class="flag flag-US release-country">
+	    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	      <abbr title="United States">US
+	      </abbr>
+	    </a>
+	  </span>
+	  <span class="release-date">1973-11
+	  </span>
+	</li>
+      </ul>
+    </div>
+  </td>
+  <td>
+    <a href="/label/011d1192-6f65-45bd-85c4-0400dd45693e">
+      <bdi>Columbia
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>owned by Sony Music Entertainment, worldwide except JP; formerly owned by CBS between 1938–1990 within US/CA/MX
+      </bdi>)
+    </span>
+  </td>
+  <td>
+    <span class="catalog-number">CA 32432
+    </span>
+  </td>
+  <td class="barcode-cell">[none]
+  </td>
+  <td>
+    <span class="flag flag-US release-country">
+      <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	<abbr title="United States">US
+	</abbr>
+      </a>
+    </span>
+  </td>
+  <td>1973-11
+  </td>
+  <td>
+    <a class="wrap-anywhere" href="/release/68136206-2939-42ed-a39d-f9c41b0defb1">
+      <bdi>The Wild, the Innocent and the E Street Shuffle
+      </bdi>
+    </a>
+  </td>
+  <td>
+  </td>
+</tr>
+#+end_example
+
+**** bad
+
+#+begin_example
+<tr class="odd">
+  <td>
+    <input name="add-to-merge" type="checkbox" value="4080002">
+  </td>
+  <td>
+    <a href="/release/c64590b2-02b7-4a6d-9440-d6af8ad528dd/cover-art">
+      <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
+      </span>
+    </a>
+    <a class="wrap-anywhere" href="/release/c64590b2-02b7-4a6d-9440-d6af8ad528dd">
+      <bdi>Prove It All Night / Factory
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>CBS company sleeve, type 2
+      </bdi>)
+    </span>
+  </td>
+  <td>
+    <bdi>
+      <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+      </a>
+    </bdi>
+  </td>
+  <td>7" Vinyl
+  </td>
+  <td>2
+  </td>
+  <td>
+    <script type="application/json">
+    <span>{"events":[{"country":{"iso_3166_3_codes":[],"gid":"106e0bec-b638-3b37-b731-f53d507dc00e","name":"Aus
+<span class="mb-filter-highlight">tra
+</span>lia","begin_date":null,"end_date":null,"typeID":1,"editsPending":false,"comment":"","country_code":"AU","id":13,"last_updated":"2013-05-27T12:20:27Z","primary_code":"AU","ended":false,"iso_3166_2_codes":[],"entityType":"area","iso_3166_1_codes":["AU"],"primaryAlias":"Aus
+<span class="mb-filter-highlight">tra
+</span>lia"},"date":{"day":null,"year":1978,"month":null}}]}
+      </span>
+    </script>
+    <div class="release-events-container">
+      <ul aria-label="Release events" class="release-events abbreviated">
+	<li aria-label="Release event" class="release-event">
+	  <span class="flag flag-AU release-country">
+	    <a href="/area/106e0bec-b638-3b37-b731-f53d507dc00e">
+	      <abbr title="Australia">AU
+	      </abbr>
+	    </a>
+	  </span>
+	  <span class="release-date">1978
+	  </span>
+	</li>
+      </ul>
+    </div>
+  </td>
+  <td>
+    <a href="/label/b8d33bec-92cc-40d9-bd92-4eb089b401a9">
+      <bdi>CBS
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>CBS Records’ international imprint from 1962–1990; renamed since 1991 as Columbia
+      </bdi>)
+    </span>
+  </td>
+  <td>
+    <span class="catalog-number">BA 222430
+    </span>
+  </td>
+  <td class="barcode-cell">[none]
+  </td>
+  <td>
+    <span class="flag flag-AU release-country">
+      <a href="/area/106e0bec-b638-3b37-b731-f53d507dc00e">
+	<abbr title="Australia">AU
+	</abbr>
+      </a>
+    </span>
+  </td>
+  <td>1978
+  </td>
+  <td>
+    <a class="wrap-anywhere" href="/release/c64590b2-02b7-4a6d-9440-d6af8ad528dd">
+      <bdi>Prove It All Night / Factory
+      </bdi>
+    </a>
+  </td>
+  <td>CBS company sleeve, type 2
+  </td>
+</tr>
+#+end_example
+
+The problem is here
+
+#+begin_example
+<abbr title="Australia">AU
+	</abbr>
+#+end_example
+
 ** DONE fix works
 
 Why in the case of URLs of type https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db  the a=href goes up to the "(Fetch/Render:" string
@@ -21499,7 +22073,7 @@ Consequently, every element the script adds via headerContainer.appendChild(...)
 
 I have updated the script below to identify if the header container is an anchor tag and, if so, append the UI elements after it instead of inside it. I have also moved the "Clear" (✕) button inside the filter box as requested and ensured all your formatting rules (untabifying, removing trailing whitespace, and preserving comments) are followed
 #+end_example
-** Popup tip for sorting + timing
+** DONE Popup tip for sorting
 
 In the uploaded userscript,
 implement a hover over popup tool tip with the text "Click to sort on this column" when hovering over a sortable columns
@@ -21513,16 +22087,68 @@ the column where a filter string has been entered (or if a global filter is NOT 
 on this column). The matching of the filter string should only be done against data cells of the column where it is
 entered.
 
-Also include a unix X to quickly empty a filter field.
+Also include a unicode X to quickly empty a filter field.
 
 Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
-lighyellow background
+lighyellow background.
 
 *** 1
 
 The column level filtering is not working yet. The filter input fields are there. also include a unix X to quickly empty a filter field
 
-** add all RGs functionality
+** add all RGs (bootlegs) functionality
 
-** sync functionaliyt right ow in the old Releases in RG implementation
+** sync functionality like on the old Releases in RG implementation
+** DONE Make the filter box as big as the Submit button - new div container
+
+Actually the height of the filter box should be adjusted to the heigth of the submit button
+AND do not remove the th.title = 'Click to sort on this column'; code
+
+This is how the generated "Loaded <n> rows from <m> pages button looks like now.
+
+#+begin_example
+<h1>
+  <a href="/series/fab79f62-2fa5-4f85-9369-82c77811a290">
+    <bdi>Bruce Springsteen Official Live Archive
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>digital
+    </bdi>)
+  </span>
+  <button type="button" style="margin-left: 10px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;" class="">Loaded 354 rows from 4 pages
+  </button>
+  <button style="display: none; margin-left: 5px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47);">Stop
+  </button>
+  <span style="display: inline-block; margin-left: 10px; vertical-align: middle; white-space: nowrap;">
+    <span style="position: relative; display: inline-block; vertical-align: middle;">
+      <input placeholder="Filter series..." style="font-size: 0.5em; padding: 2px 20px 2px 6px; vertical-align: middle; border: 1px solid rgb(204, 204, 204); border-radius: 3px; width: 150px;">
+      <span title="Clear filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
+      </span>
+    </span>
+    <label title="Case Sensitive" style="font-size: 0.4em; margin-left: 5px; vertical-align: middle; cursor: pointer; font-weight: normal;">
+      <input type="checkbox" style="vertical-align: middle; margin-right: 2px;">Cc
+    </label>
+  </span>
+  <span style="margin-left: 10px; font-size: 0.5em; color: rgb(102, 102, 102); vertical-align: middle;">(Fetch/Render: 4.91s)
+  </span>
+</h1>
+#+end_example
+
+Please adjust the alignment of the "Loaded.." button the filter text field, the checkbox and the (Fetch/Remove) text, so
+that they all match. Right now the filter text field is lower thsan the "Loaded" button. Also make the height of the filter text field the same as the "Loaded" button
+Place all of them in a singel <div> container
+
+Give the div container a meaningfull name. Additionally the checkbox and the (Fetch/Remove) text should be aligned in the middle of the div container (right now it looks like it's shifted a little bit up from the middle)
+Also implement a timing counter functionality for the duration of the sorting of a column. Place the duration information in the dame <div> container as the rest of the button and filter container.
+
+** timings for sorting
+
+The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
+
+** separate timing for fetching and initial rendering
+
+** retain the highlighting if filtered during sort
+
+
 

@@ -74,24 +74,30 @@
     const typesWithSplitLocation = ['events'];
 
     // --- UI Elements ---
+    const controlsContainer = document.createElement('div');
+    controlsContainer.id = 'mb-show-all-controls-container';
+    // Use flex and align-items: center for middle vertical alignment
+    controlsContainer.style.cssText = 'display:inline-flex; align-items:center; gap:8px; margin-left:10px; vertical-align:middle; line-height:1;';
+
     const btn = document.createElement('button');
     btn.textContent = `Show all ${pageType.replace('-', ' ')}`;
-    btn.style.cssText = 'margin-left:10px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s;';
+    btn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
     btn.type = 'button';
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
-    stopBtn.style.cssText = 'display:none; margin-left:5px; font-size:0.5em; padding:2px 6px; vertical-align:middle; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f;';
+    stopBtn.style.cssText = 'display:none; font-size:0.5em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box;';
 
     const filterContainer = document.createElement('span');
-    filterContainer.style.cssText = 'display:none; margin-left:10px; vertical-align:middle; white-space:nowrap;';
+    filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px;';
 
     const filterWrapper = document.createElement('span');
-    filterWrapper.style.cssText = 'position:relative; display:inline-block; vertical-align:middle;';
+    filterWrapper.style.cssText = 'position:relative; display:inline-block;';
 
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Filter ${pageType}...`;
-    filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; vertical-align:middle; border:1px solid #ccc; border-radius:3px;';
+    // Height matched to buttons for alignment
+    filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box;';
 
     const filterClear = document.createElement('span');
     filterClear.textContent = '✕';
@@ -102,10 +108,10 @@
     filterWrapper.appendChild(filterClear);
 
     const caseLabel = document.createElement('label');
-    caseLabel.style.cssText = 'font-size:0.4em; margin-left:5px; vertical-align:middle; cursor:pointer; font-weight:normal;';
+    caseLabel.style.cssText = 'font-size:0.4em; cursor:pointer; font-weight:normal; display:flex; align-items:center; height:24px; margin:0;';
     const caseCheckbox = document.createElement('input');
     caseCheckbox.type = 'checkbox';
-    caseCheckbox.style.cssText = 'vertical-align:middle; margin-right:2px;';
+    caseCheckbox.style.cssText = 'margin-right:2px; vertical-align:middle;';
     caseLabel.appendChild(caseCheckbox);
     caseLabel.appendChild(document.createTextNode('Cc'));
     caseLabel.title = 'Case Sensitive';
@@ -114,7 +120,16 @@
     filterContainer.appendChild(caseLabel);
 
     const timerDisplay = document.createElement('span');
-    timerDisplay.style.cssText = 'margin-left:10px; font-size:0.5em; color:#666; vertical-align:middle;';
+    timerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
+
+    const sortTimerDisplay = document.createElement('span');
+    sortTimerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
+
+    controlsContainer.appendChild(btn);
+    controlsContainer.appendChild(stopBtn);
+    controlsContainer.appendChild(filterContainer);
+    controlsContainer.appendChild(timerDisplay);
+    controlsContainer.appendChild(sortTimerDisplay);
 
     const style = document.createElement('style');
     style.textContent = `
@@ -137,18 +152,10 @@
     `;
     document.head.appendChild(style);
 
-    // If the container is a link (common on Work pages), insert elements AFTER it
-    // to prevent them from becoming part of the clickable URL.
     if (headerContainer.tagName === 'A') {
-        headerContainer.after(timerDisplay);
-        headerContainer.after(filterContainer);
-        headerContainer.after(stopBtn);
-        headerContainer.after(btn);
+        headerContainer.after(controlsContainer);
     } else {
-        headerContainer.appendChild(btn);
-        headerContainer.appendChild(stopBtn);
-        headerContainer.appendChild(filterContainer);
-        headerContainer.appendChild(timerDisplay);
+        headerContainer.appendChild(controlsContainer);
     }
 
     let allRows = [];
@@ -233,7 +240,6 @@
             }
             nodesToReplace.forEach(textNode => {
                 const span = document.createElement('span');
-                // Red color and darkyellow background via class defined in style tag
                 span.innerHTML = textNode.nodeValue.replace(regex, '<span class="mb-filter-highlight">$1</span>');
                 textNode.parentNode.replaceChild(span, textNode);
             });
@@ -597,7 +603,7 @@
             btn.disabled = false;
             btn.classList.remove('mb-show-all-btn-loading');
             stopBtn.style.display = 'none';
-            filterContainer.style.display = 'inline-block';
+            filterContainer.style.display = 'inline-flex';
 
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
@@ -702,32 +708,41 @@
             }
             th.onclick = (e) => {
                 e.preventDefault();
-                const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
-                log(`Sorting category "${category}" by "${colName}" (column ${index})`);
-                if (state.lastSortIndex === index) state.sortAscending = !state.sortAscending;
-                else { state.sortAscending = true; state.lastSortIndex = index; }
-                headers.forEach((h, i) => {
-                    const icon = h.querySelector('.sort-icon');
-                    if (icon) icon.textContent = (i === index) ? (state.sortAscending ? ' ▲' : ' ▼') : ' ↕';
+                sortTimerDisplay.textContent = '(Sorting...)';
+
+                requestAnimationFrame(() => {
+                    const startSort = performance.now();
+                    const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
+                    log(`Sorting category "${category}" by "${colName}" (column ${index})`);
+
+                    if (state.lastSortIndex === index) state.sortAscending = !state.sortAscending;
+                    else { state.sortAscending = true; state.lastSortIndex = index; }
+
+                    headers.forEach((h, i) => {
+                        const icon = h.querySelector('.sort-icon');
+                        if (icon) icon.textContent = (i === index) ? (state.sortAscending ? ' ▲' : ' ▼') : ' ↕';
+                    });
+
+                    const isNumeric = colName === 'Year' || colName === 'Releases';
+                    const rows = Array.from(table.querySelectorAll('tbody tr'));
+                    rows.sort((a, b) => {
+                        const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
+                        const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
+                        if (isNumeric) {
+                            const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
+                            const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
+                            return state.sortAscending ? numA - numB : numB - numA;
+                        }
+                        return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    });
+
+                    const tbody = table.querySelector('tbody');
+                    tbody.innerHTML = '';
+                    rows.forEach(r => tbody.appendChild(r));
+
+                    const endSort = performance.now();
+                    sortTimerDisplay.textContent = `(Sort: ${((endSort - startSort) / 1000).toFixed(2)}s)`;
                 });
-
-                const isNumeric = colName === 'Year' || colName === 'Releases';
-
-                const rows = Array.from(table.querySelectorAll('tbody tr'));
-                rows.sort((a, b) => {
-                    const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
-                    const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
-
-                    if (isNumeric) {
-                        const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
-                        const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
-                        return state.sortAscending ? numA - numB : numB - numA;
-                    }
-                    return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                });
-                const tbody = table.querySelector('tbody');
-                tbody.innerHTML = '';
-                rows.forEach(r => tbody.appendChild(r));
             };
         });
     }
@@ -750,30 +765,39 @@
             }
             th.onclick = (e) => {
                 e.preventDefault();
-                const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
-                log(`Sorting main table by ${colName} (column ${index})`);
-                if (lastSortIndex === index) sortAscending = !sortAscending;
-                else { sortAscending = true; lastSortIndex = index; }
-                headers.forEach((h, i) => {
-                    const icon = h.querySelector('.sort-icon');
-                    if (icon) icon.textContent = (i === index) ? (sortAscending ? ' ▲' : ' ▼') : ' ↕';
+                sortTimerDisplay.textContent = '(Sorting...)';
+
+                requestAnimationFrame(() => {
+                    const startSort = performance.now();
+                    const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
+                    log(`Sorting main table by ${colName} (column ${index})`);
+
+                    if (lastSortIndex === index) sortAscending = !sortAscending;
+                    else { sortAscending = true; lastSortIndex = index; }
+
+                    headers.forEach((h, i) => {
+                        const icon = h.querySelector('.sort-icon');
+                        if (icon) icon.textContent = (i === index) ? (sortAscending ? ' ▲' : ' ▼') : ' ↕';
+                    });
+
+                    const isNumeric = colName === 'Year' || colName === 'Releases';
+                    allRows.sort((a, b) => {
+                        const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
+                        const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
+                        if (isNumeric) {
+                            const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
+                            const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
+                            return sortAscending ? numA - numB : numB - numA;
+                        }
+                        return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    });
+
+                    const query = filterInput.value.toLowerCase();
+                    renderFinalTable(query ? allRows.filter(r => r.textContent.toLowerCase().includes(query)) : allRows);
+
+                    const endSort = performance.now();
+                    sortTimerDisplay.textContent = `(Sort: ${((endSort - startSort) / 1000).toFixed(2)}s)`;
                 });
-
-                const isNumeric = colName === 'Year' || colName === 'Releases';
-
-                allRows.sort((a, b) => {
-                    const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
-                    const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
-
-                    if (isNumeric) {
-                        const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
-                        const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
-                        return sortAscending ? numA - numB : numB - numA;
-                    }
-                    return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                });
-                const query = filterInput.value.toLowerCase();
-                renderFinalTable(query ? allRows.filter(r => r.textContent.toLowerCase().includes(query)) : allRows);
             };
         });
     }
