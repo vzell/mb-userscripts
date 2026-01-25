@@ -21459,7 +21459,128 @@ This is how it looks like now
 </span>
 #+end_example
 
-*** why is filtering for numeric columsn not always working
+** DONE fix works
+
+Why in the case of URLs of type https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db  the a=href goes up to the "(Fetch/Render:" string
+
+#+begin_example
+<h1>
+  <a href="/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db">
+    <bdi>Growin’ Up
+    </bdi>
+    <button type="button" style="margin-left: 10px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;" class="">Loaded 1348 rows from 3 pages
+    </button>
+    <button style="display: none; margin-left: 5px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47);">Stop
+    </button>
+    <span style="display: inline-block; margin-left: 10px; vertical-align: middle; white-space: nowrap;">
+      <span style="position: relative; display: inline-block; vertical-align: middle;">
+	<input placeholder="Filter work-recordings..." style="font-size: 0.5em; padding: 2px 20px 2px 6px; vertical-align: middle; border: 1px solid rgb(204, 204, 204); border-radius: 3px;">
+	<span title="Clear filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
+	</span>
+      </span>
+      <label title="Case Sensitive" style="font-size: 0.4em; margin-left: 5px; vertical-align: middle; cursor: pointer; font-weight: normal;">
+	<input type="checkbox" style="vertical-align: middle; margin-right: 2px;">Cc
+      </label>
+    </span>
+    <span style="margin-left: 10px; font-size: 0.5em; color: rgb(102, 102, 102); vertical-align: middle;">(Fetch/Render: 102.01s)
+    </span>
+  </a>
+</h1>
+#+end_example
+
+*** answer
+
+#+begin_example
+The reason the href link extends all the way to the end of the "(Fetch/Render:" string is that the script is appending its UI elements (buttons, filter container, and timer display) directly into the headerContainer.
+
+In the case of Work URLs (like /work/b1528b3f...), the MusicBrainz page structure often places the main title inside an <a> tag which is itself inside the <h1>. When the script defines headerContainer, it specifically looks for document.querySelector('h1 a bdi')?.parentNode. On these pages, that parentNode is the <a> element.
+
+Consequently, every element the script adds via headerContainer.appendChild(...)—including the buttons and the <span> containing the timer—becomes a child of that link, making the entire block clickable.
+
+I have updated the script below to identify if the header container is an anchor tag and, if so, append the UI elements after it instead of inside it. I have also moved the "Clear" (✕) button inside the filter box as requested and ensured all your formatting rules (untabifying, removing trailing whitespace, and preserving comments) are followed
+#+end_example
+** DONE Popup tip for sorting
+
+In the uploaded userscript,
+implement a hover over popup tool tip with the text "Click to sort on this column" when hovering over a sortable columns
+
+** DONE Make the filter box as big as the Submit button - new div container
+
+Actually the height of the filter box should be adjusted to the heigth of the submit button
+AND do not remove the th.title = 'Click to sort on this column'; code
+
+This is how the generated "Loaded <n> rows from <m> pages button looks like now.
+
+#+begin_example
+<h1>
+  <a href="/series/fab79f62-2fa5-4f85-9369-82c77811a290">
+    <bdi>Bruce Springsteen Official Live Archive
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>digital
+    </bdi>)
+  </span>
+  <button type="button" style="margin-left: 10px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;" class="">Loaded 354 rows from 4 pages
+  </button>
+  <button style="display: none; margin-left: 5px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47);">Stop
+  </button>
+  <span style="display: inline-block; margin-left: 10px; vertical-align: middle; white-space: nowrap;">
+    <span style="position: relative; display: inline-block; vertical-align: middle;">
+      <input placeholder="Filter series..." style="font-size: 0.5em; padding: 2px 20px 2px 6px; vertical-align: middle; border: 1px solid rgb(204, 204, 204); border-radius: 3px; width: 150px;">
+      <span title="Clear filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
+      </span>
+    </span>
+    <label title="Case Sensitive" style="font-size: 0.4em; margin-left: 5px; vertical-align: middle; cursor: pointer; font-weight: normal;">
+      <input type="checkbox" style="vertical-align: middle; margin-right: 2px;">Cc
+    </label>
+  </span>
+  <span style="margin-left: 10px; font-size: 0.5em; color: rgb(102, 102, 102); vertical-align: middle;">(Fetch/Render: 4.91s)
+  </span>
+</h1>
+#+end_example
+
+Please adjust the alignment of the "Loaded.." button the filter text field, the checkbox and the (Fetch/Remove) text, so
+that they all match. Right now the filter text field is lower thsan the "Loaded" button. Also make the height of the filter text field the same as the "Loaded" button
+Place all of them in a singel <div> container
+
+Give the div container a meaningfull name. Additionally the checkbox and the (Fetch/Remove) text should be aligned in the middle of the div container (right now it looks like it's shifted a little bit up from the middle)
+Also implement a timing counter functionality for the duration of the sorting of a column. Place the duration information in the dame <div> container as the rest of the button and filter container.
+
+** DONE retain the highlighting if sorted during filtering
+
+In the uploaded user script retain the highlighting of filter strings in the data cells if rows are sorted during filtering
+
+** DONE filter per column
+
+In the uploaded script, there is already a filter input field which filters rows globally.
+
+Include such a filter field above each column header (aligned with it), which ADDITIONALLY filters rows based on just
+the column where a filter string has been entered (or if a global filter is NOT already activ, which filters just based
+on this column). The matching of the filter string should only be done against data cells of the column where it is
+entered.
+
+Also include a unicode X to quickly empty a filter field.
+
+Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
+lighyellow background.
+
+** filter per column also in the grouped table display
+
+** timings for sorting
+
+The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
+
+** separate timing for fetching and initial rendering
+
+** remove "Tagger" column
+
+In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
+
+** sync functionality like on the old Releases in RG implementation
+** add all RGs (bootlegs) functionality
+
+** TODO why is filtering for numeric columns not always working - removing filtering in Flas abbrevs for example
 
 On the URLs of type
 
@@ -22033,122 +22154,13 @@ The problem is here
 	</abbr>
 #+end_example
 
-** DONE fix works
+*** solution
 
-Why in the case of URLs of type https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db  the a=href goes up to the "(Fetch/Render:" string
-
-#+begin_example
-<h1>
-  <a href="/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db">
-    <bdi>Growin’ Up
-    </bdi>
-    <button type="button" style="margin-left: 10px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;" class="">Loaded 1348 rows from 3 pages
-    </button>
-    <button style="display: none; margin-left: 5px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47);">Stop
-    </button>
-    <span style="display: inline-block; margin-left: 10px; vertical-align: middle; white-space: nowrap;">
-      <span style="position: relative; display: inline-block; vertical-align: middle;">
-	<input placeholder="Filter work-recordings..." style="font-size: 0.5em; padding: 2px 20px 2px 6px; vertical-align: middle; border: 1px solid rgb(204, 204, 204); border-radius: 3px;">
-	<span title="Clear filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
-	</span>
-      </span>
-      <label title="Case Sensitive" style="font-size: 0.4em; margin-left: 5px; vertical-align: middle; cursor: pointer; font-weight: normal;">
-	<input type="checkbox" style="vertical-align: middle; margin-right: 2px;">Cc
-      </label>
-    </span>
-    <span style="margin-left: 10px; font-size: 0.5em; color: rgb(102, 102, 102); vertical-align: middle;">(Fetch/Render: 102.01s)
-    </span>
-  </a>
-</h1>
-#+end_example
-
-*** answer
+When extracting the "Country" column from the "Country/Date" column, not only extract the abbreviated country name like "AU" but also "Australia" from the title attribute of the <abbr> tag
 
 #+begin_example
-The reason the href link extends all the way to the end of the "(Fetch/Render:" string is that the script is appending its UI elements (buttons, filter container, and timer display) directly into the headerContainer.
-
-In the case of Work URLs (like /work/b1528b3f...), the MusicBrainz page structure often places the main title inside an <a> tag which is itself inside the <h1>. When the script defines headerContainer, it specifically looks for document.querySelector('h1 a bdi')?.parentNode. On these pages, that parentNode is the <a> element.
-
-Consequently, every element the script adds via headerContainer.appendChild(...)—including the buttons and the <span> containing the timer—becomes a child of that link, making the entire block clickable.
-
-I have updated the script below to identify if the header container is an anchor tag and, if so, append the UI elements after it instead of inside it. I have also moved the "Clear" (✕) button inside the filter box as requested and ensured all your formatting rules (untabifying, removing trailing whitespace, and preserving comments) are followed
-#+end_example
-** DONE Popup tip for sorting
-
-In the uploaded userscript,
-implement a hover over popup tool tip with the text "Click to sort on this column" when hovering over a sortable columns
-
-** add all RGs (bootlegs) functionality
-
-** sync functionality like on the old Releases in RG implementation
-** DONE Make the filter box as big as the Submit button - new div container
-
-Actually the height of the filter box should be adjusted to the heigth of the submit button
-AND do not remove the th.title = 'Click to sort on this column'; code
-
-This is how the generated "Loaded <n> rows from <m> pages button looks like now.
-
-#+begin_example
-<h1>
-  <a href="/series/fab79f62-2fa5-4f85-9369-82c77811a290">
-    <bdi>Bruce Springsteen Official Live Archive
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>digital
-    </bdi>)
-  </span>
-  <button type="button" style="margin-left: 10px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;" class="">Loaded 354 rows from 4 pages
-  </button>
-  <button style="display: none; margin-left: 5px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47);">Stop
-  </button>
-  <span style="display: inline-block; margin-left: 10px; vertical-align: middle; white-space: nowrap;">
-    <span style="position: relative; display: inline-block; vertical-align: middle;">
-      <input placeholder="Filter series..." style="font-size: 0.5em; padding: 2px 20px 2px 6px; vertical-align: middle; border: 1px solid rgb(204, 204, 204); border-radius: 3px; width: 150px;">
-      <span title="Clear filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
-      </span>
-    </span>
-    <label title="Case Sensitive" style="font-size: 0.4em; margin-left: 5px; vertical-align: middle; cursor: pointer; font-weight: normal;">
-      <input type="checkbox" style="vertical-align: middle; margin-right: 2px;">Cc
-    </label>
-  </span>
-  <span style="margin-left: 10px; font-size: 0.5em; color: rgb(102, 102, 102); vertical-align: middle;">(Fetch/Render: 4.91s)
-  </span>
-</h1>
+<abbr title="Australia">AU
+	</abbr>
 #+end_example
 
-Please adjust the alignment of the "Loaded.." button the filter text field, the checkbox and the (Fetch/Remove) text, so
-that they all match. Right now the filter text field is lower thsan the "Loaded" button. Also make the height of the filter text field the same as the "Loaded" button
-Place all of them in a singel <div> container
-
-Give the div container a meaningfull name. Additionally the checkbox and the (Fetch/Remove) text should be aligned in the middle of the div container (right now it looks like it's shifted a little bit up from the middle)
-Also implement a timing counter functionality for the duration of the sorting of a column. Place the duration information in the dame <div> container as the rest of the button and filter container.
-
-** DONE retain the highlighting if sorted during filtering
-
-In the uploaded user script retain the highlighting of filter strings in the data cells if rows are sorted during filtering
-
-** timings for sorting
-
-The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
-
-** separate timing for fetching and initial rendering
-
-** filter per column
-
-In the uploaded script, there is already a filter input field which filters rows globally.
-
-Include such a filter field above each column header (aligned with it), which ADDITIONALLY filters rows based on just
-the column where a filter string has been entered (or if a global filter is NOT already activ, which filters just based
-on this column). The matching of the filter string should only be done against data cells of the column where it is
-entered.
-
-Also include a unicode X to quickly empty a filter field.
-
-Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
-lighyellow background.
-
-** remove "Tagger" column
-
-In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
-
+In the data cell for the new "Country" column the value should be concatenated like "Australia (AU)"

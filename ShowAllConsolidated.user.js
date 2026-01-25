@@ -396,7 +396,7 @@
         const indicesToRemove = [];
         headers.forEach((th, idx) => {
             const txt = th.textContent.trim();
-            // Handle Tagger column as requested, alongside Relationships and Performance Attributes
+            // Treating Tagger like Relationship/Performance Attributes
             if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes') || txt === 'Tagger') {
                 indicesToRemove.push(idx);
             }
@@ -601,12 +601,16 @@
                                         if (cdCell) {
                                             const events = Array.from(cdCell.querySelectorAll('.release-event'));
                                             events.forEach((ev, i) => {
-                                                const countrySpan = ev.querySelector('.release-country');
+                                                const countryAbbr = ev.querySelector('.release-country abbr');
                                                 const dateSpan = ev.querySelector('.release-date');
 
-                                                if (countrySpan) {
+                                                if (countryAbbr) {
                                                     if (i > 0) tdSplitC.appendChild(document.createTextNode(', '));
-                                                    tdSplitC.appendChild(countrySpan.cloneNode(true));
+                                                    // Logic update: Concatenate full name from title and abbreviated code
+                                                    const fullName = countryAbbr.getAttribute('title');
+                                                    const code = countryAbbr.textContent.trim();
+                                                    const countryText = fullName ? `${fullName} (${code})` : code;
+                                                    tdSplitC.appendChild(document.createTextNode(countryText));
                                                 }
                                                 if (dateSpan) {
                                                     if (i > 0) tdSplitD.appendChild(document.createTextNode(', '));
