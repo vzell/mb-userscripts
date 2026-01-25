@@ -22176,7 +22176,8 @@ The problem is here
 
 *** solution
 
-When extracting the "Country" column from the "Country/Date" column, not only extract the abbreviated country name like "AU" but also "Australia" from the title attribute of the <abbr> tag
+In the uploaded user script, when extracting the "Country" column from the "Country/Date" column, not only extract the
+abbreviated country name like "AU" but also "Australia" from the title attribute of the <abbr> tag
 
 #+begin_example
 <abbr title="Australia">AU
@@ -22185,12 +22186,10 @@ When extracting the "Country" column from the "Country/Date" column, not only ex
 
 In the data cell for the new "Country" column the value should be concatenated like "Australia (AU)"
 
-Actually prepend the actual flag image fromActually prepend the actual flag image from
+Actually prepend the actual flag image from
     <span class="flag flag-AU release-country">
 before the "Australia (AU)"
 
-    <span class="flag flag-AU release-country">
-before the "Australia (AU)"
 ** add all RGs (bootlegs) functionality
 
 In the uploaded user script for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
