@@ -21479,6 +21479,34 @@ The column level filtering is not working yet. The filter input fields are there
 
 ** Popup tip for sorting + timing
 
+** works
+
+Why in the case of URLs of type https://musicbrainz.org/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db  the a=href goes up to the "(Fetch/Render:" string
+
+#+begin_example
+<h1>
+  <a href="/work/b1528b3f-0c0e-3977-ba98-5cb5b38108db">
+    <bdi>Growin’ Up
+    </bdi>
+    <button type="button" style="margin-left: 10px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;" class="">Loaded 1348 rows from 3 pages
+    </button>
+    <button style="display: none; margin-left: 5px; font-size: 0.5em; padding: 2px 6px; vertical-align: middle; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47);">Stop
+    </button>
+    <span style="display: inline-block; margin-left: 10px; vertical-align: middle; white-space: nowrap;">
+      <span style="position: relative; display: inline-block; vertical-align: middle;">
+	<input placeholder="Filter work-recordings..." style="font-size: 0.5em; padding: 2px 20px 2px 6px; vertical-align: middle; border: 1px solid rgb(204, 204, 204); border-radius: 3px;">
+	<span title="Clear filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
+	</span>
+      </span>
+      <label title="Case Sensitive" style="font-size: 0.4em; margin-left: 5px; vertical-align: middle; cursor: pointer; font-weight: normal;">
+	<input type="checkbox" style="vertical-align: middle; margin-right: 2px;">Cc
+      </label>
+    </span>
+    <span style="margin-left: 10px; font-size: 0.5em; color: rgb(102, 102, 102); vertical-align: middle;">(Fetch/Render: 102.01s)
+    </span>
+  </a>
+</h1>
+#+end_example
 
 
 
