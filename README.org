@@ -22225,3 +22225,9 @@ instead of generating just one "Show all artist releasegroups" button, generate 
 
 
 * || txt.startsWith('Tagger') || txt.startsWith('Rating'))
+
+
+*
+
+When entering numerical values in the filter field, sometimes there are rows shown which actually do NOT have these
+values at all (so there is also nothing higlighted). When entering string data this behaviour is NOT observed.

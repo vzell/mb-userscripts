@@ -221,12 +221,44 @@
         }
     }
 
+    /**
+     * Helper to get visible text only, explicitly ignoring script/style tags.
+     */
+    function getCleanVisibleText(element) {
+        let textParts = [];
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+            acceptNode: (node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    const tag = node.tagName.toLowerCase();
+                    if (tag === 'script' || tag === 'style' || tag === 'head') return NodeFilter.FILTER_REJECT;
+                }
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+
+        let node;
+        while (node = walker.nextNode()) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                textParts.push(node.nodeValue);
+            }
+        }
+        return textParts.join(' ');
+    }
+
     function highlightText(row, query, isCaseSensitive) {
         if (!query) return;
         const flags = isCaseSensitive ? 'g' : 'gi';
         const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, flags);
         row.querySelectorAll('td').forEach(td => {
-            const walker = document.createTreeWalker(td, NodeFilter.SHOW_TEXT, null, false);
+            // We walk through text nodes, but we skip those inside script/style tags
+            const walker = document.createTreeWalker(td, NodeFilter.SHOW_TEXT, {
+                acceptNode: (node) => {
+                    const parentTag = node.parentNode?.tagName?.toLowerCase();
+                    if (parentTag === 'script' || parentTag === 'style') return NodeFilter.FILTER_REJECT;
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+            }, false);
+
             let node;
             const nodesToReplace = [];
             while (node = walker.nextNode()) {
@@ -256,7 +288,7 @@
             groupedRows.forEach((rows, key) => {
                 totalAbsolute += rows.length;
                 const matches = rows.map(r => r.cloneNode(true)).filter(r => {
-                    const text = r.textContent;
+                    const text = getCleanVisibleText(r);
                     const hit = isCaseSensitive ? text.includes(query) : text.toLowerCase().includes(query);
                     if (hit && query) highlightText(r, filterInput.value, isCaseSensitive);
                     return hit;
@@ -271,7 +303,7 @@
         } else {
             const totalAbsolute = allRows.length;
             const filteredRows = allRows.map(r => r.cloneNode(true)).filter(row => {
-                const text = row.textContent;
+                const text = getCleanVisibleText(row);
                 const hit = isCaseSensitive ? text.includes(query) : text.toLowerCase().includes(query);
                 if (hit && query) highlightText(row, filterInput.value, isCaseSensitive);
                 return hit;
@@ -752,8 +784,8 @@
                     const isNumeric = colName === 'Year' || colName === 'Releases';
                     const rows = Array.from(table.querySelectorAll('tbody tr'));
                     rows.sort((a, b) => {
-                        const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
-                        const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
+                        const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
+                        const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
                         if (isNumeric) {
                             const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
                             const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
@@ -819,8 +851,8 @@
 
                     const isNumeric = colName === 'Year' || colName === 'Releases';
                     allRows.sort((a, b) => {
-                        const valA = a.cells[index]?.textContent.trim().toLowerCase() || '';
-                        const valB = b.cells[index]?.textContent.trim().toLowerCase() || '';
+                        const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
+                        const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
                         if (isNumeric) {
                             const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
                             const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
@@ -835,7 +867,8 @@
 
                     if (query) {
                         const filtered = allRows.map(r => r.cloneNode(true)).filter(r => {
-                            const hit = isCaseSensitive ? r.textContent.includes(query) : r.textContent.toLowerCase().includes(queryLower);
+                            const text = getCleanVisibleText(r);
+                            const hit = isCaseSensitive ? text.includes(query) : text.toLowerCase().includes(queryLower);
                             if (hit) highlightText(r, query, isCaseSensitive);
                             return hit;
                         });
