@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v14
+// @version      0.9+2026-01-26-debug-v15
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -166,6 +166,11 @@
 
     // Generate the 4 additional artist buttons
     if (pageType === 'artist-releasegroups') {
+        const btnLabel = document.createElement('span');
+        btnLabel.textContent = 'Show all: ';
+        btnLabel.style.cssText = 'font-size:0.5em; font-weight:bold; color:#333; display:flex; align-items:center; height:24px;';
+        controlsContainer.appendChild(btnLabel);
+
         const extraConfigs = [
             { title: 'Official artist RGs', params: { all: '0', va: '0' } },
             { title: 'Non-official artist RGs', params: { all: '1', va: '0' } },
@@ -712,7 +717,6 @@
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
         statusDisplay.textContent = 'Initializing...';
-        //timerDisplay.textContent = 'Fetching...';
 
         const startTime = performance.now();
         let fetchingTimeStart = performance.now();
@@ -732,17 +736,6 @@
                     break;
                 }
                 pagesProcessed++;
-                statusDisplay.textContent = `Loading page ${p} of ${maxPage}...`;
-
-                // Update button color based on progress
-                const progress = p / maxPage;
-                if (progress >= 1.0) {
-                    activeBtn.style.backgroundColor = '#ccffcc'; // light green
-                } else if (progress >= 0.5) {
-                    activeBtn.style.backgroundColor = '#ffe0b2'; // light orange
-                } else {
-                    activeBtn.style.backgroundColor = '#ffcccc'; // light red
-                }
 
                 const pageStartTime = performance.now();
                 const fetchUrl = new URL(baseUrl);
@@ -950,6 +943,19 @@
                 const avgPageTime = cumulativeFetchTime / pagesProcessed;
                 const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
 
+                // Update status text with timing
+                statusDisplay.textContent = `Loading page ${p} of ${maxPage}... (Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s)`;
+
+                // Update button color based on progress
+                const progress = p / maxPage;
+                if (progress >= 1.0) {
+                    activeBtn.style.backgroundColor = '#ccffcc'; // light green
+                } else if (progress >= 0.5) {
+                    activeBtn.style.backgroundColor = '#ffe0b2'; // light orange
+                } else {
+                    activeBtn.style.backgroundColor = '#ffcccc'; // light red
+                }
+
                 // Detailed statistics per page fetch
                 log(`Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
 
@@ -960,9 +966,6 @@
                     });
                     console.log(`  Summary: ${summaryParts.join(' | ')}`);
                 }
-
-                if (maxPage > 1 && p < maxPage) timerDisplay.textContent = `(Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s)`;
-                //else if (p === maxPage) timerDisplay.textContent = 'Finalizing...';
             }
 
             totalFetchingTime = performance.now() - fetchingTimeStart;
@@ -997,7 +1000,7 @@
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
 
             statusDisplay.textContent = `Loaded ${pagesProcessed} pages (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
-            //timerDisplay.textContent = `(Total: ${((performance.now() - startTime) / 1000).toFixed(2)}s)`;
+            timerDisplay.textContent = ''; // Explicitly clear any temp text
 
             log(`Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
