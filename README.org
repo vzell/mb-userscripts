@@ -22688,7 +22688,6 @@ and the very large '<details>...</details>' block with lots of image refernces i
 
 #+end_example
 
-* TODO ignore &page=<n> in URLs when reloading
 * DONE new constants
 
 additionally:g
@@ -22705,14 +22704,13 @@ which are 40 and 100 respectively right now and use them in the code
 
 but do not change other existing, code, comment and logging
 
-* strip "page=<n>"
+* DONE ignore &page=<n> in URLs when reloading
 
 In the uploaded script,
 make sure that when starting on a page which has the query parameter "page=<n>" (for example "page=3") already appended in
 the browser URL bar, the script first strips the "page=<n>" from the URL and then starts its logic
 
 * fix placement of generated/rendered table data
-
+* fix 4 buttons, they should refresh the web page first
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
-* fix 4 buttons, they should refresh the web page first
