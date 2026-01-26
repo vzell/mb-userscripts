@@ -22366,7 +22366,7 @@ The text for the timing information for sorting should change during sorting to 
 
 ** separate timing for fetching and initial rendering
 
-** remove "Tagger" column
+** remove or fix "Tagger" column
 
 In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
 
@@ -22705,98 +22705,14 @@ which are 40 and 100 respectively right now and use them in the code
 
 but do not change other existing, code, comment and logging
 
-* chatpgt
-** initial
-
-In the uploaded script, there is already a filter input field which filters rows globally (with debug logging).
-
-Also the following functionality is being included:
-
-#+begin_example
-Include such a filter field BELOW each column header (aligned with it), which ADDITIONALLY filter rows based on just the
-column where a filter string has been entered (or if a global filter is NOT already activ, filter just based on this
-column). The matching of the filter string should only be done against data cells of the column where it is
-entered. Also include debug logging in this case.
-
-Take special care to also include such a filter field BELOW each column headeron URLs of type 
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
-https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a where grouped table display is active. Each group should get it's own filter row.
-
-The per column filtering should only be done in the grouped table where it is entered, and NOT synchronized over column
-filters across all tables.
-
-Also include a unicode X at the end of the column specific filter field to quickly empty it.
-
-Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
-lighyellow background.
-
-Make sure you don't break the existing filtering functionality for URL types which use non-grouped tables.
-
-Please do not make any other changes to working code, comments and debugging statements.
-#+end_example
-
-The problems are:
-
-The injection of a new filter row works, also for grouped tables.
-
-The global filtering and clearing works in all cases.
-
-The columns based filtering works in case of flat tables.
-
-The problem is with grouped tables:
-
-For URLs of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-If I start typing in a column based filter field it looses focus.
-
-Please include debug logging when typing in something in a column based filter field. Also if I scroll down the web page
-and type into a filter field which is initially not in the visible part of the web page, it immediately looses focus and I'm returned to the beginning of the web page
-
-Please fix
-
-Please do not make any other changes to working code, comments and debugging statements.
-
-** problem with last table group
-
-The column based filter logic and highlighting seems to works (even for grouped tables)
-The problem is that the global filtering works in URLs with flat tables but on URLs with grouped tables it works on all table groups EXCEPT the LAST one.
-In the LAST table group, the filtering accepts and highlights only the first character of the flobal filter string.
-
-Please fix.
-
-Please do not make any other changes to working code, comments and debugging statements.
-
-First of all there is problem with the global filtering logic
-It filters all column groups where the comlete filter string is present, but for column groups where NOT the whole filter string is present, it filters and highlights up to the character  which is still present in the filter string, but does not actuall remove those rows from the filtering
-
-example: filter string "Canada"
-
-all rows wich have "Canada" are filtered
-in one table group there is a row which has "US/CA/MX", so the "CA" part (also starting string from "Canada") is highlighted and the row is still present
-in another table group there is a row which has "CBS", so the "C" part (also starting string from "Canada") is highlighted and the row is still present
-
-Please do not make any other changes to working code, comments and debugging statements.
-
-** almost
+* strip "page=<n>"
 
 In the uploaded script,
-filtering on grouped tables almost works. If I enter "Canada" and one ore more table groups do NOT contain the filter string, they are correctly
-removed. But when clearing the whole filter string (or just removing charachters backwards from it), only table groups
-are restored with their rows, which originally had at least one match. Table groups which did not match the comlete
-filter string are stay removed completely.
+make sure that when starting on a page which has the query parameter "page=<n>" (for example "page=3") already appended in
+the browser URL bar, the script first strips the "page=<n>" from the URL and then starts its logic
 
-Please fix and restore also these
+* fix placement of generated/rendered table data
 
-Please do not make any other changes to working code, comments and debugging statements.
+* fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
-
-
-NO, now we are back to the behavious of:
-
-example: filter string "Canada"
-
-all rows wich have "Canada" are filtered
-in one table group there is a row which has "US/CA/MX", so the "CA" part (also starting string from "Canada") is highlighted and the row is still present
-in another table group there is a row which has "CBS", so the "C" part (also starting string from "Canada") is highlighted and the row is still present
-
-
-
+* fix 4 buttons, they should refresh the web page first

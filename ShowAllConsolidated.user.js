@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v10
+// @version      0.9+2026-01-26-debug-v11
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -263,6 +263,14 @@
                     const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
                     const p = urlObj.searchParams.get('page');
                     if (p) maxPage = parseInt(p, 10);
+                } else if (links.length > 0) {
+                    const pageNumbers = links
+                        .map(a => {
+                            const p = new URL(a.href, window.location.origin).searchParams.get('page');
+                            return p ? parseInt(p, 10) : 1;
+                        })
+                        .filter(num => !isNaN(num));
+                    if (pageNumbers.length > 0) maxPage = Math.max(...pageNumbers);
                 }
             }
             log(`Determined maxPage: ${maxPage}`);
@@ -640,6 +648,14 @@
                     const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
                     const p = urlObj.searchParams.get('page');
                     if (p) maxPage = parseInt(p, 10);
+                } else if (links.length > 0) {
+                    const pageNumbers = links
+                        .map(a => {
+                            const p = new URL(a.href, window.location.origin).searchParams.get('page');
+                            return p ? parseInt(p, 10) : 1;
+                        })
+                        .filter(num => !isNaN(num));
+                    if (pageNumbers.length > 0) maxPage = Math.max(...pageNumbers);
                 }
             }
         }
@@ -679,7 +695,7 @@
         timerDisplay.textContent = 'Fetching...';
 
         const startTime = performance.now();
-        const baseUrl = window.location.origin + path;
+        const baseUrl = window.location.origin + window.location.pathname;
         let pagesProcessed = 0;
         let cumulativeFetchTime = 0;
         let lastCategorySeenAcrossPages = null;
