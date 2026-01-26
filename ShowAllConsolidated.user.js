@@ -601,7 +601,7 @@
                                 if (node.classList.contains('subh')) {
                                     currentStatus = node.textContent.trim() || 'Unknown';
                                     if (pageType === 'releasegroup-releases' && currentStatus !== lastCategorySeenAcrossPages) {
-                                        log(`Change: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
+                                        log(`Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
                                     }
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
@@ -704,7 +704,7 @@
                                     }
 
                                     if (pageType === 'releasegroup-releases') {
-                                        // Modification: Append to existing category group if it exists
+                                        // Check if this category group already exists to consolidate subgroup tables
                                         let existingGroup = groupedRows.find(g => g.category === currentStatus);
                                         if (existingGroup) {
                                             existingGroup.rows.push(newRow);
@@ -728,12 +728,13 @@
                 const avgPageTime = cumulativeFetchTime / pagesProcessed;
                 const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
 
+                // Detailed statistics per page fetch
                 log(`Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
 
                 if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') {
                     const summaryParts = groupedRows.map(g => {
                         const curPageCount = pageCategoryMap.get(g.category) || 0;
-                        return `${g.category}: ${curPageCount}/${g.rows.length}`;
+                        return `${g.category}: +${curPageCount} (Total: ${g.rows.length})`;
                     });
                     console.log(`  Summary: ${summaryParts.join(' | ')}`);
                 }
