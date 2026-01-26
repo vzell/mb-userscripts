@@ -18981,6 +18981,10 @@ leave a little space between the "Cancel button and the new row of buttons, beca
 
 
 * debug logging
+** default
+
+Please do not make any other changes to working code, comments and debugging statements.
+
 ** ask
 
 In the uploaded userscript, please reintroduce comprehensive debug logging for all steps in the userscript, with timeing,
@@ -19003,7 +19007,7 @@ instead of
 Accumulation Summary: Official: 96 | Promotion: 4 | Official: 3
 #+end_src
 
-Also show debug logging when sorting on columns, inklusive column name plus index.
+Also show debug logging when sorting on columns, inclusive column name plus index and timing statistics.
 
 ** output
 *** artist-releasegroups
@@ -22263,27 +22267,81 @@ before the "Australia (AU)"
 
 ** filter per column also in the grouped table display
 
-In the uploaded script, there is already a filter input field which filters rows globally.
+In the uploaded script, there is already a filter input field which filters rows globally (with debug logging).
 
-Please also add filter per column functionality on the
+Include such a filter field BELOW each column header (aligned with it), which ADDITIONALLY filter rows based on just the
+column where a filter string has been entered (or if a global filter is NOT already activ, filter just based on this
+column). The matching of the filter string should only be done against data cells of the column where it is
+entered. Also include debug logging in this case.
+
+Take special care to also include such a filter field BELOW each column headeron URLs of type 
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
-https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a URL types where grouped table display is
-active.
+https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a where grouped table display is active. Each group should get it's own filter row.
 
-Include such a filter field above each column header (aligned with it), which ADDITIONALLY filters rows based on just
-the column where a filter string has been entered (or if a global filter is NOT already activ, which filters just based
-on this column). The matching of the filter string should only be done against data cells of the column where it is
-entered.
+The per column filtering should only be done in the grouped table where it is entered, and NOT synchronized over column
+filters across all tables.
 
-Also include a unicode X to quickly empty a filter field.
+Also include a unicode X at the end of the column specific filter field to quickly empty it.
 
 Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
 lighyellow background.
 
-The per column filtering should only be done in the grouped table where it is entered, not synchronized over column
-filters across all tables.
+Make sure you don't break the existing filtering functionality for URL types which use non-grouped tables.
 
-Make sure you don't break the existing filtering functionality for not grouped tables
+Please do not make any other changes to working code, comments and debugging statements.
+
+*** problems
+**** new
+
+The column based filter logic and highlighting works (even for grouped tables)
+The problem is that the global filtering works in URLs with flat tables but on URLs with grouped tables it works on all table groups EXCEPT the LAST one.
+In the LAST table group, the filtering accepts and highlights only the first character of the flobal filter string.
+
+Please fix.
+
+Please do not make any other changes to working code, comments and debugging statements.
+
+
+Now initially filtering globally works on all table groups, but clearing onyl clears the filter, but the rows stay there highlighted.
+Also the column based filtering doesn't work at all
+
+**** old
+
+The injection of a new filter row works, also for grouped tables.
+
+The global filtering and clearing works in all cases.
+
+The columns based filtering works in case of flat tables.
+
+The problem is with grouped tables:
+
+For URLs of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+If I start typing in a column based filter field it looses focus.
+
+Please include debug logging when typing in something in a column based filter field. Also if I scroll down the web page
+and type into a filter field which is initially not in the visible part of the web page, it immediately looses focus and I'm returned to the beginning of the web page
+
+#+begin_example
+This issue is caused by the script's "Re-render Everything" approach. Whenever you typed a character, the script deleted the entire table and recreated it. Since the input field you were typing in was destroyed and replaced by a new one, the browser lost focus and jumped back to the top of the page.
+
+I have refactored the filtering logic to use Selective DOM Updates. Now, when you type:
+
+The <thead> (containing your filter inputs) remains untouched.
+
+Only the <tbody> (the data rows) is cleared and repopulated.
+
+Debug logging has been added to the column filters as requested.
+
+Key Fixes
+Stable Headers: Column filter fields are no longer recreated during filtering, preventing focus loss and page jumping.
+
+Grouped Filtering: The runFilter function now iterates through existing tables in the DOM and updates them individually.
+
+Highlighting: Updated the CSS to use lightyellow for column-specific matches.
+
+Debug Logs: Added console.debug statements tracking the column index and the string being entered.
+#+end_example
+
 
 ** timings for sorting
 
@@ -22486,7 +22544,7 @@ The following is the debug console output, for example when pressing the second 
 
 I'm missing the button text changing to "Loading page 1 of 22..." but nothing happens, and alos there doesn't seem to be ny fetching going on
 
-** account for subheaders
+** DONE account for subheaders
 
 In the uploaded user script,
 implement for URLs of type https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a
@@ -22566,9 +22624,7 @@ with /place/*/performances
 #+end_example
 
 
-* || txt.startsWith('Tagger') || txt.startsWith('Rating'))
-
-
+* DONE || txt.startsWith('Tagger') || txt.startsWith('Rating'))
 * DONE fix filtering for just visible data
 
 When entering numerical values in the filter field, sometimes there are rows shown which actually do NOT have these
@@ -22595,7 +22651,7 @@ to also hide the following div containers
 
 and the very large '<details>...</details>' block with lots of image refernces in it.
 
-* hide clutter
+* DONE hide clutter
 
 #+begin_example
 +        // Hide various clutter elements
@@ -22615,53 +22671,10 @@ and the very large '<details>...</details>' block with lots of image refernces i
 
 #+end_example
 
-
-* includes(pageType)
-
-Please change the "includes(pageType)" logic to an equal logic, as the URL https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events (pageType 'place-events') has no location to split
-only the pageType 'events'
-
-#+begin_example
-    else if (path.includes('/events')) pageType = 'events';
-    else if (path.includes('/place')) pageType = 'place-events';
-#+end_example
-
-#+begin_example
-        if (typesWithSplitCD.includes(pageType)) {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
-            if (!headersText.includes('Country')) {
-                const thC = document.createElement('th');
-                thC.textContent = 'Country';
-                thC.style.backgroundColor = headerBgColor;
-                theadRow.appendChild(thC);
-            }
-            if (!headersText.includes('Date')) {
-                const thD = document.createElement('th');
-                thD.textContent = 'Date';
-                thD.style.backgroundColor = headerBgColor;
-                theadRow.appendChild(thD);
-            }
-        }
-
-        if (typesWithSplitLocation.includes(pageType)) {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
-            ['Place', 'Area', 'Country'].forEach(col => {
-                if (!headersText.includes(col)) {
-                    const th = document.createElement('th');
-                    th.textContent = col;
-                    th.style.backgroundColor = headerBgColor;
-                    theadRow.appendChild(th);
-                }
-            });
-        }
-#+end_example
-
-
 * TODO ignore &page=<n> in URLs when reloading
+* DONE new constants
 
-* new constants
-
-additionally:
+additionally:g
 
 Create constants for
 
@@ -22674,3 +22687,96 @@ maxPage > 100
 which are 40 and 100 respectively right now and use them in the code
 
 but do not change other existing, code, comment and logging
+
+* chatpgt
+** initial
+
+In the uploaded script, there is already a filter input field which filters rows globally (with debug logging).
+
+Also the following functionality is being included:
+
+#+begin_example
+Include such a filter field BELOW each column header (aligned with it), which ADDITIONALLY filter rows based on just the
+column where a filter string has been entered (or if a global filter is NOT already activ, filter just based on this
+column). The matching of the filter string should only be done against data cells of the column where it is
+entered. Also include debug logging in this case.
+
+Take special care to also include such a filter field BELOW each column headeron URLs of type 
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
+https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a where grouped table display is active. Each group should get it's own filter row.
+
+The per column filtering should only be done in the grouped table where it is entered, and NOT synchronized over column
+filters across all tables.
+
+Also include a unicode X at the end of the column specific filter field to quickly empty it.
+
+Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
+lighyellow background.
+
+Make sure you don't break the existing filtering functionality for URL types which use non-grouped tables.
+
+Please do not make any other changes to working code, comments and debugging statements.
+#+end_example
+
+The problems are:
+
+The injection of a new filter row works, also for grouped tables.
+
+The global filtering and clearing works in all cases.
+
+The columns based filtering works in case of flat tables.
+
+The problem is with grouped tables:
+
+For URLs of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+If I start typing in a column based filter field it looses focus.
+
+Please include debug logging when typing in something in a column based filter field. Also if I scroll down the web page
+and type into a filter field which is initially not in the visible part of the web page, it immediately looses focus and I'm returned to the beginning of the web page
+
+Please fix
+
+Please do not make any other changes to working code, comments and debugging statements.
+
+** problem with last table group
+
+The column based filter logic and highlighting seems to works (even for grouped tables)
+The problem is that the global filtering works in URLs with flat tables but on URLs with grouped tables it works on all table groups EXCEPT the LAST one.
+In the LAST table group, the filtering accepts and highlights only the first character of the flobal filter string.
+
+Please fix.
+
+Please do not make any other changes to working code, comments and debugging statements.
+
+First of all there is problem with the global filtering logic
+It filters all column groups where the comlete filter string is present, but for column groups where NOT the whole filter string is present, it filters and highlights up to the character  which is still present in the filter string, but does not actuall remove those rows from the filtering
+
+example: filter string "Canada"
+
+all rows wich have "Canada" are filtered
+in one table group there is a row which has "US/CA/MX", so the "CA" part (also starting string from "Canada") is highlighted and the row is still present
+in another table group there is a row which has "CBS", so the "C" part (also starting string from "Canada") is highlighted and the row is still present
+
+Please do not make any other changes to working code, comments and debugging statements.
+
+** almost
+
+In the uploaded script,
+filtering on grouped tables almost works. If I enter "Canada" and one ore more table groups do NOT contain the filter string, they are correctly
+removed. But when clearing the whole filter string (or just removing charachters backwards from it), only table groups
+are restored with their rows, which originally had at least one match. Table groups which did not match the comlete
+filter string are stay removed completely.
+
+Please fix and restore also these
+
+Please do not make any other changes to working code, comments and debugging statements.
+
+
+
+NO, now we are back to the behavious of:
+
+example: filter string "Canada"
+
+all rows wich have "Canada" are filtered
+in one table group there is a row which has "US/CA/MX", so the "CA" part (also starting string from "Canada") is highlighted and the row is still present
+in another table group there is a row which has "CBS", so the "C" part (also starting string from "Canada") is highlighted and the row is still present
