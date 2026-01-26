@@ -22743,6 +22743,10 @@ Everything shloud be place after the checkbox and "Cc:" text
 In the uploaded script,
 put the text "Show all: " before the 4 buttons and align like the "Loaded .." text in the middle of the buttons.
 
+** remove estimate, when finished fetching and put it before filter field, onyl place sorting and filtering timng info after filter column filed
+
+** adjust the logic for bis tables when filtering on columns, maybe waiting between keystrokes
+
 * adjust color of sorted columnto light yellow
 * remove 1st button and functionality
 * fix placement of generated/rendered table data
