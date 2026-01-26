@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v12
+// @version      0.9+2026-01-26-debug-v13
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -196,7 +196,6 @@
         button.mb-show-all-btn-loading:disabled {
             cursor: default !important;
             color: buttontext !important;
-            background-color: buttonface !important;
             opacity: 1 !important;
             border: 1px solid #767676 !important;
         }
@@ -633,6 +632,10 @@
         e.preventDefault();
         e.stopPropagation();
 
+        // Reset button state and styles
+        activeBtn.style.backgroundColor = 'red';
+        activeBtn.style.color = 'white';
+
         // Removed isLoaded block to allow re-fetching
         log('Starting fetch process...', overrideParams);
         let maxPage = 1;
@@ -664,7 +667,11 @@
         }
 
         log('Total pages to fetch:', maxPage);
-        if (maxPage > MAX_PAGE_THRESHOLD && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) return;
+        if (maxPage > MAX_PAGE_THRESHOLD && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) {
+            activeBtn.style.backgroundColor = '';
+            activeBtn.style.color = '';
+            return;
+        }
 
         isLoaded = true;
         stopRequested = false;
@@ -699,6 +706,10 @@
         timerDisplay.textContent = 'Fetching...';
 
         const startTime = performance.now();
+        let fetchingTimeStart = performance.now();
+        let totalFetchingTime = 0;
+        let totalRenderingTime = 0;
+
         const baseUrl = window.location.origin + window.location.pathname;
         let pagesProcessed = 0;
         let cumulativeFetchTime = 0;
@@ -713,6 +724,16 @@
                 }
                 pagesProcessed++;
                 statusDisplay.textContent = `Loaded page ${p} of ${maxPage}...`;
+
+                // Calculate color transition: Red (0%) -> Orange (50%) -> Green (100%)
+                const progress = p / maxPage;
+                if (progress >= 1.0) {
+                    activeBtn.style.backgroundColor = 'green';
+                } else if (progress >= 0.5) {
+                    activeBtn.style.backgroundColor = 'orange';
+                } else {
+                    activeBtn.style.backgroundColor = 'red';
+                }
 
                 const pageStartTime = performance.now();
                 const fetchUrl = new URL(baseUrl);
@@ -935,11 +956,14 @@
                 else if (p === maxPage) timerDisplay.textContent = 'Finalizing...';
             }
 
+            totalFetchingTime = performance.now() - fetchingTimeStart;
+            let renderingTimeStart = performance.now();
+
             const totalRows = (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') ?
                              groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
 
             updateH2Count(totalRows, totalRows);
-            statusDisplay.textContent = `Loaded ${pagesProcessed} pages (${totalRows} rows)`;
+
             activeBtn.disabled = false;
             activeBtn.classList.remove('mb-show-all-btn-loading');
             allActionButtons.forEach(b => b.disabled = false);
@@ -958,13 +982,22 @@
                 makeSortable();
             }
 
-            timerDisplay.textContent = `(Fetch/Render: ${((performance.now() - startTime) / 1000).toFixed(2)}s)`;
+            totalRenderingTime = performance.now() - renderingTimeStart;
+
+            const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
+            const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
+
+            statusDisplay.textContent = `Loaded ${pagesProcessed} pages (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
+            timerDisplay.textContent = `(Total: ${((performance.now() - startTime) / 1000).toFixed(2)}s)`;
+
             log(`Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
             log('Critical Error during fetch:', err);
             statusDisplay.textContent = 'Error during load';
             activeBtn.disabled = false;
             allActionButtons.forEach(b => b.disabled = false);
+            activeBtn.style.backgroundColor = '';
+            activeBtn.style.color = '';
         }
     }
 

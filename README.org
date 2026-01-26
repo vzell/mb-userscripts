@@ -22360,14 +22360,6 @@ In the uploaded script, make each column filter field exactly the same width as 
 except a bit padding left and right and place each unicode X (for emptying the field) exactly inside the filter field at
 the end of the filter field
 
-** timings for sorting
-
-The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
-
-** remove or fix "Tagger" column
-
-In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
-
 ** sync functionality like on the old Releases in RG implementation
 ** DONE add all RGs (bootlegs) functionality
 *** initial
@@ -22709,25 +22701,52 @@ In the uploaded script,
 make sure that when starting on a page which has the query parameter "page=<n>" (for example "page=3") already appended in
 the browser URL bar, the script first strips the "page=<n>" from the URL and then starts its logic
 
-* fix placement of generated/rendered table data
 * fix 4 buttons
-** initial
+** DONE initial
 
 In the uploaded script, the button text of the four buttons on pages of type
 "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f" should NOT change from their initial "Show all.. releasegroups" but should remain. Instead 
-the text "Loaded page <n> of <m>" should be placed as a standard text after the "Stop" button and when the loading has finished, the final text should be updated to "Load <m> pages (<number of rows> rows)".
+the text "Loaded page <n> of <m>" should be placed as a standard text after the "Stop" button and when the loading has finished, the final text should be updated to "Loaded <m> pages (<number of rows> rows)".
 Also the buttons should initiate the same actions after loading all pages and rendering the result page again (but with the latest data), instead of doing nothing.
 
 Please do not make any other changes to working code, comments and debugging statements.
 
-** red button when finished
+** DONE red button when finished, separate timing for fetching and initial rendering
 
-Adjust the button color to light red when loading of all pages has finished, and reset when pressing again.
+In the uploaded script,
+adjust the button color to red when starting to fetch, then switch to orange, and finally to green after loading of all
+pages has finished (calculate the color out of current number fetched and total number to fetch), and reset when
+pressing the button again
 
-** separate timing for fetching and initial rendering
+Also separate the current timing for fetching and initial rendering in the format (Fetch/Render: <time>s) in separate times,
+for fetching and initial rendering alone in the format "Fetching: <fetching time>s, Initial rendering: <initial rendering time>s"
 
+Place that information comma separated right behind the "Loaded <m> pages (<number of rows> rows)" text.
 
+Please do not make any other changes to working code, comments and debugging statements.
 
+** change colors
+
+change the button colors from
+
+- red -> light red
+- orange -> orange
+- green -> light green
+
+Also, if another of the 4 buttons is pressed reset, the now colored button back to the original grey background
+
+During the very first time, when the logic tries to get the "maxPage" information, display "Getting number of pages to fetch" instead of "Loading page <n> of <m>"
+
+Please do not make any other changes to working code, comments and debugging statements.
+
+* fix placement of generated/rendered table data
+* timings for sorting
+
+The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
+
+* remove or fix "Tagger" column
+
+In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
 
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
