@@ -18983,7 +18983,7 @@ leave a little space between the "Cancel button and the new row of buttons, beca
 * debug logging
 ** ask
 
-In the uploaded script, please reintroduce comprehensive debug logging for all steps in the userscript, with timeing,
+In the uploaded userscript, please reintroduce comprehensive debug logging for all steps in the userscript, with timeing,
 number of rows processed etc.  Also specifically for URLs of type
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f add debug logging whenever the '<h3><type></h3>'
 changes ((also include number of rows accumulated so far) and on
@@ -22486,6 +22486,71 @@ The following is the debug console output, for example when pressing the second 
 
 I'm missing the button text changing to "Loading page 1 of 22..." but nothing happens, and alos there doesn't seem to be ny fetching going on
 
+** performances
+
+In the uploaded userscript, please add support also to 
+
+#+begin_example
+// @match        *://*.musicbrainz.org/place/*/performances
+#+end_example
+
+instead of justIn the uploaded userscript, please add support also to 
+
+#+begin_example
+// @match        *://*.musicbrainz.org/place/*/performances
+#+end_example
+
+instead of just
+
+#+begin_example
+// @match        *://*.musicbrainz.org/place/*/events
+#+end_example
+
+please also adjust the following code block accordingly, thereby renaming "pageType = 'place-events'" to "pageType =
+'place-concerts'" when the URL ends with '/place/*/events' and add a new pageType 'place-performances' when the URL ends
+with /place/*/performances
+
+#+begin_example
+    // Determine page type using the requested priority structure
+    if (isWorkRecordings || isWorkBase) pageType = 'work-recordings';
+    else if (isSpecialArtistView || path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
+    else if (path.includes('/events')) pageType = 'events';
+    else if (path.includes('/recordings')) pageType = 'recordings';
+    else if (path.includes('/releases')) pageType = 'releases';
+    else if (path.includes('/works')) pageType = 'works';
+    else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
+    else if (path.match(/\/recording\/[a-f0-9-]{36}$/)) pageType = 'releasegroup-releases';
+    else if (path.includes('/label')) pageType = 'label';
+    else if (path.includes('/series')) pageType = 'series';
+    else if (path.includes('/recording')) pageType = 'recording';
+    else if (path.includes('/place')) pageType = 'place-events';
+#+end_example
+g
+
+#+begin_example
+// @match        *://*.musicbrainz.org/place/*/events
+#+end_example
+
+please also adjust the following code block accordingly, thereby renaming "pageType = 'place-events'" to "pageType =
+'place-concerts'" when the URL ends with '/place/*/events' and add a new pageType 'place-performances' when the URL ends
+with /place/*/performances
+
+#+begin_example
+    // Determine page type using the requested priority structure
+    if (isWorkRecordings || isWorkBase) pageType = 'work-recordings';
+    else if (isSpecialArtistView || path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
+    else if (path.includes('/events')) pageType = 'events';
+    else if (path.includes('/recordings')) pageType = 'recordings';
+    else if (path.includes('/releases')) pageType = 'releases';
+    else if (path.includes('/works')) pageType = 'works';
+    else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
+    else if (path.match(/\/recording\/[a-f0-9-]{36}$/)) pageType = 'releasegroup-releases';
+    else if (path.includes('/label')) pageType = 'label';
+    else if (path.includes('/series')) pageType = 'series';
+    else if (path.includes('/recording')) pageType = 'recording';
+    else if (path.includes('/place')) pageType = 'place-events';
+#+end_example
+
 
 * || txt.startsWith('Tagger') || txt.startsWith('Rating'))
 
@@ -22516,7 +22581,7 @@ to also hide the following div containers
 
 and the very large '<details>...</details>' block with lots of image refernces in it.
 
-* hid clutter
+* hide clutter
 
 #+begin_example
 +        // Hide various clutter elements

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v3
+// @version      0.9+2026-01-26-debug-v4
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -17,6 +17,7 @@
 // @match        *://*.musicbrainz.org/label/*
 // @match        *://*.musicbrainz.org/series/*
 // @match        *://*.musicbrainz.org/place/*/events
+// @match        *://*.musicbrainz.org/place/*/performances
 // @grant        GM_xmlhttpRequest
 // @license      MIT
 // ==/UserScript==
@@ -79,7 +80,6 @@
     // Determine page type using the requested priority structure
     if (isWorkRecordings || isWorkBase) pageType = 'work-recordings';
     else if (isSpecialArtistView || path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
-    else if (path.includes('/events')) pageType = 'events';
     else if (path.includes('/recordings')) pageType = 'recordings';
     else if (path.includes('/releases')) pageType = 'releases';
     else if (path.includes('/works')) pageType = 'works';
@@ -88,7 +88,9 @@
     else if (path.includes('/label')) pageType = 'label';
     else if (path.includes('/series')) pageType = 'series';
     else if (path.includes('/recording')) pageType = 'recording';
-    else if (path.includes('/place')) pageType = 'place-events';
+    else if (path.match(/\/place\/.*\/events/)) pageType = 'place-concerts';
+    else if (path.match(/\/place\/.*\/performances/)) pageType = 'place-performances';
+    else if (path.includes('/events')) pageType = 'events';
 
     if (pageType) logPrefix = `[MB-ShowAll-Debug: ${pageType}]`;
     log('Initializing script for path:', path);
