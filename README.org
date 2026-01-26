@@ -22713,27 +22713,12 @@ Please do not make any other changes to working code, comments and debugging sta
 
 ** DONE red button when finished, separate timing for fetching and initial rendering
 
-In the uploaded script,
-adjust the button color to red when starting to fetch, then switch to orange, and finally to green after loading of all
-pages has finished (calculate the color out of current number fetched and total number to fetch), and reset when
-pressing the button again
+In the uploaded script, adjust the button color to light red when starting to fetch, then switch to orange, and finally
+to light green after loading of all pages has finished (calculate the color out of current number fetched and total
+number to fetch), and reset when pressing the button again.
 
-Also separate the current timing for fetching and initial rendering in the format (Fetch/Render: <time>s) in separate times,
-for fetching and initial rendering alone in the format "Fetching: <fetching time>s, Initial rendering: <initial rendering time>s"
-
-Place that information comma separated right behind the "Loaded <m> pages (<number of rows> rows)" text.
-
-Please do not make any other changes to working code, comments and debugging statements.
-
-** change colors
-
-change the button colors from
-
-- red -> light red
-- orange -> orange
-- green -> light green
-
-Also, if another of the 4 buttons is pressed reset, the now colored button back to the original grey background
+Also, if another of the 4 buttons is pressed reset the now colored button back to the original grey background, so only
+the currently pressed/active button should be colorized.
 
 During the very first time, when the logic tries to get the "maxPage" information, display "Getting number of pages to fetch" instead of "Loading page <n> of <m>"
 
@@ -22742,7 +22727,7 @@ Please do not make any other changes to working code, comments and debugging sta
 * fix placement of generated/rendered table data
 * timings for sorting
 
-The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
+The text for the timing information for sorting should change during sorting to "Sorting on column <column name> (column index))..." and only after the sort it should be: "Sorting: <sorting time>s, Re-rendering: <re-rendering time>s"
 
 * remove or fix "Tagger" column
 

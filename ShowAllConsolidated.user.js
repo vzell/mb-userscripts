@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v13
+// @version      0.9+2026-01-26-debug-v14
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -167,10 +167,10 @@
     // Generate the 4 additional artist buttons
     if (pageType === 'artist-releasegroups') {
         const extraConfigs = [
-            { title: 'Show all official artist releasegroups', params: { all: '0', va: '0' } },
-            { title: 'Show all non-official artist releasegroups', params: { all: '1', va: '0' } },
-            { title: 'Show all official various artists releasegroups', params: { all: '0', va: '1' } },
-            { title: 'Show all non-official various artists releasegroups', params: { all: '1', va: '1' } }
+            { title: 'Official artist RGs', params: { all: '0', va: '0' } },
+            { title: 'Non-official artist RGs', params: { all: '1', va: '0' } },
+            { title: 'Official various artists RGs', params: { all: '0', va: '1' } },
+            { title: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
         ];
 
         extraConfigs.forEach(conf => {
@@ -632,12 +632,20 @@
         e.preventDefault();
         e.stopPropagation();
 
-        // Reset button state and styles
-        activeBtn.style.backgroundColor = 'red';
-        activeBtn.style.color = 'white';
+        // Reset all buttons back to original grey background
+        allActionButtons.forEach(btn => {
+            btn.style.backgroundColor = '';
+            btn.style.color = '';
+        });
+
+        // Set initial starting color for active button
+        activeBtn.style.backgroundColor = '#ffcccc'; // light red
+        activeBtn.style.color = 'black';
 
         // Removed isLoaded block to allow re-fetching
         log('Starting fetch process...', overrideParams);
+
+        statusDisplay.textContent = 'Getting number of pages to fetch...';
         let maxPage = 1;
 
         // Determine maxPage based on context
@@ -670,6 +678,7 @@
         if (maxPage > MAX_PAGE_THRESHOLD && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) {
             activeBtn.style.backgroundColor = '';
             activeBtn.style.color = '';
+            statusDisplay.textContent = '';
             return;
         }
 
@@ -723,16 +732,16 @@
                     break;
                 }
                 pagesProcessed++;
-                statusDisplay.textContent = `Loaded page ${p} of ${maxPage}...`;
+                statusDisplay.textContent = `Loading page ${p} of ${maxPage}...`;
 
-                // Calculate color transition: Red (0%) -> Orange (50%) -> Green (100%)
+                // Update button color based on progress
                 const progress = p / maxPage;
                 if (progress >= 1.0) {
-                    activeBtn.style.backgroundColor = 'green';
+                    activeBtn.style.backgroundColor = '#ccffcc'; // light green
                 } else if (progress >= 0.5) {
-                    activeBtn.style.backgroundColor = 'orange';
+                    activeBtn.style.backgroundColor = '#ffe0b2'; // light orange
                 } else {
-                    activeBtn.style.backgroundColor = 'red';
+                    activeBtn.style.backgroundColor = '#ffcccc'; // light red
                 }
 
                 const pageStartTime = performance.now();
@@ -952,7 +961,7 @@
                     console.log(`  Summary: ${summaryParts.join(' | ')}`);
                 }
 
-                if (maxPage > 1 && p < maxPage) timerDisplay.textContent = `Est. remaining: ${estRemainingSeconds.toFixed(1)}s`;
+                if (maxPage > 1 && p < maxPage) timerDisplay.textContent = `(Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s)`;
                 else if (p === maxPage) timerDisplay.textContent = 'Finalizing...';
             }
 
