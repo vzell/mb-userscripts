@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v15
+// @version      0.9+2026-01-26-debug-v16
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -111,13 +111,34 @@
     controlsContainer.id = 'mb-show-all-controls-container';
     controlsContainer.style.cssText = 'display:inline-flex; flex-wrap:wrap; align-items:center; gap:8px; margin-left:10px; vertical-align:middle; line-height:1;';
 
-    const mainBtn = document.createElement('button');
-    mainBtn.textContent = (pageType === 'artist-releasegroups') ? "Show all artist releasegroups" : `Show all ${pageType.replace('-', ' ')}`;
-    mainBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
-    mainBtn.type = 'button';
-    mainBtn.onclick = (e) => startFetchingProcess(e);
+    const allActionButtons = [];
 
-    const allActionButtons = [mainBtn];
+    if (pageType === 'artist-releasegroups') {
+        const extraConfigs = [
+            { title: 'Official artist RGs', params: { all: '0', va: '0' } },
+            { title: 'Non-official artist RGs', params: { all: '1', va: '0' } },
+            { title: 'Official various artists RGs', params: { all: '0', va: '1' } },
+            { title: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
+        ];
+
+        extraConfigs.forEach(conf => {
+            const eb = document.createElement('button');
+            eb.textContent = conf.title;
+            eb.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+            eb.type = 'button';
+            eb.onclick = (e) => startFetchingProcess(e, conf.params);
+            controlsContainer.appendChild(eb);
+            allActionButtons.push(eb);
+        });
+    } else {
+        const mainBtn = document.createElement('button');
+        mainBtn.textContent = `Show all ${pageType.replace('-', ' ')}`;
+        mainBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+        mainBtn.type = 'button';
+        mainBtn.onclick = (e) => startFetchingProcess(e);
+        controlsContainer.appendChild(mainBtn);
+        allActionButtons.push(mainBtn);
+    }
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
@@ -161,33 +182,6 @@
 
     const sortTimerDisplay = document.createElement('span');
     sortTimerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
-
-    controlsContainer.appendChild(mainBtn);
-
-    // Generate the 4 additional artist buttons
-    if (pageType === 'artist-releasegroups') {
-        const btnLabel = document.createElement('span');
-        btnLabel.textContent = 'Show all: ';
-        btnLabel.style.cssText = 'font-size:0.5em; font-weight:bold; color:#333; display:flex; align-items:center; height:24px;';
-        controlsContainer.appendChild(btnLabel);
-
-        const extraConfigs = [
-            { title: 'Official artist RGs', params: { all: '0', va: '0' } },
-            { title: 'Non-official artist RGs', params: { all: '1', va: '0' } },
-            { title: 'Official various artists RGs', params: { all: '0', va: '1' } },
-            { title: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
-        ];
-
-        extraConfigs.forEach(conf => {
-            const eb = document.createElement('button');
-            eb.textContent = conf.title;
-            eb.style.cssText = mainBtn.style.cssText;
-            eb.type = 'button';
-            eb.onclick = (e) => startFetchingProcess(e, conf.params);
-            controlsContainer.appendChild(eb);
-            allActionButtons.push(eb);
-        });
-    }
 
     controlsContainer.appendChild(stopBtn);
     controlsContainer.appendChild(statusDisplay);

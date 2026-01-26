@@ -22738,13 +22738,7 @@ The text for the timing information for sorting should change during sorting to 
 
 Everything shloud be place after the checkbox and "Cc:" text
 
-** put the text "Show all: " before the 4 buttons
-
-In the uploaded script,
-
-put the text "Show all: " before the 4 buttons and align like the "Loaded .." text in the middle of the buttons.
-
-** remove estimate, when finished fetching and put it before filter field, onyl place sorting and filtering timng info after filter column filed
+** DONE put the text "Show all: " before the 4 buttons, remove estimate, when finished fetching and put it before filter field, only place sorting and filtering timing info after filter column field
 
 In the uploaded script,
 put the text '(Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s)' during fetching at the end of 
@@ -22764,10 +22758,18 @@ is rendered remove the '(Estimated remaining time: ${estRemainingSeconds.toFixed
 Additionally,
 put the text "Show all: " before the 4 "... artist RGs" buttons and align like the "Loaded .." text in the middle of the buttons.
 
-** adjust the logic for bis tables when filtering on columns, maybe waiting between keystrokes
+** adjust the logic for bis tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
 
-* adjust color of sorted columnto light yellow
+* adjust color of sorted column to light yellow
+
+In the uploaded script,
+adjust the color of the column of a datatable on which sorting has been performed to a light yellow background. Reset the color to the default as soon as another column is choosen for sorting.
+
 * remove 1st button and functionality
+
+In the uploaded script,
+remove the button "const mainBtn" as it's functionality is now in button one of the 4 new buttons
+
 * fix placement of generated/rendered table data
 * remove or fix "Tagger" column
 
