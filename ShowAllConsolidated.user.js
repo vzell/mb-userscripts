@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26
+// @version      0.9+2026-01-26-debug
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -571,7 +571,7 @@
 
                         // Logic to handle grouped data and repeat headers
                         if (category !== lastCategorySeenAcrossPages) {
-                            log(`Category change detected: "${category}". Accumulated so far: ${totalRowsAccumulated} rows.`);
+                            log(`<h3> Type Change detected: "${category}". Rows accumulated so far: ${totalRowsAccumulated}`);
                             groupedRows.push({ category: category, rows: [] });
                             lastCategorySeenAcrossPages = category;
                         }
@@ -596,7 +596,7 @@
                                 if (node.classList.contains('subh')) {
                                     currentStatus = node.textContent.trim() || 'Unknown';
                                     if (pageType === 'releasegroup-releases' && currentStatus !== lastCategorySeenAcrossPages) {
-                                        log(`Subheader change detected: "${currentStatus}". Accumulated so far: ${totalRowsAccumulated} rows.`);
+                                        log(`Subheader change detected: "${currentStatus}". Rows accumulated so far: ${totalRowsAccumulated}`);
                                     }
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
@@ -714,12 +714,18 @@
                         });
                     }
                 }
+
+                // Log page summary with category breakdown if applicable
                 const pageDuration = performance.now() - pageStartTime;
                 cumulativeFetchTime += pageDuration;
                 const avgPageTime = cumulativeFetchTime / pagesProcessed;
                 const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
 
-                log(`Processed page ${p}. Rows in page: ${rowsInThisPage}. Total accumulated: ${totalRowsAccumulated}. Duration: ${(pageDuration / 1000).toFixed(2)}s`);
+                log(`Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
+                if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') {
+                    const summary = groupedRows.map(g => `${g.category}: ${g.rows.length}`).join(' | ');
+                    log(`Accumulation Summary: ${summary}`);
+                }
 
                 if (maxPage > 1 && p < maxPage) timerDisplay.textContent = `Est. remaining: ${estRemainingSeconds.toFixed(1)}s`;
                 else if (p === maxPage) timerDisplay.textContent = 'Finalizing...';
@@ -747,7 +753,7 @@
             }
 
             timerDisplay.textContent = `(Fetch/Render: ${((performance.now() - startTime) / 1000).toFixed(2)}s)`;
-            log(`Fetching and initial rendering complete. Total rows: ${totalRows}. Total time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
+            log(`Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
             log('Critical Error during fetch:', err);
             activeBtn.textContent = 'Error';
@@ -764,7 +770,6 @@
     }
 
     function renderGroupedTable(dataArray, isArtistMain, query = '') {
-        log(`Rendering grouped table with ${dataArray.length} groups.`);
         const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
         if (!container) return;
 
@@ -872,7 +877,7 @@
                     });
                     const duration = ((performance.now() - startSort) / 1000).toFixed(2);
                     sortTimerDisplay.textContent = `(Sort: ${duration}s)`;
-                    log(`Sort of "${sortKey}" complete. Direction: ${state.sortAscending ? 'Asc' : 'Desc'}. Duration: ${duration}s`);
+                    log(`Sort complete: ${state.sortAscending ? 'Asc' : 'Desc'}. Taken: ${duration}s`);
                 });
             };
         });
@@ -931,7 +936,7 @@
                     }
                     const duration = ((performance.now() - startSort) / 1000).toFixed(2);
                     sortTimerDisplay.textContent = `(Sort: ${duration}s)`;
-                    log(`Sort complete. Direction: ${sortAscending ? 'Asc' : 'Desc'}. Duration: ${duration}s`);
+                    log(`Sort complete: ${sortAscending ? 'Asc' : 'Desc'}. Taken: ${duration}s`);
                 });
             };
         });

@@ -18981,6 +18981,7 @@ leave a little space between the "Cancel button and the new row of buttons, beca
 
 
 * debug logging
+** ask
 
 In the uploaded script, please reintroduce comprehensive debug logging for all steps in the userscript, with timeing,
 number of rows processed etc.  Also specifically for URLs of type
@@ -18990,7 +18991,83 @@ https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a whene
 "Promotion, Bootleg" etc.changes. (also include number of rows accumulated so far).
 After each processed page also make a summary about how many rows have been accumulated per category for both types of URL, artist and release-group.
 
-Also show debug logging when sorting on cloumns, inklusive column name plus index.
+The output of the "Accumulation Summary" line should be indented below "Page x/y processed" for both types of URL, artist and release-group.
+
+#+begin_example
+  Summary: Official: <number from current page>/<total so far> | Promotion: <number from current page>/<total so far> | Official: <number from current page>/<total so far>
+#+end_example
+
+instead of
+
+#+begin_src bash
+Accumulation Summary: Official: 96 | Promotion: 4 | Official: 3
+#+end_src
+
+Also show debug logging when sorting on columns, inklusive column name plus index.
+
+** output
+*** artist-releasegroups
+
+#+begin_example
+[MB-ShowAll-Debug: artist-releasegroups] Initializing script for path: /artist/70248960-cb53-4ea4-943a-edb18f7d336f
+[MB-ShowAll-Debug: artist-releasegroups] Starting fetch process... {all: '0', va: '1'}
+[MB-ShowAll-Debug: artist-releasegroups] Fetching maxPage from: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=0&va=1&page=1
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Compilation". Rows accumulated so far: 0 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "DJ-mix". Rows accumulated so far: 2 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Album". Rows accumulated so far: 3 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Album + Compilation". Rows accumulated so far: 36 
+[MB-ShowAll-Debug: artist-releasegroups] Page 1/5 processed in 4.46s. Rows on page: 100. Total: 100 
+[MB-ShowAll-Debug: artist-releasegroups] Accumulation Summary: Compilation: 2 | DJ-mix: 1 | Album: 33 | Album + Compilation: 64 
+[MB-ShowAll-Debug: artist-releasegroups] Page 2/5 processed in 1.25s. Rows on page: 100. Total: 200 
+[MB-ShowAll-Debug: artist-releasegroups] Accumulation Summary: Compilation: 2 | DJ-mix: 1 | Album: 33 | Album + Compilation: 164 
+[MB-ShowAll-Debug: artist-releasegroups] Page 3/5 processed in 2.48s. Rows on page: 100. Total: 300 
+[MB-ShowAll-Debug: artist-releasegroups] Accumulation Summary: Compilation: 2 | DJ-mix: 1 | Album: 33 | Album + Compilation: 264 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Album + Compilation + Soundtrack". Rows accumulated so far: 351 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Album + Compilation + Soundtrack + Live". Rows accumulated so far: 357 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Album + Compilation + Interview". Rows accumulated so far: 358 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Album + Compilation + Live". Rows accumulated so far: 359 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Album + Compilation + DJ-mix". Rows accumulated so far: 375 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Album + Soundtrack". Rows accumulated so far: 376 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Album + Live". Rows accumulated so far: 387 
+[MB-ShowAll-Debug: artist-releasegroups] Page 4/5 processed in 1.79s. Rows on page: 100. Total: 400 
+[MB-ShowAll-Debug: artist-releasegroups] Accumulation Summary: Compilation: 2 | DJ-mix: 1 | Album: 33 | Album + Compilation: 315 | Album + Compilation + Soundtrack: 6 | Album + Compilation + Soundtrack + Live: 1 | Album + Compilation + Interview: 1 | Album + Compilation + Live: 16 | Album + Compilation + DJ-mix: 1 | Album + Soundtrack: 11 | Album + Live: 13 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Album + DJ-mix". Rows accumulated so far: 410 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Single". Rows accumulated so far: 413 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Broadcast". Rows accumulated so far: 415 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Broadcast + Compilation". Rows accumulated so far: 416 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Other". Rows accumulated so far: 417 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Other + Compilation". Rows accumulated so far: 419 
+[MB-ShowAll-Debug: artist-releasegroups] <h3> Type Change detected: "Other + Compilation + DJ-mix". Rows accumulated so far: 420 
+[MB-ShowAll-Debug: artist-releasegroups] Page 5/5 processed in 0.94s. Rows on page: 21. Total: 421 
+[MB-ShowAll-Debug: artist-releasegroups] Accumulation Summary: Compilation: 2 | DJ-mix: 1 | Album: 33 | Album + Compilation: 315 | Album + Compilation + Soundtrack: 6 | Album + Compilation + Soundtrack + Live: 1 | Album + Compilation + Interview: 1 | Album + Compilation + Live: 16 | Album + Compilation + DJ-mix: 1 | Album + Soundtrack: 11 | Album + Live: 23 | Album + DJ-mix: 3 | Single: 2 | Broadcast: 1 | Broadcast + Compilation: 1 | Other: 2 | Other + Compilation: 1 | Other + Compilation + DJ-mix: 1 
+[MB-ShowAll-Debug: artist-releasegroups] Updated H2 header count: (421) 
+[MB-ShowAll-Debug: artist-releasegroups] Process complete. Final Row Count: 421. Total Time: 10.93s 
+#+end_example
+
+*** releasegroup-releases
+
+[MB-ShowAll-Debug: releasegroup-releases] Initializing script for path: /release-group/39b22944-7503-3937-8bba-09b17281cc6a
+[MB-ShowAll-Debug: releasegroup-releases] Starting fetch process... null
+[MB-ShowAll-Debug: releasegroup-releases] Total pages to fetch: 2
+[MB-ShowAll-Debug: releasegroup-releases] Subheader change detected: "Official". Rows accumulated so far: 0 
+[MB-ShowAll-Debug: releasegroup-releases] Subheader change detected: "Promotion". Rows accumulated so far: 96 
+[MB-ShowAll-Debug: releasegroup-releases] Page 1/2 processed in 21.62s. Rows on page: 100. Total: 100 
+[MB-ShowAll-Debug: releasegroup-releases] Accumulation Summary: Official: 96 | Promotion: 4 
+[MB-ShowAll-Debug: releasegroup-releases] Subheader change detected: "Official". Rows accumulated so far: 100 
+[MB-ShowAll-Debug: releasegroup-releases] Page 2/2 processed in 1.43s. Rows on page: 3. Total: 103 
+[MB-ShowAll-Debug: releasegroup-releases] Accumulation Summary: Official: 96 | Promotion: 4 | Official: 3 
+[MB-ShowAll-Debug: releasegroup-releases] Updated H2 header count: (103) 
+[MB-ShowAll-Debug: releasegroup-releases] Process complete. Final Row Count: 103. Total Time: 23.06s 
+
+*** labels
+
+[MB-ShowAll-Debug: label] Initializing script for path: /label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
+[MB-ShowAll-Debug: label] Starting fetch process... null
+[MB-ShowAll-Debug: label] Total pages to fetch: 2
+[MB-ShowAll-Debug: label] Page 1/2 processed in 14.77s. Rows on page: 100. Total: 100 
+[MB-ShowAll-Debug: label] Page 2/2 processed in 2.28s. Rows on page: 22. Total: 122 
+[MB-ShowAll-Debug: label] Updated H2 header count: (122) 
+[MB-ShowAll-Debug: label] Process complete. Final Row Count: 122. Total Time: 17.06s
 
 
 * ShowAllReleases in ReleaseGroups
