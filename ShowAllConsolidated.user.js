@@ -939,7 +939,7 @@
                              groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
 
             updateH2Count(totalRows, totalRows);
-            statusDisplay.textContent = `Load ${pagesProcessed} pages (${totalRows} rows)`;
+            statusDisplay.textContent = `Loaded ${pagesProcessed} pages (${totalRows} rows)`;
             activeBtn.disabled = false;
             activeBtn.classList.remove('mb-show-all-btn-loading');
             allActionButtons.forEach(b => b.disabled = false);
