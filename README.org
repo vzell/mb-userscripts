@@ -22738,6 +22738,10 @@ Everything shloud be place after the checkbox and "Cc:" text
 In the uploaded script,
 put the text "Show all: " before the 4 buttons and align like the "Loaded .." text in the middle of the buttons.
 
+* fix sorting on grouped tables
+
+In the uploaded script, somehow for pages with grouped tabledata, the column sort handler is not working anymore, only the header itself cahnge its appearance, but the data itsle is not sorted at all
+
 * remove 1st button and functionality
 * fix placement of generated/rendered table data
 * remove show all releases button

@@ -1134,21 +1134,26 @@
                     });
 
                     const isNumeric = th.textContent.includes('Year') || th.textContent.includes('Releases');
-                    const rows = Array.from(table.querySelectorAll('tbody tr'));
-                    rows.sort((a, b) => {
-                        const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
-                        const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
-                        if (isNumeric) {
-                            const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
-                            const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
-                            return state.sortAscending ? numA - numB : numB - numA;
-                        }
-                        return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                    });
 
-                    const tbody = table.querySelector('tbody');
-                    tbody.innerHTML = '';
-                    rows.forEach(r => tbody.appendChild(r));
+                    // Find the actual data group in groupedRows to update it permanently
+                    // sortKey is constructed as `${group.category}_${index}`
+                    const groupIndex = parseInt(sortKey.split('_').pop(), 10);
+                    const targetGroup = groupedRows[groupIndex];
+
+                    if (targetGroup && targetGroup.rows) {
+                        targetGroup.rows.sort((a, b) => {
+                            const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
+                            const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
+                            if (isNumeric) {
+                                const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
+                                const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
+                                return state.sortAscending ? numA - numB : numB - numA;
+                            }
+                            return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                        });
+                    }
+
+                    // runFilter handles the re-rendering of the DOM based on the updated groupedRows
                     runFilter();
 
                     const duration = ((performance.now() - startSort) / 1000).toFixed(2);
