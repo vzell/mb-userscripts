@@ -22741,9 +22741,28 @@ Everything shloud be place after the checkbox and "Cc:" text
 ** put the text "Show all: " before the 4 buttons
 
 In the uploaded script,
+
 put the text "Show all: " before the 4 buttons and align like the "Loaded .." text in the middle of the buttons.
 
 ** remove estimate, when finished fetching and put it before filter field, onyl place sorting and filtering timng info after filter column filed
+
+In the uploaded script,
+put the text '(Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s)' during fetching at the end of 
+
+#+begin_example
+statusDisplay.textContent = `Loading page ${p} of ${maxPage}...`;
+#+end_example
+
+as soon as the text
+
+#+begin_example
+statusDisplay.textContent = `Loaded ${pagesProcessed} pages (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
+#+end_example
+
+is rendered remove the '(Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s)'
+
+Additionally,
+put the text "Show all: " before the 4 "... artist RGs" buttons and align like the "Loaded .." text in the middle of the buttons.
 
 ** adjust the logic for bis tables when filtering on columns, maybe waiting between keystrokes
 

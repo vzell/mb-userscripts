@@ -1122,7 +1122,7 @@
                 e.preventDefault();
                 const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
                 log(`Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index})...`);
-                sortTimerDisplay.textContent = '(Sorting...)';
+                sortTimerDisplay.textContent = 'Sorting...';
                 requestAnimationFrame(() => {
                     const startSort = performance.now();
                     if (state.lastSortIndex === index) state.sortAscending = !state.sortAscending;
@@ -1157,7 +1157,7 @@
                     runFilter();
 
                     const duration = ((performance.now() - startSort) / 1000).toFixed(2);
-                    sortTimerDisplay.textContent = `(Sort: ${duration}s)`;
+                    sortTimerDisplay.textContent = `Sorting: ${duration}s`;
                     log(`Sort complete: ${state.sortAscending ? 'Asc' : 'Desc'}. Taken: ${duration}s`);
                 });
             };
@@ -1179,7 +1179,7 @@
                 e.preventDefault();
                 const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
                 log(`Sorting main table by column: "${colName}" (index: ${index})...`);
-                sortTimerDisplay.textContent = '(Sorting...)';
+                sortTimerDisplay.textContent = 'Sorting...';
                 requestAnimationFrame(() => {
                     const startSort = performance.now();
                     if (lastSortIndex === index) sortAscending = !sortAscending;
@@ -1204,7 +1204,7 @@
 
                     runFilter();
                     const duration = ((performance.now() - startSort) / 1000).toFixed(2);
-                    sortTimerDisplay.textContent = `(Sort: ${duration}s)`;
+                    sortTimerDisplay.textContent = `Sorting: ${duration}s`;
                     log(`Sort complete: ${sortAscending ? 'Asc' : 'Desc'}. Taken: ${duration}s`);
                 });
             };
