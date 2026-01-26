@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v11
+// @version      0.9+2026-01-26-debug-v12
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -123,6 +123,9 @@
     stopBtn.textContent = 'Stop';
     stopBtn.style.cssText = 'display:none; font-size:0.5em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box;';
 
+    const statusDisplay = document.createElement('span');
+    statusDisplay.style.cssText = 'font-size:0.5em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+
     const filterContainer = document.createElement('span');
     filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px;';
 
@@ -182,6 +185,7 @@
     }
 
     controlsContainer.appendChild(stopBtn);
+    controlsContainer.appendChild(statusDisplay);
     controlsContainer.appendChild(filterContainer);
     controlsContainer.appendChild(timerDisplay);
     controlsContainer.appendChild(sortTimerDisplay);
@@ -629,8 +633,7 @@
         e.preventDefault();
         e.stopPropagation();
 
-        if (isLoaded) return;
-
+        // Removed isLoaded block to allow re-fetching
         log('Starting fetch process...', overrideParams);
         let maxPage = 1;
 
@@ -692,6 +695,7 @@
 
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
+        statusDisplay.textContent = 'Initializing...';
         timerDisplay.textContent = 'Fetching...';
 
         const startTime = performance.now();
@@ -708,7 +712,7 @@
                     break;
                 }
                 pagesProcessed++;
-                activeBtn.textContent = `Loading page ${p} of ${maxPage}...`;
+                statusDisplay.textContent = `Loaded page ${p} of ${maxPage}...`;
 
                 const pageStartTime = performance.now();
                 const fetchUrl = new URL(baseUrl);
@@ -935,7 +939,7 @@
                              groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
 
             updateH2Count(totalRows, totalRows);
-            activeBtn.textContent = (overrideParams) ? `${activeBtn.textContent.replace('Show all ', 'Loaded ')} (${totalRows} rows)` : `Loaded ${totalRows} rows from ${pagesProcessed} pages`;
+            statusDisplay.textContent = `Load ${pagesProcessed} pages (${totalRows} rows)`;
             activeBtn.disabled = false;
             activeBtn.classList.remove('mb-show-all-btn-loading');
             allActionButtons.forEach(b => b.disabled = false);
@@ -958,7 +962,7 @@
             log(`Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
             log('Critical Error during fetch:', err);
-            activeBtn.textContent = 'Error';
+            statusDisplay.textContent = 'Error during load';
             activeBtn.disabled = false;
             allActionButtons.forEach(b => b.disabled = false);
         }

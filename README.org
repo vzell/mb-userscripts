@@ -22364,8 +22364,6 @@ the end of the filter field
 
 The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
 
-** separate timing for fetching and initial rendering
-
 ** remove or fix "Tagger" column
 
 In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
@@ -22641,6 +22639,7 @@ with /place/*/performances
 #+end_example
 
 
+
 * DONE || txt.startsWith('Tagger') || txt.startsWith('Rating'))
 * DONE fix filtering for just visible data
 
@@ -22711,6 +22710,24 @@ make sure that when starting on a page which has the query parameter "page=<n>" 
 the browser URL bar, the script first strips the "page=<n>" from the URL and then starts its logic
 
 * fix placement of generated/rendered table data
-* fix 4 buttons, they should refresh the web page first
+* fix 4 buttons
+** initial
+
+In the uploaded script, the button text of the four buttons on pages of type
+"https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f" should NOT change from their initial "Show all.. releasegroups" but should remain. Instead 
+the text "Loaded page <n> of <m>" should be placed as a standard text after the "Stop" button and when the loading has finished, the final text should be updated to "Load <m> pages (<number of rows> rows)".
+Also the buttons should initiate the same actions after loading all pages and rendering the result page again (but with the latest data), instead of doing nothing.
+
+Please do not make any other changes to working code, comments and debugging statements.
+
+** red button when finished
+
+Adjust the button color to light red when loading of all pages has finished, and reset when pressing again.
+
+** separate timing for fetching and initial rendering
+
+
+
+
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
