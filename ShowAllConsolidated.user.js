@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v5
+// @version      0.9+2026-01-26-debug-v6
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -26,6 +26,9 @@
     'use strict';
 
     const DEBUG = true;
+    const MAX_PAGE_THRESHOLD = 100;
+    const AUTO_EXPAND_THRESHOLD = 60;
+
     let logPrefix = "[MB-ShowAll-Debug]";
     const log = (msg, data = '') => { if (DEBUG) console.log(`${logPrefix} ${msg}`, data); };
 
@@ -473,7 +476,7 @@
         }
 
         log('Total pages to fetch:', maxPage);
-        if (maxPage > 100 && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) return;
+	if (maxPage > MAX_PAGE_THRESHOLD && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) return;
 
         isLoaded = true;
         stopRequested = false;
@@ -818,7 +821,7 @@
             group.rows.forEach(r => tbody.appendChild(r));
 
             const catLower = group.category.toLowerCase();
-            const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < 40;
+            const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < AUTO_EXPAND_THRESHOLD;
             table.style.display = (shouldStayOpen || query) ? '' : 'none';
 
             h3.innerHTML = `<span class="mb-toggle-icon">${(shouldStayOpen || query) ? '▼' : '▲'}</span>${group.category} <span class="mb-row-count-stat">(${group.rows.length})</span>`;

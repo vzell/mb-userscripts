@@ -22661,6 +22661,8 @@ only the pageType 'events'
 
 * new constants
 
+additionally:
+
 Create constants for
 
 group.rows.length < 40
@@ -22670,3 +22672,5 @@ and
 maxPage > 100
 
 which are 40 and 100 respectively right now and use them in the code
+
+but do not change other existing, code, comment and logging
