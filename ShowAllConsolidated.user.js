@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-25
+// @version      0.9+2026-01-26
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -42,14 +42,43 @@
                           document.querySelector('h1 a bdi')?.parentNode ||
                           document.querySelector('h1');
 
+    // Logic for Work pages
     const isWorkRecordings =
         path.startsWith('/work/') &&
         params.get('direction') === '2' &&
         params.get('link_type_id') === '278';
-
     const isWorkBase = path.match(/\/work\/[a-f0-9-]{36}$/) && !isWorkRecordings;
 
+    // Logic for the 4 specific Artist views
+    const isOfficialArtist =
+        path.startsWith('/artist/') &&
+        params.get('all') === '0' &&
+        params.get('va') === '0';
+    const isOfficialArtistBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isOfficialArtist;
+
+    const isNonOfficialArtist =
+        path.startsWith('/artist/') &&
+        params.get('all') === '1' &&
+        params.get('va') === '0';
+    const isNonOfficialArtistBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isNonOfficialArtist;
+
+    const isOfficialVariousArtists =
+        path.startsWith('/artist/') &&
+        params.get('all') === '0' &&
+        params.get('va') === '1';
+    const isOfficialVariousArtistsBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isOfficialVariousArtists;
+
+    const isNonOfficialVariousArtists =
+        path.startsWith('/artist/') &&
+        params.get('all') === '1' &&
+        params.get('va') === '1';
+    const isNonOfficialVariousArtistsBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isNonOfficialVariousArtists;
+
+    const isSpecialArtistView = isOfficialArtist || isNonOfficialArtist || isOfficialVariousArtists || isNonOfficialVariousArtists;
+
+    // Determine page type using the requested priority structure
     if (isWorkRecordings || isWorkBase) pageType = 'work-recordings';
+    else if (isSpecialArtistView || path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
     else if (path.includes('/events')) pageType = 'events';
     else if (path.includes('/recordings')) pageType = 'recordings';
     else if (path.includes('/releases')) pageType = 'releases';
@@ -60,7 +89,6 @@
     else if (path.includes('/series')) pageType = 'series';
     else if (path.includes('/recording')) pageType = 'recording';
     else if (path.includes('/place')) pageType = 'place-events';
-    else if (path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
 
     if (pageType) logPrefix = `[MB-ShowAll-Debug: ${pageType}]`;
     log('Initializing script for path:', path);
@@ -76,12 +104,15 @@
     // --- UI Elements ---
     const controlsContainer = document.createElement('div');
     controlsContainer.id = 'mb-show-all-controls-container';
-    controlsContainer.style.cssText = 'display:inline-flex; align-items:center; gap:8px; margin-left:10px; vertical-align:middle; line-height:1;';
+    controlsContainer.style.cssText = 'display:inline-flex; flex-wrap:wrap; align-items:center; gap:8px; margin-left:10px; vertical-align:middle; line-height:1;';
 
-    const btn = document.createElement('button');
-    btn.textContent = `Show all ${pageType.replace('-', ' ')}`;
-    btn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
-    btn.type = 'button';
+    const mainBtn = document.createElement('button');
+    mainBtn.textContent = (pageType === 'artist-releasegroups') ? "Show all artist releasegroups" : `Show all ${pageType.replace('-', ' ')}`;
+    mainBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+    mainBtn.type = 'button';
+    mainBtn.onclick = (e) => startFetchingProcess(e);
+
+    const allActionButtons = [mainBtn];
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
@@ -123,7 +154,28 @@
     const sortTimerDisplay = document.createElement('span');
     sortTimerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
 
-    controlsContainer.appendChild(btn);
+    controlsContainer.appendChild(mainBtn);
+
+    // Generate the 4 additional artist buttons
+    if (pageType === 'artist-releasegroups') {
+        const extraConfigs = [
+            { title: 'Show all official artist releasegroups', params: { all: '0', va: '0' } },
+            { title: 'Show all non-official artist releasegroups', params: { all: '1', va: '0' } },
+            { title: 'Show all official various artists releasegroups', params: { all: '0', va: '1' } },
+            { title: 'Show all non-official various artists releasegroups', params: { all: '1', va: '1' } }
+        ];
+
+        extraConfigs.forEach(conf => {
+            const eb = document.createElement('button');
+            eb.textContent = conf.title;
+            eb.style.cssText = mainBtn.style.cssText;
+            eb.type = 'button';
+            eb.onclick = (e) => startFetchingProcess(e, conf.params);
+            controlsContainer.appendChild(eb);
+            allActionButtons.push(eb);
+        });
+    }
+
     controlsContainer.appendChild(stopBtn);
     controlsContainer.appendChild(filterContainer);
     controlsContainer.appendChild(timerDisplay);
@@ -157,17 +209,16 @@
     }
 
     let allRows = [];
-    let groupedRows = new Map();
+    let groupedRows = [];
     let isLoaded = false;
     let stopRequested = false;
     let multiTableSortStates = new Map();
 
-    async function fetchWorkRecordingsMaxPage(workPath) {
-        const url = new URL(window.location.origin + workPath);
-        url.searchParams.set('direction', '2');
-        url.searchParams.set('link_type_id', '278');
+    async function fetchMaxPageGeneric(targetPath, queryParams = {}) {
+        const url = new URL(window.location.origin + targetPath);
+        Object.keys(queryParams).forEach(k => url.searchParams.set(k, queryParams[k]));
         url.searchParams.set('page', '1');
-        log('Fetching maxPage for Work recordings from:', url.toString());
+        log('Fetching maxPage from:', url.toString());
         try {
             const html = await fetchHtml(url.toString());
             const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -182,10 +233,10 @@
                     if (p) maxPage = parseInt(p, 10);
                 }
             }
-            log(`Determined maxPage for Work: ${maxPage}`);
+            log(`Determined maxPage: ${maxPage}`);
             return maxPage;
         } catch (err) {
-            log('Error fetching maxPage for Work:', err);
+            log('Error fetching maxPage:', err);
             return 1;
         }
     }
@@ -238,9 +289,7 @@
 
         let node;
         while (node = walker.nextNode()) {
-            if (node.nodeType === Node.TEXT_NODE) {
-                textParts.push(node.nodeValue);
-            }
+            if (node.nodeType === Node.TEXT_NODE) textParts.push(node.nodeValue);
         }
         return textParts.join(' ');
     }
@@ -264,9 +313,7 @@
             while (node = walker.nextNode()) {
                 const val = node.nodeValue;
                 const match = isCaseSensitive ? val.includes(query) : val.toLowerCase().includes(query.toLowerCase());
-                if (match) {
-                    nodesToReplace.push(node);
-                }
+                if (match) nodesToReplace.push(node);
             }
             nodesToReplace.forEach(textNode => {
                 const span = document.createElement('span');
@@ -279,26 +326,26 @@
     function runFilter() {
         const isCaseSensitive = caseCheckbox.checked;
         const query = isCaseSensitive ? filterInput.value : filterInput.value.toLowerCase();
-        log(`Filtering rows with query: "${query}" (Case Sensitive: ${isCaseSensitive})`);
+        log(`Filtering rows with query: "${query}"`);
 
         if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
-            const filteredMap = new Map();
+            const filteredArray = [];
             let totalFiltered = 0;
             let totalAbsolute = 0;
-            groupedRows.forEach((rows, key) => {
-                totalAbsolute += rows.length;
-                const matches = rows.map(r => r.cloneNode(true)).filter(r => {
+            groupedRows.forEach((group) => {
+                totalAbsolute += group.rows.length;
+                const matches = group.rows.map(r => r.cloneNode(true)).filter(r => {
                     const text = getCleanVisibleText(r);
                     const hit = isCaseSensitive ? text.includes(query) : text.toLowerCase().includes(query);
                     if (hit && query) highlightText(r, filterInput.value, isCaseSensitive);
                     return hit;
                 });
                 if (matches.length > 0) {
-                    filteredMap.set(key, matches);
+                    filteredArray.push({ category: group.category, rows: matches });
                     totalFiltered += matches.length;
                 }
             });
-            renderGroupedTable(filteredMap, pageType === 'artist-releasegroups', query);
+            renderGroupedTable(filteredArray, pageType === 'artist-releasegroups', query);
             updateH2Count(totalFiltered, totalAbsolute);
         } else {
             const totalAbsolute = allRows.length;
@@ -324,11 +371,7 @@
 
     filterInput.addEventListener('input', runFilter);
     caseCheckbox.addEventListener('change', runFilter);
-
-    filterClear.addEventListener('click', () => {
-        filterInput.value = '';
-        runFilter();
-    });
+    filterClear.addEventListener('click', () => { filterInput.value = ''; runFilter(); });
 
     function cleanupHeaders(headerElement) {
         if (!headerElement) return;
@@ -393,15 +436,27 @@
         }
     }
 
-    btn.addEventListener('click', async (e) => {
+    /**
+     * Generalized fetching process
+     * @param {Event} e - The click event
+     * @param {Object} overrideParams - Specific query parameters for artist-releasegroups buttons
+     */
+    async function startFetchingProcess(e, overrideParams = null) {
+        // Fix: Capture currentTarget immediately before any awaits
+        const activeBtn = e.currentTarget;
         e.preventDefault();
         e.stopPropagation();
+
         if (isLoaded) return;
 
-        log('Starting fetch process...');
+        log('Starting fetch process...', overrideParams);
         let maxPage = 1;
+
+        // Determine maxPage based on context
         if (isWorkBase) {
-            maxPage = await fetchWorkRecordingsMaxPage(path);
+            maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
+        } else if (overrideParams) {
+            maxPage = await fetchMaxPageGeneric(path, overrideParams);
         } else {
             const pagination = document.querySelector('ul.pagination');
             if (pagination) {
@@ -421,8 +476,9 @@
         isLoaded = true;
         stopRequested = false;
         allRows = [];
-        groupedRows = new Map();
+        groupedRows = [];
 
+        // Hide various clutter elements
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
             if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
@@ -432,15 +488,18 @@
             const parent = div.parentElement;
             if (parent && parent.style.width === '700px') parent.style.display = 'none';
         });
+	// Target details blocks containing many images (likely the cover art gallery)
         document.querySelectorAll('details').forEach(det => {
-            // Target details blocks containing many images (likely the cover art gallery)
             if (det.querySelectorAll('img').length > 5) det.style.display = 'none';
         });
 
         if (pageType === 'events' || pageType === 'artist-releasegroups') removeSanojjonasContainers();
 
-        btn.disabled = true;
-        btn.classList.add('mb-show-all-btn-loading');
+        // Update UI state
+        activeBtn.disabled = true;
+        activeBtn.classList.add('mb-show-all-btn-loading');
+        allActionButtons.forEach(b => { if (b !== activeBtn) b.disabled = true; });
+
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
         timerDisplay.textContent = 'Fetching...';
@@ -449,6 +508,7 @@
         const baseUrl = window.location.origin + path;
         let pagesProcessed = 0;
         let cumulativeFetchTime = 0;
+        let lastCategorySeenAcrossPages = null;
 
         try {
             for (let p = 1; p <= maxPage; p++) {
@@ -457,17 +517,23 @@
                     break;
                 }
                 pagesProcessed++;
-                btn.textContent = `Loading page ${p} of ${maxPage}...`;
+                activeBtn.textContent = `Loading page ${p} of ${maxPage}...`;
 
                 const pageStartTime = performance.now();
                 const fetchUrl = new URL(baseUrl);
                 fetchUrl.searchParams.set('page', p.toString());
+
+                // Apply parameters
                 if (pageType === 'work-recordings') {
                     fetchUrl.searchParams.set('direction', '2');
                     fetchUrl.searchParams.set('link_type_id', '278');
+                } else if (overrideParams) {
+                    Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
                 } else {
                     if (params.has('direction')) fetchUrl.searchParams.set('direction', params.get('direction'));
                     if (params.has('link_type_id')) fetchUrl.searchParams.set('link_type_id', params.get('link_type_id'));
+                    if (params.has('all')) fetchUrl.searchParams.set('all', params.get('all'));
+                    if (params.has('va')) fetchUrl.searchParams.set('va', params.get('va'));
                 }
 
                 const html = await fetchHtml(fetchUrl.toString());
@@ -490,13 +556,9 @@
                         } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
                             locationIdx = idx;
                         }
-
-                        if (mainHeaders.includes(txt)) {
-                            mainColIdx = idx;
-                        }
+                        if (mainHeaders.includes(txt)) mainColIdx = idx;
                     });
                 }
-
                 if (mainColIdx === -1 && pageType === 'releasegroup-releases') mainColIdx = 0;
 
                 let rowsInThisPage = 0;
@@ -505,12 +567,19 @@
                         let h3 = table.previousElementSibling;
                         while (h3 && h3.nodeName !== 'H3') h3 = h3.previousElementSibling;
                         const category = h3 ? h3.textContent.trim() : 'Other';
-                        if (!groupedRows.has(category)) groupedRows.set(category, []);
+
+                        // Logic to handle grouped data and repeat headers
+                        if (category !== lastCategorySeenAcrossPages) {
+                            groupedRows.push({ category: category, rows: [] });
+                            lastCategorySeenAcrossPages = category;
+                        }
+                        const currentGroup = groupedRows[groupedRows.length - 1];
+
                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
                             if (row.cells.length > 1) {
                                 const newRow = document.importNode(row, true);
                                 [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
-                                groupedRows.get(category).push(newRow);
+                                currentGroup.rows.push(newRow);
                                 rowsInThisPage++;
                             }
                         });
@@ -526,6 +595,7 @@
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
 
+                                    // Extraction logic for MB-Name and Comment
                                     const tdName = document.createElement('td');
                                     const tdComment = document.createElement('td');
                                     if (mainColIdx !== -1 && pageType !== 'artist-releasegroups') {
@@ -538,9 +608,9 @@
                                         }
                                     }
 
+                                    // Handling Country/Date split
                                     const tdSplitC = document.createElement('td');
                                     const tdSplitD = document.createElement('td');
-
                                     if (typesWithSplitCD.includes(pageType) && countryDateIdx !== -1) {
                                         const cdCell = newRow.cells[countryDateIdx];
                                         if (cdCell) {
@@ -548,20 +618,16 @@
                                             events.forEach((ev, i) => {
                                                 const countrySpan = ev.querySelector('.release-country');
                                                 const dateSpan = ev.querySelector('.release-date');
-
                                                 if (countrySpan) {
                                                     if (i > 0) tdSplitC.appendChild(document.createTextNode(', '));
-
                                                     const flagImg = countrySpan.querySelector('img')?.outerHTML || '';
                                                     const abbr = countrySpan.querySelector('abbr');
                                                     const countryCode = abbr ? abbr.textContent.trim() : '';
                                                     const countryFullName = abbr ? abbr.getAttribute('title') : '';
                                                     const countryA = countrySpan.querySelector('a');
                                                     const countryHref = countryA ? countryA.getAttribute('href') : '#';
-
                                                     const spanContainer = document.createElement('span');
                                                     spanContainer.className = countrySpan.className;
-
                                                     if (countryFullName && countryCode) {
                                                         spanContainer.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
                                                     } else {
@@ -577,15 +643,14 @@
                                         }
                                     }
 
+                                    // Handling Location split
                                     const tdP = document.createElement('td');
                                     const tdA = document.createElement('td');
                                     const tdC = document.createElement('td');
-
                                     if (typesWithSplitLocation.includes(pageType) && locationIdx !== -1) {
                                         const locCell = newRow.cells[locationIdx];
                                         if (locCell) {
-                                            const links = Array.from(locCell.querySelectorAll('a'));
-                                            links.forEach(a => {
+                                            locCell.querySelectorAll('a').forEach(a => {
                                                 const href = a.getAttribute('href');
                                                 const clonedA = a.cloneNode(true);
                                                 if (href.includes('/place/')) {
@@ -598,7 +663,6 @@
                                                         const countryCode = abbr ? abbr.textContent.trim() : '';
                                                         const countryFullName = abbr ? abbr.getAttribute('title') : '';
                                                         const countryHref = a.getAttribute('href');
-
                                                         const span = document.createElement('span');
                                                         span.className = flagSpan.className;
                                                         if (countryFullName && countryCode) {
@@ -619,22 +683,21 @@
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
 
                                     if (typesWithSplitCD.includes(pageType)) {
-                                        newRow.appendChild(tdSplitC);
-                                        newRow.appendChild(tdSplitD);
+                                        newRow.appendChild(tdSplitC); newRow.appendChild(tdSplitD);
                                     } else if (typesWithSplitLocation.includes(pageType)) {
-                                        newRow.appendChild(tdP);
-                                        newRow.appendChild(tdA);
-                                        newRow.appendChild(tdC);
+                                        newRow.appendChild(tdP); newRow.appendChild(tdA); newRow.appendChild(tdC);
                                     }
 
                                     if (pageType !== 'artist-releasegroups') {
-                                        newRow.appendChild(tdName);
-                                        newRow.appendChild(tdComment);
+                                        newRow.appendChild(tdName); newRow.appendChild(tdComment);
                                     }
 
                                     if (pageType === 'releasegroup-releases') {
-                                        if (!groupedRows.has(currentStatus)) groupedRows.set(currentStatus, []);
-                                        groupedRows.get(currentStatus).push(newRow);
+                                        if (currentStatus !== lastCategorySeenAcrossPages) {
+                                            groupedRows.push({ category: currentStatus, rows: [] });
+                                            lastCategorySeenAcrossPages = currentStatus;
+                                        }
+                                        groupedRows[groupedRows.length - 1].rows.push(newRow);
                                     } else {
                                         allRows.push(newRow);
                                     }
@@ -644,31 +707,23 @@
                         });
                     }
                 }
-                const pageEndTime = performance.now();
-                const pageDuration = pageEndTime - pageStartTime;
+                const pageDuration = performance.now() - pageStartTime;
                 cumulativeFetchTime += pageDuration;
-
                 const avgPageTime = cumulativeFetchTime / pagesProcessed;
-                const remainingPages = maxPage - p;
-                const estRemainingSeconds = (avgPageTime * remainingPages) / 1000;
+                const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
 
-                if (maxPage > 1 && p < maxPage) {
-                    timerDisplay.textContent = `Est. remaining: ${estRemainingSeconds.toFixed(1)}s`;
-                } else if (p === maxPage) {
-                    timerDisplay.textContent = 'Finalizing...';
-                }
-
-                log(`Page ${p} processed: ${rowsInThisPage} rows in ${((pageEndTime - pageStartTime) / 1000).toFixed(3)}s`);
+                if (maxPage > 1 && p < maxPage) timerDisplay.textContent = `Est. remaining: ${estRemainingSeconds.toFixed(1)}s`;
+                else if (p === maxPage) timerDisplay.textContent = 'Finalizing...';
             }
 
             const totalRows = (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') ?
-                             Array.from(groupedRows.values()).reduce((a, b) => a + b.length, 0) : allRows.length;
+                             groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
 
-            log(`Finished fetching. Total rows: ${totalRows} across ${pagesProcessed} pages.`);
             updateH2Count(totalRows, totalRows);
-            btn.textContent = `Loaded ${totalRows} rows from ${pagesProcessed} pages`;
-            btn.disabled = false;
-            btn.classList.remove('mb-show-all-btn-loading');
+            activeBtn.textContent = (overrideParams) ? `${activeBtn.textContent.replace('Show all ', 'Loaded ')} (${totalRows} rows)` : `Loaded ${totalRows} rows from ${pagesProcessed} pages`;
+            activeBtn.disabled = false;
+            activeBtn.classList.remove('mb-show-all-btn-loading');
+            allActionButtons.forEach(b => b.disabled = false);
             stopBtn.style.display = 'none';
             filterContainer.style.display = 'inline-flex';
 
@@ -682,26 +737,23 @@
                 makeSortable();
             }
 
-            const endRender = performance.now();
-            timerDisplay.textContent = `(Fetch/Render: ${((endRender - startTime) / 1000).toFixed(2)}s)`;
-            log(`Full process completed in ${((endRender - startTime) / 1000).toFixed(2)}s`);
+            timerDisplay.textContent = `(Fetch/Render: ${((performance.now() - startTime) / 1000).toFixed(2)}s)`;
         } catch (err) {
             log('Critical Error during fetch:', err);
-            btn.textContent = 'Error';
-            btn.disabled = false;
+            activeBtn.textContent = 'Error';
+            activeBtn.disabled = false;
+            allActionButtons.forEach(b => b.disabled = false);
         }
-    });
+    }
 
     function renderFinalTable(rows) {
-        log(`Rendering flat table with ${rows.length} rows.`);
         const tbody = document.querySelector('table.tbl tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
         rows.forEach(r => tbody.appendChild(r));
     }
 
-    function renderGroupedTable(map, isArtistMain, query = '') {
-        log(`Rendering grouped table. Map size: ${map.size}, isArtistMain: ${isArtistMain}`);
+    function renderGroupedTable(dataArray, isArtistMain, query = '') {
         const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
         if (!container) return;
 
@@ -727,7 +779,7 @@
         };
         container.appendChild(masterToggle);
 
-        map.forEach((rows, category) => {
+        dataArray.forEach((group, index) => {
             const h3 = document.createElement('h3');
             h3.className = 'mb-toggle-h3';
             const table = document.createElement('table');
@@ -735,16 +787,13 @@
             if (templateHead) table.appendChild(templateHead.cloneNode(true));
             const tbody = document.createElement('tbody');
             table.appendChild(tbody);
-            rows.forEach(r => tbody.appendChild(r));
+            group.rows.forEach(r => tbody.appendChild(r));
 
-            const catLower = category.toLowerCase();
-            const shouldStayOpen = (catLower === 'album' || catLower === 'official') && rows.length < 40;
+            const catLower = group.category.toLowerCase();
+            const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < 40;
             table.style.display = (shouldStayOpen || query) ? '' : 'none';
 
-            const totalInCategory = groupedRows.get(category)?.length || rows.length;
-            const countDisplay = (rows.length === totalInCategory) ? `(${rows.length})` : `(${rows.length} of ${totalInCategory})`;
-
-            h3.innerHTML = `<span class="mb-toggle-icon">${(shouldStayOpen || query) ? '▼' : '▲'}</span>${category} <span class="mb-row-count-stat">${countDisplay}</span>`;
+            h3.innerHTML = `<span class="mb-toggle-icon">${(shouldStayOpen || query) ? '▼' : '▲'}</span>${group.category} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
             container.appendChild(h3);
             container.appendChild(table);
 
@@ -753,35 +802,26 @@
                 table.style.display = isHidden ? '' : 'none';
                 h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
             });
-
-            makeTableSortable(table, category);
+            makeTableSortable(table, `${group.category}_${index}`);
         });
     }
 
-    function makeTableSortable(table, category) {
+    function makeTableSortable(table, sortKey) {
         const headers = table.querySelectorAll('thead th');
-        if (!multiTableSortStates.has(category)) multiTableSortStates.set(category, { lastSortIndex: -1, sortAscending: true });
-        const state = multiTableSortStates.get(category);
+        if (!multiTableSortStates.has(sortKey)) multiTableSortStates.set(sortKey, { lastSortIndex: -1, sortAscending: true });
+        const state = multiTableSortStates.get(sortKey);
 
         headers.forEach((th, index) => {
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'pointer';
-            th.title = 'Click to sort on this column';
             if (!th.querySelector('.sort-icon')) {
-                const s = document.createElement('span');
-                s.className = 'sort-icon';
-                s.textContent = ' ↕';
-                th.appendChild(s);
+                const s = document.createElement('span'); s.className = 'sort-icon'; s.textContent = ' ↕'; th.appendChild(s);
             }
             th.onclick = (e) => {
                 e.preventDefault();
                 sortTimerDisplay.textContent = '(Sorting...)';
-
                 requestAnimationFrame(() => {
                     const startSort = performance.now();
-                    const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
-                    log(`Sorting category "${category}" by "${colName}" (column ${index})`);
-
                     if (state.lastSortIndex === index) state.sortAscending = !state.sortAscending;
                     else { state.sortAscending = true; state.lastSortIndex = index; }
 
@@ -790,7 +830,7 @@
                         if (icon) icon.textContent = (i === index) ? (state.sortAscending ? ' ▲' : ' ▼') : ' ↕';
                     });
 
-                    const isNumeric = colName === 'Year' || colName === 'Releases';
+                    const isNumeric = th.textContent.includes('Year') || th.textContent.includes('Releases');
                     const rows = Array.from(table.querySelectorAll('tbody tr'));
                     rows.sort((a, b) => {
                         const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
@@ -817,9 +857,7 @@
                             tbody.appendChild(r);
                         }
                     });
-
-                    const endSort = performance.now();
-                    sortTimerDisplay.textContent = `(Sort: ${((endSort - startSort) / 1000).toFixed(2)}s)`;
+                    sortTimerDisplay.textContent = `(Sort: ${((performance.now() - startSort) / 1000).toFixed(2)}s)`;
                 });
             };
         });
@@ -827,29 +865,20 @@
 
     function makeSortable() {
         if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') return;
-        log('Initializing sort handlers for main table.');
         const headers = document.querySelectorAll('table.tbl thead th');
         let lastSortIndex = -1;
         let sortAscending = true;
         headers.forEach((th, index) => {
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'pointer';
-            th.title = 'Click to sort on this column';
             if (!th.querySelector('.sort-icon')) {
-                const s = document.createElement('span');
-                s.className = 'sort-icon';
-                s.textContent = ' ↕';
-                th.appendChild(s);
+                const s = document.createElement('span'); s.className = 'sort-icon'; s.textContent = ' ↕'; th.appendChild(s);
             }
             th.onclick = (e) => {
                 e.preventDefault();
                 sortTimerDisplay.textContent = '(Sorting...)';
-
                 requestAnimationFrame(() => {
                     const startSort = performance.now();
-                    const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
-                    log(`Sorting main table by ${colName} (column ${index})`);
-
                     if (lastSortIndex === index) sortAscending = !sortAscending;
                     else { sortAscending = true; lastSortIndex = index; }
 
@@ -858,7 +887,7 @@
                         if (icon) icon.textContent = (i === index) ? (sortAscending ? ' ▲' : ' ▼') : ' ↕';
                     });
 
-                    const isNumeric = colName === 'Year' || colName === 'Releases';
+                    const isNumeric = th.textContent.includes('Year') || th.textContent.includes('Releases');
                     allRows.sort((a, b) => {
                         const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
                         const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
@@ -872,12 +901,10 @@
 
                     const query = filterInput.value;
                     const isCaseSensitive = caseCheckbox.checked;
-                    const queryLower = query.toLowerCase();
-
                     if (query) {
                         const filtered = allRows.map(r => r.cloneNode(true)).filter(r => {
                             const text = getCleanVisibleText(r);
-                            const hit = isCaseSensitive ? text.includes(query) : text.toLowerCase().includes(queryLower);
+                            const hit = isCaseSensitive ? text.includes(query) : text.toLowerCase().includes(query.toLowerCase());
                             if (hit) highlightText(r, query, isCaseSensitive);
                             return hit;
                         });
@@ -885,9 +912,7 @@
                     } else {
                         renderFinalTable(allRows);
                     }
-
-                    const endSort = performance.now();
-                    sortTimerDisplay.textContent = `(Sort: ${((endSort - startSort) / 1000).toFixed(2)}s)`;
+                    sortTimerDisplay.textContent = `(Sort: ${((performance.now() - startSort) / 1000).toFixed(2)}s)`;
                 });
             };
         });

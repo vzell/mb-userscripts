@@ -19487,8 +19487,8 @@ When pressed, the following action should be done:
 Generate a final "release groups page" which includes all information from all the sub release groups pages by iterating through
 all the links "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=<pagenumber>"
 
-There is specific difference to the uploaded userscript. There actually multiple tables for release groups which all have
-a specific heading '<h3><type></h3>', like the following ones
+There is a specific difference to the uploaded userscript. There are actually multiple tables for release groups which
+all have a specific heading '<h3><type></h3>', like the following ones
 
 #+begin_example
 <h3>Album</h3>
@@ -21565,42 +21565,7 @@ Also include a unicode X to quickly empty a filter field.
 Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
 lighyellow background.
 
-** filter per column also in the grouped table display
-
-In the uploaded script, there is already a filter input field which filters rows globally.
-
-Please also add filter per column functionality on the
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
-https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a URL types where grouped table display is
-active.
-
-Include such a filter field above each column header (aligned with it), which ADDITIONALLY filters rows based on just
-the column where a filter string has been entered (or if a global filter is NOT already activ, which filters just based
-on this column). The matching of the filter string should only be done against data cells of the column where it is
-entered.
-
-Also include a unicode X to quickly empty a filter field.
-
-Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
-lighyellow background.
-
-The per column filtering should only be done in the grouped table where it is entered, not synchronized over column
-filters across all tables.
-
-Make sure you don't break the existing filering functionality for not grouped tables
-
-** timings for sorting
-
-The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
-
-** separate timing for fetching and initial rendering
-
-** remove "Tagger" column
-
-In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
-
-** sync functionality like on the old Releases in RG implementation
-** TODO why is filtering for numeric columns not always working - removing filtering in Flags abbrevs for example
+** DONE why is filtering for numeric columns not always working - removing filtering in Flags abbrevs for example
 
 On the URLs of type
 
@@ -22210,29 +22175,241 @@ Actually prepend the actual flag image from
     <span class="flag flag-AU release-country">
 before the "Australia (AU)"
 
+** filter per column also in the grouped table display
+
+In the uploaded script, there is already a filter input field which filters rows globally.
+
+Please also add filter per column functionality on the
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
+https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a URL types where grouped table display is
+active.
+
+Include such a filter field above each column header (aligned with it), which ADDITIONALLY filters rows based on just
+the column where a filter string has been entered (or if a global filter is NOT already activ, which filters just based
+on this column). The matching of the filter string should only be done against data cells of the column where it is
+entered.
+
+Also include a unicode X to quickly empty a filter field.
+
+Also display the filter string in the data cells of the column where we enter a filter sting with a green color and a
+lighyellow background.
+
+The per column filtering should only be done in the grouped table where it is entered, not synchronized over column
+filters across all tables.
+
+Make sure you don't break the existing filering functionality for not grouped tables
+
+** timings for sorting
+
+The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
+
+** separate timing for fetching and initial rendering
+
+** remove "Tagger" column
+
+In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
+
+** sync functionality like on the old Releases in RG implementation
 ** add all RGs (bootlegs) functionality
+*** initial
 
 In the uploaded user script for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
-instead of generating just one "Show all artist releasegroups" button, generate 4 buttons with the title taken from the following table:
+generate 4 more buttons after the "Show all artist releasegroups" button, with the title taken from the following table:
 
-| Title                                              | Base URL                                                                       |
-|----------------------------------------------------+--------------------------------------------------------------------------------|
-| Show all official artist releasegroups             | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=0&va=0 |
-| Show all non-official artist releasegroups         | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0 |
-| Show all official various qartist releasegroups    | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=0&va=1 |
-| Show all non-official various artist releasegroups | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=1 |
+| Title                                               | Base URL                                                                       |
+|-----------------------------------------------------+--------------------------------------------------------------------------------|
+| Show all official artist releasegroups              | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=0&va=0 |
+| Show all non-official artist releasegroups          | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0 |
+| Show all official various artists releasegroups     | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=0&va=1 |
+| Show all non-official various artists releasegroups | https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=1 |
+
+When pressing the first button "Show all official artist releasegroups", create a new variables
+
+#+begin_example
+    const isOfficialArtist =
+        path.startsWith('/artist/') &&
+        params.get('all') === '0' &&
+        params.get('va') === '0';
+    const isOfficialArtistBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isOfficialArtist;
+#+end_example
+
+When pressing the second button "Show all non-official artist releasegroups", create a new variables
+
+#+begin_example
+    const isNonOfficialArtist =
+        path.startsWith('/artist/') &&
+        params.get('all') === '1' &&
+        params.get('va') === '0';
+    const isNonOfficialArtistBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isNonOfficialArtist;
+#+end_example
+
+When pressing the third button "Show all official various artists releasegroups", create a new variables
+
+#+begin_example
+    const isOfficialVariousArtists =
+        path.startsWith('/artist/') &&
+        params.get('all') === '0' &&
+        params.get('va') === '1';
+    const isOfficialVariousArtistsBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isOfficialVariousArtists;
+#+end_example
+
+When pressing the fourth button "Show all non-official various artists releasegroups", create a new variables
+
+#+begin_example
+    const isNonOfficialVariousArtists =
+        path.startsWith('/artist/') &&
+        params.get('all') === '1' &&
+        params.get('va') === '1';
+    const isNonOfficialVariousArtistsBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isNonOfficialVariousArtists;
+#+end_example
+
+Also create a new variable
+
+#+begin_example
+const isSpecialArtistView = isOfficialArtist || isNonOfficialArtist || isOfficialVariousArtists || isNonOfficialVariousArtists;
+#+end_example
+
+and adjust the if - esle if structure like this:
+
+#+begin_example
+if (isWorkRecordings || isWorkBase) pageType = 'work-recordings';
+    else if (isSpecialArtistView || path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
+    else if (path.includes('/events')) pageType = 'events';
+    else if (path.includes('/recordings')) pageType = 'recordings';
+    else if (path.includes('/releases')) pageType = 'releases';
+    else if (path.includes('/works')) pageType = 'works';
+    else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
+    else if (path.match(/\/recording\/[a-f0-9-]{36}$/)) pageType = 'releasegroup-releases';
+    else if (path.includes('/label')) pageType = 'label';
+    else if (path.includes('/series')) pageType = 'series';
+    else if (path.includes('/recording')) pageType = 'recording';
+    else if (path.includes('/place')) pageType = 'place-events';
+#+end_example
+
+In all cases apply the same fetching logic like we did already for recordings per work pages of type
+https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
+
+where we defined the variables
+
+#+begin_example
+    const isWorkRecordings =
+        path.startsWith('/work/') &&
+        params.get('direction') === '2' &&
+        params.get('link_type_id') === '278';
+    const isWorkBase = path.match(/\/work\/[a-f0-9-]{36}$/) && !isWorkRecordings;
+#+end_example
+
+Adjust the following functionname and logic for the 4 new cases and query parameters
+
+#+begin_example
+    async function fetchWorkRecordingsMaxPage(workPath) {
+        const url = new URL(window.location.origin + workPath);
+        url.searchParams.set('direction', '2');
+        url.searchParams.set('link_type_id', '278');
+        url.searchParams.set('page', '1');
+        log('Fetching maxPage for Work recordings from:', url.toString());
+        try {
+            const html = await fetchHtml(url.toString());
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            let maxPage = 1;
+            const pagination = doc.querySelector('ul.pagination');
+            if (pagination) {
+                const links = Array.from(pagination.querySelectorAll('li a'));
+                const nextIdx = links.findIndex(a => a.textContent.trim() === 'Next');
+                if (nextIdx > 0) {
+                    const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
+                    const p = urlObj.searchParams.get('page');
+                    if (p) maxPage = parseInt(p, 10);
+                }
+            }
+            log(`Determined maxPage for Work: ${maxPage}`);
+            return maxPage;
+        } catch (err) {
+            log('Error fetching maxPage for Work:', err);
+            return 1;
+        }
+    }
+#+end_example
+
+and extend the following code for the "pageType === 'artist-releasegroups'" with their specific query parameters above
+
+#+begin_example
+        try {
+            for (let p = 1; p <= maxPage; p++) {
+                if (stopRequested) {
+                    log('Fetch loop stopped at page ' + p);
+                    break;
+                }
+                pagesProcessed++;
+                btn.textContent = `Loading page ${p} of ${maxPage}...`;
+
+                const pageStartTime = performance.now();
+                const fetchUrl = new URL(baseUrl);
+                fetchUrl.searchParams.set('page', p.toString());
+                if (pageType === 'work-recordings') {
+                    fetchUrl.searchParams.set('direction', '2');
+                    fetchUrl.searchParams.set('link_type_id', '278');
+                } else {
+                    if (params.has('direction')) fetchUrl.searchParams.set('direction', params.get('direction'));
+                    if (params.has('link_type_id')) fetchUrl.searchParams.set('link_type_id', params.get('link_type_id'));
+                }
+#+end_example
+
+
+So in each case, basically stay on the is<..>Base URL, call the URL with the query parameter to get the max number of
+pages to fetch, then fetch the individual pages. Display the progress of the fetching as with the case of the "Show all artist releasegroups" button.
+Also the processing logic should be the same as for the action of the "Show all artist releasegroups" button
+
+Remember there are actually multiple tables for release groups which all have a specific heading '<h3><type></h3>', like
+the following ones
+
+#+begin_example
+<h3>Album</h3>
+#+end_example
+
+#+begin_example
+table-structure for "Album"
+#+end_example
+
+#+begin_example
+<h3>Album + Compilation</h3>
+#+end_example
+
+#+begin_example
+table-structure for "Album + Compilation"
+#+end_example
+
+and so on.
+
+Please leave these different structures intact for the finale "release groups" pages, only combine tabledata for a
+specific heading if it extents over more than one iterated page.
+
+There could even be the case that a specific heading '<h3><type></h3>' will repeat. In that case do not combine the rows
+after it (maybe extending to one or more other pages) but instead just generate another subtable with the same header.
+
+*** problem
+
+The following is the debug console output, for example when pressing the second of the 4 new buttons
+
+#+begin_example
+[MB-ShowAll-Debug: artist-releasegroups] Determined maxPage: 22 
+[MB-ShowAll-Debug: artist-releasegroups] Total pages to fetch: 22
+[MB-ShowAll-Debug: artist-releasegroups] Removing Sanojjonas containers... 
+#+end_example
+
+I'm missing the button text changing to "Loading page 1 of 22..." but nothing happens, and alos there doesn't seem to be ny fetching going on
 
 
 * || txt.startsWith('Tagger') || txt.startsWith('Rating'))
 
 
-* fix filtering for just visible data
+* DONE fix filtering for just visible data
 
 When entering numerical values in the filter field, sometimes there are rows shown which actually do NOT have these
 values at all (so there is also nothing higlighted). When entering string data this behaviour is NOT observed.
 
-* display none for timeline plugin
+* DONE display none for timeline plugin
 
 In the uploaded user script, adjust the following part of the code
 
@@ -22252,3 +22429,23 @@ to also hide the following div containers
 #+end_example
 
 and the very large '<details>...</details>' block with lots of image refernces in it.
+
+* hid clutter
+
+#+begin_example
++        // Hide various clutter elements
+         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
+         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
+             if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
+         });
+-        // Hide Slick slider containers and large details blocks
+-        document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').forEach(div => {
+-            const parent = div.parentElement;
+-            if (parent && parent.style.width === '700px') parent.style.display = 'none';
+-        });
+         document.querySelectorAll('details').forEach(det => {
+-            // Target details blocks containing many images (likely the cover art gallery)
+             if (det.querySelectorAll('img').length > 5) det.style.display = 'none';
+         });
+
+#+end_example
