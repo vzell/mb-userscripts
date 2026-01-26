@@ -131,7 +131,7 @@
 
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Global Filter...`;
-    filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box;';
+    filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box; transition:box-shadow 0.2s;';
 
     const filterClear = document.createElement('span');
     filterClear.textContent = '✕';
@@ -205,7 +205,7 @@
         .mb-master-toggle:hover { text-decoration: underline; }
         .mb-filter-highlight { color: red; background-color: #FFD700; }
         .mb-col-filter-highlight { color: green; background-color: #FFFFE0; font-weight: bold; }
-        .mb-col-filter-input { width: 90%; font-size: 0.8em; padding: 1px 15px 1px 2px; box-sizing: border-box; }
+        .mb-col-filter-input { width: 90%; font-size: 0.8em; padding: 1px 15px 1px 2px; box-sizing: border-box; transition: box-shadow 0.2s; }
         .mb-col-filter-wrapper { position: relative; width: 100%; display: block; }
         .mb-col-filter-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #999; font-size: 0.8em; }
     `;
@@ -379,7 +379,11 @@
 
     function runFilter() {
         const isCaseSensitive = caseCheckbox.checked;
-        const globalQuery = isCaseSensitive ? filterInput.value : filterInput.value.toLowerCase();
+        const globalQueryRaw = filterInput.value;
+        const globalQuery = isCaseSensitive ? globalQueryRaw : globalQueryRaw.toLowerCase();
+
+        // Apply red box to global filter if active
+        filterInput.style.boxShadow = globalQueryRaw ? '0 0 2px 2px red' : '';
 
         const __activeEl = document.activeElement;
         const __scrollY = window.scrollY;
@@ -395,9 +399,16 @@
             groupedRows.forEach((group, groupIdx) => {
                 totalAbsolute += group.rows.length;
                 const table = tables[groupIdx];
-                const colFilters = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
-                    .map(inp => ({ val: isCaseSensitive ? inp.value : inp.value.toLowerCase(), idx: parseInt(inp.dataset.colIdx, 10) }))
-                    .filter(f => f.val) : [];
+                const colFiltersRaw = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
+                    .map(inp => {
+                        // Apply red box to column filter if active
+                        inp.style.boxShadow = inp.value ? '0 0 2px 2px red' : '';
+                        return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
+                    }) : [];
+
+                const colFilters = colFiltersRaw
+                    .map(f => ({ val: isCaseSensitive ? f.raw : f.raw.toLowerCase(), idx: f.idx }))
+                    .filter(f => f.val);
 
                 const matches = group.rows.map(r => r.cloneNode(true)).filter(r => {
 
@@ -421,7 +432,7 @@
 
                     const finalHit = globalHit && colHit;
                     if (finalHit) {
-                        if (globalQuery) highlightText(r, filterInput.value, isCaseSensitive);
+                        if (globalQuery) highlightText(r, globalQueryRaw, isCaseSensitive);
                         colFilters.forEach(f => highlightText(r, isCaseSensitive ? f.val : f.val, isCaseSensitive, f.idx));
                     }
                     return finalHit;
@@ -461,9 +472,16 @@
         } else {
             const totalAbsolute = allRows.length;
             const table = document.querySelector('table.tbl');
-            const colFilters = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
-                .map(inp => ({ val: isCaseSensitive ? inp.value : inp.value.toLowerCase(), idx: parseInt(inp.dataset.colIdx, 10) }))
-                .filter(f => f.val) : [];
+            const colFiltersRaw = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
+                .map(inp => {
+                    // Apply red box to column filter if active
+                    inp.style.boxShadow = inp.value ? '0 0 2px 2px red' : '';
+                    return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
+                }) : [];
+
+            const colFilters = colFiltersRaw
+                .map(f => ({ val: isCaseSensitive ? f.raw : f.raw.toLowerCase(), idx: f.idx }))
+                .filter(f => f.val);
 
             const filteredRows = allRows.map(r => r.cloneNode(true)).filter(row => {
                 const text = getCleanVisibleText(row);
@@ -480,7 +498,7 @@
 
                 const finalHit = globalHit && colHit;
                 if (finalHit) {
-                    if (globalQuery) highlightText(row, filterInput.value, isCaseSensitive);
+                    if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive);
                     colFilters.forEach(f => highlightText(row, isCaseSensitive ? f.val : f.val, isCaseSensitive, f.idx));
                 }
                 return finalHit;

@@ -22265,7 +22265,7 @@ Actually prepend the actual flag image from
     <span class="flag flag-AU release-country">
 before the "Australia (AU)"
 
-** filter per column also in the grouped table display
+** DONE filter per column also in the grouped table display
 
 In the uploaded script, there is already a filter input field which filters rows globally (with debug logging).
 
@@ -22342,7 +22342,14 @@ Highlighting: Updated the CSS to use lightyellow for column-specific matches.
 Debug Logs: Added console.debug statements tracking the column index and the string being entered.
 #+end_example
 
+** if there is a filter expression either in the global or a column specific filter field, surround the filter field with a red box
 
+In the uploaded script,
+if there is a filter expression either in the global or a column specific filter field, surround the filter field with a red box
+
+Please do not make any other changes to working code, comments and debugging statements.
+
+** when the filter expression would leave NO rows in a table group do NOT remove the row with the filter fields and also NOT remove the corresponding h3 header '<h3 class="mb-toggle-h3">'
 ** timings for sorting
 
 The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"
@@ -22780,3 +22787,6 @@ example: filter string "Canada"
 all rows wich have "Canada" are filtered
 in one table group there is a row which has "US/CA/MX", so the "CA" part (also starting string from "Canada") is highlighted and the row is still present
 in another table group there is a row which has "CBS", so the "C" part (also starting string from "Canada") is highlighted and the row is still present
+
+
+
