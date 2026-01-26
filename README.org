@@ -21124,7 +21124,7 @@ actually ist should still be diabled during load, but still make the visual chan
 
 ** add timing info for sorting and processsing
 
-** for numerical columns adjust the sorting to be numeric and not character based
+** DONE for numerical columns adjust the sorting to be numeric and not character based
 
 In the uploaded userscript, implement the following:
 
@@ -21202,7 +21202,7 @@ to
 
 [MB-ShowAll-Debug: releasegroup-releases] Sorting category "Official" by "<column name>" (column <index>)
 
-** split column in two separate columns
+** DONE split column in two separate columns
 
 In the uploaded userscript, implement the following:
 
@@ -21254,7 +21254,7 @@ In the uploaded userscript, please also add the 'split the column values of the 
 - https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
 - https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
 
-** Split location
+** DONE Split location
 
 In URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
 
@@ -22354,7 +22354,7 @@ Please do not make any other changes to working code, comments and debugging sta
 In the uploaded script,
 when the filter expression would leave NO rows in a table group do NOT remove the row with the filter fields and also do NOT remove the corresponding h3 header '<h3 class="mb-toggle-h3">'
 
-** make each column filter field exactly the same width as the corresponding table column title and place each unicode X (for emptying the filed) exactl inside the filter field at the end of the filter field
+** DONE make each column filter field exactly the same width as the corresponding table column title and place each unicode X (for emptying the filed) exactl inside the filter field at the end of the filter field
 
 In the uploaded script, make each column filter field exactly the same width as the corresponding table title column
 except a bit padding left and right and place each unicode X (for emptying the field) exactly inside the filter field at
