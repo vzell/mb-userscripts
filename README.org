@@ -22724,11 +22724,23 @@ During the very first time, when the logic tries to get the "maxPage" informatio
 
 Please do not make any other changes to working code, comments and debugging statements.
 
-* fix placement of generated/rendered table data
-* timings for sorting
+** timings for sorting
+
+In the uploaded script,
+separate the times for sorting the table data and the re-rendering stage.
 
 The text for the timing information for sorting should change during sorting to "Sorting on column <column name> (column index))..." and only after the sort it should be: "Sorting: <sorting time>s, Re-rendering: <re-rendering time>s"
 
+Everything shloud be place after the checkbox and "Cc:" text
+
+** put the text "Show all: " before the 4 buttons
+
+In the uploaded script,
+put the text "Show all: " before the 4 buttons and align like the "Loaded .." text in the middle of the buttons.
+
+* remove 1st button and functionality
+* fix placement of generated/rendered table data
+* remove show all releases button
 * remove or fix "Tagger" column
 
 In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
