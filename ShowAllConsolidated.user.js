@@ -488,7 +488,7 @@
             const parent = div.parentElement;
             if (parent && parent.style.width === '700px') parent.style.display = 'none';
         });
-	// Target details blocks containing many images (likely the cover art gallery)
+        // Target details blocks containing many images (likely the cover art gallery)
         document.querySelectorAll('details').forEach(det => {
             if (det.querySelectorAll('img').length > 5) det.style.display = 'none';
         });
@@ -509,6 +509,7 @@
         let pagesProcessed = 0;
         let cumulativeFetchTime = 0;
         let lastCategorySeenAcrossPages = null;
+        let totalRowsAccumulated = 0;
 
         try {
             for (let p = 1; p <= maxPage; p++) {
@@ -570,6 +571,7 @@
 
                         // Logic to handle grouped data and repeat headers
                         if (category !== lastCategorySeenAcrossPages) {
+                            log(`Category change detected: "${category}". Accumulated so far: ${totalRowsAccumulated} rows.`);
                             groupedRows.push({ category: category, rows: [] });
                             lastCategorySeenAcrossPages = category;
                         }
@@ -581,6 +583,7 @@
                                 [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
                                 currentGroup.rows.push(newRow);
                                 rowsInThisPage++;
+                                totalRowsAccumulated++;
                             }
                         });
                     });
@@ -592,6 +595,9 @@
                             if (node.nodeName === 'TR') {
                                 if (node.classList.contains('subh')) {
                                     currentStatus = node.textContent.trim() || 'Unknown';
+                                    if (pageType === 'releasegroup-releases' && currentStatus !== lastCategorySeenAcrossPages) {
+                                        log(`Subheader change detected: "${currentStatus}". Accumulated so far: ${totalRowsAccumulated} rows.`);
+                                    }
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
 
@@ -702,6 +708,7 @@
                                         allRows.push(newRow);
                                     }
                                     rowsInThisPage++;
+                                    totalRowsAccumulated++;
                                 }
                             }
                         });
@@ -711,6 +718,8 @@
                 cumulativeFetchTime += pageDuration;
                 const avgPageTime = cumulativeFetchTime / pagesProcessed;
                 const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
+
+                log(`Processed page ${p}. Rows in page: ${rowsInThisPage}. Total accumulated: ${totalRowsAccumulated}. Duration: ${(pageDuration / 1000).toFixed(2)}s`);
 
                 if (maxPage > 1 && p < maxPage) timerDisplay.textContent = `Est. remaining: ${estRemainingSeconds.toFixed(1)}s`;
                 else if (p === maxPage) timerDisplay.textContent = 'Finalizing...';
@@ -738,6 +747,7 @@
             }
 
             timerDisplay.textContent = `(Fetch/Render: ${((performance.now() - startTime) / 1000).toFixed(2)}s)`;
+            log(`Fetching and initial rendering complete. Total rows: ${totalRows}. Total time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
             log('Critical Error during fetch:', err);
             activeBtn.textContent = 'Error';
@@ -754,6 +764,7 @@
     }
 
     function renderGroupedTable(dataArray, isArtistMain, query = '') {
+        log(`Rendering grouped table with ${dataArray.length} groups.`);
         const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
         if (!container) return;
 
@@ -819,6 +830,8 @@
             }
             th.onclick = (e) => {
                 e.preventDefault();
+                const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
+                log(`Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index})...`);
                 sortTimerDisplay.textContent = '(Sorting...)';
                 requestAnimationFrame(() => {
                     const startSort = performance.now();
@@ -857,7 +870,9 @@
                             tbody.appendChild(r);
                         }
                     });
-                    sortTimerDisplay.textContent = `(Sort: ${((performance.now() - startSort) / 1000).toFixed(2)}s)`;
+                    const duration = ((performance.now() - startSort) / 1000).toFixed(2);
+                    sortTimerDisplay.textContent = `(Sort: ${duration}s)`;
+                    log(`Sort of "${sortKey}" complete. Direction: ${state.sortAscending ? 'Asc' : 'Desc'}. Duration: ${duration}s`);
                 });
             };
         });
@@ -876,6 +891,8 @@
             }
             th.onclick = (e) => {
                 e.preventDefault();
+                const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
+                log(`Sorting main table by column: "${colName}" (index: ${index})...`);
                 sortTimerDisplay.textContent = '(Sorting...)';
                 requestAnimationFrame(() => {
                     const startSort = performance.now();
@@ -912,7 +929,9 @@
                     } else {
                         renderFinalTable(allRows);
                     }
-                    sortTimerDisplay.textContent = `(Sort: ${((performance.now() - startSort) / 1000).toFixed(2)}s)`;
+                    const duration = ((performance.now() - startSort) / 1000).toFixed(2);
+                    sortTimerDisplay.textContent = `(Sort: ${duration}s)`;
+                    log(`Sort complete. Direction: ${sortAscending ? 'Asc' : 'Desc'}. Duration: ${duration}s`);
                 });
             };
         });

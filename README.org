@@ -18980,6 +18980,19 @@ The logic works now.  But please generate the new buttons one row below the "Don
 leave a little space between the "Cancel button and the new row of buttons, because the "Cancel" and "cover" button touch each other
 
 
+* debug logging
+
+In the uploaded script, please reintroduce comprehensive debug logging for all steps in the userscript, with timeing,
+number of rows processed etc.  Also specifically for URLs of type
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f add debug logging whenever the '<h3><type></h3>'
+changes ((also include number of rows accumulated so far) and on
+https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a whenever the subheader like "Official",
+"Promotion, Bootleg" etc.changes. (also include number of rows accumulated so far).
+After each processed page also make a summary about how many rows have been accumulated per category for both types of URL, artist and release-group.
+
+Also show debug logging when sorting on cloumns, inklusive column name plus index.
+
+
 * ShowAllReleases in ReleaseGroups
 ** initial
 
@@ -20983,10 +20996,6 @@ after rendering the final page
 
 Remove all <br> tags above "Showing official release groups by this artist" and "<div class="mb-master-toggle">Show▼/Hide▲ all discography types or click the individual type</div>"
 after rendering the final page
-
-*** debug logging
-
-Also reintroduce comprehensive debug logging for all steps in the userscript, with timeing, number of rows processed etc.
 
 *** add recording type
 
