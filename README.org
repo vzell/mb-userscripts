@@ -22449,3 +22449,45 @@ and the very large '<details>...</details>' block with lots of image refernces i
          });
 
 #+end_example
+
+
+* includes(pageType)
+
+Please change the "includes(pageType)" logic to an equal logic, as the URL https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events (pageType 'place-events') has no location to split
+only the pageType 'events'
+
+#+begin_example
+    else if (path.includes('/events')) pageType = 'events';
+    else if (path.includes('/place')) pageType = 'place-events';
+#+end_example
+
+#+begin_example
+        if (typesWithSplitCD.includes(pageType)) {
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
+            if (!headersText.includes('Country')) {
+                const thC = document.createElement('th');
+                thC.textContent = 'Country';
+                thC.style.backgroundColor = headerBgColor;
+                theadRow.appendChild(thC);
+            }
+            if (!headersText.includes('Date')) {
+                const thD = document.createElement('th');
+                thD.textContent = 'Date';
+                thD.style.backgroundColor = headerBgColor;
+                theadRow.appendChild(thD);
+            }
+        }
+
+        if (typesWithSplitLocation.includes(pageType)) {
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
+            ['Place', 'Area', 'Country'].forEach(col => {
+                if (!headersText.includes(col)) {
+                    const th = document.createElement('th');
+                    th.textContent = col;
+                    th.style.backgroundColor = headerBgColor;
+                    theadRow.appendChild(th);
+                }
+            });
+        }
+#+end_example
+
