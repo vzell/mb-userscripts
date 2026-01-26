@@ -22349,15 +22349,16 @@ if there is a filter expression either in the global or a column specific filter
 
 Please do not make any other changes to working code, comments and debugging statements.
 
-** when the filter expression would leave NO rows in a table group do NOT remove the row with the filter fields and also do NOT remove the corresponding h3 header '<h3 class="mb-toggle-h3">'
+** DONE when the filter expression would leave NO rows in a table group do NOT remove the row with the filter fields and also do NOT remove the corresponding h3 header '<h3 class="mb-toggle-h3">'
 
 In the uploaded script,
 when the filter expression would leave NO rows in a table group do NOT remove the row with the filter fields and also do NOT remove the corresponding h3 header '<h3 class="mb-toggle-h3">'
 
 ** make each column filter field exactly the same width as the corresponding table column title and place each unicode X (for emptying the filed) exactl inside the filter field at the end of the filter field
 
-In the uploaded script,
-make each column filter field exactly the same width as the corresponding table column title and place each unicode X (for emptying the filed) exactl inside the filter field at the end of the filter field
+In the uploaded script, make each column filter field exactly the same width as the corresponding table title column
+except a bit padding left and right and place each unicode X (for emptying the field) exactly inside the filter field at
+the end of the filter field
 
 ** timings for sorting
 

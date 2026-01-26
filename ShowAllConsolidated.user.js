@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v9
+// @version      0.9+2026-01-26-debug-v10
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -205,9 +205,32 @@
         .mb-master-toggle:hover { text-decoration: underline; }
         .mb-filter-highlight { color: red; background-color: #FFD700; }
         .mb-col-filter-highlight { color: green; background-color: #FFFFE0; font-weight: bold; }
-        .mb-col-filter-input { width: 90%; font-size: 0.8em; padding: 1px 15px 1px 2px; box-sizing: border-box; transition: box-shadow 0.2s; }
-        .mb-col-filter-wrapper { position: relative; width: 100%; display: block; }
-        .mb-col-filter-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #999; font-size: 0.8em; }
+        .mb-col-filter-input {
+            width: 100%;
+            font-size: 0.8em;
+            padding: 1px 18px 1px 4px;
+            box-sizing: border-box;
+            transition: box-shadow 0.2s;
+            display: block;
+        }
+        .mb-col-filter-wrapper {
+            position: relative;
+            width: 100%;
+            display: block;
+        }
+        .mb-col-filter-clear {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #999;
+            font-size: 0.8em;
+            user-select: none;
+        }
+        .mb-col-filter-row th {
+            padding: 2px 4px !important;
+        }
     `;
     document.head.appendChild(style);
 
@@ -345,6 +368,9 @@
 
         Array.from(originalHeader.cells).forEach((cell, idx) => {
             const th = document.createElement('th');
+            // Maintain alignment by matching the display logic of header
+            th.style.width = cell.style.width;
+
             if (cell.querySelector('input[type="checkbox"]')) {
                 filterRow.appendChild(th);
                 return;
