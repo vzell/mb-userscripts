@@ -22283,7 +22283,7 @@ lighyellow background.
 The per column filtering should only be done in the grouped table where it is entered, not synchronized over column
 filters across all tables.
 
-Make sure you don't break the existing filering functionality for not grouped tables
+Make sure you don't break the existing filtering functionality for not grouped tables
 
 ** timings for sorting
 
@@ -22296,7 +22296,7 @@ The text for the timing information for sorting should change during sorting to 
 In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
 
 ** sync functionality like on the old Releases in RG implementation
-** add all RGs (bootlegs) functionality
+** DONE add all RGs (bootlegs) functionality
 *** initial
 
 In the uploaded user script for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
@@ -22486,7 +22486,21 @@ The following is the debug console output, for example when pressing the second 
 
 I'm missing the button text changing to "Loading page 1 of 22..." but nothing happens, and alos there doesn't seem to be ny fetching going on
 
-** performances
+** account for subheaders
+
+In the uploaded user script,
+implement for URLs of type https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a
+the following additional functionality:
+
+Right now, after generating the final accumulated release group page, there typically exist individual subgroup tables
+with their corresponding subgroup header like "Official", "Promotion", "Bootleg", etc.
+
+For these types of URLs, after the accumulatin stage please append all subgroup tables of the same type together and use
+just one corresponding header.
+
+Also extend the logging for this case with additional statistics/rowcounts
+
+** DONE performances
 
 In the uploaded userscript, please add support also to 
 
@@ -22642,3 +22656,17 @@ only the pageType 'events'
         }
 #+end_example
 
+
+* TODO ignore &page=<n> in URLs when reloading
+
+* new constants
+
+Create constants for
+
+group.rows.length < 40
+
+and
+
+maxPage > 100
+
+which are 40 and 100 respectively right now and use them in the code

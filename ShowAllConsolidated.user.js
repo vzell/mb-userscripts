@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v4
+// @version      0.9+2026-01-26-debug-v5
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -704,11 +704,14 @@
                                     }
 
                                     if (pageType === 'releasegroup-releases') {
-                                        if (currentStatus !== lastCategorySeenAcrossPages) {
-                                            groupedRows.push({ category: currentStatus, rows: [] });
-                                            lastCategorySeenAcrossPages = currentStatus;
+                                        // Modification: Append to existing category group if it exists
+                                        let existingGroup = groupedRows.find(g => g.category === currentStatus);
+                                        if (existingGroup) {
+                                            existingGroup.rows.push(newRow);
+                                        } else {
+                                            groupedRows.push({ category: currentStatus, rows: [newRow] });
                                         }
-                                        groupedRows[groupedRows.length - 1].rows.push(newRow);
+                                        lastCategorySeenAcrossPages = currentStatus;
                                         pageCategoryMap.set(currentStatus, (pageCategoryMap.get(currentStatus) || 0) + 1);
                                     } else {
                                         allRows.push(newRow);
