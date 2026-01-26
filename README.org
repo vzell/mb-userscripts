@@ -22342,14 +22342,23 @@ Highlighting: Updated the CSS to use lightyellow for column-specific matches.
 Debug Logs: Added console.debug statements tracking the column index and the string being entered.
 #+end_example
 
-** if there is a filter expression either in the global or a column specific filter field, surround the filter field with a red box
+** DONE if there is a filter expression either in the global or a column specific filter field, surround the filter field with a red box
 
 In the uploaded script,
 if there is a filter expression either in the global or a column specific filter field, surround the filter field with a red box
 
 Please do not make any other changes to working code, comments and debugging statements.
 
-** when the filter expression would leave NO rows in a table group do NOT remove the row with the filter fields and also NOT remove the corresponding h3 header '<h3 class="mb-toggle-h3">'
+** when the filter expression would leave NO rows in a table group do NOT remove the row with the filter fields and also do NOT remove the corresponding h3 header '<h3 class="mb-toggle-h3">'
+
+In the uploaded script,
+when the filter expression would leave NO rows in a table group do NOT remove the row with the filter fields and also do NOT remove the corresponding h3 header '<h3 class="mb-toggle-h3">'
+
+** make each column filter field exactly the same width as the corresponding table column title and place each unicode X (for emptying the filed) exactl inside the filter field at the end of the filter field
+
+In the uploaded script,
+make each column filter field exactly the same width as the corresponding table column title and place each unicode X (for emptying the filed) exactl inside the filter field at the end of the filter field
+
 ** timings for sorting
 
 The text for the timing information for sorting should change during sorting to "(Sorting...)" and only after the sort it should be "(Sort: <n>s)"

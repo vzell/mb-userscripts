@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v8
+// @version      0.9+2026-01-26-debug-v9
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -989,9 +989,9 @@
 
             group.rows.forEach(r => tbody.appendChild(r));
 
-            const isHiddenByFilter = query && group.rows.length === 0;
-            table.style.display = isHiddenByFilter ? 'none' : '';
-            h3.style.display = isHiddenByFilter ? 'none' : '';
+            // Logic changed: Do not hide the table or H3 even if group.rows.length is 0
+            table.style.display = '';
+            h3.style.display = '';
 
             if (!query) {
                 const catLower = group.category.toLowerCase();
