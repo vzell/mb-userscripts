@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug
+// @version      0.9+2026-01-26-debug-v3
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -563,6 +563,8 @@
                 if (mainColIdx === -1 && pageType === 'releasegroup-releases') mainColIdx = 0;
 
                 let rowsInThisPage = 0;
+                let pageCategoryMap = new Map();
+
                 if (pageType === 'artist-releasegroups') {
                     doc.querySelectorAll('table.tbl').forEach(table => {
                         let h3 = table.previousElementSibling;
@@ -571,7 +573,7 @@
 
                         // Logic to handle grouped data and repeat headers
                         if (category !== lastCategorySeenAcrossPages) {
-                            log(`<h3> Type Change detected: "${category}". Rows accumulated so far: ${totalRowsAccumulated}`);
+                            log(`Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
                             groupedRows.push({ category: category, rows: [] });
                             lastCategorySeenAcrossPages = category;
                         }
@@ -584,6 +586,7 @@
                                 currentGroup.rows.push(newRow);
                                 rowsInThisPage++;
                                 totalRowsAccumulated++;
+                                pageCategoryMap.set(category, (pageCategoryMap.get(category) || 0) + 1);
                             }
                         });
                     });
@@ -596,7 +599,7 @@
                                 if (node.classList.contains('subh')) {
                                     currentStatus = node.textContent.trim() || 'Unknown';
                                     if (pageType === 'releasegroup-releases' && currentStatus !== lastCategorySeenAcrossPages) {
-                                        log(`Subheader change detected: "${currentStatus}". Rows accumulated so far: ${totalRowsAccumulated}`);
+                                        log(`Change: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
                                     }
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
@@ -704,6 +707,7 @@
                                             lastCategorySeenAcrossPages = currentStatus;
                                         }
                                         groupedRows[groupedRows.length - 1].rows.push(newRow);
+                                        pageCategoryMap.set(currentStatus, (pageCategoryMap.get(currentStatus) || 0) + 1);
                                     } else {
                                         allRows.push(newRow);
                                     }
@@ -714,17 +718,19 @@
                         });
                     }
                 }
-
-                // Log page summary with category breakdown if applicable
                 const pageDuration = performance.now() - pageStartTime;
                 cumulativeFetchTime += pageDuration;
                 const avgPageTime = cumulativeFetchTime / pagesProcessed;
                 const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
 
                 log(`Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
+
                 if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') {
-                    const summary = groupedRows.map(g => `${g.category}: ${g.rows.length}`).join(' | ');
-                    log(`Accumulation Summary: ${summary}`);
+                    const summaryParts = groupedRows.map(g => {
+                        const curPageCount = pageCategoryMap.get(g.category) || 0;
+                        return `${g.category}: ${curPageCount}/${g.rows.length}`;
+                    });
+                    console.log(`  Summary: ${summaryParts.join(' | ')}`);
                 }
 
                 if (maxPage > 1 && p < maxPage) timerDisplay.textContent = `Est. remaining: ${estRemainingSeconds.toFixed(1)}s`;
