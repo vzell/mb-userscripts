@@ -712,7 +712,7 @@
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
         statusDisplay.textContent = 'Initializing...';
-        timerDisplay.textContent = 'Fetching...';
+        //timerDisplay.textContent = 'Fetching...';
 
         const startTime = performance.now();
         let fetchingTimeStart = performance.now();
@@ -962,7 +962,7 @@
                 }
 
                 if (maxPage > 1 && p < maxPage) timerDisplay.textContent = `(Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s)`;
-                else if (p === maxPage) timerDisplay.textContent = 'Finalizing...';
+                //else if (p === maxPage) timerDisplay.textContent = 'Finalizing...';
             }
 
             totalFetchingTime = performance.now() - fetchingTimeStart;
@@ -997,7 +997,7 @@
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
 
             statusDisplay.textContent = `Loaded ${pagesProcessed} pages (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
-            timerDisplay.textContent = `(Total: ${((performance.now() - startTime) / 1000).toFixed(2)}s)`;
+            //timerDisplay.textContent = `(Total: ${((performance.now() - startTime) / 1000).toFixed(2)}s)`;
 
             log(`Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {

@@ -22701,6 +22701,11 @@ In the uploaded script,
 make sure that when starting on a page which has the query parameter "page=<n>" (for example "page=3") already appended in
 the browser URL bar, the script first strips the "page=<n>" from the URL and then starts its logic
 
+* DONE remove show all releases button
+* DONE fix sorting on grouped tables
+
+In the uploaded script, somehow for pages with grouped tabledata, the column sort handler is not working anymore, only the header itself cahnge its appearance, but the data itsle is not sorted at all
+
 * fix 4 buttons
 ** DONE initial
 
@@ -22738,15 +22743,9 @@ Everything shloud be place after the checkbox and "Cc:" text
 In the uploaded script,
 put the text "Show all: " before the 4 buttons and align like the "Loaded .." text in the middle of the buttons.
 
-* fix sorting on grouped tables
-
-In the uploaded script, somehow for pages with grouped tabledata, the column sort handler is not working anymore, only the header itself cahnge its appearance, but the data itsle is not sorted at all
-
 * adjust color of sorted columnto light yellow
-
 * remove 1st button and functionality
 * fix placement of generated/rendered table data
-* remove show all releases button
 * remove or fix "Tagger" column
 
 In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
