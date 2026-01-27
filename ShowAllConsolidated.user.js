@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-27-cleanup-v18
+// @version      0.9+2026-01-27-cleanup-v19
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -19,6 +19,9 @@
 // @match        *://*.musicbrainz.org/place/*/events
 // @match        *://*.musicbrainz.org/place/*/performances
 // @grant        GM_xmlhttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
 // @license      MIT
 // ==/UserScript==
 
@@ -28,6 +31,20 @@
     const DEBUG = true;
     const MAX_PAGE_THRESHOLD = 100;
     const AUTO_EXPAND_THRESHOLD = 60;
+
+    // Configurable flags via Tampermonkey menu
+    let removeTaggerCol = GM_getValue('removeTaggerCol', true);
+    let removeRatingCol = GM_getValue('removeRatingCol', true);
+
+    GM_registerMenuCommand(`Toggle Remove Tagger Column (Current: ${removeTaggerCol})`, () => {
+        GM_setValue('removeTaggerCol', !removeTaggerCol);
+        location.reload();
+    });
+
+    GM_registerMenuCommand(`Toggle Remove Rating Column (Current: ${removeRatingCol})`, () => {
+        GM_setValue('removeRatingCol', !removeRatingCol);
+        location.reload();
+    });
 
     let logPrefix = "[MB-ShowAll-Debug]";
     const log = (msg, data = '') => { if (DEBUG) console.log(`${logPrefix} ${msg}`, data); };
@@ -566,7 +583,9 @@
         const indicesToRemove = [];
         headers.forEach((th, idx) => {
             const txt = th.textContent.trim();
-            if (txt.startsWith('Relationships') || txt.startsWith('Performance Attributes') || txt.startsWith('Rating') || txt.startsWith('Tagger')) {
+            if (txt.startsWith('Relationships') || txt.startsWith('Performance Attributes') ||
+                (removeRatingCol && txt.startsWith('Rating')) ||
+                (removeTaggerCol && txt.startsWith('Tagger'))) {
                 indicesToRemove.push(idx);
             }
         });
@@ -768,7 +787,9 @@
                 if (referenceTable) {
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
-                        if (txt.startsWith('Relationships') || txt.startsWith('Performance Attributes') || txt.startsWith('Rating') || txt.startsWith('Tagger')) {
+                        if (txt.startsWith('Relationships') || txt.startsWith('Performance Attributes') ||
+                            (removeRatingCol && txt.startsWith('Rating')) ||
+                            (removeTaggerCol && txt.startsWith('Tagger'))) {
                             indicesToExclude.push(idx);
                         } else if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
                             countryDateIdx = idx;

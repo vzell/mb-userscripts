@@ -22892,7 +22892,7 @@ Leave the background shading of even and odd classes still visible
 * remove or fix "Tagger" column
 
 In the uploaded script, please handle the "Tagger" and "Rating" columns (see also the the "Relationships" and "Performance Attributes" column handling) but based on two new javascript boolean const flags in the beginning of the userscript
-(make them configurable by the user  through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
+(make them configurable by the user through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
 
 (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
 
@@ -22912,6 +22912,8 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 * Stop other network related plugins execution thread
 
 * Configure userscripts parameter in the tampermonkey dialog button, see "Click buttons across tabe" in Chrome
+
+configure [x] like in "Funky illustrated records"
 
 
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
