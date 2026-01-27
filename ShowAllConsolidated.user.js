@@ -363,6 +363,16 @@
         });
     }
 
+    /**
+     * Signals other scripts (like FUNKEY ILLUSTRATED RECORDS) to stop their loops.
+     */
+    function stopOtherScripts() {
+        log('Signalling other scripts to stop...');
+        window.stopAllUserScripts = true;
+        // Dispatch custom event for scripts listening for inter-script signals
+        window.dispatchEvent(new CustomEvent('mb-stop-all-scripts'));
+    }
+
     function updateH2Count(filteredCount, totalCount) {
         const table = document.querySelector('table.tbl');
         if (!table) return;
@@ -712,6 +722,9 @@
         const activeBtn = e.currentTarget;
         e.preventDefault();
         e.stopPropagation();
+
+        // Stop other scripts immediately when an action button is pressed
+        stopOtherScripts();
 
         // Reset all buttons back to original grey background
         allActionButtons.forEach(btn => {

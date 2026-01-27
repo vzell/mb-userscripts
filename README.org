@@ -22899,134 +22899,6 @@ place the consolidated data right after the h2 heading 'Appears on releases'
 <h2 class="appears-on-releases">Appears on releases</h2>
 #+end_example
 
-
-* Sorting
-** timings for sorting
-
-In the uploaded script,
-separate the times for sorting the table data and the re-rendering stage.
-
-The text for the timing information for sorting should change during sorting to "Sorting on column <column name> (column index))..." and only after the sort it should be: "Sorting: <sorting time>s, Re-rendering: <re-rendering time>s"
-
-Everything shloud be place after the checkbox and "Cc:" text
-
-** adjust color of sorted column to light yellow
-
-In the uploaded script,
-adjust the color of the column of a datatable on which sorting has been performed to a light yellow background. Reset the color to the default as soon as another column is choosen for sorting.
-
-Leave the background shading of even and odd classes still visible
-
-#+begin_example
-<tr class="odd"
-<tr class="even"
-#+end_example
-
-** fix colours/shading
-*** on table headers
-*** highlightning, global and per column
-
-
-* Filtering
-** add escape handling whe cursor is in filter field
-
-** adjust the logic for big tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
-
-
-* copy image links for releases to final rendered data if available
-
-* put button on pages of type https://musicbrainz.org/recording/f258719b-361b-4719-9ca3-77f524af7d9b, because they can have disambiguations after the title
-
-(Your Love Keeps Lifting Me) Higher and Higher (live, 2009‐11‐22: HSBC Arena, Buffalo, NY, USA)
-
-* fix https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63 table placement
-
-In the uploaded script,
-place the consolidated table data for URLs of type https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63
-
-AFTER the '<h2 class="appears-on-releases">Appears on releases</h2>' header
-
-Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
-
-
-* make all h2 headers colapsable
-** DONE initial
-
-In the uploaded script,
-make all h2 headers on the final rendered page collapsable with an indicator icon '▲' or '▼' in front of the h2 header name.
-
-For an example implementation see, the same thing we did for subHeaders
-
-#+begin_example
-subHeaders.forEach(h => h.querySelector('.mb-toggle-icon').textContent = allCollapsed ? '▲' : '▼');
-#+end_example
-
-All h2 headers on the final rendered page should by default be collapsed, except the h2 header under which the table
-data is located (row-count status indicator for both types of URLs
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
-https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 is present in that case).
-
-In that specific header make the part of the header which contains the "header name (total row count)" separate
-clickable from the 'Show▼/Hide▲ all ' text part.
-
-- When clicking on the "header name (total row count)" part, this whole h2 header should collapse or expand but leaving the data inside as is, as it maybe has been toggled separately by clicking on their sub-headings
-- When clicking on the 'Show▼/Hide▲ all ' part, just the sub-headings should collapse or expand all
-
-Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
-
-** fix
-
-If individual sub-headings (and their corresponding table data) below the non-collapsed h2 header under which the table data is located (row-count status indicator for
-both types of URLs https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
-https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 is present in that case)
-
-have been collappsed, for example the "Album" and the "EP" sub-heading, AND now the part of the header which contains
-the "header name (total row count)" would be clicked, then the collapsing and un-collapsing of the h2 header should
-leave the collapsing state of the h3 based subheadings (and data) untouched.
-
-Please implement
-Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
-
-** fix 2
-
-*** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
-
-at the bottom: Showing releases by this artist. Show Various Artist releases instead.
-
-
-*** https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
-
-- remove jesus images after collapsing and re-opening
-- remove sanojaa stuff
-
-*** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
-
-remove "Relate checked recordings to…" box after collapsing and re-opening
-
-
-* remove or fix "Tagger" column
-** DONE initial
-
-In the uploaded script, please handle the "Tagger" and "Rating" columns (see also the the "Relationships" and "Performance Attributes" column handling) but based on two new javascript boolean const flags in the beginning of the userscript
-(make them configurable by the user through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
-
-(if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
-
-#+begin_example
-2 matches for "Relationship" in buffer: ShowAllConsolidated.user.js
-    570:            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
-    765:                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
-#+end_example
-
-#+begin_example
-3 matches for "cleanupHeaders" in buffer: ShowAllConsolidated.user.js
-    561:    function cleanupHeaders(headerElement) {
-    986:                document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
-   1026:            cleanupHeaders(templateHead);
-#+end_example
-
-** clicking the tagger link should not create a new page but instead just execute the action in the background
-
 * DONE Configure userscripts parameter in the tampermonkey dialog button, see "Click buttons across tabe" in Chrome
 ** logicals
 
@@ -23130,6 +23002,134 @@ implement the logic to change the values like in the following code snippet from
     }    
 #+end_example
 
+
+* Sorting
+** timings for sorting
+
+In the uploaded script,
+separate the times for sorting the table data and the re-rendering stage.
+
+The text for the timing information for sorting should change during sorting to "Sorting on column <column name> (column index))..." and only after the sort it should be: "Sorting: <sorting time>s, Re-rendering: <re-rendering time>s"
+
+Everything shloud be place after the checkbox and "Cc:" text
+
+** adjust color of sorted column to light yellow
+
+In the uploaded script,
+adjust the color of the column of a datatable on which sorting has been performed to a light yellow background. Reset the color to the default as soon as another column is choosen for sorting.
+
+Leave the background shading of even and odd classes still visible
+
+#+begin_example
+<tr class="odd"
+<tr class="even"
+#+end_example
+
+** fix colours/shading
+*** on table headers
+*** highlightning, global and per column
+
+
+* Filtering
+** add escape handling whe cursor is in filter field
+
+** adjust the logic for big tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
+
+
+* copy image links for releases to final rendered data if available
+
+* put button on pages of type https://musicbrainz.org/recording/f258719b-361b-4719-9ca3-77f524af7d9b, because they can have disambiguations after the title
+
+(Your Love Keeps Lifting Me) Higher and Higher (live, 2009‐11‐22: HSBC Arena, Buffalo, NY, USA)
+
+* DONE fix https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63 table placement
+
+In the uploaded script,
+place the consolidated table data for URLs of type https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63
+
+AFTER the '<h2 class="appears-on-releases">Appears on releases</h2>' header
+
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
+
+* make all h2 headers colapsable
+** DONE initial
+
+In the uploaded script,
+make all h2 headers on the final rendered page collapsable with an indicator icon '▲' or '▼' in front of the h2 header name.
+
+For an example implementation see, the same thing we did for subHeaders
+
+#+begin_example
+subHeaders.forEach(h => h.querySelector('.mb-toggle-icon').textContent = allCollapsed ? '▲' : '▼');
+#+end_example
+
+All h2 headers on the final rendered page should by default be collapsed, except the h2 header under which the table
+data is located (row-count status indicator for both types of URLs
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
+https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 is present in that case).
+
+In that specific header make the part of the header which contains the "header name (total row count)" separate
+clickable from the 'Show▼/Hide▲ all ' text part.
+
+- When clicking on the "header name (total row count)" part, this whole h2 header should collapse or expand but leaving the data inside as is, as it maybe has been toggled separately by clicking on their sub-headings
+- When clicking on the 'Show▼/Hide▲ all ' part, just the sub-headings should collapse or expand all
+
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
+** fix
+
+If individual sub-headings (and their corresponding table data) below the non-collapsed h2 header under which the table data is located (row-count status indicator for
+both types of URLs https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
+https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 is present in that case)
+
+have been collappsed, for example the "Album" and the "EP" sub-heading, AND now the part of the header which contains
+the "header name (total row count)" would be clicked, then the collapsing and un-collapsing of the h2 header should
+leave the collapsing state of the h3 based subheadings (and data) untouched.
+
+Please implement
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
+** fix 2
+
+*** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+at the bottom: Showing releases by this artist. Show Various Artist releases instead.
+
+
+*** https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+
+- remove jesus images after collapsing and re-opening
+- remove sanojaa stuff
+
+*** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+
+remove "Relate checked recordings to…" box after collapsing and re-opening
+
+
+* remove or fix "Tagger" column
+** DONE initial
+
+In the uploaded script, please handle the "Tagger" and "Rating" columns (see also the the "Relationships" and "Performance Attributes" column handling) but based on two new javascript boolean const flags in the beginning of the userscript
+(make them configurable by the user through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
+
+(if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
+
+#+begin_example
+2 matches for "Relationship" in buffer: ShowAllConsolidated.user.js
+    570:            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+    765:                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+#+end_example
+
+#+begin_example
+3 matches for "cleanupHeaders" in buffer: ShowAllConsolidated.user.js
+    561:    function cleanupHeaders(headerElement) {
+    986:                document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+   1026:            cleanupHeaders(templateHead);
+#+end_example
+
+** clicking the tagger link should not create a new page but instead just execute the action in the background
+
 * enable file access to scripts
 
 #+begin_example
@@ -23149,15 +23149,24 @@ Finally enable local file access.
 * Stop other network related plugins execution thread
 
 In the uploaded script,
-please implement code to stop running threads of other currently running user scripts on the same page, when pressing the action buttons
+please implement code to stop running threads of other currently running user scripts on the same page, when pressing the action buttons.
+
+Do you need to know the names of the other user scripts ?
 
 * redirect to an artificial page after rendering and call all plugins again, maybe my own versions
 
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
-* why ist statustics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
+* why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
 
-* make the collapse/un-collapse icon itsle also clickable
+* make the collapse/un-collapse icon itself also clickable
+
+* https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63 - fix after heading "Related works", there is a missing
+
+#+begin_example
+<h3><span class="worklink"></span><a href="/work/4a753e20-4b38-4161-a0d7-95e2fd36086f"><bdi>Leavin’ Train</bdi></a></h3>
+#+end_example
+
 
 * gemini explain
 
