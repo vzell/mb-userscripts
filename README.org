@@ -23091,11 +23091,9 @@ Please implement
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
 ** fix 2
-
 *** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
 
 at the bottom: Showing releases by this artist. Show Various Artist releases instead.
-
 
 *** https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
 
@@ -23105,6 +23103,23 @@ at the bottom: Showing releases by this artist. Show Various Artist releases ins
 *** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
 
 remove "Relate checked recordings to…" box after collapsing and re-opening
+
+** make the collapse/un-collapse icon itself also clickable
+
+In the uploaded script,
+make the collapse/un-collapse icon on the h2 headers itself also clickable not only the header name.
+
+Take care when it comes to the h2 header under which the table
+data is located (row-count status indicator for both types of URLs
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
+https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 is present in that case).
+
+In that specific header the part of the header which contains the "header name (total row count)" is separate
+clickable from the 'Show▼/Hide▲ all ' text part. Here also include the collapse/un-collapse icon to be part of the h2 header.
+
+When clicking on the 'Show▼/Hide▲ all ' part, just the sub-headings should collapse or expand (so leave this implementation as is)
+
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
 
 * remove or fix "Tagger" column
@@ -23146,7 +23161,7 @@ Finally enable local file access.
 
 * copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
-* Stop other network related plugins execution thread
+* DONE Stop other network related plugins execution thread
 
 In the uploaded script,
 please implement code to stop running threads of other currently running user scripts on the same page, when pressing the action buttons.
@@ -23159,7 +23174,6 @@ Do you need to know the names of the other user scripts ?
 
 * why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
 
-* make the collapse/un-collapse icon itself also clickable
 
 * https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63 - fix after heading "Related works", there is a missing
 
