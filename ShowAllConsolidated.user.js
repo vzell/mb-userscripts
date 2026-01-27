@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-27-cleanup-v23
+// @version      0.9+2026-01-27-cleanup-v24
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -272,6 +272,7 @@
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; }
         .mb-toggle-h3:hover { color: #222; background-color: #f9f9f9; }
+        .mb-toggle-h2 { cursor: pointer; user-select: none; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; }
         .mb-master-toggle { cursor: pointer; color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; }
         .mb-master-toggle:hover { text-decoration: underline; }
@@ -1081,6 +1082,9 @@
             // Perform final cleanup of UI artifacts
             finalCleanup();
 
+            // Make all H2s collapsible after rendering
+            makeH2sCollapsible();
+
             totalRenderingTime = performance.now() - renderingTimeStart;
 
             const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
@@ -1224,6 +1228,62 @@
                     countStat.textContent = (group.rows.length === totalInGroup) ? `(${totalInGroup})` : `(${group.rows.length} of ${totalInGroup})`;
                 }
             }
+        });
+    }
+
+    /**
+     * Logic to make all H2 headers collapsible.
+     */
+    function makeH2sCollapsible() {
+        log('Initializing collapsible H2 headers...');
+        const allH2s = document.querySelectorAll('h2');
+
+        allH2s.forEach(h2 => {
+            if (h2.classList.contains('mb-h2-processed')) return;
+            h2.classList.add('mb-h2-processed', 'mb-toggle-h2');
+
+            // Find elements between this H2 and the next H2
+            const contentNodes = [];
+            let next = h2.nextElementSibling;
+            while (next && next.tagName !== 'H2') {
+                contentNodes.push(next);
+                next = next.nextElementSibling;
+            }
+
+            // Identify if this is the target H2 with row-count stat
+            const isMainDataHeader = !!h2.querySelector('.mb-row-count-stat');
+            const icon = document.createElement('span');
+            icon.className = 'mb-toggle-icon';
+            icon.textContent = isMainDataHeader ? '▼' : '▲';
+            h2.prepend(icon);
+
+            // Hide content if not the main data header
+            if (!isMainDataHeader) {
+                contentNodes.forEach(node => node.style.display = 'none');
+            }
+
+            // Create a wrapper for the clickable "Title (Count)" part
+            const clickableTitle = document.createElement('span');
+            clickableTitle.style.cursor = 'pointer';
+
+            // Move current children (excluding icon and Master Toggle) into clickableTitle
+            const masterToggle = h2.querySelector('.mb-master-toggle');
+            Array.from(h2.childNodes).forEach(child => {
+                if (child !== icon && child !== masterToggle) {
+                    clickableTitle.appendChild(child);
+                }
+            });
+            h2.appendChild(clickableTitle);
+            if (masterToggle) h2.appendChild(masterToggle);
+
+            // Separate click event for the Title part
+            clickableTitle.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const isHidden = contentNodes[0] ? contentNodes[0].style.display === 'none' : false;
+                contentNodes.forEach(node => node.style.display = isHidden ? '' : 'none');
+                icon.textContent = isHidden ? '▼' : '▲';
+            });
         });
     }
 
