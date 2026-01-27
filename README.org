@@ -23104,7 +23104,36 @@ at the bottom: Showing releases by this artist. Show Various Artist releases ins
 
 remove "Relate checked recordings to…" box after collapsing and re-opening
 
-** make the collapse/un-collapse icon itself also clickable
+In the uploaded script,
+change the following code snippet, so that instead of hiding the corresponding elements, remove them right away from the web page
+
+#+begin_example
+        // Hide various clutter elements
+        document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
+        document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
+            if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
+        });
+        // Hide the release group filter paragraph
+        document.querySelectorAll('p').forEach(p => {
+            if (p.textContent.includes('Showing official release groups by this artist') ||
+                p.textContent.includes('Showing all release groups by this artist')) {
+                p.style.display = 'none';
+            }
+        });
+        // Hide Slick slider containers and large details blocks
+        document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').forEach(div => {
+            const parent = div.parentElement;
+            if (parent && parent.style.width === '700px') parent.style.display = 'none';
+        });
+        // Target details blocks containing many images (likely the cover art gallery)
+        document.querySelectorAll('details').forEach(det => {
+            if (det.querySelectorAll('img').length > 5) det.style.display = 'none';
+        });
+#+end_example
+
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
+** DONE make the collapse/un-collapse icon itself also clickable
 
 In the uploaded script,
 make the collapse/un-collapse icon on the h2 headers itself also clickable not only the header name.

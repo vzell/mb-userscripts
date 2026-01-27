@@ -781,26 +781,26 @@
         allRows = [];
         groupedRows = [];
 
-        // Hide various clutter elements
-        document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
+        // Remove various clutter elements
+        document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.remove());
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
-            if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
+            if (table.textContent.includes('Relate checked recordings to')) table.remove();
         });
-        // Hide the release group filter paragraph
+        // Remove the release group filter paragraph
         document.querySelectorAll('p').forEach(p => {
             if (p.textContent.includes('Showing official release groups by this artist') ||
                 p.textContent.includes('Showing all release groups by this artist')) {
-                p.style.display = 'none';
+                p.remove();
             }
         });
-        // Hide Slick slider containers and large details blocks
+        // Remove Slick slider containers and large details blocks
         document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').forEach(div => {
             const parent = div.parentElement;
-            if (parent && parent.style.width === '700px') parent.style.display = 'none';
+            if (parent && parent.style.width === '700px') parent.remove();
         });
         // Target details blocks containing many images (likely the cover art gallery)
         document.querySelectorAll('details').forEach(det => {
-            if (det.querySelectorAll('img').length > 5) det.style.display = 'none';
+            if (det.querySelectorAll('img').length > 5) det.remove();
         });
 
         if (pageType === 'events' || pageType === 'artist-releasegroups') removeSanojjonasContainers();
