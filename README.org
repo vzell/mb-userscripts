@@ -22832,12 +22832,44 @@ and place the text 'Show▼/Hide▲ all Release Types or click the individual Ty
 right after the h2 header 
 <h2>Album<span class="mb-row-count-stat">(total number of rows>)</span></h2>
 for the URLs of type https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
+
 *** 1
 
 - for the URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f the text should actually be placed in the same row as <h2 class="discography">Discography<span class="mb-row-count-stat">(<total number of rows>)</span></h2>
 - for the URLs of type https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 the text should actually be placed in the same row as <h2>Album<span class="mb-row-count-stat">(total number of rows>)</span></h2>, her it was actually placed at the first h2 header in the document, but it should be exactly the <h2>Album one
 
-** table data
+*** table data
+
+In the uploaded script,
+place the consolidated table data for both types of URLs https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
+
+AFTER the '<h2 class="discography">' header for https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+and
+
+AFTER the '<h2>Album' header for https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
+
+respectively.
+
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
+** fix
+
+Actually the 'Show▼/Hide▲ all ..' text should stay inside the corresponding h2 header as before, ONLY the consolidated
+table data for both types of URLs should go AFTER the h2 headers, but with an empty row in between,
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
+** 2
+
+Almost, but you targeted the first h2 header in the whole page for both types of URLs,
+but instead the following are the actual h2 targets:
+
+- for the URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f the h2 header '<h2 class="discography">Discography' 
+- for the URLs of type https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 the h2 header '<h2>Album'
+
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
+** old
 
 In the uploaded script,
 for the URL of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
@@ -22890,8 +22922,16 @@ place the consolidated data right after the h2 heading 'Appears on releases'
 
 * make all h2 headers colapsable
 
-In the uploaded script,
-make all h2 headers colapsable
+In the uploaded script, make all h2 headers in the final rendered page collapsable with an indicator icon '▲' or '▼' in
+front of the h2 header name.
+
+For an example implementation see, the same thing we did for subHeaders
+
+#+begin_example
+subHeaders.forEach(h => h.querySelector('.mb-toggle-icon').textContent = allCollapsed ? '▲' : '▼');
+#+end_example
+
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
 * adjust color of sorted column to light yellow
 

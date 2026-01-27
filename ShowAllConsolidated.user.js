@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-27-cleanup-v22
+// @version      0.9+2026-01-27-cleanup-v23
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -1118,20 +1118,24 @@
             cleanupHeaders(templateHead);
         }
 
+        // Identify the target anchor header based on page type
+        let targetHeader = null;
+        if (pageType === 'artist-releasegroups') {
+            targetHeader = document.querySelector('h2.discography');
+        } else if (pageType === 'releasegroup-releases') {
+            targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+        }
+
         if (!query) {
             container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => el.remove());
 
             let toggleLabel = 'Show▼/Hide▲ all Release Types or click the individual Type below';
-            let targetH2 = null;
 
             if (pageType === 'artist-releasegroups') {
                 toggleLabel = 'Show▼/Hide▲ all ReleaseGroup Types or click the individual Type below';
-                targetH2 = document.querySelector('h2.discography');
-            } else if (pageType === 'releasegroup-releases') {
-                targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
             }
 
-            if (targetH2) {
+            if (targetHeader) {
                 const masterToggle = document.createElement('span');
                 masterToggle.className = 'mb-master-toggle';
                 masterToggle.textContent = toggleLabel;
@@ -1146,7 +1150,7 @@
                     subTables.forEach(t => t.style.display = allCollapsed ? 'none' : '');
                     subHeaders.forEach(h => h.querySelector('.mb-toggle-icon').textContent = allCollapsed ? '▲' : '▼');
                 };
-                targetH2.appendChild(masterToggle);
+                targetHeader.appendChild(masterToggle);
             }
         }
 
@@ -1161,6 +1165,9 @@
                 }
             });
         }
+
+        // Track where to insert the elements
+        let lastInsertedElement = targetHeader;
 
         dataArray.forEach((group, index) => {
             let table, h3, tbody;
@@ -1192,8 +1199,16 @@
                 table.style.display = shouldStayOpen ? '' : 'none';
 
                 h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${group.category} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
-                container.appendChild(h3);
-                container.appendChild(table);
+
+                // Placement Logic: If targetHeader exists, insert after it/previous element. Otherwise, append to container.
+                if (lastInsertedElement) {
+                    lastInsertedElement.after(h3);
+                    h3.after(table);
+                    lastInsertedElement = table; // Update pointer for the next group
+                } else {
+                    container.appendChild(h3);
+                    container.appendChild(table);
+                }
 
                 h3.addEventListener('click', () => {
                     const isHidden = table.style.display === 'none';
