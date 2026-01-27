@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-27-cleanup-v19
+// @version      0.9+2026-01-27-cleanup-v20
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -22,6 +22,7 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
 // @license      MIT
 // ==/UserScript==
 
@@ -29,8 +30,7 @@
     'use strict';
 
     const DEBUG = true;
-    const MAX_PAGE_THRESHOLD = 100;
-    const AUTO_EXPAND_THRESHOLD = 60;
+    let registeredMenuCommandIDs = [];
 
     // --- Settings & Menu ---
     const settings = {
@@ -38,23 +38,66 @@
         removeRating: GM_getValue("removeRating", false),
         removeRelationships: GM_getValue("removeRelationships", true),
         removePerformance: GM_getValue("removePerformance", true),
+        maxPageThreshold: GM_getValue("maxPageThreshold", 100),
+        autoExpandThreshold: GM_getValue("autoExpandThreshold", 60),
 
-        setMenu: function(key, label) {
-            const icon = this[key] ? "☑" : "☐";
-            GM_registerMenuCommand(`${icon} ${label}`, () => {
-                this[key] = !this[key];
-                GM_setValue(key, this[key]);
-                this.setMenu(key, label); // Refresh menu entry
-                log(`Setting changed: ${key} = ${this[key]}`);
-            }, { autoClose: false, id: key });
+        /**
+         * Refresh the Tampermonkey menu entries to show current states and values.
+         */
+        setupMenu: function() {
+            for (const id of registeredMenuCommandIDs) {
+                try { GM_unregisterMenuCommand(id); } catch (e) { /* ignore */ }
+            }
+            registeredMenuCommandIDs = [];
+
+            const register = (label, fn) => {
+                const id = GM_registerMenuCommand(label, fn);
+                registeredMenuCommandIDs.push(id);
+            };
+
+            // Boolean Toggles
+            const bools = [
+                { key: "removeTagger", label: "Remove Tagger Column" },
+                { key: "removeRating", label: "Remove Rating Column" },
+                { key: "removeRelationships", label: "Remove Relationships Column" },
+                { key: "removePerformance", label: "Remove Performance Attributes Column" }
+            ];
+
+            bools.forEach(item => {
+                const icon = this[item.key] ? "☑" : "☐";
+                register(`${icon} ${item.label}`, () => {
+                    this[item.key] = !this[item.key];
+                    GM_setValue(item.key, this[item.key]);
+                    log(`Setting changed: ${item.key} = ${this[item.key]}`);
+                    this.setupMenu();
+                });
+            });
+
+            // Numeric Thresholds (Prompts)
+            register(`Max Fetch Page Threshold before Warning: ${this.maxPageThreshold}`, () => {
+                const val = prompt("Enter new Max Page Warning Threshold:", this.maxPageThreshold);
+                const num = parseInt(val, 10);
+                if (!isNaN(num) && num > 0) {
+                    this.maxPageThreshold = num;
+                    GM_setValue("maxPageThreshold", num);
+                    this.setupMenu();
+                }
+            });
+
+            register(`Table Auto-Expand Threshold for Type Album: ${this.autoExpandThreshold}`, () => {
+                const val = prompt("Enter new Auto-Expand Row Threshold:", this.autoExpandThreshold);
+                const num = parseInt(val, 10);
+                if (!isNaN(num) && num >= 0) {
+                    this.autoExpandThreshold = num;
+                    GM_setValue("autoExpandThreshold", num);
+                    this.setupMenu();
+                }
+            });
         }
     };
 
-    // Initialize Menu Entries
-    settings.setMenu("removeTagger", "Remove Tagger Column");
-    settings.setMenu("removeRating", "Remove Rating Column");
-    settings.setMenu("removeRelationships", "Remove Relationships Column");
-    settings.setMenu("removePerformance", "Remove Performance Attributes Column");
+    // Initialize Menu
+    settings.setupMenu();
 
     let logPrefix = "[MB-ShowAll-Debug]";
     const log = (msg, data = '') => { if (DEBUG) console.log(`${logPrefix} ${msg}`, data); };
@@ -702,7 +745,7 @@
         }
 
         log('Total pages to fetch:', maxPage);
-        if (maxPage > MAX_PAGE_THRESHOLD && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) {
+        if (maxPage > settings.maxPageThreshold && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) {
             activeBtn.style.backgroundColor = '';
             activeBtn.style.color = '';
             statusDisplay.textContent = '';
@@ -1120,7 +1163,7 @@
 
             if (!query) {
                 const catLower = group.category.toLowerCase();
-                const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < AUTO_EXPAND_THRESHOLD;
+                const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < settings.autoExpandThreshold;
                 table.style.display = shouldStayOpen ? '' : 'none';
 
                 h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${group.category} <span class="mb-row-count-stat">(${group.rows.length})</span>`;

@@ -22891,6 +22891,8 @@ Leave the background shading of even and odd classes still visible
 
 * remove or fix "Tagger" column
 
+** initial
+
 In the uploaded script, please handle the "Tagger" and "Rating" columns (see also the the "Relationships" and "Performance Attributes" column handling) but based on two new javascript boolean const flags in the beginning of the userscript
 (make them configurable by the user through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
 
@@ -22909,7 +22911,7 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
    1026:            cleanupHeaders(templateHead);
 #+end_example
 
-* Stop other network related plugins execution thread
+** clicking the tagger link should not create a new page but instead just execute the action in the background
 
 * Configure userscripts parameter in the tampermonkey dialog button, see "Click buttons across tabe" in Chrome
 
@@ -22942,6 +22944,96 @@ pics_settings.setMenu("big");
 pics_settings.setMenu("small");
 #+end_example
 
+* create menue entry for AUTO_EXPAND_THRESHOLD
+
+In the uploaded script,
+create additional Tampermonkey configuration menu entries (besided the logicals) for the variables
+
+#+begin_example
+    const MAX_PAGE_THRESHOLD = 100;
+    const AUTO_EXPAND_THRESHOLD = 60;
+#+end_example
+
+implement the logic to change the values like in the following code snippet from the user script at https://update.greasyfork.org/scripts/539029/Click%20buttons%20across%20tabs.user.js
+
+#+begin_example
+    const DEFAULT_MB_SUBMITS_PER_SECOND = 5;
+
+    /**
+     * @summary Registers all userscript menu commands and settings toggles.
+     */
+    async function setupMenuCommands() {
+        for (const commandId of registeredMenuCommandIDs) {
+            try {
+                GM_unregisterMenuCommand(commandId);
+            } catch (e) { /* ignore */ }
+        }
+        registeredMenuCommandIDs = [];
+
+        const registerCommand = (name, func) => {
+            const id = GM_registerMenuCommand(name, func);
+            registeredMenuCommandIDs.push(id);
+        };
+
+        const settings = [
+            {
+                key: MUSICBRAINZ_SUBMITS_PER_SECOND_SETTING,
+                getLabel: async (value) => `MusicBrainz Edit Submits / sec (Current: ${value})`,
+                onClick: async (currentValue) => {
+                    const newValue = prompt(`Enter new max submissions per second for MusicBrainz:`, currentValue);
+                    const newRate = parseFloat(newValue);
+                    if (!isNaN(newRate) && newRate > 0) {
+                        await GM.setValue(MUSICBRAINZ_SUBMITS_PER_SECOND_SETTING, newRate);
+                    } else if (newValue !== null) {
+                        alert('Please enter a valid positive number (you can use decimals like 0.5 for a 2-second delay).');
+                    }
+                },
+                defaultValue: DEFAULT_MB_SUBMITS_PER_SECOND,
+            },
+        ];
+
+        for (const setting of settings) {
+            const value = await GM.getValue(setting.key, setting.defaultValue);
+            registerCommand(await setting.getLabel(value), async () => {
+                await setting.onClick(value);
+                await setupMenuCommands();
+            });
+        }
+
+        const activeConfigs = getActiveConfigs();
+        const configsForMenu = activeConfigs.filter(c => !c.autoClick && c.menuCommandName);
+
+        for (const config of configsForMenu) {
+            registerCommand(config.menuCommandName, () => {
+                const channel = new BroadcastChannel(config.channelName);
+                channel.postMessage(config.messageTrigger);
+                channel.close();
+            });
+        }
+
+        debugLog(`Menu commands updated.`);
+    }    
+#+end_example
+
+* enable file access to scripts
+
+#+begin_example
+A402 There are multiple possible ways:
+
+Chrome (and derivates users) can export and @require the local copy
+Open Tampermonkey's dashboard, open the script and copy its content.
+Create a local file and paste the content
+Remove all content from the script inside Tampermonkey except the "UserScript" header
+Add a @require tag with the path to the local file that you want to include in the script. For example, if the file is located at C:\Users\[USERNAME]\Documents\myscript.js, you would add the following line to the script:
+// @require       file://C:/Users/[USERNAME]/Documents/myscript.js
+Finally enable local file access.
+#+end_example
+
+* copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+* Stop other network related plugins execution thread
+
+* redirect to an artificial page after rendering and call all plugins again, maybe my own versions
 
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
