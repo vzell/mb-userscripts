@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-27-cleanup-v24
+// @version      0.9+2026-01-27-cleanup-v25
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -281,7 +281,7 @@
         .mb-col-filter-input {
             width: 100%;
             font-size: 0.8em;
-            padding: 1px 18px 1px 4px;
+            padding: 1px 188x 1px 4px;
             box-sizing: border-box;
             transition: box-shadow 0.2s;
             display: block;
@@ -372,7 +372,7 @@
         if (pageType === 'artist-releasegroups') {
             targetH2 = document.querySelector('h2.discography');
         } else if (pageType === 'releasegroup-releases') {
-            targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+            targetH2 = document.querySelector('h2.appears-on-releases') || Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
         }
 
         if (!targetH2) {
@@ -1127,7 +1127,7 @@
         if (pageType === 'artist-releasegroups') {
             targetHeader = document.querySelector('h2.discography');
         } else if (pageType === 'releasegroup-releases') {
-            targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+            targetHeader = document.querySelector('h2.appears-on-releases') || Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
         }
 
         if (!query) {

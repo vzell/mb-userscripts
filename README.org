@@ -22939,9 +22939,18 @@ Leave the background shading of even and odd classes still visible
 
 (Your Love Keeps Lifting Me) Higher and Higher (live, 2009‐11‐22: HSBC Arena, Buffalo, NY, USA)
 
+* fix https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63 table placement
+
+In the uploaded script,
+place the consolidated table data for URLs of type https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63
+
+AFTER the '<h2 class="appears-on-releases">Appears on releases</h2>' header
+
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
 
 * make all h2 headers colapsable
-** initial
+** DONE initial
 
 In the uploaded script,
 make all h2 headers on the final rendered page collapsable with an indicator icon '▲' or '▼' in front of the h2 header name.
@@ -22977,6 +22986,23 @@ leave the collapsing state of the h3 based subheadings (and data) untouched.
 
 Please implement
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
+** fix 2
+
+*** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+at the bottom: Showing releases by this artist. Show Various Artist releases instead.
+
+
+*** https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+
+- remove jesus images after collapsing and re-opening
+- remove sanojaa stuff
+
+*** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+
+remove "Relate checked recordings to…" box after collapsing and re-opening
+
 
 * remove or fix "Tagger" column
 ** DONE initial
@@ -23130,6 +23156,8 @@ please implement code to stop running threads of other currently running user sc
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
 * why ist statustics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
+
+* make the collapse/un-collapse icon itsle also clickable
 
 * gemini explain
 
