@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-26-debug-v16
+// @version      0.9+2026-01-27-cleanup-v17
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -691,7 +691,7 @@
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
             if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
         });
-	// Hide the release group filter paragraph
+        // Hide the release group filter paragraph
         document.querySelectorAll('p').forEach(p => {
             if (p.textContent.includes('Showing official release groups by this artist') ||
                 p.textContent.includes('Showing all release groups by this artist')) {
@@ -995,6 +995,9 @@
                 makeSortable();
             }
 
+            // Perform final cleanup of UI artifacts
+            finalCleanup();
+
             totalRenderingTime = performance.now() - renderingTimeStart;
 
             const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
@@ -1213,6 +1216,29 @@
                 });
             };
         });
+    }
+
+    /**
+     * Removes all consecutive <br> tags found in the document,
+     * leaving only a single <br> if multiple were found together.
+     */
+    function finalCleanup() {
+        log('Running final cleanup...');
+        const brs = document.querySelectorAll('br');
+        for (let i = 0; i < brs.length; i++) {
+            // Check if element is still in DOM (might have been removed in previous iteration)
+            if (!brs[i].parentNode) continue;
+
+            let next = brs[i].nextSibling;
+            // Check for consecutive <br> tags, ignoring empty whitespace nodes
+            while (next && (next.nodeName === 'BR' || (next.nodeType === 3 && !/[^\t\n\r ]/.test(next.textContent)))) {
+                let toRemove = next;
+                next = next.nextSibling;
+                if (toRemove.nodeName === 'BR') {
+                    toRemove.remove();
+                }
+            }
+        }
     }
 
     function fetchHtml(url) {

@@ -22791,6 +22791,34 @@ to also hide the following parapgraph '<p>Showing official release groups by thi
 </p>
 #+end_example
 
+* remove all consecutive "<br>" tags
+
+In the uploaded script, create a new java script function which should be called after fetching all the pages and
+generating the new consolidated sortable and filtering enabled data table view. The name should be based on something
+like final cleanup.
+
+The functionality of that function shoul be:
+
+Remove or hide all consecutive "<br>" tags found in the complete web page, like for example:
+
+#+begin_example
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+#+end_example
+
+Add logging if consecutive "<br>" tags found and how many were removed
+
+
+* add escape handling whe cursor is in filter field
+
 
 * fix placement of generated/rendered table data
 
@@ -22872,6 +22900,10 @@ In the uploaded script, please handle the "Tagger" column (if present) like the 
     986:                document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
    1026:            cleanupHeaders(templateHead);
 #+end_example
+
+* Stop other network related plugins execution thread
+
+* Configure userscripts parameter in the tampermonkey dialog button, see "Click buttons across tabe" in Chrome
 
 
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
