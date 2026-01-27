@@ -22760,30 +22760,12 @@ put the text "Show all: " before the 4 "... artist RGs" buttons and align like t
 
 ** adjust the logic for bis tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
 
-* adjust color of sorted column to light yellow
-
-In the uploaded script,
-adjust the color of the column of a datatable on which sorting has been performed to a light yellow background. Reset the color to the default as soon as another column is choosen for sorting.
-
-Leave the background shading of even and odd classes still visible
-
-#+begin_example
-<tr class="odd"
-<tr class="even"
-#+end_example
-
 * DONE remove 1st button and functionality
 
 In the uploaded script,
 remove the button "const mainBtn" as it's functionality is now in button one of the 4 new buttons
 
-* fix placement of generated/rendered table data
-
-#+begin_example
-<h2 class="discography">Discography</h2>
-#+end_example
-
-* remove
+* DONE remove clutter
 
 In the uploaded user script, adjust the following part of the code
 
@@ -22809,6 +22791,70 @@ to also hide the following parapgraph '<p>Showing official release groups by thi
 </p>
 #+end_example
 
+
+* fix placement of generated/rendered table data
+
+In the uploaded script,
+for the URL of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+place the consolidated data between the
+
+#+begin_example
+<h2 class="discography">Discography</h2>
+#+end_example
+
+and the '<div class="list-merge-buttons-row-container">
+
+and the 
+
+
+before placing the consolidated data right after the h2 heading 'Discography'
+
+#+begin_example
+<h2 class="discography">Discography</h2>
+#+end_example
+
+remove all "<br>" tags after the '<div class="list-merge-buttons-row-container">'
+
+
+up to the end of the page.
+
+In the case of https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
+
+place the consolidated data right after the h2 heading 'Album'
+
+#+begin_example
+<h2>Album</h2>
+#+end_example
+
+In the case of https://musicbrainz.org/recording/f258719b-361b-4719-9ca3-77f524af7d9b
+
+place the consolidated data right after the h2 heading 'Appears on releases'
+
+#+begin_example
+<h2 class="appears-on-releases">Appears on releases</h2>
+#+end_example
+
+* copy image links for releases to final rendered data if available
+
+* put button on pages of type https://musicbrainz.org/recording/f258719b-361b-4719-9ca3-77f524af7d9b, because they can have disambiguations after the disambiguation
+
+(Your Love Keeps Lifting Me) Higher and Higher (live, 2009‐11‐22: HSBC Arena, Buffalo, NY, USA)
+
+
+* make all h2 headers colapsable
+
+* adjust color of sorted column to light yellow
+
+In the uploaded script,
+adjust the color of the column of a datatable on which sorting has been performed to a light yellow background. Reset the color to the default as soon as another column is choosen for sorting.
+
+Leave the background shading of even and odd classes still visible
+
+#+begin_example
+<tr class="odd"
+<tr class="even"
+#+end_example
 
 * remove or fix "Tagger" column
 
