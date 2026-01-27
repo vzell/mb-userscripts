@@ -691,6 +691,13 @@
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
             if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
         });
+	// Hide the release group filter paragraph
+        document.querySelectorAll('p').forEach(p => {
+            if (p.textContent.includes('Showing official release groups by this artist') ||
+                p.textContent.includes('Showing all release groups by this artist')) {
+                p.style.display = 'none';
+            }
+        });
         // Hide Slick slider containers and large details blocks
         document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').forEach(div => {
             const parent = div.parentElement;

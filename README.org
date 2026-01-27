@@ -22765,15 +22765,68 @@ put the text "Show all: " before the 4 "... artist RGs" buttons and align like t
 In the uploaded script,
 adjust the color of the column of a datatable on which sorting has been performed to a light yellow background. Reset the color to the default as soon as another column is choosen for sorting.
 
-* remove 1st button and functionality
+Leave the background shading of even and odd classes still visible
+
+#+begin_example
+<tr class="odd"
+<tr class="even"
+#+end_example
+
+* DONE remove 1st button and functionality
 
 In the uploaded script,
 remove the button "const mainBtn" as it's functionality is now in button one of the 4 new buttons
 
 * fix placement of generated/rendered table data
+
+#+begin_example
+<h2 class="discography">Discography</h2>
+#+end_example
+
+* remove
+
+In the uploaded user script, adjust the following part of the code
+
+#+begin_example
+
+        document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.style.display = 'none');
+        document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
+            if (table.textContent.includes('Relate checked recordings to')) table.style.display = 'none';
+        });
+#+end_example
+
+to also hide the following parapgraph '<p>Showing official release groups by this artist'
+
+#+begin_example
+<p>Showing official release groups by this artist
+  <!-- --> (
+  <a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&amp;va=0">Show all release groups
+  </a> /
+  <a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=0&amp;va=1">Show official various artist release groups
+  </a> /
+  <a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&amp;va=1">Show all various artist release groups
+  </a>)
+</p>
+#+end_example
+
+
 * remove or fix "Tagger" column
 
 In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
+
+#+begin_example
+2 matches for "Relationship" in buffer: ShowAllConsolidated.user.js
+    570:            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+    765:                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+#+end_example
+
+#+begin_example
+3 matches for "cleanupHeaders" in buffer: ShowAllConsolidated.user.js
+    561:    function cleanupHeaders(headerElement) {
+    986:                document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+   1026:            cleanupHeaders(templateHead);
+#+end_example
+
 
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
