@@ -22819,11 +22819,29 @@ Add logging if consecutive "<br>" tags found and how many were removed
 
 * add escape handling whe cursor is in filter field
 
-
 * fix placement of generated/rendered table data
+** place the "Show/Hide" text after the h2 header
+
+In the uploaded script,
+place the text 'Show▼/Hide▲ all ReleaseGroup Types or click the individual Type below'
+right after the h2 header 
+<h2 class="discography">Discography<span class="mb-row-count-stat">(<total number of rows>)</span></h2>
+for the URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+and place the text 'Show▼/Hide▲ all Release Types or click the individual Type below'
+right after the h2 header 
+<h2>Album<span class="mb-row-count-stat">(total number of rows>)</span></h2>
+for the URLs of type https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
+*** 1
+
+- for the URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f the text should actually be placed in the same row as <h2 class="discography">Discography<span class="mb-row-count-stat">(<total number of rows>)</span></h2>
+- for the URLs of type https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 the text should actually be placed in the same row as <h2>Album<span class="mb-row-count-stat">(total number of rows>)</span></h2>, her it was actually placed at the first h2 header in the document, but it should be exactly the <h2>Album one
+
+** table data
 
 In the uploaded script,
 for the URL of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
 
 place the consolidated data between the
 
@@ -22872,6 +22890,9 @@ place the consolidated data right after the h2 heading 'Appears on releases'
 
 * make all h2 headers colapsable
 
+In the uploaded script,
+make all h2 headers colapsable
+
 * adjust color of sorted column to light yellow
 
 In the uploaded script,
@@ -22890,8 +22911,7 @@ Leave the background shading of even and odd classes still visible
 
 
 * remove or fix "Tagger" column
-
-** initial
+** DONE initial
 
 In the uploaded script, please handle the "Tagger" and "Rating" columns (see also the the "Relationships" and "Performance Attributes" column handling) but based on two new javascript boolean const flags in the beginning of the userscript
 (make them configurable by the user through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
@@ -22913,7 +22933,8 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 
 ** clicking the tagger link should not create a new page but instead just execute the action in the background
 
-* Configure userscripts parameter in the tampermonkey dialog button, see "Click buttons across tabe" in Chrome
+* DONE Configure userscripts parameter in the tampermonkey dialog button, see "Click buttons across tabe" in Chrome
+** logicals
 
 Configure a boolean [x] like in the userscript "Funky illustrated records" for the menu entries of the booleans
 
@@ -22944,7 +22965,7 @@ pics_settings.setMenu("big");
 pics_settings.setMenu("small");
 #+end_example
 
-* create menue entry for AUTO_EXPAND_THRESHOLD
+** create menue entry for AUTO_EXPAND_THRESHOLD, numericals
 
 In the uploaded script,
 create additional Tampermonkey configuration menu entries (besided the logicals) for the variables
@@ -23038,7 +23059,7 @@ Finally enable local file access.
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
 
-*
+* gemini explain
 
 // @include           *
 // @match             *://*/*

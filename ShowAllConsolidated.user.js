@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-27-cleanup-v20
+// @version      0.9+2026-01-27-cleanup-v22
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -273,7 +273,7 @@
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; }
         .mb-toggle-h3:hover { color: #222; background-color: #f9f9f9; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; }
-        .mb-master-toggle { cursor: pointer; color: #0066cc; font-weight: bold; margin-bottom: 15px; display: inline-block; font-size: 1.1em; }
+        .mb-master-toggle { cursor: pointer; color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; }
         .mb-master-toggle:hover { text-decoration: underline; }
         .mb-filter-highlight { color: red; background-color: #FFD700; }
         .mb-col-filter-highlight { color: green; background-color: #FFFFE0; font-weight: bold; }
@@ -367,11 +367,21 @@
         if (!table) return;
         let allH2s = Array.from(document.querySelectorAll('h2'));
         let targetH2 = null;
-        for (let i = 0; i < allH2s.length; i++) {
-            if (allH2s[i].compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING) {
-                targetH2 = allH2s[i];
-            } else break;
+
+        if (pageType === 'artist-releasegroups') {
+            targetH2 = document.querySelector('h2.discography');
+        } else if (pageType === 'releasegroup-releases') {
+            targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
         }
+
+        if (!targetH2) {
+            for (let i = 0; i < allH2s.length; i++) {
+                if (allH2s[i].compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                    targetH2 = allH2s[i];
+                } else break;
+            }
+        }
+
         if (targetH2) {
             const existing = targetH2.querySelector('.mb-row-count-stat');
             if (existing) existing.remove();
@@ -589,7 +599,7 @@
                 .map(f => ({ val: isCaseSensitive ? f.raw : f.raw.toLowerCase(), idx: f.idx }))
                 .filter(f => f.val);
 
-            const filteredRows = allRows.map(r => r.cloneNode(true)).filter(row => {
+            const filteredRows = allRows.map(row => row.cloneNode(true)).filter(row => {
                 const text = getCleanVisibleText(row);
                 const globalHit = !globalQuery || (isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery));
 
@@ -1108,21 +1118,36 @@
             cleanupHeaders(templateHead);
         }
 
-        if (!query) container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => el.remove());
-
         if (!query) {
-            const masterToggle = document.createElement('div');
-            masterToggle.className = 'mb-master-toggle';
-            masterToggle.textContent = 'Show▼/Hide▲ all types or click the individual type';
-            let allCollapsed = true;
-            masterToggle.onclick = () => {
-                const subTables = container.querySelectorAll('table.tbl');
-                const subHeaders = container.querySelectorAll('.mb-toggle-h3');
-                allCollapsed = !allCollapsed;
-                subTables.forEach(t => t.style.display = allCollapsed ? 'none' : '');
-                subHeaders.forEach(h => h.querySelector('.mb-toggle-icon').textContent = allCollapsed ? '▲' : '▼');
-            };
-            container.appendChild(masterToggle);
+            container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => el.remove());
+
+            let toggleLabel = 'Show▼/Hide▲ all Release Types or click the individual Type below';
+            let targetH2 = null;
+
+            if (pageType === 'artist-releasegroups') {
+                toggleLabel = 'Show▼/Hide▲ all ReleaseGroup Types or click the individual Type below';
+                targetH2 = document.querySelector('h2.discography');
+            } else if (pageType === 'releasegroup-releases') {
+                targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+            }
+
+            if (targetH2) {
+                const masterToggle = document.createElement('span');
+                masterToggle.className = 'mb-master-toggle';
+                masterToggle.textContent = toggleLabel;
+
+                let allCollapsed = true;
+                masterToggle.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const subTables = container.querySelectorAll('table.tbl');
+                    const subHeaders = container.querySelectorAll('.mb-toggle-h3');
+                    allCollapsed = !allCollapsed;
+                    subTables.forEach(t => t.style.display = allCollapsed ? 'none' : '');
+                    subHeaders.forEach(h => h.querySelector('.mb-toggle-icon').textContent = allCollapsed ? '▲' : '▼');
+                };
+                targetH2.appendChild(masterToggle);
+            }
         }
 
         const existingTables = container.querySelectorAll('table.tbl');
