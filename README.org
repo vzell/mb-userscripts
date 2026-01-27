@@ -23077,7 +23077,7 @@ clickable from the 'Show▼/Hide▲ all ' text part.
 
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
-** indent sub-headings
+** DONE indent sub-headings
 
 In the uploaded script,
 indent the individual sub-headings (NOT their corresponding table data) below the h2 header under which the table data is located (row-count status indicator for
@@ -23164,6 +23164,18 @@ When clicking on the 'Show▼/Hide▲ all ' part, just the sub-headings should c
 
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
+
+* move global filter field after "Show/Hide" text
+
+In the uploaded script,
+move the global filter field together with the "Case sensitive" checkbox to the h2 header under which the table data is located (row-count status indicator is present)
+and place it after the 'Show▼/Hide▲ all ' text in the case of  
+of URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
+and for all other URL type after the "(row-count status indicator)"
+
+* why is total number of rows after the "Show/Hide" text for https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+* add original sorting in addition to ascending/descending per column
 
 * remove or fix "Tagger" column
 ** DONE initial

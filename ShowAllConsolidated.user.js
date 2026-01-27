@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v26
+// @version      0.9+2026-01-28-cleanup-v27
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -1297,9 +1297,35 @@
             clickableTitle.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const isHidden = contentNodes[0] ? contentNodes[0].style.display === 'none' : false;
-                contentNodes.forEach(node => node.style.display = isHidden ? '' : 'none');
-                icon.textContent = isHidden ? '▼' : '▲';
+
+                const isExpanding = icon.textContent === '▲';
+
+                contentNodes.forEach(node => {
+                    if (isExpanding) {
+                        // Expansion logic: always show headers, but check H3 state for tables
+                        if (node.tagName === 'H3' && node.classList.contains('mb-toggle-h3')) {
+                            node.style.display = '';
+                        } else if (node.tagName === 'TABLE' && node.classList.contains('tbl')) {
+                            const prevH3 = node.previousElementSibling;
+                            if (prevH3 && prevH3.classList.contains('mb-toggle-h3')) {
+                                const subIcon = prevH3.querySelector('.mb-toggle-icon');
+                                // Only show table if sub-heading is currently marked as expanded (▼)
+                                if (subIcon && subIcon.textContent === '▼') {
+                                    node.style.display = '';
+                                }
+                            } else {
+                                node.style.display = '';
+                            }
+                        } else {
+                            node.style.display = '';
+                        }
+                    } else {
+                        // Collapse logic: hide everything under this H2
+                        node.style.display = 'none';
+                    }
+                });
+
+                icon.textContent = isExpanding ? '▼' : '▲';
             });
         });
     }
