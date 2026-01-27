@@ -22791,7 +22791,7 @@ to also hide the following parapgraph '<p>Showing official release groups by thi
 </p>
 #+end_example
 
-* remove all consecutive "<br>" tags
+* DONE remove all consecutive "<br>" tags
 
 In the uploaded script, create a new java script function which should be called after fetching all the pages and
 generating the new consolidated sortable and filtering enabled data table view. The name should be based on something
@@ -22865,7 +22865,7 @@ place the consolidated data right after the h2 heading 'Appears on releases'
 
 * copy image links for releases to final rendered data if available
 
-* put button on pages of type https://musicbrainz.org/recording/f258719b-361b-4719-9ca3-77f524af7d9b, because they can have disambiguations after the disambiguation
+* put button on pages of type https://musicbrainz.org/recording/f258719b-361b-4719-9ca3-77f524af7d9b, because they can have disambiguations after the title
 
 (Your Love Keeps Lifting Me) Higher and Higher (live, 2009‐11‐22: HSBC Arena, Buffalo, NY, USA)
 

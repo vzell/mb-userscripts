@@ -566,7 +566,7 @@
         const indicesToRemove = [];
         headers.forEach((th, idx) => {
             const txt = th.textContent.trim();
-            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+            if (txt.startsWith('Relationships') || txt.startsWith('Performance Attributes') || txt.startsWith('Rating') || txt.startsWith('Tagger')) {
                 indicesToRemove.push(idx);
             }
         });
@@ -768,7 +768,7 @@
                 if (referenceTable) {
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
-                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+                        if (txt.startsWith('Relationships') || txt.startsWith('Performance Attributes') || txt.startsWith('Rating') || txt.startsWith('Tagger')) {
                             indicesToExclude.push(idx);
                         } else if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
                             countryDateIdx = idx;
