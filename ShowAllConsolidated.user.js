@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-27-cleanup-v25
+// @version      0.9+2026-01-28-cleanup-v26
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -270,7 +270,7 @@
         }
         .sort-icon { cursor: pointer; margin-left: 4px; color: #0066cc; font-weight: bold; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
-        .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; }
+        .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; }
         .mb-toggle-h3:hover { color: #222; background-color: #f9f9f9; }
         .mb-toggle-h2 { cursor: pointer; user-select: none; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; cursor: pointer; }
@@ -1198,6 +1198,9 @@
                 h3.className = 'mb-toggle-h3';
                 table = document.createElement('table');
                 table.className = 'tbl';
+                // Apply indentation to the table to match the sub-header
+                table.style.marginLeft = '1.5em';
+                table.style.width = 'calc(100% - 1.5em)';
                 if (templateHead) table.appendChild(templateHead.cloneNode(true));
                 addColumnFilterRow(table);
                 tbody = document.createElement('tbody');

@@ -23077,17 +23077,31 @@ clickable from the 'Show▼/Hide▲ all ' text part.
 
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
-** fix
+** indent sub-headings
 
-If individual sub-headings (and their corresponding table data) below the non-collapsed h2 header under which the table data is located (row-count status indicator for
+In the uploaded script,
+indent the individual sub-headings (NOT their corresponding table data) below the h2 header under which the table data is located (row-count status indicator for
+both types of URLs https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
+https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 is present in that case)
+with two additional spaces, so for example, it should look like:
+
+#+begin_example
+▼ Discography (<total row number>) <Show/Hide text...>
+  ▼ <sub header> 
+#+end_example
+
+** fix collapse state of sub-headings
+
+In the uploaded script,
+if individual sub-headings (and their corresponding table data) below the non-collapsed h2 header under which the table data is located (row-count status indicator for
 both types of URLs https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
 https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 is present in that case)
 
-have been collappsed, for example the "Album" and the "EP" sub-heading, AND now the part of the header which contains
-the "header name (total row count)" would be clicked, then the collapsing and un-collapsing of the h2 header should
-leave the collapsing state of the h3 based subheadings (and data) untouched.
+have been collappsed, for example the "Album" and the "EP" sub-heading, AND when now the part of the header which
+contains the "header name (total row count)" would be clicked, then the collapsing and un-collapsing of the h2 header
+should leave the collapsing state of the h3 based subheadings (and data) untouched.
 
-Please implement
+Please implement.
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
 ** fix 2
@@ -23095,12 +23109,12 @@ Please do NOT touch the current code logic, debug statements or comments in the 
 
 at the bottom: Showing releases by this artist. Show Various Artist releases instead.
 
-*** https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+*** DONE https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
 
 - remove jesus images after collapsing and re-opening
 - remove sanojaa stuff
 
-*** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+*** DONE https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
 
 remove "Relate checked recordings to…" box after collapsing and re-opening
 
