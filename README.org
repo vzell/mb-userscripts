@@ -22913,7 +22913,34 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 
 * Configure userscripts parameter in the tampermonkey dialog button, see "Click buttons across tabe" in Chrome
 
-configure [x] like in "Funky illustrated records"
+Configure a boolean [x] like in the userscript "Funky illustrated records" for the menu entries of the booleans
+
+So instead of
+
+`Toggle Remove Tagger Column (Current: ${removeTaggerCol})`
+`Toggle Remove Rating Column (Current: ${removeTaggerCol})`
+
+they should look like ==>
+
+`☑ Remove Tagger Column`
+`☐ Remove Rating Column`
+
+See the follwing example implementation
+#+begin_example
+var pics_settings = {
+	big: GM_getValue("bigpics", true),
+	small: GM_getValue("smallpics", true),
+	setMenu: function(id) {
+		GM_registerMenuCommand((pics_settings[id] ? "☑" : "☐") + " " + id.toUpperCase() + " PICS", function(event) {
+			pics_settings[id] = !pics_settings[id];
+			GM_setValue(id + "pics", pics_settings[id]);
+			pics_settings.setMenu(id);
+		}, {autoClose: false, id: id});
+	},
+};
+pics_settings.setMenu("big");
+pics_settings.setMenu("small");
+#+end_example
 
 
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances

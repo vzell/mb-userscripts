@@ -32,19 +32,29 @@
     const MAX_PAGE_THRESHOLD = 100;
     const AUTO_EXPAND_THRESHOLD = 60;
 
-    // Configurable flags via Tampermonkey menu
-    let removeTaggerCol = GM_getValue('removeTaggerCol', true);
-    let removeRatingCol = GM_getValue('removeRatingCol', true);
+    // --- Settings & Menu ---
+    const settings = {
+        removeTagger: GM_getValue("removeTagger", false),
+        removeRating: GM_getValue("removeRating", false),
+        removeRelationships: GM_getValue("removeRelationships", true),
+        removePerformance: GM_getValue("removePerformance", true),
 
-    GM_registerMenuCommand(`Toggle Remove Tagger Column (Current: ${removeTaggerCol})`, () => {
-        GM_setValue('removeTaggerCol', !removeTaggerCol);
-        location.reload();
-    });
+        setMenu: function(key, label) {
+            const icon = this[key] ? "☑" : "☐";
+            GM_registerMenuCommand(`${icon} ${label}`, () => {
+                this[key] = !this[key];
+                GM_setValue(key, this[key]);
+                this.setMenu(key, label); // Refresh menu entry
+                log(`Setting changed: ${key} = ${this[key]}`);
+            }, { autoClose: false, id: key });
+        }
+    };
 
-    GM_registerMenuCommand(`Toggle Remove Rating Column (Current: ${removeRatingCol})`, () => {
-        GM_setValue('removeRatingCol', !removeRatingCol);
-        location.reload();
-    });
+    // Initialize Menu Entries
+    settings.setMenu("removeTagger", "Remove Tagger Column");
+    settings.setMenu("removeRating", "Remove Rating Column");
+    settings.setMenu("removeRelationships", "Remove Relationships Column");
+    settings.setMenu("removePerformance", "Remove Performance Attributes Column");
 
     let logPrefix = "[MB-ShowAll-Debug]";
     const log = (msg, data = '') => { if (DEBUG) console.log(`${logPrefix} ${msg}`, data); };
@@ -583,11 +593,10 @@
         const indicesToRemove = [];
         headers.forEach((th, idx) => {
             const txt = th.textContent.trim();
-            if (txt.startsWith('Relationships') || txt.startsWith('Performance Attributes') ||
-                (removeRatingCol && txt.startsWith('Rating')) ||
-                (removeTaggerCol && txt.startsWith('Tagger'))) {
-                indicesToRemove.push(idx);
-            }
+            if (settings.removeRelationships && txt.startsWith('Relationships')) indicesToRemove.push(idx);
+            else if (settings.removePerformance && txt.startsWith('Performance Attributes')) indicesToRemove.push(idx);
+            else if (settings.removeRating && txt.startsWith('Rating')) indicesToRemove.push(idx);
+            else if (settings.removeTagger && txt.startsWith('Tagger')) indicesToRemove.push(idx);
         });
 
         indicesToRemove.sort((a, b) => b - a).forEach(idx => theadRow.deleteCell(idx));
@@ -787,11 +796,11 @@
                 if (referenceTable) {
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
-                        if (txt.startsWith('Relationships') || txt.startsWith('Performance Attributes') ||
-                            (removeRatingCol && txt.startsWith('Rating')) ||
-                            (removeTaggerCol && txt.startsWith('Tagger'))) {
-                            indicesToExclude.push(idx);
-                        } else if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
+                        if (settings.removeRelationships && txt.startsWith('Relationships')) indicesToExclude.push(idx);
+                        else if (settings.removePerformance && txt.startsWith('Performance Attributes')) indicesToExclude.push(idx);
+                        else if (settings.removeRating && txt.startsWith('Rating')) indicesToExclude.push(idx);
+                        else if (settings.removeTagger && txt.startsWith('Tagger')) indicesToExclude.push(idx);
+                        else if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
                             countryDateIdx = idx;
                         } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
                             locationIdx = idx;
