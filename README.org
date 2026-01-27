@@ -22884,9 +22884,17 @@ Leave the background shading of even and odd classes still visible
 <tr class="even"
 #+end_example
 
+* fix colours/shading
+** on table headers
+** highlightning, global and per column
+
+
 * remove or fix "Tagger" column
 
-In the uploaded script, please handle the "Tagger" column (if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
+In the uploaded script, please handle the "Tagger" and "Rating" columns (see also the the "Relationships" and "Performance Attributes" column handling) but based on two new javascript boolean const flags in the beginning of the userscript
+(make them configurable by the user  through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
+
+(if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
 
 #+begin_example
 2 matches for "Relationship" in buffer: ShowAllConsolidated.user.js
@@ -22908,3 +22916,26 @@ In the uploaded script, please handle the "Tagger" column (if present) like the 
 
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
+
+*
+
+// @include           *
+// @match             *://*/*
+// @grant             GM.xmlHttpRequest
+// @grant             GM_xmlhttpRequest
+// @grant             GM.setValue
+// @grant             GM_setValue
+// @grant             GM.getValue
+// @grant             GM_getValue
+// @grant             GM_registerMenuCommand
+// @grant             GM_unregisterMenuCommand
+// @grant             GM_addValueChangeListener
+// @grant             GM_download
+// @grant             GM_openInTab
+// @grant             GM.openInTab
+// @grant             GM_notification
+// @grant             GM.notification
+// @grant             GM_setClipboard
+// @grant             GM.setClipboard
+// @grant             GM_cookie
+// @connect           *
