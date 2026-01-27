@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-27-cleanup-v17
+// @version      0.9+2026-01-27-cleanup-v18
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -1221,23 +1221,42 @@
     /**
      * Removes all consecutive <br> tags found in the document,
      * leaving only a single <br> if multiple were found together.
+     * Logs the occurrences and count of tags removed.
      */
     function finalCleanup() {
         log('Running final cleanup...');
         const brs = document.querySelectorAll('br');
+        let totalRemoved = 0;
+        let instancesFound = 0;
+
         for (let i = 0; i < brs.length; i++) {
             // Check if element is still in DOM (might have been removed in previous iteration)
             if (!brs[i].parentNode) continue;
 
+            let removedInThisInstance = 0;
             let next = brs[i].nextSibling;
+
             // Check for consecutive <br> tags, ignoring empty whitespace nodes
             while (next && (next.nodeName === 'BR' || (next.nodeType === 3 && !/[^\t\n\r ]/.test(next.textContent)))) {
                 let toRemove = next;
                 next = next.nextSibling;
                 if (toRemove.nodeName === 'BR') {
                     toRemove.remove();
+                    removedInThisInstance++;
                 }
             }
+
+            if (removedInThisInstance > 0) {
+                instancesFound++;
+                totalRemoved += removedInThisInstance;
+                log(`Found consecutive <br> tags: removed ${removedInThisInstance} tags at instance ${instancesFound}.`);
+            }
+        }
+
+        if (totalRemoved > 0) {
+            log(`Final cleanup complete: Removed a total of ${totalRemoved} consecutive <br> tags across ${instancesFound} locations.`);
+        } else {
+            log('Final cleanup complete: No consecutive <br> tags found.');
         }
     }
 
