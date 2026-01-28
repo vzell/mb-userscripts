@@ -23268,6 +23268,17 @@ for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d
 Please fix.
 Please do NOT touch the current code logic (especially for other URL types), debug statements or comments in the script at all as they work perfectly.
 
+** fix
+
+The filtering logic works now for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f, also
+the highlighning is removed when pressing a different but.
+
+But there is still a small problem left. The filtering logic ONLY works for the FIRST butten press on a specific
+page. The same behaviour I described earlier, reappears on the second and further button presses.
+
+Please fix.
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
 ** direkt tri-state sort
 
 ↕ <Column name> ▲ ▼
@@ -23341,17 +23352,25 @@ Do you need to know the names of the other user scripts ?
 
 * show tooltips, when hovering over
 
-- columns headers for sorting
-- unicode X for empty filter field
-- h2 headers
-- h3 headers
-- global filter field
-- colun filter fields
+In the uploaded script,
+add missing tooltip texts when hovering over an UI elemetn with click or input functionality. Take the data from the following table
+
+
+| UI element                       | Tooltip text |
+|----------------------------------+--------------|
+| columns headers for sorting      |              |
+| unicode X for empty filter field |              |
+| h2 headers                       |              |
+| h3 headers                       |              |
+| global filter field              |              |
+| column filter fields             |              |
 
 * remove sanojjonas from
 
 - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
 - https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+
+* do not take the sidebar into account for the collapsing stuff with the header logic
 
 
 * gemini explain

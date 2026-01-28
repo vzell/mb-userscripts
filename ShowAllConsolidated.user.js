@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v33
+// @version      0.9+2026-01-28-cleanup-v34
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -509,9 +509,15 @@
             const clear = document.createElement('span');
             clear.className = 'mb-col-filter-clear';
             clear.textContent = '✕';
-            clear.onclick = () => { input.value = ''; runFilter(); };
+            clear.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                input.value = '';
+                runFilter();
+            };
 
-            input.addEventListener('input', () => {
+            input.addEventListener('input', (e) => {
+                e.stopPropagation();
                 log(`Column filter updated on column ${idx}: "${input.value}"`);
                 runFilter();
             });
@@ -542,7 +548,10 @@
             let totalFiltered = 0;
             let totalAbsolute = 0;
 
-            const tables = document.querySelectorAll('table.tbl');
+            // Only pick tables that belong to the script to avoid MusicBrainz Info tables
+            const tables = Array.from(document.querySelectorAll('table.tbl'))
+                .filter(t => t.querySelector('.mb-col-filter-row'));
+
             groupedRows.forEach((group, groupIdx) => {
                 totalAbsolute += group.rows.length;
                 const table = tables[groupIdx];
@@ -595,13 +604,14 @@
             /* Restore focus & scroll for column filters */
             if (__activeEl && __activeEl.classList.contains('mb-col-filter-input')) {
                 const colIdx = __activeEl.dataset.colIdx;
-                const tables = Array.from(document.querySelectorAll('table.tbl'));
-                const tableIdx = tables.findIndex(t => t.contains(__activeEl));
+                const allTables = Array.from(document.querySelectorAll('table.tbl'))
+                    .filter(t => t.querySelector('.mb-col-filter-row'));
+                const tableIdx = allTables.findIndex(t => t.contains(__activeEl));
 
                 log(`Attempting focus restore: tableIdx=${tableIdx}, colIdx=${colIdx}`);
 
-                if (tables[tableIdx]) {
-                    const newInput = tables[tableIdx]
+                if (allTables[tableIdx]) {
+                    const newInput = allTables[tableIdx]
                           .querySelector(`.mb-col-filter-input[data-col-idx="${colIdx}"]`);
 
                     if (newInput) {
@@ -630,6 +640,11 @@
                 .filter(f => f.val);
 
             const filteredRows = allRows.map(row => row.cloneNode(true)).filter(row => {
+
+                // Reset previous highlights
+                row.querySelectorAll('.mb-filter-highlight, .mb-col-filter-highlight')
+                    .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+
                 const text = getCleanVisibleText(row);
                 const globalHit = !globalQuery || (isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery));
 
@@ -747,6 +762,11 @@
 
         // Stop other scripts immediately when an action button is pressed
         stopOtherScripts();
+
+        // Clear existing highlights immediately from DOM for visual feedback
+        document.querySelectorAll('.mb-filter-highlight, .mb-col-filter-highlight').forEach(n => {
+            n.replaceWith(document.createTextNode(n.textContent));
+        });
 
         // Clear existing filter conditions and UI highlights for a fresh start
         filterInput.value = '';
