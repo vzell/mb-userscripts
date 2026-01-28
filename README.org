@@ -23247,7 +23247,7 @@ it looses fokus (which also should NOT happen)
 Please fix.
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
-** For artist-RG pages problems with column filtering an highlightning
+** DONE For artist-RG pages problems with column filtering an highlightning
 
 In the uploaded script, 
 for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f fix the following problems:
@@ -23268,7 +23268,7 @@ for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d
 Please fix.
 Please do NOT touch the current code logic (especially for other URL types), debug statements or comments in the script at all as they work perfectly.
 
-** fix
+** DONE fix
 
 The filtering logic works now for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f, also
 the highlighning is removed when pressing a different but.
@@ -23279,7 +23279,7 @@ page. The same behaviour I described earlier, reappears on the second and furthe
 Please fix.
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
-** try another fix
+** DONE try another fix
 
 In the uploaded script, 
 for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f fix the following problem:
@@ -23319,9 +23319,33 @@ Please do NOT touch the current code logic (especially for other URL types), deb
 
 ** direkt tri-state sort
 
-↕ <Column name> ▲ ▼
-but render the icon for the current sort order in a dark blue color (the other icons should have the same color as the column header) 
+In the uploaded script,
+change every column header after the initial rendering from
 
+#+begin_example
+<Column name> ↕
+#+end_example
+
+to
+
+#+begin_example
+↕ <Column name> ▲ ▼
+#+end_example
+
+but render the icon for the current sort order in a dark blue color, which should actually render the "↕" icon dark blue
+after the initial rendering (the other icons should have the same color as the column header, so black)
+
+Make the three icons "↕", "▲" and "▼" per column separate clickable and when clicked, directly sort that column where
+the icon is clicked according to the following table
+
+↕ - original
+▲ - ascending
+▼ - descending
+
+Please also adjust the color of the last clicked icon to a DarkBlue
+
+Please implement.
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
 * DONE fix removing "Related works"
 
@@ -23373,6 +23397,7 @@ Add a @require tag with the path to the local file that you want to include in t
 Finally enable local file access.
 #+end_example
 
+
 * copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
 * DONE Stop other network related plugins execution thread
@@ -23381,6 +23406,7 @@ In the uploaded script,
 please implement code to stop running threads of other currently running user scripts on the same page, when pressing the action buttons.
 
 Do you need to know the names of the other user scripts ?
+
 
 * redirect to an artificial page after rendering and call all plugins again, maybe my own versions
 
@@ -23402,6 +23428,7 @@ add missing tooltip texts when hovering over an UI elemetn with click or input f
 | h3 headers                       |              |
 | global filter field              |              |
 | column filter fields             |              |
+
 
 * remove sanojjonas from
 

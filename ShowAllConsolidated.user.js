@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v34
+// @version      0.9+2026-01-28-cleanup-v35
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -276,7 +276,8 @@
             opacity: 1 !important;
             border: 1px solid #767676 !important;
         }
-        .sort-icon { cursor: pointer; margin-left: 4px; color: #0066cc; font-weight: bold; }
+        .sort-icon-btn { cursor: pointer; padding: 0 2px; font-weight: bold; transition: color 0.1s; }
+        .sort-icon-active { color: DarkRed !important; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; }
         .mb-toggle-h3:hover { color: #222; background-color: #f9f9f9; }
@@ -1427,64 +1428,66 @@
 
         headers.forEach((th, index) => {
             if (th.querySelector('input[type="checkbox"]')) return;
-            th.style.cursor = 'pointer';
-            if (!th.querySelector('.sort-icon')) {
-                const s = document.createElement('span'); s.className = 'sort-icon'; s.textContent = ' ↕'; th.appendChild(s);
-            }
-            th.onclick = (e) => {
-                e.preventDefault();
-                const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
-                log(`Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index})...`);
-                sortTimerDisplay.textContent = 'Sorting...';
-                requestAnimationFrame(() => {
-                    const startSort = performance.now();
+            th.style.cursor = 'default';
 
-                    // Cycle sortState: Asc (1) -> Desc (2) -> Original (0)
-                    if (state.lastSortIndex !== index) {
+            const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
+            th.innerHTML = ''; // Clear for new icon layout
+
+            const createIcon = (char, targetState) => {
+                const span = document.createElement('span');
+                span.className = 'sort-icon-btn';
+                if (state.lastSortIndex === index && state.sortState === targetState) {
+                    span.classList.add('sort-icon-active');
+                } else if (state.lastSortIndex === -1 && targetState === 0) {
+                    span.classList.add('sort-icon-active'); // Default state
+                }
+                span.textContent = char;
+                span.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    log(`Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}...`);
+                    sortTimerDisplay.textContent = 'Sorting...';
+
+                    requestAnimationFrame(() => {
+                        const startSort = performance.now();
                         state.lastSortIndex = index;
-                        state.sortState = 1;
-                    } else {
-                        state.sortState = (state.sortState + 1) % 3;
-                    }
+                        state.sortState = targetState;
 
-                    // Map state to symbol
-                    const symbols = [' ↕', ' ▲', ' ▼'];
-                    headers.forEach((h, i) => {
-                        const icon = h.querySelector('.sort-icon');
-                        if (icon) icon.textContent = (i === index) ? symbols[state.sortState] : ' ↕';
-                    });
+                        const groupIndex = parseInt(sortKey.split('_').pop(), 10);
+                        const targetGroup = groupedRows[groupIndex];
 
-                    const groupIndex = parseInt(sortKey.split('_').pop(), 10);
-                    const targetGroup = groupedRows[groupIndex];
+                        if (targetGroup && targetGroup.rows) {
+                            if (state.sortState === 0) {
+                                targetGroup.rows = [...targetGroup.originalRows];
+                            } else {
+                                const isNumeric = colName.includes('Year') || colName.includes('Releases');
+                                const isAscending = state.sortState === 1;
 
-                    if (targetGroup && targetGroup.rows) {
-                        if (state.sortState === 0) {
-                            // Restore original order
-                            targetGroup.rows = [...targetGroup.originalRows];
-                        } else {
-                            const isNumeric = th.textContent.includes('Year') || th.textContent.includes('Releases');
-                            const isAscending = state.sortState === 1;
-
-                            targetGroup.rows.sort((a, b) => {
-                                const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
-                                const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
-                                if (isNumeric) {
-                                    const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
-                                    const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
-                                    return isAscending ? numA - numB : numB - numA;
-                                }
-                                return isAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                            });
+                                targetGroup.rows.sort((a, b) => {
+                                    const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
+                                    const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
+                                    if (isNumeric) {
+                                        const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
+                                        const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
+                                        return isAscending ? numA - numB : numB - numA;
+                                    }
+                                    return isAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                                });
+                            }
                         }
-                    }
 
-                    runFilter();
-
-                    const duration = ((performance.now() - startSort) / 1000).toFixed(2);
-                    sortTimerDisplay.textContent = `Sorting: ${duration}s`;
-                    log(`Sort state ${state.sortState} complete for grouped. Taken: ${duration}s`);
-                });
+                        runFilter();
+                        const duration = ((performance.now() - startSort) / 1000).toFixed(2);
+                        sortTimerDisplay.textContent = `Sorting: ${duration}s`;
+                    });
+                };
+                return span;
             };
+
+            th.appendChild(createIcon('↕', 0));
+            th.appendChild(document.createTextNode(` ${colName} `));
+            th.appendChild(createIcon('▲', 1));
+            th.appendChild(createIcon('▼', 2));
         });
     }
 
@@ -1496,55 +1499,61 @@
 
         headers.forEach((th, index) => {
             if (th.querySelector('input[type="checkbox"]')) return;
-            th.style.cursor = 'pointer';
-            if (!th.querySelector('.sort-icon')) {
-                const s = document.createElement('span'); s.className = 'sort-icon'; s.textContent = ' ↕'; th.appendChild(s);
-            }
-            th.onclick = (e) => {
-                e.preventDefault();
-                const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
-                log(`Sorting main table by column: "${colName}" (index: ${index})...`);
-                sortTimerDisplay.textContent = 'Sorting...';
-                requestAnimationFrame(() => {
-                    const startSort = performance.now();
+            th.style.cursor = 'default';
 
-                    if (lastSortIndex !== index) {
+            const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
+            th.innerHTML = '';
+
+            const createIcon = (char, targetState) => {
+                const span = document.createElement('span');
+                span.className = 'sort-icon-btn';
+                if (lastSortIndex === index && sortState === targetState) {
+                    span.classList.add('sort-icon-active');
+                } else if (lastSortIndex === -1 && targetState === 0) {
+                    span.classList.add('sort-icon-active');
+                }
+                span.textContent = char;
+                span.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    log(`Sorting flat table by column: "${colName}" (index: ${index}) to state ${targetState}...`);
+                    sortTimerDisplay.textContent = 'Sorting...';
+
+                    requestAnimationFrame(() => {
+                        const startSort = performance.now();
                         lastSortIndex = index;
-                        sortState = 1;
-                    } else {
-                        sortState = (sortState + 1) % 3;
-                    }
+                        sortState = targetState;
 
-                    const symbols = [' ↕', ' ▲', ' ▼'];
-                    headers.forEach((h, i) => {
-                        const icon = h.querySelector('.sort-icon');
-                        if (icon) icon.textContent = (i === index) ? symbols[sortState] : ' ↕';
+                        if (sortState === 0) {
+                            allRows = [...originalAllRows];
+                        } else {
+                            const isNumeric = colName.includes('Year') || colName.includes('Releases');
+                            const isAscending = sortState === 1;
+
+                            allRows.sort((a, b) => {
+                                const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
+                                const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
+                                if (isNumeric) {
+                                    const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
+                                    const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
+                                    return isAscending ? numA - numB : numB - numA;
+                                }
+                                return isAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                            });
+                        }
+
+                        runFilter();
+                        const duration = ((performance.now() - startSort) / 1000).toFixed(2);
+                        sortTimerDisplay.textContent = `Sorting: ${duration}s`;
                     });
-
-                    if (sortState === 0) {
-                        allRows = [...originalAllRows];
-                    } else {
-                        const isNumeric = th.textContent.includes('Year') || th.textContent.includes('Releases');
-                        const isAscending = sortState === 1;
-
-                        allRows.sort((a, b) => {
-                            const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
-                            const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
-                            if (isNumeric) {
-                                const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
-                                const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
-                                return isAscending ? numA - numB : numB - numA;
-                            }
-                            return isAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                        });
-                    }
-
-                    runFilter();
-                    const duration = ((performance.now() - startSort) / 1000).toFixed(2);
-                    sortTimerDisplay.textContent = `Sorting: ${duration}s`;
-                    log(`Sort state ${sortState} complete for flat table. Taken: ${duration}s`);
-                });
+                };
+                return span;
             };
+
+            th.appendChild(createIcon('↕', 0));
+            th.appendChild(document.createTextNode(` ${colName} `));
+            th.appendChild(createIcon('▲', 1));
+            th.appendChild(createIcon('▼', 2));
         });
     }
 
