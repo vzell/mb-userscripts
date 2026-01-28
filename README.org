@@ -23219,6 +23219,7 @@ Please do not make any other changes to working code, comments and debugging sta
 * why is total number of rows after the "Show/Hide" text for https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
 * add original sorting in addition to ascending/descending per column
+** initial
 
 In the uploaded script, please remember for all tables (flat and grouped) the original sort-order and allow ascending,
 descending and original sorting, when repeatedly clicking a column header in a specific table. Also use exactly one of
@@ -23231,7 +23232,18 @@ the three symbols after the column-name to show what sort-order is currently in 
 Please implement.
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
-* https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63 - fix after heading "Related works", there is a missing
+** fix
+
+
+
+** direkt tri-fold sort
+
+↕ <Column name> ▲ ▼
+but render the icon for the current sort order in a dark blue color (the other icons should have the same color as the column header) 
+
+
+
+* DONE fix removing "Related works"
 
 In the uploaded script,
 for URLs of type https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63

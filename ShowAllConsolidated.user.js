@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v31
+// @version      0.9+2026-01-28-cleanup-v32
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -315,6 +315,7 @@
     }
 
     let allRows = [];
+    let originalAllRows = [];
     let groupedRows = [];
     let isLoaded = false;
     let stopRequested = false;
@@ -807,6 +808,7 @@
         isLoaded = true;
         stopRequested = false;
         allRows = [];
+        originalAllRows = [];
         groupedRows = [];
 
         // Remove various clutter elements
@@ -1113,9 +1115,12 @@
 
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
+            // Backup original order for tri-state sorting
             if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
+                groupedRows.forEach(g => { g.originalRows = [...g.rows]; });
                 renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
             } else {
+                originalAllRows = [...allRows];
                 renderFinalTable(allRows);
                 document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
                 const mainTable = document.querySelector('table.tbl');
@@ -1378,7 +1383,9 @@
 
     function makeTableSortable(table, sortKey) {
         const headers = table.querySelectorAll('thead tr:first-child th');
-        if (!multiTableSortStates.has(sortKey)) multiTableSortStates.set(sortKey, { lastSortIndex: -1, sortAscending: true });
+        // multiTableSortStates.get(sortKey) holds: { lastSortIndex, sortState }
+        // sortState: 0 (Original ↕), 1 (Asc ▲), 2 (Desc ▼)
+        if (!multiTableSortStates.has(sortKey)) multiTableSortStates.set(sortKey, { lastSortIndex: -1, sortState: 0 });
         const state = multiTableSortStates.get(sortKey);
 
         headers.forEach((th, index) => {
@@ -1394,40 +1401,51 @@
                 sortTimerDisplay.textContent = 'Sorting...';
                 requestAnimationFrame(() => {
                     const startSort = performance.now();
-                    if (state.lastSortIndex === index) state.sortAscending = !state.sortAscending;
-                    else { state.sortAscending = true; state.lastSortIndex = index; }
 
+                    // Cycle sortState: Asc (1) -> Desc (2) -> Original (0)
+                    if (state.lastSortIndex !== index) {
+                        state.lastSortIndex = index;
+                        state.sortState = 1;
+                    } else {
+                        state.sortState = (state.sortState + 1) % 3;
+                    }
+
+                    // Map state to symbol
+                    const symbols = [' ↕', ' ▲', ' ▼'];
                     headers.forEach((h, i) => {
                         const icon = h.querySelector('.sort-icon');
-                        if (icon) icon.textContent = (i === index) ? (state.sortAscending ? ' ▲' : ' ▼') : ' ↕';
+                        if (icon) icon.textContent = (i === index) ? symbols[state.sortState] : ' ↕';
                     });
 
-                    const isNumeric = th.textContent.includes('Year') || th.textContent.includes('Releases');
-
-                    // Find the actual data group in groupedRows to update it permanently
-                    // sortKey is constructed as `${group.category}_${index}`
                     const groupIndex = parseInt(sortKey.split('_').pop(), 10);
                     const targetGroup = groupedRows[groupIndex];
 
                     if (targetGroup && targetGroup.rows) {
-                        targetGroup.rows.sort((a, b) => {
-                            const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
-                            const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
-                            if (isNumeric) {
-                                const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
-                                const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
-                                return state.sortAscending ? numA - numB : numB - numA;
-                            }
-                            return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                        });
+                        if (state.sortState === 0) {
+                            // Restore original order
+                            targetGroup.rows = [...targetGroup.originalRows];
+                        } else {
+                            const isNumeric = th.textContent.includes('Year') || th.textContent.includes('Releases');
+                            const isAscending = state.sortState === 1;
+
+                            targetGroup.rows.sort((a, b) => {
+                                const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
+                                const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
+                                if (isNumeric) {
+                                    const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
+                                    const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
+                                    return isAscending ? numA - numB : numB - numA;
+                                }
+                                return isAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                            });
+                        }
                     }
 
-                    // runFilter handles the re-rendering of the DOM based on the updated groupedRows
                     runFilter();
 
                     const duration = ((performance.now() - startSort) / 1000).toFixed(2);
                     sortTimerDisplay.textContent = `Sorting: ${duration}s`;
-                    log(`Sort complete: ${state.sortAscending ? 'Asc' : 'Desc'}. Taken: ${duration}s`);
+                    log(`Sort state ${state.sortState} complete for grouped. Taken: ${duration}s`);
                 });
             };
         });
@@ -1437,7 +1455,8 @@
         if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') return;
         const headers = document.querySelectorAll('table.tbl thead tr:first-child th');
         let lastSortIndex = -1;
-        let sortAscending = true;
+        let sortState = 0; // 0: Original, 1: Asc, 2: Desc
+
         headers.forEach((th, index) => {
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'pointer';
@@ -1451,30 +1470,42 @@
                 sortTimerDisplay.textContent = 'Sorting...';
                 requestAnimationFrame(() => {
                     const startSort = performance.now();
-                    if (lastSortIndex === index) sortAscending = !sortAscending;
-                    else { sortAscending = true; lastSortIndex = index; }
 
+                    if (lastSortIndex !== index) {
+                        lastSortIndex = index;
+                        sortState = 1;
+                    } else {
+                        sortState = (sortState + 1) % 3;
+                    }
+
+                    const symbols = [' ↕', ' ▲', ' ▼'];
                     headers.forEach((h, i) => {
                         const icon = h.querySelector('.sort-icon');
-                        if (icon) icon.textContent = (i === index) ? (sortAscending ? ' ▲' : ' ▼') : ' ↕';
+                        if (icon) icon.textContent = (i === index) ? symbols[sortState] : ' ↕';
                     });
 
-                    const isNumeric = th.textContent.includes('Year') || th.textContent.includes('Releases');
-                    allRows.sort((a, b) => {
-                        const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
-                        const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
-                        if (isNumeric) {
-                            const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
-                            const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
-                            return sortAscending ? numA - numB : numB - numA;
-                        }
-                        return sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                    });
+                    if (sortState === 0) {
+                        allRows = [...originalAllRows];
+                    } else {
+                        const isNumeric = th.textContent.includes('Year') || th.textContent.includes('Releases');
+                        const isAscending = sortState === 1;
+
+                        allRows.sort((a, b) => {
+                            const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
+                            const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
+                            if (isNumeric) {
+                                const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
+                                const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
+                                return isAscending ? numA - numB : numB - numA;
+                            }
+                            return isAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                        });
+                    }
 
                     runFilter();
                     const duration = ((performance.now() - startSort) / 1000).toFixed(2);
                     sortTimerDisplay.textContent = `Sorting: ${duration}s`;
-                    log(`Sort complete: ${sortAscending ? 'Asc' : 'Desc'}. Taken: ${duration}s`);
+                    log(`Sort state ${sortState} complete for flat table. Taken: ${duration}s`);
                 });
             };
         });
