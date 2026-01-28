@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v32
+// @version      0.9+2026-01-28-cleanup-v33
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -612,7 +612,6 @@
                         log('Could not find replacement column filter input');
                     }
                 }
-                window.scrollTo(0, __scrollY);
             }
 
             updateH2Count(totalFiltered, totalAbsolute);
@@ -653,6 +652,9 @@
             renderFinalTable(filteredRows);
             updateH2Count(filteredRows.length, totalAbsolute);
         }
+
+        // Maintain scroll position after filtering or sorting
+        window.scrollTo(0, __scrollY);
     }
 
     stopBtn.addEventListener('click', (e) => {
@@ -1255,11 +1257,11 @@
 
             group.rows.forEach(r => tbody.appendChild(r));
 
-            // Logic changed: Do not hide the table or H3 even if group.rows.length is 0
-            table.style.display = '';
-            h3.style.display = '';
-
             if (!query) {
+                // Logic changed: Do not hide the table or H3 even if group.rows.length is 0
+                table.style.display = '';
+                h3.style.display = '';
+
                 const catLower = group.category.toLowerCase();
                 const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < settings.autoExpandThreshold;
                 table.style.display = shouldStayOpen ? '' : 'none';

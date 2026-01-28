@@ -23234,13 +23234,19 @@ Please do NOT touch the current code logic, debug statements or comments in the 
 
 ** fix
 
+For grouped tables, the collapse state of other grouped tables should not change when sorting a specific, currently non-collapsed column.
 
+Right now, when sorting on a specific, currently no-collapsed column of a specific table group, all other table groups
+are switched to the non-collapsed state (which should NOT happen), AND also the page moves to the beginning or at least
+it looses fokus (which also should NOT happen)
 
-** direkt tri-fold sort
+Please fix.
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
+** direkt tri-state sort
 
 ↕ <Column name> ▲ ▼
 but render the icon for the current sort order in a dark blue color (the other icons should have the same color as the column header) 
-
 
 
 * DONE fix removing "Related works"
