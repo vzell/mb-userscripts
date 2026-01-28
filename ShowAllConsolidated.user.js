@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v39
+// @version      0.9+2026-01-28-cleanup-v40
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -284,8 +284,9 @@
         .mb-toggle-h3:hover { color: #222; background-color: #f9f9f9; }
         .mb-toggle-h2 { cursor: pointer; user-select: none; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; cursor: pointer; }
-        .mb-master-toggle { cursor: pointer; color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; }
-        .mb-master-toggle:hover { text-decoration: underline; }
+        .mb-master-toggle { color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; }
+        .mb-master-toggle span { cursor: pointer; }
+        .mb-master-toggle span:hover { text-decoration: underline; }
         .mb-filter-highlight { color: red; background-color: #FFD700; }
         .mb-col-filter-highlight { color: green; background-color: #FFFFE0; font-weight: bold; }
         .mb-col-filter-input {
@@ -1227,27 +1228,46 @@
                 el.remove();
             });
 
-            let toggleLabel = 'Show▼/Hide▲ all Release Types or click the individual Type below';
-
-            if (pageType === 'artist-releasegroups') {
-                toggleLabel = 'Show▼/Hide▲ all ReleaseGroup Types or click the individual Type below';
-            }
-
             if (targetHeader) {
                 const masterToggle = document.createElement('span');
                 masterToggle.className = 'mb-master-toggle';
-                masterToggle.textContent = toggleLabel;
 
-                let allCollapsed = true;
-                masterToggle.onclick = (e) => {
+                const showSpan = document.createElement('span');
+                showSpan.textContent = 'Show▼';
+                showSpan.title = 'Un-Collapse all sub-headings';
+                showSpan.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const subTables = container.querySelectorAll('table.tbl');
-                    const subHeaders = container.querySelectorAll('.mb-toggle-h3');
-                    allCollapsed = !allCollapsed;
-                    subTables.forEach(t => t.style.display = allCollapsed ? 'none' : '');
-                    subHeaders.forEach(h => h.querySelector('.mb-toggle-icon').textContent = allCollapsed ? '▲' : '▼');
+                    container.querySelectorAll('table.tbl').forEach(t => t.style.display = '');
+                    container.querySelectorAll('.mb-toggle-h3').forEach(h => {
+                        const icon = h.querySelector('.mb-toggle-icon');
+                        if (icon) icon.textContent = '▼';
+                    });
                 };
+
+                const hideSpan = document.createElement('span');
+                hideSpan.textContent = 'Hide▲';
+                hideSpan.title = 'Collapse all sub-headings';
+                hideSpan.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    container.querySelectorAll('table.tbl').forEach(t => t.style.display = 'none');
+                    container.querySelectorAll('.mb-toggle-h3').forEach(h => {
+                        const icon = h.querySelector('.mb-toggle-icon');
+                        if (icon) icon.textContent = '▲';
+                    });
+                };
+
+                let suffixText = ' all Release Types or click the individual Type below';
+                if (pageType === 'artist-releasegroups') {
+                    suffixText = ' all ReleaseGroup Types or click the individual Type below';
+                }
+
+                masterToggle.appendChild(showSpan);
+                masterToggle.appendChild(document.createTextNode(' / '));
+                masterToggle.appendChild(hideSpan);
+                masterToggle.appendChild(document.createTextNode(suffixText));
+
                 targetHeader.appendChild(masterToggle);
 
                 // Append global filter here for grouped pages
