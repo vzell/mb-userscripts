@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v36
+// @version      0.9+2026-01-28-cleanup-v37
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -233,12 +233,13 @@
 
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Global Filter...`;
+    filterInput.title = 'Enter global filter string';
     filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; border:2px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box; transition:box-shadow 0.2s;';
 
     const filterClear = document.createElement('span');
     filterClear.textContent = '✕';
     filterClear.style.cssText = 'position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:0.6em; color:#999; user-select:none;';
-    filterClear.title = 'Clear filter';
+    filterClear.title = 'Clear global filter';
 
     filterWrapper.appendChild(filterInput);
     filterWrapper.appendChild(filterClear);
@@ -250,7 +251,7 @@
     caseCheckbox.style.cssText = 'margin-right:2px; vertical-align:middle;';
     caseLabel.appendChild(caseCheckbox);
     caseLabel.appendChild(document.createTextNode('Cc'));
-    caseLabel.title = 'Case Sensitive';
+    caseLabel.title = 'Case Sensitive Filtering';
 
     filterContainer.appendChild(filterWrapper);
     filterContainer.appendChild(caseLabel);
@@ -511,12 +512,14 @@
             const input = document.createElement('input');
             input.type = 'text';
             input.placeholder = '...';
+            input.title = 'Enter column filter string';
             input.className = 'mb-col-filter-input';
             input.dataset.colIdx = idx;
 
             const clear = document.createElement('span');
             clear.className = 'mb-col-filter-clear';
             clear.textContent = '✕';
+            clear.title = 'Clear column filter';
             clear.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1280,6 +1283,7 @@
             } else {
                 h3 = document.createElement('h3');
                 h3.className = 'mb-toggle-h3';
+                h3.title = 'Collapse/Uncollapse';
                 table = document.createElement('table');
                 table.className = 'tbl';
                 // Apply indentation to the table to match the sub-header
@@ -1341,6 +1345,7 @@
         allH2s.forEach(h2 => {
             if (h2.classList.contains('mb-h2-processed')) return;
             h2.classList.add('mb-h2-processed', 'mb-toggle-h2');
+            h2.title = 'Collapse/Uncollapse';
 
             // Find elements between this H2 and the next H2
             const contentNodes = [];
@@ -1436,6 +1441,11 @@
             const createIcon = (char, targetState) => {
                 const span = document.createElement('span');
                 span.className = 'sort-icon-btn';
+                // Set Tooltip texts
+                if (char === '⇅') span.title = 'Original sort order';
+                else if (char === '▲') span.title = 'Ascending sort order';
+                else if (char === '▼') span.title = 'Descending sort order';
+
                 // Use .sort-icon-active for DarkRed color
                 if (state.lastSortIndex === index && state.sortState === targetState) {
                     span.classList.add('sort-icon-active');
@@ -1508,6 +1518,11 @@
             const createIcon = (char, targetState) => {
                 const span = document.createElement('span');
                 span.className = 'sort-icon-btn';
+                // Set Tooltip texts
+                if (char === '⇅') span.title = 'Original sort order';
+                else if (char === '▲') span.title = 'Ascending sort order';
+                else if (char === '▼') span.title = 'Descending sort order';
+
                 if (lastSortIndex === index && sortState === targetState) {
                     span.classList.add('sort-icon-active');
                 } else if (lastSortIndex === -1 && targetState === 0) {

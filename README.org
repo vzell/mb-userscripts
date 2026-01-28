@@ -23035,13 +23035,16 @@ Leave the background shading of even and odd classes still visible
 
 * Filtering
 ** add escape handling whe cursor is in filter field
+
+Pressing the Escape key should have the same effect as clicking on the unicode X symbol
+
 ** adjust the logic for big tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
 ** show sanduhr for long filters
 
 
 * copy image links for releases to final rendered data if available
 
-* put button on pages of type https://musicbrainz.org/recording/f258719b-361b-4719-9ca3-77f524af7d9b, because they can have disambiguations after the title
+* DONE put button on pages of type https://musicbrainz.org/recording/f258719b-361b-4719-9ca3-77f524af7d9b, because they can have disambiguations after the title
 
 (Your Love Keeps Lifting Me) Higher and Higher (live, 2009‐11‐22: HSBC Arena, Buffalo, NY, USA)
 
@@ -23222,7 +23225,7 @@ Please do not make any other changes to working code, comments and debugging sta
 
 * why is total number of rows after the "Show/Hide" text for https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
-* add original sorting in addition to ascending/descending per column
+* DONE add original sorting in addition to ascending/descending per column
 ** DONE initial
 
 In the uploaded script, please remember for all tables (flat and grouped) the original sort-order and allow ascending,
@@ -23317,7 +23320,7 @@ Please do NOT touch the current code logic (especially for other URL types), deb
 	    }
 #+end_example
 
-** direkt tri-state sort
+** DONE direct tri-state sort
 
 In the uploaded script,
 change every column header after the initial rendering from
