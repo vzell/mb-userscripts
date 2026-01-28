@@ -11,7 +11,7 @@
 <!-- - [MusicBrainz - Show All Recordings](#mb_show_all_recordings) -->
 <!-- - [MusicBrainz - Show All Recordings In Works](#mb_show_all_recordings_in_works) -->
 <!-- - [MusicBrainz - Show All Events](#mb_show_all_events) -->
-- [MusicBrainz - Show All Consolidated](#mb_show_all_consolidated)
+- [MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](#mb_show_all_consolidated)
 
 
 - [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
@@ -121,9 +121,9 @@ Adds a "NO Label" & "NO Catalognumber" button to the MusicBrainz release editor.
 <!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllEvents.user.js) -->
 <!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllEvents.user.js) -->
 
-## <a name="mb_show_all_consolidated"></a> MusicBrainz - Show All Consolidated
+## <a name="mb_show_all_consolidated"></a> MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 
-Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting.
+Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllConsolidated.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js)
