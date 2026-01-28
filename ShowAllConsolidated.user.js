@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v34
+// @version      0.9+2026-01-28-cleanup-v36
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -31,6 +31,13 @@
 
     const DEBUG = true;
     let registeredMenuCommandIDs = [];
+
+    // Check if we just reloaded to fix the filter issue
+    const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
+    if (reloadFlag) {
+        sessionStorage.removeItem('mb_show_all_reload_pending');
+        alert('The page has been reloaded to ensure filter stability. Please click the desired "Show All" button again to start the process.');
+    }
 
     // --- Settings & Menu ---
     const settings = {
@@ -751,6 +758,14 @@
         const activeBtn = e.currentTarget;
         e.preventDefault();
         e.stopPropagation();
+
+        // Reload the page if a fetch process has already run to fix column-level filter unresponsiveness
+        if (isLoaded) {
+            log('Second fetch attempt detected. Setting reload flag and reloading page to ensure filter stability.');
+            sessionStorage.setItem('mb_show_all_reload_pending', 'true');
+            window.location.reload();
+            return;
+        }
 
         // Stop other scripts immediately when an action button is pressed
         stopOtherScripts();

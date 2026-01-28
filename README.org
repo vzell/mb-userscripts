@@ -23279,6 +23279,44 @@ page. The same behaviour I described earlier, reappears on the second and furthe
 Please fix.
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
+** try another fix
+
+In the uploaded script, 
+for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f fix the following problem:
+
+There used to be the following problem:
+
+- when a global filter is active, typing in a column level filter field does nothing, it is completely ignored, also the
+  unicode X icon will not empty the filter field. removing the global filter with the unicode X icon AND if there was a
+  column level filter string in a grouped table, actually automagically WORKED. SO lets say, I had the global filter set
+  to "The", and in one of the grouped tables a column level filter set to "for" (remember, this first has NO effect on
+  the display rows in the grouped table), but when I now removed the global filter, the "for" filter string on the column
+  level GETS activate somehow (so it filters rows in the grouped table) together with highlighning the "for" expression
+  in the filtered rows. Only pressing the X on the column level "for" filter expression doesn't clear the field.
+
+THIS behaviour actually works now on the resulting rendered page for the very FIRST TIME one of the four action buttons
+is pressed, but for all other button presses from then on the newly rendered page exhibits the same problem as initially
+observed (but which is now fixed at least for the first button press)
+
+The easiest fix would probably be, to just reload the page when subsequently clicking the button again before starting
+the standard logic again. Because after a fresh reload, and then pressing a button we are again in the first case which
+actually works.
+
+Please fix.
+Please do NOT touch the current code logic (especially for other URL types), debug statements or comments in the script at all as they work perfectly.
+
+*** ChatGPT
+
+#+begin_example
+            renderGroupedTable(filteredArray, pageType === 'artist-releasegroups', globalQuery || 're-run');
+	    // Defer exactly one re-run to the next event loop, so the new DOM exists but no recursion happens.
+	    if (query !== 're-run') {
+		setTimeout(() => {
+		    runFilter();
+		}, 0);
+	    }
+#+end_example
+
 ** direkt tri-state sort
 
 ↕ <Column name> ▲ ▼
