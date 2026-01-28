@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v28
+// @version      0.9+2026-01-28-cleanup-v29
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -226,7 +226,7 @@
 
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Global Filter...`;
-    filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box; transition:box-shadow 0.2s;';
+    filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; border:2px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box; transition:box-shadow 0.2s;';
 
     const filterClear = document.createElement('span');
     filterClear.textContent = '✕';
@@ -405,10 +405,12 @@
 
             // Append global filter here for non-grouped pages (Artist/RG pages handle this in renderGroupedTable)
             if (pageType !== 'artist-releasegroups' && pageType !== 'releasegroup-releases') {
-                targetH2.appendChild(filterContainer);
-                filterContainer.style.display = 'inline-flex';
-                filterContainer.style.marginLeft = '15px';
-                filterContainer.style.verticalAlign = 'middle';
+                if (filterContainer.parentNode !== targetH2) {
+                    targetH2.appendChild(filterContainer);
+                    filterContainer.style.display = 'inline-flex';
+                    filterContainer.style.marginLeft = '15px';
+                    filterContainer.style.verticalAlign = 'middle';
+                }
             }
 
             log(`Updated H2 header count: ${countText}`);

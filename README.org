@@ -23113,6 +23113,7 @@ at the bottom: Showing releases by this artist. Show Various Artist releases ins
 
 - remove jesus images after collapsing and re-opening
 - remove sanojaa stuff
+
 *** DONE https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
 
 remove "Relate checked recordings to…" box after collapsing and re-opening
@@ -23165,6 +23166,7 @@ Please do NOT touch the current code logic, debug statements or comments in the 
 
 
 * move global filter field after "Show/Hide" text
+** initial
 
 In the uploaded script,
 move the global filter field together with the "Case sensitive" checkbox to the h2 header under which the table data is located (row-count status indicator is present)
@@ -23179,6 +23181,24 @@ https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
 
 Another important things is (like in the old place), whenever something is (or has been entered) in the filter field,
 all the data tables must immediate be visible but only rows which actually match the filter.
+
+** thicker grey border around the filter field
+
+In the uploaded script, make two adjustments:
+
+- adjust the very thin grey border around the filter field and make it thicker (leave it grey, as
+it will get a dark thicker border when clicking it in with the mouse or using, after initial rendering, the tab key, which
+is fine right now)
+
+- for URLs which have a flat (not grouped) table data structure, the global filter field misbeheaves in such a way, that
+  when you start typing into the filter field, after the very first character typed, the filter field looses fokus, and
+  you have to click again inside the filter field to continue typing. But here the same process begins again. So we are
+  not able to type in a complete string without refocusing the filter field after every character typed. Otherwise the
+  filtering itself works perfekt.
+  This behaviour can not be observed for URLs with grouped table data. There everything is fine.
+
+Please fix
+Please do not make any other changes to working code, comments and debugging statements.
 
 * why is total number of rows after the "Show/Hide" text for https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
