@@ -234,7 +234,7 @@
     const filterInput = document.createElement('input');
     filterInput.placeholder = `Global Filter...`;
     filterInput.title = 'Enter global filter string';
-    filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; border:2px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box; transition:box-shadow 0.2s;';
+    filterInput.style.cssText = 'font-size:0.5em; padding:2px 20px 2px 6px; border:2px solid #ccc; border-radius:3px; width:500px; height:24px; box-sizing:border-box; transition:box-shadow 0.2s;';
 
     const filterClear = document.createElement('span');
     filterClear.textContent = '✕';
