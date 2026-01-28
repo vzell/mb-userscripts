@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v36
+// @version      0.9+2026-01-28-cleanup-v34
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -36,7 +36,7 @@
     const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
     if (reloadFlag) {
         sessionStorage.removeItem('mb_show_all_reload_pending');
-        alert('The page has been reloaded to ensure filter stability. Please click the desired "Show All" button again to start the process.');
+        alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
     }
 
     // --- Settings & Menu ---
@@ -516,9 +516,15 @@
             const clear = document.createElement('span');
             clear.className = 'mb-col-filter-clear';
             clear.textContent = '✕';
-            clear.onclick = () => { input.value = ''; runFilter(); };
+            clear.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                input.value = '';
+                runFilter();
+            };
 
-            input.addEventListener('input', () => {
+            input.addEventListener('input', (e) => {
+                e.stopPropagation();
                 log(`Column filter updated on column ${idx}: "${input.value}"`);
                 runFilter();
             });
@@ -549,8 +555,9 @@
             let totalFiltered = 0;
             let totalAbsolute = 0;
 
-            const container = document.getElementById('content') || document.querySelector('table.mb-consolidated-table')?.parentNode;
-            const tables = container ? Array.from(container.querySelectorAll('table.mb-consolidated-table')) : [];
+            // Only pick tables that belong to the script to avoid MusicBrainz Info tables
+            const tables = Array.from(document.querySelectorAll('table.tbl'))
+                .filter(t => t.querySelector('.mb-col-filter-row'));
 
             groupedRows.forEach((group, groupIdx) => {
                 totalAbsolute += group.rows.length;
@@ -604,13 +611,14 @@
             /* Restore focus & scroll for column filters */
             if (__activeEl && __activeEl.classList.contains('mb-col-filter-input')) {
                 const colIdx = __activeEl.dataset.colIdx;
-                const tables = container ? Array.from(container.querySelectorAll('table.mb-consolidated-table')) : [];
-                const tableIdx = tables.findIndex(t => t.contains(__activeEl));
+                const allTables = Array.from(document.querySelectorAll('table.tbl'))
+                    .filter(t => t.querySelector('.mb-col-filter-row'));
+                const tableIdx = allTables.findIndex(t => t.contains(__activeEl));
 
                 log(`Attempting focus restore: tableIdx=${tableIdx}, colIdx=${colIdx}`);
 
-                if (tables[tableIdx]) {
-                    const newInput = tables[tableIdx]
+                if (allTables[tableIdx]) {
+                    const newInput = allTables[tableIdx]
                           .querySelector(`.mb-col-filter-input[data-col-idx="${colIdx}"]`);
 
                     if (newInput) {
@@ -839,7 +847,6 @@
         allRows = [];
         originalAllRows = [];
         groupedRows = [];
-        multiTableSortStates = new Map();
 
         // Remove various clutter elements
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.remove());
@@ -1231,7 +1238,7 @@
                 masterToggle.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const subTables = container.querySelectorAll('table.mb-consolidated-table');
+                    const subTables = container.querySelectorAll('table.tbl');
                     const subHeaders = container.querySelectorAll('.mb-toggle-h3');
                     allCollapsed = !allCollapsed;
                     subTables.forEach(t => t.style.display = allCollapsed ? 'none' : '');
@@ -1247,7 +1254,7 @@
             }
         }
 
-        const existingTables = container.querySelectorAll('table.mb-consolidated-table');
+        const existingTables = container.querySelectorAll('table.tbl');
 
         if (query) {
             existingTables.forEach((table, idx) => {
@@ -1273,7 +1280,7 @@
                 h3 = document.createElement('h3');
                 h3.className = 'mb-toggle-h3';
                 table = document.createElement('table');
-                table.className = 'tbl mb-consolidated-table';
+                table.className = 'tbl';
                 // Apply indentation to the table to match the sub-header
                 table.style.marginLeft = '1.5em';
                 table.style.width = 'calc(100% - 1.5em)';
@@ -1318,18 +1325,6 @@
                 const totalInGroup = groupedRows.find(g => g.category === group.category)?.rows.length || 0;
                 if (countStat) {
                     countStat.textContent = (group.rows.length === totalInGroup) ? `(${totalInGroup})` : `(${group.rows.length} of ${totalInGroup})`;
-                }
-
-                // Handling visibility during filtering: Show group if matches > 0 and a query is active, otherwise keep user's collapse state if not filtered
-                if (query !== 're-run') {
-                    if (group.rows.length > 0) {
-                        h3.style.display = '';
-                        table.style.display = '';
-                        h3.querySelector('.mb-toggle-icon').textContent = '▼';
-                    } else {
-                        h3.style.display = 'none';
-                        table.style.display = 'none';
-                    }
                 }
             }
         });
