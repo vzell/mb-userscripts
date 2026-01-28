@@ -23491,6 +23491,17 @@ add missing tooltip texts when hovering over an UI element with click functional
 | Show▼                            | Show all sub-tables   |
 | Hide▲                            | Hide all sub-tables   |
 
+** 1
+
+In the uploaded script,
+remove the finger/hand mouse pointer when hovering on the text " all Release Types or click the individual Type below" or " all ReleaseGroup Types or click the individual Type below"
+of the following span
+
+#+begin_example
+<span class="mb-master-toggle">
+#+end_example
+
+
 * make all colors/backgrounds configurable
 
 

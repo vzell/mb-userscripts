@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v41
+// @version      0.9+2026-01-28-cleanup-v42
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -284,7 +284,7 @@
         .mb-toggle-h3:hover { color: #222; background-color: #f9f9f9; }
         .mb-toggle-h2 { cursor: pointer; user-select: none; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; cursor: pointer; }
-        .mb-master-toggle { color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; }
+        .mb-master-toggle { color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; cursor: default; }
         .mb-master-toggle span { cursor: pointer; }
         .mb-master-toggle span:hover { text-decoration: underline; }
         .mb-filter-highlight { color: red; background-color: #FFD700; }
@@ -1258,9 +1258,9 @@
                     });
                 };
 
-                let suffixText = ' all Release Types or click the individual Type below';
+                let suffixText = ' all Release Types or click the individual Release Type below';
                 if (pageType === 'artist-releasegroups') {
-                    suffixText = ' all ReleaseGroup Types or click the individual Type below';
+                    suffixText = ' all ReleaseGroup Types or click the individual ReleaseGroup Type below';
                 }
 
                 masterToggle.appendChild(showSpan);
