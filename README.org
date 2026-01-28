@@ -23034,7 +23034,7 @@ Leave the background shading of even and odd classes still visible
 ** show sanduhr for long sorts
 
 * Filtering
-** add escape handling whe cursor is in filter field
+** add escape handling when cursor is in filter field, equivalent to pressing the Xicon
 
 Pressing the Escape key should have the same effect as clicking on the unicode X symbol
 
@@ -23042,7 +23042,7 @@ Pressing the Escape key should have the same effect as clicking on the unicode X
 ** show sanduhr for long filters
 
 
-* copy image links for releases to final rendered data if available
+* copy image links for releases to final rendered data if available, or grap them again on the rendered page
 
 * DONE put button on pages of type https://musicbrainz.org/recording/f258719b-361b-4719-9ca3-77f524af7d9b, because they can have disambiguations after the title
 
@@ -23057,8 +23057,7 @@ AFTER the '<h2 class="appears-on-releases">Appears on releases</h2>' header
 
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
-
-* make all h2 headers collapsable
+* DONE make all h2 headers collapsable
 ** DONE initial
 
 In the uploaded script,
@@ -23110,7 +23109,7 @@ should leave the collapsing state of the h3 based subheadings (and data) untouch
 Please implement.
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
-** fix 2
+** DONE fix 2
 *** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
 
 at the bottom: Showing releases by this artist. Show Various Artist releases instead.
@@ -23170,7 +23169,6 @@ When clicking on the 'Show▼/Hide▲ all ' part, just the sub-headings should c
 
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
-
 * DONE move global filter field after "Show/Hide" text
 ** DONE initial
 
@@ -23222,9 +23220,7 @@ In the uploaded script, make two adjustments:
 Please fix
 Please do not make any other changes to working code, comments and debugging statements.
 
-
-* why is total number of rows after the "Show/Hide" text for https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-
+* DONE why is total number of rows after the "Show/Hide" text for https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 * DONE add original sorting in addition to ascending/descending per column
 ** DONE initial
 
@@ -23363,29 +23359,6 @@ never ever remove h3 header container which include '<span class="worklink">'. F
 Please fix.
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
-* remove or fix "Tagger" column
-** DONE initial
-
-In the uploaded script, please handle the "Tagger" and "Rating" columns (see also the the "Relationships" and "Performance Attributes" column handling) but based on two new javascript boolean const flags in the beginning of the userscript
-(make them configurable by the user through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
-
-(if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
-
-#+begin_example
-2 matches for "Relationship" in buffer: ShowAllConsolidated.user.js
-    570:            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
-    765:                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
-#+end_example
-
-#+begin_example
-3 matches for "cleanupHeaders" in buffer: ShowAllConsolidated.user.js
-    561:    function cleanupHeaders(headerElement) {
-    986:                document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
-   1026:            cleanupHeaders(templateHead);
-#+end_example
-
-** clicking the tagger link should not create a new page but instead just execute the action in the background
-
 * enable file access to scripts
 
 #+begin_example
@@ -23401,8 +23374,6 @@ Finally enable local file access.
 #+end_example
 
 
-* copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-
 * DONE Stop other network related plugins execution thread
 
 In the uploaded script,
@@ -23410,12 +23381,6 @@ please implement code to stop running threads of other currently running user sc
 
 Do you need to know the names of the other user scripts ?
 
-
-* redirect to an artificial page after rendering and call all plugins again, maybe my own versions
-
-* fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
-
-* why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
 
 * DONE show tooltips, when hovering over
 
@@ -23438,7 +23403,6 @@ add missing tooltip texts when hovering over an UI element with click or input f
 | Hide▲                            | Hide all sub-tables   |
 |                                  |                       |
 
-
 * DONE Please also adjust the color of the last clicked Sort-Icon to DarkRed
 
 In the uploaded script,
@@ -23450,7 +23414,6 @@ adjust the color of the last clicked Sort-Icon
 
 to Green on a light yellow background, and at the same time reset the previous colored sort-icon back to back
 
-
 * DONE remove sanojjonas from
 
 - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
@@ -23460,10 +23423,7 @@ In the uploaded script,
 please call the function "removeSanojjonasContainers()" again in the final cleanup function "finalCleanup()"
 Also create a log statement for the fact that these sanojonas elemnts have been found.
 
-
-* do not take the sidebar into account for the collapsing stuff with the header logic
-
-* extra clickable links for 
+* DONE extra clickable links for 
 
 In the uploaded script,
 make the following changes to the two toggleLabels:
@@ -23502,6 +23462,47 @@ of the following span
 #+end_example
 
 
+* for release pages also support VA releases
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1
+
+
+* remove or fix "Tagger" column
+** DONE initial
+
+In the uploaded script, please handle the "Tagger" and "Rating" columns (see also the the "Relationships" and "Performance Attributes" column handling) but based on two new javascript boolean const flags in the beginning of the userscript
+(make them configurable by the user through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
+
+(if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
+
+#+begin_example
+2 matches for "Relationship" in buffer: ShowAllConsolidated.user.js
+    570:            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+    765:                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+#+end_example
+
+#+begin_example
+3 matches for "cleanupHeaders" in buffer: ShowAllConsolidated.user.js
+    561:    function cleanupHeaders(headerElement) {
+    986:                document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+   1026:            cleanupHeaders(templateHead);
+#+end_example
+
+** clicking the tagger link should not create a new page but instead just execute the action in the background
+
+* copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+* do not take the sidebar into account for the collapsing stuff with the header logic
+
+
+* redirect to an artificial page after rendering and call all plugins again, maybe my own versions
+
+
+* why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
+
+
+* fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+
 * make all colors/backgrounds configurable
 
 
@@ -23538,18 +23539,18 @@ I talked to Misses/Mr. Gemini and out came a new Userscript which accumulates al
 
 The currently supported entity types are
 
-* Artist-ReleaseGroups
-* ReleaseGroup-Releases
-* Artist-Releases
-* Artist-Works
-* Artist-Recordings
-* Works
-* Recordings
-* Artist-Events
-* Series
-* Labels
-* Place-Events
-* Place-Performances (buggy, I’m working on that later)
+ * Artist-ReleaseGroups
+ * ReleaseGroup-Releases
+ * Artist-Releases
+ * Artist-Works
+ * Artist-Recordings
+ * Works
+ * Recordings
+ * Artist-Events
+ * Series
+ * Labels
+ * Place-Events
+ * Place-Performances (buggy, I’m working on that later)
 
 ![image|690x343](upload://7UxNLpR1vOIs0xP0wqFnDILhRYm.png)
 
