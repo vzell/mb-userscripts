@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v38
+// @version      0.9+2026-01-28-cleanup-v39
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -277,8 +277,8 @@
             opacity: 1 !important;
             border: 1px solid #767676 !important;
         }
-        .sort-icon-btn { cursor: pointer; padding: 0 2px; font-weight: bold; transition: color 0.1s; color: black; }
-        .sort-icon-active { color: Green !important; }
+        .sort-icon-btn { cursor: pointer; padding: 0 2px; font-weight: bold; transition: color 0.1s; color: black; border-radius: 2px; }
+        .sort-icon-active { color: Green !important; background-color: #FFFF00 !important; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; }
         .mb-toggle-h3:hover { color: #222; background-color: #f9f9f9; }
@@ -1056,7 +1056,7 @@
                                                         const flagImg = flagSpan.querySelector('img')?.outerHTML || '';
                                                         const abbr = flagSpan.querySelector('abbr');
                                                         const countryCode = abbr ? abbr.textContent.trim() : '';
-                                                        const countryFullName = abbr ? abbr.getAttribute('title') : '';
+                                                        const countryFullName = flagSpan.querySelector('abbr').getAttribute('title');
                                                         const countryHref = a.getAttribute('href');
                                                         const span = document.createElement('span');
                                                         span.className = flagSpan.className;
@@ -1446,7 +1446,7 @@
                 else if (char === '▲') span.title = 'Ascending sort order';
                 else if (char === '▼') span.title = 'Descending sort order';
 
-                // Use .sort-icon-active for Green color
+                // Initial highlighting
                 if (state.lastSortIndex === index && state.sortState === targetState) {
                     span.classList.add('sort-icon-active');
                 } else if (state.lastSortIndex === -1 && targetState === 0) {
@@ -1509,7 +1509,9 @@
 
     function makeSortable() {
         if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') return;
-        const headers = document.querySelectorAll('table.tbl thead tr:first-child th');
+        const table = document.querySelector('table.tbl');
+        if (!table) return;
+        const headers = table.querySelectorAll('thead tr:first-child th');
         let lastSortIndex = -1;
         let sortState = 0; // 0: Original, 1: Asc, 2: Desc
 
@@ -1545,8 +1547,8 @@
                         lastSortIndex = index;
                         sortState = targetState;
 
-                        // Reset visual state for all header buttons
-                        document.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
+                        // Reset visual state for all header buttons in this table
+                        table.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
                         // Highlight this one
                         span.classList.add('sort-icon-active');
 

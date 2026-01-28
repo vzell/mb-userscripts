@@ -23446,7 +23446,7 @@ adjust the color of the last clicked Sort-Icon
 ▲ - ascending sort order
 ▼ - descending sort order
 
-to DarkRed, and at the same time reset the previous colored sort-icon back to back
+to Green on a light yellow background, and at the same time reset the previous colored sort-icon back to back
 
 
 * DONE remove sanojjonas from
@@ -23461,6 +23461,24 @@ Also create a log statement for the fact that these sanojonas elemnts have been 
 
 * do not take the sidebar into account for the collapsing stuff with the header logic
 
+* extra clickable links for 
+
+In the uploaded script,
+make the following changes to the two toggleLabels:
+
+#+begin_example
+toggleLabel = 'Show▼/Hide▲ all Release Types or click the individual Type below';
+toggleLabel = 'Show▼/Hide▲ all ReleaseGroup Types or click the individual Type below';
+#+end_example
+
+Make the 'Show▼' and 'Hide▲' separate clickable with the following actions:
+
+When clicking on 'Show▼': Un-Collapse all sub-headings
+When clicking on 'Hide▲': Collapse all sub-headings
+
+depending on the type of URL
+
+Also place a blank in front and before the "/": so it should look like 'Show▼ / Hide▲'
 
 * gemini explain
 
