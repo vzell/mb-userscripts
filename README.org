@@ -23200,6 +23200,22 @@ is fine right now)
 Please fix
 Please do not make any other changes to working code, comments and debugging statements.
 
+** positioning of number of rows to match the filter + reset all filterfieldds for the 4 button page
+
+In the uploaded script, make two adjustments:
+
+- the positioning of the number of rows to match the filter, like "(120)" should never change. Initially it is right
+  after the h2 header under which the table data is located (which is actually where it always should stay), but somehow
+  it moves to the right of the Filter-Field and the "Case sensitve" checkbox.
+- In the case of URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f with the four action
+  buttons, when pressing one of the four buttons and start entering global and/or column specific filter conditions (the
+  filtering actual works perfect), AND THEN pressing another button, the filter conditions and the red border around the
+  changed filter fields survive the next rendering stage (although without functionality), but all entered filter
+  conditions and the red border should actually be cleared/reset when another button is pressed.
+
+Please fix
+Please do not make any other changes to working code, comments and debugging statements.
+
 * why is total number of rows after the "Show/Hide" text for https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
 * add original sorting in addition to ascending/descending per column

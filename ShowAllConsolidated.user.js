@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v29
+// @version      0.9+2026-01-28-cleanup-v30
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -401,7 +401,14 @@
             span.className = 'mb-row-count-stat';
             const countText = (filteredCount === totalCount) ? `(${totalCount})` : `(${filteredCount} of ${totalCount})`;
             span.textContent = countText;
-            targetH2.appendChild(span);
+
+            // Positioning Logic: Ensure the row count stays immediately after header text, before Master Toggle or Global Filter
+            const referenceNode = targetH2.querySelector('.mb-master-toggle') || filterContainer;
+            if (referenceNode && referenceNode.parentNode === targetH2) {
+                targetH2.insertBefore(span, referenceNode);
+            } else {
+                targetH2.appendChild(span);
+            }
 
             // Append global filter here for non-grouped pages (Artist/RG pages handle this in renderGroupedTable)
             if (pageType !== 'artist-releasegroups' && pageType !== 'releasegroup-releases') {
@@ -737,6 +744,15 @@
 
         // Stop other scripts immediately when an action button is pressed
         stopOtherScripts();
+
+        // Clear existing filter conditions and UI highlights for a fresh start
+        filterInput.value = '';
+        filterInput.style.boxShadow = '';
+        caseCheckbox.checked = false;
+        document.querySelectorAll('.mb-col-filter-input').forEach(inp => {
+            inp.value = '';
+            inp.style.boxShadow = '';
+        });
 
         // Reset all buttons back to original grey background
         allActionButtons.forEach(btn => {
