@@ -278,7 +278,7 @@
             border: 1px solid #767676 !important;
         }
         .sort-icon-btn { cursor: pointer; padding: 0 2px; font-weight: bold; transition: color 0.1s; color: black; }
-        .sort-icon-active { color: DarkRed !important; }
+        .sort-icon-active { color: Green !important; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; }
         .mb-toggle-h3:hover { color: #222; background-color: #f9f9f9; }
@@ -1283,7 +1283,7 @@
             } else {
                 h3 = document.createElement('h3');
                 h3.className = 'mb-toggle-h3';
-                h3.title = 'Collapse/Uncollapse';
+                h3.title = 'Collapse/Uncollapse table section';
                 table = document.createElement('table');
                 table.className = 'tbl';
                 // Apply indentation to the table to match the sub-header
@@ -1345,7 +1345,7 @@
         allH2s.forEach(h2 => {
             if (h2.classList.contains('mb-h2-processed')) return;
             h2.classList.add('mb-h2-processed', 'mb-toggle-h2');
-            h2.title = 'Collapse/Uncollapse';
+            h2.title = 'Collapse/Uncollapse section';
 
             // Find elements between this H2 and the next H2
             const contentNodes = [];
@@ -1446,7 +1446,7 @@
                 else if (char === '▲') span.title = 'Ascending sort order';
                 else if (char === '▼') span.title = 'Descending sort order';
 
-                // Use .sort-icon-active for DarkRed color
+                // Use .sort-icon-active for Green color
                 if (state.lastSortIndex === index && state.sortState === targetState) {
                     span.classList.add('sort-icon-active');
                 } else if (state.lastSortIndex === -1 && targetState === 0) {
