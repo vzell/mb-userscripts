@@ -23527,3 +23527,47 @@ of the following span
 // @grant             GM.setClipboard
 // @grant             GM_cookie
 // @connect           *
+
+
+* posting
+
+#+begin_example
+# [MusicBrainz: Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
+
+I talked to Misses/Mr. Gemini and out came a new Userscript which accumulates all the paginated MB pages of different entities, renders them depending on the entity type either in a flat or in a grouped table structure with real-time filtering and sorting support.
+
+The currently supported entity types are
+
+* Artist-ReleaseGroups
+* ReleaseGroup-Releases
+* Artist-Releases
+* Artist-Works
+* Artist-Recordings
+* Works
+* Recordings
+* Artist-Events
+* Series
+* Labels
+* Place-Events
+* Place-Performances (buggy, I’m working on that later)
+
+![image|690x343](upload://7UxNLpR1vOIs0xP0wqFnDILhRYm.png)
+
+![image|690x173](upload://bbmH3R7j0EuzA3LGmyxh7OLUaLu.png)
+
+![image|690x276](upload://wLemH2Q4wCerLDPTRSTiRBB2rKd.jpeg)
+
+Almost everything is collapsable/un-collapsable (see the tooltip support).
+
+The final rendrered tables also include new extracted columns for easy sorting, like for example the "Country/Date" column in the Series view is split in its different parts "Country" and "Date"
+
+![image|690x136](upload://aQKg02za09Ktbm8UwTT0Afi4rBG.png)
+
+Also I will make more variables configurable via the TamperMonkey menue in the future
+
+![image|393x499](upload://nnvvX9Cow2FOM9k9NIm5GPnlbtb.png)
+
+You can get the script at https://github.com/vzell/mb-userscripts under [Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
+#+end_example
+
+

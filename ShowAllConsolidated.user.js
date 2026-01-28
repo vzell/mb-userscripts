@@ -1019,9 +1019,9 @@
                                                     const flagImg = countrySpan.querySelector('img')?.outerHTML || '';
                                                     const abbr = countrySpan.querySelector('abbr');
                                                     const countryCode = abbr ? abbr.textContent.trim() : '';
-                                                    const countryFullName = abbr ? abbr.getAttribute('title') : '';
+                                                    const countryFullName = abbr?.getAttribute('title') || '';
                                                     const countryA = countrySpan.querySelector('a');
-                                                    const countryHref = countryA ? countryA.getAttribute('href') : '#';
+                                                    const countryHref = countryA?.getAttribute('href') || '#';
                                                     const spanContainer = document.createElement('span');
                                                     spanContainer.className = countrySpan.className;
                                                     if (countryFullName && countryCode) {
@@ -1049,16 +1049,16 @@
                                             locCell.querySelectorAll('a').forEach(a => {
                                                 const href = a.getAttribute('href');
                                                 const clonedA = a.cloneNode(true);
-                                                if (href.includes('/place/')) {
+                                                if (href && href.includes('/place/')) {
                                                     tdP.appendChild(clonedA);
-                                                } else if (href.includes('/area/')) {
+                                                } else if (href && href.includes('/area/')) {
                                                     const flagSpan = a.closest('.flag');
                                                     if (flagSpan) {
                                                         const flagImg = flagSpan.querySelector('img')?.outerHTML || '';
                                                         const abbr = flagSpan.querySelector('abbr');
                                                         const countryCode = abbr ? abbr.textContent.trim() : '';
-                                                        const countryFullName = flagSpan.querySelector('abbr').getAttribute('title');
-                                                        const countryHref = a.getAttribute('href');
+                                                        const countryFullName = abbr?.getAttribute('title') || '';
+                                                        const countryHref = a.getAttribute('href') || '#';
                                                         const span = document.createElement('span');
                                                         span.className = flagSpan.className;
                                                         if (countryFullName && countryCode) {
