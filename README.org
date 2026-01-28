@@ -23338,11 +23338,11 @@ after the initial rendering (the other icons should have the same color as the c
 Make the three icons "↕", "▲" and "▼" per column separate clickable and when clicked, directly sort that column where
 the icon is clicked according to the following table
 
-↕ - original
-▲ - ascending
-▼ - descending
+⇅ - original sort order
+▲ - ascending sort order
+▼ - descending sort order
 
-Please also adjust the color of the last clicked icon to a DarkBlue
+Please also adjust the color of the last clicked Sort-Icon to DarkRed
 
 Please implement.
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
@@ -23417,17 +23417,23 @@ Do you need to know the names of the other user scripts ?
 * show tooltips, when hovering over
 
 In the uploaded script,
-add missing tooltip texts when hovering over an UI elemetn with click or input functionality. Take the data from the following table
+add missing tooltip texts when hovering over an UI element with click or input functionality. Take the data from the following table
 
 
-| UI element                       | Tooltip text |
-|----------------------------------+--------------|
-| columns headers for sorting      |              |
-| unicode X for empty filter field |              |
-| h2 headers                       |              |
-| h3 headers                       |              |
-| global filter field              |              |
-| column filter fields             |              |
+| UI element                       | Tooltip text          |
+|----------------------------------+-----------------------|
+| ⇅                                | Original sort order   |
+| ▲                                | Ascending sort order  |
+| ▼                                | Descending sort order |
+| global filter input field        | Enter filter string   |
+| column filter input field        | Enter filter string   |
+| unicode X on column filter field | Clear column filter   |
+| unicode X on global filter field | Clear global filter   |
+| h2 headers                       | Collapse/Uncollapse   |
+| h3 headers                       | Collapse/Uncollapse   |
+|                                  |                       |
+
+Please also adjust the color of the last clicked Sort-Icon to DarkRed
 
 
 * remove sanojjonas from

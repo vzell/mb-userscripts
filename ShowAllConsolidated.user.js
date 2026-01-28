@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v35
+// @version      0.9+2026-01-28-cleanup-v36
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -276,7 +276,7 @@
             opacity: 1 !important;
             border: 1px solid #767676 !important;
         }
-        .sort-icon-btn { cursor: pointer; padding: 0 2px; font-weight: bold; transition: color 0.1s; }
+        .sort-icon-btn { cursor: pointer; padding: 0 2px; font-weight: bold; transition: color 0.1s; color: black; }
         .sort-icon-active { color: DarkRed !important; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; }
@@ -713,7 +713,7 @@
         const headerBgColor = '#d3d3d3';
 
         if (typesWithSplitCD.includes(pageType)) {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
             if (!headersText.includes('Country')) {
                 const thC = document.createElement('th');
                 thC.textContent = 'Country';
@@ -729,7 +729,7 @@
         }
 
         if (typesWithSplitLocation.includes(pageType)) {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
             ['Place', 'Area', 'Country'].forEach(col => {
                 if (!headersText.includes(col)) {
                     const th = document.createElement('th');
@@ -741,7 +741,7 @@
         }
 
         if (pageType !== 'artist-releasegroups') {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[↕▲▼]/g, '').trim());
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
             if (!headersText.includes('MB-Name')) {
                 const thN = document.createElement('th');
                 thN.textContent = 'MB-Name';
@@ -1422,7 +1422,7 @@
     function makeTableSortable(table, sortKey) {
         const headers = table.querySelectorAll('thead tr:first-child th');
         // multiTableSortStates.get(sortKey) holds: { lastSortIndex, sortState }
-        // sortState: 0 (Original ↕), 1 (Asc ▲), 2 (Desc ▼)
+        // sortState: 0 (Original ⇅), 1 (Asc ▲), 2 (Desc ▼)
         if (!multiTableSortStates.has(sortKey)) multiTableSortStates.set(sortKey, { lastSortIndex: -1, sortState: 0 });
         const state = multiTableSortStates.get(sortKey);
 
@@ -1430,16 +1430,17 @@
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'default';
 
-            const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
+            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
             th.innerHTML = ''; // Clear for new icon layout
 
             const createIcon = (char, targetState) => {
                 const span = document.createElement('span');
                 span.className = 'sort-icon-btn';
+                // Use .sort-icon-active for DarkRed color
                 if (state.lastSortIndex === index && state.sortState === targetState) {
                     span.classList.add('sort-icon-active');
                 } else if (state.lastSortIndex === -1 && targetState === 0) {
-                    span.classList.add('sort-icon-active'); // Default state
+                    span.classList.add('sort-icon-active'); // Default Original state
                 }
                 span.textContent = char;
                 span.onclick = (e) => {
@@ -1484,7 +1485,7 @@
                 return span;
             };
 
-            th.appendChild(createIcon('↕', 0));
+            th.appendChild(createIcon('⇅', 0));
             th.appendChild(document.createTextNode(` ${colName} `));
             th.appendChild(createIcon('▲', 1));
             th.appendChild(createIcon('▼', 2));
@@ -1501,7 +1502,7 @@
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'default';
 
-            const colName = th.textContent.replace(/[↕▲▼]/g, '').trim();
+            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
             th.innerHTML = '';
 
             const createIcon = (char, targetState) => {
@@ -1550,7 +1551,7 @@
                 return span;
             };
 
-            th.appendChild(createIcon('↕', 0));
+            th.appendChild(createIcon('⇅', 0));
             th.appendChild(document.createTextNode(` ${colName} `));
             th.appendChild(createIcon('▲', 1));
             th.appendChild(createIcon('▼', 2));
