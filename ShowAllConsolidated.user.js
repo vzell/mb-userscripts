@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v37
+// @version      0.9+2026-01-28-cleanup-v38
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -1464,6 +1464,11 @@
                         state.lastSortIndex = index;
                         state.sortState = targetState;
 
+                        // Update visuals: Reset all icons in this TH
+                        th.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
+                        // Highlight only this specific icon
+                        span.classList.add('sort-icon-active');
+
                         const groupIndex = parseInt(sortKey.split('_').pop(), 10);
                         const targetGroup = groupedRows[groupIndex];
 
@@ -1539,6 +1544,11 @@
                         const startSort = performance.now();
                         lastSortIndex = index;
                         sortState = targetState;
+
+                        // Reset visual state for all header buttons
+                        document.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
+                        // Highlight this one
+                        span.classList.add('sort-icon-active');
 
                         if (sortState === 0) {
                             allRows = [...originalAllRows];

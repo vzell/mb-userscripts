@@ -23417,7 +23417,7 @@ Do you need to know the names of the other user scripts ?
 
 * why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
 
-* show tooltips, when hovering over
+* DONE show tooltips, when hovering over
 
 In the uploaded script,
 add missing tooltip texts when hovering over an UI element with click or input functionality. Take the data from the following table
@@ -23436,13 +23436,27 @@ add missing tooltip texts when hovering over an UI element with click or input f
 | h3 headers                       | Collapse/Uncollapse   |
 |                                  |                       |
 
-Please also adjust the color of the last clicked Sort-Icon to DarkRed
 
+* Please also adjust the color of the last clicked Sort-Icon to DarkRed
+
+In the uploaded script,
+adjust the color of the last clicked Sort-Icon
+
+⇅ - original sort order
+▲ - ascending sort order
+▼ - descending sort order
+
+to DarkRed, and at the same time reset the previous colored sort-icon back to back
 
 * remove sanojjonas from
 
 - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
 - https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+
+In the uploaded script,
+please call the function "removeSanojjonasContainers()" again in the final cleanup function "finalCleanup()"
+Also create a log statement for the fact that these sanojonas elemnts have been found.
+
 
 * do not take the sidebar into account for the collapsing stuff with the header logic
 
