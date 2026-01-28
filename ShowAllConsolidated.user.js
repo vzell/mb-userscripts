@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v40
+// @version      0.9+2026-01-28-cleanup-v41
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -1234,7 +1234,7 @@
 
                 const showSpan = document.createElement('span');
                 showSpan.textContent = 'Show▼';
-                showSpan.title = 'Un-Collapse all sub-headings';
+                showSpan.title = 'Show all sub-tables';
                 showSpan.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1247,7 +1247,7 @@
 
                 const hideSpan = document.createElement('span');
                 hideSpan.textContent = 'Hide▲';
-                hideSpan.title = 'Collapse all sub-headings';
+                hideSpan.title = 'Hide all sub-tables';
                 hideSpan.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
