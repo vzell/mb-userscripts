@@ -23004,7 +23004,7 @@ implement the logic to change the values like in the following code snippet from
 
 
 * Sorting
-** timings for sorting
+** timings for sorting 
 
 In the uploaded script,
 separate the times for sorting the table data and the re-rendering stage.
@@ -23012,6 +23012,9 @@ separate the times for sorting the table data and the re-rendering stage.
 The text for the timing information for sorting should change during sorting to "Sorting on column <column name> (column index))..." and only after the sort it should be: "Sorting: <sorting time>s, Re-rendering: <re-rendering time>s"
 
 Everything shloud be place after the checkbox and "Cc:" text
+
+"Sorting on column <column name> (column index))..."
+"Sorting on table group <sub-header> column <column name> (column index))..."
 
 ** adjust color of sorted column to light yellow
 
@@ -23028,11 +23031,12 @@ Leave the background shading of even and odd classes still visible
 ** fix colours/shading
 *** on table headers
 *** highlightning, global and per column
-
+** show sanduhr for long sorts
 
 * Filtering
 ** add escape handling whe cursor is in filter field
 ** adjust the logic for big tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
+** show sanduhr for long filters
 
 
 * copy image links for releases to final rendered data if available
@@ -23219,7 +23223,7 @@ Please do not make any other changes to working code, comments and debugging sta
 * why is total number of rows after the "Show/Hide" text for https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
 * add original sorting in addition to ascending/descending per column
-** initial
+** DONE initial
 
 In the uploaded script, please remember for all tables (flat and grouped) the original sort-order and allow ascending,
 descending and original sorting, when repeatedly clicking a column header in a specific table. Also use exactly one of
@@ -23232,7 +23236,7 @@ the three symbols after the column-name to show what sort-order is currently in 
 Please implement.
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
-** fix
+** DONE fix
 
 For grouped tables, the collapse state of other grouped tables should not change when sorting a specific, currently non-collapsed column.
 
@@ -23242,6 +23246,27 @@ it looses fokus (which also should NOT happen)
 
 Please fix.
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
+** For artist-RG pages problems with column filtering an highlightning
+
+In the uploaded script, 
+for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f fix the following problems:
+
+- When clicking on another of the four action buttons, also the current highlightning of filter expressions (if active)
+  should immediately be resettet (highlightning of both filter expressions coming from the global filter field and the
+  column level filter fields) together with resetting the red border around the filter fields (if changed from empty)
+
+- when a global filter is active, typing in a column level filter field does nothing, it is completely ignored, also the
+  unicode X icon will not empty the filter field. removing the global filter with the unicode X icon AND if there was a
+  column level filter string in a grouped table, actually now automagically WORKS. SO lets say, I had the global filter
+  set to "The", and in one of the grouped tables a column level filter set to "for" (remember this first has NO effect
+  on the display rows in the grouped table>), but when I now remove the global filter, the "for" filter string on the
+  column level GETS activate somehow (so it filters rows in the grouped table) together with highlighning the "for"
+  expression in the filtered rows. Only pressing the X on the column level "for" filter expression doesn't clear the
+  field.
+
+Please fix.
+Please do NOT touch the current code logic (especially for other URL types), debug statements or comments in the script at all as they work perfectly.
 
 ** direkt tri-state sort
 
@@ -23313,6 +23338,20 @@ Do you need to know the names of the other user scripts ?
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
 * why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
+
+* show tooltips, when hovering over
+
+- columns headers for sorting
+- unicode X for empty filter field
+- h2 headers
+- h3 headers
+- global filter field
+- colun filter fields
+
+* remove sanojjonas from
+
+- https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+- https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
 
 
 * gemini explain
