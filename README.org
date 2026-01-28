@@ -23032,7 +23032,6 @@ Leave the background shading of even and odd classes still visible
 
 * Filtering
 ** add escape handling whe cursor is in filter field
-
 ** adjust the logic for big tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
 
 
@@ -23052,7 +23051,7 @@ AFTER the '<h2 class="appears-on-releases">Appears on releases</h2>' header
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
 
-* make all h2 headers colapsable
+* make all h2 headers collapsable
 ** DONE initial
 
 In the uploaded script,
@@ -23165,8 +23164,8 @@ When clicking on the 'Show▼/Hide▲ all ' part, just the sub-headings should c
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
 
-* move global filter field after "Show/Hide" text
-** initial
+* DONE move global filter field after "Show/Hide" text
+** DONE initial
 
 In the uploaded script,
 move the global filter field together with the "Case sensitive" checkbox to the h2 header under which the table data is located (row-count status indicator is present)
@@ -23182,7 +23181,7 @@ https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
 Another important things is (like in the old place), whenever something is (or has been entered) in the filter field,
 all the data tables must immediate be visible but only rows which actually match the filter.
 
-** thicker grey border around the filter field
+** DONE thicker grey border around the filter field
 
 In the uploaded script, make two adjustments:
 
@@ -23200,7 +23199,7 @@ is fine right now)
 Please fix
 Please do not make any other changes to working code, comments and debugging statements.
 
-** positioning of number of rows to match the filter + reset all filterfieldds for the 4 button page
+** DONE positioning of number of rows to match the filter + reset all filterfieldds for the 4 button page
 
 In the uploaded script, make two adjustments:
 
@@ -23216,9 +23215,34 @@ In the uploaded script, make two adjustments:
 Please fix
 Please do not make any other changes to working code, comments and debugging statements.
 
+
 * why is total number of rows after the "Show/Hide" text for https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
 * add original sorting in addition to ascending/descending per column
+
+In the uploaded script, please remember for all tables (flat and grouped) the original sort-order and allow ascending,
+descending and original sorting, when repeatedly clicking a column header in a specific table. Also use exactly one of
+the three symbols after the column-name to show what sort-order is currently in effect:
+
+↕ - original
+▲ - ascending
+▼ - descending
+
+Please implement.
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
+
+* https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63 - fix after heading "Related works", there is a missing
+
+In the uploaded script,
+for URLs of type https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63
+never ever remove h3 header container which include '<span class="worklink">'. For example:
+
+#+begin_example
+<h3><span class="worklink"></span><a href="/work/4a753e20-4b38-4161-a0d7-95e2fd36086f"><bdi>Leavin’ Train</bdi></a></h3>
+#+end_example
+
+Please fix.
+Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
 * remove or fix "Tagger" column
 ** DONE initial
@@ -23271,13 +23295,6 @@ Do you need to know the names of the other user scripts ?
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
 * why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
-
-
-* https://musicbrainz.org/recording/8745510c-26c8-407c-bfaf-efa967ae4a63 - fix after heading "Related works", there is a missing
-
-#+begin_example
-<h3><span class="worklink"></span><a href="/work/4a753e20-4b38-4161-a0d7-95e2fd36086f"><bdi>Leavin’ Train</bdi></a></h3>
-#+end_example
 
 
 * gemini explain

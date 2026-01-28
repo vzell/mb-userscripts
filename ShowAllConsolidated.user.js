@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v30
+// @version      0.9+2026-01-28-cleanup-v31
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -282,7 +282,7 @@
         .mb-col-filter-input {
             width: 100%;
             font-size: 0.8em;
-            padding: 1px 188x 1px 4px;
+            padding: 1px 18px 1px 4px;
             box-sizing: border-box;
             transition: box-shadow 0.2s;
             display: block;
@@ -1175,7 +1175,11 @@
         }
 
         if (!query) {
-            container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => el.remove());
+            // Updated cleanup: remove H3s and tables, but NEVER remove H3s containing 'span.worklink'
+            container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => {
+                if (el.tagName === 'H3' && el.querySelector('span.worklink')) return;
+                el.remove();
+            });
 
             let toggleLabel = 'Show▼/Hide▲ all Release Types or click the individual Type below';
 
