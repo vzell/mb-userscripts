@@ -1590,6 +1590,21 @@
      */
     function finalCleanup() {
         log('Running final cleanup...');
+
+        // Call the specific container removal again
+        const sanojIds = ['load', 'load2', 'load3', 'load4', 'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'];
+        let foundSanoj = false;
+        sanojIds.forEach(id => {
+            if (document.getElementById(id)) foundSanoj = true;
+        });
+
+        if (foundSanoj) {
+            log('Sanojjonas elements found during final cleanup. Removing now...');
+            removeSanojjonasContainers();
+        } else {
+            log('No Sanojjonas elements found during final cleanup.');
+        }
+
         const brs = document.querySelectorAll('br');
         let totalRemoved = 0;
         let instancesFound = 0;

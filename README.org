@@ -23437,7 +23437,7 @@ add missing tooltip texts when hovering over an UI element with click or input f
 |                                  |                       |
 
 
-* Please also adjust the color of the last clicked Sort-Icon to DarkRed
+* DONE Please also adjust the color of the last clicked Sort-Icon to DarkRed
 
 In the uploaded script,
 adjust the color of the last clicked Sort-Icon
@@ -23448,7 +23448,8 @@ adjust the color of the last clicked Sort-Icon
 
 to DarkRed, and at the same time reset the previous colored sort-icon back to back
 
-* remove sanojjonas from
+
+* DONE remove sanojjonas from
 
 - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
 - https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
