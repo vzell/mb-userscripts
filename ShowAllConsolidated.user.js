@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Consolidated
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28-cleanup-v27
+// @version      0.9+2026-01-28-cleanup-v28
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with timing, stop button, and real-time search and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -218,6 +218,7 @@
     statusDisplay.style.cssText = 'font-size:0.5em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 
     const filterContainer = document.createElement('span');
+    // Initially hidden; will be displayed when appended to H2
     filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px;';
 
     const filterWrapper = document.createElement('span');
@@ -255,7 +256,7 @@
 
     controlsContainer.appendChild(stopBtn);
     controlsContainer.appendChild(statusDisplay);
-    controlsContainer.appendChild(filterContainer);
+    // Filter container is NOT appended here anymore; moved to H2 later
     controlsContainer.appendChild(timerDisplay);
     controlsContainer.appendChild(sortTimerDisplay);
 
@@ -401,6 +402,15 @@
             const countText = (filteredCount === totalCount) ? `(${totalCount})` : `(${filteredCount} of ${totalCount})`;
             span.textContent = countText;
             targetH2.appendChild(span);
+
+            // Append global filter here for non-grouped pages (Artist/RG pages handle this in renderGroupedTable)
+            if (pageType !== 'artist-releasegroups' && pageType !== 'releasegroup-releases') {
+                targetH2.appendChild(filterContainer);
+                filterContainer.style.display = 'inline-flex';
+                filterContainer.style.marginLeft = '15px';
+                filterContainer.style.verticalAlign = 'middle';
+            }
+
             log(`Updated H2 header count: ${countText}`);
         }
     }
@@ -1078,7 +1088,10 @@
             activeBtn.classList.remove('mb-show-all-btn-loading');
             allActionButtons.forEach(b => b.disabled = false);
             stopBtn.style.display = 'none';
-            filterContainer.style.display = 'inline-flex';
+            // Only show filter container if it wasn't already appended to H2 (handled in updateH2Count or renderGroupedTable)
+            if (!filterContainer.parentNode) {
+                filterContainer.style.display = 'inline-flex';
+            }
 
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
@@ -1168,6 +1181,12 @@
                     subHeaders.forEach(h => h.querySelector('.mb-toggle-icon').textContent = allCollapsed ? '▲' : '▼');
                 };
                 targetHeader.appendChild(masterToggle);
+
+                // Append global filter here for grouped pages
+                targetHeader.appendChild(filterContainer);
+                filterContainer.style.display = 'inline-flex';
+                filterContainer.style.marginLeft = '15px';
+                filterContainer.style.verticalAlign = 'middle';
             }
         }
 
@@ -1282,19 +1301,21 @@
             const clickableTitle = document.createElement('span');
             clickableTitle.style.cursor = 'pointer';
 
-            // Move current children (excluding Master Toggle) into clickableTitle
+            // Move current children (excluding Master Toggle and Filter) into clickableTitle
             const masterToggle = h2.querySelector('.mb-master-toggle');
             Array.from(h2.childNodes).forEach(child => {
-                // Now including icon and excluding ONLY the Master Toggle from the main trigger
-                if (child !== masterToggle) {
+                // Exclude Master Toggle and Filter Container from the collapse trigger wrapper
+                if (child !== masterToggle && child !== filterContainer && child !== icon) {
                     clickableTitle.appendChild(child);
                 }
             });
             h2.appendChild(clickableTitle);
             if (masterToggle) h2.appendChild(masterToggle);
+            // Re-append filter container if it was part of children, to ensure correct order
+            if (Array.from(h2.childNodes).includes(filterContainer)) h2.appendChild(filterContainer);
 
             // Click event for the trigger part (Icon + Title)
-            clickableTitle.addEventListener('click', (e) => {
+            const toggleFn = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -1326,7 +1347,10 @@
                 });
 
                 icon.textContent = isExpanding ? '▼' : '▲';
-            });
+            };
+
+            icon.onclick = toggleFn;
+            clickableTitle.onclick = toggleFn;
         });
     }
 

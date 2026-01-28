@@ -23090,7 +23090,7 @@ with two additional spaces, so for example, it should look like:
   ▼ <sub header> 
 #+end_example
 
-** fix collapse state of sub-headings
+** DONE fix collapse state of sub-headings
 
 In the uploaded script,
 if individual sub-headings (and their corresponding table data) below the non-collapsed h2 header under which the table data is located (row-count status indicator for
@@ -23113,7 +23113,6 @@ at the bottom: Showing releases by this artist. Show Various Artist releases ins
 
 - remove jesus images after collapsing and re-opening
 - remove sanojaa stuff
-
 *** DONE https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
 
 remove "Relate checked recordings to…" box after collapsing and re-opening
@@ -23172,6 +23171,14 @@ move the global filter field together with the "Case sensitive" checkbox to the 
 and place it after the 'Show▼/Hide▲ all ' text in the case of  
 of URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
 and for all other URL type after the "(row-count status indicator)"
+
+Make sure that the global filter field together with the "Case sensitive" checkbox is unconditionally visible and it's
+functionality is exactly preserved like in the old place, even if collapsing/un-collapsing etc is applied in the case of 
+URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
+https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
+
+Another important things is (like in the old place), whenever something is (or has been entered) in the filter field,
+all the data tables must immediate be visible but only rows which actually match the filter.
 
 * why is total number of rows after the "Show/Hide" text for https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
