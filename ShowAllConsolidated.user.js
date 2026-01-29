@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.4+2026-01-29
+// @version      1.0.0+2026-01-30
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -39,6 +39,7 @@
 
 // CHANGELOG - The most important updates/versions:
 let changelog = [
+    {version: '1.0.0+2026-01-30', description: 'Support "Official" and "Various Artists" on Artis-Releases pages.'},
     {version: '0.9.4+2026-01-29', description: 'Modernized logging framework with colors, icons, and structured levels.'},
     {version: '0.9.3+2026-01-29', description: 'Added visual progress bar with centered estimated time and dynamic coloring.'},
     {version: '0.9.2+2026-01-29', description: 'Show busy cursor for long running sort operations (> 1000 table rows)'},
@@ -247,9 +248,23 @@ let changelog = [
 
     const isSpecialArtistView = isOfficialArtist || isNonOfficialArtist || isOfficialVariousArtists || isNonOfficialVariousArtists;
 
+    // Logic for the 2 specific Artist Releases views
+    const isOfficialArtistReleases =
+        path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) &&
+        params.get('va') === '0';
+    const isOfficialArtistReleasesBase = path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) && !isOfficialArtistReleases;
+
+    const isVariousArtistReleases =
+        path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) &&
+        params.get('va') === '1';
+    const isVariousArtistReleasesBase = path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) && !isVariousArtistReleases;
+
+    const isSpecialReleasesView = isOfficialArtistReleases || isVariousArtistReleases;
+
     // Determine page type using the requested priority structure
     if (isWorkRecordings || isWorkBase) pageType = 'work-recordings';
     else if (isSpecialArtistView || path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
+    else if (isSpecialReleasesView || path.match(/\/artist\/[a-f0-9-]{36}\/releases$/)) pageType = 'releases'; // Updated for Releases
     else if (path.includes('/recordings')) pageType = 'recordings';
     else if (path.includes('/releases')) pageType = 'releases';
     else if (path.includes('/works')) pageType = 'works';
@@ -289,6 +304,22 @@ let changelog = [
         ];
 
         extraConfigs.forEach(conf => {
+            const eb = document.createElement('button');
+            eb.textContent = conf.title;
+            eb.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+            eb.type = 'button';
+            eb.onclick = (e) => startFetchingProcess(e, conf.params);
+            controlsContainer.appendChild(eb);
+            allActionButtons.push(eb);
+        });
+    } else if (pageType === 'releases' && path.includes('/artist/')) {
+        // Support for Artist Releases specific views
+        const releaseConfigs = [
+            { title: 'Official artist releases', params: { va: '0' } },
+            { title: 'Various artist releases', params: { va: '1' } }
+        ];
+
+        releaseConfigs.forEach(conf => {
             const eb = document.createElement('button');
             eb.textContent = conf.title;
             eb.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';

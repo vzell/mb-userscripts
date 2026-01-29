@@ -23544,7 +23544,22 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1
 
 
+Given the following code fragment from the uploaded userscript which is based on URLs of type "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f"
+
 #+begin_example
+    // Logic for the 4 specific Artist views
+    const isOfficialArtist =
+        path.startsWith('/artist/') &&
+        params.get('all') === '0' &&
+        params.get('va') === '0';
+    const isOfficialArtistBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isOfficialArtist;
+
+    const isNonOfficialArtist =
+        path.startsWith('/artist/') &&
+        params.get('all') === '1' &&
+        params.get('va') === '0';
+    const isNonOfficialArtistBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isNonOfficialArtist;
+
     const isOfficialVariousArtists =
         path.startsWith('/artist/') &&
         params.get('all') === '0' &&
@@ -23559,6 +23574,41 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=
 
     const isSpecialArtistView = isOfficialArtist || isNonOfficialArtist || isOfficialVariousArtists || isNonOfficialVariousArtists;
 #+end_example
+
+how should the equivalent block of code look like if the URLs are bases on "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+and the parameter involved for this type of URL just 'va' and can have either the vaue '0' or '1'
+
+and how must the following block of code be extended to support these type of URLs, the pageType = 'releases'
+
+#+begin_example
+    if (pageType === 'artist-releasegroups') {
+        const extraConfigs = [
+            { title: 'Official artist RGs', params: { all: '0', va: '0' } },
+            { title: 'Non-official artist RGs', params: { all: '1', va: '0' } },
+            { title: 'Official various artists RGs', params: { all: '0', va: '1' } },
+            { title: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
+        ];
+
+        extraConfigs.forEach(conf => {
+            const eb = document.createElement('button');
+            eb.textContent = conf.title;
+            eb.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+            eb.type = 'button';
+            eb.onclick = (e) => startFetchingProcess(e, conf.params);
+            controlsContainer.appendChild(eb);
+            allActionButtons.push(eb);
+        });
+    } else {
+        const mainBtn = document.createElement('button');
+        mainBtn.textContent = `Show all ${pageType.replace('-', ' ')}`;
+        mainBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+        mainBtn.type = 'button';
+        mainBtn.onclick = (e) => startFetchingProcess(e);
+        controlsContainer.appendChild(mainBtn);
+        allActionButtons.push(mainBtn);
+    }
+#+end_example
+
 
 
 * Include more log statements
