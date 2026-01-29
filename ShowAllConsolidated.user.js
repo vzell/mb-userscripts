@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.3+2026-01-29
+// @version      0.9.4+2026-01-29
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -39,6 +39,7 @@
 
 // CHANGELOG - The most important updates/versions:
 let changelog = [
+    {version: '0.9.4+2026-01-29', description: 'Modernized logging framework with colors, icons, and structured levels.'},
     {version: '0.9.3+2026-01-29', description: 'Added visual progress bar with centered estimated time and dynamic coloring.'},
     {version: '0.9.2+2026-01-29', description: 'Show busy cursor for long running sort operations (> 1000 table rows)'},
     {version: '0.9.1+2026-01-29', description: 'Added "Esc" key handling for clearing the filter fields when focused; Added "ChangeLog" userscript manager menu entry.'},
@@ -48,7 +49,49 @@ let changelog = [
 (function() {
     'use strict';
 
-    const DEBUG = true;
+    const DEBUG_ENABLED = true;
+
+    // --- Modernized Logging Framework ---
+    const Logger = {
+        prefix: '[MB-ShowAll]',
+        styles: {
+            debug: 'color: #7f8c8d; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold;',
+            info: 'color: #2980b9; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 11px;',
+            error: 'color: #c0392b; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; background: #fceae9; padding: 2px 4px; border-radius: 3px;',
+            timer: 'color: #8e44ad; font-family: "Consolas", monospace; font-style: italic;'
+        },
+        icons: {
+            init: '🚀',
+            fetch: '📥',
+            render: '🎨',
+            filter: '🔍',
+            sort: '⚖️',
+            cleanup: '🧹',
+            error: '❌',
+            success: '✅',
+            meta: '🎵'
+        },
+        log(level, icon, msg, data = '') {
+            if (!DEBUG_ENABLED && level === 'debug') return;
+            const style = this.styles[level] || '';
+            const iconChar = this.icons[icon] || '📝';
+            console.log(`%c${this.prefix} ${iconChar} ${msg}`, style, data);
+        },
+        debug(icon, msg, data) { this.log('debug', icon, msg, data); },
+        info(icon, msg, data) { this.log('info', icon, msg, data); },
+        error(icon, msg, data) { this.log('error', 'error', msg, data); }
+    };
+
+    // Backward compatibility wrapper for existing simple log calls
+    const log = (msg, data = '') => {
+        let icon = 'meta';
+        if (msg.includes('Initializing')) icon = 'init';
+        if (msg.includes('Fetching') || msg.includes('page')) icon = 'fetch';
+        if (msg.includes('cleanup')) icon = 'cleanup';
+        if (msg.includes('Filter')) icon = 'filter';
+        Logger.debug(icon, msg, data);
+    };
+
     let registeredMenuCommandIDs = [];
 
     // Check if we just reloaded to fix the filter issue
@@ -94,7 +137,7 @@ let changelog = [
                 register(`${icon} ${item.label}`, () => {
                     this[item.key] = !this[item.key];
                     GM_setValue(item.key, this[item.key]);
-                    log(`Setting changed: ${item.key} = ${this[item.key]}`);
+                    Logger.info('meta', `Setting changed: ${item.key} = ${this[item.key]}`);
                     this.setupMenu();
                 });
             });
@@ -155,9 +198,6 @@ let changelog = [
 
     // Initialize Menu
     settings.setupMenu();
-
-    let logPrefix = "[MB-ShowAll-Debug]";
-    const log = (msg, data = '') => { if (DEBUG) console.log(`${logPrefix} ${msg}`, data); };
 
     const currentUrl = new URL(window.location.href);
     const path = currentUrl.pathname;
@@ -222,11 +262,11 @@ let changelog = [
     else if (path.match(/\/place\/.*\/performances/)) pageType = 'place-performances';
     else if (path.includes('/events')) pageType = 'events';
 
-    if (pageType) logPrefix = `[MB-ShowAll-Debug: ${pageType}]`;
-    log('Initializing script for path:', path);
+    if (pageType) Logger.prefix = `[MB-ShowAll: ${pageType}]`;
+    Logger.info('init', 'Initializing script for path:', path);
 
     if (!pageType || !headerContainer) {
-        log('Required elements not found. Terminating.', { pageType, hasHeader: !!headerContainer });
+        Logger.error('init', 'Required elements not found. Terminating.', { pageType, hasHeader: !!headerContainer });
         return;
     }
 
@@ -402,7 +442,7 @@ let changelog = [
         const url = new URL(window.location.origin + targetPath);
         Object.keys(queryParams).forEach(k => url.searchParams.set(k, queryParams[k]));
         url.searchParams.set('page', '1');
-        log('Fetching maxPage from:', url.toString());
+        Logger.info('fetch', `Fetching maxPage from: ${url.toString()}`);
         try {
             const html = await fetchHtml(url.toString());
             const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -425,16 +465,16 @@ let changelog = [
                     if (pageNumbers.length > 0) maxPage = Math.max(...pageNumbers);
                 }
             }
-            log(`Determined maxPage: ${maxPage}`);
+            Logger.info('success', `Determined maxPage: ${maxPage}`);
             return maxPage;
         } catch (err) {
-            log('Error fetching maxPage:', err);
+            Logger.error('fetch', 'Error fetching maxPage:', err);
             return 1;
         }
     }
 
     function removeSanojjonasContainers() {
-        log('Removing Sanojjonas containers...');
+        Logger.debug('cleanup', 'Removing Sanojjonas containers...');
         const idsToRemove = ['load', 'load2', 'load3', 'load4', 'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'];
         idsToRemove.forEach(id => {
             const el = document.getElementById(id);
@@ -446,7 +486,7 @@ let changelog = [
      * Signals other scripts (like FUNKEY ILLUSTRATED RECORDS) to stop their loops.
      */
     function stopOtherScripts() {
-        log('Signalling other scripts to stop...');
+        Logger.info('cleanup', 'Signalling other scripts to stop...');
         window.stopAllUserScripts = true;
         // Dispatch custom event for scripts listening for inter-script signals
         window.dispatchEvent(new CustomEvent('mb-stop-all-scripts'));
@@ -498,7 +538,7 @@ let changelog = [
                 }
             }
 
-            log(`Updated H2 header count: ${countText}`);
+            Logger.debug('render', `Updated H2 header count: ${countText}`);
         }
     }
 
@@ -597,7 +637,7 @@ let changelog = [
 
             input.addEventListener('input', (e) => {
                 e.stopPropagation();
-                log(`Column filter updated on column ${idx}: "${input.value}"`);
+                Logger.debug('filter', `Column filter updated on column ${idx}: "${input.value}"`);
                 runFilter();
             });
 
@@ -629,7 +669,7 @@ let changelog = [
         const __activeEl = document.activeElement;
         const __scrollY = window.scrollY;
 
-        log('runFilter(): active element =', __activeEl?.className || '(none)');
+        Logger.debug('filter', 'runFilter(): active element =', __activeEl?.className || '(none)');
 
         if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
             const filteredArray = [];
@@ -696,7 +736,7 @@ let changelog = [
                     .filter(t => t.querySelector('.mb-col-filter-row'));
                 const tableIdx = allTables.findIndex(t => t.contains(__activeEl));
 
-                log(`Attempting focus restore: tableIdx=${tableIdx}, colIdx=${colIdx}`);
+                Logger.debug('filter', `Attempting focus restore: tableIdx=${tableIdx}, colIdx=${colIdx}`);
 
                 if (allTables[tableIdx]) {
                     const newInput = allTables[tableIdx]
@@ -705,9 +745,9 @@ let changelog = [
                     if (newInput) {
                         newInput.focus();
                         newInput.selectionStart = newInput.selectionEnd = newInput.value.length;
-                        log('Restored focus to column filter input');
+                        Logger.debug('filter', 'Restored focus to column filter input');
                     } else {
-                        log('Could not find replacement column filter input');
+                        Logger.debug('filter', 'Could not find replacement column filter input');
                     }
                 }
             }
@@ -763,7 +803,7 @@ let changelog = [
     stopBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        log('Stop requested by user.');
+        Logger.info('cleanup', 'Stop requested by user.');
         stopRequested = true;
         stopBtn.disabled = true;
         stopBtn.textContent = 'Stopping...';
@@ -858,7 +898,7 @@ let changelog = [
 
         // Reload the page if a fetch process has already run to fix column-level filter unresponsiveness
         if (isLoaded) {
-            log('Second fetch attempt detected. Setting reload flag and reloading page to ensure filter stability.');
+            Logger.info('meta', 'Second fetch attempt detected. Setting reload flag and reloading page to ensure filter stability.');
             sessionStorage.setItem('mb_show_all_reload_pending', 'true');
             window.location.reload();
             return;
@@ -892,7 +932,7 @@ let changelog = [
         activeBtn.style.color = 'black';
 
         // Removed isLoaded block to allow re-fetching
-        log('Starting fetch process...', overrideParams);
+        Logger.info('fetch', 'Starting fetch process...', overrideParams);
 
         statusDisplay.textContent = 'Getting number of pages to fetch...';
         let maxPage = 1;
@@ -923,7 +963,7 @@ let changelog = [
             }
         }
 
-        log('Total pages to fetch:', maxPage);
+        Logger.debug('fetch', `Total pages to fetch: ${maxPage}`);
         if (maxPage > settings.maxPageThreshold && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) {
             activeBtn.style.backgroundColor = '';
             activeBtn.style.color = '';
@@ -988,7 +1028,7 @@ let changelog = [
         try {
             for (let p = 1; p <= maxPage; p++) {
                 if (stopRequested) {
-                    log('Fetch loop stopped at page ' + p);
+                    Logger.info('cleanup', 'Fetch loop stopped at page ' + p);
                     break;
                 }
                 pagesProcessed++;
@@ -1048,7 +1088,7 @@ let changelog = [
 
                         // Logic to handle grouped data and repeat headers
                         if (category !== lastCategorySeenAcrossPages) {
-                            log(`Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
+                            Logger.debug('fetch', `Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
                             groupedRows.push({ category: category, rows: [] });
                             lastCategorySeenAcrossPages = category;
                         }
@@ -1074,7 +1114,7 @@ let changelog = [
                                 if (node.classList.contains('subh')) {
                                     currentStatus = node.textContent.trim() || 'Unknown';
                                     if (pageType === 'releasegroup-releases' && currentStatus !== lastCategorySeenAcrossPages) {
-                                        log(`Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
+                                        Logger.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
                                     }
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
@@ -1218,7 +1258,7 @@ let changelog = [
                 activeBtn.style.backgroundColor = bgColor;
 
                 // Detailed statistics per page fetch
-                log(`Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
+                Logger.info('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
 
                 if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') {
                     const summaryParts = groupedRows.map(g => {
@@ -1233,7 +1273,7 @@ let changelog = [
             let renderingTimeStart = performance.now();
 
             // --- RENDERING START ---
-            if (DEBUG) console.log(`${logPrefix} DOM rendering starting...`);
+            Logger.debug('render', 'DOM rendering starting...');
 
             const totalRows = (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') ?
                              groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
@@ -1275,7 +1315,7 @@ let changelog = [
             totalRenderingTime = performance.now() - renderingTimeStart;
 
             // --- RENDERING END ---
-            if (DEBUG) console.log(`${logPrefix} DOM rendering finished in ${totalRenderingTime.toFixed(2)}ms`);
+            Logger.debug('render', `DOM rendering finished in ${totalRenderingTime.toFixed(2)}ms`);
 
             const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
@@ -1283,9 +1323,9 @@ let changelog = [
             statusDisplay.textContent = `Loaded ${pagesProcessed} pages (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
             timerDisplay.textContent = ''; // Explicitly clear any temp text
 
-            log(`Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
+            Logger.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
-            log('Critical Error during fetch:', err);
+            Logger.error('fetch', 'Critical Error during fetch:', err);
             statusDisplay.textContent = 'Error during load... (repress the "Show all" button)';
             progressContainer.style.display = 'none';
             activeBtn.disabled = false;
@@ -1459,7 +1499,7 @@ let changelog = [
      * Logic to make all H2 headers collapsible.
      */
     function makeH2sCollapsible() {
-        log('Initializing collapsible H2 headers...');
+        Logger.debug('render', 'Initializing collapsible H2 headers...');
         const allH2s = document.querySelectorAll('h2');
 
         allH2s.forEach(h2 => {
@@ -1576,7 +1616,7 @@ let changelog = [
                 span.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    log(`Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}...`);
+                    Logger.debug('sort', `Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}...`);
                     sortTimerDisplay.textContent = 'Sorting...';
 
                     const groupIndex = parseInt(sortKey.split('_').pop(), 10);
@@ -1664,7 +1704,7 @@ let changelog = [
                 span.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    log(`Sorting flat table by column: "${colName}" (index: ${index}) to state ${targetState}...`);
+                    Logger.debug('sort', `Sorting flat table by column: "${colName}" (index: ${index}) to state ${targetState}...`);
                     sortTimerDisplay.textContent = 'Sorting...';
 
                     const rowCount = allRows.length;
@@ -1722,7 +1762,7 @@ let changelog = [
      * Logs the occurrences and count of tags removed.
      */
     function finalCleanup() {
-        log('Running final cleanup...');
+        Logger.debug('cleanup', 'Running final cleanup...');
 
         // Call the specific container removal again
         const sanojIds = ['load', 'load2', 'load3', 'load4', 'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'];
@@ -1732,10 +1772,10 @@ let changelog = [
         });
 
         if (foundSanoj) {
-            log('Sanojjonas elements found during final cleanup. Removing now...');
+            Logger.debug('cleanup', 'Sanojjonas elements found during final cleanup. Removing now...');
             removeSanojjonasContainers();
         } else {
-            log('No Sanojjonas elements found during final cleanup.');
+            Logger.debug('cleanup', 'No Sanojjonas elements found during final cleanup.');
         }
 
         const brs = document.querySelectorAll('br');
@@ -1762,14 +1802,14 @@ let changelog = [
             if (removedInThisInstance > 0) {
                 instancesFound++;
                 totalRemoved += removedInThisInstance;
-                log(`Found consecutive <br> tags: removed ${removedInThisInstance} tags at instance ${instancesFound}.`);
+                Logger.debug('cleanup', `Found consecutive <br> tags: removed ${removedInThisInstance} tags at instance ${instancesFound}.`);
             }
         }
 
         if (totalRemoved > 0) {
-            log(`Final cleanup complete: Removed a total of ${totalRemoved} consecutive <br> tags across ${instancesFound} locations.`);
+            Logger.info('cleanup', `Final cleanup complete: Removed a total of ${totalRemoved} consecutive <br> tags across ${instancesFound} locations.`);
         } else {
-            log('Final cleanup complete: No consecutive <br> tags found.');
+            Logger.info('cleanup', 'Final cleanup complete: No consecutive <br> tags found.');
         }
     }
 
