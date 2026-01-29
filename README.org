@@ -24530,6 +24530,18 @@ Please do not make any other changes to working code, comments and logging state
 	});
 #+end_example
 
+** 2
+
+In the uploaded userscript, in all the h2 headers make the visible area between the last '</span>' and the '</h2>' also
+clickable with the standard action of collapsing/un-collapsing the corresponding heading with the underlyinng data.
+
+Example HTML snippet
+
+#+begin_example
+<h2 class="relationships mb-h2-processed mb-toggle-h2" title="Collapse/Uncollapse section"><span class="mb-toggle-icon">▼</span><span style="cursor: pointer;">Relationships</span></h2>
+#+end_example
+
+Please do not make any other changes to working code, comments and logging statements.
 
 * icons
 
