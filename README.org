@@ -16477,6 +16477,7 @@ insert it as is and wait for completion on the whole MBID string, instead of typ
 
 It should be much faster.
 
+
 * Guess Related Works
 ** Gemini
 
@@ -23002,96 +23003,6 @@ implement the logic to change the values like in the following code snippet from
     }    
 #+end_example
 
-
-* Sorting
-** timings for sorting 
-
-In the uploaded script,
-why is the sort time in the status line printed as 4s when sorting 4000 rows, but in usertime it tokk maybe 25s ?
-
-In the uploaded script,
-separate the times for sorting the table data and the re-rendering stage.
-
-The text for the timing information for sorting should change during sorting to "Sorting on column <column name> (column index))..." and only after the sort it should be: "Sorting: <sorting time>s, Re-rendering: <re-rendering time>s"
-
-Everything should be place after the checkbox and "Cc:" text
-
-"Sorting on column <column name> (column index))..."
-"Sorting on table group <sub-header> column <column name> (column index))..."
-
-** adjust color of sorted column to light yellow
-
-In the uploaded script,
-adjust the color of the column of a datatable on which sorting has been performed to a light yellow background. Reset the color to the default as soon as another column is choosen for sorting.
-
-Leave the background shading of even and odd classes still visible
-
-#+begin_example
-<tr class="odd"
-<tr class="even"
-#+end_example
-
-** fix colours/shading
-*** on table headers
-*** highlightning, global and per column
-** show sanduhr for long sorts
-
-In the uploaded script,
-change the mouse pointer to a "sand clock", if long running sorting actions are taken place, e.g. if more than 1000 rows are involved.
-
-** visual progress bar for the fetching phase
-
-In the uploaded script,
-
-also implement a visual progress bar for the fetching phase, in addition to the status text.  Additionally change the
-mouse pointer directly to a "busy cursor", when the rendering stage begins and back to normal when it ends. Also fix the
-"renderSeconds" calcuations to be the real time the user sees (DOM updates etc.)
-
-Please do not make any other changes to working code, comments and debugging statements.
-
-
-* Filtering
-** DONE add escape handling when cursor is in filter field, equivalent to pressing the Xicon
-
-In the uploaded script, pressing the "Escape" key when the focus is inside either the global or one of the columns
-specific filter fields, should have the same effect as clicking on the unicode X symbol at the end of the corresponding filter field.
-
-** DONE add changelog
-
-#+begin_example
-/*
- *      VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
- *      is an userscript which accumulates paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.)
- *      into a single view with real-time filtering and sorting.
- *
- *      This script has been created by giving the right facts and asking the right questions to Gemini.
- *      When Gemini gots stuck, I asked ChatGPT for help, until I got everything right.
- *
- *      NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome and Firefox.
- */
-
-// CHANGELOG - The most important updates/versions:
-let changelog = [
-    {version: '0.9.1+2026-01-28', description: 'Added "Esc" key handling for clearing the filter fields when focused,'},
-    {version: '0.9.0+2026-01-28', description: '1st official release version.'}
-];
-#+end_example
-
-In the uploaded script "AA.user.js"
-use the "changelog" variable as the information to show in a popup text field when pressing the "TamperMonkey -> ChangeLog" menu entry.
-
-For this to happen extend the "setupMenu: function()" to mimic the behaviour found in the uploaded userscript "StigArt.user.js"
-Also allow, besides clicking the ChangeLog popup text filed, the "Esc" key to let the popup vanish. 
-
-Please do not make any changes to the code in "AA.user.js", comments, debugging statements except adding a new entry in
-the "setupMenu: function()" of "AA.user.js", see instructions above
-
-** adjust the logic for big tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
-** show sanduhr for long filters
-
-
-* copy image links for releases to final rendered data if available, or grap them again on the rendered page
-
 * DONE put button on pages of type https://musicbrainz.org/recording/f258719b-361b-4719-9ca3-77f524af7d9b, because they can have disambiguations after the title
 
 (Your Love Keeps Lifting Me) Higher and Higher (live, 2009‐11‐22: HSBC Arena, Buffalo, NY, USA)
@@ -23407,28 +23318,12 @@ never ever remove h3 header container which include '<span class="worklink">'. F
 Please fix.
 Please do NOT touch the current code logic, debug statements or comments in the script at all as they work perfectly.
 
-* enable file access to scripts
-
-#+begin_example
-A402 There are multiple possible ways:
-
-Chrome (and derivates users) can export and @require the local copy
-Open Tampermonkey's dashboard, open the script and copy its content.
-Create a local file and paste the content
-Remove all content from the script inside Tampermonkey except the "UserScript" header
-Add a @require tag with the path to the local file that you want to include in the script. For example, if the file is located at C:\Users\[USERNAME]\Documents\myscript.js, you would add the following line to the script:
-// @require       file://C:/Users/[USERNAME]/Documents/myscript.js
-Finally enable local file access.
-#+end_example
-
-
 * DONE Stop other network related plugins execution thread
 
 In the uploaded script,
 please implement code to stop running threads of other currently running user scripts on the same page, when pressing the action buttons.
 
 Do you need to know the names of the other user scripts ?
-
 
 * DONE show tooltips, when hovering over
 
@@ -23510,52 +23405,22 @@ of the following span
 #+end_example
 
 
-* for release pages also support VA releases
-
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1
-
-
-* remove or fix "Tagger" column
-** DONE initial
-
-In the uploaded script, please handle the "Tagger" and "Rating" columns (see also the the "Relationships" and "Performance Attributes" column handling) but based on two new javascript boolean const flags in the beginning of the userscript
-(make them configurable by the user through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
-
-(if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
+* Tampermonkey in general
+** enable file access to scripts
 
 #+begin_example
-2 matches for "Relationship" in buffer: ShowAllConsolidated.user.js
-    570:            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
-    765:                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+A402 There are multiple possible ways:
+
+Chrome (and derivates users) can export and @require the local copy
+Open Tampermonkey's dashboard, open the script and copy its content.
+Create a local file and paste the content
+Remove all content from the script inside Tampermonkey except the "UserScript" header
+Add a @require tag with the path to the local file that you want to include in the script. For example, if the file is located at C:\Users\[USERNAME]\Documents\myscript.js, you would add the following line to the script:
+// @require       file://C:/Users/[USERNAME]/Documents/myscript.js
+Finally enable local file access.
 #+end_example
 
-#+begin_example
-3 matches for "cleanupHeaders" in buffer: ShowAllConsolidated.user.js
-    561:    function cleanupHeaders(headerElement) {
-    986:                document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
-   1026:            cleanupHeaders(templateHead);
-#+end_example
-
-** clicking the tagger link should not create a new page but instead just execute the action in the background
-
-* copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-
-* do not take the sidebar into account for the collapsing stuff with the header logic
-
-
-* redirect to an artificial page after rendering and call all plugins again, maybe my own versions
-
-
-* why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
-
-
-* fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
-
-
-* make all colors/backgrounds configurable
-
-
-* gemini explain
+** gemini explain header elements
 
 // @include           *
 // @match             *://*/*
@@ -23579,7 +23444,8 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 // @connect           *
 
 
-* posting
+* posting to MusicBrainz forum
+** <2026-01-28 Wed 09:05>
 
 #+begin_example
 # [MusicBrainz: Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
@@ -23621,3 +23487,211 @@ You can get the script at https://github.com/vzell/mb-userscripts under [Accumul
 #+end_example
 
 
+* copy image links for releases to final rendered data if available, or grap them again on the rendered page
+
+* copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+* do not take the sidebar into account for the collapsing stuff with the header logic
+
+
+* redirect to an artificial page after rendering and call all plugins again, maybe my own versions
+
+
+* fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+
+
+* make all colors/backgrounds configurable
+
+
+* remove or fix "Tagger" column
+** DONE initial
+
+In the uploaded script, please handle the "Tagger" and "Rating" columns (see also the the "Relationships" and "Performance Attributes" column handling) but based on two new javascript boolean const flags in the beginning of the userscript
+(make them configurable by the user through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
+
+(if present) like the "Relationships" and "Performance Attributes" columns, it should NOT be present in the rendered final table
+
+#+begin_example
+2 matches for "Relationship" in buffer: ShowAllConsolidated.user.js
+    570:            if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+    765:                        if (txt.startsWith('Relationship') || txt.startsWith('Performance Attributes')) {
+#+end_example
+
+#+begin_example
+3 matches for "cleanupHeaders" in buffer: ShowAllConsolidated.user.js
+    561:    function cleanupHeaders(headerElement) {
+    986:                document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+   1026:            cleanupHeaders(templateHead);
+#+end_example
+
+** clicking the tagger link should not create a new page but instead just execute the action in the background
+
+
+* for release pages also support VA releases
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1
+
+
+* Downloading
+** visual progress bar for the fetching phase
+*** initial
+
+In the uploaded userscript,
+
+- please also implement a visual progress bar for the fetching phase, in addition to the status text. The colour should
+  change like in the colour change logic for the action button itself (from red, over orange to green).
+- The text "(Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s)" currently in "statusDisplay.textContent"
+  should be placed inside the visual progress bar and removed from "statusDisplay.textContent, that also means that the
+  proges bar width must be adjustet accordingly and maybe the heigth must be a bit bigger
+
+Please do not make any other changes to working code, comments and debugging statements.
+
+*** 1
+
+The text "Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s" should be centered inside the visual progress
+bar with enough padding on both sides. Right now it looks like it flows in from the left.
+
+** busy curser throught initial rendering stage
+
+- Additionally change the mouse pointer directly to a "busy cursor", when the rendering stage begins and back to normal
+  when it ends. Also fix the "renderSeconds" calcuations to be the real time the user sees (DOM updates etc.)
+
+
+* Sorting
+** rethink timings for sorting 
+
+In the uploaded script,
+why is the sort time in the status line printed as 4s when sorting 4000 rows, but in usertime it tokk maybe 25s ?
+
+In the uploaded script,
+separate the times for sorting the table data and the re-rendering stage.
+
+The text for the timing information for sorting should change during sorting to "Sorting on column <column name> (column index))..." and only after the sort it should be: "Sorting: <sorting time>s, Re-rendering: <re-rendering time>s"
+
+Everything should be place after the checkbox and "Cc:" text
+
+"Sorting on column <column name> (column index))..."
+"Sorting on table group <sub-header> column <column name> (column index))..."
+
+** adjust color of sorted column to light yellow
+
+In the uploaded script,
+adjust the color of the column of a datatable on which sorting has been performed to a light yellow background. Reset the color to the default as soon as another column is choosen for sorting.
+
+Leave the background shading of even and odd classes still visible
+
+#+begin_example
+<tr class="odd"
+<tr class="even"
+#+end_example
+
+** fix colours/shading
+*** on table headers
+*** highlightning, global and per column
+** show sanduhr for long sorts
+
+In the uploaded script,
+change the mouse pointer to a "sand clock", if long running sorting actions are taken place, e.g. if more than 1000 rows are involved.
+
+** why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
+
+
+* Filtering
+** DONE add escape handling when cursor is in filter field, equivalent to pressing the Xicon
+
+In the uploaded script, pressing the "Escape" key when the focus is inside either the global or one of the columns
+specific filter fields, should have the same effect as clicking on the unicode X symbol at the end of the corresponding filter field.
+
+** DONE add changelog
+
+#+begin_example
+/*
+ *      VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+ *      is an userscript which accumulates paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.)
+ *      into a single view with real-time filtering and sorting.
+ *
+ *      This script has been created by giving the right facts and asking the right questions to Gemini.
+ *      When Gemini gots stuck, I asked ChatGPT for help, until I got everything right.
+ *
+ *      NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome and Firefox.
+ */
+
+// CHANGELOG - The most important updates/versions:
+let changelog = [
+    {version: '0.9.1+2026-01-28', description: 'Added "Esc" key handling for clearing the filter fields when focused,'},
+    {version: '0.9.0+2026-01-28', description: '1st official release version.'}
+];
+#+end_example
+
+In the uploaded script "AA.user.js"
+use the "changelog" variable as the information to show in a popup text field when pressing the "TamperMonkey -> ChangeLog" menu entry.
+
+For this to happen extend the "setupMenu: function()" to mimic the behaviour found in the uploaded userscript "StigArt.user.js"
+Also allow, besides clicking the ChangeLog popup text filed, the "Esc" key to let the popup vanish. 
+
+Please do not make any changes to the code in "AA.user.js", comments, debugging statements except adding a new entry in
+the "setupMenu: function()" of "AA.user.js", see instructions above
+
+** adjust the logic for big tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
+** show sanduhr for long filters
+
+* Timings
+
+Initializing -> Fetching page 1 to get maxPage to fetch -> [eventually start fetching 2..maxPage (Estimated remaining time)] ->  Rendering
+
+| Optional (if maxPage=1) | Stage        | Status text                                                                              | Visual progress bar visible | Visual progress bar text       |
+|-------------------------+--------------+------------------------------------------------------------------------------------------+-----------------------------+--------------------------------|
+|                         | Initializing | Initializing...                                                                          |                             |                                |
+|                         | get maxPage  |                                                                                          |                             |                                |
+|                         |              | Getting <total page numbers>...                                                          |                             |                                |
+|-------------------------+--------------+------------------------------------------------------------------------------------------+-----------------------------+--------------------------------|
+| x                       |              | Loading page <current page number> of <total page numbers>...                            | x                           | Estimated remaining time: <e>s |
+| x                       |              | Loading page <current page number> of <total page numbers>... (current total rows)       | x                           | Estimated remaining time: <e>s |
+|-------------------------+--------------+------------------------------------------------------------------------------------------+-----------------------------+--------------------------------|
+|                         |              | Loaded <total page numbers> pages (current rows)                                         |                             |                                |
+|                         |              | Loaded <total page numbers> pages (current rows) Fetching time: <f>s                     |                             |                                |
+|                         |              | Loaded <total page numbers> pages (current rows) Fetching time: <f>s Rendering time <r>s |                             |                                |
+
+
+* Put log statements in side the if the elkse
+
+#+begin_example
+        // Determine maxPage based on context
+        if (isWorkBase) {
+            maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
+        } else if (overrideParams) {
+            maxPage = await fetchMaxPageGeneric(path, overrideParams);
+        } else {
+            const pagination = document.querySelector('ul.pagination');
+            if (pagination) {
+                const links = Array.from(pagination.querySelectorAll('li a'));
+                const nextIdx = links.findIndex(a => a.textContent.trim() === 'Next');
+                if (nextIdx > 0) {
+                    const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
+                    const p = urlObj.searchParams.get('page');
+                    if (p) maxPage = parseInt(p, 10);
+                } else if (links.length > 0) {
+                    const pageNumbers = links
+                        .map(a => {
+                            const p = new URL(a.href, window.location.origin).searchParams.get('page');
+                            return p ? parseInt(p, 10) : 1;
+                        })
+                        .filter(num => !isNaN(num));
+                    if (pageNumbers.length > 0) maxPage = Math.max(...pageNumbers);
+                }
+            }
+        }
+#+end_example
+
+#+begin_example
+        // Remove various clutter elements
+#+end_example
+
+* use nice logging framework
+
+with error, debug, info
+maybe coloroization
+mabe other font
+
+
+* remove first column or at least the sortin indicators for pages of type https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290?page=3&tport=8000

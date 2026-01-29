@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.2+2026-01-29
+// @version      0.9.3+2026-01-29
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -39,6 +39,7 @@
 
 // CHANGELOG - The most important updates/versions:
 let changelog = [
+    {version: '0.9.3+2026-01-29', description: 'Added visual progress bar with centered estimated time and dynamic coloring.'},
     {version: '0.9.2+2026-01-29', description: 'Show busy cursor for long running sort operations (> 1000 table rows)'},
     {version: '0.9.1+2026-01-29', description: 'Added "Esc" key handling for clearing the filter fields when focused; Added "ChangeLog" userscript manager menu entry.'},
     {version: '0.9.0+2026-01-28', description: '1st official release version.'}
@@ -273,6 +274,21 @@ let changelog = [
     const statusDisplay = document.createElement('span');
     statusDisplay.style.cssText = 'font-size:0.5em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 
+    const progressContainer = document.createElement('div');
+    progressContainer.id = 'mb-fetch-progress-container';
+    progressContainer.style.cssText = 'display:none; width:300px; height:26px; background-color:#eee; border:1px solid #ccc; border-radius:3px; overflow:hidden; position:relative; vertical-align:middle;';
+
+    const progressBar = document.createElement('div');
+    progressBar.id = 'mb-fetch-progress-bar';
+    progressBar.style.cssText = 'width:0%; height:100%; transition: width 0.3s, background-color 0.3s; position:absolute; left:0; top:0;';
+
+    const progressText = document.createElement('div');
+    progressText.id = 'mb-fetch-progress-text';
+    progressText.style.cssText = 'position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:black; z-index:1; pointer-events:none; padding: 0 10px; box-sizing: border-box;';
+
+    progressContainer.appendChild(progressBar);
+    progressContainer.appendChild(progressText);
+
     const filterContainer = document.createElement('span');
     // Initially hidden; will be displayed when appended to H2
     filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px;';
@@ -313,6 +329,7 @@ let changelog = [
 
     controlsContainer.appendChild(stopBtn);
     controlsContainer.appendChild(statusDisplay);
+    controlsContainer.appendChild(progressContainer);
     // Filter container is NOT appended here anymore; moved to H2 later
     controlsContainer.appendChild(timerDisplay);
     controlsContainer.appendChild(sortTimerDisplay);
@@ -952,6 +969,10 @@ let changelog = [
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
         statusDisplay.textContent = 'Initializing...';
+        progressContainer.style.display = 'inline-block';
+        progressBar.style.width = '0%';
+        progressBar.style.backgroundColor = '#ffcccc';
+        progressText.textContent = '';
 
         const startTime = performance.now();
         let fetchingTimeStart = performance.now();
@@ -1180,18 +1201,21 @@ let changelog = [
                 const avgPageTime = cumulativeFetchTime / pagesProcessed;
                 const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
 
-                // Update status text with timing
-                statusDisplay.textContent = `Loading page ${p} of ${maxPage}... (Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s)`;
+                // Update status text (page count only)
+                statusDisplay.textContent = `Loading page ${p} of ${maxPage}...`;
 
-                // Update button color based on progress
+                // Update progress bar
                 const progress = p / maxPage;
-                if (progress >= 1.0) {
-                    activeBtn.style.backgroundColor = '#ccffcc'; // light green
-                } else if (progress >= 0.5) {
-                    activeBtn.style.backgroundColor = '#ffe0b2'; // light orange
-                } else {
-                    activeBtn.style.backgroundColor = '#ffcccc'; // light red
-                }
+                progressBar.style.width = `${progress * 100}%`;
+                progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
+
+                // Update color based on progress (red -> orange -> green)
+                let bgColor = '#ffcccc'; // light red
+                if (progress >= 1.0) bgColor = '#ccffcc'; // light green
+                else if (progress >= 0.5) bgColor = '#ffe0b2'; // light orange
+
+                progressBar.style.backgroundColor = bgColor;
+                activeBtn.style.backgroundColor = bgColor;
 
                 // Detailed statistics per page fetch
                 log(`Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
@@ -1217,6 +1241,8 @@ let changelog = [
             activeBtn.classList.remove('mb-show-all-btn-loading');
             allActionButtons.forEach(b => b.disabled = false);
             stopBtn.style.display = 'none';
+            progressContainer.style.display = 'none';
+
             // Only show filter container if it wasn't already appended to H2 (handled in updateH2Count or renderGroupedTable)
             if (!filterContainer.parentNode) {
                 filterContainer.style.display = 'inline-flex';
@@ -1254,7 +1280,8 @@ let changelog = [
             log(`Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
             log('Critical Error during fetch:', err);
-            statusDisplay.textContent = 'Error during load';
+            statusDisplay.textContent = 'Error during load... (repress the "Show all" button)';
+            progressContainer.style.display = 'none';
             activeBtn.disabled = false;
             allActionButtons.forEach(b => b.disabled = false);
             activeBtn.style.backgroundColor = '';
