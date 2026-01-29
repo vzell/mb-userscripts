@@ -1012,26 +1012,51 @@ let changelog = [
         groupedRows = [];
 
         // Remove various clutter elements
+        Logger.info('cleanup', 'Starting clutter element removal.');
+
+        const bigBoxCount = document.querySelectorAll('div.jesus2099userjs154481bigbox').length;
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.remove());
+        if (bigBoxCount > 0) Logger.debug('cleanup', `Removed ${bigBoxCount} jesus2099 bigbox elements.`);
+
+        let relationTablesCount = 0;
         document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
-            if (table.textContent.includes('Relate checked recordings to')) table.remove();
-        });
-        // Remove the release group filter paragraph
-        document.querySelectorAll('p').forEach(p => {
-            if (p.textContent.includes('Showing official release groups by this artist') ||
-                p.textContent.includes('Showing all release groups by this artist')) {
-                p.remove();
+            if (table.textContent.includes('Relate checked recordings to')) {
+                table.remove();
+                relationTablesCount++;
             }
         });
+        if (relationTablesCount > 0) Logger.debug('cleanup', `Removed ${relationTablesCount} relation helper tables.`);
+
+        // Remove the release group filter paragraph
+        let filterParaRemoved = false;
+        document.querySelectorAll('p').forEach(p => {
+            if (p.textContent.includes('Showing official release groups by this artist') || p.textContent.includes('Showing all release groups by this artist')) {
+                p.remove();
+                filterParaRemoved = true;
+            }
+        });
+        if (filterParaRemoved) Logger.debug('cleanup', 'Removed artist release group filter description paragraph.');
+
         // Remove Slick slider containers and large details blocks
+        const sliderCount = document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').length;
         document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').forEach(div => {
-            const parent = div.parentElement;
-            if (parent && parent.style.width === '700px') parent.remove();
+            div.parentNode.remove();
         });
+        if (sliderCount > 0) Logger.debug('cleanup', `Removed ${sliderCount} Slick slider containers.`);
+
         // Target details blocks containing many images (likely the cover art gallery)
+        let removedDetailsCount = 0;
         document.querySelectorAll('details').forEach(det => {
-            if (det.querySelectorAll('img').length > 5) det.remove();
+            const imgCount = det.querySelectorAll('img').length;
+            if (imgCount > 5) {
+                det.remove();
+                removedDetailsCount++;
+                Logger.debug('cleanup', `Removed <details> block containing ${imgCount} images.`);
+            }
         });
+        if (removedDetailsCount > 0) {
+            Logger.info('cleanup', `Removed ${removedDetailsCount} gallery/details blocks.`);
+        }
 
         if (pageType === 'events' || pageType === 'artist-releasegroups') removeSanojjonasContainers();
 

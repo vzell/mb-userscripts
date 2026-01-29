@@ -23539,7 +23539,7 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 ** clicking the tagger link should not create a new page but instead just execute the action in the background
 
 
-* for release pages also support VA releases
+* DONE for release pages also support VA releases
 
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1
 
