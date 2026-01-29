@@ -23033,6 +23033,10 @@ Leave the background shading of even and odd classes still visible
 *** highlightning, global and per column
 ** show sanduhr for long sorts
 
+In the uploaded script,
+change the mouse pointer to a "sand clock", if long running sorting actions are taken place, e.g. if more than 1000 rows are involved.
+
+
 * Filtering
 ** DONE add escape handling when cursor is in filter field, equivalent to pressing the Xicon
 
