@@ -18984,7 +18984,7 @@ leave a little space between the "Cancel button and the new row of buttons, beca
 * debug logging
 ** default
 
-Please do not make any other changes to working code, comments and debugging statements.
+Please do not make any other changes to working code, comments and logging statements.
 
 ** ask
 
@@ -23404,6 +23404,18 @@ of the following span
 <span class="mb-master-toggle">
 #+end_example
 
+* DONE modernize logging framework
+
+In the uploaded userscript,
+modernize the logging framework
+
+- with error, debug, info enabled logging
+- coloroization in the console
+- nice fonts
+- use of nice icons in the log statements which make sens for the current logged action
+
+Do not remove current log statements, only modernize if you implement a more niceer logging framework
+
 
 * Tampermonkey in general
 ** enable file access to scripts
@@ -23532,7 +23544,51 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1
 
 
-* Downloading
+* Include more log statements
+
+In the uploaded script,
+put log statements in side the "if then else" block
+
+#+begin_example
+        // Determine maxPage based on context
+        if (isWorkBase) {
+            maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
+        } else if (overrideParams) {
+            maxPage = await fetchMaxPageGeneric(path, overrideParams);
+        } else {
+            const pagination = document.querySelector('ul.pagination');
+            if (pagination) {
+                const links = Array.from(pagination.querySelectorAll('li a'));
+                const nextIdx = links.findIndex(a => a.textContent.trim() === 'Next');
+                if (nextIdx > 0) {
+                    const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
+                    const p = urlObj.searchParams.get('page');
+                    if (p) maxPage = parseInt(p, 10);
+                } else if (links.length > 0) {
+                    const pageNumbers = links
+                        .map(a => {
+                            const p = new URL(a.href, window.location.origin).searchParams.get('page');
+                            return p ? parseInt(p, 10) : 1;
+                        })
+                        .filter(num => !isNaN(num));
+                    if (pageNumbers.length > 0) maxPage = Math.max(...pageNumbers);
+                }
+            }
+        }
+#+end_example
+
+and also add logging for
+
+#+begin_example
+        // Remove various clutter elements
+#+end_example
+
+Refactor the clutter removal section into it's own function and call that one instead.
+
+Please do NOT make any other changes to working code, comments and logging statements.
+
+
+* DONE Downloading
 ** visual progress bar for the fetching phase
 *** initial
 
@@ -23551,6 +23607,7 @@ Please do not make any other changes to working code, comments and debugging sta
 The text "Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s" should be centered inside the visual progress
 bar with enough padding on both sides. Right now it looks like it flows in from the left.
 
+
 * DOM rendering
 ** DONE timings and logging
 
@@ -23558,13 +23615,31 @@ where in the code does the actual DOM rendering begin, and end. Pleas place logg
 
 ** busy curser throught initial rendering stage
 
-- Additionally change the mouse pointer directly to a "busy cursor", when the rendering stage begins and back to normal
+- Change the mouse pointer directly to a "busy cursor", when the rendering stage begins and back to normal
   when it ends. Also fix the "renderSeconds" calcuations to be the real time the user sees (DOM updates etc.)
 
 ** UI spinning icon
 
-Generate a userscript visually appealing UI element, which should appear if the underlying code would execute a long
-running sorting or filtering action
+In the uploaded script, "ShowAllConsolidated.user.js" generate a visually appealing "Overlay UI element", which should appear
+after the page loading stage and place it inside the '<div id="mb-show-all-controls-container"' at the end.
+
+Prepend the element with the text "Rendering...".  If the Rendering stage takes quite long (for example if the rowcount
+is high) the underlying code would execute quite long, which is also true for running sorting or filtering actions.
+
+Create timers which calculate the time <r> for these long runing action and when finished change the text
+"Rendering..." to "Rendering: <r>s"
+
+Please checkout also the uploaded sript "longop-ui.user.js" and implement as much as possible for such a "Long Running Operation Overlay"
+
+*** fix
+
+It actually says "Rendering.." (but NOT in an overlay) but there is still the visual progress bar visible which should vanish as soon as Filtering is displayed
+
+Also "Filtering results..." is displayd as an Overlay for a long time, but it still show 0s
+
+PLease fix
+
+*** ChatGPT
 
 #+begin_example
 // ==UserScript==
@@ -24250,7 +24325,7 @@ Everything should be place after the checkbox and "Cc:" text
 "Sorting on column <column name> (column index))..."
 "Sorting on table group <sub-header> column <column name> (column index))..."
 
-** adjust color of sorted column to a ver light yellow
+** adjust color of sorted column to a very lightyellow
 
 In the uploaded script,
 adjust the color of the column of a datatable on which sorting has been performed to a light yellow background. Reset the color to the default as soon as another column is choosen for sorting.
@@ -24314,6 +24389,31 @@ the "setupMenu: function()" of "AA.user.js", see instructions above
 
 
 * Timings
+** 1
+
+In the uploaded userscript,
+the '<div id="mb-show-all-controls-container"' should be updated with "statusDisplay.textContent" during the following stages from top to bottom with the content of the "Status text" column in the next table:
+
+| Stage              | Status text                                                                                | Visual progress bar | Visual progress bar text       |
+|--------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------|
+| Initializing       | Initializing...                                                                            |                     |                                |
+| Get maxPage        | Getting <total page numbers>...                                                            |                     |                                |
+|--------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------|
+| Loading            | Loading page <current page number> of <total page numbers>... (current rows up to now)     | visible             | Estimated remaining time: <e>s |
+| Loading finished   | Loading page <current page number> of <total page numbers>... (current total rows)         | visible             | Estimated remaining time: <e>s |
+|--------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------|
+| Fetching finished  | Loaded <total page numbers> pages (current rows), Fetching time: <f>s                      |                     |                                |
+|--------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------|
+| Rendering          | Loaded <total page numbers> pages (current rows), Fetching time: <f>s                      |                     |                                |
+| Rendering finished | Loaded <total page numbers> pages (current rows), Fetching time: <f>s, Rendering time <r>s |                     |                                |
+
+All the steps should also have detailed console logging.
+
+The "Visual progress bar" should vanish as soon we change from stage "Loading finished" to "Fetching finished".
+
+Please do not make any other changes to working code, comments and logging statements.
+
+** 2
 
 In the uploaded userscript,
 the '<div id="mb-show-all-controls-container"' should have a modern visually nice appearance during the following stages from top to bottom in the next table:
@@ -24322,7 +24422,8 @@ I
 | Stage              | Optional         | Status text                                                                                | Visual progress bar | Visual progress bar text       | Visual spinning icon |
 |--------------------+------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------+----------------------|
 | Initializing       |                  | Initializing...                                                                            |                     |                                |                      |
-| Get maxPage        |                  | Getting <total page numbers>...                                                            |                     |                                |                      |
+| Get maxPage        |                  | Getting total pages...                                                                     |                     |                                |                      |
+| Get maxPage done   |                  | Getting total pages...<total page numbers>                                                 |                     |                                |                      |
 |--------------------+------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------+----------------------|
 | Loading            | x (if maxPage=1) | Loading page <current page number> of <total page numbers>...                              | visible             | Estimated remaining time: <e>s |                      |
 | Loading finished   | x (if maxPage=1) | Loading page <current page number> of <total page numbers>... (current total rows)         | visible             | Estimated remaining time: <e>s |                      |
@@ -24334,64 +24435,54 @@ I
 
 Please check if something could be made better. All the steps should also have detailed console logging.
 
+Please do not make any other changes to working code, comments and logging statements.
 
+* remove yellow backgound of the sorting indicator
 
-* Put log statements in side the if the else
+In the uploaded userscript
+the yellow backgound of the sorting indicator should only be applied when a sorting has actually been done at least once
+after the initial rendering stage after fetching all the pages (and it must be one of ascending or desending, so a click
+on the icon for "original sort order" should not trigger a background change, because nothing will actually change for
+that case)
 
-#+begin_example
-        // Determine maxPage based on context
-        if (isWorkBase) {
-            maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
-        } else if (overrideParams) {
-            maxPage = await fetchMaxPageGeneric(path, overrideParams);
-        } else {
-            const pagination = document.querySelector('ul.pagination');
-            if (pagination) {
-                const links = Array.from(pagination.querySelectorAll('li a'));
-                const nextIdx = links.findIndex(a => a.textContent.trim() === 'Next');
-                if (nextIdx > 0) {
-                    const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
-                    const p = urlObj.searchParams.get('page');
-                    if (p) maxPage = parseInt(p, 10);
-                } else if (links.length > 0) {
-                    const pageNumbers = links
-                        .map(a => {
-                            const p = new URL(a.href, window.location.origin).searchParams.get('page');
-                            return p ? parseInt(p, 10) : 1;
-                        })
-                        .filter(num => !isNaN(num));
-                    if (pageNumbers.length > 0) maxPage = Math.max(...pageNumbers);
-                }
-            }
-        }
-#+end_example
+Please do not make any other changes to working code, comments and logging statements.
 
-#+begin_example
-        // Remove various clutter elements
-#+end_example
-
-
-* use nice logging framework
-
-In the uploaded userscript,
-modernize the logging framework
-
-- with error, debug, info enabled logging
-- coloroization in the console
-- nice fonts
-- use of nice icons in the log statements which make sens for the current logged action
-
-Do not remove current log statements, only modernize if you implement a more niceer logging framework
-
-
-* remove first column or at least the sortin indicators for pages of type https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290?page=3&tport=8000
-
+* remove first column or at least the sorting indicators for pages of type https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290?page=3&tport=8000
 
 * remove the mouse pointer finger from "(total rows)" after h2 heading, but add the click (collapse(uncollapse) funct. to the h2/h3 header lines as a whole
 
-actually h3 lines work (alos have grey shading, when hovering"
-add this also to h2 lines  (grey shading, when hovering), except "Show", "Hide", "global filter field", "[ ] Cc" checkbox
+In the uploaded userscript
+the h3 header lines (which span up to the '<div id="sidebar"'
 
+#+begin_example
+<h3 class="mb-toggle-h3"
+#+end_example
+
+there appears a grey background shading, when hovering over with the mouse.
+
+The same behaviour should also happen to the h2 lines which have the "mb-toggle-h2" class applied
+
+#+begin_example
+<h2 class=".... mb-toggle-h2"
+#+end_example
+
+except for the h2 header
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Collapse/Uncollapse section">
+#+end_example
+
+where the following elements should have their special functions attached
+
+ - textContent = 'Show▼'
+ - textContent = 'Hide▲'
+ - "global filter field"
+ - "[ ] Cc" checkbox
+ 
+and all the rest, inklusive the "suffixText" and everything after the ""[ ] Cc" checkbox up to the '<div id="sidebar"' should just be clickable
+with the standard action of collapsing/un-collapsing the corresponding heading with the underlyinng data.
+
+Please do not make any other changes to working code, comments and logging statements.
 
 * spacer between "Show / Hide" and the rest of the text " all Release..."
 

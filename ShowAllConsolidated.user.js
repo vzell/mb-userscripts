@@ -1373,7 +1373,7 @@ let changelog = [
                 masterToggle.className = 'mb-master-toggle';
 
                 const showSpan = document.createElement('span');
-                showSpan.textContent = 'Show▼';
+                showSpan.textContent = 'Show all';
                 showSpan.title = 'Show all sub-tables';
                 showSpan.onclick = (e) => {
                     e.preventDefault();
@@ -1386,7 +1386,7 @@ let changelog = [
                 };
 
                 const hideSpan = document.createElement('span');
-                hideSpan.textContent = 'Hide▲';
+                hideSpan.textContent = 'Hide all';
                 hideSpan.title = 'Hide all sub-tables';
                 hideSpan.onclick = (e) => {
                     e.preventDefault();
@@ -1398,15 +1398,11 @@ let changelog = [
                     });
                 };
 
-                let suffixText = ' all Release Types or click the individual Release Type below';
-                if (pageType === 'artist-releasegroups') {
-                    suffixText = ' all ReleaseGroup Types or click the individual ReleaseGroup Type below';
-                }
-
+                masterToggle.appendChild(document.createTextNode('[ '));
                 masterToggle.appendChild(showSpan);
-                masterToggle.appendChild(document.createTextNode(' / '));
+                masterToggle.appendChild(document.createTextNode(' | '));
                 masterToggle.appendChild(hideSpan);
-                masterToggle.appendChild(document.createTextNode(suffixText));
+                masterToggle.appendChild(document.createTextNode(' ]'));
 
                 targetHeader.appendChild(masterToggle);
 
