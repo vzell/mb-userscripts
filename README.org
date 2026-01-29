@@ -23007,11 +23007,14 @@ implement the logic to change the values like in the following code snippet from
 ** timings for sorting 
 
 In the uploaded script,
+why is the sort time in the status line printed as 4s when sorting 4000 rows, but in usertime it tokk maybe 25s ?
+
+In the uploaded script,
 separate the times for sorting the table data and the re-rendering stage.
 
 The text for the timing information for sorting should change during sorting to "Sorting on column <column name> (column index))..." and only after the sort it should be: "Sorting: <sorting time>s, Re-rendering: <re-rendering time>s"
 
-Everything shloud be place after the checkbox and "Cc:" text
+Everything should be place after the checkbox and "Cc:" text
 
 "Sorting on column <column name> (column index))..."
 "Sorting on table group <sub-header> column <column name> (column index))..."
@@ -23036,16 +23039,22 @@ Leave the background shading of even and odd classes still visible
 In the uploaded script,
 change the mouse pointer to a "sand clock", if long running sorting actions are taken place, e.g. if more than 1000 rows are involved.
 
+** visual progress bar for the fetching phase
+
+In the uploaded script,
+
+also implement a visual progress bar for the fetching phase, in addition to the status text.  Additionally change the
+mouse pointer directly to a "busy cursor", when the rendering stage begins and back to normal when it ends. Also fix the
+"renderSeconds" calcuations to be the real time the user sees (DOM updates etc.)
+
+Please do not make any other changes to working code, comments and debugging statements.
+
 
 * Filtering
 ** DONE add escape handling when cursor is in filter field, equivalent to pressing the Xicon
 
 In the uploaded script, pressing the "Escape" key when the focus is inside either the global or one of the columns
 specific filter fields, should have the same effect as clicking on the unicode X symbol at the end of the corresponding filter field.
-
-** visual progress bar for the fetching phase
-
-Would you like me to also implement a visual progress bar for the fetching phase, or should we stick to the status text?
 
 ** DONE add changelog
 
