@@ -387,8 +387,11 @@ let changelog = [
         .sort-icon-btn { cursor: pointer; padding: 0 2px; font-weight: bold; transition: color 0.1s; color: black; border-radius: 2px; }
         .sort-icon-active { color: Green !important; background-color: #FFFF00 !important; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
+        .mb-toggle-h3:hover, .mb-toggle-h2:hover {
+            color: #222;
+            background-color: #f9f9f9;
+        }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; }
-        .mb-toggle-h3:hover { color: #222; background-color: #f9f9f9; }
         .mb-toggle-h2 { cursor: pointer; user-select: none; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; cursor: pointer; }
         .mb-master-toggle { color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; cursor: default; }

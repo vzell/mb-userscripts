@@ -24449,6 +24449,30 @@ Please do not make any other changes to working code, comments and logging state
 
 * remove first column or at least the sorting indicators for pages of type https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290?page=3&tport=8000
 
+In the uploaded userscript for the URLs of type https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+currently the initial rendered column header "#" for the first column with looks like
+
+#+begin_example
+  <th colspan="1" class="number-column" style="cursor: default;">
+    <span class="sort-icon-btn sort-icon-active" title="Original sort order">⇅
+    </span> #
+    <span class="sort-icon-btn" title="Ascending sort order">▲
+    </span>
+    <span class="sort-icon-btn" title="Descending sort order">▼
+    </span>
+  </th>
+#+end_example
+
+As it does NOT make sense to sort on this column, please remove the '<span class="sort-icon-btn sort-icon-active" title="Original sort order">⇅' around the "#" and leave just the "#", and also completey remove the block
+
+#+begin_example
+    <span class="sort-icon-btn" title="Ascending sort order">▲
+    </span>
+    <span class="sort-icon-btn" title="Descending sort order">▼
+    </span>
+#+end_example
+
+
 * remove the mouse pointer finger from "(total rows)" after h2 heading, but add the click (collapse(uncollapse) funct. to the h2/h3 header lines as a whole
 
 In the uploaded userscript
@@ -24474,17 +24498,37 @@ except for the h2 header
 
 where the following elements should have their special functions attached
 
- - textContent = 'Show▼'
- - textContent = 'Hide▲'
+ - textContent = 'Show all'
+ - textContent = 'Hide all'
  - "global filter field"
  - "[ ] Cc" checkbox
  
-and all the rest, inklusive the "suffixText" and everything after the ""[ ] Cc" checkbox up to the '<div id="sidebar"' should just be clickable
-with the standard action of collapsing/un-collapsing the corresponding heading with the underlyinng data.
+and all the rest, inklusive the "[ ", "|", " ]" and everything after the ""[ ] Cc" checkbox up to the '<div
+id="sidebar"' should just be clickable with the standard action of collapsing/un-collapsing the corresponding heading
+with the underlyinng data.
 
 Please do not make any other changes to working code, comments and logging statements.
 
-* spacer between "Show / Hide" and the rest of the text " all Release..."
+** 1
+
+#+begin_example
+	// Add the mb-toggle-h2 class to the header
+	h2.className = 'mb-h2-processed mb-toggle-h2';
+	h2.title = 'Collapse/Uncollapse section';
+
+	h2.addEventListener('click', (e) => {
+	    // List of elements/text that have special functions and should NOT trigger collapse
+	    const isSpecialElement = e.target.closest('input') ||
+                  e.target.closest('.mb-col-filter-clear') ||
+                  (e.target.tagName === 'SPAN' && (e.target.textContent === 'Show all' || e.target.textContent === 'Hide all'));
+
+	    // The "Cc" label text itself should still allow toggling,
+	    // but we check if the click was specifically on the checkbox or filter inputs.
+	    if (!isSpecialElement) {
+		toggleSection(sectionId);
+	    }
+	});
+#+end_example
 
 
 * icons
