@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9+2026-01-28
+// @version      0.9.1+2026-01-29
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -25,6 +25,23 @@
 // @grant        GM_unregisterMenuCommand
 // @license      MIT
 // ==/UserScript==
+
+/*
+ * VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+ * is an userscript which accumulates paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.)
+ * into a single view with real-time filtering and sorting.
+ *
+ * This script has been created by giving the right facts and asking the right questions to Gemini.
+ * When Gemini gots stuck, I asked ChatGPT for help, until I got everything right.
+ *
+ * NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome and Firefox.
+ */
+
+// CHANGELOG - The most important updates/versions:
+let changelog = [
+    {version: '0.9.1+2026-01-29', description: 'Added "Esc" key handling for clearing the filter fields when focused; Added "ChangeLog" userscript manager menu entry.'},
+    {version: '0.9.0+2026-01-28', description: '1st official release version.'}
+];
 
 (function() {
     'use strict';
@@ -99,6 +116,37 @@
                     GM_setValue("autoExpandThreshold", num);
                     this.setupMenu();
                 }
+            });
+
+            // Added ChangeLog menu entry mimicking Stig's Art Grabr userscript behavior
+            register("ChangeLog", () => {
+                let logDiv = document.getElementById('vz-changelog');
+                if (!logDiv) {
+                    logDiv = document.createElement("div");
+                    logDiv.id = "vz-changelog";
+                    logDiv.style.cssText = "position:fixed; left:0; right:0; top:10em; z-index:3000009; margin-left:auto; margin-right:auto; min-height:8em; width:50%; background-color:#eee; color:#111; border-radius:5px; padding:1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid #ccc; display:none;";
+
+                    const title = document.createElement("b");
+                    title.textContent = "VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities ... (Click to dismiss)";
+                    logDiv.appendChild(title);
+
+                    const list = document.createElement("ul");
+                    list.style.marginTop = "0.5em";
+
+                    changelog.forEach(entry => {
+                        const li = document.createElement("li");
+                        li.innerHTML = `<i>${entry.version}</i> - ${entry.description}`;
+                        list.appendChild(li);
+                    });
+
+                    logDiv.appendChild(list);
+                    document.body.appendChild(logDiv);
+
+                    logDiv.addEventListener('click', () => {
+                        logDiv.style.display = 'none';
+                    }, false);
+                }
+                logDiv.style.display = 'block';
             });
         }
     };
@@ -534,6 +582,15 @@
                 runFilter();
             });
 
+            // Handle Escape key to clear column filter
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    input.value = '';
+                    runFilter();
+                }
+            });
+
             wrapper.appendChild(input);
             wrapper.appendChild(clear);
             th.appendChild(wrapper);
@@ -691,6 +748,14 @@
         stopRequested = true;
         stopBtn.disabled = true;
         stopBtn.textContent = 'Stopping...';
+    });
+
+    // Handle Escape key to clear global filter
+    filterInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            filterInput.value = '';
+            runFilter();
+        }
     });
 
     filterInput.addEventListener('input', runFilter);

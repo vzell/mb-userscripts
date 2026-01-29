@@ -23034,9 +23034,40 @@ Leave the background shading of even and odd classes still visible
 ** show sanduhr for long sorts
 
 * Filtering
-** add escape handling when cursor is in filter field, equivalent to pressing the Xicon
+** DONE add escape handling when cursor is in filter field, equivalent to pressing the Xicon
 
-Pressing the Escape key should have the same effect as clicking on the unicode X symbol
+In the uploaded script, pressing the "Escape" key when the focus is inside either the global or one of the columns
+specific filter fields, should have the same effect as clicking on the unicode X symbol at the end of the corresponding filter field.
+
+** DONE add changelog
+
+#+begin_example
+/*
+ *      VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+ *      is an userscript which accumulates paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.)
+ *      into a single view with real-time filtering and sorting.
+ *
+ *      This script has been created by giving the right facts and asking the right questions to Gemini.
+ *      When Gemini gots stuck, I asked ChatGPT for help, until I got everything right.
+ *
+ *      NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome and Firefox.
+ */
+
+// CHANGELOG - The most important updates/versions:
+let changelog = [
+    {version: '0.9.1+2026-01-28', description: 'Added "Esc" key handling for clearing the filter fields when focused,'},
+    {version: '0.9.0+2026-01-28', description: '1st official release version.'}
+];
+#+end_example
+
+In the uploaded script "AA.user.js"
+use the "changelog" variable as the information to show in a popup text field when pressing the "TamperMonkey -> ChangeLog" menu entry.
+
+For this to happen extend the "setupMenu: function()" to mimic the behaviour found in the uploaded userscript "StigArt.user.js"
+Also allow, besides clicking the ChangeLog popup text filed, the "Esc" key to let the popup vanish. 
+
+Please do not make any changes to the code in "AA.user.js", comments, debugging statements except adding a new entry in
+the "setupMenu: function()" of "AA.user.js", see instructions above
 
 ** adjust the logic for big tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
 ** show sanduhr for long filters
@@ -23502,6 +23533,7 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 
 
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+
 
 * make all colors/backgrounds configurable
 
