@@ -472,6 +472,62 @@ let changelog = [
     let stopRequested = false;
     let multiTableSortStates = new Map();
 
+    /**
+     * Removes various clutter elements from the MusicBrainz page to prepare for consolidated view.
+     */
+    function performClutterCleanup() {
+        Logger.info('cleanup', 'Starting clutter element removal.');
+
+        // Remove Jesus2099 bigbox elements
+        const bigBoxCount = document.querySelectorAll('div.jesus2099userjs154481bigbox').length;
+        document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.remove());
+        if (bigBoxCount > 0) Logger.debug('cleanup', `Removed ${bigBoxCount} jesus2099 bigbox elements.`);
+
+        // Remove relationship helper tables
+        let relationTablesCount = 0;
+        document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
+            if (table.textContent.includes('Relate checked recordings to')) {
+                table.remove();
+                relationTablesCount++;
+            }
+        });
+        if (relationTablesCount > 0) Logger.debug('cleanup', `Removed ${relationTablesCount} relation helper tables.`);
+
+        // Remove the release group filter paragraph
+        let filterParaRemoved = false;
+        document.querySelectorAll('p').forEach(p => {
+            if (p.textContent.includes('Showing official release groups by this artist') || p.textContent.includes('Showing all release groups by this artist')) {
+                p.remove();
+                filterParaRemoved = true;
+            }
+        });
+        if (filterParaRemoved) Logger.debug('cleanup', 'Removed artist release group filter description paragraph.');
+
+        // Remove Slick slider containers
+        const sliderCount = document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').length;
+        document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').forEach(div => {
+            const parent = div.parentElement;
+            if (parent && parent.style.width === '700px') parent.remove();
+        });
+        if (sliderCount > 0) Logger.debug('cleanup', `Removed ${sliderCount} Slick slider containers.`);
+
+        // Target details blocks containing many images (likely the cover art gallery)
+        let removedDetailsCount = 0;
+        document.querySelectorAll('details').forEach(det => {
+            const imgCount = det.querySelectorAll('img').length;
+            if (imgCount > 5) {
+                det.remove();
+                removedDetailsCount++;
+                Logger.debug('cleanup', `Removed <details> block containing ${imgCount} images.`);
+            }
+        });
+        if (removedDetailsCount > 0) Logger.info('cleanup', `Removed ${removedDetailsCount} gallery/details blocks.`);
+
+        if (pageType === 'events' || pageType === 'artist-releasegroups') {
+            removeSanojjonasContainers();
+        }
+    }
+
     async function fetchMaxPageGeneric(targetPath, queryParams = {}) {
         const url = new URL(window.location.origin + targetPath);
         Object.keys(queryParams).forEach(k => url.searchParams.set(k, queryParams[k]));
@@ -967,16 +1023,18 @@ let changelog = [
 
         // Removed isLoaded block to allow re-fetching
         Logger.info('fetch', 'Starting fetch process...', overrideParams);
-
         statusDisplay.textContent = 'Getting number of pages to fetch...';
         let maxPage = 1;
 
         // Determine maxPage based on context
         if (isWorkBase) {
+            Logger.info('fetch', 'Context: isWorkBase. Fetching maxPage with specific parameters.');
             maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
         } else if (overrideParams) {
+            Logger.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
             maxPage = await fetchMaxPageGeneric(path, overrideParams);
         } else {
+            Logger.debug('fetch', 'Context: Standard pagination. Parsing "ul.pagination" from current page.');
             const pagination = document.querySelector('ul.pagination');
             if (pagination) {
                 const links = Array.from(pagination.querySelectorAll('li a'));
@@ -984,7 +1042,10 @@ let changelog = [
                 if (nextIdx > 0) {
                     const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
                     const p = urlObj.searchParams.get('page');
-                    if (p) maxPage = parseInt(p, 10);
+                    if (p) {
+                        maxPage = parseInt(p, 10);
+                        Logger.debug('fetch', `Found "Next" link. Extracted page: ${maxPage}`);
+                    }
                 } else if (links.length > 0) {
                     const pageNumbers = links
                         .map(a => {
@@ -992,8 +1053,13 @@ let changelog = [
                             return p ? parseInt(p, 10) : 1;
                         })
                         .filter(num => !isNaN(num));
-                    if (pageNumbers.length > 0) maxPage = Math.max(...pageNumbers);
+                    if (pageNumbers.length > 0) {
+                        maxPage = Math.max(...pageNumbers);
+                        Logger.debug('fetch', `Parsed page numbers from list. Max found: ${maxPage}`);
+                    }
                 }
+            } else {
+                Logger.debug('fetch', 'No pagination element found; assuming single page (maxPage = 1).');
             }
         }
 
@@ -1011,52 +1077,8 @@ let changelog = [
         originalAllRows = [];
         groupedRows = [];
 
-        // Remove various clutter elements
-        Logger.info('cleanup', 'Starting clutter element removal.');
-
-        const bigBoxCount = document.querySelectorAll('div.jesus2099userjs154481bigbox').length;
-        document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.remove());
-        if (bigBoxCount > 0) Logger.debug('cleanup', `Removed ${bigBoxCount} jesus2099 bigbox elements.`);
-
-        let relationTablesCount = 0;
-        document.querySelectorAll('table[style*="background: rgb(242, 242, 242)"]').forEach(table => {
-            if (table.textContent.includes('Relate checked recordings to')) {
-                table.remove();
-                relationTablesCount++;
-            }
-        });
-        if (relationTablesCount > 0) Logger.debug('cleanup', `Removed ${relationTablesCount} relation helper tables.`);
-
-        // Remove the release group filter paragraph
-        let filterParaRemoved = false;
-        document.querySelectorAll('p').forEach(p => {
-            if (p.textContent.includes('Showing official release groups by this artist') || p.textContent.includes('Showing all release groups by this artist')) {
-                p.remove();
-                filterParaRemoved = true;
-            }
-        });
-        if (filterParaRemoved) Logger.debug('cleanup', 'Removed artist release group filter description paragraph.');
-
-        // Remove Slick slider containers and large details blocks
-        const sliderCount = document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').length;
-        document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').forEach(div => {
-            div.parentNode.remove();
-        });
-        if (sliderCount > 0) Logger.debug('cleanup', `Removed ${sliderCount} Slick slider containers.`);
-
-        // Target details blocks containing many images (likely the cover art gallery)
-        let removedDetailsCount = 0;
-        document.querySelectorAll('details').forEach(det => {
-            const imgCount = det.querySelectorAll('img').length;
-            if (imgCount > 5) {
-                det.remove();
-                removedDetailsCount++;
-                Logger.debug('cleanup', `Removed <details> block containing ${imgCount} images.`);
-            }
-        });
-        if (removedDetailsCount > 0) {
-            Logger.info('cleanup', `Removed ${removedDetailsCount} gallery/details blocks.`);
-        }
+        // Run refactored clutter removal
+        performClutterCleanup();
 
         if (pageType === 'events' || pageType === 'artist-releasegroups') removeSanojjonasContainers();
 

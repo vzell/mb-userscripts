@@ -23611,7 +23611,7 @@ and how must the following block of code be extended to support these type of UR
 
 
 
-* Include more log statements
+* DONE Include more log statements
 
 In the uploaded script,
 put log statements in side the "if then else" block
@@ -23650,7 +23650,7 @@ and also add logging for
         // Remove various clutter elements
 #+end_example
 
-Refactor the clutter removal section into it's own function and call that one instead.
+* Refactor the clutter removal section into it's own function and call that one instead.
 
 Please do NOT make any other changes to working code, comments and logging statements.
 
