@@ -24530,10 +24530,12 @@ Please do not make any other changes to working code, comments and logging state
 	});
 #+end_example
 
-** 2
+* make the visible area between the last '</span>' and the '</h2>' also clickable
 
-In the uploaded userscript, in all the h2 headers make the visible area between the last '</span>' and the '</h2>' also
-clickable with the standard action of collapsing/un-collapsing the corresponding heading with the underlyinng data.
+In the uploaded userscript,
+
+in all the h2 headers make the visible area between the last '</span>' and the '</h2>' also
+clickable with the standard action of collapsing/un-collapsing the corresponding heading
 
 Example HTML snippet
 

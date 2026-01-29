@@ -1404,13 +1404,13 @@ let changelog = [
                 let suffixText = ' all Release Types';
                 if (pageType === 'artist-releasegroups') {
                     suffixText = ' all ReleaseGroup Types';
-		}
+                }
                 masterToggle.appendChild(document.createTextNode('[ '));
                 masterToggle.appendChild(showSpan);
                 masterToggle.appendChild(document.createTextNode(' | '));
                 masterToggle.appendChild(hideSpan);
                 masterToggle.appendChild(document.createTextNode(' ]'));
-		masterToggle.appendChild(document.createTextNode(suffixText));
+                masterToggle.appendChild(document.createTextNode(suffixText));
 
                 targetHeader.appendChild(masterToggle);
 
@@ -1419,7 +1419,7 @@ let changelog = [
                 filterContainer.style.display = 'inline-flex';
                 filterContainer.style.marginLeft = '15px';
                 filterContainer.style.verticalAlign = 'middle';
-	    }
+            }
         }
 
         const existingTables = container.querySelectorAll('table.tbl');
