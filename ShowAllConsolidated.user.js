@@ -1376,7 +1376,7 @@ let changelog = [
                 masterToggle.className = 'mb-master-toggle';
 
                 const showSpan = document.createElement('span');
-                showSpan.textContent = 'Show all';
+                showSpan.textContent = 'Show';
                 showSpan.title = 'Show all sub-tables';
                 showSpan.onclick = (e) => {
                     e.preventDefault();
@@ -1389,7 +1389,7 @@ let changelog = [
                 };
 
                 const hideSpan = document.createElement('span');
-                hideSpan.textContent = 'Hide all';
+                hideSpan.textContent = 'Hide';
                 hideSpan.title = 'Hide all sub-tables';
                 hideSpan.onclick = (e) => {
                     e.preventDefault();
@@ -1401,11 +1401,16 @@ let changelog = [
                     });
                 };
 
+                let suffixText = ' all Release Types';
+                if (pageType === 'artist-releasegroups') {
+                    suffixText = ' all ReleaseGroup Types';
+		}
                 masterToggle.appendChild(document.createTextNode('[ '));
                 masterToggle.appendChild(showSpan);
                 masterToggle.appendChild(document.createTextNode(' | '));
                 masterToggle.appendChild(hideSpan);
                 masterToggle.appendChild(document.createTextNode(' ]'));
+		masterToggle.appendChild(document.createTextNode(suffixText));
 
                 targetHeader.appendChild(masterToggle);
 
@@ -1414,7 +1419,7 @@ let changelog = [
                 filterContainer.style.display = 'inline-flex';
                 filterContainer.style.marginLeft = '15px';
                 filterContainer.style.verticalAlign = 'middle';
-            }
+	    }
         }
 
         const existingTables = container.querySelectorAll('table.tbl');
