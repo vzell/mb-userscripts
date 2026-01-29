@@ -23043,6 +23043,10 @@ change the mouse pointer to a "sand clock", if long running sorting actions are 
 In the uploaded script, pressing the "Escape" key when the focus is inside either the global or one of the columns
 specific filter fields, should have the same effect as clicking on the unicode X symbol at the end of the corresponding filter field.
 
+** visual progress bar for the fetching phase
+
+Would you like me to also implement a visual progress bar for the fetching phase, or should we stick to the status text?
+
 ** DONE add changelog
 
 #+begin_example

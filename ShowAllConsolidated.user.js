@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.1+2026-01-29
+// @version      0.9.2+2026-01-29
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -39,6 +39,7 @@
 
 // CHANGELOG - The most important updates/versions:
 let changelog = [
+    {version: '0.9.2+2026-01-29', description: 'Show busy cursor for long running sort operations (> 1000 table rows)'},
     {version: '0.9.1+2026-01-29', description: 'Added "Esc" key handling for clearing the filter fields when focused; Added "ChangeLog" userscript manager menu entry.'},
     {version: '0.9.0+2026-01-28', description: '1st official release version.'}
 ];
@@ -318,6 +319,7 @@ let changelog = [
 
     const style = document.createElement('style');
     style.textContent = `
+        .mb-sorting-active, .mb-sorting-active * { cursor: wait !important; }
         .mb-show-all-btn-active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
         button.mb-show-all-btn-loading:disabled {
             cursor: default !important;
@@ -1544,6 +1546,13 @@ let changelog = [
                     log(`Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}...`);
                     sortTimerDisplay.textContent = 'Sorting...';
 
+                    const groupIndex = parseInt(sortKey.split('_').pop(), 10);
+                    const targetGroup = groupedRows[groupIndex];
+                    const rowCount = targetGroup?.rows?.length || 0;
+                    const showWaitCursor = rowCount > 1000;
+
+                    if (showWaitCursor) document.body.classList.add('mb-sorting-active');
+
                     requestAnimationFrame(() => {
                         const startSort = performance.now();
                         state.lastSortIndex = index;
@@ -1553,9 +1562,6 @@ let changelog = [
                         th.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
                         // Highlight only this specific icon
                         span.classList.add('sort-icon-active');
-
-                        const groupIndex = parseInt(sortKey.split('_').pop(), 10);
-                        const targetGroup = groupedRows[groupIndex];
 
                         if (targetGroup && targetGroup.rows) {
                             if (state.sortState === 0) {
@@ -1580,6 +1586,7 @@ let changelog = [
                         runFilter();
                         const duration = ((performance.now() - startSort) / 1000).toFixed(2);
                         sortTimerDisplay.textContent = `Sorting: ${duration}s`;
+                        if (showWaitCursor) document.body.classList.remove('mb-sorting-active');
                     });
                 };
                 return span;
@@ -1627,6 +1634,11 @@ let changelog = [
                     log(`Sorting flat table by column: "${colName}" (index: ${index}) to state ${targetState}...`);
                     sortTimerDisplay.textContent = 'Sorting...';
 
+                    const rowCount = allRows.length;
+                    const showWaitCursor = rowCount > 1000;
+
+                    if (showWaitCursor) document.body.classList.add('mb-sorting-active');
+
                     requestAnimationFrame(() => {
                         const startSort = performance.now();
                         lastSortIndex = index;
@@ -1658,6 +1670,7 @@ let changelog = [
                         runFilter();
                         const duration = ((performance.now() - startSort) / 1000).toFixed(2);
                         sortTimerDisplay.textContent = `Sorting: ${duration}s`;
+                        if (showWaitCursor) document.body.classList.remove('mb-sorting-active');
                     });
                 };
                 return span;
