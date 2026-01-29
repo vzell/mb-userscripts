@@ -23551,10 +23551,401 @@ Please do not make any other changes to working code, comments and debugging sta
 The text "Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s" should be centered inside the visual progress
 bar with enough padding on both sides. Right now it looks like it flows in from the left.
 
+* DOM rendering
+** timings
+
+where in the code does the actual DOM rendering begin, and end. Pleas place logging statement in there, and add timing info to the log
+
 ** busy curser throught initial rendering stage
 
 - Additionally change the mouse pointer directly to a "busy cursor", when the rendering stage begins and back to normal
   when it ends. Also fix the "renderSeconds" calcuations to be the real time the user sees (DOM updates etc.)
+
+** UI spinning icon
+
+Generate a userscript visually appealing UI element, which should appear if the underlying code would execute a long
+running sorting or filtering action
+
+#+begin_example
+// ==UserScript==
+// @name         Long Running Operation Overlay
+// @namespace    ui.long.operation.overlay
+// @match        *://*/*
+// @grant        none
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    // ---------- STYLES ----------
+    const style = document.createElement('style');
+    style.textContent = `
+        .lr-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 15, 15, 0.45);
+            backdrop-filter: blur(4px);
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .lr-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .lr-card {
+            background: #1e1e1e;
+            color: #f2f2f2;
+            padding: 24px 28px;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            min-width: 260px;
+            text-align: center;
+            font-family: system-ui, sans-serif;
+        }
+
+        .lr-spinner {
+            width: 42px;
+            height: 42px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #4da3ff;
+            border-radius: 50%;
+            animation: lr-spin 0.8s linear infinite;
+            margin: 0 auto 14px;
+        }
+
+        @keyframes lr-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .lr-text {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // ---------- ELEMENT ----------
+    const overlay = document.createElement('div');
+    overlay.className = 'lr-overlay';
+    overlay.innerHTML = `
+        <div class="lr-card">
+            <div class="lr-spinner"></div>
+            <div class="lr-text">Working…</div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const textNode = overlay.querySelector('.lr-text');
+
+    // ---------- API ----------
+    window.LongRunningUI = {
+        show(text = 'Working…') {
+            textNode.textContent = text;
+            overlay.classList.add('visible');
+        },
+
+        update(text) {
+            textNode.textContent = text;
+        },
+
+        hide() {
+            overlay.classList.remove('visible');
+        }
+    };
+})();
+#+end_example
+
+All except "Integrate directly into your existing filter/sort script without touching logic"
+
+#+begin_example
+// ==UserScript==
+// @name         Long Operation UI – Ultimate
+// @namespace    userscript.longop.ui.ultimate
+// @match        *://*/*
+// @grant        none
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    if (window.LongOpUI) return; // 🔒 singleton safety
+
+    /* ---------------- CONFIG ---------------- */
+    const AUTO_SHOW_DELAY = 120; // ms
+    const MAX_STACK_LINES = 5;
+
+    /* ---------------- STATE ---------------- */
+    let visible = false;
+    let cancelled = false;
+    let startTime = 0;
+    let showTimer = null;
+    let elapsedTimer = null;
+    let progress = null;
+
+    /* ---------------- STYLES ---------------- */
+    const style = document.createElement('style');
+    style.textContent = `
+        .lop-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            backdrop-filter: blur(4px);
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease;
+        }
+
+        .lop-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .lop-card {
+            background: #1b1b1b;
+            color: #eee;
+            padding: 24px 28px;
+            border-radius: 14px;
+            width: 340px;
+            box-shadow: 0 30px 70px rgba(0,0,0,.55);
+            font-family: system-ui, sans-serif;
+        }
+
+        .lop-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .lop-spinner {
+            width: 36px;
+            height: 36px;
+            border: 4px solid rgba(255,255,255,.2);
+            border-top-color: #4da3ff;
+            border-radius: 50%;
+            animation: lop-spin .8s linear infinite;
+        }
+
+        @keyframes lop-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .lop-lines {
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .lop-lines div {
+            opacity: .85;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lop-time {
+            font-size: 11px;
+            opacity: .6;
+            margin-bottom: 10px;
+        }
+
+        .lop-progress {
+            height: 6px;
+            background: #2a2a2a;
+            border-radius: 99px;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .lop-progress-inner {
+            height: 100%;
+            width: 0%;
+            background: #4da3ff;
+            transition: width .2s ease;
+        }
+
+        .lop-actions {
+            text-align: right;
+        }
+
+        .lop-cancel {
+            background: #2d2d2d;
+            border: none;
+            color: #ff6b6b;
+            padding: 6px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .lop-cancel:hover {
+            background: #383838;
+        }
+    `;
+    document.head.appendChild(style);
+
+    /* ---------------- DOM ---------------- */
+    const overlay = document.createElement('div');
+    overlay.className = 'lop-overlay';
+    overlay.innerHTML = `
+        <div class="lop-card">
+            <div class="lop-header">
+                <div class="lop-spinner"></div>
+                <div class="lop-lines"></div>
+            </div>
+            <div class="lop-time">0.0 s</div>
+            <div class="lop-progress">
+                <div class="lop-progress-inner"></div>
+            </div>
+            <div class="lop-actions">
+                <button class="lop-cancel">Cancel (Esc)</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const linesEl = overlay.querySelector('.lop-lines');
+    const timeEl = overlay.querySelector('.lop-time');
+    const progressEl = overlay.querySelector('.lop-progress-inner');
+    const cancelBtn = overlay.querySelector('.lop-cancel');
+
+    /* ---------------- EVENTS ---------------- */
+    cancelBtn.addEventListener('click', cancel);
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && visible) cancel();
+    });
+
+    function cancel() {
+        cancelled = true;
+        pushLine('Cancelling…');
+    }
+
+    /* ---------------- HELPERS ---------------- */
+    function show() {
+        if (visible) return;
+        visible = true;
+        overlay.classList.add('visible');
+
+        elapsedTimer = setInterval(() => {
+            timeEl.textContent =
+                ((performance.now() - startTime) / 1000).toFixed(1) + ' s';
+        }, 100);
+    }
+
+    function hide() {
+        clearTimeout(showTimer);
+        clearInterval(elapsedTimer);
+        overlay.classList.remove('visible');
+        visible = false;
+        cancelled = false;
+        progress = null;
+        progressEl.style.width = '0%';
+        linesEl.innerHTML = '';
+    }
+
+    function pushLine(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        linesEl.appendChild(div);
+
+        while (linesEl.children.length > MAX_STACK_LINES) {
+            linesEl.removeChild(linesEl.firstChild);
+        }
+    }
+
+    /* ---------------- PUBLIC API ---------------- */
+    window.LongOpUI = {
+        start(text = 'Working…') {
+            startTime = performance.now();
+            cancelled = false;
+            linesEl.innerHTML = '';
+            pushLine(text);
+            timeEl.textContent = '0.0 s';
+
+            showTimer = setTimeout(show, AUTO_SHOW_DELAY);
+        },
+
+        phase(text) {
+            pushLine(text);
+        },
+
+        progress(current, total) {
+            if (!total) return;
+            progress = Math.min(100, (current / total) * 100);
+            progressEl.style.width = progress.toFixed(1) + '%';
+        },
+
+        update(text) {
+            pushLine(text);
+        },
+
+        isCancelled() {
+            return cancelled;
+        },
+
+        done() {
+            hide();
+        }
+    };
+})();
+#+end_example
+
+#+begin_example
+Usage patterns (real-world ready)
+Sorting with phases
+LongOpUI.start('Sorting table');
+await new Promise(requestAnimationFrame);
+
+LongOpUI.phase('Collecting rows');
+collectRows();
+
+LongOpUI.phase('Applying sort');
+sortRows();
+
+LongOpUI.phase('Rendering');
+renderRows();
+
+LongOpUI.done();
+
+Chunked filtering + progress + cancel
+LongOpUI.start('Filtering table');
+await new Promise(requestAnimationFrame);
+
+for (let i = 0; i < groups.length; i++) {
+    if (LongOpUI.isCancelled()) break;
+
+    filterGroup(groups[i]);
+    LongOpUI.progress(i + 1, groups.length);
+
+    await new Promise(requestAnimationFrame);
+}
+
+LongOpUI.done();
+
+🧠 Design decisions (why this survives abuse)
+
+Singleton-safe → multiple scripts won’t spawn multiple overlays
+
+ESC + Cancel → universal escape hatch
+
+Stacked phases → explains “what’s happening now”
+
+Auto-delay → zero flicker on fast ops
+
+Progress optional → works even when total unknown
+
+Userscript-safe CSS → no site collisions
+#+end_example
 
 
 * Sorting
@@ -23573,7 +23964,7 @@ Everything should be place after the checkbox and "Cc:" text
 "Sorting on column <column name> (column index))..."
 "Sorting on table group <sub-header> column <column name> (column index))..."
 
-** adjust color of sorted column to light yellow
+** adjust color of sorted column to a ver light yellow
 
 In the uploaded script,
 adjust the color of the column of a datatable on which sorting has been performed to a light yellow background. Reset the color to the default as soon as another column is choosen for sorting.
@@ -23594,7 +23985,6 @@ In the uploaded script,
 change the mouse pointer to a "sand clock", if long running sorting actions are taken place, e.g. if more than 1000 rows are involved.
 
 ** why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
-
 
 * Filtering
 ** DONE add escape handling when cursor is in filter field, equivalent to pressing the Xicon
@@ -23687,6 +24077,7 @@ Initializing -> Fetching page 1 to get maxPage to fetch -> [eventually start fet
         // Remove various clutter elements
 #+end_example
 
+
 * use nice logging framework
 
 with error, debug, info
@@ -23695,3 +24086,12 @@ mabe other font
 
 
 * remove first column or at least the sortin indicators for pages of type https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290?page=3&tport=8000
+
+
+* remove the mouse pointer finger from "(total rows)" after h2 heading, but add the click (collapse(uncollapse) funct. to the h2/h3 header lines as a whole
+
+actually h3 lines work (alos have grey shading, when hovering"
+add this also to h2 lines  (grey shading, when hovering), except "Show", "Hide", "global filter field", "[ ] Cc" checkbox
+
+
+* spacer bet "Show / Hide" and the rest of the text " all Release..."

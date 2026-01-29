@@ -1232,6 +1232,9 @@ let changelog = [
             totalFetchingTime = performance.now() - fetchingTimeStart;
             let renderingTimeStart = performance.now();
 
+            // --- RENDERING START ---
+            if (DEBUG) console.log(`${logPrefix} DOM rendering starting...`);
+
             const totalRows = (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') ?
                              groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
 
@@ -1270,6 +1273,9 @@ let changelog = [
             makeH2sCollapsible();
 
             totalRenderingTime = performance.now() - renderingTimeStart;
+
+            // --- RENDERING END ---
+            if (DEBUG) console.log(`${logPrefix} DOM rendering finished in ${totalRenderingTime.toFixed(2)}ms`);
 
             const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
