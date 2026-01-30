@@ -23505,6 +23505,16 @@ You can get the script at https://github.com/vzell/mb-userscripts under [Accumul
 
 * MAYBE: need to check - do not take the sidebar into account for the collapsing stuff with the header logic
 
+in the right the sidebar,
+ - create a toggle to collapse/un-collapse all headings together
+ - hide the sidebar to the complete right (with the usual nice little tab at the right side)
+
+See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
+
+#+begin_example
+var sidebar = document.getElementById("sidebar");
+#+end_example
+
 
 * redirect to an artificial page after rendering and call all plugins again, maybe my own versions
 
@@ -24564,6 +24574,14 @@ Please check if something could be made better. All the steps should also have d
 Please do not make any other changes to working code, comments and logging statements.
 
 
+* green border instead of red around columns specific filter field
+
+In the uploaded userscript,
+there should be a green border instead of red one around column specific filter fields as soon as something has been typed in
+
+Show me just the code which has to be changed/added/deleted but with explanations and hints to locate where in the code the changes should be applied
+
+
 * remove yellow backgound of the sorting indicator on grouped tables per column
 ** initial
 
@@ -25195,6 +25213,8 @@ Encapsulation: Using createBaseTable() ensures that even if MusicBrainz changes 
 No Logic Duplication: The "cleanup" and "sortable" triggers are moved into the render engine, so you don't forget to call them when adding new page types.
 #+end_example
 
+* Add configuration section like in "jesus - Super mind control II", remove from Tampermonkey menu, only leave changelog and github page
+
 
 * TODO
 ** Search results - https://musicbrainz.org/search?query=Europe&type=area&method=indexed
@@ -25208,3 +25228,19 @@ https://musicbrainz.org/area/89a675c2-3e37-3518-b83c-418bad59a85a/artists
 ⏱
 🔔
 🛠
+
+
+* add support for http://brucebase.wikidot.com/stats:discography-single#streetsofminneapolis in my plugin "Add relationships..."
+
+** URL
+
+https://musicbrainz.org/release-group/c8e768c9-448b-4ebd-8e5e-4ae95609dd0b
+
+** add config dialog for en-user
+
+
+* create a userscript which show coverart on the mainpage
+
+* fix my usercipt for adding SP URLs to work pages
+
+* create userscript which directly scolls to the first fifference on http://brucebase.wikidot.com/song:streets-of-minneapolis pages when clicking history
