@@ -24732,6 +24732,7 @@ Please do not make any other changes to working code, comments and logging state
 
 
 * make the visible area between the last '</span>' and the '</h2>' also clickable
+** initial
 
 In the uploaded userscript,
 
@@ -24745,6 +24746,24 @@ Example HTML snippet
 #+end_example
 
 Please do not make any other changes to working code, comments and logging statements.
+
+** Ctrl-click
+
+YES, now it works.
+
+Now please add the following functionalities
+- By holding the "Ctrl" key and clicking a h2 header all of them should either collapse or uncollapse (depending on their current state)
+- But remember, there actually is a sidebar, identified by
+  
+
+#+begin_example
+<div id="sidebar">
+#+end_example
+
+The ALL collapsing/uncollapsing functionality must stay inside the sidebar container, if clicking a h2 header inside the
+container, and the other way around if clicking a h2 header in the main page left from the sidebar container
+
+Please implement
 
 
 * TODO refactoring

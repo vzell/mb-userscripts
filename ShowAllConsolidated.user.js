@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.3.0+2026-01-30
+// @version      1.2.0+2026-01-30
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -39,7 +39,7 @@
 
 // CHANGELOG - The most important updates/versions:
 let changelog = [
-    {version: '1.3.0+2026-01-30', description: 'Make h2 sections collapsable/un-collabsable by clicking anywhere in the corresponding headerline.'},
+    {version: '1.3.0+2026-01-30', description: 'Implemented Ctrl+Click on headers to toggle all headers within the same container (sidebar vs main content).'},
     {version: '1.2.0+2026-01-30', description: 'Added collapsable sidebar functionality with a handle on the vertical line.'},
     {version: '1.1.0+2026-01-30', description: 'Increased the size of the filter input boxes and text. Several other small UI improvements.'},
     {version: '1.0.0+2026-01-30', description: 'Support "Official" and "Various Artists" on Artis-Releases pages.'},
@@ -1705,12 +1705,13 @@ let changelog = [
      */
     function makeH2sCollapsible() {
         Logger.debug('render', 'Initializing collapsible H2 headers...');
-        const allH2s = document.querySelectorAll('h2');
+        // Capture all H2s currently in the document to allow peer filtering later
+        const allH2s = Array.from(document.querySelectorAll('h2'));
 
         allH2s.forEach(h2 => {
             if (h2.classList.contains('mb-h2-processed')) return;
             h2.classList.add('mb-h2-processed', 'mb-toggle-h2');
-            h2.title = 'Collapse/Uncollapse section';
+            h2.title = 'Click to Collapse/Uncollapse section (Ctrl+Click to toggle all in this column)';
             h2.style.cursor = 'pointer'; // Make entire H2 header indicate clickability
             h2.style.userSelect = 'none'; // Prevent text selection when clicking
 
@@ -1738,22 +1739,15 @@ let changelog = [
             // (Note: We do NOT wrap children in a span anymore, to ensure the H2 background remains clickable)
             if (Array.from(h2.childNodes).includes(filterContainer)) h2.appendChild(filterContainer);
 
-            // Click event for the entire H2 header
-            const toggleFn = (e) => {
-                // GUARD CLAUSE: Don't toggle if clicking on interactive elements (Filter input, Master Toggle links, Checkboxes)
-                if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
-                    e.target.closest('.mb-master-toggle') ||
-                    (filterContainer && filterContainer.contains(e.target))) {
-                    return;
-                }
+            // 1. Define Toggle Function on the Element
+            h2._mbToggle = (forceExpand) => {
+                const isCurrentlyExpanded = icon.textContent === '▼';
+                const shouldExpand = (forceExpand !== undefined) ? forceExpand : !isCurrentlyExpanded;
 
-                e.preventDefault();
-                e.stopPropagation();
-
-                const isExpanding = icon.textContent === '▲';
+                if (shouldExpand === isCurrentlyExpanded) return;
 
                 contentNodes.forEach(node => {
-                    if (isExpanding) {
+                    if (shouldExpand) {
                         // Expansion logic: always show headers, but check H3 state for tables
                         if (node.tagName === 'H3' && node.classList.contains('mb-toggle-h3')) {
                             node.style.display = '';
@@ -1777,7 +1771,42 @@ let changelog = [
                     }
                 });
 
-                icon.textContent = isExpanding ? '▼' : '▲';
+                icon.textContent = shouldExpand ? '▼' : '▲';
+            };
+
+            // 2. Click event for the entire H2 header
+            const toggleFn = (e) => {
+                // GUARD CLAUSE: Don't toggle if clicking on interactive elements (Filter input, Master Toggle links, Checkboxes)
+                if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
+                    e.target.closest('.mb-master-toggle') ||
+                    (filterContainer && filterContainer.contains(e.target))) {
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const isExpanding = icon.textContent === '▲';
+
+                if (e.ctrlKey) {
+                    // Logic to toggle all peers in the same container (sidebar vs main)
+                    const sidebar = document.getElementById('sidebar');
+                    const isInsideSidebar = sidebar && sidebar.contains(h2);
+
+                    const peers = allH2s.filter(peer => {
+                        if (!document.body.contains(peer)) return false;
+                        const peerInSidebar = sidebar && sidebar.contains(peer);
+                        return peerInSidebar === isInsideSidebar;
+                    });
+
+                    peers.forEach(peer => {
+                        if (typeof peer._mbToggle === 'function') {
+                            peer._mbToggle(isExpanding);
+                        }
+                    });
+                } else {
+                    h2._mbToggle(isExpanding);
+                }
             };
 
             // Attach event listener directly to the H2 container
