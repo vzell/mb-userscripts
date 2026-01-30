@@ -24697,6 +24697,512 @@ Example HTML snippet
 
 Please do not make any other changes to working code, comments and logging statements.
 
+
+* TODO refactoring
+** initial routing configuration
+
+In the uploaded script,
+could the following section somehow be refactored, because in the future there will be much more URLs supported, with more "pageType"s and differetn query parameters
+
+#+begin_example
+    // Logic for Work pages
+    const isWorkRecordings =
+        path.startsWith('/work/') &&
+        params.get('direction') === '2' &&
+        params.get('link_type_id') === '278';
+    const isWorkBase = path.match(/\/work\/[a-f0-9-]{36}$/) && !isWorkRecordings;
+
+    // Logic for the 4 specific Artist views
+    const isOfficialArtist =
+        path.startsWith('/artist/') &&
+        params.get('all') === '0' &&
+        params.get('va') === '0';
+    const isOfficialArtistBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isOfficialArtist;
+
+    const isNonOfficialArtist =
+        path.startsWith('/artist/') &&
+        params.get('all') === '1' &&
+        params.get('va') === '0';
+    const isNonOfficialArtistBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isNonOfficialArtist;
+
+    const isOfficialVariousArtists =
+        path.startsWith('/artist/') &&
+        params.get('all') === '0' &&
+        params.get('va') === '1';
+    const isOfficialVariousArtistsBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isOfficialVariousArtists;
+
+    const isNonOfficialVariousArtists =
+        path.startsWith('/artist/') &&
+        params.get('all') === '1' &&
+        params.get('va') === '1';
+    const isNonOfficialVariousArtistsBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isNonOfficialVariousArtists;
+
+    const isSpecialArtistView = isOfficialArtist || isNonOfficialArtist || isOfficialVariousArtists || isNonOfficialVariousArtists;
+
+    // Logic for the 2 specific Artist Releases views
+    const isOfficialArtistReleases =
+        path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) &&
+        params.get('va') === '0';
+    const isOfficialArtistReleasesBase = path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) && !isOfficialArtistReleases;
+
+    const isVariousArtistReleases =
+        path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) &&
+        params.get('va') === '1';
+    const isVariousArtistReleasesBase = path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) && !isVariousArtistReleases;
+
+    const isSpecialReleasesView = isOfficialArtistReleases || isVariousArtistReleases;
+
+    // Determine page type using the requested priority structure
+    if (isWorkRecordings || isWorkBase) pageType = 'work-recordings';
+    else if (isSpecialArtistView || path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
+    else if (isSpecialReleasesView || path.match(/\/artist\/[a-f0-9-]{36}\/releases$/)) pageType = 'releases'; // Updated for Releases
+    else if (path.includes('/recordings')) pageType = 'recordings';
+    else if (path.includes('/releases')) pageType = 'releases';
+    else if (path.includes('/works')) pageType = 'works';
+    else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
+    else if (path.match(/\/recording\/[a-f0-9-]{36}$/)) pageType = 'releasegroup-releases';
+    else if (path.includes('/label')) pageType = 'label';
+    else if (path.includes('/series')) pageType = 'series';
+    else if (path.includes('/recording')) pageType = 'recording';
+    else if (path.match(/\/place\/.*\/events/)) pageType = 'place-concerts';
+    else if (path.match(/\/place\/.*\/performances/)) pageType = 'place-performances';
+    else if (path.includes('/events')) pageType = 'events';
+
+    if (pageType) Logger.prefix = `[MB-ShowAll: ${pageType}]`;
+    Logger.info('init', 'Initializing script for path:', path);
+
+    if (!pageType || !headerContainer) {
+        Logger.error('init', 'Required elements not found. Terminating.', { pageType, hasHeader: !!headerContainer });
+        return;
+    }
+
+    const typesWithSplitCD = ['releasegroup-releases', 'releases', 'label', 'series'];
+    const typesWithSplitLocation = ['events'];
+
+    // --- UI Elements ---
+    const controlsContainer = document.createElement('div');
+    controlsContainer.id = 'mb-show-all-controls-container';
+    controlsContainer.style.cssText = 'display:inline-flex; flex-wrap:wrap; align-items:center; gap:8px; margin-left:10px; vertical-align:middle; line-height:1;';
+
+    const allActionButtons = [];
+
+    if (pageType === 'artist-releasegroups') {
+        const extraConfigs = [
+            { title: 'Official artist RGs', params: { all: '0', va: '0' } },
+            { title: 'Non-official artist RGs', params: { all: '1', va: '0' } },
+            { title: 'Official various artists RGs', params: { all: '0', va: '1' } },
+            { title: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
+        ];
+
+        extraConfigs.forEach(conf => {
+            const eb = document.createElement('button');
+            eb.textContent = conf.title;
+            eb.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+            eb.type = 'button';
+            eb.onclick = (e) => startFetchingProcess(e, conf.params);
+            controlsContainer.appendChild(eb);
+            allActionButtons.push(eb);
+        });
+    } else if (pageType === 'releases' && path.includes('/artist/')) {
+        // Support for Artist Releases specific views
+        const releaseConfigs = [
+            { title: 'Official artist releases', params: { va: '0' } },
+            { title: 'Various artist releases', params: { va: '1' } }
+        ];
+
+        releaseConfigs.forEach(conf => {
+            const eb = document.createElement('button');
+            eb.textContent = conf.title;
+            eb.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+            eb.type = 'button';
+            eb.onclick = (e) => startFetchingProcess(e, conf.params);
+            controlsContainer.appendChild(eb);
+            allActionButtons.push(eb);
+        });
+    } else {
+        const mainBtn = document.createElement('button');
+        mainBtn.textContent = `Show all ${pageType.replace('-', ' ')}`;
+        mainBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+        mainBtn.type = 'button';
+        mainBtn.onclick = (e) => startFetchingProcess(e);
+        controlsContainer.appendChild(mainBtn);
+        allActionButtons.push(mainBtn);
+    }
+#+end_example
+
+maybe a better json type structure could be defined ?
+
+** answer
+
+#+begin_example
+/**
+ * Configuration for all supported MusicBrainz page types.
+ * Matches are evaluated in order; the first match wins.
+ */
+const ROUTES = [
+    {
+        id: 'work-recordings',
+        match: (path, params) => 
+            path.startsWith('/work/') && 
+            params.get('direction') === '2' && 
+            params.get('link_type_id') === '278',
+        isBase: (path) => path.match(/\/work\/[a-f0-9-]{36}$/)
+    },
+    {
+        id: 'artist-releasegroups',
+        match: (path, params) => path.startsWith('/artist/') && params.has('all') && params.has('va'),
+        isBase: (path) => path.match(/\/artist\/[a-f0-9-]{36}$/),
+        uiConfigs: [
+            { title: 'Official artist RGs', params: { all: '0', va: '0' } },
+            { title: 'Non-official artist RGs', params: { all: '1', va: '0' } },
+            { title: 'Official various artists RGs', params: { all: '0', va: '1' } },
+            { title: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
+        ]
+    },
+    {
+        id: 'releases',
+        match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
+        uiConfigs: [
+            { title: 'Official artist releases', params: { va: '0' } },
+            { title: 'Various artist releases', params: { va: '1' } }
+        ]
+    },
+    { id: 'recordings', match: (path) => path.includes('/recordings') },
+    { id: 'works', match: (path) => path.includes('/works') },
+    { 
+        id: 'releasegroup-releases', 
+        match: (path) => path.includes('/release-group/') || path.match(/\/recording\/[a-f0-9-]{36}$/) 
+    },
+    { id: 'label', match: (path) => path.includes('/label') },
+    { id: 'series', match: (path) => path.includes('/series') },
+    { id: 'place-concerts', match: (path) => path.match(/\/place\/.*\/events/) },
+    { id: 'place-performances', match: (path) => path.match(/\/place\/.*\/performances/) },
+    { id: 'events', match: (path) => path.includes('/events') }
+];
+
+// --- Initialization Logic ---
+
+let activeRoute = ROUTES.find(r => r.match(path, params) || (r.isBase && r.isBase(path)));
+
+if (activeRoute) {
+    pageType = activeRoute.id;
+    Logger.prefix = `[MB-ShowAll: ${pageType}]`;
+}
+
+// --- UI Generation Logic ---
+
+if (activeRoute?.uiConfigs) {
+    activeRoute.uiConfigs.forEach(conf => {
+        const eb = createActionButton(conf.title, (e) => startFetchingProcess(e, conf.params));
+        controlsContainer.appendChild(eb);
+        allActionButtons.push(eb);
+    });
+} else if (pageType) {
+    const mainBtn = createActionButton(`Show all ${pageType.replace('-', ' ')}`, (e) => startFetchingProcess(e));
+    controlsContainer.appendChild(mainBtn);
+    allActionButtons.push(mainBtn);
+}
+
+/**
+ * Helper to keep button styling consistent
+ */
+function createActionButton(text, onClick) {
+    const btn = document.createElement('button');
+    btn.textContent = text;
+    btn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+    btn.type = 'button';
+    btn.onclick = onClick;
+    return btn;
+}
+#+end_example
+
+Benefits of this Refactoring:
+Scalability: To add a new page type, you simply add a new object to the ROUTES array.
+
+Centralization: The detection logic (match), the identifier (id), and the UI elements (uiConfigs) for a specific page are now grouped together instead of being spread across multiple if/else blocks.
+
+Readability: The activeRoute.find(...) line replaces dozens of lines of conditional logic, making the main execution flow much cleaner.
+
+Extensibility: You can easily add more properties to each route object in the future (e.g., specific CSS selectors for headerContainer per page type) without breaking the structure.
+
+** table sorting
+
+What about the refactoting of the sorting functions
+ - function makeSortable()
+ - function makeTableSortable()
+
+** answer
+
+#+begin_example
+To refactor the sorting logic into a more scalable structure, you can move away from hardcoded column names and manual if/else checks for every page type.
+
+By defining a Sorting Metadata Map, you can describe how different types of data (Dates, Durations, Numbers) should be compared. This allows the sort functions to be generic: makeTableSortable handles the UI and DOM manipulation, while the sorting logic is driven by the data type of the column.
+
+1. Refactored makeTableSortable
+This version becomes a generic "Engine" that applies sorting to any table. It uses dataset attributes to track state, allowing it to support multiple tables on one page (like in Grouped views) without conflict.
+
+JavaScript
+
+/**
+ * Makes a specific table sortable.
+ * Uses the data-type attribute on headers to determine the sorting algorithm.
+ */
+function makeTableSortable(table) {
+    const thead = table.tHead;
+    if (!thead) return;
+
+    const headerRow = thead.querySelector('tr:not(.mb-col-filter-row)');
+    if (!headerRow) return;
+
+    Array.from(headerRow.cells).forEach((th, index) => {
+        // Skip columns that shouldn't be sorted (e.g., checkboxes)
+        if (th.querySelector('input[type="checkbox"]')) return;
+
+        th.classList.add('sort-icon-btn');
+        if (!th.textContent.includes('⇅')) th.textContent += ' ⇅';
+
+        th.onclick = () => {
+            const currentDir = th.getAttribute('data-sort-dir') || 'none';
+            const newDir = currentDir === 'asc' ? 'desc' : 'asc';
+            
+            // UI Update: Reset other headers in this table
+            Array.from(headerRow.cells).forEach(c => {
+                c.setAttribute('data-sort-dir', 'none');
+                c.classList.remove('sort-icon-active');
+                if (c.textContent.includes('▲') || c.textContent.includes('▼')) {
+                    c.textContent = c.textContent.replace(/[▲▼]/, '⇅');
+                }
+            });
+
+            // Set active state
+            th.setAttribute('data-sort-dir', newDir);
+            th.classList.add('sort-icon-active');
+            th.textContent = th.textContent.replace('⇅', newDir === 'asc' ? '▲' : '▼');
+
+            performSort(table, index, newDir);
+        };
+    });
+}
+2. Refactored makeSortable (Logic Engine)
+Instead of a single giant function, we use a COMPARE_LOGIC object. This makes it trivial to add new data types (e.g., "BPM" or "Bitrate") in the future.
+
+JavaScript
+
+const COMPARE_LOGIC = {
+    text: (a, b) => a.localeCompare(b),
+    number: (a, b) => parseFloat(a) - parseFloat(b),
+    duration: (a, b) => {
+        const toSec = (s) => s.split(':').reduce((acc, time) => (60 * acc) + +time, 0);
+        return toSec(a) - toSec(b);
+    },
+    date: (a, b) => new Date(a || '1900-01-01') - new Date(b || '1900-01-01')
+};
+
+function performSort(table, columnIndex, direction) {
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.rows);
+    
+    // Determine type from header or default to text
+    const header = table.tHead.rows[0].cells[columnIndex];
+    const type = header.getAttribute('data-type') || 'text';
+    const compare = COMPARE_LOGIC[type] || COMPARE_LOGIC.text;
+
+    const startTime = performance.now();
+    if (rows.length > 1000) document.body.classList.add('mb-sorting-active');
+
+    rows.sort((rowA, rowB) => {
+        const valA = getCleanVisibleText(rowA.cells[columnIndex]).trim();
+        const valB = getCleanVisibleText(rowB.cells[columnIndex]).trim();
+        return direction === 'asc' ? compare(valA, valB) : compare(valB, valA);
+    });
+
+    // Re-append sorted rows
+    const fragment = document.createDocumentFragment();
+    rows.forEach(row => fragment.appendChild(row));
+    tbody.appendChild(fragment);
+
+    document.body.classList.remove('mb-sorting-active');
+    const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+    Logger.info('sort', `Sorted ${rows.length} rows in ${duration}s using type: ${type}`);
+}
+3. Usage in the script
+To make this work with your future "many URLs" requirement, you simply tag your table headers during the cleanupHeaders or render phase:
+
+JavaScript
+
+// Inside cleanupHeaders or table generation
+function prepareHeaderTypes(th, columnName) {
+    if (columnName === 'Date') th.setAttribute('data-type', 'date');
+    else if (columnName === 'Time' || columnName === 'Length') th.setAttribute('data-type', 'duration');
+    else if (columnName === 'Rating' || columnName === 'Votes') th.setAttribute('data-type', 'number');
+    else th.setAttribute('data-type', 'text');
+}
+Key Improvements:
+Decoupled Logic: The sorting UI (makeTableSortable) no longer needs to know how to sort a date; it just knows that it's a date.
+
+Performance: Uses DocumentFragment for DOM updates, which is much faster than individual appendChild calls for large lists.
+
+Multi-Table Support: By using data-sort-dir on the elements themselves instead of global variables, you can sort different tables on the same page independently.
+
+Scalability: Adding a new sort type only requires one line in the COMPARE_LOGIC object.
+#+end_example
+
+** table rendering
+
+What about the refactoring of the rendering functions
+ - function renderFinalTable
+ - function renderGroupedTable
+
+#+begin_example
+Refactoring the render functions focuses on decoupling the data processing (how rows are built) from the DOM insertion (where they are placed).
+
+The current logic mixes header cleanup, column splitting (Country/Date), and DOM building in one place. By moving the logic into a more structured pattern, you can support future URL types by simply defining their "schema."
+
+1. Refactored renderFinalTable
+This becomes a clean, single-purpose engine that builds the table based on the provided row data.
+
+JavaScript
+
+/**
+ * Generic renderer for flat (non-grouped) tables.
+ */
+function renderFinalTable(rows) {
+    const table = document.querySelector('table.tbl');
+    if (!table) return;
+
+    // Use a DocumentFragment for high performance with large datasets
+    const fragment = document.createDocumentFragment();
+    const tbody = table.tBodies[0];
+    
+    // Clear existing content safely
+    tbody.innerHTML = '';
+
+    rows.forEach(row => {
+        // Ensure standard MusicBrainz row classes for alternating colors
+        row.classList.remove('even', 'odd'); 
+        fragment.appendChild(row);
+    });
+
+    tbody.appendChild(fragment);
+
+    // Apply column filters and sort icons to the newly rendered table
+    addColumnFilterRow(table);
+    makeTableSortable(table);
+    
+    Logger.info('render', `Rendered ${rows.length} rows to the final table.`);
+}
+2. Refactored renderGroupedTable
+For grouped pages (like Artist/Release Group views), the complexity often lies in managing multiple headers and toggles. This refactor uses a "Group Config" approach.
+
+JavaScript
+
+/**
+ * Renders data divided into categories (e.g., Album, Single, EP).
+ */
+function renderGroupedTable(groupedData, isArtistRGPage, filterActive = false) {
+    const container = document.getElementById('content');
+    if (!container) return;
+
+    // 1. Identify where to insert (MusicBrainz usually puts tables after specific H2s)
+    let insertionPoint = document.querySelector('h2.discography') || 
+                         document.querySelector('h2.appears-on-releases') || 
+                         document.querySelector('h2');
+
+    // 2. Clear old generated content (using a marker class for safety)
+    document.querySelectorAll('.mb-generated-content').forEach(el => el.remove());
+
+    const mainFragment = document.createDocumentFragment();
+
+    groupedData.forEach((group, index) => {
+        if (group.rows.length === 0 && filterActive) return;
+
+        // Create Section Header (H3)
+        const h3 = createGroupHeader(group.category, group.rows.length);
+        mainFragment.appendChild(h3);
+
+        // Create the Table
+        const table = createBaseTable();
+        const tbody = table.tBodies[0];
+        
+        group.rows.forEach(row => tbody.appendChild(row.cloneNode(true)));
+        
+        // Add table to fragment
+        const tableWrapper = document.createElement('div');
+        tableWrapper.className = 'mb-generated-content';
+        tableWrapper.appendChild(table);
+        mainFragment.appendChild(tableWrapper);
+
+        // Post-processing for this specific table
+        cleanupHeaders(table.tHead);
+        addColumnFilterRow(table);
+        makeTableSortable(table);
+    });
+
+    insertionPoint.after(mainFragment);
+    Logger.info('render', `Grouped render complete: ${groupedData.length} categories.`);
+}
+
+/**
+ * Helper to create a standardized MusicBrainz table skeleton
+ */
+function createBaseTable() {
+    const table = document.createElement('table');
+    table.className = 'tbl mb-generated-content';
+    
+    // Clone the original header if it exists, or create a default
+    const originalHeader = document.querySelector('table.tbl thead');
+    if (originalHeader) {
+        table.appendChild(originalHeader.cloneNode(true));
+    }
+    
+    table.appendChild(document.createElement('tbody'));
+    return table;
+}
+3. Proposed Schema-Based Refactoring
+To handle "much more URLs" in the future, you should define a Render Schema. This tells the render functions which columns to add or split based on the pageType.
+
+JavaScript
+
+const PAGE_SCHEMAS = {
+    'releases': {
+        hasGroups: true,
+        extraColumns: ['Country', 'Date', 'MB-Name'],
+        groupSelector: 'h2.releases',
+    },
+    'work-recordings': {
+        hasGroups: false,
+        extraColumns: ['MB-Name', 'Comment'],
+        groupSelector: 'h2.recordings',
+    },
+    'events': {
+        hasGroups: false,
+        extraColumns: ['Place', 'Area', 'Country'],
+    }
+};
+
+// In your render functions, you can now do:
+const schema = PAGE_SCHEMAS[pageType];
+if (schema?.extraColumns) {
+    schema.extraColumns.forEach(col => ensureColumnExists(table, col));
+}
+Key Improvements:
+Performance: Switched to DocumentFragment. In your script, rendering 1000+ rows directly to the DOM can cause "jank." Fragments perform the work in memory first.
+
+Statelessness: By passing filterActive as a boolean, the function doesn't need to guess if it's currently filtering.
+
+Encapsulation: Using createBaseTable() ensures that even if MusicBrainz changes their table structure, you only have one place to update the skeleton.
+
+No Logic Duplication: The "cleanup" and "sortable" triggers are moved into the render engine, so you don't forget to call them when adding new page types.
+#+end_example
+
+
+* TODO
+** Search results - https://musicbrainz.org/search?query=Europe&type=area&method=indexed
+** Annotations - https://musicbrainz.org/search?query=test&type=annotation&method=indexed
+** Place-Performaces - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+** area - ALL'
+https://musicbrainz.org/area/89a675c2-3e37-3518-b83c-418bad59a85a/artists
+
 * icons
 
 ⏱
