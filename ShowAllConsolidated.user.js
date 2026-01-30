@@ -94,29 +94,26 @@ let changelog = [
         Logger.debug(icon, msg, data);
     };
 
-        // --- Sidebar Collapsing Logic ---
+        // --- Sidebar Collapsing & Content Stretching Logic ---
     function initSidebarCollapse() {
-        // MusicBrainz usually uses id="content" for the main area
         const sidebar = document.getElementById("sidebar");
-        const content = document.getElementById("content") || document.querySelector('#page');
+        const pageContainer = document.getElementById("page"); // Main MB container
+        const contentArea = document.getElementById("content");
 
-        if (!sidebar || !content) {
-            console.debug('[MB-ShowAll] Sidebar or Content element not found, skipping collapse init.');
-            return;
-        }
+        if (!sidebar) return;
 
-        Logger.debug('init', 'Initializing sidebar collapse handle.');
+        Logger.debug('init', 'Initializing persistent sidebar collapse logic.');
 
         const sidebarWidth = '240px';
 
         const style = document.createElement('style');
         style.textContent = `
-            /* Ensure the sidebar has a transition and hides correctly */
             #sidebar {
                 transition: transform 0.3s ease, width 0.3s ease, opacity 0.3s ease, margin-right 0.3s ease;
             }
-
-            /* The sidebar-collapsed state */
+            #page, #content {
+                transition: margin-right 0.3s ease, padding-right 0.3s ease, width 0.3s ease, max-width 0.3s ease;
+            }
             .sidebar-collapsed {
                 transform: translateX(100%);
                 width: 0 !important;
@@ -125,20 +122,14 @@ let changelog = [
                 margin-right: -${sidebarWidth} !important;
                 pointer-events: none;
             }
-
-            /* IMPORTANT: MusicBrainz uses "margin-right" on #content to make space for #sidebar.
-               We override this when expanded.
-            */
-            #content {
-                transition: margin-right 0.3s ease, margin-left 0.3s ease;
-            }
-
-            .content-expanded {
+            /* Aggressive stretching to use ALL available space */
+            .content-full-width {
                 margin-right: 0 !important;
-                width: auto !important;
+                padding-right: 0 !important;
+                width: 100% !important;
                 max-width: none !important;
+                min-width: 100% !important;
             }
-
             #sidebar-toggle-handle {
                 position: fixed;
                 right: ${sidebarWidth};
@@ -155,24 +146,17 @@ let changelog = [
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                transition: right 0.3s ease, background-color 0.2s;
+                transition: right 0.3s ease;
                 box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             }
-
-            #sidebar-toggle-handle:hover {
-                background-color: #e0e0e0;
-            }
-
             #sidebar-toggle-handle::after {
                 content: '▶';
                 font-size: 9px;
                 color: #555;
             }
-
             .handle-collapsed {
                 right: 0 !important;
             }
-
             .handle-collapsed::after {
                 content: '◀' !important;
             }
@@ -183,29 +167,37 @@ let changelog = [
         handle.id = 'sidebar-toggle-handle';
         handle.title = 'Toggle Sidebar';
 
-        handle.addEventListener('click', () => {
-            // Re-query content in case the "Show all" button replaced the DOM
-            const activeContent = document.getElementById("content") || document.querySelector('#page');
-
+        const toggleLogic = () => {
+            const isCollapsing = !sidebar.classList.contains('sidebar-collapsed');
             sidebar.classList.toggle('sidebar-collapsed');
-            if (activeContent) {
-                activeContent.classList.toggle('content-expanded');
-            }
             handle.classList.toggle('handle-collapsed');
 
-            Logger.debug('meta', 'Sidebar toggled. Stretching logic applied.');
-        });
+            // Apply stretching to both #page and #content to override default layout
+            [pageContainer, contentArea].forEach(el => {
+                if (el) el.classList.toggle('content-full-width', isCollapsing);
+            });
 
+            Logger.debug('meta', `Sidebar ${isCollapsing ? 'collapsed' : 'expanded'}. Stretching applied.`);
+        };
+
+        handle.addEventListener('click', toggleLogic);
         document.body.appendChild(handle);
 
-        // Final sanity check: if we are on a page where the sidebar is already missing
-        // but the handle exists, hide the handle or adjust.
-        if (window.getComputedStyle(sidebar).display === 'none') {
-            handle.style.display = 'none';
-        }
+        // Observer to re-apply stretching if the "Show all" process replaces/modifies the #content element
+        const observer = new MutationObserver(() => {
+            if (sidebar.classList.contains('sidebar-collapsed')) {
+                const currentContent = document.getElementById("content");
+                if (currentContent && !currentContent.classList.contains('content-full-width')) {
+                    currentContent.classList.add('content-full-width');
+                    Logger.debug('meta', 'Re-applied stretching to new content area.');
+                }
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    // Initialize immediately
+    // Call sidebar init immediately
     initSidebarCollapse();
 
     let registeredMenuCommandIDs = [];

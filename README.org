@@ -23540,6 +23540,15 @@ collapsable/un-collapsable functionality works
 
 Please fix
 
+** use even more space
+
+ - The content area STILL  doesn't stretch when the sidebar is collapsed on the initial page load (before clicking the "Show all" action button)
+ - AND also in the case of clicking the "Show all" action button it works fine, there could still be more stretching applied as it uses onyl half of the spce it COULD use
+
+Pleae try and fix both issues
+
+example URL: https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c
+
 
 * redirect to an artificial page after rendering and call all plugins again, maybe my own versions
 
