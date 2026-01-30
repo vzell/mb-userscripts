@@ -24520,51 +24520,7 @@ In the uploaded userscript,
 - for the case of flat tables, the yellow backgound is ONLY placed on the sorting icon which was last clicked, all other
 sorting indicaters are resettet to have no yellow background anymore.
 
-- for the case of grouped tables, the yellow backgound from the initial rendering phase
-  - is NOT removed at all
-  - and each column additionally remembers (by setting the yellow background) the last clicked sort icon
-
-This would be my plan:
-
-#+begin_example
-Root causes (short & concrete)
-1. Visual reset scope is wrong (grouped tables)
-
-In the grouped-table click handler, only the icons inside the clicked <th> were reset:
-
-th.querySelectorAll('.sort-icon-btn')
-
-
-This allows other columns to keep their yellow background.
-
-➡ Flat tables correctly reset all icons in the table.
-
-2. Initial rendering permanently activates icons (grouped tables)
-
-During initial rendering of grouped tables, this block runs for every column:
-
-else if (state.lastSortIndex === -1 && targetState === 0) {
-    span.classList.add('sort-icon-active'); // Default Original state
-}
-
-
-Since each group has its own header rendering pass, this causes:
-
-initial yellow backgrounds never being cleared
-
-each column “remembering” its last click independently
-
-➡ Flat tables don’t suffer from this because they render headers once.
-
-✅ Fix strategy (exactly matching flat-table behaviour)
-
-Reset sort icons table-wide for grouped tables (same as flat)
-
-Remove the “default original state” highlight during grouped initial rendering
-→ only the currently active sort icon may be yellow
-
-That’s it. No new state, no refactors.
-#+end_example
+- for the case of grouped tables each column remembers the last clicked sort icon, it's not cleard, eventually all columns (if all were clicke at least once), would hav a yellow background on the column specific last clicked sort-icon
 
 Please fix, so that there is the same behaviour as in the flat table case    
 
@@ -24596,9 +24552,7 @@ As it does NOT make sense to sort on this column, please remove the '<span class
     </span>
 #+end_example
 
-Please do not make any other changes to working code, comments and logging statements.
-
-answer from chagpt
+apply something like this
 
 #+begin_example
 /**************************************************************************

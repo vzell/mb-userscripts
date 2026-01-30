@@ -1384,7 +1384,18 @@ let changelog = [
                 document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
                 const mainTable = document.querySelector('table.tbl');
                 if (mainTable) addColumnFilterRow(mainTable);
+
                 makeSortable();
+
+                // Series page: disable sorting UI for the "#" (number) column - (DOM-only cleanup; no logic changes)
+                if (location.pathname.startsWith('/series/')) {
+                    document.querySelectorAll('th.number-column').forEach(th => {
+                        // Remove alert();l sort icon buttons inside the "#" header
+                        th.querySelectorAll('.sort-icon-btn').forEach(span => span.remove());
+                        // Ensure the header text is exactly "#"
+                        th.textContent = '#';
+                    });
+                }
             }
 
             // Perform final cleanup of UI artifacts
