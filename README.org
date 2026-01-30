@@ -23503,16 +23503,9 @@ You can get the script at https://github.com/vzell/mb-userscripts under [Accumul
 
 * copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
-* MAYBE: need to check - do not take the sidebar into account for the collapsing stuff with the header logic
-
-in the right the sidebar,
- - create a toggle to collapse/un-collapse all headings together
- - hide the sidebar to the complete right (with the usual nice little tab at the right side)
-
-See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
 
 * make the whole sidebar vanish to the right side of the browser window
-** sidebar
+** DONE sidebar
 
 In the uploaded userscript,
 make the whole sidebar
@@ -23528,11 +23521,11 @@ this UI handle on the vertical line which is located between the page content an
 var sidebar = document.getElementById("sidebar");
 #+end_example
 
-** autostretch
+** DONE autostretch
 
 Now also add functionality, that the rest of the webpage consumes the space gained when the sidebar is collapsed and the other way around
 
-** also during initial rendering
+** DONE also during initial rendering
 
 Yup it works perfect on the rendered page after pressing the action button, but the sidebar collapse handle is already
 generated when the URL is entered. BUT in that case the stretching of the rest of the page doesn't happen also the
@@ -23540,7 +23533,7 @@ collapsable/un-collapsable functionality works
 
 Please fix
 
-** use even more space
+** fix use use even more space, especially on the page entry
 
  - The content area STILL  doesn't stretch when the sidebar is collapsed on the initial page load (before clicking the "Show all" action button)
  - AND also in the case of clicking the "Show all" action button it works fine, there could still be more stretching applied as it uses onyl half of the spce it COULD use
@@ -23548,6 +23541,10 @@ Please fix
 Pleae try and fix both issues
 
 example URL: https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c
+
+** collapse by default after pressing the action button
+
+Please collapse the sidebar by default after pressing the action button
 
 
 * redirect to an artificial page after rendering and call all plugins again, maybe my own versions
@@ -24608,7 +24605,7 @@ Please check if something could be made better. All the steps should also have d
 Please do not make any other changes to working code, comments and logging statements.
 
 
-* green border instead of red around columns specific filter field
+* DONE green border instead of red around columns specific filter field
 
 In the uploaded userscript,
 there should be a green border instead of red one around column specific filter fields as soon as something has been typed in
@@ -25247,6 +25244,7 @@ Encapsulation: Using createBaseTable() ensures that even if MusicBrainz changes 
 No Logic Duplication: The "cleanup" and "sortable" triggers are moved into the render engine, so you don't forget to call them when adding new page types.
 #+end_example
 
+
 * Add configuration section like in "jesus - Super mind control II", remove from Tampermonkey menu, only leave changelog and github page
 
 
@@ -25265,16 +25263,17 @@ https://musicbrainz.org/area/89a675c2-3e37-3518-b83c-418bad59a85a/artists
 
 
 * add support for http://brucebase.wikidot.com/stats:discography-single#streetsofminneapolis in my plugin "Add relationships..."
-
 ** URL
 
 https://musicbrainz.org/release-group/c8e768c9-448b-4ebd-8e5e-4ae95609dd0b
 
-** add config dialog for en-user
+** add config dialog for end-user
 
 
 * create a userscript which show coverart on the mainpage
 
 * fix my userscript for adding SP URLs to work pages
 
-* create userscript which directly scrolls to the first fifference on http://brucebase.wikidot.com/song:streets-of-minneapolis pages when clicking history
+* create userscript which directly scrolls to the first difference on http://brucebase.wikidot.com/song:streets-of-minneapolis pages when clicking history
+
+See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js

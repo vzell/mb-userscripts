@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.2.0+2026-01-30
+// @version      1.3.0+2026-01-30
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -39,6 +39,7 @@
 
 // CHANGELOG - The most important updates/versions:
 let changelog = [
+    {version: '1.3.0+2026-01-30', description: 'Make h2 sections collapsable/un-collabsable by clicking anywhere in the corresponding headerline.'},
     {version: '1.2.0+2026-01-30', description: 'Added collapsable sidebar functionality with a handle on the vertical line.'},
     {version: '1.1.0+2026-01-30', description: 'Increased the size of the filter input boxes and text. Several other small UI improvements.'},
     {version: '1.0.0+2026-01-30', description: 'Support "Official" and "Various Artists" on Artis-Releases pages.'},
@@ -475,6 +476,7 @@ let changelog = [
     filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px;';
 
     const filterWrapper = document.createElement('span');
+    filterWrapper.className = 'mb-filter-wrapper';
     filterWrapper.style.cssText = 'position:relative; display:inline-block;';
 
     const filterInput = document.createElement('input');
@@ -1709,6 +1711,8 @@ let changelog = [
             if (h2.classList.contains('mb-h2-processed')) return;
             h2.classList.add('mb-h2-processed', 'mb-toggle-h2');
             h2.title = 'Collapse/Uncollapse section';
+            h2.style.cursor = 'pointer'; // Make entire H2 header indicate clickability
+            h2.style.userSelect = 'none'; // Prevent text selection when clicking
 
             // Find elements between this H2 and the next H2
             const contentNodes = [];
@@ -1730,25 +1734,19 @@ let changelog = [
                 contentNodes.forEach(node => node.style.display = 'none');
             }
 
-            // Create a wrapper for the clickable "Title (Count)" part
-            const clickableTitle = document.createElement('span');
-            clickableTitle.style.cursor = 'pointer';
-
-            // Move current children (excluding Master Toggle and Filter) into clickableTitle
-            const masterToggle = h2.querySelector('.mb-master-toggle');
-            Array.from(h2.childNodes).forEach(child => {
-                // Exclude Master Toggle and Filter Container from the collapse trigger wrapper
-                if (child !== masterToggle && child !== filterContainer && child !== icon) {
-                    clickableTitle.appendChild(child);
-                }
-            });
-            h2.appendChild(clickableTitle);
-            if (masterToggle) h2.appendChild(masterToggle);
             // Re-append filter container if it was part of children, to ensure correct order
+            // (Note: We do NOT wrap children in a span anymore, to ensure the H2 background remains clickable)
             if (Array.from(h2.childNodes).includes(filterContainer)) h2.appendChild(filterContainer);
 
-            // Click event for the trigger part (Icon + Title)
+            // Click event for the entire H2 header
             const toggleFn = (e) => {
+                // GUARD CLAUSE: Don't toggle if clicking on interactive elements (Filter input, Master Toggle links, Checkboxes)
+                if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
+                    e.target.closest('.mb-master-toggle') ||
+                    (filterContainer && filterContainer.contains(e.target))) {
+                    return;
+                }
+
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -1782,8 +1780,8 @@ let changelog = [
                 icon.textContent = isExpanding ? '▼' : '▲';
             };
 
-            icon.onclick = toggleFn;
-            clickableTitle.onclick = toggleFn;
+            // Attach event listener directly to the H2 container
+            h2.addEventListener('click', toggleFn);
         });
     }
 
