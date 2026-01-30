@@ -23511,6 +23511,18 @@ in the right the sidebar,
 
 See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
 
+* make the whole sidebar vanish to the right side of the browser window
+
+In the uploaded userscript,
+make the whole sidebar
+
+#+begin_example
+<div id="sidebar">
+#+end_example
+
+collapsable/un-collapsable to the right side of the browser window when repeatedly clicking on an UI handle, by creating
+this UI handle on the vertical line which is located between the page content and the sidebar itself
+ 
 #+begin_example
 var sidebar = document.getElementById("sidebar");
 #+end_example
@@ -25241,6 +25253,6 @@ https://musicbrainz.org/release-group/c8e768c9-448b-4ebd-8e5e-4ae95609dd0b
 
 * create a userscript which show coverart on the mainpage
 
-* fix my usercipt for adding SP URLs to work pages
+* fix my userscript for adding SP URLs to work pages
 
-* create userscript which directly scolls to the first fifference on http://brucebase.wikidot.com/song:streets-of-minneapolis pages when clicking history
+* create userscript which directly scrolls to the first fifference on http://brucebase.wikidot.com/song:streets-of-minneapolis pages when clicking history

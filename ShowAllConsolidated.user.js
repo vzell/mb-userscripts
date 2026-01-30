@@ -94,6 +94,80 @@ let changelog = [
         Logger.debug(icon, msg, data);
     };
 
+        // --- Sidebar Collapsing Logic ---
+    function initSidebarCollapse() {
+        const sidebar = document.getElementById("sidebar");
+        if (!sidebar) return;
+
+        Logger.debug('init', 'Initializing sidebar collapse handle.');
+
+        // Add CSS for the sidebar collapse and the handle
+        const style = document.createElement('style');
+        style.textContent = `
+            #sidebar {
+                transition: transform 0.3s ease, margin-right 0.3s ease, width 0.3s ease, opacity 0.3s ease;
+                overflow-x: hidden;
+            }
+            .sidebar-collapsed {
+                transform: translateX(100%);
+                margin-right: -250px; /* Standard MusicBrainz sidebar width */
+                width: 0 !important;
+                min-width: 0 !important;
+                opacity: 0;
+                pointer-events: none;
+            }
+            #sidebar-toggle-handle {
+                position: fixed;
+                right: 250px; /* Standard sidebar width */
+                top: 50%;
+                transform: translateY(-50%);
+                width: 12px;
+                height: 60px;
+                background-color: #f2f2f2;
+                border: 1px solid #ccc;
+                border-right: none;
+                border-radius: 5px 0 0 5px;
+                cursor: pointer;
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: right 0.3s ease;
+                box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            }
+            #sidebar-toggle-handle:hover {
+                background-color: #e0e0e0;
+            }
+            #sidebar-toggle-handle::after {
+                content: '▶';
+                font-size: 8px;
+                color: #666;
+            }
+            .handle-collapsed {
+                right: 0 !important;
+            }
+            .handle-collapsed::after {
+                content: '◀' !important;
+            }
+        `;
+        document.head.appendChild(style);
+
+        const handle = document.createElement('div');
+        handle.id = 'sidebar-toggle-handle';
+        handle.title = 'Toggle Sidebar';
+
+        handle.addEventListener('click', () => {
+            sidebar.classList.toggle('sidebar-collapsed');
+            handle.classList.toggle('handle-collapsed');
+            Logger.debug('meta', 'Sidebar toggled.');
+        });
+
+        document.body.appendChild(handle);
+    }
+
+    // Initialize sidebar collapse
+    initSidebarCollapse();
+
     let registeredMenuCommandIDs = [];
 
     // Check if we just reloaded to fix the filter issue
