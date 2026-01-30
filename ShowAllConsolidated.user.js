@@ -381,7 +381,7 @@ let changelog = [
     filterWrapper.appendChild(filterClear);
 
     const caseLabel = document.createElement('label');
-    caseLabel.style.cssText = 'font-size:0.4em; cursor:pointer; font-weight:normal; display:flex; align-items:center; height:24px; margin:0;';
+    caseLabel.style.cssText = 'font-size:0.8em; cursor:pointer; font-weight:normal; display:flex; align-items:center; height:24px; margin:0;';
     const caseCheckbox = document.createElement('input');
     caseCheckbox.type = 'checkbox';
     caseCheckbox.style.cssText = 'margin-right:2px; vertical-align:middle;';
