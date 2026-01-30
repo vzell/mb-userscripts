@@ -1691,8 +1691,6 @@ let changelog = [
                 // Initial highlighting
                 if (state.lastSortIndex === index && state.sortState === targetState) {
                     span.classList.add('sort-icon-active');
-                } else if (state.lastSortIndex === -1 && targetState === 0) {
-                    span.classList.add('sort-icon-active'); // Default Original state
                 }
                 span.textContent = char;
                 span.onclick = (e) => {
@@ -1778,8 +1776,6 @@ let changelog = [
                 else if (char === '▼') span.title = 'Descending sort order';
 
                 if (lastSortIndex === index && sortState === targetState) {
-                    span.classList.add('sort-icon-active');
-                } else if (lastSortIndex === -1 && targetState === 0) {
                     span.classList.add('sort-icon-active');
                 }
                 span.textContent = char;
