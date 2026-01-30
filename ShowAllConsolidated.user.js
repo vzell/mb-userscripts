@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1.0+2026-01-30
+// @version      1.2.0+2026-01-30
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -39,6 +39,7 @@
 
 // CHANGELOG - The most important updates/versions:
 let changelog = [
+    {version: '1.2.0+2026-01-30', description: 'Added collapsable sidebar functionality with a handle on the vertical line.'},
     {version: '1.1.0+2026-01-30', description: 'Increased the size of the filter input boxes and text. Several other small UI improvements.'},
     {version: '1.0.0+2026-01-30', description: 'Support "Official" and "Various Artists" on Artis-Releases pages.'},
     {version: '0.9.4+2026-01-29', description: 'Modernized logging framework with colors, icons, and structured levels.'},
@@ -94,15 +95,15 @@ let changelog = [
         Logger.debug(icon, msg, data);
     };
 
-        // --- Sidebar Collapsing & Content Stretching Logic ---
+        // --- Sidebar Collapsing & Full Width Stretching Logic ---
     function initSidebarCollapse() {
         const sidebar = document.getElementById("sidebar");
-        const pageContainer = document.getElementById("page"); // Main MB container
-        const contentArea = document.getElementById("content");
+        const page = document.getElementById("page");
+        const content = document.getElementById("content");
 
         if (!sidebar) return;
 
-        Logger.debug('init', 'Initializing persistent sidebar collapse logic.');
+        Logger.debug('init', 'Initializing aggressive full-width sidebar toggle.');
 
         const sidebarWidth = '240px';
 
@@ -112,23 +113,26 @@ let changelog = [
                 transition: transform 0.3s ease, width 0.3s ease, opacity 0.3s ease, margin-right 0.3s ease;
             }
             #page, #content {
-                transition: margin-right 0.3s ease, padding-right 0.3s ease, width 0.3s ease, max-width 0.3s ease;
+                transition: margin-right 0.3s ease, padding-right 0.3s ease, width 0.3s ease, max-width 0.3s ease, margin-left 0.3s ease;
             }
             .sidebar-collapsed {
                 transform: translateX(100%);
                 width: 0 !important;
                 min-width: 0 !important;
-                opacity: 0;
+                opacity: 0 !important;
                 margin-right: -${sidebarWidth} !important;
                 pointer-events: none;
             }
-            /* Aggressive stretching to use ALL available space */
-            .content-full-width {
+            /* Force 100% width and remove any MB centering/max-width constraints */
+            .mb-full-width-stretching {
                 margin-right: 0 !important;
-                padding-right: 0 !important;
+                margin-left: 0 !important;
+                padding-right: 10px !important;
+                padding-left: 10px !important;
                 width: 100% !important;
-                max-width: none !important;
+                max-width: 100% !important;
                 min-width: 100% !important;
+                box-sizing: border-box !important;
             }
             #sidebar-toggle-handle {
                 position: fixed;
@@ -165,35 +169,34 @@ let changelog = [
 
         const handle = document.createElement('div');
         handle.id = 'sidebar-toggle-handle';
-        handle.title = 'Toggle Sidebar';
+        handle.title = 'Toggle Full Width Sidebar';
 
-        const toggleLogic = () => {
+        const applyStretching = (isCollapsed) => {
+            const containers = [document.getElementById("page"), document.getElementById("content")];
+            containers.forEach(el => {
+                if (el) {
+                    if (isCollapsed) el.classList.add('mb-full-width-stretching');
+                    else el.classList.remove('mb-full-width-stretching');
+                }
+            });
+        };
+
+        handle.addEventListener('click', () => {
             const isCollapsing = !sidebar.classList.contains('sidebar-collapsed');
             sidebar.classList.toggle('sidebar-collapsed');
             handle.classList.toggle('handle-collapsed');
-
-            // Apply stretching to both #page and #content to override default layout
-            [pageContainer, contentArea].forEach(el => {
-                if (el) el.classList.toggle('content-full-width', isCollapsing);
-            });
-
-            Logger.debug('meta', `Sidebar ${isCollapsing ? 'collapsed' : 'expanded'}. Stretching applied.`);
-        };
-
-        handle.addEventListener('click', toggleLogic);
-        document.body.appendChild(handle);
-
-        // Observer to re-apply stretching if the "Show all" process replaces/modifies the #content element
-        const observer = new MutationObserver(() => {
-            if (sidebar.classList.contains('sidebar-collapsed')) {
-                const currentContent = document.getElementById("content");
-                if (currentContent && !currentContent.classList.contains('content-full-width')) {
-                    currentContent.classList.add('content-full-width');
-                    Logger.debug('meta', 'Re-applied stretching to new content area.');
-                }
-            }
+            applyStretching(isCollapsing);
+            Logger.debug('meta', `Sidebar ${isCollapsing ? 'collapsed' : 'expanded'}. Full width applied.`);
         });
 
+        document.body.appendChild(handle);
+
+        // Observer to handle dynamic content replacement by the "Show All" logic
+        const observer = new MutationObserver(() => {
+            if (sidebar.classList.contains('sidebar-collapsed')) {
+                applyStretching(true);
+            }
+        });
         observer.observe(document.body, { childList: true, subtree: true });
     }
 
