@@ -23686,7 +23686,7 @@ where in the code does the actual DOM rendering begin, and end. Pleas place logg
 - Change the mouse pointer directly to a "busy cursor", when the rendering stage begins and back to normal
   when it ends. Also fix the "renderSeconds" calcuations to be the real time the user sees (DOM updates etc.)
 
-** UI spinning icon
+** UI rendering sandglass icon spinning icon
 
 In the uploaded script, "ShowAllConsolidated.user.js" generate a visually appealing "Overlay UI element", which should appear
 after the page loading stage and place it inside the '<div id="mb-show-all-controls-container"' at the end.
@@ -24413,7 +24413,7 @@ Leave the background shading of even and odd classes still visible
 In the uploaded script,
 change the mouse pointer to a "sand clock", if long running sorting actions are taken place, e.g. if more than 1000 rows are involved.
 
-** why
+** Updates the UI and logs the busy state.
 
 #+begin_example
 mplementation Example (User Script)
@@ -24468,7 +24468,6 @@ function triggerSort(columnIdx, table) {
 
 ** why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
 
-
 * Filtering
 ** DONE add escape handling when cursor is in filter field, equivalent to pressing the Xicon
 
@@ -24508,9 +24507,8 @@ the "setupMenu: function()" of "AA.user.js", see instructions above
 ** adjust the logic for big tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
 ** show sanduhr for long filters
 
-
 * Timings
-** 0
+** DONE 0
 
 Change "Loading page <current page number> of <total page numbers>..."
 to
@@ -24564,6 +24562,7 @@ I
 Please check if something could be made better. All the steps should also have detailed console logging.
 
 Please do not make any other changes to working code, comments and logging statements.
+
 
 * remove yellow backgound of the sorting indicator on grouped tables per column
 ** initial
