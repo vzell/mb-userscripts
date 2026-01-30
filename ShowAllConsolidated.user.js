@@ -94,45 +94,53 @@ let changelog = [
         Logger.debug(icon, msg, data);
     };
 
-        // --- Sidebar Collapsing Logic ---
+    // --- Sidebar Collapsing Logic ---
     function initSidebarCollapse() {
         const sidebar = document.getElementById("sidebar");
-        if (!sidebar) return;
+        const content = document.getElementById("content");
+        if (!sidebar || !content) return;
 
-        Logger.debug('init', 'Initializing sidebar collapse handle.');
+        Logger.debug('init', 'Initializing sidebar collapse handle with content expansion.');
 
-        // Add CSS for the sidebar collapse and the handle
+        const sidebarWidth = '240px'; // standard MusicBrainz sidebar width approx
+
         const style = document.createElement('style');
         style.textContent = `
             #sidebar {
-                transition: transform 0.3s ease, margin-right 0.3s ease, width 0.3s ease, opacity 0.3s ease;
+                transition: transform 0.3s ease, width 0.3s ease, opacity 0.3s ease, margin-right 0.3s ease;
                 overflow-x: hidden;
+            }
+            #content {
+                transition: margin-right 0.3s ease;
             }
             .sidebar-collapsed {
                 transform: translateX(100%);
-                margin-right: -250px; /* Standard MusicBrainz sidebar width */
                 width: 0 !important;
                 min-width: 0 !important;
                 opacity: 0;
+                margin-right: -${sidebarWidth} !important;
                 pointer-events: none;
+            }
+            .content-expanded {
+                margin-right: 0 !important;
             }
             #sidebar-toggle-handle {
                 position: fixed;
-                right: 250px; /* Standard sidebar width */
+                right: ${sidebarWidth};
                 top: 50%;
                 transform: translateY(-50%);
-                width: 12px;
-                height: 60px;
+                width: 14px;
+                height: 80px;
                 background-color: #f2f2f2;
                 border: 1px solid #ccc;
                 border-right: none;
-                border-radius: 5px 0 0 5px;
+                border-radius: 8px 0 0 8px;
                 cursor: pointer;
-                z-index: 9999;
+                z-index: 10000;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                transition: right 0.3s ease;
+                transition: right 0.3s ease, background-color 0.2s;
                 box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             }
             #sidebar-toggle-handle:hover {
@@ -140,8 +148,8 @@ let changelog = [
             }
             #sidebar-toggle-handle::after {
                 content: '▶';
-                font-size: 8px;
-                color: #666;
+                font-size: 9px;
+                color: #555;
             }
             .handle-collapsed {
                 right: 0 !important;
@@ -158,8 +166,9 @@ let changelog = [
 
         handle.addEventListener('click', () => {
             sidebar.classList.toggle('sidebar-collapsed');
+            content.classList.toggle('content-expanded');
             handle.classList.toggle('handle-collapsed');
-            Logger.debug('meta', 'Sidebar toggled.');
+            Logger.debug('meta', 'Sidebar toggled. Content expansion state changed.');
         });
 
         document.body.appendChild(handle);

@@ -23512,6 +23512,7 @@ in the right the sidebar,
 See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
 
 * make the whole sidebar vanish to the right side of the browser window
+** sidebar
 
 In the uploaded userscript,
 make the whole sidebar
@@ -23526,6 +23527,18 @@ this UI handle on the vertical line which is located between the page content an
 #+begin_example
 var sidebar = document.getElementById("sidebar");
 #+end_example
+
+** autostretch
+
+Now also add functionality, that the rest of the webpage consumes the space gained when the sidebar is collapsed and the other way around
+
+** also during initial rendering
+
+Yup it works perfect on the rendered page after pressing the action button, but the sidebar collapse handle is already
+generated when the URL is entered. BUT in that case the stretching of the rest of the page doesn't happen also the
+collapsable/un-collapsable functionality works
+
+Please fix
 
 
 * redirect to an artificial page after rendering and call all plugins again, maybe my own versions
