@@ -23503,7 +23503,7 @@ You can get the script at https://github.com/vzell/mb-userscripts under [Accumul
 
 * copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
-* do not take the sidebar into account for the collapsing stuff with the header logic
+* MAYBE: need to check - do not take the sidebar into account for the collapsing stuff with the header logic
 
 
 * redirect to an artificial page after rendering and call all plugins again, maybe my own versions
@@ -23650,7 +23650,8 @@ and also add logging for
         // Remove various clutter elements
 #+end_example
 
-* Refactor the clutter removal section into it's own function and call that one instead.
+
+* DONE Refactor the clutter removal section into it's own function and call that one instead.
 
 Please do NOT make any other changes to working code, comments and logging statements.
 
@@ -24456,6 +24457,12 @@ the "setupMenu: function()" of "AA.user.js", see instructions above
 
 
 * Timings
+** 0
+
+Change "Loading page <current page number> of <total page numbers>..."
+to
+"Loading page <current page number> of <total page numbers>... (<current rows up to now> rows)"
+
 ** 1
 
 In the uploaded userscript,
@@ -24464,7 +24471,8 @@ the '<div id="mb-show-all-controls-container"' should be updated with "statusDis
 | Stage              | Status text                                                                                | Visual progress bar | Visual progress bar text       |
 |--------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------|
 | Initializing       | Initializing...                                                                            |                     |                                |
-| Get maxPage        | Getting <total page numbers>...                                                            |                     |                                |
+| Get maxPage        | Getting total pages...                                                                     |                     |                                |
+| Get maxPage done   | Getting total pages...<total page numbers>                                                 |                     |                                |
 |--------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------|
 | Loading            | Loading page <current page number> of <total page numbers>... (current rows up to now)     | visible             | Estimated remaining time: <e>s |
 | Loading finished   | Loading page <current page number> of <total page numbers>... (current total rows)         | visible             | Estimated remaining time: <e>s |
@@ -24486,184 +24494,38 @@ In the uploaded userscript,
 the '<div id="mb-show-all-controls-container"' should have a modern visually nice appearance during the following stages from top to bottom in the next table:
 
 I
-| Stage              | Optional         | Status text                                                                                | Visual progress bar | Visual progress bar text       | Visual spinning icon |
-|--------------------+------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------+----------------------|
-| Initializing       |                  | Initializing...                                                                            |                     |                                |                      |
-| Get maxPage        |                  | Getting total pages...                                                                     |                     |                                |                      |
-| Get maxPage done   |                  | Getting total pages...<total page numbers>                                                 |                     |                                |                      |
-|--------------------+------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------+----------------------|
-| Loading            | x (if maxPage=1) | Loading page <current page number> of <total page numbers>...                              | visible             | Estimated remaining time: <e>s |                      |
-| Loading finished   | x (if maxPage=1) | Loading page <current page number> of <total page numbers>... (current total rows)         | visible             | Estimated remaining time: <e>s |                      |
-|--------------------+------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------+----------------------|
-| Fetching finished  |                  | Loaded <total page numbers> pages (current rows), Fetching time: <f>s                      |                     |                                | visible              |
-|--------------------+------------------+--------------------------------------------------------------------------------------------+---------------------+--------------------------------+----------------------|
-| Rendering          |                  | Loaded <total page numbers> pages (current rows), Fetching time: <f>s                      |                     |                                |                      |
-| Rendering finished |                  | Loaded <total page numbers> pages (current rows), Fetching time: <f>s, Rendering time <r>s |                     |                                |                      |
+| Stage                      | Optional         | Status text                                                                                        | Visual progress bar | Visual progress bar text       | Visual spinning icon |
+|----------------------------+------------------+----------------------------------------------------------------------------------------------------+---------------------+--------------------------------+----------------------|
+| Initializing               |                  | Initializing...                                                                                    |                     |                                |                      |
+| Get maxPage                |                  | Getting total pages...                                                                             |                     |                                |                      |
+| Get maxPage done           |                  | Getting total pages...<total page numbers>                                                         |                     |                                |                      |
+|----------------------------+------------------+----------------------------------------------------------------------------------------------------+---------------------+--------------------------------+----------------------|
+| Loading                    | x (if maxPage=1) | Loading page <current page number> of <total page numbers>... (current rows up to now)             | visible             | Estimated remaining time: <e>s |                      |
+| Loading finished           | x (if maxPage=1) | Loading page <current page number> of <total page numbers>... (current total rows)                 | visible             | Estimated remaining time: <e>s |                      |
+|----------------------------+------------------+----------------------------------------------------------------------------------------------------+---------------------+--------------------------------+----------------------|
+| Fetching finished          |                  | Loaded <total page numbers> pages (current rows), Fetching time: <f>s                              |                     |                                | visible              |
+|----------------------------+------------------+----------------------------------------------------------------------------------------------------+---------------------+--------------------------------+----------------------|
+| Initail rendering          |                  | Loaded <total page numbers> pages (current rows), Fetching time: <f>s                              |                     |                                |                      |
+| Initial rendering finished |                  | Loaded <total page numbers> pages (current rows), Fetching time: <f>s, Initial rendering time <r>s |                     |                                |                      |
 
 Please check if something could be made better. All the steps should also have detailed console logging.
 
 Please do not make any other changes to working code, comments and logging statements.
 
 * remove yellow backgound of the sorting indicator
-** 1
 
-In the uploaded userscript remove the yellow backgound from all sorting indicators in all table columns after the user
-clicks the first time an arbitary sorting icon in an arbitrary column. ONLY add the yellow backgound to the last sorting icon clicked
+In the uploaded userscript,
 
-Something like this dummy code
+- for the case of flat tables, the yellow backgound is ONLY placed on the sorting icon which was last clicked, all other
+sorting indicaters are resettet to have no yellow background anymore.
 
-#+begin_example
-// ... existing code ...
+- for the case of grouped tables, the yellow backgound from the initial rendering phase
+  - is NOT removed at all
+  - and each column additionally remembers (by setting the yellow background) the last clicked sort icon
 
-// Get all sorting indicators/icons
-const allSortIcons = document.querySelectorAll('.sorting-indicator-selector'); // Replace with your actual selector
+Please fix, so that there is the same behaviour as in the flat table case    
 
-// 1. Remove yellow background from all indicators
-allSortIcons.forEach(icon => {
-    if (icon.style.backgroundColor === 'yellow') {
-        console.debug('Removing highlight from icon:', icon);
-        icon.style.backgroundColor = '';
-    }
-});
-
-// 2. Apply yellow background ONLY to the clicked icon
-console.debug('Applying highlight to clicked icon:', clickedElement);
-clickedElement.style.backgroundColor = 'yellow';
-
-// ... existing code ...
-#+end_example
-
-Please do NOT make any other changes to working code, comments and logging statements ONLY add the neccessary logic to change the yellow background behaviour
-
-
-
-In the uploaded userscript DO NO add the yellow backgound of the sorting indicator after the initial rendering stage 
-
-Show the complete source code with just your changes
-Please do not make any other changes to working code, comments and logging statements.
-
-In the uploaded userscript the yellow backgound of the sorting indicator should only be applied when a sorting has
-actually been done at least once after the initial rendering stage 
-
-
-So
-
-The yellow background should be a “user has actually sorted” signal, not something that appears just because the table rendered.
-
-To implement this without touching any working logic, comments, or logging, the fix is purely state-based:
-
-Core idea (minimal & safe)
-
-Introduce a single boolean flag that tracks whether any sort action has occurred after initial render, and gate the yellow background logic behind that flag.
-
-What changes (conceptually)
-
-Initialize a flag after initial rendering
-
-let hasUserSortedOnce = false;
-
-
-This must be set during setup / render phase (where the table is first built).
-
-Flip the flag only when a real sort happens
-In the existing sort handler (where rows are actually reordered), add one line:
-
-hasUserSortedOnce = true;
-
-
-Guard the yellow background application
-Wherever the yellow background (or class that causes it) is applied to the sorting indicator, wrap it like this:
-
-if (hasUserSortedOnce) {
-    // existing code that applies yellow background
-}
-
-Please do not make any other changes to working code, comments and logging statements.
-
-** 1
-
-(and it must be one of ascending or desending, so a
-click on the icon for "original sort order" should not trigger a background change, because nothing will actually change
-for that case)
-
-** tmp
-
-#+begin_example
-To implement the requested behavior while strictly following your constraints, I have introduced a state-based flag hasUserSortedOnce and gated the yellow background application behind it.
-
-JavaScript
-
-// ... existing code ...
-    let allRows = [];
-    let originalAllRows = [];
-    let groupedRows = [];
-    let isLoaded = false;
-    let stopRequested = false;
-    let multiTableSortStates = new Map();
-    let hasUserSortedOnce = false; // Flag to track if the user has performed a sort action
-
-    async function fetchMaxPageGeneric(targetPath, queryParams = {}) {
-// ... existing code ...
-In the startFetchingProcess function, I have reset this flag to false at the beginning of the render phase to ensure that initial rendering (which sets the default "Original" sorting indicator) does not trigger the yellow background.
-
-JavaScript
-
-// ... inside startFetchingProcess (near the end of the function) ...
-        totalFetchingTime = performance.now() - fetchingTimeStart;
-        let renderingTimeStart = performance.now();
-
-        // --- RENDERING START ---
-        hasUserSortedOnce = false; // Reset flag before initial rendering stage
-        Logger.debug('render', 'DOM rendering starting...');
-// ... existing code ...
-In both createSortIcons (for grouped tables) and the logic for non-grouped tables, I have added the logic to set hasUserSortedOnce = true; when a sort button is clicked and wrapped the yellow background application (sort-icon-active class) in a conditional check.
-
-For Grouped Tables (Artist/Release-Group pages):
-JavaScript
-
-// ... inside createSortIcons for grouped tables ...
-            span.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                hasUserSortedOnce = true; // User has now manually triggered a sort
-                Logger.debug('sort', `Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}...`);
-                // ... logic to sort rows ...
-            };
-
-            // Only apply the yellow background (sort-icon-active) if a user-initiated sort has occurred
-            if (hasUserSortedOnce) {
-                if (state.lastSortIndex === index && state.sortState === targetState) {
-                    span.classList.add('sort-icon-active');
-                } else if (state.lastSortIndex === -1 && targetState === 0) {
-                    span.classList.add('sort-icon-active'); // Default Original state
-                }
-            }
-            span.textContent = char;
-// ... existing code ...
-For Non-Grouped Tables (Releases, Works, etc.):
-JavaScript
-
-// ... inside createSortIcons for non-grouped tables ...
-            span.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                hasUserSortedOnce = true; // User has now manually triggered a sort
-                Logger.debug('sort', `Sorting table by column: "${colName}" (index: ${index}) to state ${targetState}...`);
-                // ... logic to sort rows ...
-            };
-
-            // Only apply the yellow background (sort-icon-active) if a user-initiated sort has occurred
-            if (hasUserSortedOnce) {
-                if (lastSortIndex === index && sortState === targetState) {
-                    span.classList.add('sort-icon-active');
-                } else if (lastSortIndex === -1 && targetState === 0) {
-                    span.classList.add('sort-icon-active');
-                }
-            }
-            span.textContent = char;
-// ... existing code ...
-These changes ensure the yellow background remains hidden during the initial table build and only appears as a signal once the user interacts with the sorting controls. All existing logging, comments, and core sorting logic remain untouched.
-#+end_example
+Please do NOT make any other changes to the working code, comments and logging statements ONLY add the neccessary logic to change the yellow background behaviour
 
 
 * remove first column or at least the sorting indicators for pages of type https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290?page=3&tport=8000

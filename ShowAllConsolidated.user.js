@@ -1323,7 +1323,7 @@ let changelog = [
                 const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
 
                 // Update status text (page count only)
-                statusDisplay.textContent = `Loading page ${p} of ${maxPage}...`;
+                statusDisplay.textContent = `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)`;
 
                 // Update progress bar
                 const progress = p / maxPage;
