@@ -24393,7 +24393,7 @@ Everything should be place after the checkbox and "Cc:" text
 "Sorting on column <column name> (column index))..."
 "Sorting on table group <sub-header> column <column name> (column index))..."
 
-** adjust color of sorted column to a very lightyellow
+** DONE adjust color of sorted column to a very lightyellow
 
 In the uploaded script,
 adjust the color of the column of a datatable on which sorting has been performed to a light yellow background. Reset the color to the default as soon as another column is choosen for sorting.
@@ -24408,10 +24408,63 @@ Leave the background shading of even and odd classes still visible
 ** fix colours/shading
 *** on table headers
 *** highlightning, global and per column
-** show sanduhr for long sorts
+** DONE show sanduhr for long sorts
 
 In the uploaded script,
 change the mouse pointer to a "sand clock", if long running sorting actions are taken place, e.g. if more than 1000 rows are involved.
+
+** why
+
+#+begin_example
+mplementation Example (User Script)
+Following your coding preferences, here is how you might log a "busy" state in a script while maintaining your console debug logs and clean formatting.
+
+JavaScript
+
+/**
+ * Updates the UI and logs the busy state.
+ */
+function setBusyState(isLoading) {
+    const statusIcon = isLoading ? "⏳" : "✅";
+    
+    // Existing logic for UI updates
+    document.getElementById("status-indicator").innerText = statusIcon;
+
+    // console debug logging statements
+    console.debug(`[${new Date().toISOString()}] Busy state changed: ${isLoading}`);
+}
+
+// Example usage
+setBusyState(true);
+#+end_example
+
+
+In the uploaded script,
+the mouse pointer to a "Hourglass Not Done", if long running sorting actions are taken place, e.g. if more than 1000 rows are involved.
+
+But why is the code "sortTimerDisplay.textContent = 'Sorting...⏳'; never executed, because the text and the icon are not displayed at all
+
+#+begin_example
+function triggerSort(columnIdx, table) {
+    // 1. Show the loading state immediately
+    sortTimerDisplay.textContent = 'Sorting...⏳';
+    document.body.classList.add('mb-sorting-active');
+
+    // 2. Use setTimeout to defer the heavy work
+    setTimeout(() => {
+        const startTime = performance.now();
+        
+        // --- YOUR HEAVY SORTING LOGIC HERE ---
+        // (e.g., allRows.sort(...) and renderFinalTable(...))
+        
+        const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+        
+        // 3. Clear the loading state
+        sortTimerDisplay.textContent = `Sorted in ${duration}s`;
+        document.body.classList.remove('mb-sorting-active');
+    }, 50); // A short 50ms delay is enough for the UI to paint the "⏳" icon
+}
+#+end_example
 
 ** why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
 
@@ -24512,7 +24565,7 @@ Please check if something could be made better. All the steps should also have d
 
 Please do not make any other changes to working code, comments and logging statements.
 
-* remove yellow backgound of the sorting indicator
+* remove yellow backgound of the sorting indicator on grouped tables per column
 ** initial
 
 In the uploaded userscript,
@@ -24527,7 +24580,7 @@ Please fix, so that there is the same behaviour as in the flat table case
 Please do NOT make any other changes to the working code, comments and logging statements ONLY add the neccessary logic to change the yellow background behaviour
 
 
-* remove first column or at least the sorting indicators for pages of type https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290?page=3&tport=8000
+* DONE remove first column or at least the sorting indicators for pages of type https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290?page=3&tport=8000
 
 In the uploaded userscript, for the URLs of type https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
 currently the initial rendered column header "#" for the first column with looks like

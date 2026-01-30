@@ -1708,7 +1708,7 @@ let changelog = [
                     e.preventDefault();
                     e.stopPropagation();
                     Logger.debug('sort', `Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}...`);
-                    sortTimerDisplay.textContent = 'Sorting...';
+                    sortTimerDisplay.textContent = 'Sorting...⏳';
 
                     const groupIndex = parseInt(sortKey.split('_').pop(), 10);
                     const targetGroup = groupedRows[groupIndex];
@@ -1717,7 +1717,7 @@ let changelog = [
 
                     if (showWaitCursor) document.body.classList.add('mb-sorting-active');
 
-                    requestAnimationFrame(() => {
+                    setTimeout(() => {
                         const startSort = performance.now();
                         state.lastSortIndex = index;
                         state.sortState = targetState;
@@ -1749,9 +1749,9 @@ let changelog = [
 
                         runFilter();
                         const duration = ((performance.now() - startSort) / 1000).toFixed(2);
-                        sortTimerDisplay.textContent = `Sorting: ${duration}s`;
+                        sortTimerDisplay.textContent = `Sorted "${colName}": ${duration}s`;
                         if (showWaitCursor) document.body.classList.remove('mb-sorting-active');
-                    });
+                    }, 50); // A short 50ms delay is enough for the UI to paint the "⏳" icon
                 };
                 return span;
             };
@@ -1794,14 +1794,14 @@ let changelog = [
                     e.preventDefault();
                     e.stopPropagation();
                     Logger.debug('sort', `Sorting flat table by column: "${colName}" (index: ${index}) to state ${targetState}...`);
-                    sortTimerDisplay.textContent = 'Sorting...';
+                    sortTimerDisplay.textContent = 'Sorting...⏳';
 
                     const rowCount = allRows.length;
                     const showWaitCursor = rowCount > 1000;
 
                     if (showWaitCursor) document.body.classList.add('mb-sorting-active');
 
-                    requestAnimationFrame(() => {
+                    setTimeout(() => {
                         const startSort = performance.now();
                         lastSortIndex = index;
                         sortState = targetState;
@@ -1831,9 +1831,9 @@ let changelog = [
 
                         runFilter();
                         const duration = ((performance.now() - startSort) / 1000).toFixed(2);
-                        sortTimerDisplay.textContent = `Sorting: ${duration}s`;
+                        sortTimerDisplay.textContent = `Sorted "${colName}": ${duration}s`;
                         if (showWaitCursor) document.body.classList.remove('mb-sorting-active');
-                    });
+                    }, 50); // A short 50ms delay is enough for the UI to paint the "⏳" icon
                 };
                 return span;
             };
