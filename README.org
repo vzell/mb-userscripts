@@ -24731,7 +24731,7 @@ Please do not make any other changes to working code, comments and logging state
 #+end_example
 
 
-* make the visible area between the last '</span>' and the '</h2>' also clickable
+* DONE make the visible area between the last '</span>' and the '</h2>' also clickable
 ** initial
 
 In the uploaded userscript,
@@ -24747,7 +24747,7 @@ Example HTML snippet
 
 Please do not make any other changes to working code, comments and logging statements.
 
-** Ctrl-click
+** DONE Ctrl-click
 
 YES, now it works.
 
@@ -24764,6 +24764,8 @@ The ALL collapsing/uncollapsing functionality must stay inside the sidebar conta
 container, and the other way around if clicking a h2 header in the main page left from the sidebar container
 
 Please implement
+
+* Add Ctrl-click to h3 headers
 
 
 * TODO refactoring
@@ -25265,6 +25267,17 @@ No Logic Duplication: The "cleanup" and "sortable" triggers are moved into the r
 
 
 * Add configuration section like in "jesus - Super mind control II", remove from Tampermonkey menu, only leave changelog and github page
+
+In the uploaded userscript "ShowAllConsolidated.user.js",
+change the Tampermonkey "Settings & Menu" functionality below
+
+#+begin_example
+    // --- Settings & Menu ---
+#+end_example
+
+to the equivalent, what is used in the uploaded userscript "super_min_control.user.js".
+
+So the settings which previously could be change vi clicking Tampermonkey menu entirs
 
 
 * TODO
