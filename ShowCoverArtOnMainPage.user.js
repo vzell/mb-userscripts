@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show Cover Art On Main Release Page
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1.5+2026-01-31
+// @version      1.1.6+2026-01-31
 // @description  Show all cover art images on the main release page, collapsible with transitions and configurable size
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -92,8 +92,8 @@
                 <a id="mb-ca-reset" style="cursor: pointer;">RESET</a> |
                 <a id="mb-ca-close" style="cursor: pointer;">CLOSE</a>
             </p>
-            <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">██ COVER ART DISPLAY</h4>
-            <p>Settings are applied immediately to the gallery upon saving.</p>
+            <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">COVER ART DISPLAY</h4>
+            <p>Settings are applied immediately upon saving.</p>
             <table border="2" cellpadding="4" cellspacing="1" style="width: 100%; border-collapse: separate; background: #eee;">
                 <thead>
                     <tr style="background-color: #ccc;">
@@ -126,18 +126,13 @@
             if (document.body.contains(overlay)) document.body.removeChild(overlay);
         };
 
-        // Event: Save
+        // Event: Save (Stores value and reloads)
         document.getElementById("mb-ca-save-btn").onclick = () => {
             const val = parseInt(document.getElementById("mb-ca-size-input").value, 10);
             if (!isNaN(val) && val > 0) {
                 GM_setValue("ca_image_size", val);
-                const images = document.querySelectorAll("#consolidated-cover-art-gallery img");
-                images.forEach(img => {
-                    img.style.maxWidth = `${val}px`;
-                    img.style.maxHeight = `${val}px`;
-                });
-                Logger.info('init', `Configuration saved: ${val}px`);
-                closeDialog();
+                Logger.info('init', `Configuration saved: ${val}px. Reloading...`);
+                location.reload();
             }
         };
 
@@ -178,7 +173,7 @@
         }
     };
 
-    // Existing comments should NOT be deleted
+    // --- Main Logic ---
     const mbidMatch = location.pathname.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
     const tabsContainer = document.querySelector("div.tabs");
 
@@ -231,7 +226,6 @@
                     fragment.appendChild(caHeader);
                     fragment.appendChild(gallery);
 
-                    // Insert after the tabs div
                     tabsContainer.after(fragment);
                     Logger.debug('render', "Gallery injected after tabs container.");
 
