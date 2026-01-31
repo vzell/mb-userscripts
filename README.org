@@ -25300,7 +25300,16 @@ https://musicbrainz.org/release-group/c8e768c9-448b-4ebd-8e5e-4ae95609dd0b
 ** add config dialog for end-user
 
 
+* fix my userscript for adding SP URLs to work pages
+
+* create userscript which directly scrolls to the first difference on http://brucebase.wikidot.com/song:streets-of-minneapolis pages when clicking history
+
+See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
+
+* consolidate logging in library
+
 * create a userscript which shows coverart on the mainpage in miniature form
+** initial
 
 In the uploaded userscript ShowAllConsolidated.user.js", create a userscript for URLs of type
 https://musicbrainz.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60 which shows the coverart from the tab "Cover art
@@ -25314,15 +25323,60 @@ before the h2 header element "Tracklist":
 
 Use similar logic like in the script https://github.com/jesus2099/konami-command/blob/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
 
+** 250px
 
 Show the 250px types of images https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475411558-250.jpg
 
+** collapsable
+
 Add the following h2 header in front of all images: "<h2>Cover Art</h2>" and make it collapsable/un-collabsable when clicking on it
 
+** config
+
+In the uploaded userscript
+- add a transition effect to the collapse logic
+- make the image size configurable by adding a menue entry under the "Editing" pull-down menu entry on the page. When
+  clicked generate a UI where you can specify the image dimensions in pixels and store them per user in browser
+  storage. The default pixel size should be 250px
 
 
-* fix my userscript for adding SP URLs to work pages
 
-* create userscript which directly scrolls to the first difference on http://brucebase.wikidot.com/song:streets-of-minneapolis pages when clicking history
+[MB-ShowAll] 🚀 Script loaded and starting... 
+[MB-ShowAll] 🚀 Conditions not met: MBID found: false, Tracklist Header: true
 
-See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
+Here is URL I ran it on: https://musicbrainz.org/release/68136206-2939-42ed-a39d-f9c41b0defb1
+
+** default
+
+Yes,
+- add a "Reset to Default" button inside the settings modal?
+- also change the placement from insert before
+
+#+begin_example
+  <h2 class="tracklist">Tracklist<button class="work-button-style">Edit recording comments</button><span id="settings-icon">⚙️</span></h2>
+#+end_example
+
+to insert after
+
+#+begin_example
+<div class="tabs">
+#+end_example
+
+** adjust display login in config dialog to look like jesus
+
+In the uploaded userscript
+adjust the configuration dialog to visually look like the one uploaded in "jesus.config.html".
+
+So basically, for our case
+
+| Setting                                          | Default | Description                        |
+|--------------------------------------------------+---------+------------------------------------|
+| Pixel Size <input area with size up/down dialog> |     250 | Set the cover image size in pixels |
+|                                                  |         |                                    |
+
+but still retain the functionality to explicitely save all the values with a "Save" button, cancel the dialog with a
+"Cancel" button (should alos react on pressing the "Esc" key), reset the whole dialog to the initial state with a
+"Reset" button. The "Save" button should store everything in persisten storage and apply everything immediately without a page reload
+
+
+** add "VZ" icon to config dialog

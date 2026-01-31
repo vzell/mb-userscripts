@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show Cover Art On Main Release Page
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1.3+2026-01-31
+// @version      1.1.4+2026-01-31
 // @description  Show all cover art images on the main release page, collapsible with transitions and configurable size
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -75,43 +75,92 @@
         const overlay = document.createElement("div");
         Object.assign(overlay.style, {
             position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
-            backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '1000', display: 'flex',
+            backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '10000', display: 'flex',
             justifyContent: 'center', alignItems: 'center'
         });
 
-        const modal = document.createElement("div");
-        Object.assign(modal.style, {
-            backgroundColor: '#fff', padding: '20px', borderRadius: '5px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.3)', border: '1px solid #ccc',
-            color: '#000'
+        const container = document.createElement("div");
+        container.id = "vzell-ca-config-container";
+        // Matching jesus.config.html style
+        Object.assign(container.style, {
+            backgroundColor: 'silver', border: '2px outset white', padding: '1em',
+            color: 'black', fontFamily: 'sans-serif', minWidth: '400px'
         });
 
-        modal.innerHTML = `
-            <h3 style="margin-top:0">Cover Art Display Settings</h3>
-            <label for="mb-ca-size">Image size (pixels): </label>
-            <input type="number" id="mb-ca-size" value="${currentSize}" style="width: 80px; padding: 4px;">
-            <div style="margin-top: 20px; text-align: right;">
-                <button id="mb-ca-cancel" style="margin-right: 10px;">Cancel</button>
-                <button id="mb-ca-save" style="background: #2980b9; color: white; border: none; padding: 5px 15px; cursor: pointer;">Save</button>
+        container.innerHTML = `
+            <p style="text-align: right; margin: 0px;">
+                <a id="mb-ca-reset" style="cursor: pointer;">RESET</a> |
+                <a id="mb-ca-close" style="cursor: pointer;">CLOSE</a>
+            </p>
+            <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">██ COVER ART DISPLAY</h4>
+            <p>Settings are applied immediately to the gallery upon saving.</p>
+            <table border="2" cellpadding="4" cellspacing="1" style="width: 100%; border-collapse: separate; background: #eee;">
+                <thead>
+                    <tr style="background-color: #ccc;">
+                        <th>setting</th>
+                        <th>default setting</th>
+                        <th>description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                            <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                Pixel Size: <input type="number" id="mb-ca-size-input" value="${currentSize}" style="width: 60px; margin-left: 5px;">
+                            </label>
+                        </th>
+                        <td style="opacity: 0.666; text-align: center;">${DEFAULT_SIZE}</td>
+                        <td style="margin-bottom: 0.4em;">Set the cover image size in pixels</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div style="margin-top: 15px; text-align: right;">
+                <button id="mb-ca-save-btn" style="padding: 4px 12px; cursor: pointer; font-weight: bold;">SAVE</button>
             </div>
         `;
 
-        overlay.appendChild(modal);
+        overlay.appendChild(container);
         document.body.appendChild(overlay);
 
-        document.getElementById("mb-ca-save").onclick = () => {
-            const val = parseInt(document.getElementById("mb-ca-size").value, 10);
+        const closeDialog = () => {
+            if (document.body.contains(overlay)) document.body.removeChild(overlay);
+        };
+
+        // Event: Save
+        document.getElementById("mb-ca-save-btn").onclick = () => {
+            const val = parseInt(document.getElementById("mb-ca-size-input").value, 10);
             if (!isNaN(val) && val > 0) {
                 GM_setValue("ca_image_size", val);
-                location.reload();
+                // Apply immediately to existing gallery images
+                const images = document.querySelectorAll("#consolidated-cover-art-gallery img");
+                images.forEach(img => {
+                    img.style.maxWidth = `${val}px`;
+                    img.style.maxHeight = `${val}px`;
+                });
+                Logger.info('init', `Configuration saved: ${val}px`);
+                closeDialog();
             }
         };
 
-        const close = () => {
-            if (document.body.contains(overlay)) document.body.removeChild(overlay);
+        // Event: Reset
+        document.getElementById("mb-ca-reset").onclick = () => {
+            document.getElementById("mb-ca-size-input").value = DEFAULT_SIZE;
         };
-        document.getElementById("mb-ca-cancel").onclick = close;
-        overlay.onclick = (e) => { if (e.target === overlay) close(); };
+
+        // Event: Close/Cancel
+        document.getElementById("mb-ca-close").onclick = closeDialog;
+
+        // Event: Escape Key
+        const handleEsc = (e) => {
+            if (e.key === "Escape") {
+                closeDialog();
+                window.removeEventListener("keydown", handleEsc);
+            }
+        };
+        window.addEventListener("keydown", handleEsc);
+
+        // Click outside to close
+        overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
     };
 
     const injectMenuEntry = () => {
