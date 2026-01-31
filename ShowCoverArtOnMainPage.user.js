@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show Cover Art On Main Release Page
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.1.4+2026-01-31
+// @version      1.1.5+2026-01-31
 // @description  Show all cover art images on the main release page, collapsible with transitions and configurable size
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -131,7 +131,6 @@
             const val = parseInt(document.getElementById("mb-ca-size-input").value, 10);
             if (!isNaN(val) && val > 0) {
                 GM_setValue("ca_image_size", val);
-                // Apply immediately to existing gallery images
                 const images = document.querySelectorAll("#consolidated-cover-art-gallery img");
                 images.forEach(img => {
                     img.style.maxWidth = `${val}px`;
@@ -159,7 +158,6 @@
         };
         window.addEventListener("keydown", handleEsc);
 
-        // Click outside to close
         overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
     };
 
@@ -182,9 +180,9 @@
 
     // Existing comments should NOT be deleted
     const mbidMatch = location.pathname.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
-    const tracklistHeader = document.querySelector("h2.tracklist, h2#tracklist");
+    const tabsContainer = document.querySelector("div.tabs");
 
-    if (mbidMatch && tracklistHeader) {
+    if (mbidMatch && tabsContainer) {
         injectMenuEntry();
         const mbid = mbidMatch[0];
         const imgSize = getStoredSize();
@@ -204,6 +202,7 @@
                     gallery.style.display = "flex";
                     gallery.style.flexWrap = "wrap";
                     gallery.style.gap = "10px";
+                    gallery.style.marginTop = "20px";
                     gallery.style.marginBottom = "20px";
                     gallery.style.overflow = "hidden";
                     gallery.style.transition = "max-height 0.4s ease-in-out, opacity 0.3s ease";
@@ -211,7 +210,7 @@
                     gallery.style.opacity = "1";
 
                     const caHeader = document.createElement("h2");
-                    caHeader.textContent = "Cover art (click to toggle)";
+                    caHeader.textContent = "Cover art";
                     caHeader.style.cursor = "pointer";
                     caHeader.style.userSelect = "none";
 
@@ -220,15 +219,21 @@
                             gallery.style.maxHeight = "2000px";
                             gallery.style.opacity = "1";
                             gallery.style.marginBottom = "20px";
+                            gallery.style.marginTop = "20px";
                         } else {
                             gallery.style.maxHeight = "0px";
                             gallery.style.opacity = "0";
                             gallery.style.marginBottom = "0px";
+                            gallery.style.marginTop = "0px";
                         }
                     });
 
                     fragment.appendChild(caHeader);
-                    fragment.appendChild(document.createElement("br"));
+                    fragment.appendChild(gallery);
+
+                    // Insert after the tabs div
+                    tabsContainer.after(fragment);
+                    Logger.debug('render', "Gallery injected after tabs container.");
 
                     data.images.forEach(img => {
                         const link = document.createElement("a");
@@ -246,21 +251,6 @@
                         link.appendChild(image);
                         gallery.appendChild(link);
                     });
-
-                    fragment.appendChild(gallery);
-
-                    // Robust insertion logic
-                    if (tracklistHeader.parentNode) {
-                        tracklistHeader.parentNode.insertBefore(fragment, tracklistHeader);
-                        Logger.debug('render', "Gallery injected before tracklist header.");
-                    } else {
-                        // Fallback to appending to the main content container if parentNode is missing
-                        const content = document.getElementById('content');
-                        if (content) {
-                            content.insertBefore(fragment, tracklistHeader);
-                            Logger.debug('render', "Gallery injected via fallback content container.");
-                        }
-                    }
                 }
             })
             .catch(err => {
