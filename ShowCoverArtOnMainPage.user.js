@@ -24,7 +24,7 @@
 
     if (mbidMatch && tracklistHeader) {
         const mbid = mbidMatch[0];
-        console.debug("ShowAllConsolidated: Fetching cover art for " + mbid);
+        console.debug("ShowCoverArtOnMainPage: Fetching cover art for " + mbid);
 
         fetch("https://coverartarchive.org/release/" + mbid)
             .then(response => {
@@ -85,7 +85,7 @@
                 }
             })
             .catch(err => {
-                console.debug("ShowAllConsolidated: " + err.message);
+                console.debug("ShowCoverArtOnMainPage: " + err.message);
             });
     }
 })();
