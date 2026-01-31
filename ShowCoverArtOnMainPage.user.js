@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show Cover Art On Main Release Page
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.3.0+2026-01-30
+// @version      0.9.0+2026-01-31
 // @description  Shows all cover art images (250px) on the main release page before the tracklist. Collapsible.
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
