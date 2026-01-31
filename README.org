@@ -23533,7 +23533,7 @@ collapsable/un-collapsable functionality works
 
 Please fix
 
-** fix use use even more space, especially on the page entry
+** fix use of even more space, especially on the page entry
 
  - The content area STILL  doesn't stretch when the sidebar is collapsed on the initial page load (before clicking the "Show all" action button)
  - AND also in the case of clicking the "Show all" action button it works fine, there could still be more stretching applied as it uses onyl half of the spce it COULD use
@@ -23651,7 +23651,6 @@ and how must the following block of code be extended to support these type of UR
 #+end_example
 
 
-
 * DONE Include more log statements
 
 In the uploaded script,
@@ -23691,11 +23690,9 @@ and also add logging for
         // Remove various clutter elements
 #+end_example
 
-
 * DONE Refactor the clutter removal section into it's own function and call that one instead.
 
 Please do NOT make any other changes to working code, comments and logging statements.
-
 
 * DONE Downloading
 ** visual progress bar for the fetching phase
@@ -23746,7 +23743,7 @@ It actually says "Rendering.." (but NOT in an overlay) but there is still the vi
 
 Also "Filtering results..." is displayd as an Overlay for a long time, but it still show 0s
 
-PLease fix
+Please fix
 
 *** ChatGPT
 
@@ -24765,6 +24762,7 @@ container, and the other way around if clicking a h2 header in the main page lef
 
 Please implement
 
+
 * Add Ctrl-click to h3 headers
 
 
@@ -25275,9 +25273,9 @@ change the Tampermonkey "Settings & Menu" functionality below
     // --- Settings & Menu ---
 #+end_example
 
-to the equivalent, what is used in the uploaded userscript "super_min_control.user.js".
+to the equivalent, what is used in the uploaded userscript "smc.js".
 
-So the settings which previously could be change vi clicking Tampermonkey menu entirs
+So the settings which previously could be changed via clicking Tampermonkey menu entries should now be located as a menu entry in the "Editing" MusicBrainz pages 
 
 
 * TODO
@@ -25302,7 +25300,26 @@ https://musicbrainz.org/release-group/c8e768c9-448b-4ebd-8e5e-4ae95609dd0b
 ** add config dialog for end-user
 
 
-* create a userscript which show coverart on the mainpage
+* create a userscript which shows coverart on the mainpage in miniature form
+
+In the uploaded userscript ShowAllConsolidated.user.js", create a userscript for URLs of type
+https://musicbrainz.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60 which shows the coverart from the tab "Cover art
+(<number of images>)", https://musicbrainz.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/cover-art on the mainpage
+before the h2 header element "Tracklist":
+
+#+begin_example
+<h2 class="tracklist">Tracklist</h2>
+#+end_example
+
+
+Use similar logic like in the script https://github.com/jesus2099/konami-command/blob/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
+
+
+Show the 250px types of images https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475411558-250.jpg
+
+Add the following h2 header in front of all images: "<h2>Cover Art</h2>" and make it collapsable/un-collabsable when clicking on it
+
+
 
 * fix my userscript for adding SP URLs to work pages
 
