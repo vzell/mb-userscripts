@@ -18,13 +18,57 @@
 "use strict";
 
 (function() {
+
+        const DEBUG_ENABLED = true;
+
+    // --- Modernized Logging Framework ---
+    const Logger = {
+        prefix: '[MB-ShowAll]',
+        styles: {
+            debug: 'color: #7f8c8d; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold;',
+            info: 'color: #2980b9; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 11px;',
+            error: 'color: #c0392b; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; background: #fceae9; padding: 2px 4px; border-radius: 3px;',
+            timer: 'color: #8e44ad; font-family: "Consolas", monospace; font-style: italic;'
+        },
+        icons: {
+            init: '🚀',
+            fetch: '📥',
+            render: '🎨',
+            filter: '🔍',
+            sort: '⚖️',
+            cleanup: '🧹',
+            error: '❌',
+            success: '✅',
+            meta: '🎵'
+        },
+        log(level, icon, msg, data = '') {
+            if (!DEBUG_ENABLED && level === 'debug') return;
+            const style = this.styles[level] || '';
+            const iconChar = this.icons[icon] || '📝';
+            console.log(`%c${this.prefix} ${iconChar} ${msg}`, style, data);
+        },
+        debug(icon, msg, data) { this.log('debug', icon, msg, data); },
+        info(icon, msg, data) { this.log('info', icon, msg, data); },
+        error(icon, msg, data) { this.log('error', 'error', msg, data); }
+    };
+
+    // Backward compatibility wrapper for existing simple log calls
+    const log = (msg, data = '') => {
+        let icon = 'meta';
+        if (msg.includes('Initializing')) icon = 'init';
+        if (msg.includes('Fetching') || msg.includes('page')) icon = 'fetch';
+        if (msg.includes('cleanup')) icon = 'cleanup';
+        if (msg.includes('Filter')) icon = 'filter';
+        Logger.debug(icon, msg, data);
+    };
+
     // Existing comments should NOT be deleted
     const mbidMatch = location.pathname.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/);
     const tracklistHeader = document.querySelector("h2.tracklist, h2#tracklist");
 
     if (mbidMatch && tracklistHeader) {
         const mbid = mbidMatch[0];
-        console.debug("ShowCoverArtOnMainPage: Fetching cover art for " + mbid);
+        Logger.info('init', "ShowCoverArtOnMainPage: Fetching cover art for " + mbid);
 
         fetch("https://coverartarchive.org/release/" + mbid)
             .then(response => {
@@ -85,7 +129,7 @@
                 }
             })
             .catch(err => {
-                console.debug("ShowCoverArtOnMainPage: " + err.message);
+                Logger.info('init', "ShowCoverArtOnMainPage: " + err.message);
             });
     }
 })();
