@@ -213,8 +213,7 @@ let changelog = [
         alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
     }
 
-    // --- Settings & Menu ---
-    const settings = {
+        const settings = {
         removeTagger: GM_getValue("removeTagger", false),
         removeRating: GM_getValue("removeRating", false),
         removeRelationships: GM_getValue("removeRelationships", true),
@@ -222,89 +221,91 @@ let changelog = [
         maxPageThreshold: GM_getValue("maxPageThreshold", 100),
         autoExpandThreshold: GM_getValue("autoExpandThreshold", 60),
 
-        /**
-         * Refresh the Tampermonkey menu entries to show current states and values.
-         */
+        save: function() {
+            GM_setValue("removeTagger", this.removeTagger);
+            GM_setValue("removeRating", this.removeRating);
+            GM_setValue("removeRelationships", this.removeRelationships);
+            GM_setValue("removePerformance", this.removePerformance);
+            GM_setValue("maxPageThreshold", this.maxPageThreshold);
+            GM_setValue("autoExpandThreshold", this.autoExpandThreshold);
+            this.setupMenu();
+        },
+
+        showSettingsModal: function() {
+            const overlay = document.createElement("div");
+            Object.assign(overlay.style, {
+                position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+                backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '10000', display: 'flex',
+                justifyContent: 'center', alignItems: 'center'
+            });
+
+            const container = document.createElement("div");
+            Object.assign(container.style, {
+                backgroundColor: 'silver', border: '2px outset white', padding: '1em',
+                color: 'black', fontFamily: 'sans-serif', minWidth: '450px'
+            });
+
+            container.innerHTML = `
+                <p style="text-align: right; margin: 0px;">
+                    <a id="mb-sa-close" style="cursor: pointer;">CLOSE</a>
+                </p>
+                <h4 style="text-shadow: white 0px 1px 1px; margin-top: 0px;">Show All Consolidated Settings</h4>
+                <div style="background-color: white; border: 2px inset white; padding: 0.5em;">
+                    <label><input type="checkbox" id="sa-tagger" ${this.removeTagger ? 'checked' : ''}> Remove Tagger Column</label><br>
+                    <label><input type="checkbox" id="sa-rating" ${this.removeRating ? 'checked' : ''}> Remove Rating Column</label><br>
+                    <label><input type="checkbox" id="sa-rel" ${this.removeRelationships ? 'checked' : ''}> Remove Relationships Column</label><br>
+                    <label><input type="checkbox" id="sa-perf" ${this.removePerformance ? 'checked' : ''}> Remove Performance Column</label><br>
+                    <hr>
+                    <label title="Warning threshold for page fetching">Max Page Warning: <input type="number" id="sa-max" value="${this.maxPageThreshold}" style="width: 50px;"></label><br>
+                    <label title="Row count threshold to auto-expand tables">Auto-Expand Rows: <input type="number" id="sa-auto" value="${this.autoExpandThreshold}" style="width: 50px;"></label>
+                </div>
+                <p style="margin-bottom: 0px; text-align: center;">
+                    <button id="sa-save-btn" style="cursor: pointer;">SAVE</button>
+                </p>
+            `;
+
+            overlay.appendChild(container);
+            document.body.appendChild(overlay);
+
+            document.getElementById("mb-sa-close").onclick = () => overlay.remove();
+            document.getElementById("sa-save-btn").onclick = () => {
+                this.removeTagger = document.getElementById("sa-tagger").checked;
+                this.removeRating = document.getElementById("sa-rating").checked;
+                this.removeRelationships = document.getElementById("sa-rel").checked;
+                this.removePerformance = document.getElementById("sa-perf").checked;
+                this.maxPageThreshold = parseInt(document.getElementById("sa-max").value, 10);
+                this.autoExpandThreshold = parseInt(document.getElementById("sa-auto").value, 10);
+                this.save();
+                overlay.remove();
+                Logger.info('meta', 'Settings saved via Modal');
+            };
+        },
+
         setupMenu: function() {
+            // Tampermonkey Menu
             for (const id of registeredMenuCommandIDs) {
-                try { GM_unregisterMenuCommand(id); } catch (e) { /* ignore */ }
+                try { GM_unregisterMenuCommand(id); } catch (e) {}
             }
             registeredMenuCommandIDs = [];
+            registeredMenuCommandIDs.push(GM_registerMenuCommand("⚙️ Open Settings Manager", () => this.showSettingsModal()));
+            registeredMenuCommandIDs.push(GM_registerMenuCommand("📜 ChangeLog", () => document.getElementById('vz-changelog-trigger')?.click() || showChangelog()));
 
-            const register = (label, fn) => {
-                const id = GM_registerMenuCommand(label, fn);
-                registeredMenuCommandIDs.push(id);
-            };
-
-            // Boolean Toggles
-            const bools = [
-                { key: "removeTagger", label: "Remove Tagger Column" },
-                { key: "removeRating", label: "Remove Rating Column" },
-                { key: "removeRelationships", label: "Remove Relationships Column" },
-                { key: "removePerformance", label: "Remove Performance Attributes Column" }
-            ];
-
-            bools.forEach(item => {
-                const icon = this[item.key] ? "☑" : "☐";
-                register(`${icon} ${item.label}`, () => {
-                    this[item.key] = !this[item.key];
-                    GM_setValue(item.key, this[item.key]);
-                    Logger.info('meta', `Setting changed: ${item.key} = ${this[item.key]}`);
-                    this.setupMenu();
-                });
-            });
-
-            // Numeric Thresholds (Prompts)
-            register(`Max Fetch Page Threshold before Warning: ${this.maxPageThreshold}`, () => {
-                const val = prompt("Enter new Max Page Warning Threshold:", this.maxPageThreshold);
-                const num = parseInt(val, 10);
-                if (!isNaN(num) && num > 0) {
-                    this.maxPageThreshold = num;
-                    GM_setValue("maxPageThreshold", num);
-                    this.setupMenu();
-                }
-            });
-
-            register(`Table Auto-Expand Threshold for Type Album: ${this.autoExpandThreshold}`, () => {
-                const val = prompt("Enter new Auto-Expand Row Threshold:", this.autoExpandThreshold);
-                const num = parseInt(val, 10);
-                if (!isNaN(num) && num >= 0) {
-                    this.autoExpandThreshold = num;
-                    GM_setValue("autoExpandThreshold", num);
-                    this.setupMenu();
-                }
-            });
-
-            // Added ChangeLog menu entry mimicking Stig's Art Grabr userscript behavior
-            register("ChangeLog", () => {
-                let logDiv = document.getElementById('vz-changelog');
-                if (!logDiv) {
-                    logDiv = document.createElement("div");
-                    logDiv.id = "vz-changelog";
-                    logDiv.style.cssText = "position:fixed; left:0; right:0; top:10em; z-index:3000009; margin-left:auto; margin-right:auto; min-height:8em; width:50%; background-color:#eee; color:#111; border-radius:5px; padding:1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid #ccc; display:none;";
-
-                    const title = document.createElement("b");
-                    title.textContent = "VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities ... (Click to dismiss)";
-                    logDiv.appendChild(title);
-
-                    const list = document.createElement("ul");
-                    list.style.marginTop = "0.5em";
-
-                    changelog.forEach(entry => {
-                        const li = document.createElement("li");
-                        li.innerHTML = `<i>${entry.version}</i> - ${entry.description}`;
-                        list.appendChild(li);
-                    });
-
-                    logDiv.appendChild(list);
-                    document.body.appendChild(logDiv);
-
-                    logDiv.addEventListener('click', () => {
-                        logDiv.style.display = 'none';
-                    }, false);
-                }
-                logDiv.style.display = 'block';
-            });
+            // Webpage "Editing" Menu Integration
+            const editingMenu = document.querySelector('li.editing > ul.menu');
+            if (editingMenu && !document.getElementById('sa-settings-menu-link')) {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.id = 'sa-settings-menu-link';
+                a.textContent = 'Show All Consolidated Settings';
+                a.style.cursor = 'pointer';
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    this.showSettingsModal();
+                };
+                li.appendChild(a);
+                editingMenu.appendChild(li);
+                Logger.debug('init', 'Settings entry added to Editing menu.');
+            }
         }
     };
 

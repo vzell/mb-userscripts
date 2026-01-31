@@ -25385,8 +25385,8 @@ but still retain the functionality to explicitely save all the values with a "Sa
 * centralize config in library
 ** apply to showall
 
-In the uploaded userscript "ShowAllConsolidated.user.js", double the current Tampermonkey configuration of parameters
-located in the Tampermonkey dialog (except the "ChangeLog" entry) to be located as a menue entry under the "Editing"
-pull-down menu entry on the webpage itself. 
+In the uploaded userscript "ShowAllConsolidated.user.js", in addition to the current Tampermonkey configuration of
+parameters located in the Tampermonkey dialog (except the "ChangeLog" entry), add a menue entry under the "Editing"
+pull-down menu entry on the webpage itself with the same functionality.
 
 Apply the same UI and logic as in the uploaded script "ShowCoverArtOnMainPage.user.js"
