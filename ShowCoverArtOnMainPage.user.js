@@ -45,7 +45,7 @@
 
                     // Create the header with toggle logic
                     const caHeader = document.createElement("h2");
-                    caHeader.textContent = "Cover art (click to toggle)";
+                    caHeader.textContent = "Cover art";
                     caHeader.style.cursor = "pointer";
                     caHeader.style.userSelect = "none";
                     caHeader.addEventListener("click", function() {
