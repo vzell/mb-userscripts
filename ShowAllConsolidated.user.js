@@ -213,7 +213,8 @@ let changelog = [
         alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
     }
 
-        const settings = {
+    // --- Settings & Configuration UI ---
+    const settings = {
         removeTagger: GM_getValue("removeTagger", false),
         removeRating: GM_getValue("removeRating", false),
         removeRelationships: GM_getValue("removeRelationships", true),
@@ -247,20 +248,20 @@ let changelog = [
 
             container.innerHTML = `
                 <p style="text-align: right; margin: 0px;">
-                    <a id="mb-sa-close" style="cursor: pointer;">CLOSE</a>
+                    <a id="mb-sa-close" style="cursor: pointer; font-weight: bold; color: black;">[X]</a>
                 </p>
                 <h4 style="text-shadow: white 0px 1px 1px; margin-top: 0px;">Show All Consolidated Settings</h4>
-                <div style="background-color: white; border: 2px inset white; padding: 0.5em;">
-                    <label><input type="checkbox" id="sa-tagger" ${this.removeTagger ? 'checked' : ''}> Remove Tagger Column</label><br>
-                    <label><input type="checkbox" id="sa-rating" ${this.removeRating ? 'checked' : ''}> Remove Rating Column</label><br>
-                    <label><input type="checkbox" id="sa-rel" ${this.removeRelationships ? 'checked' : ''}> Remove Relationships Column</label><br>
-                    <label><input type="checkbox" id="sa-perf" ${this.removePerformance ? 'checked' : ''}> Remove Performance Column</label><br>
-                    <hr>
-                    <label title="Warning threshold for page fetching">Max Page Warning: <input type="number" id="sa-max" value="${this.maxPageThreshold}" style="width: 50px;"></label><br>
-                    <label title="Row count threshold to auto-expand tables">Auto-Expand Rows: <input type="number" id="sa-auto" value="${this.autoExpandThreshold}" style="width: 50px;"></label>
+                <div style="background-color: white; border: 2px inset white; padding: 0.5em; color: black;">
+                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-tagger" ${this.removeTagger ? 'checked' : ''}> Remove Tagger Column</label>
+                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-rating" ${this.removeRating ? 'checked' : ''}> Remove Rating Column</label>
+                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-rel" ${this.removeRelationships ? 'checked' : ''}> Remove Relationships Column</label>
+                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-perf" ${this.removePerformance ? 'checked' : ''}> Remove Performance Column</label>
+                    <hr style="border: 0; border-top: 1px solid #ccc;">
+                    <label title="Warning threshold for page fetching" style="display: block; margin-bottom: 5px;">Max Page Warning: <input type="number" id="sa-max" value="${this.maxPageThreshold}" style="width: 60px;"></label>
+                    <label title="Row count threshold to auto-expand tables" style="display: block;">Auto-Expand Rows: <input type="number" id="sa-auto" value="${this.autoExpandThreshold}" style="width: 60px;"></label>
                 </div>
-                <p style="margin-bottom: 0px; text-align: center;">
-                    <button id="sa-save-btn" style="cursor: pointer;">SAVE</button>
+                <p style="margin-top: 15px; margin-bottom: 0px; text-align: center;">
+                    <button id="sa-save-btn" style="cursor: pointer; padding: 4px 12px;">SAVE</button>
                 </p>
             `;
 
@@ -281,14 +282,45 @@ let changelog = [
             };
         },
 
+        showChangelog: function() {
+            let logDiv = document.getElementById('vz-changelog');
+            if (!logDiv) {
+                logDiv = document.createElement("div");
+                logDiv.id = "vz-changelog";
+                logDiv.style.cssText = "position:fixed; left:0; right:0; top:10em; z-index:3000009; margin-left:auto; margin-right:auto; min-height:8em; width:50%; background-color:#eee; color:#111; border-radius:5px; padding:1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid #ccc; display:none;";
+
+                const title = document.createElement("b");
+                title.textContent = "VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities ... (Click to dismiss)";
+                logDiv.appendChild(title);
+
+                const list = document.createElement("ul");
+                list.style.marginTop = "0.5em";
+
+                changelog.forEach(entry => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `<i>${entry.version}</i> - ${entry.description}`;
+                    list.appendChild(li);
+                });
+
+                logDiv.appendChild(list);
+                document.body.appendChild(logDiv);
+
+                logDiv.addEventListener('click', () => {
+                    logDiv.style.display = 'none';
+                }, false);
+            }
+            logDiv.style.display = 'block';
+        },
+
         setupMenu: function() {
             // Tampermonkey Menu
             for (const id of registeredMenuCommandIDs) {
-                try { GM_unregisterMenuCommand(id); } catch (e) {}
+                try { GM_unregisterMenuCommand(id); } catch (e) { /* ignore */ }
             }
             registeredMenuCommandIDs = [];
+
             registeredMenuCommandIDs.push(GM_registerMenuCommand("⚙️ Open Settings Manager", () => this.showSettingsModal()));
-            registeredMenuCommandIDs.push(GM_registerMenuCommand("📜 ChangeLog", () => document.getElementById('vz-changelog-trigger')?.click() || showChangelog()));
+            registeredMenuCommandIDs.push(GM_registerMenuCommand("📜 ChangeLog", () => this.showChangelog()));
 
             // Webpage "Editing" Menu Integration
             const editingMenu = document.querySelector('li.editing > ul.menu');
@@ -1177,7 +1209,7 @@ let changelog = [
         }
 
         Logger.debug('fetch', `Total pages to fetch: ${maxPage}`);
-        if (maxPage > settings.maxPageThreshold && !confirm(`Warning: This section has ${maxPage} pages. Proceed?`)) {
+        if (maxPage > settings.maxPageThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
             activeBtn.style.backgroundColor = '';
             activeBtn.style.color = '';
             statusDisplay.textContent = '';
