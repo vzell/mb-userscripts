@@ -25378,5 +25378,15 @@ but still retain the functionality to explicitely save all the values with a "Sa
 "Cancel" button (should alos react on pressing the "Esc" key), reset the whole dialog to the initial state with a
 "Reset" button. The "Save" button should store everything in persisten storage and apply everything immediately without a page reload
 
-
 ** add "VZ" icon to config dialog
+
+* centralize loggin in library
+
+* centralize config in library
+** apply to showall
+
+In the uploaded userscript "ShowAllConsolidated.user.js", double the current Tampermonkey configuration of parameters
+located in the Tampermonkey dialog (except the "ChangeLog" entry) to be located as a menue entry under the "Editing"
+pull-down menu entry on the webpage itself. 
+
+Apply the same UI and logic as in the uploaded script "ShowCoverArtOnMainPage.user.js"
