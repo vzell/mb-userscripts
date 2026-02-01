@@ -56,6 +56,8 @@ let changelog = [
     const SCRIPT_ID = "vzell-mb-show-all-entities";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
     const DEBUG_ENABLED = true;
+    const DEFAULT_MAX_PAGE = 100;
+    const DEFAULT_AUTO_EXPAND = 60;
 
     // --- Modernized Logging Framework ---
     const Logger = {
@@ -215,14 +217,18 @@ let changelog = [
         alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
     }
 
+    // --- Configuration Helpers ---
+    const getStoredMaxPage = () => GM_getValue("maxPageThreshold", DEFAULT_MAX_PAGE);
+    const getStoredAutoExpand = () => GM_getValue("autoExpandThreshold", DEFAULT_AUTO_EXPAND);
+
     // --- Settings & Configuration UI ---
     const settings = {
         removeTagger: GM_getValue("removeTagger", false),
         removeRating: GM_getValue("removeRating", false),
         removeRelationships: GM_getValue("removeRelationships", true),
         removePerformance: GM_getValue("removePerformance", true),
-        maxPageThreshold: GM_getValue("maxPageThreshold", 100),
-        autoExpandThreshold: GM_getValue("autoExpandThreshold", 60),
+	maxPageThreshold: getStoredMaxPage(),
+        autoExpandThreshold: getStoredAutoExpand(),
 
         save: function() {
             GM_setValue("removeTagger", this.removeTagger);
@@ -231,7 +237,7 @@ let changelog = [
             GM_setValue("removePerformance", this.removePerformance);
             GM_setValue("maxPageThreshold", this.maxPageThreshold);
             GM_setValue("autoExpandThreshold", this.autoExpandThreshold);
-            this.setupMenu();
+            this.setupMenus();
         },
 
         showSettingsModal: function() {
@@ -248,6 +254,10 @@ let changelog = [
                 color: 'black', fontFamily: 'sans-serif', minWidth: '450px'
             });
 
+	    // Use the current values in the modal inputs
+            const currentMax = this.maxPageThreshold;
+            const currentAuto = this.autoExpandThreshold;
+
             container.innerHTML = `
                 <p style="text-align: right; margin: 0px;">
                     <a id="mb-sa-close" style="cursor: pointer; font-weight: bold; color: black;">[X]</a>
@@ -259,8 +269,8 @@ let changelog = [
                     <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-rel" ${this.removeRelationships ? 'checked' : ''}> Remove Relationships Column</label>
                     <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-perf" ${this.removePerformance ? 'checked' : ''}> Remove Performance Column</label>
                     <hr style="border: 0; border-top: 1px solid #ccc;">
-                    <label title="Warning threshold for page fetching" style="display: block; margin-bottom: 5px;">Max Page Warning: <input type="number" id="sa-max" value="${this.maxPageThreshold}" style="width: 60px;"></label>
-                    <label title="Row count threshold to auto-expand tables" style="display: block;">Auto-Expand Rows: <input type="number" id="sa-auto" value="${this.autoExpandThreshold}" style="width: 60px;"></label>
+                    <label title="Warning threshold for page fetching" style="display: block; margin-bottom: 5px;">Max Page Warning: <input type="number" id="${SCRIPT_ID}-max-input" value="${currentMax}" style="width: 60px;"></label>
+                    <label title="Row count threshold to auto-expand tables" style="display: block;">Auto-Expand Rows: <input type="number" id="${SCRIPT_ID}-auto-input" value="${currentAuto}" style="width: 60px;"></label>
                 </div>
                 <p style="margin-top: 15px; margin-bottom: 0px; text-align: center;">
                     <button id="sa-save-btn" style="cursor: pointer; padding: 4px 12px;">SAVE</button>
@@ -276,8 +286,9 @@ let changelog = [
                 this.removeRating = document.getElementById("sa-rating").checked;
                 this.removeRelationships = document.getElementById("sa-rel").checked;
                 this.removePerformance = document.getElementById("sa-perf").checked;
-                this.maxPageThreshold = parseInt(document.getElementById("sa-max").value, 10);
-                this.autoExpandThreshold = parseInt(document.getElementById("sa-auto").value, 10);
+                // Fetching values using the new IDs
+                this.maxPageThreshold = parseInt(document.getElementById(`${SCRIPT_ID}-max-input`).value, 10);
+                this.autoExpandThreshold = parseInt(document.getElementById(`${SCRIPT_ID}-auto-input`).value, 10);
                 this.save();
                 overlay.remove();
                 Logger.info('meta', 'Settings saved via Modal');
@@ -1213,10 +1224,13 @@ let changelog = [
             }
         }
 
+
+	const maxThreshold = settings.maxPageThreshold;
         Logger.debug('fetch', `Total pages to fetch: ${maxPage}`);
-        if (maxPage > settings.maxPageThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
+	if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
             activeBtn.style.backgroundColor = '';
             activeBtn.style.color = '';
+	    activeBtn.disabled = false;
             statusDisplay.textContent = '';
             return;
         }

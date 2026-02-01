@@ -25608,6 +25608,55 @@ Apply the same UI and logic as in the uploaded script "ShowCoverArtOnMainPage.us
 | Pixel Size <input area with size up/down dialog> |     250 | Set the cover image size in pixels |
 |                                                  |         |                                    |
 
+** create defaults
+
+In the uploaded userscript,
+please create configuration helpers like in the following example code block
+
+#+begin_example
+    const DEFAULT_SIZE = 250;
+    const DEFAULT_COLLAPSED = false;
+
+    // --- Configuration Helpers ---
+    const getStoredSize = () => GM_getValue("ca_image_size", DEFAULT_SIZE);
+    const getStoredCollapsed = () => GM_getValue("ca_collapsed_by_default", DEFAULT_COLLAPSED);
+
+        const currentSize = getStoredSize();
+        const isCollapsed = getStoredCollapsed();
+
+Pixel Size: <input type="number" id="${SCRIPT_ID}-size-input" value="${currentSize}" style="width: 60px; margin-left: 5px;">	
+#+end_example
+
+and replace
+
+#+begin_example
+        maxPageThreshold: GM_getValue("maxPageThreshold", 100),
+        autoExpandThreshold: GM_getValue("autoExpandThreshold", 60),
+#+end_example
+
+in the
+
+#+begin_example
+    const settings = {
+#+end_example
+
+variable to use these default by default
+
+**
+
+Change the text in confirm to use the currently defined maximum value
+in the following code block
+
+#+begin_example
+        if (maxPage > settings.maxPageThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
+            activeBtn.style.backgroundColor = '';
+            activeBtn.style.color = '';
+            statusDisplay.textContent = '';
+            return;
+        }
+#+end_example
+
+like this
 
 * filter (funnel) icon from chrome console
 
