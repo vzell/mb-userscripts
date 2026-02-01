@@ -18,9 +18,27 @@
 // @license      MIT
 // ==/UserScript==
 
-"use strict";
+/*
+ * VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+ *
+
+ * is an userscript which enhances MusicBrainz release pages with showing all cover art images on the page itself,
+ * collapsible with configurable image size
+ *
+ * This script has been created by giving the right facts and asking the right questions to Gemini.
+ * When Gemini gots stuck, I asked ChatGPT for help, until I got everything right.
+ *
+ * NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome and Firefox.
+ */
+
+// CHANGELOG - The most important updates/versions:
+let changelog = [
+    {version: '0.9.0+2026-02-01', description: '1st official release version.'}
+];
+
 
 (function() {
+    'use strict';
 
     const SCRIPT_ID = "vzell-mb-release-enhancer";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Release Page Enhancer";
