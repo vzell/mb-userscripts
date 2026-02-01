@@ -10,6 +10,7 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/MBLoggerLib.user.js
 // @match        *://*.musicbrainz.org/artist/*
 // @match        *://*.musicbrainz.org/release-group/*
 // @match        *://*.musicbrainz.org/work/*
@@ -56,38 +57,12 @@ let changelog = [
 
     const SCRIPT_ID = "vzell-mb-show-all-entities";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
-    const DEBUG_ENABLED = true;
 
-    // --- Modernized Logging Framework ---
-    const Logger = {
-        prefix: '[MB-ShowAll]',
-        styles: {
-            debug: 'color: #7f8c8d; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold;',
-            info: 'color: #2980b9; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 11px;',
-            error: 'color: #c0392b; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; background: #fceae9; padding: 2px 4px; border-radius: 3px;',
-            timer: 'color: #8e44ad; font-family: "Consolas", monospace; font-style: italic;'
-        },
-        icons: {
-            init: '🚀',
-            fetch: '📥',
-            render: '🎨',
-            filter: '🔍',
-            sort: '⚖️',
-            cleanup: '🧹',
-            error: '❌',
-            success: '✅',
-            meta: '🎵'
-        },
-        log(level, icon, msg, data = '') {
-            if (!DEBUG_ENABLED && level === 'debug') return;
-            const style = this.styles[level] || '';
-            const iconChar = this.icons[icon] || '📝';
-            console.log(`%c${this.prefix} ${iconChar} ${msg}`, style, data);
-        },
-        debug(icon, msg, data) { this.log('debug', icon, msg, data); },
-        info(icon, msg, data) { this.log('info', icon, msg, data); },
-        error(icon, msg, data) { this.log('error', 'error', msg, data); }
-    };
+    const Logger = (typeof MBLogger !== 'undefined')
+          ? new MBLogger(SCRIPT_NAME, true)
+          : { info: console.log, debug: console.log, error: console.error, time: console.time, timeEnd: console.timeEnd };
+
+    Logger.info('init', "Script loaded with external library!");
 
     // --- Settings & Configuration UI ---
     const configSchema = {
@@ -500,7 +475,7 @@ let changelog = [
     else if (path.match(/\/place\/.*\/performances/)) pageType = 'place-performances';
     else if (path.includes('/events')) pageType = 'events';
 
-    if (pageType) Logger.prefix = `[MB-ShowAll: ${pageType}]`;
+    if (pageType) Logger.prefix = `[VZ-ShowAllEntities: ${pageType}]`;
     Logger.info('init', 'Initializing script for path:', path);
 
     if (!pageType || !headerContainer) {
