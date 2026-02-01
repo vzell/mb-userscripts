@@ -25265,6 +25265,7 @@ No Logic Duplication: The "cleanup" and "sortable" triggers are moved into the r
 
 
 * Add configuration section like in "jesus - Super mind control II", remove from Tampermonkey menu, only leave changelog and github page
+** initial
 
 In the uploaded userscript "ShowAllConsolidated.user.js",
 change the Tampermonkey "Settings & Menu" functionality below
@@ -25276,6 +25277,66 @@ change the Tampermonkey "Settings & Menu" functionality below
 to the equivalent, what is used in the uploaded userscript "smc.js".
 
 So the settings which previously could be changed via clicking Tampermonkey menu entries should now be located as a menu entry in the "Editing" MusicBrainz pages 
+
+** menu entry
+
+In the uploaded userscript "ShowAllConsolidated.user.js",
+The menu entry in the "Editing" MusicBrainz pages doesn't show up yet.
+
+Actually the follwing is the place where the "Open Settings Manager" configuration UI should be injected:
+
+#+begin_example
+<div class="right">
+  <div class="bottom">
+    <ul class="menu">
+      <li class="editing" tabindex="-1">
+#+end_example
+
+Please change only the following part of the code to implement this change:
+
+#+begin_example
+            // Webpage "Editing" Menu Integration
+            const editingMenu = document.querySelector('li.editing > ul.menu');
+            if (editingMenu && !document.getElementById('sa-settings-menu-link')) {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.id = 'sa-settings-menu-link';
+                a.textContent = 'Show All Consolidated Settings';
+                a.style.cursor = 'pointer';
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    this.showSettingsModal();
+                };
+                li.appendChild(a);
+                editingMenu.appendChild(li);
+                Logger.debug('init', 'Settings entry added to Editing menu.');
+            }
+#+end_example
+
+*** 1
+
+Still not working. Implement it like in the following code taken from another working userscript
+
+#+begin_example
+    const injectMenuEntry = () => {
+        const editMenuItem = document.querySelector('div.right div.bottom ul.menu li.editing');
+        const editMenuUl = editMenuItem ? editMenuItem.querySelector('ul') : null;
+
+        if (editMenuUl) {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = "javascript:void(0)";
+            a.textContent = SCRIPT_NAME;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                showSettingsModal();
+            });
+            li.appendChild(a);
+            editMenuUl.appendChild(li);
+            Logger.debug('init', "Menu entry added.");
+        }
+    };
+#+end_example
 
 
 * TODO

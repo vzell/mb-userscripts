@@ -165,7 +165,7 @@ let changelog = [
             });
             li.appendChild(a);
             editMenuUl.appendChild(li);
-            Logger.debug('init', "Menu entry added.");
+            Logger.debug('init', "Settings entry added to Editing menu.");
         }
     };
 

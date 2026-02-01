@@ -53,6 +53,8 @@ let changelog = [
 (function() {
     'use strict';
 
+    const SCRIPT_ID = "vzell-mb-show-all-entities";
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
     const DEBUG_ENABLED = true;
 
     // --- Modernized Logging Framework ---
@@ -312,7 +314,7 @@ let changelog = [
             logDiv.style.display = 'block';
         },
 
-        setupMenu: function() {
+        setupMenus: function() {
             // Tampermonkey Menu
             for (const id of registeredMenuCommandIDs) {
                 try { GM_unregisterMenuCommand(id); } catch (e) { /* ignore */ }
@@ -322,27 +324,30 @@ let changelog = [
             registeredMenuCommandIDs.push(GM_registerMenuCommand("⚙️ Open Settings Manager", () => this.showSettingsModal()));
             registeredMenuCommandIDs.push(GM_registerMenuCommand("📜 ChangeLog", () => this.showChangelog()));
 
-            // Webpage "Editing" Menu Integration
-            const editingMenu = document.querySelector('li.editing > ul.menu');
-            if (editingMenu && !document.getElementById('sa-settings-menu-link')) {
+	    // Webpage "Editing" Menu Integration
+            const editMenuItem = document.querySelector('div.right div.bottom ul.menu li.editing');
+            const editMenuUl = editMenuItem ? editMenuItem.querySelector('ul') : null;
+
+            if (editMenuUl && !document.getElementById('sa-settings-menu-link')) {
                 const li = document.createElement('li');
                 const a = document.createElement('a');
                 a.id = 'sa-settings-menu-link';
-                a.textContent = 'Show All Consolidated Settings';
+                a.href = "javascript:void(0)";
+                a.textContent = SCRIPT_NAME;;
                 a.style.cursor = 'pointer';
-                a.onclick = (e) => {
+                a.addEventListener('click', (e) => {
                     e.preventDefault();
                     this.showSettingsModal();
-                };
+                });
                 li.appendChild(a);
-                editingMenu.appendChild(li);
+                editMenuUl.appendChild(li);
                 Logger.debug('init', 'Settings entry added to Editing menu.');
             }
         }
     };
 
-    // Initialize Menu
-    settings.setupMenu();
+    // Initialize Menus
+    settings.setupMenus();
 
     const currentUrl = new URL(window.location.href);
     const path = currentUrl.pathname;
