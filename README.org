@@ -25472,12 +25472,34 @@ but still retain the functionality to explicitely save all the values with a "Sa
 "Reset" button. The "Save" button should store everything in persistent storage and apply everything immediately without
 a page reload
 
-** add icon to userscript config menu entry + versionnumber after the name
-** add tooltip about configuration option like in jeses super script
-** maybe make the fuction async
+** DONE maybe make the fuction async
 
 Is it a good idea to make the cover art display in a function and make the execution asynch
 
+** DONE unique id
+
+Should a userscript have a unique id beside it's name ? And what can I use it for
+
+** nice name
+
+Could you change the variable
+
+#+begin_example
+    const SCRIPT_ID = "vzell-mb-release-enhancer";
+#+end_example
+
+to have two parts, an actual ID part like "vzell-mb-release-enhancer" and a nice name for using for display purposes (or could this be done by referenceing the script "name" header somehow)
+In the following prefix
+
+#+begin_example
+    const Logger = {
+        prefix: `[${SCRIPT_ID}]`,
+#+end_example
+
+I would like to use the nice friendly name
+
+** add icon to userscript config menu entry + versionnumber after the name
+** add tooltip about configuration option like in jeses super script
 * centralize logging in library
 
 

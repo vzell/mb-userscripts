@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Release Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.4+2026-02-01
+// @version      0.9.7+2026-02-01
 // @description  Enhancee Release Page with show all cover art images on the page itself, collapsible with configurable size
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -21,13 +21,15 @@
 
 (function() {
 
+    const SCRIPT_ID = "vzell-mb-release-enhancer";
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Release Page Enhancer";
     const DEBUG_ENABLED = true;
     const DEFAULT_SIZE = 250;
     const DEFAULT_COLLAPSED = true;
 
     // --- Modernized Logging Framework ---
     const Logger = {
-        prefix: '[MB-ReleasePageEnhancer]',
+        prefix: `[${SCRIPT_NAME}]`,
         styles: {
             debug: 'color: #7f8c8d; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold;',
             info: 'color: #2980b9; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 11px;',
@@ -68,7 +70,7 @@
         Logger.debug(icon, msg, data);
     };
 
-    // --- Configuration Logic ---
+    // --- Configuration Helpers ---
     const getStoredSize = () => GM_getValue("ca_image_size", DEFAULT_SIZE);
     const getStoredCollapsed = () => GM_getValue("ca_collapsed_by_default", DEFAULT_COLLAPSED);
 
@@ -76,6 +78,7 @@
         const currentSize = getStoredSize();
         const isCollapsed = getStoredCollapsed();
         const overlay = document.createElement("div");
+        overlay.id = `${SCRIPT_ID}-settings-overlay`;
         Object.assign(overlay.style, {
             position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
             backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '10000', display: 'flex',
@@ -83,7 +86,7 @@
         });
 
         const container = document.createElement("div");
-        container.id = "vzell-ca-config-container";
+        container.id = `${SCRIPT_ID}-config-container`;
         Object.assign(container.style, {
             backgroundColor: 'silver', border: '2px outset white', padding: '1em',
             color: 'black', fontFamily: 'sans-serif', minWidth: '400px'
@@ -91,10 +94,10 @@
 
         container.innerHTML = `
             <p style="text-align: right; margin: 0px;">
-                <a id="mb-ca-reset" style="cursor: pointer;">RESET</a> |
-                <a id="mb-ca-close" style="cursor: pointer;">CLOSE</a>
+                <a id="${SCRIPT_ID}-reset" style="cursor: pointer;">RESET</a> |
+                <a id="${SCRIPT_ID}-close" style="cursor: pointer;">CLOSE</a>
             </p>
-            <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">COVER ART DISPLAY</h4>
+            <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">${SCRIPT_NAME.toUpperCase()}</h4>
             <p>Settings are applied immediately upon saving.</p>
             <table border="2" cellpadding="4" cellspacing="1" style="width: 100%; border-collapse: separate; background: #eee;">
                 <thead>
@@ -108,7 +111,7 @@
                     <tr>
                         <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
                             <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                Pixel Size: <input type="number" id="mb-ca-size-input" value="${currentSize}" style="width: 60px; margin-left: 5px;">
+                                Pixel Size: <input type="number" id="${SCRIPT_ID}-size-input" value="${currentSize}" style="width: 60px; margin-left: 5px;">
                             </label>
                         </th>
                         <td style="opacity: 0.666; text-align: center;">${DEFAULT_SIZE}</td>
@@ -117,7 +120,7 @@
                     <tr>
                         <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
                             <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                Start Collapsed: <input type="checkbox" id="mb-ca-collapse-input" ${isCollapsed ? 'checked' : ''} style="margin-left: 5px;">
+                                Start Collapsed: <input type="checkbox" id="${SCRIPT_ID}-collapse-input" ${isCollapsed ? 'checked' : ''} style="margin-left: 5px;">
                             </label>
                         </th>
                         <td style="opacity: 0.666; text-align: center;">${DEFAULT_COLLAPSED}</td>
@@ -126,7 +129,7 @@
                 </tbody>
             </table>
             <div style="margin-top: 15px; text-align: right;">
-                <button id="mb-ca-save-btn" style="padding: 4px 12px; cursor: pointer; font-weight: bold;">SAVE</button>
+                <button id="${SCRIPT_ID}-save-btn" style="padding: 4px 12px; cursor: pointer; font-weight: bold;">SAVE</button>
             </div>
         `;
 
@@ -137,23 +140,23 @@
             if (document.body.contains(overlay)) document.body.removeChild(overlay);
         };
 
-        document.getElementById("mb-ca-save-btn").onclick = () => {
-            const val = parseInt(document.getElementById("mb-ca-size-input").value, 10);
-            const coll = document.getElementById("mb-ca-collapse-input").checked;
+        document.getElementById(`${SCRIPT_ID}-save-btn`).onclick = () => {
+            const val = parseInt(document.getElementById(`${SCRIPT_ID}-size-input`).value, 10);
+            const coll = document.getElementById(`${SCRIPT_ID}-collapse-input`).checked;
             if (!isNaN(val) && val > 0) {
                 GM_setValue("ca_image_size", val);
                 GM_setValue("ca_collapsed_by_default", coll);
-                Logger.info('init', `Configuration saved. Reloading...`);
+                Logger.info('init', "Settings saved. Reloading...");
                 location.reload();
             }
         };
 
-        document.getElementById("mb-ca-reset").onclick = () => {
-            document.getElementById("mb-ca-size-input").value = DEFAULT_SIZE;
-            document.getElementById("mb-ca-collapse-input").checked = DEFAULT_COLLAPSED;
+        document.getElementById(`${SCRIPT_ID}-reset`).onclick = () => {
+            document.getElementById(`${SCRIPT_ID}-size-input`).value = DEFAULT_SIZE;
+            document.getElementById(`${SCRIPT_ID}-collapse-input`).checked = DEFAULT_COLLAPSED;
         };
 
-        document.getElementById("mb-ca-close").onclick = closeDialog;
+        document.getElementById(`${SCRIPT_ID}-close`).onclick = closeDialog;
 
         const handleEsc = (e) => {
             if (e.key === "Escape") {
@@ -162,7 +165,6 @@
             }
         };
         window.addEventListener("keydown", handleEsc);
-
         overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
     };
 
@@ -174,7 +176,7 @@
             const li = document.createElement('li');
             const a = document.createElement('a');
             a.href = "javascript:void(0)";
-            a.textContent = "Release Page Enhancer";
+            a.textContent = SCRIPT_NAME;
             a.addEventListener('click', (e) => {
                 e.preventDefault();
                 showSettingsModal();
@@ -191,7 +193,7 @@
     };
 
     /**
-     * Refactored asynchronous function to handle fetching and rendering
+     * Fetch and render the cover art gallery
      */
     async function displayCoverArt(mbid, tabsContainer) {
         try {
@@ -203,7 +205,7 @@
 
             if (!response.ok) {
                 if (response.status === 404) {
-                    Logger.debug('fetch', "No cover art found for this release.");
+                    Logger.debug('fetch', "No cover art found.");
                     return;
                 }
                 throw new Error(`HTTP Error: ${response.status}`);
@@ -214,15 +216,13 @@
 
             const fragment = document.createDocumentFragment();
             const gallery = document.createElement("div");
-            gallery.id = "consolidated-cover-art-gallery";
+            gallery.id = `${SCRIPT_ID}-gallery`;
 
-            // Base styling
             Object.assign(gallery.style, {
                 display: "flex", flexWrap: "wrap", gap: "10px",
                 overflow: "hidden", transition: "max-height 0.4s ease-in-out, opacity 0.3s ease, margin 0.4s ease"
             });
 
-            // Initial state
             if (startCollapsed) {
                 Object.assign(gallery.style, { maxHeight: "0px", opacity: "0", marginTop: "0px", marginBottom: "0px" });
             } else {
@@ -230,14 +230,15 @@
             }
 
             const caHeader = document.createElement("h2");
+            caHeader.id = `${SCRIPT_ID}-header`;
             caHeader.textContent = "Cover art";
             caHeader.style.cursor = "pointer";
             caHeader.style.userSelect = "none";
             caHeader.title = startCollapsed ? "Click to show" : "Click to hide";
 
             caHeader.addEventListener("click", () => {
-                const isCurrentlyCollapsed = gallery.style.maxHeight === "0px";
-                if (isCurrentlyCollapsed) {
+                const isCollapsed = gallery.style.maxHeight === "0px";
+                if (isCollapsed) {
                     Object.assign(gallery.style, { maxHeight: "5000px", opacity: "1", marginBottom: "20px", marginTop: "20px" });
                     caHeader.title = "Click to hide";
                 } else {
@@ -265,14 +266,14 @@
             });
 
             tabsContainer.after(fragment);
-            Logger.debug('render', "Gallery injected.");
+            Logger.debug('render', "Gallery successfully rendered.");
 
         } catch (err) {
-            Logger.error('init', `Async failure: ${err.message}`);
+            Logger.error('init', `Async error: ${err.message}`);
         }
     }
 
-    // --- Main Entry ---
+    // --- Start Execution ---
     const mbidMatch = location.pathname.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
     const tabsContainer = document.querySelector("div.tabs");
 
