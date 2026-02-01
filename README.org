@@ -25333,10 +25333,81 @@ Show the 250px types of images https://coverartarchive.org/release/3ce46b79-5e8c
 
 Add the following h2 header in front of all images: "<h2>Cover Art</h2>" and make it collapsable/un-collabsable when clicking on it
 
-*** configurable
+*** collapse configurable during initial rendering
 
 In the uploaded userscript,
-introduce 
+introduce a boolen variable mich makes the collapse state configurable during initial rendering. The default should collapsed.
+
+**** problems
+
+There are two problems:
+- first of all the configuration UI is somehow NOT added as amenue entry under the "Editing" pull-down menu entry on the webpage
+- the default collapsed state is NOT applied right now
+
+** onyl visible on the "Overview tab
+
+In the '<ul class="tabs">' make the '"<h2>Cover Art</h2>"' container visible only when on the 
+
+#+begin_example
+	<bdi>Overview
+	</bdi>
+#+end_example
+
+tab
+
+#+begin_example
+<ul class="tabs">
+  <li>
+    <span class="name-variation">
+      <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29" title="Double Shot in South Bend">
+	<bdi>Overview
+	</bdi>
+      </a>
+    </span>
+  </li>
+  <li class="sel">
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/discids">
+      <bdi>Disc IDs (0)
+      </bdi>
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/cover-art">
+      <bdi>Cover art (3)
+      </bdi>
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/aliases">Aliases (0)
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/tags">
+      <bdi>Tags
+      </bdi>
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/details">
+      <bdi>Details
+      </bdi>
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/edit">
+      <bdi>Edit
+      </bdi>
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/edit-relationships">
+      <bdi>Edit relationships
+      </bdi>
+    </a>
+  </li>
+</ul>
+#+end_example
+
 ** DONE config
 
 In the uploaded userscript

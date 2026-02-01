@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Release Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.0+2026-02-01
+// @version      0.9.1+2026-02-01
 // @description  Enhancee Release Page with show all cover art images on the page itself, collapsible with configurable size
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -23,6 +23,7 @@
 
     const DEBUG_ENABLED = true;
     const DEFAULT_SIZE = 250;
+    const DEFAULT_COLLAPSED = true;
 
     // --- Modernized Logging Framework ---
     const Logger = {
@@ -69,9 +70,11 @@
 
     // --- Configuration Logic ---
     const getStoredSize = () => GM_getValue("ca_image_size", DEFAULT_SIZE);
+    const getStoredCollapsed = () => GM_getValue("ca_collapsed_by_default", DEFAULT_COLLAPSED);
 
     const showSettingsModal = () => {
         const currentSize = getStoredSize();
+        const isCollapsed = getStoredCollapsed();
         const overlay = document.createElement("div");
         Object.assign(overlay.style, {
             position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
@@ -112,6 +115,15 @@
                         <td style="opacity: 0.666; text-align: center;">${DEFAULT_SIZE}</td>
                         <td style="margin-bottom: 0.4em;">Set the cover image size in pixels</td>
                     </tr>
+                    <tr>
+                        <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                            <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                Start Collapsed: <input type="checkbox" id="mb-ca-collapse-input" ${isCollapsed ? 'checked' : ''} style="margin-left: 5px;">
+                            </label>
+                        </th>
+                        <td style="opacity: 0.666; text-align: center;">${DEFAULT_COLLAPSED}</td>
+                        <td style="margin-bottom: 0.4em;">Gallery starts hidden by default</td>
+                    </tr>
                 </tbody>
             </table>
             <div style="margin-top: 15px; text-align: right;">
@@ -129,9 +141,11 @@
         // Event: Save (Stores value and reloads)
         document.getElementById("mb-ca-save-btn").onclick = () => {
             const val = parseInt(document.getElementById("mb-ca-size-input").value, 10);
+            const coll = document.getElementById("mb-ca-collapse-input").checked;
             if (!isNaN(val) && val > 0) {
                 GM_setValue("ca_image_size", val);
-                Logger.info('init', `Configuration saved: ${val}px. Reloading...`);
+                GM_setValue("ca_collapsed_by_default", coll);
+                Logger.info('init', `Configuration saved. Size: ${val}px, Collapsed: ${coll}. Reloading...`);
                 location.reload();
             }
         };
@@ -139,6 +153,7 @@
         // Event: Reset
         document.getElementById("mb-ca-reset").onclick = () => {
             document.getElementById("mb-ca-size-input").value = DEFAULT_SIZE;
+            document.getElementById("mb-ca-collapse-input").checked = DEFAULT_COLLAPSED;
         };
 
         // Event: Close/Cancel
@@ -181,6 +196,7 @@
         injectMenuEntry();
         const mbid = mbidMatch[0];
         const imgSize = getStoredSize();
+        const startCollapsed = getStoredCollapsed();
         Logger.info('init', "Fetching cover art for " + mbid);
 
         fetch("https://coverartarchive.org/release/" + mbid)
@@ -197,15 +213,24 @@
                     gallery.style.display = "flex";
                     gallery.style.flexWrap = "wrap";
                     gallery.style.gap = "10px";
-                    gallery.style.marginTop = "20px";
-                    gallery.style.marginBottom = "20px";
                     gallery.style.overflow = "hidden";
-                    gallery.style.transition = "max-height 0.4s ease-in-out, opacity 0.3s ease";
-                    gallery.style.maxHeight = "2000px";
-                    gallery.style.opacity = "1";
+                    gallery.style.transition = "max-height 0.4s ease-in-out, opacity 0.3s ease, margin 0.4s ease";
+
+                    // Apply initial collapsed state
+                    if (startCollapsed) {
+                        gallery.style.maxHeight = "0px";
+                        gallery.style.opacity = "0";
+                        gallery.style.marginTop = "0px";
+                        gallery.style.marginBottom = "0px";
+                    } else {
+                        gallery.style.maxHeight = "2000px";
+                        gallery.style.opacity = "1";
+                        gallery.style.marginTop = "20px";
+                        gallery.style.marginBottom = "20px";
+                    }
 
                     const caHeader = document.createElement("h2");
-                    caHeader.textContent = "Cover art";
+                    caHeader.textContent = "Cover art " + (startCollapsed ? "(click to show)" : "(click to hide)");
                     caHeader.style.cursor = "pointer";
                     caHeader.style.userSelect = "none";
 
@@ -215,11 +240,13 @@
                             gallery.style.opacity = "1";
                             gallery.style.marginBottom = "20px";
                             gallery.style.marginTop = "20px";
+                            caHeader.textContent = "Cover art (click to hide)";
                         } else {
                             gallery.style.maxHeight = "0px";
                             gallery.style.opacity = "0";
                             gallery.style.marginBottom = "0px";
                             gallery.style.marginTop = "0px";
+                            caHeader.textContent = "Cover art (click to show)";
                         }
                     });
 
@@ -227,7 +254,7 @@
                     fragment.appendChild(gallery);
 
                     tabsContainer.after(fragment);
-                    Logger.debug('render', "Gallery injected after tabs container.");
+                    Logger.debug('render', `Gallery injected. Initial state: ${startCollapsed ? 'collapsed' : 'expanded'}`);
 
                     data.images.forEach(img => {
                         const link = document.createElement("a");
