@@ -26107,14 +26107,81 @@ also please change the references in the rest of the code to use the new framewo
 ** refactor
 
 In the uploaded userscripts "ShowAllConsolidated.user.js" and "ReleasePageEnhancer.user.js"
-please refactor the "Configuration Helpers & Settings UI" functionality currently configured in
+please refactor the following parts of the code (in the following as an example from ""ShowAllConsolidated.user.js"")
 
 #+begin_example
-    // --- Configuration Helpers & Settings UI ---
+// CHANGELOG - The most important updates/versions:
+let changelog = [
+    {version: '1.4.0+2026-02-01', description: 'Refactored settings to a schema-driven framework.'},
+    {version: '1.3.0+2026-01-30', description: 'Implemented Ctrl+Click on headers to toggle all headers within the same container (sidebar vs main content).'},
+    {version: '1.2.0+2026-01-30', description: 'Added collapsable sidebar functionality with a handle on the vertical line.'},
+    {version: '1.1.0+2026-01-30', description: 'Increased the size of the filter input boxes and text. Several other small UI improvements.'},
+    {version: '1.0.0+2026-01-30', description: 'Support "Official" and "Various Artists" on Artis-Releases pages.'},
+    {version: '0.9.4+2026-01-29', description: 'Modernized logging framework with colors, icons, and structured levels.'},
+    {version: '0.9.3+2026-01-29', description: 'Added visual progress bar with centered estimated time and dynamic coloring.'},
+    {version: '0.9.2+2026-01-29', description: 'Show busy cursor for long running sort operations (> 1000 table rows)'},
+    {version: '0.9.1+2026-01-29', description: 'Added "Esc" key handling for clearing the filter fields when focused; Added "ChangeLog" userscript manager menu entry.'},
+    {version: '0.9.0+2026-01-28', description: '1st official release version.'}
+];
+
+
+(function() {
+    'use strict';
+
+    const SCRIPT_ID = "vzell-mb-show-all-entities";
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
+    const Logger = (typeof MBLogger !== 'undefined')
+          ? new MBLogger(SCRIPT_NAME, true)
+          : { info: console.log, debug: console.log, error: console.error, time: console.time, timeEnd: console.timeEnd };
+
+    Logger.info('init', "Script loaded with external library!");
+
+    // --- Settings & Configuration UI ---
+    const configSchema = {
+    ...
+    };
+
     const settings = {
+    ...
+    };
+
+
+    // Initialize and get settings values
+    settings.init(configSchema);
+    settings.setupMenus();
 #+end_example
 
-in the library "MBLoggerLib.user.js"
+in the uploaded library "MBLoggerLib.user.js", thereby renaming
+
+#+begin_example
+const MBLogger = (function() {
+#+end_example
+
+to
+
+#+begin_example
+const VZ-MBLibrary = (function() {
+#+end_example
+
+Please also make the corresponding changes to the current logger statements e.g.
+
+#+begin_example
+        Logger.debug('init', 'Initializing aggressive full-width sidebar toggle.');
+#+end_example
+
+so they use now the new library framework
+
+Account for future userscripts NOT having the "changelog" variable
+
+#+begin_example
+// CHANGELOG - The most important updates/versions:
+let changelog = [
+#+end_example
+
+or NOT having the "Settings & Configuration UI" section at all
+
+
+Do not touch any other code NOT related to this changes, comments.
 
 
 * filter (funnel) icon from chrome console
