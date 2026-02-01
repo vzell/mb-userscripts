@@ -25998,10 +25998,115 @@ const configSchema = {
     const settings = settings.init(configSchema);
 #+end_example
 
+** refactor again
+
+Do the same for the uploaded userscript "ShowAllConsolidated.user.js",
+restructure the settings
+
+#+begin_example
+    // --- Settings & Configuration UI ---
+    const settings = {
+#+end_example
+
+object to be schema-driven, allowing the table rows to be generated dynamically.
+
+refactor the following code
+
+#+begin_example
+            container.innerHTML = `
+                <p style="text-align: right; margin: 0px;">
+                    <a id="${SCRIPT_ID}-reset" style="cursor: pointer; font-weight: bold; color: black;">RESET</a> |
+                    <a id="${SCRIPT_ID}-close" style="cursor: pointer; font-weight: bold; color: black;">CLOSE</a>
+                </p>
+                <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">${SCRIPT_NAME.toUpperCase()}</h4>
+                <p>Settings are applied immediately upon saving.</p>
+                <table border="2" cellpadding="4" cellspacing="1" style="width: 100%; border-collapse: separate; background: #eee;">
+                    <thead>
+                        <tr style="background-color: #ccc;">
+                            <th>setting</th>
+                            <th>default setting</th>
+                            <th>description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Remove Tagger column: <input type="checkbox" id="sa-tagger" ${this.removeTagger ? 'checked' : ''} style="margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_TAGGER}</td>
+                            <td style="margin-bottom: 0.4em;">Remove the Tagger column from the list</td>
+                        </tr>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Remove Rating column: <input type="checkbox" id="sa-rating" ${this.removeRating ? 'checked' : ''} style="margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_RATING}</td>
+                            <td style="margin-bottom: 0.4em;">Remove the Rating column from the list</td>
+                        </tr>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Remove Relationships column: <input type="checkbox" id="sa-rel" ${this.removeRelationships ? 'checked' : ''} style="margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_RELATIONSHIPS}</td>
+                            <td style="margin-bottom: 0.4em;">Remove the Relationships column from the list</td>
+                        </tr>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Remove Performance column: <input type="checkbox" id="sa-perf" ${this.removePerformance ? 'checked' : ''} style="margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_PERFORMANCE}</td>
+                            <td style="margin-bottom: 0.4em;">Remove the Performance column from the list</td>
+                        </tr>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Max Page Warning: <input type="number" id="${SCRIPT_ID}-max-input" value="${currentMax}" style="width: 60px; margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_MAX_PAGE}</td>
+                            <td style="margin-bottom: 0.4em;">Warning threshold for page fetching</td>
+                        </tr>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Auto-Expand Rows: <input type="number" id="${SCRIPT_ID}-auto-input" value="${currentAuto}" style="width: 60px; margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_AUTO_EXPAND}</td>
+                            <td style="margin-bottom: 0.4em;">Row count threshold to auto-expand tables</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; text-align: right;">
+                    <button id="sa-save-btn" style="padding: 4px 12px; cursor: pointer; font-weight: bold;">SAVE</button>
+                </div>
+            `;
+#+end_example
+
+so that the configuration lines in the table are data driven from 
+
+#+begin_example
+const configSchema = {
+...
+    };
+
+    // Initialize and get settings values
+    const settings = settings.init(configSchema);
+#+end_example
+
+also please change the references in the rest of the code to use the new framework
 
 ** refactor
 
-In the uploaded userscripts "" and ""
+In the uploaded userscripts "ShowAllConsolidated.user.js" and "ReleasePageEnhancer.user.js"
 please refactor the "Configuration Helpers & Settings UI" functionality currently configured in
 
 #+begin_example

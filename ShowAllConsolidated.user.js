@@ -39,6 +39,7 @@
 
 // CHANGELOG - The most important updates/versions:
 let changelog = [
+    {version: '1.4.0+2026-02-01', description: 'Refactored settings to a schema-driven framework.'},
     {version: '1.3.0+2026-01-30', description: 'Implemented Ctrl+Click on headers to toggle all headers within the same container (sidebar vs main content).'},
     {version: '1.2.0+2026-01-30', description: 'Added collapsable sidebar functionality with a handle on the vertical line.'},
     {version: '1.1.0+2026-01-30', description: 'Increased the size of the filter input boxes and text. Several other small UI improvements.'},
@@ -56,12 +57,6 @@ let changelog = [
     const SCRIPT_ID = "vzell-mb-show-all-entities";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
     const DEBUG_ENABLED = true;
-    const DEFAULT_REMOVE_TAGGER = false;
-    const DEFAULT_REMOVE_RATING = false;
-    const DEFAULT_REMOVE_RELATIONSHIPS = true;
-    const DEFAULT_REMOVE_PERFORMANCE = true;
-    const DEFAULT_MAX_PAGE = 100;
-    const DEFAULT_AUTO_EXPAND = 60;
 
     // --- Modernized Logging Framework ---
     const Logger = {
@@ -92,16 +87,6 @@ let changelog = [
         debug(icon, msg, data) { this.log('debug', icon, msg, data); },
         info(icon, msg, data) { this.log('info', icon, msg, data); },
         error(icon, msg, data) { this.log('error', 'error', msg, data); }
-    };
-
-    // Backward compatibility wrapper for existing simple log calls
-    const log = (msg, data = '') => {
-        let icon = 'meta';
-        if (msg.includes('Initializing')) icon = 'init';
-        if (msg.includes('Fetching') || msg.includes('page')) icon = 'fetch';
-        if (msg.includes('cleanup')) icon = 'cleanup';
-        if (msg.includes('Filter')) icon = 'filter';
-        Logger.debug(icon, msg, data);
     };
 
         // --- Sidebar Collapsing & Full Width Stretching Logic ---
@@ -212,8 +197,6 @@ let changelog = [
     // Call sidebar init immediately
     initSidebarCollapse();
 
-    let registeredMenuCommandIDs = [];
-
     // Check if we just reloaded to fix the filter issue
     const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
     if (reloadFlag) {
@@ -221,33 +204,62 @@ let changelog = [
         alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
     }
 
-    // --- Configuration Helpers ---
-    const getStoredRemoveTagger = () => GM_getValue("removeTagger", DEFAULT_REMOVE_TAGGER);
-    const getStoredRemoveRating = () => GM_getValue("removeRating", DEFAULT_REMOVE_RATING);
-    const getStoredRemoveRelationships = () => GM_getValue("removeRelationships", DEFAULT_REMOVE_RELATIONSHIPS);
-    const getStoredRemovePerformance = () => GM_getValue("removePerformance", DEFAULT_REMOVE_PERFORMANCE);
-    const getStoredMaxPage = () => GM_getValue("maxPageThreshold", DEFAULT_MAX_PAGE);
-    const getStoredAutoExpand = () => GM_getValue("autoExpandThreshold", DEFAULT_AUTO_EXPAND);
+    const configSchema = {
+        sa_remove_tagger: {
+            label: "Remove Tagger column",
+            type: "checkbox",
+            default: false,
+            description: "Remove the Tagger column from the list"
+        },
+        sa_remove_rating: {
+            label: "Remove Rating column",
+            type: "checkbox",
+            default: false,
+            description: "Remove the Rating column from the list"
+        },
+        sa_remove_rel: {
+            label: "Remove Relationships column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Relationships column from the list"
+        },
+        sa_remove_perf: {
+            label: "Remove Performance column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Performance column from the list"
+        },
+        sa_max_page: {
+            label: "Max Page Warning",
+            type: "number",
+            default: 50,
+            description: "Warning threshold for page fetching"
+        },
+        sa_auto_expand: {
+            label: "Auto-Expand Rows",
+            type: "number",
+            default: 50,
+            description: "Row count threshold to auto-expand tables"
+        }
+    };
 
     // --- Settings & Configuration UI ---
     const settings = {
-        removeTagger: getStoredRemoveTagger(),
-        removeRating: getStoredRemoveRating(),
-        removeRelationships: getStoredRemoveRelationships(),
-        removePerformance: getStoredRemovePerformance(),
-        maxPageThreshold: getStoredMaxPage(),
-        autoExpandThreshold: getStoredAutoExpand(),
+        values: {},
 
-        save: function() {
-            GM_setValue("removeTagger", this.removeTagger);
-            GM_setValue("removeRating", this.removeRating);
-            GM_setValue("removeRelationships", this.removeRelationships);
-            GM_setValue("removePerformance", this.removePerformance);
-            GM_setValue("maxPageThreshold", this.maxPageThreshold);
-            GM_setValue("autoExpandThreshold", this.autoExpandThreshold);
-            this.setupMenus();
+        init: function(schema) {
+            this.schema = schema;
+            for (const key in schema) {
+                this.values[key] = GM_getValue(key, schema[key].default);
+            }
+            return this;
+        },
 
-            // Implement page reload so settings are applied immediately
+        save: function(newValues) {
+            for (const key in newValues) {
+                GM_setValue(key, newValues[key]);
+            }
+            Logger.info('init', "Settings saved. Reloading...");
             location.reload();
         },
 
@@ -261,13 +273,30 @@ let changelog = [
             });
 
             const container = document.createElement("div");
+            container.id = `${SCRIPT_ID}-config-container`;
             Object.assign(container.style, {
                 backgroundColor: 'silver', border: '2px outset white', padding: '1em',
-                color: 'black', fontFamily: 'sans-serif', minWidth: '600px'
+                color: 'black', fontFamily: 'sans-serif', minWidth: '450px'
             });
 
-            const currentMax = this.maxPageThreshold;
-            const currentAuto = this.autoExpandThreshold;
+            const tableRows = Object.entries(this.schema).map(([key, cfg]) => {
+                const inputId = `${SCRIPT_ID}-input-${key}`;
+                const isCheck = cfg.type === "checkbox";
+                const valAttr = isCheck
+                    ? (this.values[key] ? 'checked' : '')
+                    : `value="${this.values[key]}"`;
+
+                return `
+                    <tr>
+                        <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                            <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                ${cfg.label}: <input type="${cfg.type}" id="${inputId}" ${valAttr} style="${isCheck ? '' : 'width: 60px;'} margin-left: 5px;">
+                            </label>
+                        </th>
+                        <td style="opacity: 0.666; text-align: center;">${cfg.default}</td>
+                        <td style="margin-bottom: 0.4em;">${cfg.description}</td>
+                    </tr>`;
+            }).join('');
 
             container.innerHTML = `
                 <p style="text-align: right; margin: 0px;">
@@ -285,60 +314,7 @@ let changelog = [
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
-                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                    Remove Tagger column: <input type="checkbox" id="sa-tagger" ${this.removeTagger ? 'checked' : ''} style="margin-left: 5px;">
-                                </label>
-                            </th>
-                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_TAGGER}</td>
-                            <td style="margin-bottom: 0.4em;">Remove the Tagger column from the list</td>
-                        </tr>
-                        <tr>
-                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
-                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                    Remove Rating column: <input type="checkbox" id="sa-rating" ${this.removeRating ? 'checked' : ''} style="margin-left: 5px;">
-                                </label>
-                            </th>
-                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_RATING}</td>
-                            <td style="margin-bottom: 0.4em;">Remove the Rating column from the list</td>
-                        </tr>
-                        <tr>
-                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
-                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                    Remove Relationships column: <input type="checkbox" id="sa-rel" ${this.removeRelationships ? 'checked' : ''} style="margin-left: 5px;">
-                                </label>
-                            </th>
-                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_RELATIONSHIPS}</td>
-                            <td style="margin-bottom: 0.4em;">Remove the Relationships column from the list</td>
-                        </tr>
-                        <tr>
-                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
-                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                    Remove Performance column: <input type="checkbox" id="sa-perf" ${this.removePerformance ? 'checked' : ''} style="margin-left: 5px;">
-                                </label>
-                            </th>
-                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_PERFORMANCE}</td>
-                            <td style="margin-bottom: 0.4em;">Remove the Performance column from the list</td>
-                        </tr>
-                        <tr>
-                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
-                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                    Max Page Warning: <input type="number" id="${SCRIPT_ID}-max-input" value="${currentMax}" style="width: 60px; margin-left: 5px;">
-                                </label>
-                            </th>
-                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_MAX_PAGE}</td>
-                            <td style="margin-bottom: 0.4em;">Warning threshold for page fetching</td>
-                        </tr>
-                        <tr>
-                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
-                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                    Auto-Expand Rows: <input type="number" id="${SCRIPT_ID}-auto-input" value="${currentAuto}" style="width: 60px; margin-left: 5px;">
-                                </label>
-                            </th>
-                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_AUTO_EXPAND}</td>
-                            <td style="margin-bottom: 0.4em;">Row count threshold to auto-expand tables</td>
-                        </tr>
+                        ${tableRows}
                     </tbody>
                 </table>
                 <div style="margin-top: 15px; text-align: right;">
@@ -349,52 +325,50 @@ let changelog = [
             overlay.appendChild(container);
             document.body.appendChild(overlay);
 
-            // Close functionality
             const closeDialog = () => {
-                overlay.remove();
+                if (document.body.contains(overlay)) document.body.removeChild(overlay);
                 window.removeEventListener("keydown", handleEsc);
             };
 
-            // Implement "Esc" key handling
             const handleEsc = (e) => {
                 if (e.key === "Escape") closeDialog();
             };
             window.addEventListener("keydown", handleEsc);
 
-            document.getElementById(`${SCRIPT_ID}-close`).onclick = closeDialog;
-
-            // Implement "Reset" clickable link
-            document.getElementById(`${SCRIPT_ID}-reset`).onclick = () => {
-                document.getElementById("sa-tagger").checked = DEFAULT_REMOVE_TAGGER;
-                document.getElementById("sa-rating").checked = DEFAULT_REMOVE_RATING;
-                document.getElementById("sa-rel").checked = DEFAULT_REMOVE_RELATIONSHIPS;
-                document.getElementById("sa-perf").checked = DEFAULT_REMOVE_PERFORMANCE;
-                document.getElementById(`${SCRIPT_ID}-max-input`).value = DEFAULT_MAX_PAGE;
-                document.getElementById(`${SCRIPT_ID}-auto-input`).value = DEFAULT_AUTO_EXPAND;
-            };
-
-            document.getElementById("sa-save-btn").onclick = () => {
-                this.removeTagger = document.getElementById("sa-tagger").checked;
-                this.removeRating = document.getElementById("sa-rating").checked;
-                this.removeRelationships = document.getElementById("sa-rel").checked;
-                this.removePerformance = document.getElementById("sa-perf").checked;
-                this.maxPageThreshold = parseInt(document.getElementById(`${SCRIPT_ID}-max-input`).value, 10);
-                this.autoExpandThreshold = parseInt(document.getElementById(`${SCRIPT_ID}-auto-input`).value, 10);
-                this.save();
+            document.getElementById(`sa-save-btn`).onclick = () => {
+                const newValues = {};
+                for (const key in this.schema) {
+                    const input = document.getElementById(`${SCRIPT_ID}-input-${key}`);
+                    newValues[key] = this.schema[key].type === "checkbox" ? input.checked : parseInt(input.value, 10);
+                }
+                this.save(newValues);
                 closeDialog();
-                Logger.info('meta', 'Settings saved via Modal');
             };
+
+            document.getElementById(`${SCRIPT_ID}-reset`).onclick = () => {
+                for (const key in this.schema) {
+                    const input = document.getElementById(`${SCRIPT_ID}-input-${key}`);
+                    if (this.schema[key].type === "checkbox") {
+                        input.checked = this.schema[key].default;
+                    } else {
+                        input.value = this.schema[key].default;
+                    }
+                }
+            };
+
+            document.getElementById(`${SCRIPT_ID}-close`).onclick = closeDialog;
+            overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
         },
 
         showChangelog: function() {
-            let logDiv = document.getElementById('vz-changelog');
+            let logDiv = document.getElementById(`${SCRIPT_ID}-changelog`);
             if (!logDiv) {
                 logDiv = document.createElement("div");
-                logDiv.id = "vz-changelog";
+                logDiv.id = `${SCRIPT_ID}-changelog`;
                 logDiv.style.cssText = "position:fixed; left:0; right:0; top:10em; z-index:3000009; margin-left:auto; margin-right:auto; min-height:8em; width:50%; background-color:#eee; color:#111; border-radius:5px; padding:1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid #ccc; display:none;";
 
                 const title = document.createElement("b");
-                title.textContent = "VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities ... (Click to dismiss)";
+                title.textContent = `${SCRIPT_NAME} - ChangeLog (Click to dismiss)`;
                 logDiv.appendChild(title);
 
                 const list = document.createElement("ul");
@@ -417,25 +391,22 @@ let changelog = [
         },
 
         setupMenus: function() {
-            // Tampermonkey Menu
-            for (const id of registeredMenuCommandIDs) {
-                try { GM_unregisterMenuCommand(id); } catch (e) { /* ignore */ }
+            // Tampermonkey/UserScript Manager Menu
+            if (typeof GM_registerMenuCommand !== 'undefined') {
+                GM_registerMenuCommand("⚙️ Open Settings Manager", () => this.showSettingsModal());
+                GM_registerMenuCommand("📜 ChangeLog", () => this.showChangelog());
             }
-            registeredMenuCommandIDs = [];
-
-            registeredMenuCommandIDs.push(GM_registerMenuCommand("⚙️ Open Settings Manager", () => this.showSettingsModal()));
-            registeredMenuCommandIDs.push(GM_registerMenuCommand("📜 ChangeLog", () => this.showChangelog()));
 
             // Webpage "Editing" Menu Integration
             const editMenuItem = document.querySelector('div.right div.bottom ul.menu li.editing');
             const editMenuUl = editMenuItem ? editMenuItem.querySelector('ul') : null;
 
-            if (editMenuUl && !document.getElementById('sa-settings-menu-link')) {
+            if (editMenuUl && !document.getElementById(`${SCRIPT_ID}-menu-link`)) {
                 const li = document.createElement('li');
                 const a = document.createElement('a');
-                a.id = 'sa-settings-menu-link';
+                a.id = `${SCRIPT_ID}-menu-link`;
                 a.href = "javascript:void(0)";
-                a.textContent = SCRIPT_NAME;;
+                a.textContent = SCRIPT_NAME;
                 a.style.cursor = 'pointer';
                 a.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -443,12 +414,13 @@ let changelog = [
                 });
                 li.appendChild(a);
                 editMenuUl.appendChild(li);
-                Logger.debug('init', 'Settings entry added to Editing menu.');
+                Logger.debug('init', "Settings entry added to Editing menu.");
             }
         }
     };
 
-    // Initialize Menus
+    // Initialize and get settings values
+    settings.init(configSchema);
     settings.setupMenus();
 
     const currentUrl = new URL(window.location.href);
@@ -1172,10 +1144,10 @@ let changelog = [
         const indicesToRemove = [];
         headers.forEach((th, idx) => {
             const txt = th.textContent.trim();
-            if (settings.removeRelationships && txt.startsWith('Relationships')) indicesToRemove.push(idx);
-            else if (settings.removePerformance && txt.startsWith('Performance Attributes')) indicesToRemove.push(idx);
-            else if (settings.removeRating && txt.startsWith('Rating')) indicesToRemove.push(idx);
-            else if (settings.removeTagger && txt.startsWith('Tagger')) indicesToRemove.push(idx);
+            if (settings.values.sa_remove_rel && txt.startsWith('Relationships')) indicesToRemove.push(idx);
+            else if (settings.values.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToRemove.push(idx);
+            else if (settings.values.sa_remove_rating && txt.startsWith('Rating')) indicesToRemove.push(idx);
+            else if (settings.values.sa_remove_tagger && txt.startsWith('Tagger')) indicesToRemove.push(idx);
         });
 
         indicesToRemove.sort((a, b) => b - a).forEach(idx => theadRow.deleteCell(idx));
@@ -1316,7 +1288,7 @@ let changelog = [
         }
 
 
-        const maxThreshold = settings.maxPageThreshold;
+        const maxThreshold = settings.values.sa_max_page;
         Logger.debug('fetch', `Total pages to fetch: ${maxPage}`);
         if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
             activeBtn.style.backgroundColor = '';
@@ -1399,10 +1371,10 @@ let changelog = [
                 if (referenceTable) {
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
-                        if (settings.removeRelationships && txt.startsWith('Relationships')) indicesToExclude.push(idx);
-                        else if (settings.removePerformance && txt.startsWith('Performance Attributes')) indicesToExclude.push(idx);
-                        else if (settings.removeRating && txt.startsWith('Rating')) indicesToExclude.push(idx);
-                        else if (settings.removeTagger && txt.startsWith('Tagger')) indicesToExclude.push(idx);
+                        if (settings.values.sa_remove_rel && txt.startsWith('Relationships')) indicesToExclude.push(idx);
+                        else if (settings.values.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToExclude.push(idx);
+                        else if (settings.values.sa_remove_rating && txt.startsWith('Rating')) indicesToExclude.push(idx);
+                        else if (settings.values.sa_remove_tagger && txt.startsWith('Tagger')) indicesToExclude.push(idx);
                         else if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
                             countryDateIdx = idx;
                         } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
@@ -1811,7 +1783,7 @@ let changelog = [
                 h3.style.display = '';
 
                 const catLower = group.category.toLowerCase();
-                const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < settings.autoExpandThreshold;
+                const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < settings.values.sa_auto_expand;
                 table.style.display = shouldStayOpen ? '' : 'none';
 
                 h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${group.category} <span class="mb-row-count-stat">(${group.rows.length})</span>`;

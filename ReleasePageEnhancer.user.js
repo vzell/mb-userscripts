@@ -54,7 +54,7 @@ let changelog = [
             label: "Pixel Size",
             type: "number",
             default: 250,
-            description: "Set the cover image size in pixels"
+            description: "Set the cover image size in pixels from CA archive"
         },
         ca_collapsed_by_default: {
             label: "Start Collapsed",
