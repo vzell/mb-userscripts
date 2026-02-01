@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Release Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.1+2026-02-01
+// @version      0.9.2+2026-02-01
 // @description  Enhancee Release Page with show all cover art images on the page itself, collapsible with configurable size
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -84,7 +84,6 @@
 
         const container = document.createElement("div");
         container.id = "vzell-ca-config-container";
-        // Matching jesus.config.html style
         Object.assign(container.style, {
             backgroundColor: 'silver', border: '2px outset white', padding: '1em',
             color: 'black', fontFamily: 'sans-serif', minWidth: '400px'
@@ -138,7 +137,6 @@
             if (document.body.contains(overlay)) document.body.removeChild(overlay);
         };
 
-        // Event: Save (Stores value and reloads)
         document.getElementById("mb-ca-save-btn").onclick = () => {
             const val = parseInt(document.getElementById("mb-ca-size-input").value, 10);
             const coll = document.getElementById("mb-ca-collapse-input").checked;
@@ -150,16 +148,13 @@
             }
         };
 
-        // Event: Reset
         document.getElementById("mb-ca-reset").onclick = () => {
             document.getElementById("mb-ca-size-input").value = DEFAULT_SIZE;
             document.getElementById("mb-ca-collapse-input").checked = DEFAULT_COLLAPSED;
         };
 
-        // Event: Close/Cancel
         document.getElementById("mb-ca-close").onclick = closeDialog;
 
-        // Event: Escape Key
         const handleEsc = (e) => {
             if (e.key === "Escape") {
                 closeDialog();
@@ -172,7 +167,12 @@
     };
 
     const injectMenuEntry = () => {
-        const editMenu = document.querySelector('.editing > ul');
+        // Look for the "Editing" menu list specifically
+        const menuHeader = Array.from(document.querySelectorAll('.tabs ul li'))
+            .find(li => li.textContent.trim().includes('Editing'));
+
+        const editMenu = menuHeader ? menuHeader.querySelector('ul') : document.querySelector('.editing > ul');
+
         if (editMenu) {
             const li = document.createElement('li');
             const a = document.createElement('a');
@@ -185,6 +185,8 @@
             li.appendChild(a);
             editMenu.appendChild(li);
             Logger.debug('init', "Menu entry added to Editing tab");
+        } else {
+            Logger.error('init', "Could not find Editing menu container");
         }
     };
 
@@ -216,14 +218,14 @@
                     gallery.style.overflow = "hidden";
                     gallery.style.transition = "max-height 0.4s ease-in-out, opacity 0.3s ease, margin 0.4s ease";
 
-                    // Apply initial collapsed state
+                    // Force initial display state
                     if (startCollapsed) {
                         gallery.style.maxHeight = "0px";
                         gallery.style.opacity = "0";
                         gallery.style.marginTop = "0px";
                         gallery.style.marginBottom = "0px";
                     } else {
-                        gallery.style.maxHeight = "2000px";
+                        gallery.style.maxHeight = "5000px"; // Increased to ensure it fits large sets
                         gallery.style.opacity = "1";
                         gallery.style.marginTop = "20px";
                         gallery.style.marginBottom = "20px";
@@ -236,7 +238,7 @@
 
                     caHeader.addEventListener("click", function() {
                         if (gallery.style.maxHeight === "0px") {
-                            gallery.style.maxHeight = "2000px";
+                            gallery.style.maxHeight = "5000px";
                             gallery.style.opacity = "1";
                             gallery.style.marginBottom = "20px";
                             gallery.style.marginTop = "20px";
