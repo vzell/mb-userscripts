@@ -35,6 +35,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '0.9.5+2026-02-01', description: 'Refactored settings, logging and changelog handling to a library.'},
     {version: '0.9.0+2026-02-01', description: '1st official release version.'}
 ];
 
