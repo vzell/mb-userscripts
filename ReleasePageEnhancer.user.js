@@ -37,31 +37,49 @@ let changelog = [
     {version: '0.9.0+2026-02-01', description: '1st official release version.'}
 ];
 
-
 (function() {
     'use strict';
 
     const SCRIPT_ID = "vzell-mb-release-enhancer";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Release Page Enhancer";
-    const DEBUG_ENABLED = true;
-    const DEFAULT_SIZE = 250;
-    const DEFAULT_COLLAPSED = false;
 
     const Logger = (typeof MBLogger !== 'undefined')
           ? new MBLogger(SCRIPT_NAME, true)
-          : { info: console.log, debug: console.log, error: console.error };
+          : { info: console.log, debug: console.log, error: console.error, time: console.time, timeEnd: console.timeEnd };
 
     Logger.info('init', "Script loaded with external library!");
 
+    const configSchema = {
+        ca_image_size: {
+            label: "Pixel Size",
+            type: "number",
+            default: 250,
+            description: "Set the cover image size in pixels"
+        },
+        ca_collapsed_by_default: {
+            label: "Start Collapsed",
+            type: "checkbox",
+            default: false,
+            description: "Cover art gallery starts hidden by default"
+        }
+    };
+
     // --- Configuration Helpers & Settings UI ---
     const settings = {
-        imageSize: GM_getValue("ca_image_size", DEFAULT_SIZE),
-        collapsedByDefault: GM_getValue("ca_collapsed_by_default", DEFAULT_COLLAPSED),
+        values: {},
 
-        save: function() {
-            GM_setValue("ca_image_size", this.imageSize);
-            GM_setValue("ca_collapsed_by_default", this.collapsedByDefault);
+        init: function(schema) {
+            this.schema = schema;
+            for (const key in schema) {
+                this.values[key] = GM_getValue(key, schema[key].default);
+            }
+            return this;
+        },
 
+        save: function(newValues) {
+            for (const key in newValues) {
+                GM_setValue(key, newValues[key]);
+            }
             Logger.info('init', "Settings saved. Reloading...");
             location.reload();
         },
@@ -82,6 +100,26 @@ let changelog = [
                 color: 'black', fontFamily: 'sans-serif', minWidth: '400px'
             });
 
+            // Generate Table Rows from Schema
+            const tableRows = Object.entries(this.schema).map(([key, cfg]) => {
+                const inputId = `${SCRIPT_ID}-input-${key}`;
+                const isCheck = cfg.type === "checkbox";
+                const valAttr = isCheck
+                    ? (this.values[key] ? 'checked' : '')
+                    : `value="${this.values[key]}"`;
+
+                return `
+                    <tr>
+                        <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                            <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                ${cfg.label}: <input type="${cfg.type}" id="${inputId}" ${valAttr} style="${isCheck ? '' : 'width: 60px;'} margin-left: 5px;">
+                            </label>
+                        </th>
+                        <td style="opacity: 0.666; text-align: center;">${cfg.default}</td>
+                        <td style="margin-bottom: 0.4em;">${cfg.description}</td>
+                    </tr>`;
+            }).join('');
+
             container.innerHTML = `
                 <p style="text-align: right; margin: 0px;">
                     <a id="${SCRIPT_ID}-reset" style="cursor: pointer; font-weight: bold; color: black;">RESET</a> |
@@ -98,24 +136,7 @@ let changelog = [
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
-                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                    Pixel Size: <input type="number" id="${SCRIPT_ID}-size-input" value="${this.imageSize}" style="width: 60px; margin-left: 5px;">
-                                </label>
-                            </th>
-                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_SIZE}</td>
-                            <td style="margin-bottom: 0.4em;">Set the cover image size in pixels</td>
-                        </tr>
-                        <tr>
-                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
-                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                    Start Collapsed: <input type="checkbox" id="${SCRIPT_ID}-collapse-input" ${this.collapsedByDefault ? 'checked' : ''} style="margin-left: 5px;">
-                                </label>
-                            </th>
-                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_COLLAPSED}</td>
-                            <td style="margin-bottom: 0.4em;">Cover art gallery starts hidden by default</td>
-                        </tr>
+                        ${tableRows}
                     </tbody>
                 </table>
                 <div style="margin-top: 15px; text-align: right;">
@@ -137,19 +158,24 @@ let changelog = [
             window.addEventListener("keydown", handleEsc);
 
             document.getElementById(`${SCRIPT_ID}-save-btn`).onclick = () => {
-                const val = parseInt(document.getElementById(`${SCRIPT_ID}-size-input`).value, 10);
-                const coll = document.getElementById(`${SCRIPT_ID}-collapse-input`).checked;
-                if (!isNaN(val) && val > 0) {
-                    this.imageSize = val;
-                    this.collapsedByDefault = coll;
-                    this.save();
-                    closeDialog();
+                const newValues = {};
+                for (const key in this.schema) {
+                    const input = document.getElementById(`${SCRIPT_ID}-input-${key}`);
+                    newValues[key] = this.schema[key].type === "checkbox" ? input.checked : parseInt(input.value, 10);
                 }
+                this.save(newValues);
+                closeDialog();
             };
 
             document.getElementById(`${SCRIPT_ID}-reset`).onclick = () => {
-                document.getElementById(`${SCRIPT_ID}-size-input`).value = DEFAULT_SIZE;
-                document.getElementById(`${SCRIPT_ID}-collapse-input`).checked = DEFAULT_COLLAPSED;
+                for (const key in this.schema) {
+                    const input = document.getElementById(`${SCRIPT_ID}-input-${key}`);
+                    if (this.schema[key].type === "checkbox") {
+                        input.checked = this.schema[key].default;
+                    } else {
+                        input.value = this.schema[key].default;
+                    }
+                }
             };
 
             document.getElementById(`${SCRIPT_ID}-close`).onclick = closeDialog;
@@ -215,7 +241,8 @@ let changelog = [
         }
     };
 
-    // Initialize Menus
+    // Initialize Settings with Schema
+    settings.init(configSchema);
     settings.setupMenus();
 
     const isOverviewTabActive = () => {
@@ -228,8 +255,8 @@ let changelog = [
      */
     async function displayCoverArt(mbid, tabsContainer) {
         try {
-            const imgSize = getStoredSize();
-            const startCollapsed = getStoredCollapsed();
+            const imgSize = settings.values.ca_image_size;
+            const startCollapsed = settings.values.ca_collapsed_by_default;
 
             Logger.info('fetch', `Fetching cover art for ${mbid}...`);
             const response = await fetch(`https://coverartarchive.org/release/${mbid}`);
