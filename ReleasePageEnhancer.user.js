@@ -2,7 +2,7 @@
 // @name         VZ: MusicBrainz - Release Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      0.9.7+2026-02-01
-// @description  Enhancee Release Page with show all cover art images on the page itself, collapsible with configurable size
+// @description  Enhance Release Page with show all cover art images on the page itself, collapsible with configurable size
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -26,53 +26,13 @@
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Release Page Enhancer";
     const DEBUG_ENABLED = true;
     const DEFAULT_SIZE = 250;
-    const DEFAULT_COLLAPSED = true;
+    const DEFAULT_COLLAPSED = false;
 
-    // // --- Modernized Logging Framework ---
-    // const Logger = {
-    //     prefix: `[${SCRIPT_NAME}]`,
-    //     styles: {
-    //         debug: 'color: #7f8c8d; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold;',
-    //         info: 'color: #2980b9; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 11px;',
-    //         error: 'color: #c0392b; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; background: #fceae9; padding: 2px 4px; border-radius: 3px;',
-    //         timer: 'color: #8e44ad; font-family: "Consolas", monospace; font-style: italic;'
-    //     },
-    //     icons: {
-    //         init: '🚀',
-    //         fetch: '📥',
-    //         render: '🎨',
-    //         filter: '🔍',
-    //         sort: '⚖️',
-    //         cleanup: '🧹',
-    //         error: '❌',
-    //         success: '✅',
-    //         meta: '🎵'
-    //     },
-    //     log(level, icon, msg, data = '') {
-    //         if (!DEBUG_ENABLED && level === 'debug') return;
-    //         const style = this.styles[level] || '';
-    //         const iconChar = this.icons[icon] || '📝';
-    //         console.log(`%c${this.prefix} ${iconChar} ${msg}`, style, data);
-    //     },
-    //     debug(icon, msg, data) { this.log('debug', icon, msg, data); },
-    //     info(icon, msg, data) { this.log('info', icon, msg, data); },
-    //     error(icon, msg, data) { this.log('error', 'error', msg, data); }
-    // };
+    const Logger = (typeof MBLogger !== 'undefined')
+	  ? new MBLogger(SCRIPT_NAME, true)
+	  : { info: console.log, debug: console.log, error: console.error };
 
-    const Logger = new MBLogger(SCRIPT_NAME, true);
-
-    Logger.info('init', "Script loaded with external library!");    
-    //Logger.info('init', "Script loaded and starting...");
-
-    // Backward compatibility wrapper for existing simple log calls
-    const log = (msg, data = '') => {
-        let icon = 'meta';
-        if (msg.includes('Initializing')) icon = 'init';
-        if (msg.includes('Fetching') || msg.includes('page')) icon = 'fetch';
-        if (msg.includes('cleanup')) icon = 'cleanup';
-        if (msg.includes('Filter')) icon = 'filter';
-        Logger.debug(icon, msg, data);
-    };
+    Logger.info('init', "Script loaded with external library!");
 
     // --- Configuration Helpers ---
     const getStoredSize = () => GM_getValue("ca_image_size", DEFAULT_SIZE);

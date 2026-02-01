@@ -55,7 +55,7 @@
 
 ## <a name="mb_release_page_enhancer"></a> MusicBrainz - Release Page Enhancer
 
-Enhancee Release Page with show all cover art images on the page itself, collapsible with configurable size.
+Enhance Release Page with show all cover art images on the page itself, collapsible with configurable size.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ReleasePageEnhancer.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js)
