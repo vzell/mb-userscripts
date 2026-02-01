@@ -231,7 +231,7 @@ let changelog = [
 
     // --- Settings & Configuration UI ---
     const settings = {
-	removeTagger: getStoredRemoveTagger(),
+        removeTagger: getStoredRemoveTagger(),
         removeRating: getStoredRemoveRating(),
         removeRelationships: getStoredRemoveRelationships(),
         removePerformance: getStoredRemovePerformance(),
@@ -246,10 +246,14 @@ let changelog = [
             GM_setValue("maxPageThreshold", this.maxPageThreshold);
             GM_setValue("autoExpandThreshold", this.autoExpandThreshold);
             this.setupMenus();
+
+            // Implement page reload so settings are applied immediately
+            location.reload();
         },
 
         showSettingsModal: function() {
             const overlay = document.createElement("div");
+            overlay.id = `${SCRIPT_ID}-settings-overlay`;
             Object.assign(overlay.style, {
                 position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
                 backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '10000', display: 'flex',
@@ -262,12 +266,12 @@ let changelog = [
                 color: 'black', fontFamily: 'sans-serif', minWidth: '600px'
             });
 
-            // Use the current values in the modal inputs
             const currentMax = this.maxPageThreshold;
             const currentAuto = this.autoExpandThreshold;
 
             container.innerHTML = `
                 <p style="text-align: right; margin: 0px;">
+                    <a id="${SCRIPT_ID}-reset" style="cursor: pointer; font-weight: bold; color: black;">RESET</a> |
                     <a id="${SCRIPT_ID}-close" style="cursor: pointer; font-weight: bold; color: black;">CLOSE</a>
                 </p>
                 <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">${SCRIPT_NAME.toUpperCase()}</h4>
@@ -287,7 +291,7 @@ let changelog = [
                                     Remove Tagger column: <input type="checkbox" id="sa-tagger" ${this.removeTagger ? 'checked' : ''} style="margin-left: 5px;">
                                 </label>
                             </th>
-                            <td style="opacity: 0.666; text-align: center;">false</td>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_TAGGER}</td>
                             <td style="margin-bottom: 0.4em;">Remove the Tagger column from the list</td>
                         </tr>
                         <tr>
@@ -296,16 +300,16 @@ let changelog = [
                                     Remove Rating column: <input type="checkbox" id="sa-rating" ${this.removeRating ? 'checked' : ''} style="margin-left: 5px;">
                                 </label>
                             </th>
-                            <td style="opacity: 0.666; text-align: center;">false</td>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_RATING}</td>
                             <td style="margin-bottom: 0.4em;">Remove the Rating column from the list</td>
                         </tr>
                         <tr>
                             <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
                                 <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                    Remove Relationships  column: <input type="checkbox" id="sa-rel" ${this.removeRelationships ? 'checked' : ''} style="margin-left: 5px;">
+                                    Remove Relationships column: <input type="checkbox" id="sa-rel" ${this.removeRelationships ? 'checked' : ''} style="margin-left: 5px;">
                                 </label>
                             </th>
-                            <td style="opacity: 0.666; text-align: center;">true</td>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_RELATIONSHIPS}</td>
                             <td style="margin-bottom: 0.4em;">Remove the Relationships column from the list</td>
                         </tr>
                         <tr>
@@ -314,7 +318,7 @@ let changelog = [
                                     Remove Performance column: <input type="checkbox" id="sa-perf" ${this.removePerformance ? 'checked' : ''} style="margin-left: 5px;">
                                 </label>
                             </th>
-                            <td style="opacity: 0.666; text-align: center;">true</td>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_REMOVE_PERFORMANCE}</td>
                             <td style="margin-bottom: 0.4em;">Remove the Performance column from the list</td>
                         </tr>
                         <tr>
@@ -345,8 +349,30 @@ let changelog = [
             overlay.appendChild(container);
             document.body.appendChild(overlay);
 
-            // Note: Updated the close handler to the new ID
-            document.getElementById(`${SCRIPT_ID}-close`).onclick = () => overlay.remove();
+            // Close functionality
+            const closeDialog = () => {
+                overlay.remove();
+                window.removeEventListener("keydown", handleEsc);
+            };
+
+            // Implement "Esc" key handling
+            const handleEsc = (e) => {
+                if (e.key === "Escape") closeDialog();
+            };
+            window.addEventListener("keydown", handleEsc);
+
+            document.getElementById(`${SCRIPT_ID}-close`).onclick = closeDialog;
+
+            // Implement "Reset" clickable link
+            document.getElementById(`${SCRIPT_ID}-reset`).onclick = () => {
+                document.getElementById("sa-tagger").checked = DEFAULT_REMOVE_TAGGER;
+                document.getElementById("sa-rating").checked = DEFAULT_REMOVE_RATING;
+                document.getElementById("sa-rel").checked = DEFAULT_REMOVE_RELATIONSHIPS;
+                document.getElementById("sa-perf").checked = DEFAULT_REMOVE_PERFORMANCE;
+                document.getElementById(`${SCRIPT_ID}-max-input`).value = DEFAULT_MAX_PAGE;
+                document.getElementById(`${SCRIPT_ID}-auto-input`).value = DEFAULT_AUTO_EXPAND;
+            };
+
             document.getElementById("sa-save-btn").onclick = () => {
                 this.removeTagger = document.getElementById("sa-tagger").checked;
                 this.removeRating = document.getElementById("sa-rating").checked;
@@ -355,7 +381,7 @@ let changelog = [
                 this.maxPageThreshold = parseInt(document.getElementById(`${SCRIPT_ID}-max-input`).value, 10);
                 this.autoExpandThreshold = parseInt(document.getElementById(`${SCRIPT_ID}-auto-input`).value, 10);
                 this.save();
-                overlay.remove();
+                closeDialog();
                 Logger.info('meta', 'Settings saved via Modal');
             };
         },

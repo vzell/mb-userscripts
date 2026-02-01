@@ -25778,6 +25778,15 @@ Also create new "const DEFAULT_xxxxx = <boolean>" variables at the begiining of 
     const getStoredRemovePerformance = () => GM_getValue("removePerformance", true);
 #+end_example
 
+** make dialogs the same
+
+In the uploaded script "ShowAllConsolidated.user.js"
+- implement the missing "Esc" key handling for closing the configuration dialog
+- implement the page reload, so that "Settings are applied immediately upon saving"
+- implement a "Reset" clickable link that resets all the configurable parameters to their default values
+
+like in the userscript "ReleasePageEnhancer.user.js"
+
 
 * filter (funnel) icon from chrome console
 
