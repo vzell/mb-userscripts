@@ -10,7 +10,7 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @require      file:///V:/home/vzell/git/mb-userscripts/lib/MBLoggerLib.user.js
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
 // @match        *://*.musicbrainz.org/artist/*
 // @match        *://*.musicbrainz.org/release-group/*
 // @match        *://*.musicbrainz.org/work/*
@@ -20,6 +20,7 @@
 // @match        *://*.musicbrainz.org/place/*/events
 // @match        *://*.musicbrainz.org/place/*/performances
 // @grant        GM_xmlhttpRequest
+// @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
@@ -38,8 +39,9 @@
  * NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome and Firefox.
  */
 
-// CHANGELOG - The most important updates/versions:
+// CHANGELOG
 let changelog = [
+    {version: '1.5.0+2026-02-01', description: 'Refactored settings, logging and changelog handling to a library.'},
     {version: '1.4.0+2026-02-01', description: 'Refactored settings to a schema-driven framework.'},
     {version: '1.3.0+2026-01-30', description: 'Implemented Ctrl+Click on headers to toggle all headers within the same container (sidebar vs main content).'},
     {version: '1.2.0+2026-01-30', description: 'Added collapsable sidebar functionality with a handle on the vertical line.'},
@@ -58,13 +60,7 @@ let changelog = [
     const SCRIPT_ID = "vzell-mb-show-all-entities";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
 
-    const Logger = (typeof MBLogger !== 'undefined')
-          ? new MBLogger(SCRIPT_NAME, true)
-          : { info: console.log, debug: console.log, error: console.error, time: console.time, timeEnd: console.timeEnd };
-
-    Logger.info('init', "Script loaded with external library!");
-
-    // --- Settings & Configuration UI ---
+    // CONFIG SCHEMA
     const configSchema = {
         sa_remove_tagger: {
             label: "Remove Tagger column",
@@ -104,184 +100,15 @@ let changelog = [
         }
     };
 
-    const settings = {
-        values: {},
+    // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
+    const Lib = (typeof VZMBLibrary !== 'undefined')
+          ? new VZMBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, true)
+          : {
+              settings: {},
+              info: console.log, debug: console.log, error: console.error, time: console.time, timeEnd: console.timeEnd
+          };
 
-        init: function(schema) {
-            this.schema = schema;
-            for (const key in schema) {
-                this.values[key] = GM_getValue(key, schema[key].default);
-            }
-            return this;
-        },
-
-        save: function(newValues) {
-            for (const key in newValues) {
-                GM_setValue(key, newValues[key]);
-            }
-            Logger.info('init', "Settings saved. Reloading...");
-            location.reload();
-        },
-
-        showSettingsModal: function() {
-            const overlay = document.createElement("div");
-            overlay.id = `${SCRIPT_ID}-settings-overlay`;
-            Object.assign(overlay.style, {
-                position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
-                backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '10000', display: 'flex',
-                justifyContent: 'center', alignItems: 'center'
-            });
-
-            const container = document.createElement("div");
-            container.id = `${SCRIPT_ID}-config-container`;
-            Object.assign(container.style, {
-                backgroundColor: 'silver', border: '2px outset white', padding: '1em',
-                color: 'black', fontFamily: 'sans-serif', minWidth: '450px'
-            });
-
-            const tableRows = Object.entries(this.schema).map(([key, cfg]) => {
-                const inputId = `${SCRIPT_ID}-input-${key}`;
-                const isCheck = cfg.type === "checkbox";
-                const valAttr = isCheck
-                    ? (this.values[key] ? 'checked' : '')
-                    : `value="${this.values[key]}"`;
-
-                return `
-                    <tr>
-                        <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
-                            <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                ${cfg.label}: <input type="${cfg.type}" id="${inputId}" ${valAttr} style="${isCheck ? '' : 'width: 60px;'} margin-left: 5px;">
-                            </label>
-                        </th>
-                        <td style="opacity: 0.666; text-align: center;">${cfg.default}</td>
-                        <td style="margin-bottom: 0.4em;">${cfg.description}</td>
-                    </tr>`;
-            }).join('');
-
-            container.innerHTML = `
-                <p style="text-align: right; margin: 0px;">
-                    <a id="${SCRIPT_ID}-reset" style="cursor: pointer; font-weight: bold; color: black;">RESET</a> |
-                    <a id="${SCRIPT_ID}-close" style="cursor: pointer; font-weight: bold; color: black;">CLOSE</a>
-                </p>
-                <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">${SCRIPT_NAME.toUpperCase()}</h4>
-                <p>Settings are applied immediately upon saving.</p>
-                <table border="2" cellpadding="4" cellspacing="1" style="width: 100%; border-collapse: separate; background: #eee;">
-                    <thead>
-                        <tr style="background-color: #ccc;">
-                            <th>setting</th>
-                            <th>default setting</th>
-                            <th>description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${tableRows}
-                    </tbody>
-                </table>
-                <div style="margin-top: 15px; text-align: right;">
-                    <button id="sa-save-btn" style="padding: 4px 12px; cursor: pointer; font-weight: bold;">SAVE</button>
-                </div>
-            `;
-
-            overlay.appendChild(container);
-            document.body.appendChild(overlay);
-
-            const closeDialog = () => {
-                if (document.body.contains(overlay)) document.body.removeChild(overlay);
-                window.removeEventListener("keydown", handleEsc);
-            };
-
-            const handleEsc = (e) => {
-                if (e.key === "Escape") closeDialog();
-            };
-            window.addEventListener("keydown", handleEsc);
-
-            document.getElementById(`sa-save-btn`).onclick = () => {
-                const newValues = {};
-                for (const key in this.schema) {
-                    const input = document.getElementById(`${SCRIPT_ID}-input-${key}`);
-                    newValues[key] = this.schema[key].type === "checkbox" ? input.checked : parseInt(input.value, 10);
-                }
-                this.save(newValues);
-                closeDialog();
-            };
-
-            document.getElementById(`${SCRIPT_ID}-reset`).onclick = () => {
-                for (const key in this.schema) {
-                    const input = document.getElementById(`${SCRIPT_ID}-input-${key}`);
-                    if (this.schema[key].type === "checkbox") {
-                        input.checked = this.schema[key].default;
-                    } else {
-                        input.value = this.schema[key].default;
-                    }
-                }
-            };
-
-            document.getElementById(`${SCRIPT_ID}-close`).onclick = closeDialog;
-            overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
-        },
-
-        showChangelog: function() {
-            let logDiv = document.getElementById(`${SCRIPT_ID}-changelog`);
-            if (!logDiv) {
-                logDiv = document.createElement("div");
-                logDiv.id = `${SCRIPT_ID}-changelog`;
-                logDiv.style.cssText = "position:fixed; left:0; right:0; top:10em; z-index:3000009; margin-left:auto; margin-right:auto; min-height:8em; width:50%; background-color:#eee; color:#111; border-radius:5px; padding:1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid #ccc; display:none;";
-
-                const title = document.createElement("b");
-                title.textContent = `${SCRIPT_NAME} - ChangeLog (Click to dismiss)`;
-                logDiv.appendChild(title);
-
-                const list = document.createElement("ul");
-                list.style.marginTop = "0.5em";
-
-                changelog.forEach(entry => {
-                    const li = document.createElement("li");
-                    li.innerHTML = `<i>${entry.version}</i> - ${entry.description}`;
-                    list.appendChild(li);
-                });
-
-                logDiv.appendChild(list);
-                document.body.appendChild(logDiv);
-
-                logDiv.addEventListener('click', () => {
-                    logDiv.style.display = 'none';
-                }, false);
-            }
-            logDiv.style.display = 'block';
-        },
-
-        setupMenus: function() {
-            // Tampermonkey/UserScript Manager Menu
-            if (typeof GM_registerMenuCommand !== 'undefined') {
-                GM_registerMenuCommand("⚙️ Open Settings Manager", () => this.showSettingsModal());
-                GM_registerMenuCommand("📜 ChangeLog", () => this.showChangelog());
-            }
-
-            // Webpage "Editing" Menu Integration
-            const editMenuItem = document.querySelector('div.right div.bottom ul.menu li.editing');
-            const editMenuUl = editMenuItem ? editMenuItem.querySelector('ul') : null;
-
-            if (editMenuUl && !document.getElementById(`${SCRIPT_ID}-menu-link`)) {
-                const li = document.createElement('li');
-                const a = document.createElement('a');
-                a.id = `${SCRIPT_ID}-menu-link`;
-                a.href = "javascript:void(0)";
-                a.textContent = SCRIPT_NAME;
-                a.style.cursor = 'pointer';
-                a.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.showSettingsModal();
-                });
-                li.appendChild(a);
-                editMenuUl.appendChild(li);
-                Logger.debug('init', "Settings entry added to Editing menu.");
-            }
-        }
-    };
-
-    // Initialize and get settings values
-    settings.init(configSchema);
-    settings.setupMenus();
+    Lib.info('init', "Script loaded with external library!");
 
         // --- Sidebar Collapsing & Full Width Stretching Logic ---
     function initSidebarCollapse() {
@@ -291,7 +118,7 @@ let changelog = [
 
         if (!sidebar) return;
 
-        Logger.debug('init', 'Initializing aggressive full-width sidebar toggle.');
+        Lib.debug('init', 'Initializing aggressive full-width sidebar toggle.');
 
         const sidebarWidth = '240px';
 
@@ -374,7 +201,7 @@ let changelog = [
             sidebar.classList.toggle('sidebar-collapsed');
             handle.classList.toggle('handle-collapsed');
             applyStretching(isCollapsing);
-            Logger.debug('meta', `Sidebar ${isCollapsing ? 'collapsed' : 'expanded'}. Full width applied.`);
+            Lib.debug('meta', `Sidebar ${isCollapsing ? 'collapsed' : 'expanded'}. Full width applied.`);
         });
 
         document.body.appendChild(handle);
@@ -475,11 +302,11 @@ let changelog = [
     else if (path.match(/\/place\/.*\/performances/)) pageType = 'place-performances';
     else if (path.includes('/events')) pageType = 'events';
 
-    if (pageType) Logger.prefix = `[VZ-ShowAllEntities: ${pageType}]`;
-    Logger.info('init', 'Initializing script for path:', path);
+    if (pageType) Lib.prefix = `[VZ-ShowAllEntities: ${pageType}]`;
+    Lib.info('init', 'Initializing script for path:', path);
 
     if (!pageType || !headerContainer) {
-        Logger.error('init', 'Required elements not found. Terminating.', { pageType, hasHeader: !!headerContainer });
+        Lib.error('init', 'Required elements not found. Terminating.', { pageType, hasHeader: !!headerContainer });
         return;
     }
 
@@ -675,12 +502,12 @@ let changelog = [
      * Removes various clutter elements from the MusicBrainz page to prepare for consolidated view.
      */
     function performClutterCleanup() {
-        Logger.info('cleanup', 'Starting clutter element removal.');
+        Lib.info('cleanup', 'Starting clutter element removal.');
 
         // Remove Jesus2099 bigbox elements
         const bigBoxCount = document.querySelectorAll('div.jesus2099userjs154481bigbox').length;
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.remove());
-        if (bigBoxCount > 0) Logger.debug('cleanup', `Removed ${bigBoxCount} jesus2099 bigbox elements.`);
+        if (bigBoxCount > 0) Lib.debug('cleanup', `Removed ${bigBoxCount} jesus2099 bigbox elements.`);
 
         // Remove relationship helper tables
         let relationTablesCount = 0;
@@ -690,7 +517,7 @@ let changelog = [
                 relationTablesCount++;
             }
         });
-        if (relationTablesCount > 0) Logger.debug('cleanup', `Removed ${relationTablesCount} relation helper tables.`);
+        if (relationTablesCount > 0) Lib.debug('cleanup', `Removed ${relationTablesCount} relation helper tables.`);
 
         // Remove the release group filter paragraph
         let filterParaRemoved = false;
@@ -700,7 +527,7 @@ let changelog = [
                 filterParaRemoved = true;
             }
         });
-        if (filterParaRemoved) Logger.debug('cleanup', 'Removed artist release group filter description paragraph.');
+        if (filterParaRemoved) Lib.debug('cleanup', 'Removed artist release group filter description paragraph.');
 
         // Remove Slick slider containers
         const sliderCount = document.querySelectorAll('div[style*="width: 700px"] > div.slider.multiple-items').length;
@@ -708,7 +535,7 @@ let changelog = [
             const parent = div.parentElement;
             if (parent && parent.style.width === '700px') parent.remove();
         });
-        if (sliderCount > 0) Logger.debug('cleanup', `Removed ${sliderCount} Slick slider containers.`);
+        if (sliderCount > 0) Lib.debug('cleanup', `Removed ${sliderCount} Slick slider containers.`);
 
         // Target details blocks containing many images (likely the cover art gallery)
         let removedDetailsCount = 0;
@@ -717,10 +544,10 @@ let changelog = [
             if (imgCount > 5) {
                 det.remove();
                 removedDetailsCount++;
-                Logger.debug('cleanup', `Removed <details> block containing ${imgCount} images.`);
+                Lib.debug('cleanup', `Removed <details> block containing ${imgCount} images.`);
             }
         });
-        if (removedDetailsCount > 0) Logger.info('cleanup', `Removed ${removedDetailsCount} gallery/details blocks.`);
+        if (removedDetailsCount > 0) Lib.info('cleanup', `Removed ${removedDetailsCount} gallery/details blocks.`);
 
         if (pageType === 'events' || pageType === 'artist-releasegroups') {
             removeSanojjonasContainers();
@@ -731,7 +558,7 @@ let changelog = [
         const url = new URL(window.location.origin + targetPath);
         Object.keys(queryParams).forEach(k => url.searchParams.set(k, queryParams[k]));
         url.searchParams.set('page', '1');
-        Logger.info('fetch', `Fetching maxPage from: ${url.toString()}`);
+        Lib.info('fetch', `Fetching maxPage from: ${url.toString()}`);
         try {
             const html = await fetchHtml(url.toString());
             const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -754,16 +581,16 @@ let changelog = [
                     if (pageNumbers.length > 0) maxPage = Math.max(...pageNumbers);
                 }
             }
-            Logger.info('success', `Determined maxPage: ${maxPage}`);
+            Lib.info('success', `Determined maxPage: ${maxPage}`);
             return maxPage;
         } catch (err) {
-            Logger.error('fetch', 'Error fetching maxPage:', err);
+            Lib.error('fetch', 'Error fetching maxPage:', err);
             return 1;
         }
     }
 
     function removeSanojjonasContainers() {
-        Logger.debug('cleanup', 'Removing Sanojjonas containers...');
+        Lib.debug('cleanup', 'Removing Sanojjonas containers...');
         const idsToRemove = ['load', 'load2', 'load3', 'load4', 'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'];
         idsToRemove.forEach(id => {
             const el = document.getElementById(id);
@@ -775,7 +602,7 @@ let changelog = [
      * Signals other scripts (like FUNKEY ILLUSTRATED RECORDS) to stop their loops.
      */
     function stopOtherScripts() {
-        Logger.info('cleanup', 'Signalling other scripts to stop...');
+        Lib.info('cleanup', 'Signalling other scripts to stop...');
         window.stopAllUserScripts = true;
         // Dispatch custom event for scripts listening for inter-script signals
         window.dispatchEvent(new CustomEvent('mb-stop-all-scripts'));
@@ -827,7 +654,7 @@ let changelog = [
                 }
             }
 
-            Logger.debug('render', `Updated H2 header count: ${countText}`);
+            Lib.debug('render', `Updated H2 header count: ${countText}`);
         }
     }
 
@@ -926,7 +753,7 @@ let changelog = [
 
             input.addEventListener('input', (e) => {
                 e.stopPropagation();
-                Logger.debug('filter', `Column filter updated on column ${idx}: "${input.value}"`);
+                Lib.debug('filter', `Column filter updated on column ${idx}: "${input.value}"`);
                 runFilter();
             });
 
@@ -958,7 +785,7 @@ let changelog = [
         const __activeEl = document.activeElement;
         const __scrollY = window.scrollY;
 
-        Logger.debug('filter', 'runFilter(): active element =', __activeEl?.className || '(none)');
+        Lib.debug('filter', 'runFilter(): active element =', __activeEl?.className || '(none)');
 
         if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
             const filteredArray = [];
@@ -1025,7 +852,7 @@ let changelog = [
                     .filter(t => t.querySelector('.mb-col-filter-row'));
                 const tableIdx = allTables.findIndex(t => t.contains(__activeEl));
 
-                Logger.debug('filter', `Attempting focus restore: tableIdx=${tableIdx}, colIdx=${colIdx}`);
+                Lib.debug('filter', `Attempting focus restore: tableIdx=${tableIdx}, colIdx=${colIdx}`);
 
                 if (allTables[tableIdx]) {
                     const newInput = allTables[tableIdx]
@@ -1034,9 +861,9 @@ let changelog = [
                     if (newInput) {
                         newInput.focus();
                         newInput.selectionStart = newInput.selectionEnd = newInput.value.length;
-                        Logger.debug('filter', 'Restored focus to column filter input');
+                        Lib.debug('filter', 'Restored focus to column filter input');
                     } else {
-                        Logger.debug('filter', 'Could not find replacement column filter input');
+                        Lib.debug('filter', 'Could not find replacement column filter input');
                     }
                 }
             }
@@ -1092,7 +919,7 @@ let changelog = [
     stopBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        Logger.info('cleanup', 'Stop requested by user.');
+        Lib.info('cleanup', 'Stop requested by user.');
         stopRequested = true;
         stopBtn.disabled = true;
         stopBtn.textContent = 'Stopping...';
@@ -1119,10 +946,10 @@ let changelog = [
         const indicesToRemove = [];
         headers.forEach((th, idx) => {
             const txt = th.textContent.trim();
-            if (settings.values.sa_remove_rel && txt.startsWith('Relationships')) indicesToRemove.push(idx);
-            else if (settings.values.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToRemove.push(idx);
-            else if (settings.values.sa_remove_rating && txt.startsWith('Rating')) indicesToRemove.push(idx);
-            else if (settings.values.sa_remove_tagger && txt.startsWith('Tagger')) indicesToRemove.push(idx);
+            if (Lib.settings.sa_remove_rel && txt.startsWith('Relationships')) indicesToRemove.push(idx);
+            else if (Lib.settings.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToRemove.push(idx);
+            else if (Lib.settings.sa_remove_rating && txt.startsWith('Rating')) indicesToRemove.push(idx);
+            else if (Lib.settings.sa_remove_tagger && txt.startsWith('Tagger')) indicesToRemove.push(idx);
         });
 
         indicesToRemove.sort((a, b) => b - a).forEach(idx => theadRow.deleteCell(idx));
@@ -1187,7 +1014,7 @@ let changelog = [
 
         // Reload the page if a fetch process has already run to fix column-level filter unresponsiveness
         if (isLoaded) {
-            Logger.info('meta', 'Second fetch attempt detected. Setting reload flag and reloading page to ensure filter stability.');
+            Lib.info('meta', 'Second fetch attempt detected. Setting reload flag and reloading page to ensure filter stability.');
             sessionStorage.setItem('mb_show_all_reload_pending', 'true');
             window.location.reload();
             return;
@@ -1221,19 +1048,19 @@ let changelog = [
         activeBtn.style.color = 'black';
 
         // Removed isLoaded block to allow re-fetching
-        Logger.info('fetch', 'Starting fetch process...', overrideParams);
+        Lib.info('fetch', 'Starting fetch process...', overrideParams);
         statusDisplay.textContent = 'Getting number of pages to fetch...';
         let maxPage = 1;
 
         // Determine maxPage based on context
         if (isWorkBase) {
-            Logger.info('fetch', 'Context: isWorkBase. Fetching maxPage with specific parameters.');
+            Lib.info('fetch', 'Context: isWorkBase. Fetching maxPage with specific parameters.');
             maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
         } else if (overrideParams) {
-            Logger.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
+            Lib.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
             maxPage = await fetchMaxPageGeneric(path, overrideParams);
         } else {
-            Logger.debug('fetch', 'Context: Standard pagination. Parsing "ul.pagination" from current page.');
+            Lib.debug('fetch', 'Context: Standard pagination. Parsing "ul.pagination" from current page.');
             const pagination = document.querySelector('ul.pagination');
             if (pagination) {
                 const links = Array.from(pagination.querySelectorAll('li a'));
@@ -1243,7 +1070,7 @@ let changelog = [
                     const p = urlObj.searchParams.get('page');
                     if (p) {
                         maxPage = parseInt(p, 10);
-                        Logger.debug('fetch', `Found "Next" link. Extracted page: ${maxPage}`);
+                        Lib.debug('fetch', `Found "Next" link. Extracted page: ${maxPage}`);
                     }
                 } else if (links.length > 0) {
                     const pageNumbers = links
@@ -1254,17 +1081,17 @@ let changelog = [
                         .filter(num => !isNaN(num));
                     if (pageNumbers.length > 0) {
                         maxPage = Math.max(...pageNumbers);
-                        Logger.debug('fetch', `Parsed page numbers from list. Max found: ${maxPage}`);
+                        Lib.debug('fetch', `Parsed page numbers from list. Max found: ${maxPage}`);
                     }
                 }
             } else {
-                Logger.debug('fetch', 'No pagination element found; assuming single page (maxPage = 1).');
+                Lib.debug('fetch', 'No pagination element found; assuming single page (maxPage = 1).');
             }
         }
 
 
-        const maxThreshold = settings.values.sa_max_page;
-        Logger.debug('fetch', `Total pages to fetch: ${maxPage}`);
+        const maxThreshold = Lib.settings.sa_max_page;
+        Lib.debug('fetch', `Total pages to fetch: ${maxPage}`);
         if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
             activeBtn.style.backgroundColor = '';
             activeBtn.style.color = '';
@@ -1311,7 +1138,7 @@ let changelog = [
         try {
             for (let p = 1; p <= maxPage; p++) {
                 if (stopRequested) {
-                    Logger.info('cleanup', 'Fetch loop stopped at page ' + p);
+                    Lib.info('cleanup', 'Fetch loop stopped at page ' + p);
                     break;
                 }
                 pagesProcessed++;
@@ -1346,10 +1173,10 @@ let changelog = [
                 if (referenceTable) {
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
-                        if (settings.values.sa_remove_rel && txt.startsWith('Relationships')) indicesToExclude.push(idx);
-                        else if (settings.values.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToExclude.push(idx);
-                        else if (settings.values.sa_remove_rating && txt.startsWith('Rating')) indicesToExclude.push(idx);
-                        else if (settings.values.sa_remove_tagger && txt.startsWith('Tagger')) indicesToExclude.push(idx);
+                        if (Lib.settings.sa_remove_rel && txt.startsWith('Relationships')) indicesToExclude.push(idx);
+                        else if (Lib.settings.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToExclude.push(idx);
+                        else if (Lib.settings.sa_remove_rating && txt.startsWith('Rating')) indicesToExclude.push(idx);
+                        else if (Lib.settings.sa_remove_tagger && txt.startsWith('Tagger')) indicesToExclude.push(idx);
                         else if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
                             countryDateIdx = idx;
                         } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
@@ -1371,7 +1198,7 @@ let changelog = [
 
                         // Logic to handle grouped data and repeat headers
                         if (category !== lastCategorySeenAcrossPages) {
-                            Logger.debug('fetch', `Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
+                            Lib.debug('fetch', `Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
                             groupedRows.push({ category: category, rows: [] });
                             lastCategorySeenAcrossPages = category;
                         }
@@ -1397,7 +1224,7 @@ let changelog = [
                                 if (node.classList.contains('subh')) {
                                     currentStatus = node.textContent.trim() || 'Unknown';
                                     if (pageType === 'releasegroup-releases' && currentStatus !== lastCategorySeenAcrossPages) {
-                                        Logger.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
+                                        Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
                                     }
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     const newRow = document.importNode(node, true);
@@ -1541,7 +1368,7 @@ let changelog = [
                 activeBtn.style.backgroundColor = bgColor;
 
                 // Detailed statistics per page fetch
-                Logger.info('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
+                Lib.info('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
 
                 if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') {
                     const summaryParts = groupedRows.map(g => {
@@ -1556,7 +1383,7 @@ let changelog = [
             let renderingTimeStart = performance.now();
 
             // --- RENDERING START ---
-            Logger.debug('render', 'DOM rendering starting...');
+            Lib.debug('render', 'DOM rendering starting...');
 
             const totalRows = (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') ?
                              groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
@@ -1609,7 +1436,7 @@ let changelog = [
             totalRenderingTime = performance.now() - renderingTimeStart;
 
             // --- RENDERING END ---
-            Logger.debug('render', `DOM rendering finished in ${totalRenderingTime.toFixed(2)}ms`);
+            Lib.debug('render', `DOM rendering finished in ${totalRenderingTime.toFixed(2)}ms`);
 
             const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
@@ -1617,9 +1444,9 @@ let changelog = [
             statusDisplay.textContent = `Loaded ${pagesProcessed} pages (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
             timerDisplay.textContent = ''; // Explicitly clear any temp text
 
-            Logger.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
+            Lib.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
-            Logger.error('fetch', 'Critical Error during fetch:', err);
+            Lib.error('fetch', 'Critical Error during fetch:', err);
             statusDisplay.textContent = 'Error during load... (repress the "Show all" button)';
             progressContainer.style.display = 'none';
             activeBtn.disabled = false;
@@ -1758,7 +1585,7 @@ let changelog = [
                 h3.style.display = '';
 
                 const catLower = group.category.toLowerCase();
-                const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < settings.values.sa_auto_expand;
+                const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < Lib.settings.sa_auto_expand;
                 table.style.display = shouldStayOpen ? '' : 'none';
 
                 h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${group.category} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
@@ -1794,7 +1621,7 @@ let changelog = [
      * Logic to make all H2 headers collapsible.
      */
     function makeH2sCollapsible() {
-        Logger.debug('render', 'Initializing collapsible H2 headers...');
+        Lib.debug('render', 'Initializing collapsible H2 headers...');
         // Capture all H2s currently in the document to allow peer filtering later
         const allH2s = Array.from(document.querySelectorAll('h2'));
 
@@ -1934,7 +1761,7 @@ let changelog = [
                 span.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    Logger.debug('sort', `Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}...`);
+                    Lib.debug('sort', `Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}...`);
                     sortTimerDisplay.textContent = 'Sorting...⏳';
 
                     const groupIndex = parseInt(sortKey.split('_').pop(), 10);
@@ -2020,7 +1847,7 @@ let changelog = [
                 span.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    Logger.debug('sort', `Sorting flat table by column: "${colName}" (index: ${index}) to state ${targetState}...`);
+                    Lib.debug('sort', `Sorting flat table by column: "${colName}" (index: ${index}) to state ${targetState}...`);
                     sortTimerDisplay.textContent = 'Sorting...⏳';
 
                     const rowCount = allRows.length;
@@ -2078,7 +1905,7 @@ let changelog = [
      * Logs the occurrences and count of tags removed.
      */
     function finalCleanup() {
-        Logger.debug('cleanup', 'Running final cleanup...');
+        Lib.debug('cleanup', 'Running final cleanup...');
 
         // Call the specific container removal again
         const sanojIds = ['load', 'load2', 'load3', 'load4', 'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'];
@@ -2088,10 +1915,10 @@ let changelog = [
         });
 
         if (foundSanoj) {
-            Logger.debug('cleanup', 'Sanojjonas elements found during final cleanup. Removing now...');
+            Lib.debug('cleanup', 'Sanojjonas elements found during final cleanup. Removing now...');
             removeSanojjonasContainers();
         } else {
-            Logger.debug('cleanup', 'No Sanojjonas elements found during final cleanup.');
+            Lib.debug('cleanup', 'No Sanojjonas elements found during final cleanup.');
         }
 
         const brs = document.querySelectorAll('br');
@@ -2118,14 +1945,14 @@ let changelog = [
             if (removedInThisInstance > 0) {
                 instancesFound++;
                 totalRemoved += removedInThisInstance;
-                Logger.debug('cleanup', `Found consecutive <br> tags: removed ${removedInThisInstance} tags at instance ${instancesFound}.`);
+                Lib.debug('cleanup', `Found consecutive <br> tags: removed ${removedInThisInstance} tags at instance ${instancesFound}.`);
             }
         }
 
         if (totalRemoved > 0) {
-            Logger.info('cleanup', `Final cleanup complete: Removed a total of ${totalRemoved} consecutive <br> tags across ${instancesFound} locations.`);
+            Lib.info('cleanup', `Final cleanup complete: Removed a total of ${totalRemoved} consecutive <br> tags across ${instancesFound} locations.`);
         } else {
-            Logger.info('cleanup', 'Final cleanup complete: No consecutive <br> tags found.');
+            Lib.info('cleanup', 'Final cleanup complete: No consecutive <br> tags found.');
         }
     }
 
