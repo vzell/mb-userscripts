@@ -26183,6 +26183,21 @@ or NOT having the "Settings & Configuration UI" section at all
 
 Do not touch any other code NOT related to this changes, comments.
 
+** separet in two lines
+
+How do I separate
+
+#+begin_example
+                    title.textContent = `${scriptName} - ChangeLog:      ...click to dismiss`;
+#+end_example
+
+in two lines, in the final output
+
+#+begin_example
+${scriptName}
+ChangeLog:      ...click to dismiss
+#+end_example
+
 
 * filter (funnel) icon from chrome console
 
