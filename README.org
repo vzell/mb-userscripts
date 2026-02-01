@@ -25519,6 +25519,20 @@ in a library. For developing puposes show me how to access the corresponding jav
 
 Add best practice to my logger library, like adding timestampes etc.
 
+** how require the logging library from github instead as from the filesystem. what are the considerations during developent of the library
+
+#+begin_example
+To transition from local development to a production-ready GitHub-hosted library, you need to update your @require headers and understand the implications of caching and version control.1. How to @require from GitHubTo load the script from GitHub, you cannot use the standard "blob" or "repository" URL because GitHub serves those with text/plain headers or as HTML wrappers. Instead, you must use the Raw content URL or a CDN like jsDelivr (recommended for better performance and reliability).Option A: Direct Raw LinkUse the "Raw" button on GitHub to get a URL like this:https://raw.githubusercontent.com/[User]/[Repo]/[Branch]/MBLoggerLib.user.jsOption B: jsDelivr CDN (Best Practice)CDNs provide faster loading and better uptime. The format is:https://cdn.jsdelivr.net/gh/[User]/[Repo]@[Branch-or-Version]/MBLoggerLib.user.jsUpdated Header Example:JavaScript// ==UserScript==
+// @name         MusicBrainz - Release Page Enhancer
+// ...
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/MBLoggerLib.user.js
+// ==/UserScript==
+2. Development Considerations & Best PracticesWhen moving a local utility into an external library, your workflow changes significantly. Here are the key considerations:A. The Caching HeadacheUserscript managers (Tampermonkey/Violentmonkey) cache @require files aggressively.The Issue: If you update the library on GitHub, your main script won't see the changes immediately because it's using the cached version.The Solution: During active development, stick to the file:// method. Once on GitHub, use versioned URLs (e.g., @v1.1.0) if you need to force an update.B. Namespace and Global ConflictsSince the library is loaded into the same scope as your script (or a shared global scope), ensure you don't pollute the window object unnecessarily.Practice: Wrap your library in an IIFE (Immediately Invoked Function Expression) as we did in the previous step to keep the internal logic private while only exposing the MBLogger constructor.C. Dependency OrderIf you have multiple libraries, the order of @require matters.Practice: Always list the MBLoggerLib first if other libraries or your main script depend on it for initialization logging.D. Graceful DegradationWhat happens if GitHub or the CDN is down?Practice: In your main script, check if the library loaded before calling it:JavaScriptconst Logger = (typeof MBLogger !== 'undefined') 
+    ? new MBLogger("MyScript") 
+    : { info: console.log, debug: console.log, error: console.error };
+E. Versioning (Semantic Versioning)If you share this library across multiple scripts (e.g., ReleasePageEnhancer and ShowAllConsolidated), a breaking change in the library could break all your scripts at once.Practice: Use Semantic Versioning ($Major.Minor.Patch$). Only increment the $Major$ version if you change the function signatures (e.g., changing Logger.log() to Logger.write()).Summary TableMethodBest ForProsConsFilesystemActive CodingInstant updates, no internet needed.Requires browser permission changes.GitHub RawQuick SharingAlways "latest" (on master).Slow, occasional MIME-type issues.jsDelivrProductionFast, reliable, supports versioning.Cache delay (up to 24h) unless versioned.Would you like me to provide a template for a GitHub Actions workflow that could automatically validate your library code whenever you push to GitHub?
+#+end_example
+
 * centralize config in library
 ** apply to showall
 
@@ -25532,3 +25546,13 @@ Apply the same UI and logic as in the uploaded script "ShowCoverArtOnMainPage.us
 |--------------------------------------------------+---------+------------------------------------|
 | Pixel Size <input area with size up/down dialog> |     250 | Set the cover image size in pixels |
 |                                                  |         |                                    |
+
+
+* filter (funnel) icon from chrome console
+
+#+begin_example
+<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M1 3h14l-5.6 6.7v3.3l-2.8 2v-5.3L1 3z"/>
+</svg>
+#+end_example
+
