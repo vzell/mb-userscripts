@@ -25565,7 +25565,8 @@ I would like to use the nice friendly name
 *** make the whole "Show cover art" functionality in a configurable subfunction besies other subfunctions which could separately be enabled or not
 
 
-* centralize logging in library
+* add library
+** centralize logging in library
 
 In the uploaded userscripts
 please refactor the logging functionality currently configured in
@@ -25577,11 +25578,11 @@ please refactor the logging functionality currently configured in
 
 in a library. For developing puposes show me how to access the corresponding javascript code directly from the filesystem instead of lading it always from the web
 
-** timestamps
+*** timestamps
 
 Add best practice to my logger library, like adding timestampes etc.
 
-** how require the logging library from github instead as from the filesystem. what are the considerations during developent of the library
+*** how require the logging library from github instead as from the filesystem. what are the considerations during developent of the library
 
 #+begin_example
 To transition from local development to a production-ready GitHub-hosted library, you need to update your @require headers and understand the implications of caching and version control.1. How to @require from GitHubTo load the script from GitHub, you cannot use the standard "blob" or "repository" URL because GitHub serves those with text/plain headers or as HTML wrappers. Instead, you must use the Raw content URL or a CDN like jsDelivr (recommended for better performance and reliability).Option A: Direct Raw LinkUse the "Raw" button on GitHub to get a URL like this:https://raw.githubusercontent.com/[User]/[Repo]/[Branch]/MBLoggerLib.user.jsOption B: jsDelivr CDN (Best Practice)CDNs provide faster loading and better uptime. The format is:https://cdn.jsdelivr.net/gh/[User]/[Repo]@[Branch-or-Version]/MBLoggerLib.user.jsUpdated Header Example:JavaScript// ==UserScript==
@@ -25595,9 +25596,8 @@ To transition from local development to a production-ready GitHub-hosted library
 E. Versioning (Semantic Versioning)If you share this library across multiple scripts (e.g., ReleasePageEnhancer and ShowAllConsolidated), a breaking change in the library could break all your scripts at once.Practice: Use Semantic Versioning ($Major.Minor.Patch$). Only increment the $Major$ version if you change the function signatures (e.g., changing Logger.log() to Logger.write()).Summary TableMethodBest ForProsConsFilesystemActive CodingInstant updates, no internet needed.Requires browser permission changes.GitHub RawQuick SharingAlways "latest" (on master).Slow, occasional MIME-type issues.jsDelivrProductionFast, reliable, supports versioning.Cache delay (up to 24h) unless versioned.Would you like me to provide a template for a GitHub Actions workflow that could automatically validate your library code whenever you push to GitHub?
 #+end_example
 
-
-* centralize config in library
-** apply to showall
+** centralize config in library
+*** apply to showall
 
 In the uploaded userscript "ShowAllConsolidated.user.js", in addition to the current Tampermonkey configuration of
 parameters located in the Tampermonkey dialog (except the "ChangeLog" entry), add a menue entry under the "Editing"
@@ -25610,7 +25610,7 @@ Apply the same UI and logic as in the uploaded script "ShowCoverArtOnMainPage.us
 | Pixel Size <input area with size up/down dialog> |     250 | Set the cover image size in pixels |
 |                                                  |         |                                    |
 
-** create defaults
+*** create defaults
 
 In the uploaded userscript,
 please create configuration helpers like in the following example code block
@@ -25644,7 +25644,7 @@ in the
 
 variable to use these default by default
 
-** use defaults
+*** use defaults
 
 Change the text in confirm to use the currently defined maximum value
 in the following code block
@@ -25660,7 +25660,7 @@ in the following code block
 
 like this
 
-** sync dialog
+*** sync dialog
 
 In the uploaded script
 change the variable "container.innerHTML" to use the same structure
@@ -25740,7 +25740,7 @@ So basically there should be 3 columns
                         <th>description</th>
 #+end_example
 
-** sync code
+*** sync code
 
 In the uploaded script
 change the following code lines
@@ -25769,7 +25769,7 @@ in the equivalent "const getXXXX = () => GM_getValue(..." calls
         autoExpandThreshold: getStoredAutoExpand(),
 #+end_example
 
-** create new globals
+*** create new globals
 
 Also create new "const DEFAULT_xxxxx = <boolean>" variables at the begiining of the file and use them in
 
@@ -25780,7 +25780,7 @@ Also create new "const DEFAULT_xxxxx = <boolean>" variables at the begiining of 
     const getStoredRemovePerformance = () => GM_getValue("removePerformance", true);
 #+end_example
 
-** make dialogs the same
+*** make dialogs the same
 
 In the uploaded script "ShowAllConsolidated.user.js"
 - implement the missing "Esc" key handling for closing the configuration dialog
@@ -25789,7 +25789,7 @@ In the uploaded script "ShowAllConsolidated.user.js"
 
 like in the userscript "ReleasePageEnhancer.user.js"
 
-** resync
+*** resync
 
 In the uploaded script "ReleasePageEnhancer.user.js"
 - change the
@@ -25928,7 +25928,7 @@ to mirror the
 like in the userscript "ShowAllConsolidated.user.js"
 thereby adding the missing functionaliyt of showing the "ChangeLog"
 
-** refactor into configschema
+*** refactor into configschema
 
 In the uploaded userscript
 refactor the following code
@@ -25998,7 +25998,7 @@ const configSchema = {
     const settings = settings.init(configSchema);
 #+end_example
 
-** refactor again
+*** refactor again
 
 Do the same for the uploaded userscript "ShowAllConsolidated.user.js",
 restructure the settings
@@ -26104,7 +26104,7 @@ const configSchema = {
 
 also please change the references in the rest of the code to use the new framework
 
-** refactor
+*** refactor
 
 In the uploaded userscripts "ShowAllConsolidated.user.js" and "ReleasePageEnhancer.user.js"
 please refactor the following parts of the code (in the following as an example from ""ShowAllConsolidated.user.js"")
@@ -26183,7 +26183,7 @@ or NOT having the "Settings & Configuration UI" section at all
 
 Do not touch any other code NOT related to this changes, comments.
 
-** separet in two lines
+*** separte in two lines
 
 How do I separate
 
@@ -26197,6 +26197,11 @@ in two lines, in the final output
 ${scriptName}
 ChangeLog:      ...click to dismiss
 #+end_example
+
+** test library with 3rd script
+
+In the uploaded userscript "CustomizableMultiSelector.user.js"
+please add comprehensive logging statements, see also the corresponding uploaded library file "VZMBLibrary.user.js"
 
 
 * filter (funnel) icon from chrome console
@@ -26213,7 +26218,7 @@ Why is for the following URL
 
 https://musicbrainz.org/release/add
 
-the userscript with the followinf definition still executed:
+the userscript with the following definition still executed:
 
 #+begin_example
 // ==UserScript==

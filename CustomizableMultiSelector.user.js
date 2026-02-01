@@ -3,22 +3,40 @@
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      1.3+2025-11-29
 // @description  Adds customizable quick-select buttons for Primary Type, Status, Language, Script and Packaging on release pages
-// @author       vzell + Gemini
+// @author       Gemini (directed by vzell)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
 // @match        https://musicbrainz.org/release/add
 // @match        https://musicbrainz.org/release/*/edit
+// @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
 // @license      MIT
 // ==/UserScript==
 
 (function() {
     'use strict';
+
+    const SCRIPT_ID = "vzell-mb-customizable-selector";
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Customizable Type Selector";
+    const DEBUG_ENABLED = true
+
+    // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
+    const Lib = (typeof VZMBLibrary !== 'undefined')
+          ? new VZMBLibrary(SCRIPT_ID, SCRIPT_NAME, null, null, DEBUG_ENABLED)
+          : {
+              settings: {}, // Fallback
+              info: console.log, debug: console.log, error: console.error, time: console.time, timeEnd: console.timeEnd
+          };
+
+    Lib.info('init', "Script loaded with external library!");
 
     // --- Configuration ---
     // Define all fields managed by this script
@@ -192,7 +210,7 @@
         // 4. Add Configuration Button
         const configButton = document.createElement('button');
         configButton.type = 'button';
-        configButton.textContent = '⚙️'; // Changed from '⚙️ Config' to just '⚙️'
+        configButton.textContent = '⚙️';
         configButton.className = 'button btn-default';
         configButton.title = 'Configure quick-select buttons';
         // Set margin-left to auto to push it to the right, and add 5px right and bottom margin
