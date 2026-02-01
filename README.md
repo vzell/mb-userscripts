@@ -1,5 +1,6 @@
 # MusicBrainz UserScripts
 
+- [MusicBrainz - Release Page Enhancer](#mb_release_page_enhancer)
 - [MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages](#mb_customizable_selector)
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
@@ -51,6 +52,13 @@
 - [BruceBase – Auto 200 Revisions](#bb_auto_200_revisions)
 ---
 
+
+## <a name="mb_release_page_enhancer"></a> MusicBrainz - Release Page Enhancer
+
+Enhancee Release Page with show all cover art images on the page itself, collapsible with configurable size.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ReleasePageEnhancer.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js)
 
 ## <a name="mb_customizable_selector"></a> MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages
 

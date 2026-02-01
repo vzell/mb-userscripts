@@ -25308,8 +25308,9 @@ See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/kon
 
 * consolidate logging in library
 
+
 * create a userscript which shows coverart on the mainpage in miniature form
-** initial
+** DONE initial
 
 In the uploaded userscript ShowAllConsolidated.user.js", create a userscript for URLs of type
 https://musicbrainz.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60 which shows the coverart from the tab "Cover art
@@ -25323,15 +25324,20 @@ before the h2 header element "Tracklist":
 
 Use similar logic like in the script https://github.com/jesus2099/konami-command/blob/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
 
-** 250px
+** DONE 250px
 
 Show the 250px types of images https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475411558-250.jpg
 
 ** collapsable
+*** initial
 
 Add the following h2 header in front of all images: "<h2>Cover Art</h2>" and make it collapsable/un-collabsable when clicking on it
 
-** config
+*** configurable
+
+In the uploaded userscript,
+introduce 
+** DONE config
 
 In the uploaded userscript
 - add a transition effect to the collapse logic
@@ -25339,14 +25345,12 @@ In the uploaded userscript
   clicked generate a UI where you can specify the image dimensions in pixels and store them per user in browser
   storage. The default pixel size should be 250px
 
-
-
 [MB-ShowAll] 🚀 Script loaded and starting... 
 [MB-ShowAll] 🚀 Conditions not met: MBID found: false, Tracklist Header: true
 
 Here is URL I ran it on: https://musicbrainz.org/release/68136206-2939-42ed-a39d-f9c41b0defb1
 
-** default
+** DONE default
 
 Yes,
 - add a "Reset to Default" button inside the settings modal?
@@ -25380,7 +25384,10 @@ but still retain the functionality to explicitely save all the values with a "Sa
 
 ** add "VZ" icon to config dialog
 
+** maybe make the fuction async
+
 * centralize loggin in library
+
 
 * centralize config in library
 ** apply to showall
