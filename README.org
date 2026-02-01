@@ -25328,12 +25328,12 @@ Use similar logic like in the script https://github.com/jesus2099/konami-command
 
 Show the 250px types of images https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475411558-250.jpg
 
-** collapsable
-*** initial
+** DONE collapsable
+*** DONE initial
 
 Add the following h2 header in front of all images: "<h2>Cover Art</h2>" and make it collapsable/un-collabsable when clicking on it
 
-*** collapse configurable during initial rendering
+*** DONE collapse configurable during initial rendering
 
 In the uploaded userscript,
 introduce a boolen variable mich makes the collapse state configurable during initial rendering. The default should collapsed.
@@ -25362,11 +25362,7 @@ Actually this is the place where the configuration UI should be injected:
 
 - Rename the menu entry to "Release Page Enhancer"
 
-** add icon to menu entry
-
-** add tooltip about configuration option liek jeses super ind script
-
-** onyl visible on the "Overview tab
+** only visible on the "Overview tab
 
 In the '<ul class="tabs">' make the '"<h2>Cover Art</h2>"' container visible only when on the 
 
@@ -25429,6 +25425,9 @@ tab
   </li>
 </ul>
 #+end_example
+
+** add icon to menu entry
+** add tooltip about configuration option liek jeses super ind script
 
 ** DONE config
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Release Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.3+2026-02-01
+// @version      0.9.4+2026-02-01
 // @description  Enhancee Release Page with show all cover art images on the page itself, collapsible with configurable size
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -143,7 +143,7 @@
             if (!isNaN(val) && val > 0) {
                 GM_setValue("ca_image_size", val);
                 GM_setValue("ca_collapsed_by_default", coll);
-                Logger.info('init', `Configuration saved: ${val}px, Collapsed: ${coll}. Reloading...`);
+                Logger.info('init', `Configuration saved. Reloading...`);
                 location.reload();
             }
         };
@@ -167,7 +167,6 @@
     };
 
     const injectMenuEntry = () => {
-        // Specifically targeting div.right div.bottom ul.menu li.editing
         const editMenuItem = document.querySelector('div.right div.bottom ul.menu li.editing');
         const editMenuUl = editMenuItem ? editMenuItem.querySelector('ul') : null;
 
@@ -182,10 +181,16 @@
             });
             li.appendChild(a);
             editMenuUl.appendChild(li);
-            Logger.debug('init', "Menu entry added to Editing dropdown");
-        } else {
-            Logger.error('init', "Could not find target menu path: div.right div.bottom ul.menu li.editing ul");
+            Logger.debug('init', "Menu entry added");
         }
+    };
+
+    // --- Tab Check Logic ---
+    const isOverviewTabActive = () => {
+        const activeTab = document.querySelector("ul.tabs li.sel");
+        if (!activeTab) return false;
+        // Check if the selected tab contains the 'Overview' text
+        return activeTab.textContent.includes("Overview");
     };
 
     // --- Main Logic ---
@@ -194,91 +199,93 @@
 
     if (mbidMatch && tabsContainer) {
         injectMenuEntry();
-        const mbid = mbidMatch[0];
-        const imgSize = getStoredSize();
-        const startCollapsed = getStoredCollapsed();
-        Logger.info('init', "Fetching cover art for " + mbid);
 
-        fetch("https://coverartarchive.org/release/" + mbid)
-            .then(response => {
-                if (response.ok) return response.json();
-                throw new Error("No cover art available or API error.");
-            })
-            .then(data => {
-                if (data.images && data.images.length > 0) {
-                    const fragment = document.createDocumentFragment();
+        if (isOverviewTabActive()) {
+            const mbid = mbidMatch[0];
+            const imgSize = getStoredSize();
+            const startCollapsed = getStoredCollapsed();
+            Logger.info('init', "Overview tab active. Fetching cover art for " + mbid);
 
-                    const gallery = document.createElement("div");
-                    gallery.id = "consolidated-cover-art-gallery";
-                    gallery.style.display = "flex";
-                    gallery.style.flexWrap = "wrap";
-                    gallery.style.gap = "10px";
-                    gallery.style.overflow = "hidden";
-                    gallery.style.transition = "max-height 0.4s ease-in-out, opacity 0.3s ease, margin 0.4s ease";
+            fetch("https://coverartarchive.org/release/" + mbid)
+                .then(response => {
+                    if (response.ok) return response.json();
+                    throw new Error("No cover art available or API error.");
+                })
+                .then(data => {
+                    if (data.images && data.images.length > 0) {
+                        const fragment = document.createDocumentFragment();
 
-                    // Initialize display state based on config
-                    if (startCollapsed) {
-                        gallery.style.maxHeight = "0px";
-                        gallery.style.opacity = "0";
-                        gallery.style.marginTop = "0px";
-                        gallery.style.marginBottom = "0px";
-                    } else {
-                        gallery.style.maxHeight = "5000px";
-                        gallery.style.opacity = "1";
-                        gallery.style.marginTop = "20px";
-                        gallery.style.marginBottom = "20px";
-                    }
+                        const gallery = document.createElement("div");
+                        gallery.id = "consolidated-cover-art-gallery";
+                        gallery.style.display = "flex";
+                        gallery.style.flexWrap = "wrap";
+                        gallery.style.gap = "10px";
+                        gallery.style.overflow = "hidden";
+                        gallery.style.transition = "max-height 0.4s ease-in-out, opacity 0.3s ease, margin 0.4s ease";
 
-                    const caHeader = document.createElement("h2");
-                    caHeader.textContent = "Cover art";
-                    caHeader.style.cursor = "pointer";
-                    caHeader.style.userSelect = "none";
-                    // Move instructions to tooltip
-                    caHeader.title = startCollapsed ? "Click to show" : "Click to hide";
-
-                    caHeader.addEventListener("click", function() {
-                        const isCurrentlyCollapsed = gallery.style.maxHeight === "0px";
-                        if (isCurrentlyCollapsed) {
-                            gallery.style.maxHeight = "5000px";
-                            gallery.style.opacity = "1";
-                            gallery.style.marginBottom = "20px";
-                            gallery.style.marginTop = "20px";
-                            caHeader.title = "Click to hide";
-                        } else {
+                        if (startCollapsed) {
                             gallery.style.maxHeight = "0px";
                             gallery.style.opacity = "0";
-                            gallery.style.marginBottom = "0px";
                             gallery.style.marginTop = "0px";
-                            caHeader.title = "Click to show";
+                            gallery.style.marginBottom = "0px";
+                        } else {
+                            gallery.style.maxHeight = "5000px";
+                            gallery.style.opacity = "1";
+                            gallery.style.marginTop = "20px";
+                            gallery.style.marginBottom = "20px";
                         }
-                    });
 
-                    fragment.appendChild(caHeader);
-                    fragment.appendChild(gallery);
+                        const caHeader = document.createElement("h2");
+                        caHeader.textContent = "Cover art";
+                        caHeader.style.cursor = "pointer";
+                        caHeader.style.userSelect = "none";
+                        caHeader.title = startCollapsed ? "Click to show" : "Click to hide";
 
-                    tabsContainer.after(fragment);
-                    Logger.debug('render', `Gallery injected. Start collapsed: ${startCollapsed}`);
+                        caHeader.addEventListener("click", function() {
+                            const isCurrentlyCollapsed = gallery.style.maxHeight === "0px";
+                            if (isCurrentlyCollapsed) {
+                                gallery.style.maxHeight = "5000px";
+                                gallery.style.opacity = "1";
+                                gallery.style.marginBottom = "20px";
+                                gallery.style.marginTop = "20px";
+                                caHeader.title = "Click to hide";
+                            } else {
+                                gallery.style.maxHeight = "0px";
+                                gallery.style.opacity = "0";
+                                gallery.style.marginBottom = "0px";
+                                gallery.style.marginTop = "0px";
+                                caHeader.title = "Click to show";
+                            }
+                        });
 
-                    data.images.forEach(img => {
-                        const link = document.createElement("a");
-                        link.href = img.image;
-                        link.target = "_blank";
+                        fragment.appendChild(caHeader);
+                        fragment.appendChild(gallery);
 
-                        const image = document.createElement("img");
-                        image.src = img.thumbnails["250"] || img.thumbnails.small || img.image;
-                        image.alt = img.types.join(", ");
-                        image.title = img.types.join(", ") + (img.comment ? " (" + img.comment + ")" : "");
-                        image.style.maxWidth = `${imgSize}px`;
-                        image.style.maxHeight = `${imgSize}px`;
-                        image.style.border = "1px solid #ccc";
+                        tabsContainer.after(fragment);
 
-                        link.appendChild(image);
-                        gallery.appendChild(link);
-                    });
-                }
-            })
-            .catch(err => {
-                Logger.info('init', err.message);
-            });
+                        data.images.forEach(img => {
+                            const link = document.createElement("a");
+                            link.href = img.image;
+                            link.target = "_blank";
+
+                            const image = document.createElement("img");
+                            image.src = img.thumbnails["250"] || img.thumbnails.small || img.image;
+                            image.alt = img.types.join(", ");
+                            image.title = img.types.join(", ") + (img.comment ? " (" + img.comment + ")" : "");
+                            image.style.maxWidth = `${imgSize}px`;
+                            image.style.maxHeight = `${imgSize}px`;
+                            image.style.border = "1px solid #ccc";
+
+                            link.appendChild(image);
+                            gallery.appendChild(link);
+                        });
+                    }
+                })
+                .catch(err => {
+                    Logger.info('init', err.message);
+                });
+        } else {
+            Logger.debug('init', "Not on Overview tab, skipping gallery injection.");
+        }
     }
 })();
