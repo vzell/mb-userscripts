@@ -59,6 +59,7 @@ let changelog = [
 
     const SCRIPT_ID = "vzell-mb-show-all-entities";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
+    const DEBUG_ENABLED = true
 
     // CONFIG SCHEMA
     const configSchema = {
@@ -102,7 +103,7 @@ let changelog = [
 
     // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
     const Lib = (typeof VZMBLibrary !== 'undefined')
-          ? new VZMBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, true)
+          ? new VZMBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, DEBUG_ENABLED)
           : {
               settings: {},
               info: console.log, debug: console.log, error: console.error, time: console.time, timeEnd: console.timeEnd
