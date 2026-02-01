@@ -49,6 +49,7 @@ let changelog = [
 
     Logger.info('init', "Script loaded with external library!");
 
+    // --- Settings & Configuration UI ---
     const configSchema = {
         ca_image_size: {
             label: "Pixel Size",
@@ -64,7 +65,6 @@ let changelog = [
         }
     };
 
-    // --- Configuration Helpers & Settings UI ---
     const settings = {
         values: {},
 

@@ -89,121 +89,7 @@ let changelog = [
         error(icon, msg, data) { this.log('error', 'error', msg, data); }
     };
 
-        // --- Sidebar Collapsing & Full Width Stretching Logic ---
-    function initSidebarCollapse() {
-        const sidebar = document.getElementById("sidebar");
-        const page = document.getElementById("page");
-        const content = document.getElementById("content");
-
-        if (!sidebar) return;
-
-        Logger.debug('init', 'Initializing aggressive full-width sidebar toggle.');
-
-        const sidebarWidth = '240px';
-
-        const style = document.createElement('style');
-        style.textContent = `
-            #sidebar {
-                transition: transform 0.3s ease, width 0.3s ease, opacity 0.3s ease, margin-right 0.3s ease;
-            }
-            #page, #content {
-                transition: margin-right 0.3s ease, padding-right 0.3s ease, width 0.3s ease, max-width 0.3s ease, margin-left 0.3s ease;
-            }
-            .sidebar-collapsed {
-                transform: translateX(100%);
-                width: 0 !important;
-                min-width: 0 !important;
-                opacity: 0 !important;
-                margin-right: -${sidebarWidth} !important;
-                pointer-events: none;
-            }
-            /* Force 100% width and remove any MB centering/max-width constraints */
-            .mb-full-width-stretching {
-                margin-right: 0 !important;
-                margin-left: 0 !important;
-                padding-right: 10px !important;
-                padding-left: 10px !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                min-width: 100% !important;
-                box-sizing: border-box !important;
-            }
-            #sidebar-toggle-handle {
-                position: fixed;
-                right: ${sidebarWidth};
-                top: 50%;
-                transform: translateY(-50%);
-                width: 14px;
-                height: 80px;
-                background-color: #f2f2f2;
-                border: 1px solid #ccc;
-                border-right: none;
-                border-radius: 8px 0 0 8px;
-                cursor: pointer;
-                z-index: 10000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: right 0.3s ease;
-                box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-            }
-            #sidebar-toggle-handle::after {
-                content: '▶';
-                font-size: 9px;
-                color: #555;
-            }
-            .handle-collapsed {
-                right: 0 !important;
-            }
-            .handle-collapsed::after {
-                content: '◀' !important;
-            }
-        `;
-        document.head.appendChild(style);
-
-        const handle = document.createElement('div');
-        handle.id = 'sidebar-toggle-handle';
-        handle.title = 'Toggle Full Width Sidebar';
-
-        const applyStretching = (isCollapsed) => {
-            const containers = [document.getElementById("page"), document.getElementById("content")];
-            containers.forEach(el => {
-                if (el) {
-                    if (isCollapsed) el.classList.add('mb-full-width-stretching');
-                    else el.classList.remove('mb-full-width-stretching');
-                }
-            });
-        };
-
-        handle.addEventListener('click', () => {
-            const isCollapsing = !sidebar.classList.contains('sidebar-collapsed');
-            sidebar.classList.toggle('sidebar-collapsed');
-            handle.classList.toggle('handle-collapsed');
-            applyStretching(isCollapsing);
-            Logger.debug('meta', `Sidebar ${isCollapsing ? 'collapsed' : 'expanded'}. Full width applied.`);
-        });
-
-        document.body.appendChild(handle);
-
-        // Observer to handle dynamic content replacement by the "Show All" logic
-        const observer = new MutationObserver(() => {
-            if (sidebar.classList.contains('sidebar-collapsed')) {
-                applyStretching(true);
-            }
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-    }
-
-    // Call sidebar init immediately
-    initSidebarCollapse();
-
-    // Check if we just reloaded to fix the filter issue
-    const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
-    if (reloadFlag) {
-        sessionStorage.removeItem('mb_show_all_reload_pending');
-        alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
-    }
-
+    // --- Settings & Configuration UI ---
     const configSchema = {
         sa_remove_tagger: {
             label: "Remove Tagger column",
@@ -243,7 +129,6 @@ let changelog = [
         }
     };
 
-    // --- Settings & Configuration UI ---
     const settings = {
         values: {},
 
@@ -422,6 +307,121 @@ let changelog = [
     // Initialize and get settings values
     settings.init(configSchema);
     settings.setupMenus();
+
+        // --- Sidebar Collapsing & Full Width Stretching Logic ---
+    function initSidebarCollapse() {
+        const sidebar = document.getElementById("sidebar");
+        const page = document.getElementById("page");
+        const content = document.getElementById("content");
+
+        if (!sidebar) return;
+
+        Logger.debug('init', 'Initializing aggressive full-width sidebar toggle.');
+
+        const sidebarWidth = '240px';
+
+        const style = document.createElement('style');
+        style.textContent = `
+            #sidebar {
+                transition: transform 0.3s ease, width 0.3s ease, opacity 0.3s ease, margin-right 0.3s ease;
+            }
+            #page, #content {
+                transition: margin-right 0.3s ease, padding-right 0.3s ease, width 0.3s ease, max-width 0.3s ease, margin-left 0.3s ease;
+            }
+            .sidebar-collapsed {
+                transform: translateX(100%);
+                width: 0 !important;
+                min-width: 0 !important;
+                opacity: 0 !important;
+                margin-right: -${sidebarWidth} !important;
+                pointer-events: none;
+            }
+            /* Force 100% width and remove any MB centering/max-width constraints */
+            .mb-full-width-stretching {
+                margin-right: 0 !important;
+                margin-left: 0 !important;
+                padding-right: 10px !important;
+                padding-left: 10px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            #sidebar-toggle-handle {
+                position: fixed;
+                right: ${sidebarWidth};
+                top: 50%;
+                transform: translateY(-50%);
+                width: 14px;
+                height: 80px;
+                background-color: #f2f2f2;
+                border: 1px solid #ccc;
+                border-right: none;
+                border-radius: 8px 0 0 8px;
+                cursor: pointer;
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: right 0.3s ease;
+                box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            }
+            #sidebar-toggle-handle::after {
+                content: '▶';
+                font-size: 9px;
+                color: #555;
+            }
+            .handle-collapsed {
+                right: 0 !important;
+            }
+            .handle-collapsed::after {
+                content: '◀' !important;
+            }
+        `;
+        document.head.appendChild(style);
+
+        const handle = document.createElement('div');
+        handle.id = 'sidebar-toggle-handle';
+        handle.title = 'Toggle Full Width Sidebar';
+
+        const applyStretching = (isCollapsed) => {
+            const containers = [document.getElementById("page"), document.getElementById("content")];
+            containers.forEach(el => {
+                if (el) {
+                    if (isCollapsed) el.classList.add('mb-full-width-stretching');
+                    else el.classList.remove('mb-full-width-stretching');
+                }
+            });
+        };
+
+        handle.addEventListener('click', () => {
+            const isCollapsing = !sidebar.classList.contains('sidebar-collapsed');
+            sidebar.classList.toggle('sidebar-collapsed');
+            handle.classList.toggle('handle-collapsed');
+            applyStretching(isCollapsing);
+            Logger.debug('meta', `Sidebar ${isCollapsing ? 'collapsed' : 'expanded'}. Full width applied.`);
+        });
+
+        document.body.appendChild(handle);
+
+        // Observer to handle dynamic content replacement by the "Show All" logic
+        const observer = new MutationObserver(() => {
+            if (sidebar.classList.contains('sidebar-collapsed')) {
+                applyStretching(true);
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    // Call sidebar init immediately
+    initSidebarCollapse();
+
+    // Check if we just reloaded to fix the filter issue
+    const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
+    if (reloadFlag) {
+        sessionStorage.removeItem('mb_show_all_reload_pending');
+        alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
+    }
 
     const currentUrl = new URL(window.location.href);
     const path = currentUrl.pathname;
