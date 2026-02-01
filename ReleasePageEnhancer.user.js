@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Release Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.2+2026-02-01
+// @version      0.9.3+2026-02-01
 // @description  Enhancee Release Page with show all cover art images on the page itself, collapsible with configurable size
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -143,7 +143,7 @@
             if (!isNaN(val) && val > 0) {
                 GM_setValue("ca_image_size", val);
                 GM_setValue("ca_collapsed_by_default", coll);
-                Logger.info('init', `Configuration saved. Size: ${val}px, Collapsed: ${coll}. Reloading...`);
+                Logger.info('init', `Configuration saved: ${val}px, Collapsed: ${coll}. Reloading...`);
                 location.reload();
             }
         };
@@ -167,26 +167,24 @@
     };
 
     const injectMenuEntry = () => {
-        // Look for the "Editing" menu list specifically
-        const menuHeader = Array.from(document.querySelectorAll('.tabs ul li'))
-            .find(li => li.textContent.trim().includes('Editing'));
+        // Specifically targeting div.right div.bottom ul.menu li.editing
+        const editMenuItem = document.querySelector('div.right div.bottom ul.menu li.editing');
+        const editMenuUl = editMenuItem ? editMenuItem.querySelector('ul') : null;
 
-        const editMenu = menuHeader ? menuHeader.querySelector('ul') : document.querySelector('.editing > ul');
-
-        if (editMenu) {
+        if (editMenuUl) {
             const li = document.createElement('li');
             const a = document.createElement('a');
             a.href = "javascript:void(0)";
-            a.textContent = "Set Cover Art Size";
+            a.textContent = "Release Page Enhancer";
             a.addEventListener('click', (e) => {
                 e.preventDefault();
                 showSettingsModal();
             });
             li.appendChild(a);
-            editMenu.appendChild(li);
-            Logger.debug('init', "Menu entry added to Editing tab");
+            editMenuUl.appendChild(li);
+            Logger.debug('init', "Menu entry added to Editing dropdown");
         } else {
-            Logger.error('init', "Could not find Editing menu container");
+            Logger.error('init', "Could not find target menu path: div.right div.bottom ul.menu li.editing ul");
         }
     };
 
@@ -218,37 +216,40 @@
                     gallery.style.overflow = "hidden";
                     gallery.style.transition = "max-height 0.4s ease-in-out, opacity 0.3s ease, margin 0.4s ease";
 
-                    // Force initial display state
+                    // Initialize display state based on config
                     if (startCollapsed) {
                         gallery.style.maxHeight = "0px";
                         gallery.style.opacity = "0";
                         gallery.style.marginTop = "0px";
                         gallery.style.marginBottom = "0px";
                     } else {
-                        gallery.style.maxHeight = "5000px"; // Increased to ensure it fits large sets
+                        gallery.style.maxHeight = "5000px";
                         gallery.style.opacity = "1";
                         gallery.style.marginTop = "20px";
                         gallery.style.marginBottom = "20px";
                     }
 
                     const caHeader = document.createElement("h2");
-                    caHeader.textContent = "Cover art " + (startCollapsed ? "(click to show)" : "(click to hide)");
+                    caHeader.textContent = "Cover art";
                     caHeader.style.cursor = "pointer";
                     caHeader.style.userSelect = "none";
+                    // Move instructions to tooltip
+                    caHeader.title = startCollapsed ? "Click to show" : "Click to hide";
 
                     caHeader.addEventListener("click", function() {
-                        if (gallery.style.maxHeight === "0px") {
+                        const isCurrentlyCollapsed = gallery.style.maxHeight === "0px";
+                        if (isCurrentlyCollapsed) {
                             gallery.style.maxHeight = "5000px";
                             gallery.style.opacity = "1";
                             gallery.style.marginBottom = "20px";
                             gallery.style.marginTop = "20px";
-                            caHeader.textContent = "Cover art (click to hide)";
+                            caHeader.title = "Click to hide";
                         } else {
                             gallery.style.maxHeight = "0px";
                             gallery.style.opacity = "0";
                             gallery.style.marginBottom = "0px";
                             gallery.style.marginTop = "0px";
-                            caHeader.textContent = "Cover art (click to show)";
+                            caHeader.title = "Click to show";
                         }
                     });
 
@@ -256,7 +257,7 @@
                     fragment.appendChild(gallery);
 
                     tabsContainer.after(fragment);
-                    Logger.debug('render', `Gallery injected. Initial state: ${startCollapsed ? 'collapsed' : 'expanded'}`);
+                    Logger.debug('render', `Gallery injected. Start collapsed: ${startCollapsed}`);
 
                     data.images.forEach(img => {
                         const link = document.createElement("a");

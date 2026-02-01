@@ -25344,6 +25344,28 @@ There are two problems:
 - first of all the configuration UI is somehow NOT added as amenue entry under the "Editing" pull-down menu entry on the webpage
 - the default collapsed state is NOT applied right now
 
+**** editing menu position
+
+Actually this is the place where the configuration UI should be injected:
+
+#+begin_example
+<div class="right">
+  <div class="bottom">
+    <ul class="menu">
+      <li class="editing" tabindex="-1">
+#+end_example
+
+- Please check with your current implementation and refine if neccessary.
+
+- Also remove the h2 headers text parts "(click to show)" and "(click to hide)" and make these part of a popup tooltip
+  which should appear when hovering over the h2 header "Cover art"
+
+- Rename the menu entry to "Release Page Enhancer"
+
+** add icon to menu entry
+
+** add tooltip about configuration option liek jeses super ind script
+
 ** onyl visible on the "Overview tab
 
 In the '<ul class="tabs">' make the '"<h2>Cover Art</h2>"' container visible only when on the 
