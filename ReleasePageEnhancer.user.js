@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Release Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.0+2026-02-01
+// @version      0.9.5+2026-02-01
 // @description  Enhance Release Page with show all cover art images on the page itself, collapsible with configurable image size
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -35,6 +35,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '0.9.5+2026-02-01', description: 'Refactored settings, logging and changelog handling to a library.'},
     {version: '0.9.0+2026-02-01', description: '1st official release version.'}
 ];
 
