@@ -26212,7 +26212,8 @@ please add comprehensive logging statements, see also the corresponding uploaded
 </svg>
 #+end_example
 
-* why
+* userscript match conditions
+** 1
 
 Why is for the following URL
 
@@ -26244,4 +26245,24 @@ the userscript with the following definition still executed:
 // @grant        GM_unregisterMenuCommand
 // @license      MIT
 // ==/UserScript==
+#+end_example
+
+** release
+
+How to best formulate a userscript match condition to exactly match the following types of URLs, which have MusicBrainz MBIDs at the end
+
+#+begin_example
+https://musicbrainz.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29
+#+end_example
+
+Currently I have
+
+#+begin_example
+// @match        *://*.musicbrainz.org/release/*
+#+end_example
+
+which is much to broad and also runs on
+
+#+begin_example
+https://musicbrainz.org/release/add
 #+end_example
