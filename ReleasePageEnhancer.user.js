@@ -15,6 +15,8 @@
 // @exclude      *://*.musicbrainz.org/release/*/*
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
 // @license      MIT
 // ==/UserScript==
 
@@ -46,127 +48,175 @@ let changelog = [
     const DEFAULT_COLLAPSED = false;
 
     const Logger = (typeof MBLogger !== 'undefined')
-	  ? new MBLogger(SCRIPT_NAME, true)
-	  : { info: console.log, debug: console.log, error: console.error };
+          ? new MBLogger(SCRIPT_NAME, true)
+          : { info: console.log, debug: console.log, error: console.error };
 
     Logger.info('init', "Script loaded with external library!");
 
-    // --- Configuration Helpers ---
-    const getStoredSize = () => GM_getValue("ca_image_size", DEFAULT_SIZE);
-    const getStoredCollapsed = () => GM_getValue("ca_collapsed_by_default", DEFAULT_COLLAPSED);
+    // --- Configuration Helpers & Settings UI ---
+    const settings = {
+        imageSize: GM_getValue("ca_image_size", DEFAULT_SIZE),
+        collapsedByDefault: GM_getValue("ca_collapsed_by_default", DEFAULT_COLLAPSED),
 
-    const showSettingsModal = () => {
-        const currentSize = getStoredSize();
-        const isCollapsed = getStoredCollapsed();
-        const overlay = document.createElement("div");
-        overlay.id = `${SCRIPT_ID}-settings-overlay`;
-        Object.assign(overlay.style, {
-            position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
-            backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '10000', display: 'flex',
-            justifyContent: 'center', alignItems: 'center'
-        });
+        save: function() {
+            GM_setValue("ca_image_size", this.imageSize);
+            GM_setValue("ca_collapsed_by_default", this.collapsedByDefault);
 
-        const container = document.createElement("div");
-        container.id = `${SCRIPT_ID}-config-container`;
-        Object.assign(container.style, {
-            backgroundColor: 'silver', border: '2px outset white', padding: '1em',
-            color: 'black', fontFamily: 'sans-serif', minWidth: '400px'
-        });
+            Logger.info('init', "Settings saved. Reloading...");
+            location.reload();
+        },
 
-        container.innerHTML = `
-            <p style="text-align: right; margin: 0px;">
-                <a id="${SCRIPT_ID}-reset" style="cursor: pointer;">RESET</a> |
-                <a id="${SCRIPT_ID}-close" style="cursor: pointer;">CLOSE</a>
-            </p>
-            <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">${SCRIPT_NAME.toUpperCase()}</h4>
-            <p>Settings are applied immediately upon saving.</p>
-            <table border="2" cellpadding="4" cellspacing="1" style="width: 100%; border-collapse: separate; background: #eee;">
-                <thead>
-                    <tr style="background-color: #ccc;">
-                        <th>setting</th>
-                        <th>default setting</th>
-                        <th>description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
-                            <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                Pixel Size: <input type="number" id="${SCRIPT_ID}-size-input" value="${currentSize}" style="width: 60px; margin-left: 5px;">
-                            </label>
-                        </th>
-                        <td style="opacity: 0.666; text-align: center;">${DEFAULT_SIZE}</td>
-                        <td style="margin-bottom: 0.4em;">Set the cover image size in pixels</td>
-                    </tr>
-                    <tr>
-                        <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
-                            <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
-                                Start Collapsed: <input type="checkbox" id="${SCRIPT_ID}-collapse-input" ${isCollapsed ? 'checked' : ''} style="margin-left: 5px;">
-                            </label>
-                        </th>
-                        <td style="opacity: 0.666; text-align: center;">${DEFAULT_COLLAPSED}</td>
-                        <td style="margin-bottom: 0.4em;">Cover art gallery starts hidden by default</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div style="margin-top: 15px; text-align: right;">
-                <button id="${SCRIPT_ID}-save-btn" style="padding: 4px 12px; cursor: pointer; font-weight: bold;">SAVE</button>
-            </div>
-        `;
-
-        overlay.appendChild(container);
-        document.body.appendChild(overlay);
-
-        const closeDialog = () => {
-            if (document.body.contains(overlay)) document.body.removeChild(overlay);
-        };
-
-        document.getElementById(`${SCRIPT_ID}-save-btn`).onclick = () => {
-            const val = parseInt(document.getElementById(`${SCRIPT_ID}-size-input`).value, 10);
-            const coll = document.getElementById(`${SCRIPT_ID}-collapse-input`).checked;
-            if (!isNaN(val) && val > 0) {
-                GM_setValue("ca_image_size", val);
-                GM_setValue("ca_collapsed_by_default", coll);
-                Logger.info('init', "Settings saved. Reloading...");
-                location.reload();
-            }
-        };
-
-        document.getElementById(`${SCRIPT_ID}-reset`).onclick = () => {
-            document.getElementById(`${SCRIPT_ID}-size-input`).value = DEFAULT_SIZE;
-            document.getElementById(`${SCRIPT_ID}-collapse-input`).checked = DEFAULT_COLLAPSED;
-        };
-
-        document.getElementById(`${SCRIPT_ID}-close`).onclick = closeDialog;
-
-        const handleEsc = (e) => {
-            if (e.key === "Escape") {
-                closeDialog();
-                window.removeEventListener("keydown", handleEsc);
-            }
-        };
-        window.addEventListener("keydown", handleEsc);
-        overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
-    };
-
-    const injectMenuEntry = () => {
-        const editMenuItem = document.querySelector('div.right div.bottom ul.menu li.editing');
-        const editMenuUl = editMenuItem ? editMenuItem.querySelector('ul') : null;
-
-        if (editMenuUl) {
-            const li = document.createElement('li');
-            const a = document.createElement('a');
-            a.href = "javascript:void(0)";
-            a.textContent = SCRIPT_NAME;
-            a.addEventListener('click', (e) => {
-                e.preventDefault();
-                showSettingsModal();
+        showSettingsModal: function() {
+            const overlay = document.createElement("div");
+            overlay.id = `${SCRIPT_ID}-settings-overlay`;
+            Object.assign(overlay.style, {
+                position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+                backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '10000', display: 'flex',
+                justifyContent: 'center', alignItems: 'center'
             });
-            li.appendChild(a);
-            editMenuUl.appendChild(li);
-            Logger.debug('init', "Settings entry added to Editing menu.");
+
+            const container = document.createElement("div");
+            container.id = `${SCRIPT_ID}-config-container`;
+            Object.assign(container.style, {
+                backgroundColor: 'silver', border: '2px outset white', padding: '1em',
+                color: 'black', fontFamily: 'sans-serif', minWidth: '400px'
+            });
+
+            container.innerHTML = `
+                <p style="text-align: right; margin: 0px;">
+                    <a id="${SCRIPT_ID}-reset" style="cursor: pointer; font-weight: bold; color: black;">RESET</a> |
+                    <a id="${SCRIPT_ID}-close" style="cursor: pointer; font-weight: bold; color: black;">CLOSE</a>
+                </p>
+                <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">${SCRIPT_NAME.toUpperCase()}</h4>
+                <p>Settings are applied immediately upon saving.</p>
+                <table border="2" cellpadding="4" cellspacing="1" style="width: 100%; border-collapse: separate; background: #eee;">
+                    <thead>
+                        <tr style="background-color: #ccc;">
+                            <th>setting</th>
+                            <th>default setting</th>
+                            <th>description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Pixel Size: <input type="number" id="${SCRIPT_ID}-size-input" value="${this.imageSize}" style="width: 60px; margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_SIZE}</td>
+                            <td style="margin-bottom: 0.4em;">Set the cover image size in pixels</td>
+                        </tr>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Start Collapsed: <input type="checkbox" id="${SCRIPT_ID}-collapse-input" ${this.collapsedByDefault ? 'checked' : ''} style="margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_COLLAPSED}</td>
+                            <td style="margin-bottom: 0.4em;">Cover art gallery starts hidden by default</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; text-align: right;">
+                    <button id="${SCRIPT_ID}-save-btn" style="padding: 4px 12px; cursor: pointer; font-weight: bold;">SAVE</button>
+                </div>
+            `;
+
+            overlay.appendChild(container);
+            document.body.appendChild(overlay);
+
+            const closeDialog = () => {
+                if (document.body.contains(overlay)) document.body.removeChild(overlay);
+                window.removeEventListener("keydown", handleEsc);
+            };
+
+            const handleEsc = (e) => {
+                if (e.key === "Escape") closeDialog();
+            };
+            window.addEventListener("keydown", handleEsc);
+
+            document.getElementById(`${SCRIPT_ID}-save-btn`).onclick = () => {
+                const val = parseInt(document.getElementById(`${SCRIPT_ID}-size-input`).value, 10);
+                const coll = document.getElementById(`${SCRIPT_ID}-collapse-input`).checked;
+                if (!isNaN(val) && val > 0) {
+                    this.imageSize = val;
+                    this.collapsedByDefault = coll;
+                    this.save();
+                    closeDialog();
+                }
+            };
+
+            document.getElementById(`${SCRIPT_ID}-reset`).onclick = () => {
+                document.getElementById(`${SCRIPT_ID}-size-input`).value = DEFAULT_SIZE;
+                document.getElementById(`${SCRIPT_ID}-collapse-input`).checked = DEFAULT_COLLAPSED;
+            };
+
+            document.getElementById(`${SCRIPT_ID}-close`).onclick = closeDialog;
+            overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
+        },
+
+        showChangelog: function() {
+            let logDiv = document.getElementById(`${SCRIPT_ID}-changelog`);
+            if (!logDiv) {
+                logDiv = document.createElement("div");
+                logDiv.id = `${SCRIPT_ID}-changelog`;
+                logDiv.style.cssText = "position:fixed; left:0; right:0; top:10em; z-index:3000009; margin-left:auto; margin-right:auto; min-height:8em; width:50%; background-color:#eee; color:#111; border-radius:5px; padding:1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid #ccc; display:none;";
+
+                const title = document.createElement("b");
+                title.textContent = `${SCRIPT_NAME} - ChangeLog (Click to dismiss)`;
+                logDiv.appendChild(title);
+
+                const list = document.createElement("ul");
+                list.style.marginTop = "0.5em";
+
+                changelog.forEach(entry => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `<i>${entry.version}</i> - ${entry.description}`;
+                    list.appendChild(li);
+                });
+
+                logDiv.appendChild(list);
+                document.body.appendChild(logDiv);
+
+                logDiv.addEventListener('click', () => {
+                    logDiv.style.display = 'none';
+                }, false);
+            }
+            logDiv.style.display = 'block';
+        },
+
+        setupMenus: function() {
+            // Tampermonkey/UserScript Manager Menu
+            if (typeof GM_registerMenuCommand !== 'undefined') {
+                GM_registerMenuCommand("⚙️ Open Settings Manager", () => this.showSettingsModal());
+                GM_registerMenuCommand("📜 ChangeLog", () => this.showChangelog());
+            }
+
+            // Webpage "Editing" Menu Integration
+            const editMenuItem = document.querySelector('div.right div.bottom ul.menu li.editing');
+            const editMenuUl = editMenuItem ? editMenuItem.querySelector('ul') : null;
+
+            if (editMenuUl && !document.getElementById(`${SCRIPT_ID}-menu-link`)) {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.id = `${SCRIPT_ID}-menu-link`;
+                a.href = "javascript:void(0)";
+                a.textContent = SCRIPT_NAME;
+                a.style.cursor = 'pointer';
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.showSettingsModal();
+                });
+                li.appendChild(a);
+                editMenuUl.appendChild(li);
+                Logger.debug('init', "Settings entry added to Editing menu.");
+            }
         }
     };
+
+    // Initialize Menus
+    settings.setupMenus();
 
     const isOverviewTabActive = () => {
         const activeTab = document.querySelector("ul.tabs li.sel");
@@ -259,12 +309,10 @@ let changelog = [
     const tabsContainer = document.querySelector("div.tabs");
 
     if (mbidMatch && tabsContainer) {
-        injectMenuEntry();
-
         if (isOverviewTabActive()) {
-	    Logger.time("Cover Art Render");
+            Logger.time("Cover Art Render");
             displayCoverArt(mbidMatch[0], tabsContainer);
-	    Logger.timeEnd("Cover Art Render", "render");
+            Logger.timeEnd("Cover Art Render", "render");
         } else {
             Logger.debug('init', "Not on Overview tab, skipping gallery logic.");
         }
