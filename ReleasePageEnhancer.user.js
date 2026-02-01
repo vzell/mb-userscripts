@@ -10,6 +10,7 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/MBLoggerLib.user.js
 // @match        *://*.musicbrainz.org/release/*
 // @exclude      *://*.musicbrainz.org/release/*/*
 // @grant        GM_setValue
@@ -27,38 +28,41 @@
     const DEFAULT_SIZE = 250;
     const DEFAULT_COLLAPSED = true;
 
-    // --- Modernized Logging Framework ---
-    const Logger = {
-        prefix: `[${SCRIPT_NAME}]`,
-        styles: {
-            debug: 'color: #7f8c8d; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold;',
-            info: 'color: #2980b9; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 11px;',
-            error: 'color: #c0392b; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; background: #fceae9; padding: 2px 4px; border-radius: 3px;',
-            timer: 'color: #8e44ad; font-family: "Consolas", monospace; font-style: italic;'
-        },
-        icons: {
-            init: '🚀',
-            fetch: '📥',
-            render: '🎨',
-            filter: '🔍',
-            sort: '⚖️',
-            cleanup: '🧹',
-            error: '❌',
-            success: '✅',
-            meta: '🎵'
-        },
-        log(level, icon, msg, data = '') {
-            if (!DEBUG_ENABLED && level === 'debug') return;
-            const style = this.styles[level] || '';
-            const iconChar = this.icons[icon] || '📝';
-            console.log(`%c${this.prefix} ${iconChar} ${msg}`, style, data);
-        },
-        debug(icon, msg, data) { this.log('debug', icon, msg, data); },
-        info(icon, msg, data) { this.log('info', icon, msg, data); },
-        error(icon, msg, data) { this.log('error', 'error', msg, data); }
-    };
+    // // --- Modernized Logging Framework ---
+    // const Logger = {
+    //     prefix: `[${SCRIPT_NAME}]`,
+    //     styles: {
+    //         debug: 'color: #7f8c8d; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold;',
+    //         info: 'color: #2980b9; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 11px;',
+    //         error: 'color: #c0392b; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; background: #fceae9; padding: 2px 4px; border-radius: 3px;',
+    //         timer: 'color: #8e44ad; font-family: "Consolas", monospace; font-style: italic;'
+    //     },
+    //     icons: {
+    //         init: '🚀',
+    //         fetch: '📥',
+    //         render: '🎨',
+    //         filter: '🔍',
+    //         sort: '⚖️',
+    //         cleanup: '🧹',
+    //         error: '❌',
+    //         success: '✅',
+    //         meta: '🎵'
+    //     },
+    //     log(level, icon, msg, data = '') {
+    //         if (!DEBUG_ENABLED && level === 'debug') return;
+    //         const style = this.styles[level] || '';
+    //         const iconChar = this.icons[icon] || '📝';
+    //         console.log(`%c${this.prefix} ${iconChar} ${msg}`, style, data);
+    //     },
+    //     debug(icon, msg, data) { this.log('debug', icon, msg, data); },
+    //     info(icon, msg, data) { this.log('info', icon, msg, data); },
+    //     error(icon, msg, data) { this.log('error', 'error', msg, data); }
+    // };
 
-    Logger.info('init', "Script loaded and starting...");
+    const Logger = new MBLogger(SCRIPT_NAME, true);
+
+    Logger.info('init', "Script loaded with external library!");    
+    //Logger.info('init', "Script loaded and starting...");
 
     // Backward compatibility wrapper for existing simple log calls
     const log = (msg, data = '') => {
@@ -124,7 +128,7 @@
                             </label>
                         </th>
                         <td style="opacity: 0.666; text-align: center;">${DEFAULT_COLLAPSED}</td>
-                        <td style="margin-bottom: 0.4em;">Gallery starts hidden by default</td>
+                        <td style="margin-bottom: 0.4em;">Cover art gallery starts hidden by default</td>
                     </tr>
                 </tbody>
             </table>
@@ -266,7 +270,7 @@
             });
 
             tabsContainer.after(fragment);
-            Logger.debug('render', "Gallery successfully rendered.");
+            Logger.debug('render', "Cover art gallery from CA archive successfully rendered.");
 
         } catch (err) {
             Logger.error('init', `Async error: ${err.message}`);
@@ -281,7 +285,9 @@
         injectMenuEntry();
 
         if (isOverviewTabActive()) {
+	    Logger.time("Cover Art Render");
             displayCoverArt(mbidMatch[0], tabsContainer);
+	    Logger.timeEnd("Cover Art Render", "render");
         } else {
             Logger.debug('init', "Not on Overview tab, skipping gallery logic.");
         }
