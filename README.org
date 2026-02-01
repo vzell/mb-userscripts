@@ -25660,7 +25660,7 @@ like this
 
 ** sync dialog
 
-In the uploaded script "ShowCoverArtOnMainPage.user.js"
+In the uploaded script
 change the variable "container.innerHTML" to use the same structure
 
 #+begin_example
@@ -25737,6 +25737,47 @@ So basically there should be 3 columns
                         <th>default setting</th>
                         <th>description</th>
 #+end_example
+
+** sync code
+
+In the uploaded script
+change the following code lines
+
+#+begin_example
+        removeTagger: GM_getValue("removeTagger", false),
+        removeRating: GM_getValue("removeRating", false),
+        removeRelationships: GM_getValue("removeRelationships", true),
+        removePerformance: GM_getValue("removePerformance", true),
+#+end_example
+
+in the equivalent "const getXXXX = () => GM_getValue(..." calls
+
+#+begin_example
+    // --- Configuration Helpers ---
+    const getStoredMaxPage = () => GM_getValue("maxPageThreshold", DEFAULT_MAX_PAGE);
+    const getStoredAutoExpand = () => GM_getValue("autoExpandThreshold", DEFAULT_AUTO_EXPAND);
+
+    // --- Settings & Configuration UI ---
+    const settings = {
+        removeTagger: GM_getValue("removeTagger", false),
+        removeRating: GM_getValue("removeRating", false),
+        removeRelationships: GM_getValue("removeRelationships", true),
+        removePerformance: GM_getValue("removePerformance", true),
+        maxPageThreshold: getStoredMaxPage(),
+        autoExpandThreshold: getStoredAutoExpand(),
+#+end_example
+
+** create new globals
+
+Also create new "const DEFAULT_xxxxx = <boolean>" variables at the begiining of the file and use them in
+
+#+begin_example
+    const getStoredRemoveTagger = () => GM_getValue("removeTagger", false);
+    const getStoredRemoveRating = () => GM_getValue("removeRating", false);
+    const getStoredRemoveRelationships = () => GM_getValue("removeRelationships", true);
+    const getStoredRemovePerformance = () => GM_getValue("removePerformance", true);
+#+end_example
+
 
 * filter (funnel) icon from chrome console
 

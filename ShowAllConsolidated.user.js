@@ -56,6 +56,10 @@ let changelog = [
     const SCRIPT_ID = "vzell-mb-show-all-entities";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
     const DEBUG_ENABLED = true;
+    const DEFAULT_REMOVE_TAGGER = false;
+    const DEFAULT_REMOVE_RATING = false;
+    const DEFAULT_REMOVE_RELATIONSHIPS = true;
+    const DEFAULT_REMOVE_PERFORMANCE = true;
     const DEFAULT_MAX_PAGE = 100;
     const DEFAULT_AUTO_EXPAND = 60;
 
@@ -218,15 +222,19 @@ let changelog = [
     }
 
     // --- Configuration Helpers ---
+    const getStoredRemoveTagger = () => GM_getValue("removeTagger", DEFAULT_REMOVE_TAGGER);
+    const getStoredRemoveRating = () => GM_getValue("removeRating", DEFAULT_REMOVE_RATING);
+    const getStoredRemoveRelationships = () => GM_getValue("removeRelationships", DEFAULT_REMOVE_RELATIONSHIPS);
+    const getStoredRemovePerformance = () => GM_getValue("removePerformance", DEFAULT_REMOVE_PERFORMANCE);
     const getStoredMaxPage = () => GM_getValue("maxPageThreshold", DEFAULT_MAX_PAGE);
     const getStoredAutoExpand = () => GM_getValue("autoExpandThreshold", DEFAULT_AUTO_EXPAND);
 
     // --- Settings & Configuration UI ---
     const settings = {
-        removeTagger: GM_getValue("removeTagger", false),
-        removeRating: GM_getValue("removeRating", false),
-        removeRelationships: GM_getValue("removeRelationships", true),
-        removePerformance: GM_getValue("removePerformance", true),
+	removeTagger: getStoredRemoveTagger(),
+        removeRating: getStoredRemoveRating(),
+        removeRelationships: getStoredRemoveRelationships(),
+        removePerformance: getStoredRemovePerformance(),
         maxPageThreshold: getStoredMaxPage(),
         autoExpandThreshold: getStoredAutoExpand(),
 

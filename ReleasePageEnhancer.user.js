@@ -19,9 +19,8 @@
 // ==/UserScript==
 
 /*
- * VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+ * VZ: MusicBrainz - Release Page Enhancer
  *
-
  * is an userscript which enhances MusicBrainz release pages with showing all cover art images on the page itself,
  * collapsible with configurable image size
  *
