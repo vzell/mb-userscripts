@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Release Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.7+2026-02-01
-// @description  Enhance Release Page with show all cover art images on the page itself, collapsible with configurable size
+// @version      0.9.0+2026-02-01
+// @description  Enhance Release Page with show all cover art images on the page itself, collapsible with configurable image size
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
