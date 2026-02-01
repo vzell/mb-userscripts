@@ -25642,7 +25642,7 @@ in the
 
 variable to use these default by default
 
-**
+** use defaults
 
 Change the text in confirm to use the currently defined maximum value
 in the following code block
@@ -25657,6 +25657,86 @@ in the following code block
 #+end_example
 
 like this
+
+** sync dialog
+
+In the uploaded script "ShowCoverArtOnMainPage.user.js"
+change the variable "container.innerHTML" to use the same structure
+
+#+begin_example
+            container.innerHTML = `
+                <p style="text-align: right; margin: 0px;">
+                    <a id="mb-sa-close" style="cursor: pointer; font-weight: bold; color: black;">[X]</a>
+                </p>
+                <h4 style="text-shadow: white 0px 1px 1px; margin-top: 0px;">Show All Consolidated Settings</h4>
+                <div style="background-color: white; border: 2px inset white; padding: 0.5em; color: black;">
+                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-tagger" ${this.removeTagger ? 'checked' : ''}> Remove Tagger Column</label>
+                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-rating" ${this.removeRating ? 'checked' : ''}> Remove Rating Column</label>
+                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-rel" ${this.removeRelationships ? 'checked' : ''}> Remove Relationships Column</label>
+                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-perf" ${this.removePerformance ? 'checked' : ''}> Remove Performance Column</label>
+                    <hr style="border: 0; border-top: 1px solid #ccc;">
+                    <label title="Warning threshold for page fetching" style="display: block; margin-bottom: 5px;">Max Page Warning: <input type="number" id="${SCRIPT_ID}-max-input" value="${currentMax}" style="width: 60px;"></label>
+                    <label title="Row count threshold to auto-expand tables" style="display: block;">Auto-Expand Rows: <input type="number" id="${SCRIPT_ID}-auto-input" value="${currentAuto}" style="width: 60px;"></label>
+                </div>
+                <p style="margin-top: 15px; margin-bottom: 0px; text-align: center;">
+                    <button id="sa-save-btn" style="cursor: pointer; padding: 4px 12px;">SAVE</button>
+                </p>
+            `;
+#+end_example
+
+like the one in the userscript "ReleasePageEnhancer.user.js"
+
+#+begin_example
+        container.innerHTML = `
+            <p style="text-align: right; margin: 0px;">
+                <a id="${SCRIPT_ID}-reset" style="cursor: pointer;">RESET</a> |
+                <a id="${SCRIPT_ID}-close" style="cursor: pointer;">CLOSE</a>
+            </p>
+            <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">${SCRIPT_NAME.toUpperCase()}</h4>
+            <p>Settings are applied immediately upon saving.</p>
+            <table border="2" cellpadding="4" cellspacing="1" style="width: 100%; border-collapse: separate; background: #eee;">
+                <thead>
+                    <tr style="background-color: #ccc;">
+                        <th>setting</th>
+                        <th>default setting</th>
+                        <th>description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                            <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                Pixel Size: <input type="number" id="${SCRIPT_ID}-size-input" value="${currentSize}" style="width: 60px; margin-left: 5px;">
+                            </label>
+                        </th>
+                        <td style="opacity: 0.666; text-align: center;">${DEFAULT_SIZE}</td>
+                        <td style="margin-bottom: 0.4em;">Set the cover image size in pixels</td>
+                    </tr>
+                    <tr>
+                        <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                            <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                Start Collapsed: <input type="checkbox" id="${SCRIPT_ID}-collapse-input" ${isCollapsed ? 'checked' : ''} style="margin-left: 5px;">
+                            </label>
+                        </th>
+                        <td style="opacity: 0.666; text-align: center;">${DEFAULT_COLLAPSED}</td>
+                        <td style="margin-bottom: 0.4em;">Cover art gallery starts hidden by default</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div style="margin-top: 15px; text-align: right;">
+                <button id="${SCRIPT_ID}-save-btn" style="padding: 4px 12px; cursor: pointer; font-weight: bold;">SAVE</button>
+            </div>
+        `;
+#+end_example
+
+So basically there should be 3 columns
+
+#+begin_example
+                   <tr style="background-color: #ccc;">
+                        <th>setting</th>
+                        <th>default setting</th>
+                        <th>description</th>
+#+end_example
 
 * filter (funnel) icon from chrome console
 

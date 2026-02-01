@@ -227,7 +227,7 @@ let changelog = [
         removeRating: GM_getValue("removeRating", false),
         removeRelationships: GM_getValue("removeRelationships", true),
         removePerformance: GM_getValue("removePerformance", true),
-	maxPageThreshold: getStoredMaxPage(),
+        maxPageThreshold: getStoredMaxPage(),
         autoExpandThreshold: getStoredAutoExpand(),
 
         save: function() {
@@ -251,42 +251,99 @@ let changelog = [
             const container = document.createElement("div");
             Object.assign(container.style, {
                 backgroundColor: 'silver', border: '2px outset white', padding: '1em',
-                color: 'black', fontFamily: 'sans-serif', minWidth: '450px'
+                color: 'black', fontFamily: 'sans-serif', minWidth: '600px'
             });
 
-	    // Use the current values in the modal inputs
+            // Use the current values in the modal inputs
             const currentMax = this.maxPageThreshold;
             const currentAuto = this.autoExpandThreshold;
 
             container.innerHTML = `
                 <p style="text-align: right; margin: 0px;">
-                    <a id="mb-sa-close" style="cursor: pointer; font-weight: bold; color: black;">[X]</a>
+                    <a id="${SCRIPT_ID}-close" style="cursor: pointer; font-weight: bold; color: black;">CLOSE</a>
                 </p>
-                <h4 style="text-shadow: white 0px 1px 1px; margin-top: 0px;">Show All Consolidated Settings</h4>
-                <div style="background-color: white; border: 2px inset white; padding: 0.5em; color: black;">
-                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-tagger" ${this.removeTagger ? 'checked' : ''}> Remove Tagger Column</label>
-                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-rating" ${this.removeRating ? 'checked' : ''}> Remove Rating Column</label>
-                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-rel" ${this.removeRelationships ? 'checked' : ''}> Remove Relationships Column</label>
-                    <label style="display: block; margin-bottom: 5px;"><input type="checkbox" id="sa-perf" ${this.removePerformance ? 'checked' : ''}> Remove Performance Column</label>
-                    <hr style="border: 0; border-top: 1px solid #ccc;">
-                    <label title="Warning threshold for page fetching" style="display: block; margin-bottom: 5px;">Max Page Warning: <input type="number" id="${SCRIPT_ID}-max-input" value="${currentMax}" style="width: 60px;"></label>
-                    <label title="Row count threshold to auto-expand tables" style="display: block;">Auto-Expand Rows: <input type="number" id="${SCRIPT_ID}-auto-input" value="${currentAuto}" style="width: 60px;"></label>
+                <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">${SCRIPT_NAME.toUpperCase()}</h4>
+                <p>Settings are applied immediately upon saving.</p>
+                <table border="2" cellpadding="4" cellspacing="1" style="width: 100%; border-collapse: separate; background: #eee;">
+                    <thead>
+                        <tr style="background-color: #ccc;">
+                            <th>setting</th>
+                            <th>default setting</th>
+                            <th>description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Remove Tagger column: <input type="checkbox" id="sa-tagger" ${this.removeTagger ? 'checked' : ''} style="margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">false</td>
+                            <td style="margin-bottom: 0.4em;">Remove the Tagger column from the list</td>
+                        </tr>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Remove Rating column: <input type="checkbox" id="sa-rating" ${this.removeRating ? 'checked' : ''} style="margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">false</td>
+                            <td style="margin-bottom: 0.4em;">Remove the Rating column from the list</td>
+                        </tr>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Remove Relationships  column: <input type="checkbox" id="sa-rel" ${this.removeRelationships ? 'checked' : ''} style="margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">true</td>
+                            <td style="margin-bottom: 0.4em;">Remove the Relationships column from the list</td>
+                        </tr>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Remove Performance column: <input type="checkbox" id="sa-perf" ${this.removePerformance ? 'checked' : ''} style="margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">true</td>
+                            <td style="margin-bottom: 0.4em;">Remove the Performance column from the list</td>
+                        </tr>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Max Page Warning: <input type="number" id="${SCRIPT_ID}-max-input" value="${currentMax}" style="width: 60px; margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_MAX_PAGE}</td>
+                            <td style="margin-bottom: 0.4em;">Warning threshold for page fetching</td>
+                        </tr>
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    Auto-Expand Rows: <input type="number" id="${SCRIPT_ID}-auto-input" value="${currentAuto}" style="width: 60px; margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${DEFAULT_AUTO_EXPAND}</td>
+                            <td style="margin-bottom: 0.4em;">Row count threshold to auto-expand tables</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; text-align: right;">
+                    <button id="sa-save-btn" style="padding: 4px 12px; cursor: pointer; font-weight: bold;">SAVE</button>
                 </div>
-                <p style="margin-top: 15px; margin-bottom: 0px; text-align: center;">
-                    <button id="sa-save-btn" style="cursor: pointer; padding: 4px 12px;">SAVE</button>
-                </p>
             `;
 
             overlay.appendChild(container);
             document.body.appendChild(overlay);
 
-            document.getElementById("mb-sa-close").onclick = () => overlay.remove();
+            // Note: Updated the close handler to the new ID
+            document.getElementById(`${SCRIPT_ID}-close`).onclick = () => overlay.remove();
             document.getElementById("sa-save-btn").onclick = () => {
                 this.removeTagger = document.getElementById("sa-tagger").checked;
                 this.removeRating = document.getElementById("sa-rating").checked;
                 this.removeRelationships = document.getElementById("sa-rel").checked;
                 this.removePerformance = document.getElementById("sa-perf").checked;
-                // Fetching values using the new IDs
                 this.maxPageThreshold = parseInt(document.getElementById(`${SCRIPT_ID}-max-input`).value, 10);
                 this.autoExpandThreshold = parseInt(document.getElementById(`${SCRIPT_ID}-auto-input`).value, 10);
                 this.save();
@@ -335,7 +392,7 @@ let changelog = [
             registeredMenuCommandIDs.push(GM_registerMenuCommand("⚙️ Open Settings Manager", () => this.showSettingsModal()));
             registeredMenuCommandIDs.push(GM_registerMenuCommand("📜 ChangeLog", () => this.showChangelog()));
 
-	    // Webpage "Editing" Menu Integration
+            // Webpage "Editing" Menu Integration
             const editMenuItem = document.querySelector('div.right div.bottom ul.menu li.editing');
             const editMenuUl = editMenuItem ? editMenuItem.querySelector('ul') : null;
 
@@ -1225,12 +1282,12 @@ let changelog = [
         }
 
 
-	const maxThreshold = settings.maxPageThreshold;
+        const maxThreshold = settings.maxPageThreshold;
         Logger.debug('fetch', `Total pages to fetch: ${maxPage}`);
-	if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
+        if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
             activeBtn.style.backgroundColor = '';
             activeBtn.style.color = '';
-	    activeBtn.disabled = false;
+            activeBtn.disabled = false;
             statusDisplay.textContent = '';
             return;
         }
