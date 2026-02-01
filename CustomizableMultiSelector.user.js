@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.3+2025-11-29
+// @version      2.0.0+2026-02-02
 // @description  Adds customizable quick-select buttons for Primary Type, Status, Language, Script and Packaging on release pages
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -21,16 +21,22 @@
 // @license      MIT
 // ==/UserScript==
 
+// CHANGELOG
+let changelog = [
+    {version: '2.0.0+2026-02-02', description: 'Refactored settings, logging and changelog handling to a library.'},
+    {version: '0.9.0+2026-02-01', description: '1st official release version.'}
+];
+
 (function() {
     'use strict';
 
     const SCRIPT_ID = "vzell-mb-customizable-selector";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Customizable Type Selector";
-    const DEBUG_ENABLED = true
+    const DEBUG_ENABLED = false
 
     // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
     const Lib = (typeof VZMBLibrary !== 'undefined')
-          ? new VZMBLibrary(SCRIPT_ID, SCRIPT_NAME, null, null, DEBUG_ENABLED)
+          ? new VZMBLibrary(SCRIPT_ID, SCRIPT_NAME, null, changelog, DEBUG_ENABLED)
           : {
               settings: {}, // Fallback
               info: console.log, debug: console.log, error: console.error, time: console.time, timeEnd: console.timeEnd
@@ -96,7 +102,12 @@
      * @param {string} value The new value.
      */
     function forceValue(input, value) {
-        if (!input) return;
+        if (!input) {
+            Lib.error('error', "forceValue called without input element");
+            return;
+        }
+
+        Lib.debug('ui', `Forcing value "${value}" on element #${input.id}`);
 
         // 1. Set the value directly
         input.value = value;
@@ -123,10 +134,15 @@
     function loadPreferences(storageKey, defaultValue) {
         try {
             const stored = GM_getValue(storageKey);
+            if (!stored) {
+                Lib.debug('fetch', `No preferences found for ${storageKey}, using defaults.`);
+                return defaultValue;
+            }
+            const parsed = JSON.parse(stored);
             // Ensure the stored value is an array before returning
-            return (stored && Array.isArray(JSON.parse(stored))) ? JSON.parse(stored) : defaultValue;
+            return Array.isArray(parsed) ? parsed : defaultValue;
         } catch (e) {
-            console.error(`[MB-Selector] Error loading preferences for ${storageKey}:`, e);
+            Lib.error('error', `Error loading preferences for ${storageKey}:`, e);
             return defaultValue;
         }
     }
@@ -139,6 +155,7 @@
     function createClickHandler(selectElement, value) {
         return function(e) {
             e.preventDefault();
+            Lib.info('ui', `Quick-select clicked: Setting #${selectElement.id} to "${value}"`);
             // Original logic for setting value is kept:
             selectElement.value = value;
             // The fix: Use the updated forceValue function to notify React.
@@ -155,6 +172,8 @@
     function createButtonsFromPreferences(selectElement, preferences) {
         const buttons = [];
         const optionsMap = new Map();
+
+        Lib.debug('render', `Mapping options for #${selectElement.id}...`);
 
         // Map option text content (normalized) to its value
         Array.from(selectElement.options).forEach(option => {
@@ -175,6 +194,8 @@
                 button.style.marginBottom = '5px';
                 button.onclick = createClickHandler(selectElement, value);
                 buttons.push(button);
+            } else {
+                Lib.debug('filter', `Preference "${pref}" not found in available options for #${selectElement.id}`);
             }
         });
 
@@ -193,6 +214,7 @@
         // 1. Remove old container if it exists (in case the observer fires multiple times)
         const oldContainer = document.getElementById(`quick-add-${id}-container`);
         if (oldContainer) {
+            Lib.debug('cleanup', `Removing old container for ${id}`);
             oldContainer.remove();
         }
 
@@ -216,12 +238,16 @@
         // Set margin-left to auto to push it to the right, and add 5px right and bottom margin
         // Format: top right bottom left
         configButton.style.margin = '0 5px 5px auto';
-        configButton.onclick = () => showSettingsDialog(config);
+        configButton.onclick = () => {
+            Lib.info('ui', `Opening settings dialog for ${id}`);
+            showSettingsDialog(config);
+        };
 
         container.appendChild(configButton);
 
         // 5. Insert into the DOM
         selectElement.parentNode.insertBefore(container, selectElement.nextSibling);
+        Lib.debug('render', `Injected container for ${id} with ${buttons.length} buttons.`);
         return container;
     }
 
@@ -236,6 +262,7 @@
         if (!selectElement || !container) return;
 
         const selectedText = selectElement.options[selectElement.selectedIndex].textContent.trim().toLowerCase();
+        Lib.debug('ui', `Updating button states for ${typeId}. Current value text: "${selectedText}"`);
 
         // Iterate over all buttons *except* the last one (which is the Config button)
         const quickButtons = Array.from(container.querySelectorAll('button:not(:last-child)'));
@@ -263,6 +290,7 @@
             ALL_FIELD_OPTIONS[id] = Array.from(selectElement.options)
                 .filter(option => option.value !== '')
                 .map(option => option.textContent.trim());
+            Lib.debug('fetch', `Collected ${ALL_FIELD_OPTIONS[id].length} options for field #${id}`);
         }
     }
 
@@ -275,7 +303,12 @@
         const { id, storageKey, default: defaultValue, rowsContainerClass } = config;
 
         const selectElement = document.getElementById(id);
-        if (!selectElement) return;
+        if (!selectElement) {
+            Lib.error('error', `buildQuickAddUI: Element #${id} not found.`);
+            return;
+        }
+
+        Lib.info('render', `Building UI for #${id}...`);
 
         // 0. Collect all options for the config modal
         collectAllOptions(id);
@@ -289,10 +322,12 @@
         // 2. Hide existing elements and restructure the DOM (only once on initial load)
         const initializedAttr = `data-mb-selector-${id}-initialized`;
         if (!selectElement.hasAttribute(initializedAttr)) {
+            Lib.debug('init', `First-time initialization for #${id}`);
             // Find the container of the existing quick-add rows (for Packaging, Type, Status)
             const rowsContainer = rowsContainerClass ? document.querySelector(rowsContainerClass) : null;
 
             if (rowsContainer && rowsContainerClass) {
+                Lib.debug('ui', `Hiding original rows container ${rowsContainerClass}`);
                 // Hide the existing select rows container entirely
                 rowsContainer.style.display = 'none';
 
@@ -316,6 +351,7 @@
 
             // 3. Set up observer to watch for changes to the select element's value (React state change)
             const observer = new MutationObserver(function(mutations) {
+                Lib.debug('ui', `Mutation detected on #${id}, updating UI.`);
                 updateReleaseEditorUI(id);
             });
 
@@ -343,14 +379,17 @@
 
         if (selectElement) {
             // Element found immediately: run the builder function
+            Lib.debug('init', `Element #${id} found immediately.`);
             buildQuickAddUI(config);
             return;
         }
 
         // Element not found: set up MutationObserver to wait for it
+        Lib.debug('init', `Element #${id} not found yet. Setting up MutationObserver...`);
         const observer = new MutationObserver((mutationsList, observer) => {
             selectElement = document.getElementById(id);
             if (selectElement) {
+                Lib.info('init', `Element #${id} appeared via MutationObserver.`);
                 // Element found by observer: run the builder function and disconnect
                 buildQuickAddUI(config);
                 observer.disconnect();
@@ -378,6 +417,8 @@
         const { id, label, storageKey, default: defaultValue } = config;
         const availableOptions = ALL_FIELD_OPTIONS[id] || [];
         const selectedOptions = loadPreferences(storageKey, defaultValue);
+
+        Lib.debug('ui', `Showing dialog for ${label}. Selected options: ${selectedOptions.length}`);
 
         // --- Dialog Creation ---
         const dialog = document.createElement('div');
@@ -493,6 +534,7 @@
         document.body.appendChild(dialog);
 
         const closeDialog = () => {
+            Lib.debug('ui', "Closing settings dialog.");
             document.removeEventListener('keydown', handleEscapeKey);
             dialog.remove();
             overlay.remove();
@@ -520,12 +562,14 @@
                 }
             });
 
+            Lib.info('init', `Saving ${newSelection.length} selections for ${storageKey}`);
             // Save new preferences for this specific field
             GM_setValue(storageKey, JSON.stringify(newSelection));
 
             closeDialog();
 
             // Reload the page to apply changes
+            Lib.info('init', "Reloading page to apply configuration...");
             location.reload();
         });
     }
@@ -534,13 +578,19 @@
     // --- Main Initialization ---
 
     function initialize() {
+        Lib.time('Initialization');
+        Lib.info('init', "Starting DOM initialization...");
         // Iterate over all field configurations and set up the UI for each
         FIELD_CONFIGS.forEach(config => {
             setupQuickAddUI(config);
         });
+        Lib.timeEnd('Initialization', 'success');
     }
 
     // Wait for the page to fully load before trying to manipulate the DOM
-    window.addEventListener('load', initialize);
+    window.addEventListener('load', () => {
+        Lib.debug('init', "Window load event fired.");
+        initialize();
+    });
 
 })();
