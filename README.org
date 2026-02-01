@@ -25362,7 +25362,7 @@ Actually this is the place where the configuration UI should be injected:
 
 - Rename the menu entry to "Release Page Enhancer"
 
-** only visible on the "Overview tab
+** DONE only visible on the "Overview tab
 
 In the '<ul class="tabs">' make the '"<h2>Cover Art</h2>"' container visible only when on the 
 
@@ -25426,9 +25426,6 @@ tab
 </ul>
 #+end_example
 
-** add icon to menu entry
-** add tooltip about configuration option liek jeses super ind script
-
 ** DONE config
 
 In the uploaded userscript
@@ -25458,7 +25455,7 @@ to insert after
 <div class="tabs">
 #+end_example
 
-** adjust display login in config dialog to look like jesus
+** DONE adjust display logging in config dialog to look like jesus
 
 In the uploaded userscript
 adjust the configuration dialog to visually look like the one uploaded in "jesus.config.html".
@@ -25472,13 +25469,16 @@ So basically, for our case
 
 but still retain the functionality to explicitely save all the values with a "Save" button, cancel the dialog with a
 "Cancel" button (should alos react on pressing the "Esc" key), reset the whole dialog to the initial state with a
-"Reset" button. The "Save" button should store everything in persisten storage and apply everything immediately without a page reload
+"Reset" button. The "Save" button should store everything in persistent storage and apply everything immediately without
+a page reload
 
-** add "VZ" icon to config dialog
-
+** add icon to userscript config menu entry + versionnumber after the name
+** add tooltip about configuration option like in jeses super script
 ** maybe make the fuction async
 
-* centralize loggin in library
+Is it a good idea to make the cover art display in a function and make the execution asynch
+
+* centralize logging in library
 
 
 * centralize config in library
@@ -25489,3 +25489,8 @@ parameters located in the Tampermonkey dialog (except the "ChangeLog" entry), ad
 pull-down menu entry on the webpage itself with the same functionality.
 
 Apply the same UI and logic as in the uploaded script "ShowCoverArtOnMainPage.user.js"
+
+| Setting                                          | Default | Description                        |
+|--------------------------------------------------+---------+------------------------------------|
+| Pixel Size <input area with size up/down dialog> |     250 | Set the cover image size in pixels |
+|                                                  |         |                                    |

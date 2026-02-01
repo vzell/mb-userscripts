@@ -181,19 +181,98 @@
             });
             li.appendChild(a);
             editMenuUl.appendChild(li);
-            Logger.debug('init', "Menu entry added");
+            Logger.debug('init', "Menu entry added.");
         }
     };
 
-    // --- Tab Check Logic ---
     const isOverviewTabActive = () => {
         const activeTab = document.querySelector("ul.tabs li.sel");
-        if (!activeTab) return false;
-        // Check if the selected tab contains the 'Overview' text
-        return activeTab.textContent.includes("Overview");
+        return activeTab && activeTab.textContent.includes("Overview");
     };
 
-    // --- Main Logic ---
+    /**
+     * Refactored asynchronous function to handle fetching and rendering
+     */
+    async function displayCoverArt(mbid, tabsContainer) {
+        try {
+            const imgSize = getStoredSize();
+            const startCollapsed = getStoredCollapsed();
+
+            Logger.info('fetch', `Fetching cover art for ${mbid}...`);
+            const response = await fetch(`https://coverartarchive.org/release/${mbid}`);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    Logger.debug('fetch', "No cover art found for this release.");
+                    return;
+                }
+                throw new Error(`HTTP Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (!data.images || data.images.length === 0) return;
+
+            const fragment = document.createDocumentFragment();
+            const gallery = document.createElement("div");
+            gallery.id = "consolidated-cover-art-gallery";
+
+            // Base styling
+            Object.assign(gallery.style, {
+                display: "flex", flexWrap: "wrap", gap: "10px",
+                overflow: "hidden", transition: "max-height 0.4s ease-in-out, opacity 0.3s ease, margin 0.4s ease"
+            });
+
+            // Initial state
+            if (startCollapsed) {
+                Object.assign(gallery.style, { maxHeight: "0px", opacity: "0", marginTop: "0px", marginBottom: "0px" });
+            } else {
+                Object.assign(gallery.style, { maxHeight: "5000px", opacity: "1", marginTop: "20px", marginBottom: "20px" });
+            }
+
+            const caHeader = document.createElement("h2");
+            caHeader.textContent = "Cover art";
+            caHeader.style.cursor = "pointer";
+            caHeader.style.userSelect = "none";
+            caHeader.title = startCollapsed ? "Click to show" : "Click to hide";
+
+            caHeader.addEventListener("click", () => {
+                const isCurrentlyCollapsed = gallery.style.maxHeight === "0px";
+                if (isCurrentlyCollapsed) {
+                    Object.assign(gallery.style, { maxHeight: "5000px", opacity: "1", marginBottom: "20px", marginTop: "20px" });
+                    caHeader.title = "Click to hide";
+                } else {
+                    Object.assign(gallery.style, { maxHeight: "0px", opacity: "0", marginBottom: "0px", marginTop: "0px" });
+                    caHeader.title = "Click to show";
+                }
+            });
+
+            fragment.appendChild(caHeader);
+            fragment.appendChild(gallery);
+
+            data.images.forEach(img => {
+                const link = document.createElement("a");
+                link.href = img.image;
+                link.target = "_blank";
+
+                const image = document.createElement("img");
+                image.src = img.thumbnails["250"] || img.thumbnails.small || img.image;
+                image.alt = img.types.join(", ");
+                image.title = img.types.join(", ") + (img.comment ? ` (${img.comment})` : "");
+                Object.assign(image.style, { maxWidth: `${imgSize}px`, maxHeight: `${imgSize}px`, border: "1px solid #ccc" });
+
+                link.appendChild(image);
+                gallery.appendChild(link);
+            });
+
+            tabsContainer.after(fragment);
+            Logger.debug('render', "Gallery injected.");
+
+        } catch (err) {
+            Logger.error('init', `Async failure: ${err.message}`);
+        }
+    }
+
+    // --- Main Entry ---
     const mbidMatch = location.pathname.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
     const tabsContainer = document.querySelector("div.tabs");
 
@@ -201,91 +280,9 @@
         injectMenuEntry();
 
         if (isOverviewTabActive()) {
-            const mbid = mbidMatch[0];
-            const imgSize = getStoredSize();
-            const startCollapsed = getStoredCollapsed();
-            Logger.info('init', "Overview tab active. Fetching cover art for " + mbid);
-
-            fetch("https://coverartarchive.org/release/" + mbid)
-                .then(response => {
-                    if (response.ok) return response.json();
-                    throw new Error("No cover art available or API error.");
-                })
-                .then(data => {
-                    if (data.images && data.images.length > 0) {
-                        const fragment = document.createDocumentFragment();
-
-                        const gallery = document.createElement("div");
-                        gallery.id = "consolidated-cover-art-gallery";
-                        gallery.style.display = "flex";
-                        gallery.style.flexWrap = "wrap";
-                        gallery.style.gap = "10px";
-                        gallery.style.overflow = "hidden";
-                        gallery.style.transition = "max-height 0.4s ease-in-out, opacity 0.3s ease, margin 0.4s ease";
-
-                        if (startCollapsed) {
-                            gallery.style.maxHeight = "0px";
-                            gallery.style.opacity = "0";
-                            gallery.style.marginTop = "0px";
-                            gallery.style.marginBottom = "0px";
-                        } else {
-                            gallery.style.maxHeight = "5000px";
-                            gallery.style.opacity = "1";
-                            gallery.style.marginTop = "20px";
-                            gallery.style.marginBottom = "20px";
-                        }
-
-                        const caHeader = document.createElement("h2");
-                        caHeader.textContent = "Cover art";
-                        caHeader.style.cursor = "pointer";
-                        caHeader.style.userSelect = "none";
-                        caHeader.title = startCollapsed ? "Click to show" : "Click to hide";
-
-                        caHeader.addEventListener("click", function() {
-                            const isCurrentlyCollapsed = gallery.style.maxHeight === "0px";
-                            if (isCurrentlyCollapsed) {
-                                gallery.style.maxHeight = "5000px";
-                                gallery.style.opacity = "1";
-                                gallery.style.marginBottom = "20px";
-                                gallery.style.marginTop = "20px";
-                                caHeader.title = "Click to hide";
-                            } else {
-                                gallery.style.maxHeight = "0px";
-                                gallery.style.opacity = "0";
-                                gallery.style.marginBottom = "0px";
-                                gallery.style.marginTop = "0px";
-                                caHeader.title = "Click to show";
-                            }
-                        });
-
-                        fragment.appendChild(caHeader);
-                        fragment.appendChild(gallery);
-
-                        tabsContainer.after(fragment);
-
-                        data.images.forEach(img => {
-                            const link = document.createElement("a");
-                            link.href = img.image;
-                            link.target = "_blank";
-
-                            const image = document.createElement("img");
-                            image.src = img.thumbnails["250"] || img.thumbnails.small || img.image;
-                            image.alt = img.types.join(", ");
-                            image.title = img.types.join(", ") + (img.comment ? " (" + img.comment + ")" : "");
-                            image.style.maxWidth = `${imgSize}px`;
-                            image.style.maxHeight = `${imgSize}px`;
-                            image.style.border = "1px solid #ccc";
-
-                            link.appendChild(image);
-                            gallery.appendChild(link);
-                        });
-                    }
-                })
-                .catch(err => {
-                    Logger.info('init', err.message);
-                });
+            displayCoverArt(mbidMatch[0], tabsContainer);
         } else {
-            Logger.debug('init', "Not on Overview tab, skipping gallery injection.");
+            Logger.debug('init', "Not on Overview tab, skipping gallery logic.");
         }
     }
 })();
