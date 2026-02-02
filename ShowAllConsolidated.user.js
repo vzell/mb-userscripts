@@ -42,6 +42,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '1.6.0+2026-02-02', description: 'Add color picker for variables which represent a color.'},
     {version: '1.5.0+2026-02-01', description: 'Refactored settings, logging and changelog handling to a library.'},
     {version: '1.4.0+2026-02-01', description: 'Refactored settings to a schema-driven framework.'},
     {version: '1.3.0+2026-01-30', description: 'Implemented Ctrl+Click on headers to toggle all headers within the same container (sidebar vs main content).'},
