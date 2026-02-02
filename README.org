@@ -23549,6 +23549,13 @@ Please collapse the sidebar by default after pressing the action button
 
 * redirect to an artificial page after rendering and call all plugins again, maybe my own versions
 
+Lets say I enter a web page with tabular data, where a couple of userscripts are running and enrich the data with new
+columns. One of the scripts provide a button and when pressed does something to the data and but stays on the same page
+but most of the enriched data is gone.
+
+How can I achieve that after the script which provides the button has run, the same registered other userscripts run
+automatically again. What pattern could be used ?
+
 
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
@@ -26452,3 +26459,26 @@ https://musicbrainz.org/release/add
 
 // @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
 // @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
+
+* exluce standalone recordings
+
+https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72
+
+Check for "No releases found which feature this recording."
+
+
+* new columns for labels
+
+https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c
+
+** xtract the real format
+
+2xCD-R ==> CD-R
+2xCD-R + DVD ==> CD-R, DVD
+
+** sum of all tracks
+
+https://musicbrainz.org/release/4865fa3a-ee89-454e-97b6-796b8517ae19
+
+9 + 13 + 5 + 8 + 10 + 11 + 7 + 5 + 8 + 11 + 8 + 7 ==>
+

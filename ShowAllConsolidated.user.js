@@ -322,8 +322,8 @@ let changelog = [
     else if (path.includes('/works')) pageType = 'works';
     else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
     else if (path.match(/\/recording\/[a-f0-9-]{36}$/)) pageType = 'releasegroup-releases';
-    else if (path.includes('/label')) pageType = 'label';
-    else if (path.includes('/series')) pageType = 'series';
+    else if (path.includes('/label')) pageType = 'label-releases';
+    else if (path.includes('/series')) pageType = 'series-releases';
     else if (path.includes('/recording')) pageType = 'recording';
     else if (path.match(/\/place\/.*\/events/)) pageType = 'place-concerts';
     else if (path.match(/\/place\/.*\/performances/)) pageType = 'place-performances';
@@ -337,7 +337,7 @@ let changelog = [
         return;
     }
 
-    const typesWithSplitCD = ['releasegroup-releases', 'releases', 'label', 'series'];
+    const typesWithSplitCD = ['releasegroup-releases', 'releases', 'label-releases', 'series-releases'];
     const typesWithSplitLocation = ['events'];
 
     // --- UI Elements ---
