@@ -281,7 +281,7 @@ let changelog = [
         params.get('link_type_id') === '278';
     const isWorkBase = path.match(/\/work\/[a-f0-9-]{36}$/) && !isWorkRecordings;
 
-    // Logic for the 4 specific Artist views
+    // Logic for the 4 specific Artist Release Groups views
     const isOfficialArtist =
         path.startsWith('/artist/') &&
         params.get('all') === '0' &&
