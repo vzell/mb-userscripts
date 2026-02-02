@@ -26455,10 +26455,132 @@ which is much to broad and also runs on
 https://musicbrainz.org/release/add
 #+end_example
 
-* require
 
-// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
+* require
+** temporary workflow
+
+If you find yourself updating the library frequently and don't want to bump the main script version every time, you can temporarily append a "cache buster" to the @require line in your local dev copy:
+
+#+begin_example
+// During development only:
+// @require https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js?v=1
+#+end_example
+
+** development workflow
+
+The "Hybrid" Workflow (Recommended)
+To prevent accidentally breaking things for others, here is how the "pros" usually handle this:
+
+1. The Local Main Script
+Create a second script in Tampermonkey called VZ: ShowAll (DEV).
+
+Paste your main code there.
+
+Point the @require to your local path: // @require file:///C:/.../VZMBLibrary.user.js.
+
+Disable the "Production" version of the script in the Tampermonkey dashboard so they don't conflict.
+
+2. The Development Library
+Keep your VZMBLibrary.user.js on your hard drive. Open it in a real code editor (VS Code, Sublime, etc.).
+
+Every time you save the file in your editor, simply refresh the MusicBrainz page.
+
+The "DEV" script will immediately see the changes.
+
+3. The Commit Step
+When you are happy with the library:
+
+Push the library to GitHub.
+
+Go back to your Production script (ShowAllConsolidated.user.js).
+
+Update its @version and ensure its @require still points to the raw.githubusercontent or cdn.jsdelivr URL.
+
+Push the Production script.
+** header
+*** CDN
+
+#+begin_example
+// ==UserScript==
+// @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      1.6.0+2026-02-02
+// @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
+// @author       Gemini (directed by vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
 // @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
+// @match        *://*.musicbrainz.org/artist/*
+// @match        *://*.musicbrainz.org/release-group/*
+// @match        *://*.musicbrainz.org/work/*
+// @match        *://*.musicbrainz.org/recording/*
+// @match        *://*.musicbrainz.org/label/*
+// @match        *://*.musicbrainz.org/series/*
+// @match        *://*.musicbrainz.org/place/*/events
+// @match        *://*.musicbrainz.org/place/*/performances
+// @grant        GM_xmlhttpRequest
+// @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
+// @license      MIT
+// ==/UserScript==
+#+end_example
+
+*** local
+
+#+begin_example
+// ==UserScript==
+// @name         [AA] VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      1.6.0+2026-02-02
+// @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
+// @author       Gemini (directed by vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
+// @match        *://*.musicbrainz.org/artist/*
+// @match        *://*.musicbrainz.org/release-group/*
+// @match        *://*.musicbrainz.org/work/*
+// @match        *://*.musicbrainz.org/recording/*
+// @match        *://*.musicbrainz.org/label/*
+// @match        *://*.musicbrainz.org/series/*
+// @match        *://*.musicbrainz.org/place/*/events
+// @match        *://*.musicbrainz.org/place/*/performances
+// @grant        GM_xmlhttpRequest
+// @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
+// @license      MIT
+// ==/UserScript==
+#+end_example
+
+** require
+*** local
+
+#+begin_example
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
+#+end_example
+
+*** CDN
+
+#+begin_example
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
+#+end_example
+
 
 * exluce standalone recordings
 
@@ -26482,3 +26604,90 @@ https://musicbrainz.org/release/4865fa3a-ee89-454e-97b6-796b8517ae19
 
 9 + 13 + 5 + 8 + 10 + 11 + 7 + 5 + 8 + 11 + 8 + 7 ==>
 
+
+* prefix not honoured
+
+** question
+
+In the uploaded userscript "ShowAllConsolidated.user.js"
+why is the "Lib.prefix" prefix in the following code not honoured when it comes to console logging
+
+#+begin_example
+    if (pageType) Lib.prefix = `[VZ-ShowAllEntities: ${pageType}]`;
+    Lib.info('init', 'Initializing script for path:', path);
+#+end_example
+
+See also the uploaded library "VZMBLibrary.user.js"
+
+** answer
+
+#+begin_example
+return {
+    // ... other properties
+    get prefix() { return loggerInterface.prefix; },
+    set prefix(val) { loggerInterface.prefix = val; },
+    // ... logging methods
+};
+#+end_example
+
+** library workflow
+
+what would be the typical workflow if I would now update my library which has the following header
+
+#+begin_example
+// ==UserScript==
+// @name         VZ: MusicBrainz - Unified Library
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      0.9.2
+// @description  Unified library for Logging, Settings, and Changelog management
+// @author       Gemini (directed by vzell)
+// @license      MIT
+// @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// ==/UserScript==
+#+end_example
+
+and my main script the following header
+
+#+begin_example
+// ==UserScript==
+// @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      1.6.0+2026-02-02
+// @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
+// @author       Gemini (directed by vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
+// @match        *://*.musicbrainz.org/artist/*
+// @match        *://*.musicbrainz.org/release-group/*
+// @match        *://*.musicbrainz.org/work/*
+// @match        *://*.musicbrainz.org/recording/*
+// @match        *://*.musicbrainz.org/label/*
+// @match        *://*.musicbrainz.org/series/*
+// @match        *://*.musicbrainz.org/place/*/events
+// @match        *://*.musicbrainz.org/place/*/performances
+// @grant        GM_xmlhttpRequest
+// @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
+// @license      MIT
+// ==/UserScript==
+#+end_example
+
+and requires my library with
+
+#+begin_example
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
+#+end_example
+
+Which version should I update so that Tampermonkey pick up the change correctly
