@@ -102,33 +102,27 @@ let changelog = [
         },
 	sa_filter_highlight_color: {
             label: "Global Filter Highlight Color",
-            type: "text",
+            type: "color_picker",
             default: "red",
             description: "Text color for global filter matches"
         },
         sa_filter_highlight_bg: {
             label: "Global Filter Highlight Background",
-            type: "text",
+            type: "color_picker",
             default: "#FFD700",
             description: "Background color for global filter matches"
         },
         sa_col_filter_highlight_color: {
             label: "Column Filter Highlight Color",
-            type: "text",
+            type: "color_picker",
             default: "green",
             description: "Text color for column filter matches"
         },
         sa_col_filter_highlight_bg: {
             label: "Column Filter Highlight Background",
-            type: "text",
-            default: "#FFFFE0",
-            description: "Background color for column filter matches"
-        },
-        sa_bg: {
-            label: "Test Background Color",
             type: "color_picker",
             default: "#FFFFE0",
-            description: "Background color for entity"
+            description: "Background color for column filter matches"
         }
     };
 
