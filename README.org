@@ -23535,8 +23535,27 @@ Please fix
 
 ** fix use of even more space, especially on the page entry
 
- - The content area STILL  doesn't stretch when the sidebar is collapsed on the initial page load (before clicking the "Show all" action button)
- - AND also in the case of clicking the "Show all" action button it works fine, there could still be more stretching applied as it uses onyl half of the spce it COULD use
+In the uploaded userscript,
+when the whole sidebar
+
+#+begin_example
+<div id="sidebar">
+#+end_example
+
+is collapsed to the right side,
+
+ - The content area STILL doesn't stretch to the right side
+ - also a scrollbar appears which actually doesn't make any sense
+
+In the HTML file "original.html" you find the original non-collapsed website content
+and in the "vanished.html" the one where the sidebar is collapsed
+
+Please fix the code, so that the whole rela estate is being used.
+
+Don't touch other workable code, comments and debug logging
+
+ - The content area STILL doesn't stretch when the sidebar is collapsed on the initial page load (before clicking the "Show all" action button)
+ - AND also in the case of clicking the "Show all" action button it works fine, there could still be more stretching applied as it uses only half of the space it COULD use
 
 Pleae try and fix both issues
 
@@ -23555,6 +23574,9 @@ but most of the enriched data is gone.
 
 How can I achieve that after the script which provides the button has run, the same registered other userscripts run
 automatically again. What pattern could be used ?
+
+I actually would want this for the uploaded userscript to happen, as it has the button logic, and I would refire after rendering the final page, the other scripts which already run, when the button was rendered
+
 
 
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
@@ -23902,7 +23924,7 @@ bar with enough padding on both sides. Right now it looks like it flows in from 
 
 where in the code does the actual DOM rendering begin, and end. Pleas place logging statement in there, and add timing info to the log
 
-** busy curser throught initial rendering stage
+** busy curser through initial rendering stage
 
 - Change the mouse pointer directly to a "busy cursor", when the rendering stage begins and back to normal
   when it ends. Also fix the "renderSeconds" calcuations to be the real time the user sees (DOM updates etc.)
@@ -26605,7 +26627,7 @@ Check for "No releases found which feature this recording."
 
 https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c
 
-** xtract the real format
+** extract the real format
 
 2xCD-R ==> CD-R
 2xCD-R + DVD ==> CD-R, DVD
@@ -26616,9 +26638,15 @@ https://musicbrainz.org/release/4865fa3a-ee89-454e-97b6-796b8517ae19
 
 9 + 13 + 5 + 8 + 10 + 11 + 7 + 5 + 8 + 11 + 8 + 7 ==>
 
+** https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
 
-* prefix not honoured
+extract comment from the following columns
+ - Release title
+ - Label
 
+
+
+* DONE prefix not honoured
 ** question
 
 In the uploaded userscript "ShowAllConsolidated.user.js"
@@ -26704,29 +26732,3 @@ and requires my library with
 
 Which version should I update so that Tampermonkey pick up the change correctly
 
-* strange
-
-In the uploaded userscript,
-when I change the code for URLs of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-
-#+begin_example
-        let targetHeader = null;
-        if (pageType === 'artist-releasegroups') {
-            targetHeader = document.querySelector('h2.discography');
-        } else if (pageType === 'releasegroup-releases') {
-            targetHeader = document.querySelector('h2.appears-on-releases') || Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
-        }
-#+end_example
-
-to
-
-#+begin_example
-        let targetHeader = null;
-        if (pageType === 'artist-releasegroups') {
-            targetHeader = document.querySelector('h2.discography');
-        } else if (pageType === 'releasegroup-releases') {
-            Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
-        }
-#+end_example
-
-Then to table data is rendered at all, also 'h2.appears-on-releases' doesn't even exist on the renderd final page
