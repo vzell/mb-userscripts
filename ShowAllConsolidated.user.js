@@ -78,25 +78,25 @@ let changelog = [
             label: "Remove Tagger column",
             type: "checkbox",
             default: false,
-            description: "Remove the Tagger column from the list"
+            description: "Remove the Tagger column from the final rendered tables"
         },
         sa_remove_rating: {
             label: "Remove Rating column",
             type: "checkbox",
             default: false,
-            description: "Remove the Rating column from the list"
+            description: "Remove the Rating column from the final rendered tables"
         },
         sa_remove_rel: {
             label: "Remove Relationships column",
             type: "checkbox",
             default: true,
-            description: "Remove the Relationships column from the list"
+            description: "Remove the Relationships column from the final rendered tables"
         },
         sa_remove_perf: {
             label: "Remove Performance column",
             type: "checkbox",
             default: true,
-            description: "Remove the Performance column from the list"
+            description: "Remove the Performance column from the final rendered tables"
         },
         sa_max_page: {
             label: "Max Page Warning",
