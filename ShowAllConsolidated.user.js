@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.6.2+2026-02-02
+// @version      1.7.0+2026-02-02
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -42,6 +42,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '1.7.0+2026-02-02', description: 'Make sidebar collapse conditional on setting and only init after process completion.'},
     {version: '1.6.2+2026-02-02', description: 'Fix pageType Recording-Releases (button text was wrong).'},
     {version: '1.6.1+2026-02-02', description: 'Expose loggerInterface.prefix with getter/setter.'},
     {version: '1.6.0+2026-02-02', description: 'Add color picker for variables which represent a color.'},
@@ -67,6 +68,12 @@ let changelog = [
 
     // CONFIG SCHEMA
     const configSchema = {
+        sa_collabsable_sidebar: {
+            label: "Collabsable sidebar",
+            type: "checkbox",
+            default: false,
+            description: "Render sidebar collabsable"
+        },
         sa_remove_tagger: {
             label: "Remove Tagger column",
             type: "checkbox",
@@ -139,8 +146,10 @@ let changelog = [
 
     Lib.info('init', "Script loaded with external library!");
 
-        // --- Sidebar Collapsing & Full Width Stretching Logic ---
+    // --- Sidebar Collapsing & Full Width Stretching Logic ---
     function initSidebarCollapse() {
+	if (!Lib.settings.sa_collabsable_sidebar) return; // Only available if true
+
         const sidebar = document.getElementById("sidebar");
         const page = document.getElementById("page");
         const content = document.getElementById("content");
@@ -243,9 +252,6 @@ let changelog = [
         });
         observer.observe(document.body, { childList: true, subtree: true });
     }
-
-    // Call sidebar init immediately
-    initSidebarCollapse();
 
     // Check if we just reloaded to fix the filter issue
     const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
@@ -1135,7 +1141,6 @@ let changelog = [
             return;
         }
 
-        isLoaded = true;
         stopRequested = false;
         allRows = [];
         originalAllRows = [];
@@ -1467,6 +1472,12 @@ let changelog = [
 
             // Make all H2s collapsible after rendering
             makeH2sCollapsible();
+
+	    isLoaded = true;
+            // Initialize sidebar collapse only now if enabled
+            if (Lib.settings.sa_collabsable_sidebar) {
+		initSidebarCollapse();
+            }
 
             totalRenderingTime = performance.now() - renderingTimeStart;
 

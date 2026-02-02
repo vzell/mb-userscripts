@@ -23602,6 +23602,26 @@ Please fix and only provide the necessary css changes if not code changes are in
 
 Please collapse the sidebar by default after pressing the action button
 
+** boolean
+
+In the uploaded userscript,
+using the boolean "sa_collabsable_sidebar" make the whole
+
+#+begin_example
+    function initSidebarCollapse() {
+#+end_example
+
+and
+
+#+begin_example
+    initSidebarCollapse();
+#+end_example
+
+functionality onyl available if true.
+
+Also call the initSidebarCollapse(); function only on the final rendered page, after pressing the action button
+
+
 
 * redirect to an artificial page after rendering and call all plugins again, maybe my own versions
 
