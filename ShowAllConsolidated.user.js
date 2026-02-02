@@ -69,7 +69,7 @@ let changelog = [
     // CONFIG SCHEMA
     const configSchema = {
         sa_collabsable_sidebar: {
-            label: "Collabsable sidebar",
+            label: "Collabsable sidebar (experimental)",
             type: "checkbox",
             default: false,
             description: "Render sidebar collabsable"
