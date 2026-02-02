@@ -23553,7 +23553,7 @@ Please collapse the sidebar by default after pressing the action button
 * fix https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
 
-* make all colors/backgrounds configurable
+* DONE make all colors/backgrounds configurable
 ** initial
 
 In the uploaded script "ShowAllConsolidated.user.js",
@@ -25772,6 +25772,11 @@ To transition from local development to a production-ready GitHub-hosted library
 E. Versioning (Semantic Versioning)If you share this library across multiple scripts (e.g., ReleasePageEnhancer and ShowAllConsolidated), a breaking change in the library could break all your scripts at once.Practice: Use Semantic Versioning ($Major.Minor.Patch$). Only increment the $Major$ version if you change the function signatures (e.g., changing Logger.log() to Logger.write()).Summary TableMethodBest ForProsConsFilesystemActive CodingInstant updates, no internet needed.Requires browser permission changes.GitHub RawQuick SharingAlways "latest" (on master).Slow, occasional MIME-type issues.jsDelivrProductionFast, reliable, supports versioning.Cache delay (up to 24h) unless versioned.Would you like me to provide a template for a GitHub Actions workflow that could automatically validate your library code whenever you push to GitHub?
 #+end_example
 
+*** ok
+
+OK, so the file is visible under the URL "https://github.com/vzell/mb-userscripts/blob/master/lib/VZMBLibrary.user.js"
+how shoud I specify the require line to get it via "https://cdn.jsdelivr.net/gh/vzell/mb-userscripts"
+
 ** centralize config in library
 *** apply to showall
 
@@ -26442,3 +26447,8 @@ which is much to broad and also runs on
 #+begin_example
 https://musicbrainz.org/release/add
 #+end_example
+
+* require
+
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
