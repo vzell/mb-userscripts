@@ -23533,7 +23533,7 @@ collapsable/un-collapsable functionality works
 
 Please fix
 
-** fix use of even more space, especially on the page entry
+** DONE fix use of even more space, especially on the page entry
 
 In the uploaded userscript,
 when the whole sidebar
@@ -23560,6 +23560,43 @@ Don't touch other workable code, comments and debug logging
 Pleae try and fix both issues
 
 example URL: https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c
+
+** no sidebar toggle on the initial render page, only after pressing the action button
+
+In the uploaded userscript,
+ - on the initial page load (before clicking the "Show all" action button) the sidebar toggle should not be there/visisble, it should ONLY appear after pressing the action button
+
+** double scrollbars
+
+In the uploaded userscript,
+
+OK, I fixed the userscript with your changes, but after the initial rendering, there are two scrollbars visible on the
+right side, the inner should NOT be there.  This also happens after the action button has been clicked and the page is
+rerendered
+
+In the HTML file "double-scrollbars.html." you find the doubling of the scrollbar (when the userscripts runs)
+and in the "single-scrollbar.html" the webpage without running a userscript
+
+Please fix
+
+            #page, #content {
+                transition: margin-right 0.3s ease, padding-right 0.3s ease, width 0.3s ease, max-width 0.3s ease, margin-left 0.3s ease;
+            }
+
+** double scrollbars
+
+In the uploaded userscript,
+after the initial rendering, there are two scrollbars visible on the right side, the inner should NOT be there.  This
+also happens after the action button has been clicked and the page is rerendered
+	    
+** still problem
+
+In the uploaded userscript,
+after the initial rendering, there are two scrollbars visible on the right side, the inner should NOT be there.  This
+also happens after the action button has been clicked and the page is rerendered.
+
+It looks like the '<div id="sidebar">' container itself (which can be collapsed and in the non-collapsed state actually needs the scrollbar because it has lots of content).
+Please fix and only provide the necessary css changes if not code changes are involved
 
 ** collapse by default after pressing the action button
 
@@ -24968,7 +25005,7 @@ container, and the other way around if clicking a h2 header in the main page lef
 Please implement
 
 
-* Add Ctrl-click to h3 headers
+* DONE Add Ctrl-click to h3 headers
 
 
 * TODO refactoring
@@ -25469,7 +25506,7 @@ No Logic Duplication: The "cleanup" and "sortable" triggers are moved into the r
 #+end_example
 
 
-* Add configuration section like in "jesus - Super mind control II", remove from Tampermonkey menu, only leave changelog and github page
+* DONE Add configuration section like in "jesus - Super mind control II", remove from Tampermonkey menu, only leave changelog and github page
 ** initial
 
 In the uploaded userscript "ShowAllConsolidated.user.js",
@@ -25551,6 +25588,7 @@ Still not working. Implement it like in the following code taken from another wo
 ** area - ALL'
 https://musicbrainz.org/area/89a675c2-3e37-3518-b83c-418bad59a85a/artists
 
+
 * icons
 
 ⏱
@@ -25558,7 +25596,7 @@ https://musicbrainz.org/area/89a675c2-3e37-3518-b83c-418bad59a85a/artists
 🛠
 
 
-* add support for http://brucebase.wikidot.com/stats:discography-single#streetsofminneapolis in my plugin "Add relationships..."
+* add support for http://brucebase.wikidot.com/stats:discography-single#streetsofminneapolis in my plugin "Add discography relationships..."
 ** URL
 
 https://musicbrainz.org/release-group/c8e768c9-448b-4ebd-8e5e-4ae95609dd0b
@@ -25571,8 +25609,6 @@ https://musicbrainz.org/release-group/c8e768c9-448b-4ebd-8e5e-4ae95609dd0b
 * create userscript which directly scrolls to the first difference on http://brucebase.wikidot.com/song:streets-of-minneapolis pages when clicking history
 
 See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
-
-* consolidate logging in library
 
 
 * Release page enhancer
@@ -25767,10 +25803,11 @@ I would like to use the nice friendly name
 
 *** add icon to userscript config menu entry + versionnumber after the name
 *** add tooltip about configuration option like in jeses super script
-*** make the whole "Show cover art" functionality in a configurable subfunction besies other subfunctions which could separately be enabled or not
+*** make the whole "Show cover art" functionality in a configurable subfunction besides other subfunctions which could separately be enabled or not
+*** add sidebar collapse handle
 
 
-* add library
+* DONE add library
 ** centralize logging in library
 
 In the uploaded userscripts
@@ -26422,6 +26459,7 @@ please add comprehensive logging statements, see also the corresponding uploaded
 </svg>
 #+end_example
 
+
 * userscript match conditions
 ** 1
 
@@ -26616,7 +26654,8 @@ curl -v https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.
 
 curl -v https://purge.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
 
-* exluce standalone recordings
+
+* exclude standalone recordings
 
 https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72
 

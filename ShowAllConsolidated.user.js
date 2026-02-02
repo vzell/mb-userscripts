@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.7.0+2026-02-02
+// @version      1.6.2+2026-02-02
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -42,7 +42,6 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '1.7.0+2026-02-02', description: 'Fix sidbar collapsing not giving the whole real estate.'},
     {version: '1.6.2+2026-02-02', description: 'Fix pageType Recording-Releases (button text was wrong).'},
     {version: '1.6.1+2026-02-02', description: 'Expose loggerInterface.prefix with getter/setter.'},
     {version: '1.6.0+2026-02-02', description: 'Add color picker for variables which represent a color.'},
@@ -154,9 +153,6 @@ let changelog = [
 
         const style = document.createElement('style');
         style.textContent = `
-            html, body {
-                overflow-x: hidden !important;
-            }
             #sidebar {
                 transition: transform 0.3s ease, width 0.3s ease, opacity 0.3s ease, margin-right 0.3s ease;
             }
@@ -164,20 +160,11 @@ let changelog = [
                 transition: margin-right 0.3s ease, padding-right 0.3s ease, width 0.3s ease, max-width 0.3s ease, margin-left 0.3s ease;
             }
             .sidebar-collapsed {
-                position: fixed !important;
-                right: 0 !important;
-                top: 0 !important;
-
                 transform: translateX(100%);
                 width: 0 !important;
                 min-width: 0 !important;
-                max-width: 0 !important;
-
                 opacity: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-
-                overflow: hidden !important;
+                margin-right: -${sidebarWidth} !important;
                 pointer-events: none;
             }
             /* Force 100% width and remove any MB centering/max-width constraints */
