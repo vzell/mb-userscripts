@@ -10,6 +10,7 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
 // @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
 // @match        *://*.musicbrainz.org/artist/*
 // @match        *://*.musicbrainz.org/release-group/*
@@ -122,6 +123,12 @@ let changelog = [
             type: "text",
             default: "#FFFFE0",
             description: "Background color for column filter matches"
+        },
+        sa_bg: {
+            label: "Test Background Color",
+            type: "color_picker",
+            default: "#FFFFE0",
+            description: "Background color for entity"
         }
     };
 

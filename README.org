@@ -23575,7 +23575,7 @@ into the variable
 
 and then reference them afterwards in the "style.textContent" accordingly
 
-See also the uploaded library file ""VZMBLibrary.user.js""
+See also the uploaded library file "VZMBLibrary.user.js"
 
 ** increase text width
 
@@ -23687,6 +23687,48 @@ In the uploaded library file, double the width of the elements <input type="text
             }
         };
 #+end_example
+
+** color-picker
+
+Adjust the libary "VZMBLibrary.user.js"
+to support the type "color-picker"
+
+#+begin_example
+    // CONFIG SCHEMA
+    const configSchema = {
+        sa_bg: {
+            label: "Test Background Color",
+            type: "color_picker",
+            default: "#FFFFE0",
+            description: "Background color for entity"
+        }
+#+end_example
+
+by creating an additional button after the text input field for the color hex value, and when clicking
+the button attaching the color chooser to the button along the lines below
+
+#+begin_example
+const container = document.createElement('div');
+container.id = 'picker-container';
+document.body.appendChild(container);
+
+const colorPicker = new iro.ColorPicker("#picker-container", {
+    width: 150,
+    color: "#f00"
+});
+
+colorPicker.on('color:change', function(color) {
+    // Log the hex code to console
+    console.debug('New Hex:', color.hexString);
+    document.body.style.backgroundColor = color.hexString;
+});
+#+end_example
+
+Additionally to logging the choosen color to the console, add it as the value for variable with label "Test Background Color" in the input field of type text
+
+** highlight the textcolor
+
+
 
 * remove or fix "Tagger" column
 ** DONE initial
