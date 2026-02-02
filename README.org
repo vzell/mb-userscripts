@@ -26703,3 +26703,30 @@ and requires my library with
 #+end_example
 
 Which version should I update so that Tampermonkey pick up the change correctly
+
+* strange
+
+In the uploaded userscript,
+when I change the code for URLs of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+#+begin_example
+        let targetHeader = null;
+        if (pageType === 'artist-releasegroups') {
+            targetHeader = document.querySelector('h2.discography');
+        } else if (pageType === 'releasegroup-releases') {
+            targetHeader = document.querySelector('h2.appears-on-releases') || Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+        }
+#+end_example
+
+to
+
+#+begin_example
+        let targetHeader = null;
+        if (pageType === 'artist-releasegroups') {
+            targetHeader = document.querySelector('h2.discography');
+        } else if (pageType === 'releasegroup-releases') {
+            Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+        }
+#+end_example
+
+Then to table data is rendered at all, also 'h2.appears-on-releases' doesn't even exist on the renderd final page

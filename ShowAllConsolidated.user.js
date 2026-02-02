@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.6.1+2026-02-02
+// @version      1.6.2+2026-02-02
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -42,6 +42,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '1.6.2+2026-02-02', description: 'Fix pageType Recording-Releases (button text was wrong).'},
     {version: '1.6.1+2026-02-02', description: 'Expose loggerInterface.prefix with getter/setter.'},
     {version: '1.6.0+2026-02-02', description: 'Add color picker for variables which represent a color.'},
     {version: '1.5.0+2026-02-01', description: 'Refactored settings, logging and changelog handling to a library.'},
@@ -1514,7 +1515,7 @@ let changelog = [
         if (pageType === 'artist-releasegroups') {
             targetHeader = document.querySelector('h2.discography');
         } else if (pageType === 'releasegroup-releases') {
-            targetHeader = document.querySelector('h2.appears-on-releases') || Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+            targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
         }
 
         if (!query) {
