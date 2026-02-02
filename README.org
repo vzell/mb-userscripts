@@ -23554,7 +23554,139 @@ Please collapse the sidebar by default after pressing the action button
 
 
 * make all colors/backgrounds configurable
+** initial
 
+In the uploaded script "ShowAllConsolidated.user.js",
+refactor the hardcoded colors in the following code
+
+#+begin_example
+    const style = document.createElement('style');
+    style.textContent = `
+        .mb-filter-highlight { color: red; background-color: #FFD700; }
+        .mb-col-filter-highlight { color: green; background-color: #FFFFE0; font-weight: bold; }
+#+end_example
+
+into the variable
+
+#+begin_example
+    // CONFIG SCHEMA
+    const configSchema = {
+#+end_example
+
+and then reference them afterwards in the "style.textContent" accordingly
+
+See also the uploaded library file ""VZMBLibrary.user.js""
+
+** increase text width
+
+In the uploaded library file, double the width of the elements <input type="text"
+
+#+begin_example
+        // --- 2. Settings Logic ---
+        const settingsInterface = {
+            values: {},
+            init: function() {
+                if (!configSchema) return;
+                for (const key in configSchema) {
+                    this.values[key] = GM_getValue(key, configSchema[key].default);
+                }
+            },
+            save: function(newValues) {
+                for (const key in newValues) {
+                    GM_setValue(key, newValues[key]);
+                }
+                loggerInterface.info('init', "Settings saved. Reloading...");
+                location.reload();
+            },
+            showModal: function() {
+                if (!configSchema) return;
+                const overlay = document.createElement("div");
+                overlay.id = `${scriptId}-settings-overlay`;
+                Object.assign(overlay.style, {
+                    position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '10000', display: 'flex',
+                    justifyContent: 'center', alignItems: 'center'
+                });
+
+                const container = document.createElement("div");
+                container.id = `${scriptId}-config-container`;
+                Object.assign(container.style, {
+                    backgroundColor: 'silver', border: '2px outset white', padding: '1em',
+                    color: 'black', fontFamily: 'sans-serif', minWidth: '450px'
+                });
+
+                const tableRows = Object.entries(configSchema).map(([key, cfg]) => {
+                    const inputId = `${scriptId}-input-${key}`;
+                    const isCheck = cfg.type === "checkbox";
+                    const valAttr = isCheck
+                        ? (this.values[key] ? 'checked' : '')
+                        : `value="${this.values[key]}"`;
+
+                    return `
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    ${cfg.label}: <input type="${cfg.type}" id="${inputId}" ${valAttr} style="${isCheck ? '' : 'width: 60px;'} margin-left: 5px;">
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${cfg.default}</td>
+                            <td style="margin-bottom: 0.4em;">${cfg.description}</td>
+                        </tr>`;
+                }).join('');
+
+                container.innerHTML = `
+                    <p style="text-align: right; margin: 0px;">
+                        <a id="${scriptId}-reset" style="cursor: pointer; font-weight: bold; color: black;">RESET</a> |
+                        <a id="${scriptId}-close" style="cursor: pointer; font-weight: bold; color: black;">CLOSE</a>
+                    </p>
+                    <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">${scriptName.toUpperCase()}</h4>
+                    <p>Settings are applied immediately upon saving.</p>
+                    <table border="2" cellpadding="4" cellspacing="1" style="width: 100%; border-collapse: separate; background: #eee;">
+                        <thead>
+                            <tr style="background-color: #ccc;">
+                                <th>setting</th>
+                                <th>default setting</th>
+                                <th>description</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                    <div style="margin-top: 15px; text-align: right;">
+                        <button id="${scriptId}-save-btn" style="padding: 4px 12px; cursor: pointer; font-weight: bold;">SAVE</button>
+                    </div>
+                `;
+
+                overlay.appendChild(container);
+                document.body.appendChild(overlay);
+
+                const closeDialog = () => {
+                    if (document.body.contains(overlay)) document.body.removeChild(overlay);
+                    window.removeEventListener("keydown", handleEsc);
+                };
+                const handleEsc = (e) => { if (e.key === "Escape") closeDialog(); };
+                window.addEventListener("keydown", handleEsc);
+
+                document.getElementById(`${scriptId}-save-btn`).onclick = () => {
+                    const newValues = {};
+                    for (const key in configSchema) {
+                        const input = document.getElementById(`${scriptId}-input-${key}`);
+                        newValues[key] = configSchema[key].type === "checkbox" ? input.checked : parseInt(input.value, 10);
+                    }
+                    this.save(newValues);
+                    closeDialog();
+                };
+                document.getElementById(`${scriptId}-reset`).onclick = () => {
+                    for (const key in configSchema) {
+                        const input = document.getElementById(`${scriptId}-input-${key}`);
+                        if (configSchema[key].type === "checkbox") input.checked = configSchema[key].default;
+                        else input.value = configSchema[key].default;
+                    }
+                };
+                document.getElementById(`${scriptId}-close`).onclick = closeDialog;
+                overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
+            }
+        };
+#+end_example
 
 * remove or fix "Tagger" column
 ** DONE initial

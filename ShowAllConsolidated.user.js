@@ -98,6 +98,30 @@ let changelog = [
             type: "number",
             default: 50,
             description: "Row count threshold to auto-expand tables"
+        },
+	sa_filter_highlight_color: {
+            label: "Global Filter Highlight Color",
+            type: "text",
+            default: "red",
+            description: "Text color for global filter matches"
+        },
+        sa_filter_highlight_bg: {
+            label: "Global Filter Highlight Background",
+            type: "text",
+            default: "#FFD700",
+            description: "Background color for global filter matches"
+        },
+        sa_col_filter_highlight_color: {
+            label: "Column Filter Highlight Color",
+            type: "text",
+            default: "green",
+            description: "Text color for column filter matches"
+        },
+        sa_col_filter_highlight_bg: {
+            label: "Column Filter Highlight Background",
+            type: "text",
+            default: "#FFFFE0",
+            description: "Background color for column filter matches"
         }
     };
 
@@ -455,8 +479,15 @@ let changelog = [
         .mb-master-toggle { color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; cursor: default; }
         .mb-master-toggle span { cursor: pointer; }
         .mb-master-toggle span:hover { text-decoration: underline; }
-        .mb-filter-highlight { color: red; background-color: #FFD700; }
-        .mb-col-filter-highlight { color: green; background-color: #FFFFE0; font-weight: bold; }
+        .mb-filter-highlight {
+            color: ${Lib.settings.sa_filter_highlight_color};
+            background-color: ${Lib.settings.sa_filter_highlight_bg};
+        }
+        .mb-col-filter-highlight {
+            color: ${Lib.settings.sa_col_filter_highlight_color};
+            background-color: ${Lib.settings.sa_col_filter_highlight_bg};
+            font-weight: bold;
+        }
         .mb-col-filter-input {
             width: 100%;
             font-size: 1em;
