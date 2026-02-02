@@ -23728,6 +23728,8 @@ Additionally to logging the choosen color to the console, add it as the value fo
 
 ** highlight the textcolor
 
+Also apply the currently choosen color to the "color_picker" button and the hex value string in the input field, to get
+a better feel how the color looks like in reality
 
 
 * remove or fix "Tagger" column
