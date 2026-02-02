@@ -26581,6 +26581,18 @@ Push the Production script.
 // @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
 #+end_example
 
+*** raw github
+
+#+begin_example
+// @require      https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZMBLibrary.user.js
+#+end_example
+
+
+*** purging CDN
+
+curl -v https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
+
+curl -v https://purge.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
 
 * exluce standalone recordings
 
