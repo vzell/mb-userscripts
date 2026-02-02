@@ -324,7 +324,6 @@ let changelog = [
     else if (path.includes('/works')) pageType = 'works';
     else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
     else if (path.includes('/recording')) pageType = 'recording-releases';
-    //else if (path.match(/\/recording\/[a-f0-9-]{36}$/)) pageType = 'releasegroup-releases';
     else if (path.includes('/label')) pageType = 'label-releases';
     else if (path.includes('/series')) pageType = 'series-releases';
     else if (path.match(/\/place\/.*\/events/)) pageType = 'place-concerts';
