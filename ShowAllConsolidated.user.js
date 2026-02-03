@@ -1503,7 +1503,7 @@ let changelog = [
                 // Detailed statistics per page fetch
                 Lib.info('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
 
-                if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') {
+		if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
                     const summaryParts = groupedRows.map(g => {
                         const curPageCount = pageCategoryMap.get(g.category) || 0;
                         return `${g.category}: +${curPageCount} (Total: ${g.rows.length})`;
