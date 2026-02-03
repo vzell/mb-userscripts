@@ -26794,6 +26794,15 @@ Which version should I update so that Tampermonkey pick up the change correctly
 
 
 * add regexp filtering (global, column specific clickable)
+** regexp filtering
+
+In the uploaded userscript,
+add support to interpret the filterstring as a regexp, with an addiotnal checkbox like the for 'label title="Case Sensitive Filtering"'
+
+#+begin_example
+<label title="Case Sensitive Filtering" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;"><input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label>
+#+end_example
+
 
 * case sensitive  (global, column specific clickable)
 
