@@ -842,7 +842,7 @@ let changelog = [
                 const table = tables[groupIdx];
                 const colFiltersRaw = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
                     .map(inp => {
-                        // Apply red box to column filter if active
+                        // Apply green box to column filter if active
                         inp.style.boxShadow = inp.value ? '0 0 2px 2px green' : '';
                         return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
                     }) : [];
@@ -915,7 +915,7 @@ let changelog = [
             const table = document.querySelector('table.tbl');
             const colFiltersRaw = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
                 .map(inp => {
-                    // Apply red box to column filter if active
+                    // Apply green box to column filter if active
                     inp.style.boxShadow = inp.value ? '0 0 2px 2px green' : '';
                     return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
                 }) : [];
