@@ -25032,9 +25032,19 @@ Please implement
 ** initial routing configuration
 
 In the uploaded script,
-could the following section somehow be refactored, because in the future there will be much more URLs supported, with more "pageType"s and differetn query parameters
+could the following section somehow be refactored, because in the future there will be much more URLs supported, with more "pageType"s and different query parameters
 
 #+begin_example
+    let pageType = '';
+    let headerContainer = document.querySelector('.artistheader h1') ||
+                          document.querySelector('.rgheader h1') ||
+                          document.querySelector('.labelheader h1') ||
+                          document.querySelector('.seriesheader h1') ||
+                          document.querySelector('.placeheader h1') ||
+                          document.querySelector('.recordingheader h1') ||
+                          document.querySelector('h1 a bdi')?.parentNode ||
+                          document.querySelector('h1');
+
     // Logic for Work pages
     const isWorkRecordings =
         path.startsWith('/work/') &&
@@ -25042,7 +25052,7 @@ could the following section somehow be refactored, because in the future there w
         params.get('link_type_id') === '278';
     const isWorkBase = path.match(/\/work\/[a-f0-9-]{36}$/) && !isWorkRecordings;
 
-    // Logic for the 4 specific Artist views
+    // Logic for the 4 specific Artist Release Groups views
     const isOfficialArtist =
         path.startsWith('/artist/') &&
         params.get('all') === '0' &&
@@ -25090,23 +25100,22 @@ could the following section somehow be refactored, because in the future there w
     else if (path.includes('/releases')) pageType = 'releases';
     else if (path.includes('/works')) pageType = 'works';
     else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
-    else if (path.match(/\/recording\/[a-f0-9-]{36}$/)) pageType = 'releasegroup-releases';
-    else if (path.includes('/label')) pageType = 'label';
-    else if (path.includes('/series')) pageType = 'series';
-    else if (path.includes('/recording')) pageType = 'recording';
+    else if (path.includes('/recording')) pageType = 'recording-releases';
+    else if (path.includes('/label')) pageType = 'label-releases';
+    else if (path.includes('/series')) pageType = 'series-releases';
     else if (path.match(/\/place\/.*\/events/)) pageType = 'place-concerts';
     else if (path.match(/\/place\/.*\/performances/)) pageType = 'place-performances';
     else if (path.includes('/events')) pageType = 'events';
 
-    if (pageType) Logger.prefix = `[MB-ShowAll: ${pageType}]`;
-    Logger.info('init', 'Initializing script for path:', path);
+    if (pageType) Lib.prefix = `[VZ-ShowAllEntities: ${pageType}]`;
+    Lib.info('init', 'Initializing script for path:', path);
 
     if (!pageType || !headerContainer) {
-        Logger.error('init', 'Required elements not found. Terminating.', { pageType, hasHeader: !!headerContainer });
+        Lib.error('init', 'Required elements not found. Terminating.', { pageType, hasHeader: !!headerContainer });
         return;
     }
 
-    const typesWithSplitCD = ['releasegroup-releases', 'releases', 'label', 'series'];
+    const typesWithSplitCD = ['releasegroup-releases', 'releases', 'recording-releases', 'label-releases', 'series-releases'];
     const typesWithSplitLocation = ['events'];
 
     // --- UI Elements ---
@@ -25157,107 +25166,134 @@ could the following section somehow be refactored, because in the future there w
         mainBtn.onclick = (e) => startFetchingProcess(e);
         controlsContainer.appendChild(mainBtn);
         allActionButtons.push(mainBtn);
-    }
 #+end_example
 
-maybe a better json type structure could be defined ?
+maybe some JSON structure could be defined for this ?
 
-** answer
+*** console logging
 
 #+begin_example
-/**
- * Configuration for all supported MusicBrainz page types.
- * Matches are evaluated in order; the first match wins.
- */
-const ROUTES = [
+21:30:07.151 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Signalling other scripts to stop... 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 21:30:07.151 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Starting fetch process... null
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1681 Uncaught (in promise) ReferenceError: isWorkBase is not defined
+    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1681:9)
+    at eb.onclick (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:771:29)
+startFetchingProcess @ userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1681
+eb.onclick @ userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:771
+#+end_example
+
+*** more refactoring, ChatGPT
+
+**** 1
+
+#+begin_example
+const MBID_RE = '[a-f0-9-]{36}';
+
+const hasParams = expected =>
+    Object.entries(expected).every(([k, v]) => params.get(k) === v);
+#+end_example
+
+==>
+
+#+begin_example
+asParams({ direction: '2', link_type_id: '278' })
+#+end_example
+
+**** 1
+
+#+begin_example
+Normalize URL info once
+const url = new URL(location.href);
+const path = url.pathname;
+const params = url.searchParams;
+
+const MBID_RE = '[a-f0-9-]{36}';
+
+const hasParams = expected =>
+    Object.entries(expected).every(([k, v]) => params.get(k) === v);
+
+2️⃣ Declarative page matchers (JSON-ish)
+
+Think of this as a routing table.
+
+const PAGE_DEFINITIONS = [
     {
-        id: 'work-recordings',
-        match: (path, params) => 
-            path.startsWith('/work/') && 
-            params.get('direction') === '2' && 
-            params.get('link_type_id') === '278',
-        isBase: (path) => path.match(/\/work\/[a-f0-9-]{36}$/)
+        pageType: 'work-recordings',
+        match: ({ path, params }) =>
+            path.startsWith('/work/') &&
+            hasParams({ direction: '2', link_type_id: '278' }),
     },
     {
-        id: 'artist-releasegroups',
-        match: (path, params) => path.startsWith('/artist/') && params.has('all') && params.has('va'),
-        isBase: (path) => path.match(/\/artist\/[a-f0-9-]{36}$/),
-        uiConfigs: [
+        pageType: 'work-recordings',
+        match: ({ path }) =>
+            new RegExp(`/work/${MBID_RE}$`).test(path),
+    },
+
+    {
+        pageType: 'artist-releasegroups',
+        match: ({ path }) =>
+            new RegExp(`/artist/${MBID_RE}$`).test(path),
+        variants: [
             { title: 'Official artist RGs', params: { all: '0', va: '0' } },
             { title: 'Non-official artist RGs', params: { all: '1', va: '0' } },
             { title: 'Official various artists RGs', params: { all: '0', va: '1' } },
             { title: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
         ]
     },
+
     {
-        id: 'releases',
-        match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
-        uiConfigs: [
+        pageType: 'releases',
+        match: ({ path }) =>
+            new RegExp(`/artist/${MBID_RE}/releases$`).test(path),
+        variants: [
             { title: 'Official artist releases', params: { va: '0' } },
             { title: 'Various artist releases', params: { va: '1' } }
         ]
     },
-    { id: 'recordings', match: (path) => path.includes('/recordings') },
-    { id: 'works', match: (path) => path.includes('/works') },
-    { 
-        id: 'releasegroup-releases', 
-        match: (path) => path.includes('/release-group/') || path.match(/\/recording\/[a-f0-9-]{36}$/) 
+
+    {
+        pageType: 'releasegroup-releases',
+        match: ({ path }) => path.includes('/release-group/')
     },
-    { id: 'label', match: (path) => path.includes('/label') },
-    { id: 'series', match: (path) => path.includes('/series') },
-    { id: 'place-concerts', match: (path) => path.match(/\/place\/.*\/events/) },
-    { id: 'place-performances', match: (path) => path.match(/\/place\/.*\/performances/) },
-    { id: 'events', match: (path) => path.includes('/events') }
+    {
+        pageType: 'recording-releases',
+        match: ({ path }) => path.includes('/recording')
+    },
+    {
+        pageType: 'label-releases',
+        match: ({ path }) => path.includes('/label')
+    },
+    {
+        pageType: 'series-releases',
+        match: ({ path }) => path.includes('/series')
+    },
+    {
+        pageType: 'place-concerts',
+        match: ({ path }) => /\/place\/.*\/events/.test(path)
+    },
+    {
+        pageType: 'place-performances',
+        match: ({ path }) => /\/place\/.*\/performances/.test(path)
+    },
+    {
+        pageType: 'events',
+        match: ({ path }) => path.includes('/events')
+    }
 ];
 
-// --- Initialization Logic ---
 
-let activeRoute = ROUTES.find(r => r.match(path, params) || (r.isBase && r.isBase(path)));
+✨ Why this works well
 
-if (activeRoute) {
-    pageType = activeRoute.id;
-    Logger.prefix = `[MB-ShowAll: ${pageType}]`;
-}
+Priority = array order (top wins)
 
-// --- UI Generation Logic ---
+Complex cases stay readable
 
-if (activeRoute?.uiConfigs) {
-    activeRoute.uiConfigs.forEach(conf => {
-        const eb = createActionButton(conf.title, (e) => startFetchingProcess(e, conf.params));
-        controlsContainer.appendChild(eb);
-        allActionButtons.push(eb);
-    });
-} else if (pageType) {
-    const mainBtn = createActionButton(`Show all ${pageType.replace('-', ' ')}`, (e) => startFetchingProcess(e));
-    controlsContainer.appendChild(mainBtn);
-    allActionButtons.push(mainBtn);
-}
-
-/**
- * Helper to keep button styling consistent
- */
-function createActionButton(text, onClick) {
-    const btn = document.createElement('button');
-    btn.textContent = text;
-    btn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
-    btn.type = 'button';
-    btn.onclick = onClick;
-    return btn;
-}
+Variants live with their pageType
 #+end_example
-
-Benefits of this Refactoring:
-Scalability: To add a new page type, you simply add a new object to the ROUTES array.
-
-Centralization: The detection logic (match), the identifier (id), and the UI elements (uiConfigs) for a specific page are now grouped together instead of being spread across multiple if/else blocks.
-
-Readability: The activeRoute.find(...) line replaces dozens of lines of conditional logic, making the main execution flow much cleaner.
-
-Extensibility: You can easily add more properties to each route object in the future (e.g., specific CSS selectors for headerContainer per page type) without breaking the structure.
 
 ** table sorting
 
-What about the refactoting of the sorting functions
+What about the refactoring of the sorting functions
  - function makeSortable()
  - function makeTableSortable()
 
@@ -25625,6 +25661,7 @@ https://musicbrainz.org/release-group/c8e768c9-448b-4ebd-8e5e-4ae95609dd0b
 
 
 * fix my userscript for adding SP URLs to work pages
+
 
 * create userscript which directly scrolls to the first difference on http://brucebase.wikidot.com/song:streets-of-minneapolis pages when clicking history
 
@@ -26793,7 +26830,7 @@ Which version should I update so that Tampermonkey pick up the change correctly
 
 
 
-* add regexp filtering (global, column specific clickable)
+* DONE add regexp filtering (global, column specific clickable)
 ** regexp filtering
 
 In the uploaded userscript,
@@ -26830,9 +26867,357 @@ doesn't show ANY rows also it should match
 
 actually works when using it as a column filter but not as global filter
 
+
 * case sensitive  (global, column specific clickable)
+
 
 * add option to specify filter condition for the initial display already
 
-* add fetching to local db storage and reading from it
 
+* add fetching to local db storage and reading from it
+** initial
+
+Is it possible to serialize the table data read from the paginated musicbrainz pages and store the rows in a database
+format on the filesystem and later, by another button action, instead of downloading again from the internet, read the
+rows from the filesystem and reuse just the musicbrainz page as a container
+
+** answer
+
+#+begin_example
+Yes, it is entirely possible to implement a "Offline Storage" or "Cache" feature for this userscript. Since the script already processes table data as DOM nodes and arrays of rows, you can serialize this data into a JSON structure, store it on your filesystem (or in browser storage), and later "re-hydrate" the MusicBrainz page with that data.
+
+Based on the provided source code of VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages, here is the technical feasibility and a high-level implementation plan.
+
+1. Technical Feasibility
+Data Structure: The script already maintains two primary data structures: allRows (for simple lists) and groupedRows (for Artist and Release Group pages).
+
+Serialization: Since these are DOM <tr> elements, they cannot be directly saved as JSON. However, you can save the innerHTML of each row or, more efficiently, extract the data into a pure JSON object (Title, Year, Format, etc.).
+
+Storage Options:
+
+Browser Storage: GM_setValue (which the script already grants) can store large amounts of data, but it is tied to the browser profile, not a standalone file.
+
+Filesystem: To save to a "database format on the filesystem," the script can trigger a download of a .json file containing the serialized rows.
+
+2. Implementation Strategy
+A. Serialization (Saving the Data)
+You would add a "Save to Disk" button. When clicked, it would iterate through allRows or groupedRows and convert them into a serializable array:
+
+JavaScript
+function serializeRows() {
+    const dataToSave = allRows.map(row => {
+        return Array.from(row.cells).map(cell => cell.innerHTML);
+    });
+    const blob = new Blob([JSON.stringify({
+        url: window.location.href,
+        timestamp: Date.now(),
+        rows: dataToSave
+    })], {type: "application/json"});
+    // Trigger download...
+}
+B. Re-hydration (Loading from Disk)
+You would add a "Load from Disk" button with a file input. When a file is selected:
+
+Clear the Page: Use the existing performClutterCleanup() logic to prepare the MusicBrainz container.
+
+Reconstruct Rows: Create new <tr> elements and set their innerHTML from the saved JSON.
+
+Inject Rows: Use the script's existing renderGroupedTable() or standard table injection functions to populate the page.
+
+Restore Functionality: Because the filtering logic (runFilter()) and sorting logic rely on the allRows array, you simply need to point that variable to your newly reconstructed rows. The script's filter will then work on the "offline" data just as it does on "live" data.
+
+3. Benefits of this Approach
+Speed: Loading 1,000+ rows from a local file is nearly instantaneous compared to fetching 50+ paginated web pages.
+
+Stability: You avoid MusicBrainz's rate-limiting or temporary server errors.
+
+Container Reuse: As you suggested, the MusicBrainz page serves only as the "UI shell" (header, sidebar, and CSS), while the data is purely local.
+
+4. Constraints to Consider
+Images: If you save the rows, the cover art images might still try to load from MusicBrainz's servers unless you base64-encode them (which would make the file very large).
+
+Version Mismatch: If MusicBrainz changes its table structure (e.g., adds a new column), an old saved file might not align perfectly with the current page's headers.
+
+This would be a significant but very powerful addition to the script's current capabilities.
+#+end_example
+
+** questions
+
+is hyperlinked data, like the artist name, or the flag symbol in the Country column preserved in the case we read back from the filesystem
+
+how much storage can a userscript use on the filesystem
+
+
+** implement
+
+In the uploaded script,
+
+please implement a "Offline Storage" or "Cache" feature for the userscript. Since the script already processes table
+data as DOM nodes and arrays of rows, we should serialize this data into a JSON structure, store it our filesystem and
+later "re-hydrate" the MusicBrainz page with that data.
+
+1. Technical Feasibility
+
+Data Structure: The script already maintains two primary data structures: allRows (for simple lists) and groupedRows
+(for Artist and Release Group pages).
+
+Serialization: Since these are DOM <tr> elements, we should save the innerHTML of each row
+
+Storage Options:
+
+Filesystem: To save to a "database format on the filesystem," the script can trigger a download of a .json file containing the serialized rows.
+
+2. Implementation Strategy
+   
+Serialization (Saving the Data)
+
+You should add a "Save to Disk" button. When clicked, it would iterate through allRows or groupedRows and convert them
+into a serializable array:
+
+like this probably
+
+#+begin_example
+function serializeRows() {
+    const dataToSave = allRows.map(row => {
+        return Array.from(row.cells).map(cell => cell.innerHTML);
+    });
+    const blob = new Blob([JSON.stringify({
+        url: window.location.href,
+        timestamp: Date.now(),
+        rows: dataToSave
+    })], {type: "application/json"});
+    // Trigger download...
+}
+#+end_example
+
+B. Re-hydration (Loading from Disk)
+
+You should add a "Load from Disk" button with a file input. When a file is selected:
+
+Clear the Page: Use the existing performClutterCleanup() logic to prepare the MusicBrainz container.
+
+Reconstruct Rows: Create new <tr> elements and set their innerHTML from the saved JSON.
+
+Inject Rows: Use the script's existing renderGroupedTable() or standard table injection functions to populate the page.
+
+Restore Functionality: Because the filtering logic (runFilter()) and sorting logic rely on the allRows array, you simply
+need to point that variable to your newly reconstructed rows. The script's filter will then work on the "offline" data
+just as it does on "live" data.
+
+3. Benefits of this Approach
+   
+Speed: Loading 1,000+ rows from a local file is nearly instantaneous compared to fetching 50+ paginated web pages.
+
+Stability: You avoid MusicBrainz's rate-limiting or temporary server errors.
+
+Container Reuse: As you suggested, the MusicBrainz page serves only as the "UI shell" (header, sidebar, and CSS), while the data is purely local.
+
+So, please implement the "Serialization (Saving the Data)" and "Re-hydration (Loading from Disk)" stratey by introducing
+two new buttons on each supported URL type and use "Physical Filesystem (GM_download / File API)"
+
+Please do not make any other changes to working code, comments and logging statements except adding the buttons plus their logic
+
+** chagpt
+
+#+begin_example
+Alright — this is a good design and it fits your script very cleanly 👍
+Because the userscript is already very large and stable, the safest and most maintainable way to do this is surgical additions only:
+
+✅ no refactors
+
+✅ no behavior changes
+
+✅ no comment / logging changes
+
+✅ only new buttons + new logic, wired into existing variables (allRows, groupedRows, render…, runFilter(), etc.)
+
+Below is exactly what to add, and where to add it.
+
+1️⃣ Add two new buttons to the existing controls bar
+📍 Location
+
+Inside the UI Elements section, after the existing action buttons are created and pushed into allActionButtons, and before stopBtn is appended.
+
+✅ Insert this code verbatim
+    // --- Offline Storage Buttons ---
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save to Disk';
+    saveBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; height:24px; box-sizing:border-box;';
+    saveBtn.type = 'button';
+    saveBtn.onclick = () => serializeRowsToDisk();
+    controlsContainer.appendChild(saveBtn);
+
+    const loadBtn = document.createElement('button');
+    loadBtn.textContent = 'Load from Disk';
+    loadBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; height:24px; box-sizing:border-box;';
+    loadBtn.type = 'button';
+    loadBtn.onclick = () => loadRowsFromDisk();
+    controlsContainer.appendChild(loadBtn);
+
+
+Nothing else in the UI is touched.
+
+2️⃣ Serialization: Save current table state to disk
+📍 Location
+
+Add near the bottom of the script, anywhere before the final })();
+(no existing functions modified).
+
+✅ Add this function
+    function serializeRowsToDisk() {
+        Lib.info('offline', 'Serializing table data to disk…');
+
+        let payload;
+
+        if (Array.isArray(groupedRows) && groupedRows.length) {
+            payload = {
+                type: 'grouped',
+                url: window.location.href,
+                timestamp: Date.now(),
+                groups: groupedRows.map(g => ({
+                    category: g.category,
+                    rows: g.rows.map(r => r.innerHTML)
+                }))
+            };
+        } else {
+            payload = {
+                type: 'flat',
+                url: window.location.href,
+                timestamp: Date.now(),
+                rows: allRows.map(r => r.innerHTML)
+            };
+        }
+
+        const blob = new Blob(
+            [JSON.stringify(payload, null, 2)],
+            { type: 'application/json' }
+        );
+
+        const filename =
+            'musicbrainz-cache-' +
+            pageType +
+            '-' +
+            new Date().toISOString().replace(/[:.]/g, '-') +
+            '.json';
+
+        GM_download({
+            blob,
+            name: filename,
+            saveAs: true
+        });
+
+        Lib.info('offline', `Saved ${payload.type} data to disk.`);
+    }
+
+
+✔ Uses innerHTML
+✔ Preserves grouped vs flat tables
+✔ Includes URL + timestamp
+✔ Uses physical filesystem via GM_download
+
+3️⃣ Re-hydration: Load JSON and rebuild the page
+📍 Location
+
+Right next to the serialization function (before })();)
+
+✅ Add this function
+    function loadRowsFromDisk() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json';
+
+        input.onchange = () => {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const data = JSON.parse(reader.result);
+                    Lib.info('offline', 'Loading offline data…', data);
+
+                    performClutterCleanup();
+
+                    if (data.type === 'grouped') {
+                        groupedRows = data.groups.map(g => ({
+                            category: g.category,
+                            rows: g.rows.map(html => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = html;
+                                return tr;
+                            })
+                        }));
+
+                        renderGroupedTable(groupedRows);
+                    } else {
+                        allRows = data.rows.map(html => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = html;
+                            return tr;
+                        });
+                        originalAllRows = [...allRows];
+
+                        const table = document.querySelector('table.tbl tbody');
+                        table.innerHTML = '';
+                        allRows.forEach(r => table.appendChild(r));
+
+                        makeSortable();
+                    }
+
+                    runFilter();
+                    Lib.info('offline', 'Offline data successfully rehydrated.');
+                } catch (err) {
+                    Lib.error('offline', 'Failed to load offline cache', err);
+                }
+            };
+
+            reader.readAsText(file);
+        };
+
+        input.click();
+    }
+
+
+✔ Clears page via existing cleanup
+✔ Rebuilds <tr> nodes from innerHTML
+✔ Reuses existing render / sort / filter logic
+✔ No special “offline mode” flags needed
+
+4️⃣ What this gives you (exactly as intended)
+
+🚀 Instant loading of 1,000+ rows
+
+📴 Fully usable offline MusicBrainz UI
+
+🧠 All filtering & sorting keeps working
+
+📁 Portable JSON “database” per entity type
+
+🧱 MusicBrainz page becomes a pure UI shell
+
+No coupling. No fragile hacks. No DOM mutation observers.
+
+If you want next steps, easy upgrades are:
+
+auto-restore cache on page revisit
+
+cache versioning / migration
+
+merging multiple saved files
+
+background auto-save during pagination
+
+Just say the word.
+#+end_example
+
+
+** error
+
+In the uploaded script,
+when loading the data from a file I get the following error in the console
+
+#+begin_example
+20:53:43.086 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ❌ Failed to load file: ReferenceError: renderFlatTable is not defined
+    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1014:21)
+#+end_example

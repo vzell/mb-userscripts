@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.8.0+2026-02-03
+// @version      2.0.0+2026-02-03
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -42,6 +42,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '2.0.0+2026-02-03', description: 'Refactor the pageType detection.'},
     {version: '1.8.0+2026-02-03', description: 'Add support for RegExp filtering with an additional "Rx" checkbox.'},
     {version: '1.7.0+2026-02-02', description: 'Make sidebar collapse conditional on setting and only init after process completion.'},
     {version: '1.6.2+2026-02-02', description: 'Fix pageType Recording-Releases (button text was wrong).'},
@@ -263,7 +264,100 @@ let changelog = [
     const path = currentUrl.pathname;
     const params = currentUrl.searchParams;
 
+    // --- Configuration: Page Definitions ---
+    // Define all supported page types, their detection logic, and specific UI configurations here.
+    const pageDefinitions = [
+        {
+            type: 'work-recordings',
+            // Logic: Specific work recordings view OR base work page
+            match: (path, params) => (path.startsWith('/work/') && params.get('direction') === '2' && params.get('link_type_id') === '278') || path.match(/\/work\/[a-f0-9-]{36}$/),
+            buttons: [ { label: 'Show all Work Recordings' } ] // Default button
+        },
+        {
+            type: 'artist-releasegroups',
+            // Logic: Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: 'Official artist RGs', params: { all: '0', va: '0' } },
+                { label: 'Non-official artist RGs', params: { all: '1', va: '0' } },
+                { label: 'Official various artists RGs', params: { all: '0', va: '1' } },
+                { label: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
+            ]
+        },
+        {
+            type: 'releases',
+            // Logic: Artist Releases page (Specific handling for VA/Official toggle)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
+            buttons: [
+                { label: 'Official artist releases', params: { va: '0' } },
+                { label: 'Various artist releases', params: { va: '1' } }
+            ],
+            features: { splitCD: true }
+        },
+        {
+            type: 'recordings',
+            match: (path) => path.includes('/recordings'),
+            features: { splitCD: false } // Explicitly false (default), but shown for clarity
+        },
+        {
+            type: 'releases', // Generic Releases (non-artist specific)
+            match: (path) => path.includes('/releases'),
+            features: { splitCD: true }
+        },
+        {
+            type: 'works',
+            match: (path) => path.includes('/works')
+        },
+        {
+            type: 'releasegroup-releases',
+            match: (path) => path.includes('/release-group/'),
+            features: { splitCD: true }
+        },
+        {
+            type: 'recording-releases',
+            match: (path) => path.includes('/recording'),
+            features: { splitCD: true }
+        },
+        {
+            type: 'label-releases',
+            match: (path) => path.includes('/label'),
+            features: { splitCD: true }
+        },
+        {
+            type: 'series-releases',
+            match: (path) => path.includes('/series'),
+            features: { splitCD: true }
+        },
+        {
+            type: 'place-concerts',
+            match: (path) => path.match(/\/place\/.*\/events/)
+        },
+        {
+            type: 'place-performances',
+            match: (path) => path.match(/\/place\/.*\/performances/)
+        },
+        {
+            type: 'events',
+            match: (path) => path.includes('/events'),
+            features: { splitLocation: true }
+        }
+    ];
+
+    // --- Initialization Logic ---
+
+    // 1. Detect Page Type
     let pageType = '';
+    let activeDefinition = null;
+
+    for (const def of pageDefinitions) {
+        if (def.match(path, params)) {
+            pageType = def.type;
+            activeDefinition = def;
+            break; // Stop at first match (priority based on array order)
+        }
+    }
+
+    // 2. Locate Header
     let headerContainer = document.querySelector('.artistheader h1') ||
                           document.querySelector('.rgheader h1') ||
                           document.querySelector('.labelheader h1') ||
@@ -273,68 +367,6 @@ let changelog = [
                           document.querySelector('h1 a bdi')?.parentNode ||
                           document.querySelector('h1');
 
-    // Logic for Work pages
-    const isWorkRecordings =
-        path.startsWith('/work/') &&
-        params.get('direction') === '2' &&
-        params.get('link_type_id') === '278';
-    const isWorkBase = path.match(/\/work\/[a-f0-9-]{36}$/) && !isWorkRecordings;
-
-    // Logic for the 4 specific Artist Release Groups views
-    const isOfficialArtist =
-        path.startsWith('/artist/') &&
-        params.get('all') === '0' &&
-        params.get('va') === '0';
-    const isOfficialArtistBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isOfficialArtist;
-
-    const isNonOfficialArtist =
-        path.startsWith('/artist/') &&
-        params.get('all') === '1' &&
-        params.get('va') === '0';
-    const isNonOfficialArtistBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isNonOfficialArtist;
-
-    const isOfficialVariousArtists =
-        path.startsWith('/artist/') &&
-        params.get('all') === '0' &&
-        params.get('va') === '1';
-    const isOfficialVariousArtistsBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isOfficialVariousArtists;
-
-    const isNonOfficialVariousArtists =
-        path.startsWith('/artist/') &&
-        params.get('all') === '1' &&
-        params.get('va') === '1';
-    const isNonOfficialVariousArtistsBase = path.match(/\/artist\/[a-f0-9-]{36}$/) && !isNonOfficialVariousArtists;
-
-    const isSpecialArtistView = isOfficialArtist || isNonOfficialArtist || isOfficialVariousArtists || isNonOfficialVariousArtists;
-
-    // Logic for the 2 specific Artist Releases views
-    const isOfficialArtistReleases =
-        path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) &&
-        params.get('va') === '0';
-    const isOfficialArtistReleasesBase = path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) && !isOfficialArtistReleases;
-
-    const isVariousArtistReleases =
-        path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) &&
-        params.get('va') === '1';
-    const isVariousArtistReleasesBase = path.match(/\/artist\/[a-f0-9-]{36}\/releases$/) && !isVariousArtistReleases;
-
-    const isSpecialReleasesView = isOfficialArtistReleases || isVariousArtistReleases;
-
-    // Determine page type using the requested priority structure
-    if (isWorkRecordings || isWorkBase) pageType = 'work-recordings';
-    else if (isSpecialArtistView || path.match(/\/artist\/[a-f0-9-]{36}$/)) pageType = 'artist-releasegroups';
-    else if (isSpecialReleasesView || path.match(/\/artist\/[a-f0-9-]{36}\/releases$/)) pageType = 'releases'; // Updated for Releases
-    else if (path.includes('/recordings')) pageType = 'recordings';
-    else if (path.includes('/releases')) pageType = 'releases';
-    else if (path.includes('/works')) pageType = 'works';
-    else if (path.includes('/release-group/')) pageType = 'releasegroup-releases';
-    else if (path.includes('/recording')) pageType = 'recording-releases';
-    else if (path.includes('/label')) pageType = 'label-releases';
-    else if (path.includes('/series')) pageType = 'series-releases';
-    else if (path.match(/\/place\/.*\/events/)) pageType = 'place-concerts';
-    else if (path.match(/\/place\/.*\/performances/)) pageType = 'place-performances';
-    else if (path.includes('/events')) pageType = 'events';
-
     if (pageType) Lib.prefix = `[VZ-ShowAllEntities: ${pageType}]`;
     Lib.info('init', 'Initializing script for path:', path);
 
@@ -343,8 +375,9 @@ let changelog = [
         return;
     }
 
-    const typesWithSplitCD = ['releasegroup-releases', 'releases', 'recording-releases', 'label-releases', 'series-releases'];
-    const typesWithSplitLocation = ['events'];
+    // 3. Set Feature Flags based on active definition
+    const typesWithSplitCD = (activeDefinition && activeDefinition.features?.splitCD) ? [pageType] : [];
+    const typesWithSplitLocation = (activeDefinition && activeDefinition.features?.splitLocation) ? [pageType] : [];
 
     // --- UI Elements ---
     const controlsContainer = document.createElement('div');
@@ -353,48 +386,21 @@ let changelog = [
 
     const allActionButtons = [];
 
-    if (pageType === 'artist-releasegroups') {
-        const extraConfigs = [
-            { title: 'Official artist RGs', params: { all: '0', va: '0' } },
-            { title: 'Non-official artist RGs', params: { all: '1', va: '0' } },
-            { title: 'Official various artists RGs', params: { all: '0', va: '1' } },
-            { title: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
-        ];
+    // 4. Generate Buttons
+    const buttonsToRender = activeDefinition.buttons || [
+        { label: `Show all ${pageType.replace('-', ' ')}` } // Default fallback
+    ];
 
-        extraConfigs.forEach(conf => {
-            const eb = document.createElement('button');
-            eb.textContent = conf.title;
-            eb.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
-            eb.type = 'button';
-            eb.onclick = (e) => startFetchingProcess(e, conf.params);
-            controlsContainer.appendChild(eb);
-            allActionButtons.push(eb);
-        });
-    } else if (pageType === 'releases' && path.includes('/artist/')) {
-        // Support for Artist Releases specific views
-        const releaseConfigs = [
-            { title: 'Official artist releases', params: { va: '0' } },
-            { title: 'Various artist releases', params: { va: '1' } }
-        ];
-
-        releaseConfigs.forEach(conf => {
-            const eb = document.createElement('button');
-            eb.textContent = conf.title;
-            eb.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
-            eb.type = 'button';
-            eb.onclick = (e) => startFetchingProcess(e, conf.params);
-            controlsContainer.appendChild(eb);
-            allActionButtons.push(eb);
-        });
-    } else {
-        const mainBtn = document.createElement('button');
-        mainBtn.textContent = `Show all ${pageType.replace('-', ' ')}`;
-        mainBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
-        mainBtn.type = 'button';
-        mainBtn.onclick = (e) => startFetchingProcess(e);
-        controlsContainer.appendChild(mainBtn);
-        allActionButtons.push(mainBtn);
-    }
+    buttonsToRender.forEach(conf => {
+        const eb = document.createElement('button');
+        eb.textContent = conf.label;
+        eb.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+        eb.type = 'button';
+        // If params are defined in config, pass them; otherwise standard fetch
+        eb.onclick = (e) => startFetchingProcess(e, conf.params || null);
+        controlsContainer.appendChild(eb);
+        allActionButtons.push(eb);
+    });
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
@@ -1167,9 +1173,9 @@ let changelog = [
         statusDisplay.textContent = 'Getting number of pages to fetch...';
         let maxPage = 1;
 
-        // Determine maxPage based on context
-        if (isWorkBase) {
-            Lib.info('fetch', 'Context: isWorkBase. Fetching maxPage with specific parameters.');
+        // Determine maxPage based on context (Replaces 'isWorkBase' check)
+        if (pageType === 'work-recordings' && !params.get('direction')) {
+            Lib.info('fetch', 'Context: Work base page. Fetching maxPage with specific parameters.');
             maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
         } else if (overrideParams) {
             Lib.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
@@ -1203,7 +1209,6 @@ let changelog = [
                 Lib.debug('fetch', 'No pagination element found; assuming single page (maxPage = 1).');
             }
         }
-
 
         const maxThreshold = Lib.settings.sa_max_page;
         Lib.debug('fetch', `Total pages to fetch: ${maxPage}`);
@@ -1896,7 +1901,7 @@ let changelog = [
                         state.lastSortIndex = index;
                         state.sortState = targetState;
 
-                        // Update visuals: Reset all icons in this TH
+                        // Reset visual state for all header buttons in this table
                         th.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
                         // Highlight only this specific icon
                         span.classList.add('sort-icon-active');
@@ -1950,7 +1955,7 @@ let changelog = [
             th.style.cursor = 'default';
 
             const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
-            th.innerHTML = '';
+            th.innerHTML = ''; // Clear for new icon layout
 
             const createIcon = (char, targetState) => {
                 const span = document.createElement('span');
@@ -1960,6 +1965,7 @@ let changelog = [
                 else if (char === '▲') span.title = 'Ascending sort order';
                 else if (char === '▼') span.title = 'Descending sort order';
 
+		// Initial highlighting
                 if (lastSortIndex === index && sortState === targetState) {
                     span.classList.add('sort-icon-active');
                 }
@@ -1982,7 +1988,7 @@ let changelog = [
 
                         // Reset visual state for all header buttons in this table
                         table.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
-                        // Highlight this one
+                        // Highlight only this specific icon
                         span.classList.add('sort-icon-active');
 
                         if (sortState === 0) {
