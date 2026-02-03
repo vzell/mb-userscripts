@@ -26803,6 +26803,32 @@ add support to interpret the filterstring as a regexp, with an addiotnal checkbo
 <label title="Case Sensitive Filtering" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;"><input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label>
 #+end_example
 
+** strange behaviour
+
+In the uploaded userscript,
+
+for URLs of type https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2
+the following regexp works
+
+#+begin_example
+^[NA].*E$
+#+end_example
+
+but for URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+#+begin_example
+^[GT]
+#+end_example
+
+doesn't show ANY rows also it should match
+
+** 
+
+#+begin_example
+^[GT]
+#+end_example
+
+actually works when using it as a column filter but not as global filter
 
 * case sensitive  (global, column specific clickable)
 

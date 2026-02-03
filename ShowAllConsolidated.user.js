@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.7.0+2026-02-02
+// @version      1.8.0+2026-02-03
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -42,6 +42,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '1.8.0+2026-02-03', description: 'Add support for RegExp filtering with an additional "Rx" checkbox.'},
     {version: '1.7.0+2026-02-02', description: 'Make sidebar collapse conditional on setting and only init after process completion.'},
     {version: '1.6.2+2026-02-02', description: 'Fix pageType Recording-Releases (button text was wrong).'},
     {version: '1.6.1+2026-02-02', description: 'Expose loggerInterface.prefix with getter/setter.'},
@@ -110,7 +111,7 @@ let changelog = [
             default: 50,
             description: "Row count threshold to auto-expand tables"
         },
-	sa_filter_highlight_color: {
+        sa_filter_highlight_color: {
             label: "Global Filter Highlight Color",
             type: "color_picker",
             default: "red",
@@ -148,7 +149,7 @@ let changelog = [
 
     // --- Sidebar Collapsing & Full Width Stretching Logic ---
     function initSidebarCollapse() {
-	if (!Lib.settings.sa_collabsable_sidebar) return; // Only available if true
+        if (!Lib.settings.sa_collabsable_sidebar) return; // Only available if true
 
         const sidebar = document.getElementById("sidebar");
         const page = document.getElementById("page");
@@ -200,9 +201,7 @@ let changelog = [
                 border-radius: 8px 0 0 8px;
                 cursor: pointer;
                 z-index: 10000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                display: flex; align-items: center; justify-content: center;
                 transition: right 0.3s ease;
                 box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             }
@@ -441,16 +440,26 @@ let changelog = [
     filterWrapper.appendChild(filterClear);
 
     const caseLabel = document.createElement('label');
-    caseLabel.style.cssText = 'font-size:0.8em; cursor:pointer; font-weight:normal; display:flex; align-items:center; height:24px; margin:0;';
+    caseLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;';
     const caseCheckbox = document.createElement('input');
     caseCheckbox.type = 'checkbox';
-    caseCheckbox.style.cssText = 'margin-right:2px; vertical-align:middle;';
+    caseCheckbox.style.cssText = 'margin-right: 2px; vertical-align: middle;';
     caseLabel.appendChild(caseCheckbox);
     caseLabel.appendChild(document.createTextNode('Cc'));
     caseLabel.title = 'Case Sensitive Filtering';
 
+    const regexpLabel = document.createElement('label');
+    regexpLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;';
+    const regexpCheckbox = document.createElement('input');
+    regexpCheckbox.type = 'checkbox';
+    regexpCheckbox.style.cssText = 'margin-right: 2px; vertical-align: middle;';
+    regexpLabel.appendChild(regexpCheckbox);
+    regexpLabel.appendChild(document.createTextNode('Rx'));
+    regexpLabel.title = 'RegExp Filtering';
+
     filterContainer.appendChild(filterWrapper);
     filterContainer.appendChild(caseLabel);
+    filterContainer.appendChild(regexpLabel);
 
     const timerDisplay = document.createElement('span');
     timerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
@@ -721,10 +730,22 @@ let changelog = [
         return textParts.join(' ');
     }
 
-    function highlightText(row, query, isCaseSensitive, targetColIndex = -1) {
+    function highlightText(row, query, isCaseSensitive, targetColIndex = -1, isRegExp = false) {
         if (!query) return;
+        let regex;
         const flags = isCaseSensitive ? 'g' : 'gi';
-        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, flags);
+
+        if (isRegExp) {
+            try {
+                regex = new RegExp(`(${query})`, flags);
+            } catch (e) {
+                // Fallback to literal if regexp is invalid
+                regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, flags);
+            }
+        } else {
+            regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, flags);
+        }
+
         const className = targetColIndex === -1 ? 'mb-filter-highlight' : 'mb-col-filter-highlight';
 
         row.querySelectorAll('td').forEach((td, idx) => {
@@ -742,7 +763,16 @@ let changelog = [
             const nodesToReplace = [];
             while (node = walker.nextNode()) {
                 const val = node.nodeValue;
-                const match = isCaseSensitive ? val.includes(query) : val.toLowerCase().includes(query.toLowerCase());
+                let match = false;
+                if (isRegExp) {
+                    try {
+                        match = new RegExp(query, isCaseSensitive ? '' : 'i').test(val);
+                    } catch (e) {
+                        match = isCaseSensitive ? val.includes(query) : val.toLowerCase().includes(query.toLowerCase());
+                    }
+                } else {
+                    match = isCaseSensitive ? val.includes(query) : val.toLowerCase().includes(query.toLowerCase());
+                }
                 if (match) nodesToReplace.push(node);
             }
             nodesToReplace.forEach(textNode => {
@@ -817,8 +847,21 @@ let changelog = [
 
     function runFilter() {
         const isCaseSensitive = caseCheckbox.checked;
+        const isRegExp = regexpCheckbox.checked;
         const globalQueryRaw = filterInput.value;
-        const globalQuery = isCaseSensitive ? globalQueryRaw : globalQueryRaw.toLowerCase();
+        const globalQuery = (isCaseSensitive || isRegExp) ? globalQueryRaw : globalQueryRaw.toLowerCase();
+
+        let globalRegex = null;
+        if (globalQueryRaw && isRegExp) {
+            try {
+                globalRegex = new RegExp(globalQueryRaw, isCaseSensitive ? '' : 'i');
+                filterInput.style.border = '2px solid #ccc'; // Reset to standard if valid
+            } catch (e) {
+                filterInput.style.border = '2px solid red'; // Visual cue for invalid Regex
+            }
+        } else {
+            filterInput.style.border = '2px solid #ccc';
+        }
 
         // Apply red box to global filter if active
         filterInput.style.boxShadow = globalQueryRaw ? '0 0 2px 2px red' : '';
@@ -848,24 +891,40 @@ let changelog = [
                     }) : [];
 
                 const colFilters = colFiltersRaw
-                    .map(f => ({ val: isCaseSensitive ? f.raw : f.raw.toLowerCase(), idx: f.idx }))
+                    .map(f => ({ val: (isCaseSensitive || isRegExp) ? f.raw : f.raw.toLowerCase(), idx: f.idx }))
                     .filter(f => f.val);
 
                 const matches = group.rows.map(r => r.cloneNode(true)).filter(r => {
-
                     // Reset previous highlights (critical for correct filtering)
                     r.querySelectorAll('.mb-filter-highlight, .mb-col-filter-highlight')
                         .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
 
                     // Global match
                     const text = getCleanVisibleText(r);
-                    const globalHit = !globalQuery || (isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery));
+                    let globalHit = !globalQuery;
+                    if (!globalHit) {
+                        if (isRegExp && globalRegex) {
+                            globalHit = globalRegex.test(text);
+                        } else {
+                            globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
+                        }
+                    }
 
                     // Column matches
                     let colHit = true;
                     for (const f of colFilters) {
                         const cellText = getCleanVisibleText(r.cells[f.idx]);
-                        if (!(isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val))) {
+                        let match = false;
+                        if (isRegExp) {
+                            try {
+                                match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
+                            } catch (e) {
+                                match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+                            }
+                        } else {
+                            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+                        }
+                        if (!match) {
                             colHit = false;
                             break;
                         }
@@ -873,8 +932,8 @@ let changelog = [
 
                     const finalHit = globalHit && colHit;
                     if (finalHit) {
-                        if (globalQuery) highlightText(r, globalQueryRaw, isCaseSensitive);
-                        colFilters.forEach(f => highlightText(r, isCaseSensitive ? f.val : f.val, isCaseSensitive, f.idx));
+                        if (globalQuery) highlightText(r, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+                        colFilters.forEach(f => highlightText(r, f.val, isCaseSensitive, f.idx, isRegExp));
                     }
                     return finalHit;
                 });
@@ -892,13 +951,10 @@ let changelog = [
                 const allTables = Array.from(document.querySelectorAll('table.tbl'))
                     .filter(t => t.querySelector('.mb-col-filter-row'));
                 const tableIdx = allTables.findIndex(t => t.contains(__activeEl));
-
                 Lib.debug('filter', `Attempting focus restore: tableIdx=${tableIdx}, colIdx=${colIdx}`);
-
                 if (allTables[tableIdx]) {
                     const newInput = allTables[tableIdx]
-                          .querySelector(`.mb-col-filter-input[data-col-idx="${colIdx}"]`);
-
+                        .querySelector(`.mb-col-filter-input[data-col-idx="${colIdx}"]`);
                     if (newInput) {
                         newInput.focus();
                         newInput.selectionStart = newInput.selectionEnd = newInput.value.length;
@@ -908,7 +964,6 @@ let changelog = [
                     }
                 }
             }
-
             updateH2Count(totalFiltered, totalAbsolute);
         } else {
             const totalAbsolute = allRows.length;
@@ -921,22 +976,38 @@ let changelog = [
                 }) : [];
 
             const colFilters = colFiltersRaw
-                .map(f => ({ val: isCaseSensitive ? f.raw : f.raw.toLowerCase(), idx: f.idx }))
+                .map(f => ({ val: (isCaseSensitive || isRegExp) ? f.raw : f.raw.toLowerCase(), idx: f.idx }))
                 .filter(f => f.val);
 
             const filteredRows = allRows.map(row => row.cloneNode(true)).filter(row => {
-
                 // Reset previous highlights
                 row.querySelectorAll('.mb-filter-highlight, .mb-col-filter-highlight')
                     .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
 
                 const text = getCleanVisibleText(row);
-                const globalHit = !globalQuery || (isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery));
+                let globalHit = !globalQuery;
+                if (!globalHit) {
+                    if (isRegExp && globalRegex) {
+                        globalHit = globalRegex.test(text);
+                    } else {
+                        globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
+                    }
+                }
 
                 let colHit = true;
                 for (const f of colFilters) {
                     const cellText = getCleanVisibleText(row.cells[f.idx]);
-                    if (!(isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val))) {
+                    let match = false;
+                    if (isRegExp) {
+                        try {
+                            match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
+                        } catch (e) {
+                            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+                        }
+                    } else {
+                        match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+                    }
+                    if (!match) {
                         colHit = false;
                         break;
                     }
@@ -944,15 +1015,14 @@ let changelog = [
 
                 const finalHit = globalHit && colHit;
                 if (finalHit) {
-                    if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive);
-                    colFilters.forEach(f => highlightText(row, isCaseSensitive ? f.val : f.val, isCaseSensitive, f.idx));
+                    if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+                    colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
                 }
                 return finalHit;
             });
             renderFinalTable(filteredRows);
             updateH2Count(filteredRows.length, totalAbsolute);
         }
-
         // Maintain scroll position after filtering or sorting
         window.scrollTo(0, __scrollY);
     }
@@ -976,7 +1046,11 @@ let changelog = [
 
     filterInput.addEventListener('input', runFilter);
     caseCheckbox.addEventListener('change', runFilter);
-    filterClear.addEventListener('click', () => { filterInput.value = ''; runFilter(); });
+    regexpCheckbox.addEventListener('change', runFilter);
+    filterClear.addEventListener('click', () => {
+        filterInput.value = '';
+        runFilter();
+    });
 
     function cleanupHeaders(headerElement) {
         if (!headerElement) return;
