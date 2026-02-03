@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.7.1+2026-02-03
+// @version      1.8.0+2026-02-03
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -42,7 +42,7 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '1.7.1+2026-02-03', description: 'Add support for RegExp filtering with an additional "Rx" checkbox.'},
+    {version: '1.8.0+2026-02-03', description: 'Add support for RegExp filtering with an additional "Rx" checkbox.'},
     {version: '1.7.0+2026-02-02', description: 'Make sidebar collapse conditional on setting and only init after process completion.'},
     {version: '1.6.2+2026-02-02', description: 'Fix pageType Recording-Releases (button text was wrong).'},
     {version: '1.6.1+2026-02-02', description: 'Expose loggerInterface.prefix with getter/setter.'},
@@ -885,7 +885,7 @@ let changelog = [
                 const table = tables[groupIdx];
                 const colFiltersRaw = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
                     .map(inp => {
-                        // Apply red box to column filter if active
+                        // Apply green box to column filter if active
                         inp.style.boxShadow = inp.value ? '0 0 2px 2px green' : '';
                         return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
                     }) : [];
@@ -970,7 +970,7 @@ let changelog = [
             const table = document.querySelector('table.tbl');
             const colFiltersRaw = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
                 .map(inp => {
-                    // Apply red box to column filter if active
+                    // Apply green box to column filter if active
                     inp.style.boxShadow = inp.value ? '0 0 2px 2px green' : '';
                     return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
                 }) : [];
