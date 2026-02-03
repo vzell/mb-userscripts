@@ -26791,3 +26791,13 @@ and requires my library with
 
 Which version should I update so that Tampermonkey pick up the change correctly
 
+
+
+* add regexp filtering (global, column specific clickable)
+
+* case sensitive  (global, column specific clickable)
+
+* add option to specify filter condition for the initial display already
+
+* add fetching to local db storage and reading from it
+
