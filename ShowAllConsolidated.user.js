@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.0.0+2026-02-03
+// @version      2.1.0+2026-02-04
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -42,6 +42,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '2.1.0+2026-02-04', description: 'Refactor the single- and multi-table on one page sorting functions.'},
     {version: '2.0.0+2026-02-03', description: 'Refactor the pageType detection.'},
     {version: '1.8.0+2026-02-03', description: 'Add support for RegExp filtering with an additional "Rx" checkbox.'},
     {version: '1.7.0+2026-02-02', description: 'Make sidebar collapse conditional on setting and only init after process completion.'},
@@ -271,7 +272,8 @@ let changelog = [
             type: 'work-recordings',
             // Logic: Specific work recordings view OR base work page
             match: (path, params) => (path.startsWith('/work/') && params.get('direction') === '2' && params.get('link_type_id') === '278') || path.match(/\/work\/[a-f0-9-]{36}$/),
-            buttons: [ { label: 'Show all Work Recordings' } ] // Default button
+            buttons: [ { label: 'Show all Work Recordings' } ], // Default button
+            tableMode: 'single'
         },
         {
             type: 'artist-releasegroups',
@@ -282,7 +284,8 @@ let changelog = [
                 { label: 'Non-official artist RGs', params: { all: '1', va: '0' } },
                 { label: 'Official various artists RGs', params: { all: '0', va: '1' } },
                 { label: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
-            ]
+            ],
+            tableMode: 'multi'
         },
         {
             type: 'releases',
@@ -292,54 +295,65 @@ let changelog = [
                 { label: 'Official artist releases', params: { va: '0' } },
                 { label: 'Various artist releases', params: { va: '1' } }
             ],
-            features: { splitCD: true }
+            features: { splitCD: true },
+            tableMode: 'single'
         },
         {
             type: 'recordings',
             match: (path) => path.includes('/recordings'),
-            features: { splitCD: false } // Explicitly false (default), but shown for clarity
+            features: { splitCD: false }, // Explicitly false (default), but shown for clarity
+            tableMode: 'single'
         },
         {
             type: 'releases', // Generic Releases (non-artist specific)
             match: (path) => path.includes('/releases'),
-            features: { splitCD: true }
+            features: { splitCD: true },
+            tableMode: 'single'
         },
         {
             type: 'works',
-            match: (path) => path.includes('/works')
+            match: (path) => path.includes('/works'),
+            tableMode: 'single'
         },
         {
             type: 'releasegroup-releases',
             match: (path) => path.includes('/release-group/'),
-            features: { splitCD: true }
+            features: { splitCD: true },
+            tableMode: 'multi'
         },
         {
             type: 'recording-releases',
             match: (path) => path.includes('/recording'),
-            features: { splitCD: true }
+            features: { splitCD: true },
+            tableMode: 'single'
         },
         {
             type: 'label-releases',
             match: (path) => path.includes('/label'),
-            features: { splitCD: true }
+            features: { splitCD: true },
+            tableMode: 'single'
         },
         {
             type: 'series-releases',
             match: (path) => path.includes('/series'),
-            features: { splitCD: true }
+            features: { splitCD: true },
+            tableMode: 'single'
         },
         {
             type: 'place-concerts',
-            match: (path) => path.match(/\/place\/.*\/events/)
+            match: (path) => path.match(/\/place\/.*\/events/),
+            tableMode: 'single'
         },
         {
             type: 'place-performances',
-            match: (path) => path.match(/\/place\/.*\/performances/)
+            match: (path) => path.match(/\/place\/.*\/performances/),
+            tableMode: 'single'
         },
         {
             type: 'events',
             match: (path) => path.includes('/events'),
-            features: { splitLocation: true }
+            features: { splitLocation: true },
+            tableMode: 'single'
         }
     ];
 
@@ -1533,7 +1547,7 @@ let changelog = [
                 const mainTable = document.querySelector('table.tbl');
                 if (mainTable) addColumnFilterRow(mainTable);
 
-                makeSortable();
+		if (mainTable) makeTableSortableUnified(mainTable, 'main_table');
 
                 // Series page: disable sorting UI for the "#" (number) column - (DOM-only cleanup; no logic changes)
                 if (location.pathname.startsWith('/series/')) {
@@ -1730,7 +1744,7 @@ let changelog = [
                     table.style.display = isHidden ? '' : 'none';
                     h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
                 });
-                makeTableSortable(table, `${group.category}_${index}`);
+		makeTableSortableUnified(table, `${group.category}_${index}`);
             } else if (h3 && h3.classList.contains('mb-toggle-h3')) {
                 // Update the count in the header during filtering
                 const countStat = h3.querySelector('.mb-row-count-stat');
@@ -1856,11 +1870,24 @@ let changelog = [
         });
     }
 
-    function makeTableSortable(table, sortKey) {
+    /**
+     * Unified sorting logic for both single and multi-table pages.
+     * Handles UI highlighting, wait cursors, and state persistence.
+     *
+     * @param {HTMLElement} table - The table element to attach sorters to.
+     * @param {string} sortKey - Unique key for state persistence (e.g., "Album_0" or "main_table").
+     */
+    function makeTableSortableUnified(table, sortKey) {
+        // Determine mode based on active definition
+        const isMultiTable = activeDefinition && activeDefinition.tableMode === 'multi';
+
         const headers = table.querySelectorAll('thead tr:first-child th');
+
         // multiTableSortStates.get(sortKey) holds: { lastSortIndex, sortState }
         // sortState: 0 (Original ⇅), 1 (Asc ▲), 2 (Desc ▼)
-        if (!multiTableSortStates.has(sortKey)) multiTableSortStates.set(sortKey, { lastSortIndex: -1, sortState: 0 });
+        if (!multiTableSortStates.has(sortKey)) {
+            multiTableSortStates.set(sortKey, { lastSortIndex: -1, sortState: 0 });
+        }
         const state = multiTableSortStates.get(sortKey);
 
         headers.forEach((th, index) => {
@@ -1878,126 +1905,66 @@ let changelog = [
                 else if (char === '▲') span.title = 'Ascending sort order';
                 else if (char === '▼') span.title = 'Descending sort order';
 
-                // Initial highlighting
+                // Initial highlighting: Check if this specific icon corresponds to the saved state
                 if (state.lastSortIndex === index && state.sortState === targetState) {
                     span.classList.add('sort-icon-active');
                 }
                 span.textContent = char;
+
                 span.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    Lib.debug('sort', `Sorting grouped table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}...`);
+
+                    // 1. Identify Target Data
+                    let targetRows = [];
+                    let originalRows = [];
+                    let targetGroup = null;
+
+                    if (isMultiTable) {
+                        const groupIndex = parseInt(sortKey.split('_').pop(), 10);
+                        targetGroup = groupedRows[groupIndex];
+                        if (targetGroup) {
+                            targetRows = targetGroup.rows;
+                            originalRows = targetGroup.originalRows;
+                        }
+                    } else {
+                        targetRows = allRows;
+                        originalRows = originalAllRows;
+                    }
+
+                    // 2. Setup UI Feedback
+                    Lib.debug('sort', `Sorting table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}...`);
                     sortTimerDisplay.textContent = 'Sorting...⏳';
 
-                    const groupIndex = parseInt(sortKey.split('_').pop(), 10);
-                    const targetGroup = groupedRows[groupIndex];
-                    const rowCount = targetGroup?.rows?.length || 0;
+                    const rowCount = targetRows.length;
                     const showWaitCursor = rowCount > 1000;
 
                     if (showWaitCursor) document.body.classList.add('mb-sorting-active');
 
+                    // 3. Execution (Time-delayed to allow UI render)
                     setTimeout(() => {
                         const startSort = performance.now();
+
+                        // Update State
                         state.lastSortIndex = index;
                         state.sortState = targetState;
 
-                        // Reset visual state for all header buttons in this table
-                        th.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
-                        // Highlight only this specific icon
-                        span.classList.add('sort-icon-active');
-
-                        if (targetGroup && targetGroup.rows) {
-                            if (state.sortState === 0) {
-                                targetGroup.rows = [...targetGroup.originalRows];
-                            } else {
-                                const isNumeric = colName.includes('Year') || colName.includes('Releases');
-                                const isAscending = state.sortState === 1;
-
-                                targetGroup.rows.sort((a, b) => {
-                                    const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
-                                    const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
-                                    if (isNumeric) {
-                                        const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
-                                        const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
-                                        return isAscending ? numA - numB : numB - numA;
-                                    }
-                                    return isAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                                });
-                            }
-                        }
-
-                        runFilter();
-                        const duration = ((performance.now() - startSort) / 1000).toFixed(2);
-                        sortTimerDisplay.textContent = `Sorted "${colName}": ${duration}s`;
-                        if (showWaitCursor) document.body.classList.remove('mb-sorting-active');
-                    }, 50); // A short 50ms delay is enough for the UI to paint the "⏳" icon
-                };
-                return span;
-            };
-
-            th.appendChild(createIcon('⇅', 0));
-            th.appendChild(document.createTextNode(` ${colName} `));
-            th.appendChild(createIcon('▲', 1));
-            th.appendChild(createIcon('▼', 2));
-        });
-    }
-
-    function makeSortable() {
-        if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') return;
-        const table = document.querySelector('table.tbl');
-        if (!table) return;
-        const headers = table.querySelectorAll('thead tr:first-child th');
-        let lastSortIndex = -1;
-        let sortState = 0; // 0: Original, 1: Asc, 2: Desc
-
-        headers.forEach((th, index) => {
-            if (th.querySelector('input[type="checkbox"]')) return;
-            th.style.cursor = 'default';
-
-            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
-            th.innerHTML = ''; // Clear for new icon layout
-
-            const createIcon = (char, targetState) => {
-                const span = document.createElement('span');
-                span.className = 'sort-icon-btn';
-                // Set Tooltip texts
-                if (char === '⇅') span.title = 'Original sort order';
-                else if (char === '▲') span.title = 'Ascending sort order';
-                else if (char === '▼') span.title = 'Descending sort order';
-
-		// Initial highlighting
-                if (lastSortIndex === index && sortState === targetState) {
-                    span.classList.add('sort-icon-active');
-                }
-                span.textContent = char;
-                span.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    Lib.debug('sort', `Sorting flat table by column: "${colName}" (index: ${index}) to state ${targetState}...`);
-                    sortTimerDisplay.textContent = 'Sorting...⏳';
-
-                    const rowCount = allRows.length;
-                    const showWaitCursor = rowCount > 1000;
-
-                    if (showWaitCursor) document.body.classList.add('mb-sorting-active');
-
-                    setTimeout(() => {
-                        const startSort = performance.now();
-                        lastSortIndex = index;
-                        sortState = targetState;
-
-                        // Reset visual state for all header buttons in this table
+                        // Reset visual state for all header buttons in THIS table
                         table.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
                         // Highlight only this specific icon
                         span.classList.add('sort-icon-active');
 
-                        if (sortState === 0) {
-                            allRows = [...originalAllRows];
+                        // Perform Sort
+                        let sortedData = [];
+                        if (state.sortState === 0) {
+                            sortedData = [...originalRows];
                         } else {
+                            // Clone before sorting to avoid modifying the original array reference in place immediately
+                            sortedData = [...targetRows];
                             const isNumeric = colName.includes('Year') || colName.includes('Releases');
-                            const isAscending = sortState === 1;
+                            const isAscending = state.sortState === 1;
 
-                            allRows.sort((a, b) => {
+                            sortedData.sort((a, b) => {
                                 const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
                                 const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
                                 if (isNumeric) {
@@ -2009,10 +1976,20 @@ let changelog = [
                             });
                         }
 
+                        // Apply Sorted Data back to Source variables
+                        if (isMultiTable && targetGroup) {
+                            targetGroup.rows = sortedData;
+                        } else {
+                            allRows = sortedData;
+                        }
+
+                        // Re-run filter and render
                         runFilter();
+
                         const duration = ((performance.now() - startSort) / 1000).toFixed(2);
                         sortTimerDisplay.textContent = `Sorted "${colName}": ${duration}s`;
                         if (showWaitCursor) document.body.classList.remove('mb-sorting-active');
+
                     }, 50); // A short 50ms delay is enough for the UI to paint the "⏳" icon
                 };
                 return span;

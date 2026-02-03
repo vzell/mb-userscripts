@@ -25183,7 +25183,6 @@ eb.onclick @ userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-Music
 #+end_example
 
 *** more refactoring, ChatGPT
-
 **** 1
 
 #+begin_example
@@ -25296,6 +25295,48 @@ Variants live with their pageType
 What about the refactoring of the sorting functions
  - function makeSortable()
  - function makeTableSortable()
+
+** initial
+
+In the uploaded script,
+
+please refactor the logic currently in the separated sorting functions
+
+#+begin_example
+    function makeTableSortable(table, sortKey) {
+    function makeSortable() {
+#+end_example
+
+which basically duplicate the sorting logic and only differentiate between the single table and multi table case on the
+rendered final page.
+
+The variable
+
+#+begin_example
+    const pageDefinitions = [
+#+end_example
+
+should be extended with a new parameter which specifies the table type (single or multiple) depending on the currently
+available "type" parameter (this would than be extendable in the future for further page types).
+
+Right now, the following pageTypes are of type "multi table"
+
+#+begin_example
+ - artist-releasegroups
+ - releasegroup-releases
+#+end_example
+
+** more refactoring
+
+Do not just refactor the sorting logic itself,
+but please also take the highlightning logic in the current sorting functions into account, specifically
+
+ - the Initial highlighting
+ - after sorting, Highlight only the specific sort icon
+ - also take care of the "showWaitCursor = rowCount > 1000" situation, inclusive the "sortTimerDisplay.textContent = 'Sorting...⏳';" display
+
+and even more importantly, remember that in the multi table case the sort state needs to be remebered for all the tables ona page
+
 
 ** answer
 
@@ -27221,3 +27262,6 @@ when loading the data from a file I get the following error in the console
 20:53:43.086 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ❌ Failed to load file: ReferenceError: renderFlatTable is not defined
     at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1014:21)
 #+end_example
+
+* when inside a filter field, pressing "Esc" once ==> empty filter (if there is already some date), but when at the beginning of the filter (so no filter condition at all, pressing "Esc" releases focus from filterfiled)
+
