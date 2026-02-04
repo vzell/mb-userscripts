@@ -27461,4 +27461,72 @@ Similarly, inside the page-fetching loop, the logic that sets fetchUrl.searchPar
 #+end_src
 
 
+* refactor column removal
+** initial
 
+In the uploaded userscript
+
+please refactor the 'if / else if' structure for column removal
+
+#+begin_example
+    function cleanupHeaders(headerElement) {
+        if (!headerElement) return;
+        const theadRow = (headerElement.tagName === 'THEAD') ? headerElement.querySelector('tr') : headerElement;
+        if (!theadRow) return;
+
+        const headers = Array.from(theadRow.cells);
+        const indicesToRemove = [];
+        headers.forEach((th, idx) => {
+            const txt = th.textContent.trim();
+            if (Lib.settings.sa_remove_rel && txt.startsWith('Relationships')) indicesToRemove.push(idx);
+            else if (Lib.settings.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToRemove.push(idx);
+            else if (Lib.settings.sa_remove_rating && txt.startsWith('Rating')) indicesToRemove.push(idx);
+            else if (Lib.settings.sa_remove_tagger && txt.startsWith('Tagger')) indicesToRemove.push(idx);
+        });
+
+        indicesToRemove.sort((a, b) => b - a).forEach(idx => theadRow.deleteCell(idx));
+#+end_example
+
+Is the second condition like for example
+
+#+begin_example
+else if (Lib.settings.sa_remove_tagger && txt.startsWith('Tagger')) indicesToRemove.push(idx)
+#+end_example
+
+really needed at all ?
+
+isn't that equivalent to just use
+
+#+begin_example
+else if (Lib.settings.sa_remove_tagger) indicesToRemove.push(idx)
+#+end_example
+
+** logging
+
+add comprehensive debug logging for the columns removal cases in the final renderd table
+
+** same
+
+Is
+
+#+begin_example
+        sa_remove_release_events: {
+            label: 'Remove "Release events" column from "Place-Performances" pages',
+            type: "checkbox",
+            default: true,
+            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
+        },
+#+end_example
+
+and
+
+#+begin_example
+        sa_remove_release_events: {
+            label: "Remove 'Release events' column from 'Place-Performances' pages",
+            type: "checkbox",
+            default: true,
+            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
+        },
+#+end_example
+
+functional equivalent

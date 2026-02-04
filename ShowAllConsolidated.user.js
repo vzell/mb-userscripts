@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.2.0+2026-02-04
+// @version      2.2.1+2026-02-04
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -42,6 +42,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '2.2.1+2026-02-04', description: 'Refactor column removal in final rendered table. Supports now "Release events" column from jesus2099 Super Mind Control script.'},
     {version: '2.2.0+2026-02-04', description: 'Support for "Show all Performances for Recordings".'},
     {version: '2.1.0+2026-02-04', description: 'Refactor the single- and multi-table on one page sorting functions.'},
     {version: '2.0.0+2026-02-03', description: 'Refactor the pageType detection.'},
@@ -83,6 +84,12 @@ let changelog = [
             type: "checkbox",
             default: false,
             description: "Remove the Tagger column from the final rendered tables"
+        },
+        sa_remove_release_events: {
+            label: 'Remove "Release events" column from "Place-Performances" pages',
+            type: "checkbox",
+            default: true,
+            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
         },
         sa_remove_rating: {
             label: "Remove Rating column",
@@ -1077,6 +1084,9 @@ let changelog = [
         runFilter();
     });
 
+    /**
+     * Cleans up the table headers based on user settings and logs the process.
+     */
     function cleanupHeaders(headerElement) {
         if (!headerElement) return;
         const theadRow = (headerElement.tagName === 'THEAD') ? headerElement.querySelector('tr') : headerElement;
@@ -1084,15 +1094,44 @@ let changelog = [
 
         const headers = Array.from(theadRow.cells);
         const indicesToRemove = [];
+
+        // Map header text prefixes to their corresponding library settings keys
+        const removalMap = {
+            'Relationships': 'sa_remove_rel',
+            'Performance Attributes': 'sa_remove_perf',
+            'Rating': 'sa_remove_rating',
+            'Tagger': 'sa_remove_tagger',
+            'Release events': 'sa_remove_release_events'
+        };
+
         headers.forEach((th, idx) => {
             const txt = th.textContent.trim();
-            if (Lib.settings.sa_remove_rel && txt.startsWith('Relationships')) indicesToRemove.push(idx);
-            else if (Lib.settings.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToRemove.push(idx);
-            else if (Lib.settings.sa_remove_rating && txt.startsWith('Rating')) indicesToRemove.push(idx);
-            else if (Lib.settings.sa_remove_tagger && txt.startsWith('Tagger')) indicesToRemove.push(idx);
+
+            for (const [headerPrefix, settingKey] of Object.entries(removalMap)) {
+                if (txt.startsWith(headerPrefix)) {
+                    const isEnabled = Lib.settings[settingKey];
+                    if (isEnabled) {
+                        Lib.debug('cleanup', `Marking column ${idx} ("${txt}") for removal. Match: "${headerPrefix}", Setting: "${settingKey}"`);
+                        indicesToRemove.push(idx);
+                    } else {
+                        Lib.debug('cleanup', `Skipping removal of column ${idx} ("${txt}"). Setting "${settingKey}" is disabled.`);
+                    }
+                    break;
+                }
+            }
         });
 
-        indicesToRemove.sort((a, b) => b - a).forEach(idx => theadRow.deleteCell(idx));
+        if (indicesToRemove.length > 0) {
+            Lib.info('cleanup', `Removing ${indicesToRemove.length} columns from table.`);
+            // Sort descending to ensure index stability during deletion
+            indicesToRemove.sort((a, b) => b - a).forEach(idx => {
+                const colName = theadRow.cells[idx]?.textContent.trim() || `index ${idx}`;
+                theadRow.deleteCell(idx);
+                Lib.debug('cleanup', `Successfully deleted column: ${colName}`);
+            });
+        } else {
+            Lib.debug('cleanup', 'No columns were matched for removal based on current settings.');
+        }
 
         const headerBgColor = '#d3d3d3';
 
