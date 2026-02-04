@@ -24677,6 +24677,22 @@ Userscript-safe CSS → no site collisions
 
 
 
+* Fetching
+
+Sync the data shown in the info area:
+
+#+begin_example
+Loaded 36 of 37 (3600) pages
+#+end_example
+
+with what is already shown in the console
+
+#+begin_example
+02:02:15.761 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 9127. Total Time: 50.46s
+#+end_example
+
+Probably when the info line is stuck, the system already renders the DOM
+
 * Sorting
 ** rethink timings for sorting 
 
@@ -27147,10 +27163,66 @@ when loading the data from a file I get the following error in the console
     at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1014:21)
 #+end_example
 
-* when inside a filter field, pressing "Esc" once ==> empty filter (if there is already some date), but when at the beginning of the filter (so no filter condition at all, pressing "Esc" releases focus from filterfiled)
 
+* "Esc" handling in filter fieldd
 
-* question - equivalent to specifiying the tableMode 'multi'
+** initial
+
+In the uploaded script,
+
+when the focus is inside a filter field, pressing "Esc" once should empty the filter but leave the focus IN the filter
+field, so that we can enter characters by the keyboard for example), but when the cursor is at the beginning of the
+filter field (so basically there is no filter condition at all typed in, or the filter field was just made empty)
+pressing "Esc" should finally release the focus from the filter field.
+
+Rigth now the filter is emptied and the focus is released unconditionally.
+
+** 1
+
+the filters actually get cleared, if something has been typed in before as in the previous implementation, but the focus
+is NOT retained in such a way, that I can start typing right away. I have to artifically click again inside the now empty filter field to gain focus again
+
+** chatgpt
+
+In the uploaded script,
+
+when the focus is inside a filter field, pressing "Esc" once should empty the filter but leave the focus IN the filter
+field, so that we can enter characters by the keyboard for example), but when the cursor is at the beginning of the
+filter field (so basically there is no filter condition at all typed in, or the filter field was just made empty)
+pressing "Esc" should finally release the focus from the filter field.
+
+Rigth now the filter is emptied and the focus is released unconditionally.
+
+So, distinguish between two states when "Esc" is pressed:
+
+Field is not empty: Clear the text but stay inside (keep focus).
+
+Field is already empty: The user wants to leave the field (release focus/blur).
+
+** global ok
+
+OK, so the behaviour for the global filter is OK now, but the column specific filters (remember they also exist in each
+table for a rendered page with multi tables) the first "Esc" clears the filter but it doesn't stay focused, so that I can start typing again 
+
+** midifier escape
+
+If you want, next step could be:
+
+Shift+Esc to always blur
+
+Ctrl+Esc to clear all filters (global + columns)
+
+----------
+
+If you want next-level polish:
+
+restore same table index, not just first matching column
+
+allow Esc to clear all column filters in table with modifier
+
+visual feedback (“cleared”) animation
+
+* DONE question - equivalent to specifiying the tableMode 'multi'
 ** initial
 
 is

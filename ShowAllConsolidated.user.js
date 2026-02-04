@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.1.0+2026-02-04
+// @version      2.2.0+2026-02-04
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -42,6 +42,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '2.2.0+2026-02-04', description: 'Support for "Show all Performances for Recordings".'},
     {version: '2.1.0+2026-02-04', description: 'Refactor the single- and multi-table on one page sorting functions.'},
     {version: '2.0.0+2026-02-03', description: 'Refactor the pageType detection.'},
     {version: '1.8.0+2026-02-03', description: 'Add support for RegExp filtering with an additional "Rx" checkbox.'},
@@ -269,15 +270,20 @@ let changelog = [
     // Define all supported page types, their detection logic, and specific UI configurations here.
     const pageDefinitions = [
         {
+            type: 'place-performances-recording-location-for-recording',
+            match: (path, params) => (path.startsWith('/place/') && params.get('direction') === '1' && params.get('link_type_id') === '693') || path.match(/\/place\/[a-f0-9-]{36}\/performances/),
+            buttons: [ { label: 'Show all Performances for Recordings' } ], // Default button
+            tableMode: 'single'
+        },
+        {
             type: 'work-recordings',
-            // Logic: Specific work recordings view OR base work page
             match: (path, params) => (path.startsWith('/work/') && params.get('direction') === '2' && params.get('link_type_id') === '278') || path.match(/\/work\/[a-f0-9-]{36}$/),
             buttons: [ { label: 'Show all Work Recordings' } ], // Default button
             tableMode: 'single'
         },
         {
             type: 'artist-releasegroups',
-            // Logic: Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
                 { label: 'Official artist RGs', params: { all: '0', va: '0' } },
@@ -289,7 +295,7 @@ let changelog = [
         },
         {
             type: 'releases',
-            // Logic: Artist Releases page (Specific handling for VA/Official toggle)
+            // Artist Releases page (Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
             buttons: [
                 { label: 'Official artist releases', params: { va: '0' } },
@@ -305,7 +311,7 @@ let changelog = [
             tableMode: 'single'
         },
         {
-            type: 'releases', // Generic Releases (non-artist specific)
+            type: 'releases',
             match: (path) => path.includes('/releases'),
             features: { splitCD: true },
             tableMode: 'single'
@@ -342,11 +348,6 @@ let changelog = [
         {
             type: 'place-concerts',
             match: (path) => path.match(/\/place\/.*\/events/),
-            tableMode: 'single'
-        },
-        {
-            type: 'place-performances',
-            match: (path) => path.match(/\/place\/.*\/performances/),
             tableMode: 'single'
         },
         {
@@ -1191,10 +1192,13 @@ let changelog = [
         statusDisplay.textContent = 'Getting number of pages to fetch...';
         let maxPage = 1;
 
-        // Determine maxPage based on context (Replaces 'isWorkBase' check)
+        // Determine maxPage based on context
         if (pageType === 'work-recordings' && !params.get('direction')) {
-            Lib.info('fetch', 'Context: Work base page. Fetching maxPage with specific parameters.');
+            Lib.info('fetch', 'Context: work-recordings page. Fetching maxPage with specific parameters.');
             maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
+        } else if (pageType === 'place-performances-recording-location-for-recording' && !params.get('direction')) {
+            Lib.info('fetch', 'Context: place-performances-recording-location-for-recording page. Fetching maxPage with specific parameters.');
+            maxPage = await fetchMaxPageGeneric(path, { direction: '1', link_type_id: '693' });
         } else if (overrideParams) {
             Lib.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
             maxPage = await fetchMaxPageGeneric(path, overrideParams);
@@ -1284,10 +1288,13 @@ let changelog = [
                 const fetchUrl = new URL(baseUrl);
                 fetchUrl.searchParams.set('page', p.toString());
 
-                // Apply parameters
+                // Apply linkTypeID parameters for specific pageTypes
                 if (pageType === 'work-recordings') {
                     fetchUrl.searchParams.set('direction', '2');
                     fetchUrl.searchParams.set('link_type_id', '278');
+                } else if (pageType === 'place-performances-recording-location-for-recording') {
+                    fetchUrl.searchParams.set('direction', '1');
+                    fetchUrl.searchParams.set('link_type_id', '693');
                 } else if (overrideParams) {
                     Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
                 } else {
