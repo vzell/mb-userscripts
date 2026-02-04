@@ -371,6 +371,10 @@ let changelog = [
         }
     }
 
+    // Add debug logs for tablemode and pagetype at the beginning of execution
+    Lib.debug('init', `Detected pageType: ${pageType}`);
+    Lib.debug('init', `Detected tableMode: ${activeDefinition ? activeDefinition.tableMode : 'unknown'}`);
+
     // 2. Locate Header
     let headerContainer = document.querySelector('.artistheader h1') ||
                           document.querySelector('.rgheader h1') ||
@@ -891,7 +895,7 @@ let changelog = [
 
         Lib.debug('filter', 'runFilter(): active element =', __activeEl?.className || '(none)');
 
-        if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
+        if (activeDefinition.tableMode === 'multi') {
             const filteredArray = [];
             let totalFiltered = 0;
             let totalAbsolute = 0;
@@ -1503,7 +1507,7 @@ let changelog = [
                 // Detailed statistics per page fetch
                 Lib.info('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
 
-		if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
+                if (activeDefinition.tableMode === 'multi') {
                     const summaryParts = groupedRows.map(g => {
                         const curPageCount = pageCategoryMap.get(g.category) || 0;
                         return `${g.category}: +${curPageCount} (Total: ${g.rows.length})`;
@@ -1518,7 +1522,7 @@ let changelog = [
             // --- RENDERING START ---
             Lib.debug('render', 'DOM rendering starting...');
 
-            const totalRows = (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') ?
+            const totalRows = (activeDefinition.tableMode === 'multi') ?
                              groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
 
             updateH2Count(totalRows, totalRows);
@@ -1537,7 +1541,7 @@ let changelog = [
             document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
 
             // Backup original order for tri-state sorting
-            if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
+            if (activeDefinition.tableMode === 'multi') {
                 groupedRows.forEach(g => { g.originalRows = [...g.rows]; });
                 renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
             } else {
@@ -1547,7 +1551,7 @@ let changelog = [
                 const mainTable = document.querySelector('table.tbl');
                 if (mainTable) addColumnFilterRow(mainTable);
 
-		if (mainTable) makeTableSortableUnified(mainTable, 'main_table');
+                if (mainTable) makeTableSortableUnified(mainTable, 'main_table');
 
                 // Series page: disable sorting UI for the "#" (number) column - (DOM-only cleanup; no logic changes)
                 if (location.pathname.startsWith('/series/')) {
@@ -1566,10 +1570,10 @@ let changelog = [
             // Make all H2s collapsible after rendering
             makeH2sCollapsible();
 
-	    isLoaded = true;
+            isLoaded = true;
             // Initialize sidebar collapse only now if enabled
             if (Lib.settings.sa_collabsable_sidebar) {
-		initSidebarCollapse();
+                initSidebarCollapse();
             }
 
             totalRenderingTime = performance.now() - renderingTimeStart;
@@ -1744,7 +1748,7 @@ let changelog = [
                     table.style.display = isHidden ? '' : 'none';
                     h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
                 });
-		makeTableSortableUnified(table, `${group.category}_${index}`);
+                makeTableSortableUnified(table, `${group.category}_${index}`);
             } else if (h3 && h3.classList.contains('mb-toggle-h3')) {
                 // Update the count in the header during filtering
                 const countStat = h3.querySelector('.mb-row-count-stat');

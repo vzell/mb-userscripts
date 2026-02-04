@@ -25029,7 +25029,7 @@ Please implement
 
 
 * TODO refactoring
-** initial routing configuration
+** DONE initial routing configuration
 
 In the uploaded script,
 could the following section somehow be refactored, because in the future there will be much more URLs supported, with more "pageType"s and different query parameters
@@ -25296,7 +25296,7 @@ What about the refactoring of the sorting functions
  - function makeSortable()
  - function makeTableSortable()
 
-** initial
+*** initial
 
 In the uploaded script,
 
@@ -25326,7 +25326,7 @@ Right now, the following pageTypes are of type "multi table"
  - releasegroup-releases
 #+end_example
 
-** more refactoring
+*** more refactoring
 
 Do not just refactor the sorting logic itself,
 but please also take the highlightning logic in the current sorting functions into account, specifically
@@ -25337,122 +25337,6 @@ but please also take the highlightning logic in the current sorting functions in
 
 and even more importantly, remember that in the multi table case the sort state needs to be remebered for all the tables ona page
 
-
-** answer
-
-#+begin_example
-To refactor the sorting logic into a more scalable structure, you can move away from hardcoded column names and manual if/else checks for every page type.
-
-By defining a Sorting Metadata Map, you can describe how different types of data (Dates, Durations, Numbers) should be compared. This allows the sort functions to be generic: makeTableSortable handles the UI and DOM manipulation, while the sorting logic is driven by the data type of the column.
-
-1. Refactored makeTableSortable
-This version becomes a generic "Engine" that applies sorting to any table. It uses dataset attributes to track state, allowing it to support multiple tables on one page (like in Grouped views) without conflict.
-
-JavaScript
-
-/**
- * Makes a specific table sortable.
- * Uses the data-type attribute on headers to determine the sorting algorithm.
- */
-function makeTableSortable(table) {
-    const thead = table.tHead;
-    if (!thead) return;
-
-    const headerRow = thead.querySelector('tr:not(.mb-col-filter-row)');
-    if (!headerRow) return;
-
-    Array.from(headerRow.cells).forEach((th, index) => {
-        // Skip columns that shouldn't be sorted (e.g., checkboxes)
-        if (th.querySelector('input[type="checkbox"]')) return;
-
-        th.classList.add('sort-icon-btn');
-        if (!th.textContent.includes('⇅')) th.textContent += ' ⇅';
-
-        th.onclick = () => {
-            const currentDir = th.getAttribute('data-sort-dir') || 'none';
-            const newDir = currentDir === 'asc' ? 'desc' : 'asc';
-            
-            // UI Update: Reset other headers in this table
-            Array.from(headerRow.cells).forEach(c => {
-                c.setAttribute('data-sort-dir', 'none');
-                c.classList.remove('sort-icon-active');
-                if (c.textContent.includes('▲') || c.textContent.includes('▼')) {
-                    c.textContent = c.textContent.replace(/[▲▼]/, '⇅');
-                }
-            });
-
-            // Set active state
-            th.setAttribute('data-sort-dir', newDir);
-            th.classList.add('sort-icon-active');
-            th.textContent = th.textContent.replace('⇅', newDir === 'asc' ? '▲' : '▼');
-
-            performSort(table, index, newDir);
-        };
-    });
-}
-2. Refactored makeSortable (Logic Engine)
-Instead of a single giant function, we use a COMPARE_LOGIC object. This makes it trivial to add new data types (e.g., "BPM" or "Bitrate") in the future.
-
-JavaScript
-
-const COMPARE_LOGIC = {
-    text: (a, b) => a.localeCompare(b),
-    number: (a, b) => parseFloat(a) - parseFloat(b),
-    duration: (a, b) => {
-        const toSec = (s) => s.split(':').reduce((acc, time) => (60 * acc) + +time, 0);
-        return toSec(a) - toSec(b);
-    },
-    date: (a, b) => new Date(a || '1900-01-01') - new Date(b || '1900-01-01')
-};
-
-function performSort(table, columnIndex, direction) {
-    const tbody = table.tBodies[0];
-    const rows = Array.from(tbody.rows);
-    
-    // Determine type from header or default to text
-    const header = table.tHead.rows[0].cells[columnIndex];
-    const type = header.getAttribute('data-type') || 'text';
-    const compare = COMPARE_LOGIC[type] || COMPARE_LOGIC.text;
-
-    const startTime = performance.now();
-    if (rows.length > 1000) document.body.classList.add('mb-sorting-active');
-
-    rows.sort((rowA, rowB) => {
-        const valA = getCleanVisibleText(rowA.cells[columnIndex]).trim();
-        const valB = getCleanVisibleText(rowB.cells[columnIndex]).trim();
-        return direction === 'asc' ? compare(valA, valB) : compare(valB, valA);
-    });
-
-    // Re-append sorted rows
-    const fragment = document.createDocumentFragment();
-    rows.forEach(row => fragment.appendChild(row));
-    tbody.appendChild(fragment);
-
-    document.body.classList.remove('mb-sorting-active');
-    const duration = ((performance.now() - startTime) / 1000).toFixed(2);
-    Logger.info('sort', `Sorted ${rows.length} rows in ${duration}s using type: ${type}`);
-}
-3. Usage in the script
-To make this work with your future "many URLs" requirement, you simply tag your table headers during the cleanupHeaders or render phase:
-
-JavaScript
-
-// Inside cleanupHeaders or table generation
-function prepareHeaderTypes(th, columnName) {
-    if (columnName === 'Date') th.setAttribute('data-type', 'date');
-    else if (columnName === 'Time' || columnName === 'Length') th.setAttribute('data-type', 'duration');
-    else if (columnName === 'Rating' || columnName === 'Votes') th.setAttribute('data-type', 'number');
-    else th.setAttribute('data-type', 'text');
-}
-Key Improvements:
-Decoupled Logic: The sorting UI (makeTableSortable) no longer needs to know how to sort a date; it just knows that it's a date.
-
-Performance: Uses DocumentFragment for DOM updates, which is much faster than individual appendChild calls for large lists.
-
-Multi-Table Support: By using data-sort-dir on the elements themselves instead of global variables, you can sort different tables on the same page independently.
-
-Scalability: Adding a new sort type only requires one line in the COMPARE_LOGIC object.
-#+end_example
 
 ** table rendering
 
@@ -27265,3 +27149,50 @@ when loading the data from a file I get the following error in the console
 
 * when inside a filter field, pressing "Esc" once ==> empty filter (if there is already some date), but when at the beginning of the filter (so no filter condition at all, pressing "Esc" releases focus from filterfiled)
 
+
+* question - equivalent to specifiying the tableMode 'multi'
+** initial
+
+is
+
+#+begin_example
+if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
+#+end_example
+
+the same as
+
+#+begin_example
+if (pageType === 'artist-releasegroups' || pageType === 'releasegroup-releases') {
+#+end_example
+
+#+begin_example
+      3:    894:        if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
+      8:   1521:            const totalRows = (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') ?
+      9:   1540:            if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
+#+end_example
+
+** final question
+
+In the uploaded script,
+is the logic in the following rows
+
+#+begin_example
+    894:        if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
+   1506:		if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
+   1521:            const totalRows = (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') ?
+   1540:            if (pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups') {
+#+end_example
+
+equivalent to specifiying the tableMode 'multi' from the variable 
+
+#+begin_example
+    const pageDefinitions = [
+#+end_example
+
+** answer
+
+(pageType === 'releasegroup-releases' || pageType === 'artist-releasegroups')
+
+#+begin_example
+(activeDefinition.tableMode === 'multi')
+#+end_example
