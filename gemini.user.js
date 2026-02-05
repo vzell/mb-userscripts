@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.3.0+2026-02-04
+// @version      2.2.1+2026-02-04
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -42,7 +42,7 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '2.3.0+2026-02-04', description: 'Implemented "Show all [Subgroup]" buttons for Place-Performances to separate massive lists from the consolidated view.'},
+    {version: '2.3.0+2026-02-05', description: 'Handle multitable pages of type "non_paginated" like Place-Performances.'},
     {version: '2.2.1+2026-02-04', description: 'Refactor column removal in final rendered table. Supports now "Release events" column from jesus2099 Super Mind Control script.'},
     {version: '2.2.0+2026-02-04', description: 'Support for "Show all Performances for Recordings".'},
     {version: '2.1.0+2026-02-04', description: 'Refactor the single- and multi-table on one page sorting functions.'},
@@ -278,10 +278,10 @@ let changelog = [
     // Define all supported page types, their detection logic, and specific UI configurations here.
     const pageDefinitions = [
         {
-            type: 'place-performances-recording-location-for-recording',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/),
+            type: 'place-performances',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/performances/),
             buttons: [ { label: 'Show all Performances for Recordings' } ], // Default button
-            tableMode: 'multiple',
+            tableMode: 'multi',
             non_paginated: true
         },
         {
@@ -701,7 +701,12 @@ let changelog = [
         if (pageType === 'artist-releasegroups') {
             targetH2 = document.querySelector('h2.discography');
         } else if (pageType === 'releasegroup-releases') {
-            targetH2 = document.querySelector('h2.appears-on-releases') || Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+            targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+        } else if (pageType === 'place-performances') {
+            targetH2 = Array.from(document.querySelectorAll('h2'))
+                .find(h => h.childNodes[0]?.nodeType === Node.TEXT_NODE &&
+                      h.childNodes[0].textContent.trim() === 'Performances');
+            //targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Performances'));
         }
 
         if (!targetH2) {
@@ -729,7 +734,9 @@ let changelog = [
             }
 
             // Append global filter here for non-grouped pages (Artist/RG pages handle this in renderGroupedTable)
-            if (pageType !== 'artist-releasegroups' && pageType !== 'releasegroup-releases') {
+            if (pageType !== 'artist-releasegroups' &&
+                pageType !== 'releasegroup-releases' &&
+                pageType !== 'place-performances') {
                 if (filterContainer.parentNode !== targetH2) {
                     targetH2.appendChild(filterContainer);
                     filterContainer.style.display = 'inline-flex';
@@ -1241,9 +1248,6 @@ let changelog = [
         } else if (pageType === 'work-recordings' && !params.get('direction')) {
             Lib.info('fetch', 'Context: work-recordings page. Fetching maxPage with specific parameters.');
             maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
-        } else if (pageType === 'place-performances-recording-location-for-recording' && !params.get('direction')) {
-            Lib.info('fetch', 'Context: place-performances-recording-location-for-recording page. Fetching maxPage with specific parameters.');
-            maxPage = await fetchMaxPageGeneric(path, { direction: '1', link_type_id: '693' });
         } else if (overrideParams) {
             Lib.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
             maxPage = await fetchMaxPageGeneric(path, overrideParams);
@@ -1323,45 +1327,69 @@ let changelog = [
         const html = await fetchHtml(fetchUrl.toString());
         const doc = new DOMParser().parseFromString(html, 'text/html');
 
-        // [CHANGE] Define subgroupData outside the block so it is accessible during the rendering phase
+        // Define subgroupData outside the block so it is accessible during the rendering phase
         let subgroupData = [];
 
-        // Special handling for non-paginated pages with sub-grouping (e.g., Place-Performances)
+        // This block will only be executed for non-paginated pages to get their subgroup structure
         if (activeDefinition && activeDefinition.non_paginated) {
             Lib.debug('parse', 'Entering non-paginated subgroup extraction block.');
             const table = doc.querySelector('table.tbl');
             if (table) {
-                Lib.debug('parse', `Subgroup table found. Scanning ${table.querySelectorAll('tr').length} rows.`);
+                const rows = table.querySelectorAll('tr');
+                Lib.debug('parse', `Subgroup table found. Scanning ${rows.length} rows.`);
 
-                // [CHANGE] Removed 'const' keyword here so it populates the variable defined above
+                // Removed 'const' keyword here so it populates the variable defined above
                 subgroupData = [];
+
+                // Pre-scan to calculate final counts for each subgroup for logging purposes
+                const subgroupTotals = new Map();
+                let scanSubIdx = -1;
+                rows.forEach((r, i) => {
+                    if (r.classList.contains('subh')) {
+                        scanSubIdx = i;
+                        subgroupTotals.set(i, 0);
+                    } else if (scanSubIdx !== -1) {
+                        const isDataRow = r.querySelector('td') && !r.querySelector('td[colspan]');
+                        if (isDataRow) {
+                            subgroupTotals.set(scanSubIdx, subgroupTotals.get(scanSubIdx) + 1);
+                        } else {
+                            const link = r.querySelector('td[colspan] a');
+                            if (link && link.textContent.toLowerCase().includes('see all')) {
+                                const m = link.textContent.match(/See all ([\d,.]+) relationships/i);
+                                if (m) {
+                                    subgroupTotals.set(scanSubIdx, parseInt(m[1].replace(/[,.]/g, ''), 10));
+                                }
+                            }
+                        }
+                    }
+                });
 
                 let currentSubgroup = 'Unknown';
                 let totalRows = 0;
                 let localSubgroupCount = 0;
-                const rows = table.querySelectorAll('tr');
 
                 Lib.debug('parse', `Testing row count for subgrouping. Total rows: ${rows.length}`);
 
-                rows.forEach((row, index) => {
-                    // 1. Check classes on every row to see what MusicBrainz is actually providing
-                    if (index < 10 || row.classList.contains('subh')) {
-                        Lib.debug('parse', `[Row ${index}] classes: "${row.className}", nodeName: ${row.nodeName}`);
-                    }
+                // low level debugging
+                // rows.forEach((row, index) => {
+                //      // 1. Check classes on every row to see what MusicBrainz is actually providing
+                //      if (index < 10 || row.classList.contains('subh')) {
+                //          Lib.debug('parse', `[Row ${index}] classes: "${row.className}", nodeName: ${row.nodeName}`);
+                //      }
 
-                    // 2. Check if the specific subh class is present
-                    if (row.classList.contains('subh')) {
-                        const th = row.querySelector('th');
-                        Lib.debug('parse', `[Row ${index}] FOUND subh. TH content: "${th ? th.textContent.trim() : 'null'}"`);
-                    }
-                });
+                //      // 2. Check if the specific subh class is present
+                //      if (row.classList.contains('subh')) {
+                //          const th = row.querySelector('th');
+                //          Lib.debug('parse', `[Row ${index}] FOUND subh. TH content: "${th ? th.textContent.trim() : 'null'}"`);
+                //      }
+                // });
 
-                // 3. Log the "See all" link search result specifically
-                const seeAllLinks = doc.querySelectorAll('td > a[href*="performances"]');
-                Lib.debug('parse', `DEBUG: Found ${seeAllLinks.length} potential "See all" links.`);
-                seeAllLinks.forEach((link, i) => {
-                    Lib.debug('parse', `Link ${i}: text="${link.textContent}", href="${link.href}"`);
-                });
+                // // 3. Log the "See all" link search result specifically
+                // const seeAllLinks = doc.querySelectorAll('td > a[href*="performances"]');
+                // Lib.debug('parse', `DEBUG: Found ${seeAllLinks.length} potential "See all" links.`);
+                // seeAllLinks.forEach((link, i) => {
+                //      Lib.debug('parse', `Link ${i}: text="${link.textContent}", href="${link.href}"`);
+                // });
 
                 rows.forEach((row, index) => {
                     // Detect sub-grouping headers (e.g., "recording location for")
@@ -1370,7 +1398,9 @@ let changelog = [
                         if (thWithColspan) {
                             currentSubgroup = thWithColspan.textContent.replace(/\s+/g, ' ').trim();
                             localSubgroupCount = 0; // Reset local counter for the new section
+
                             Lib.debug('parse', `[Row ${index}] Detected subgroup header: "${currentSubgroup}"`);
+                            Lib.info('parse', `Total rows in "${currentSubgroup}": ${subgroupTotals.get(index) || 0}`);
 
                             const metaEntry = {
                                 subgroup: currentSubgroup,
@@ -1410,6 +1440,7 @@ let changelog = [
                                 const totalRowsFromLink = match ? parseInt(match[1].replace(/[,.]/g, ''), 10) : 0;
 
                                 if (href.includes('link_type_id') || href.includes('direction') || totalRowsFromLink > 0) {
+				    Lib.debug('parse', `Link for all rows: href="${href}"`);
                                     if (subgroupData.length > 0) {
                                         const currentEntry = subgroupData[subgroupData.length - 1];
 
@@ -1425,7 +1456,6 @@ let changelog = [
                                         currentEntry.url = href ? new URL(href, window.location.origin).href : null;
 
                                         console.log(JSON.stringify(currentEntry));
-                                        Lib.info('parse', `Extracted: ${currentSubgroup} -> ${currentEntry.totalRowsPerSubGroup} total relationships (Backend count).`);
                                     }
                                 }
                             }
@@ -1469,9 +1499,6 @@ let changelog = [
                 if (pageType === 'work-recordings') {
                     fetchUrl.searchParams.set('direction', '2');
                     fetchUrl.searchParams.set('link_type_id', '278');
-                // } else if (pageType === 'place-performances-recording-location-for-recording') {
-                //     fetchUrl.searchParams.set('direction', '1');
-                //     fetchUrl.searchParams.set('link_type_id', '693');
                 } else if (overrideParams) {
                     Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
                 } else {
@@ -1506,7 +1533,7 @@ let changelog = [
                         if (mainHeaders.includes(txt)) mainColIdx = idx;
                     });
                 }
-                if (mainColIdx === -1 && pageType === 'releasegroup-releases') mainColIdx = 0;
+                if (mainColIdx === -1 && (pageType === 'releasegroup-releases' || pageType === 'place-performances')) mainColIdx = 0;
 
                 let rowsInThisPage = 0;
                 let pageCategoryMap = new Map();
@@ -1544,10 +1571,25 @@ let changelog = [
                             if (node.nodeName === 'TR') {
                                 if (node.classList.contains('subh')) {
                                     currentStatus = node.textContent.trim() || 'Unknown';
-                                    if (pageType === 'releasegroup-releases' && currentStatus !== lastCategorySeenAcrossPages) {
+                                    // TODO: for 'place-performances' check as we can have same named categories but different entities, like releases and recordings recorded at the same place
+                                    if ((pageType === 'releasegroup-releases' || pageType === 'place-performances') && currentStatus !== lastCategorySeenAcrossPages) {
                                         Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
                                     }
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+                                    // START row REMOVAL LOGIC
+                                    // Check for "See all relationships" link in place-performances pages
+                                    if (pageType === 'place-performances') {
+                                        const seeAllCell = node.querySelector('td[colspan]');
+                                        if (seeAllCell) {
+                                            const link = seeAllCell.querySelector('a');
+                                            if (link && link.textContent.toLowerCase().includes('see all')) {
+                                                Lib.debug('parse', `Skipping "See all" relationship row.`);
+                                                return; // Skip adding this row to data structures
+                                            }
+                                        }
+                                    }
+                                    // END row REMOVAL LOGIC
+
                                     const newRow = document.importNode(node, true);
 
                                     // Extraction logic for MB-Name and Comment
@@ -1642,13 +1684,10 @@ let changelog = [
                                     } else if (typesWithSplitLocation.includes(pageType)) {
                                         newRow.appendChild(tdP); newRow.appendChild(tdA); newRow.appendChild(tdC);
                                     }
-
                                     if (pageType !== 'artist-releasegroups') {
                                         newRow.appendChild(tdName); newRow.appendChild(tdComment);
                                     }
-
-                                    if (pageType === 'releasegroup-releases') {
-                                        // Check if this category group already exists to consolidate subgroup tables
+                                    if (activeDefinition.tableMode === 'multi') {
                                         let existingGroup = groupedRows.find(g => g.category === currentStatus);
                                         if (existingGroup) {
                                             existingGroup.rows.push(newRow);
@@ -1660,6 +1699,7 @@ let changelog = [
                                     } else {
                                         allRows.push(newRow);
                                     }
+
                                     rowsInThisPage++;
                                     totalRowsAccumulated++;
                                 }
@@ -1696,73 +1736,13 @@ let changelog = [
                         const curPageCount = pageCategoryMap.get(g.category) || 0;
                         return `${g.category}: +${curPageCount} (Total: ${g.rows.length})`;
                     });
+                    Lib.debug(`  Summary: ${summaryParts.join(' | ')}`);
                     console.log(`  Summary: ${summaryParts.join(' | ')}`);
                 }
             }
 
             totalFetchingTime = performance.now() - fetchingTimeStart;
             let renderingTimeStart = performance.now();
-
-            // [NEW LOGIC START] -----------------------------------------------------------------------
-            // Process 'groupedRows' based on the 'subgroupData' extracted earlier.
-            // If a subgroup has a 'See all' URL, create a button and remove the rows to prevent table rendering.
-
-            if (activeDefinition.tableMode === 'multi' && subgroupData.length > 0) {
-                Lib.info('process', 'Processing subgroups for Button vs Table display...');
-
-                const btnContainer = document.createElement('div');
-                btnContainer.id = 'mb-subgroup-action-buttons';
-                btnContainer.style.cssText = 'padding: 10px 0; display: flex; flex-wrap: wrap; gap: 8px;';
-
-                // Filter groupedRows: Keep only those that DO NOT have a URL in subgroupData
-                const groupsToRender = [];
-
-                groupedRows.forEach(group => {
-                    // Find matching metadata by name
-                    const meta = subgroupData.find(m => m.subgroup === group.category);
-
-                    if (meta && meta.url) {
-                        // Case 1: Subgroup has a "See all" URL -> Create Button
-                        Lib.debug('process', `Creating button for "${group.category}" (Rows: ${group.rows.length}, Total: ${meta.totalRowsPerSubGroup})`);
-
-                        const btn = document.createElement('button');
-                        btn.textContent = `Show all ${group.category} (${meta.totalRowsPerSubGroup})`;
-                        btn.title = `Maps to full list for ${group.category}`;
-                        // Style matching other controls
-                        btn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; background-color:#e0e0e0; border:1px solid #ccc; height:24px; box-sizing:border-box; border-radius:3px;';
-
-                        btn.onclick = (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (confirm(`Leave this consolidated view and load the full list for "${group.category}"?`)) {
-                                window.location.href = meta.url;
-                            }
-                        };
-                        btnContainer.appendChild(btn);
-
-                        // Do NOT add to groupsToRender (effectively removing the table)
-                    } else {
-                        // Case 2: No URL (complete list already) -> Render as Table
-                        groupsToRender.push(group);
-                    }
-                });
-
-                // Replace the main data array with our filtered list
-                groupedRows = groupsToRender;
-
-                // Insert the button container into the DOM
-                // We insert it after the main controlsContainer
-                if (btnContainer.hasChildNodes()) {
-                    if (controlsContainer && controlsContainer.parentNode) {
-                        controlsContainer.after(btnContainer);
-                    } else {
-                        // Fallback if controlsContainer is weirdly placed
-                        const targetHeader = document.querySelector('h1') || document.querySelector('#content');
-                        if (targetHeader) targetHeader.after(btnContainer);
-                    }
-                }
-            }
-            // [NEW LOGIC END] -------------------------------------------------------------------------
 
             // --- RENDERING START ---
             Lib.debug('render', 'DOM rendering starting...');
@@ -1845,21 +1825,44 @@ let changelog = [
     }
 
     function renderFinalTable(rows) {
+        // Access rows.length to get the actual count
+        const rowCount = Array.isArray(rows) ? rows.length : 0;
+        Lib.info('render', `Starting renderFinalTable with ${rowCount} rows.`);
+
         const tbody = document.querySelector('table.tbl tbody');
-        if (!tbody) return;
+        if (!tbody) {
+            Lib.error('render', 'Abort: #tbody container not found.');
+            return;
+        }
+
         tbody.innerHTML = '';
-        rows.forEach(r => tbody.appendChild(r));
+
+        if (rowCount > 0) {
+            rows.forEach(r => tbody.appendChild(r));
+        } else {
+            Lib.warn('render', 'No rows provided to renderFinalTable.');
+        }
+
+        Lib.info('render', `Finished renderFinalTable. Injected ${rowCount} rows into DOM.`);
     }
 
     function renderGroupedTable(dataArray, isArtistMain, query = '') {
+        Lib.info('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}"`);
+
         const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
-        if (!container) return;
+        if (!container) {
+            Lib.error('render', 'Abort: #content container not found.');
+            return;
+        }
 
         let templateHead = null;
         const firstTable = document.querySelector('table.tbl');
         if (firstTable && firstTable.tHead) {
+            Lib.info('render', 'Cloning table head for template.');
             templateHead = firstTable.tHead.cloneNode(true);
             cleanupHeaders(templateHead);
+        } else {
+            Lib.warn('render', 'No template table head found.');
         }
 
         // Identify the target anchor header based on page type
@@ -1868,16 +1871,26 @@ let changelog = [
             targetHeader = document.querySelector('h2.discography');
         } else if (pageType === 'releasegroup-releases') {
             targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+        } else if (pageType === 'place-performances') {
+            targetHeader = Array.from(document.querySelectorAll('h2'))
+                .find(h => h.childNodes[0]?.nodeType === Node.TEXT_NODE &&
+                      h.childNodes[0].textContent.trim() === 'Performances');
         }
+        Lib.info('render', `Target header identified for pageType "${pageType}":`, targetHeader);
 
         if (!query) {
+            Lib.info('render', 'No query provided; performing initial cleanup of existing elements.');
             // Updated cleanup: remove H3s and tables, but NEVER remove H3s containing 'span.worklink'
             container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => {
-                if (el.tagName === 'H3' && el.querySelector('span.worklink')) return;
+                if (el.tagName === 'H3' && el.querySelector('span.worklink')) {
+                    Lib.info('render', 'Skipping removal of H3 containing worklink.');
+                    return;
+                }
                 el.remove();
             });
 
             if (targetHeader) {
+                Lib.info('render', 'Injecting master toggle and filter container.');
                 const masterToggle = document.createElement('span');
                 masterToggle.className = 'mb-master-toggle';
 
@@ -1887,6 +1900,7 @@ let changelog = [
                 showSpan.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    Lib.info('render', 'Master toggle: Showing all tables.');
                     container.querySelectorAll('table.tbl').forEach(t => t.style.display = '');
                     container.querySelectorAll('.mb-toggle-h3').forEach(h => {
                         const icon = h.querySelector('.mb-toggle-icon');
@@ -1900,6 +1914,7 @@ let changelog = [
                 hideSpan.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    Lib.info('render', 'Master toggle: Hiding all tables.');
                     container.querySelectorAll('table.tbl').forEach(t => t.style.display = 'none');
                     container.querySelectorAll('.mb-toggle-h3').forEach(h => {
                         const icon = h.querySelector('.mb-toggle-icon');
@@ -1931,6 +1946,7 @@ let changelog = [
         const existingTables = container.querySelectorAll('table.tbl');
 
         if (query) {
+            Lib.info('render', `Filtering: Cleaning up overflow tables beyond data length (${dataArray.length}).`);
             existingTables.forEach((table, idx) => {
                 if (idx >= dataArray.length) {
                     const h3 = table.previousElementSibling;
@@ -1944,13 +1960,16 @@ let changelog = [
         let lastInsertedElement = targetHeader;
 
         dataArray.forEach((group, index) => {
+            Lib.info('render', `Processing group: "${group.category}" with ${group.rows.length} rows.`);
             let table, h3, tbody;
             if (query && existingTables[index]) {
+                Lib.info('render', `Reusing existing table at index ${index} for group "${group.category}".`);
                 table = existingTables[index];
                 h3 = table.previousElementSibling;
                 tbody = table.querySelector('tbody');
                 tbody.innerHTML = '';
             } else {
+                Lib.info('render', `Creating new table and H3 for group "${group.category}".`);
                 h3 = document.createElement('h3');
                 h3.className = 'mb-toggle-h3';
                 h3.title = 'Collapse/Uncollapse table section';
@@ -1975,6 +1994,7 @@ let changelog = [
                 const catLower = group.category.toLowerCase();
                 const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < Lib.settings.sa_auto_expand;
                 table.style.display = shouldStayOpen ? '' : 'none';
+                Lib.info('render', `Group "${group.category}" auto-expand status: ${shouldStayOpen}`);
 
                 h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${group.category} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
 
@@ -1990,6 +2010,7 @@ let changelog = [
 
                 h3.addEventListener('click', () => {
                     const isHidden = table.style.display === 'none';
+                    Lib.info('render', `Toggling table for "${group.category}". New state: ${isHidden ? 'visible' : 'hidden'}`);
                     table.style.display = isHidden ? '' : 'none';
                     h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
                 });
@@ -2003,6 +2024,7 @@ let changelog = [
                 }
             }
         });
+        Lib.info('render', 'Finished renderGroupedTable.');
     }
 
     /**

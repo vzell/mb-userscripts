@@ -27347,6 +27347,7 @@ and
 
 functional equivalent
 
+
 * refactor pageDefinitions and correponding fetch logic
 ** initial
 
@@ -27722,7 +27723,6 @@ action button is rendered the first time, and NOT in the stage when the  action 
             non_paginated: true
         },
 
-
 ** refine the querySelector
 
 Please refine the querySelector's in the following code block
@@ -28095,6 +28095,7 @@ if they would later be fetched (the server restricts typically the number of row
                                         const totalRows = match ? parseInt(match[1].replace(/[,.]/g, ''), 10) : 0;
 #+end_example
 
+
 * FIX - probably
 
 #+begin_example
@@ -28111,6 +28112,7 @@ if they would later be fetched (the server restricts typically the number of row
             targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
         }
 #+end_example
+
 
 * what
 
@@ -28164,3 +28166,1166 @@ Pleasw leave the original implementation of the
 intact with comments, additional code logic and debug statements and JUST add the new functionlity to it
 
 Show just that changed code block again, taking all your other changes of course into account
+
+
+* add divider in config menu + scrollbars
+
+
+* no rows rendered
+
+In the uploaded userscript, for the URL https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances, why are there NO rows rendered in the final page
+
+#+begin_example
+09:37:36.100 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:36.100 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:36.101 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: place-performances 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:36.101 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: multi 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:36.101 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing script for path: /place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:57.770 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Signalling other scripts to stop... 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:57.770 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Starting fetch process... null
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:57.770 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:57.770 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Total pages to fetch: 1 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:57.770 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Starting clutter element removal. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:57.771 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?page=1 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.133 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "engineering location for". Rows so far: 0 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.134 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "producing location for". Rows so far: 6 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.134 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 11 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.136 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "shooting location for". Rows so far: 112 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.137 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 134 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.137 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Page 1/1 processed in 1.37s. Rows on page: 158. Total: 158 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.137 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering starting... 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.137 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Updated H2 header count: (0) 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.138 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Marking column 1 ("Release events") for removal. Match: "Release events", Setting: "sa_remove_release_events" 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.138 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Removing 1 columns from table. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.138 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Successfully deleted column: Release events 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.141 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Running final cleanup... 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.141 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 No Sanojjonas elements found during final cleanup. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.141 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.142 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Initializing collapsible H2 headers... 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.142 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing aggressive full-width sidebar toggle. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.142 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering finished in 5.20ms 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 09:37:59.142 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 158. Total Time: 1.37s 
+#+end_example
+
+after the HTML code
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle all in this column)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Performances<span class="mb-row-count-stat">(0)</span><span style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span class="mb-filter-wrapper" style="position: relative; display: inline-block;"><input placeholder="Global Filter..." title="Enter global filter string" style="font-size: 1em; padding: 2px 20px 2px 6px; border: 2px solid rgb(204, 204, 204); border-radius: 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span title="Clear global filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕</span></span><label title="Case Sensitive Filtering" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;"><input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label title="RegExp Filtering" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;"><input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label></span></h2>
+#+end_example
+
+** 2
+
+In the uploaded userscript, for the URL https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances, why are there NO rows rendered in the final page
+
+#+begin_example
+11:05:43.562 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Starting fetch process... null
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:43.562 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:43.562 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Total pages to fetch: 1 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:43.562 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Starting clutter element removal. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:43.563 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?page=1 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.914 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "engineering location for". Rows so far: 0 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.915 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "producing location for". Rows so far: 6 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.915 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 11 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.917 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "shooting location for". Rows so far: 112 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.917 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 134 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.918 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Page 1/1 processed in 1.36s. Rows on page: 158. Total: 158 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.918 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering starting... 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Updated H2 header count: (0) 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting renderGroupedTable with 0 categories. Query: "" 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Cloning table head for template. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Marking column 1 ("Release events") for removal. Match: "Release events", Setting: "sa_remove_release_events" 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Removing 1 columns from table. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Successfully deleted column: Release events 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target header identified for pageType "place-performances": <h2 class=​"mb-h2-processed mb-toggle-h2" title=​"Click to Collapse/​Uncollapse section (Ctrl+Click to toggle all in this column)​">​…​</h2>​
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.920 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 No query provided; performing initial cleanup of existing elements. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.923 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Injecting master toggle and filter container. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.924 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Finished renderGroupedTable. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.924 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Running final cleanup... 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.924 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 No Sanojjonas elements found during final cleanup. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.924 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.924 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Initializing collapsible H2 headers... 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.925 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing aggressive full-width sidebar toggle. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.925 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering finished in 6.60ms 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.925 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 158. Total Time: 1.36s 
+#+end_example
+
+
+after the HTML code
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle all in this column)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Performances<span class="mb-row-count-stat">(0)</span><span style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span class="mb-filter-wrapper" style="position: relative; display: inline-block;"><input placeholder="Global Filter..." title="Enter global filter string" style="font-size: 1em; padding: 2px 20px 2px 6px; border: 2px solid rgb(204, 204, 204); border-radius: 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span title="Clear global filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕</span></span><label title="Case Sensitive Filtering" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;"><input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label title="RegExp Filtering" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;"><input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label></span></h2>
+#+end_example
+
+** 3
+
+Still not working. But why is it working for pageTypes "releasegroup-releases" there the tableMode is also "multi" and the original pages look like the "place-performances" ones
+
+You messed up somehow,
+
+In this page https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c?
+
+of pageType "releasegroup-releases" the original data looks like in the case of pageType "place-performances"
+
+on this original URL https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+
+Please recheck now my logic.
+
+** again
+
+I didn't implement your solution, instead added more debugg loggin to
+
+#+begin_example
+    function renderGroupedTable(dataArray, isArtistMain, query = '') {
+        Lib.info('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}"`);
+#+end_example
+
+I think so problem is how/when the renderGroupedTable function is called
+
+#+begin_example
+            // Backup original order for tri-state sorting
+            if (activeDefinition.tableMode === 'multi') {
+                groupedRows.forEach(g => { g.originalRows = [...g.rows]; });
+                renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
+            } else {
+                originalAllRows = [...allRows];
+                renderFinalTable(allRows);
+                document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+                const mainTable = document.querySelector('table.tbl');
+                if (mainTable) addColumnFilterRow(mainTable);
+
+                if (mainTable) makeTableSortableUnified(mainTable, 'main_table');
+
+                // Series page: disable sorting UI for the "#" (number) column - (DOM-only cleanup; no logic changes)
+                if (location.pathname.startsWith('/series/')) {
+                    document.querySelectorAll('th.number-column').forEach(th => {
+                        // Remove alert();l sort icon buttons inside the "#" header
+                        th.querySelectorAll('.sort-icon-btn').forEach(span => span.remove());
+                        // Ensure the header text is exactly "#"
+                        th.textContent = '#';
+                    });
+                }
+            }
+#+end_example
+
+#+begin_example
+11:05:43.562 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Starting fetch process... null
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:43.562 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:43.562 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Total pages to fetch: 1 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:43.562 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Starting clutter element removal. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:43.563 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?page=1 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.914 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "engineering location for". Rows so far: 0 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.915 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "producing location for". Rows so far: 6 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.915 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 11 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.917 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "shooting location for". Rows so far: 112 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.917 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 134 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.918 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Page 1/1 processed in 1.36s. Rows on page: 158. Total: 158 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.918 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering starting... 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Updated H2 header count: (0) 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting renderGroupedTable with 0 categories. Query: "" 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Cloning table head for template. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Marking column 1 ("Release events") for removal. Match: "Release events", Setting: "sa_remove_release_events" 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Removing 1 columns from table. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Successfully deleted column: Release events 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.919 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target header identified for pageType "place-performances": <h2 class=​"mb-h2-processed mb-toggle-h2" title=​"Click to Collapse/​Uncollapse section (Ctrl+Click to toggle all in this column)​">​…​</h2>​
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.920 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 No query provided; performing initial cleanup of existing elements. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.923 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Injecting master toggle and filter container. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.924 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Finished renderGroupedTable. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.924 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Running final cleanup... 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.924 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 No Sanojjonas elements found during final cleanup. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.924 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.924 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Initializing collapsible H2 headers... 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.925 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing aggressive full-width sidebar toggle. 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.925 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering finished in 6.60ms 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:61 11:05:44.925 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 158. Total Time: 1.36s 
+#+end_example
+
+**
+
+Made a type it must hev read:
+
+or maybe the problem is actually here, as my pageType where it fails is "place-performances"
+
+Shouldn't this actually just be
+
+#+begin_example
+renderGroupedTable(groupedRows, pageType === 'place-performances');
+#+end_example
+
+instead of
+
+#+begin_example
+renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
+#+end_example
+
+for the "place-performances" case
+
+
+** logging
+
+Please add comprehensive logging statements to the function
+
+#+begin_example
+    function renderGroupedTable(dataArray, isArtistMain, query = '') {
+	Lib.info('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}"`);
+	
+        const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
+        if (!container) {
+	    Lib.error('render', 'Abort: #content container not found.');
+	    return;
+	}
+
+        let templateHead = null;
+        const firstTable = document.querySelector('table.tbl');
+        if (firstTable && firstTable.tHead) {
+            templateHead = firstTable.tHead.cloneNode(true);
+            cleanupHeaders(templateHead);
+        }
+
+        // Identify the target anchor header based on page type
+        let targetHeader = null;
+        if (pageType === 'artist-releasegroups') {
+            targetHeader = document.querySelector('h2.discography');
+        } else if (pageType === 'releasegroup-releases') {
+            targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+        } else if (pageType === 'place-performances') {
+            targetHeader = Array.from(document.querySelectorAll('h2'))
+                .find(h => h.childNodes[0]?.nodeType === Node.TEXT_NODE &&
+                      h.childNodes[0].textContent.trim() === 'Performances');
+
+        }
+
+        if (!query) {
+            // Updated cleanup: remove H3s and tables, but NEVER remove H3s containing 'span.worklink'
+            container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => {
+                if (el.tagName === 'H3' && el.querySelector('span.worklink')) return;
+                el.remove();
+            });
+
+            if (targetHeader) {
+                const masterToggle = document.createElement('span');
+                masterToggle.className = 'mb-master-toggle';
+
+                const showSpan = document.createElement('span');
+                showSpan.textContent = 'Show';
+                showSpan.title = 'Show all sub-tables';
+                showSpan.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    container.querySelectorAll('table.tbl').forEach(t => t.style.display = '');
+                    container.querySelectorAll('.mb-toggle-h3').forEach(h => {
+                        const icon = h.querySelector('.mb-toggle-icon');
+                        if (icon) icon.textContent = '▼';
+                    });
+                };
+
+                const hideSpan = document.createElement('span');
+                hideSpan.textContent = 'Hide';
+                hideSpan.title = 'Hide all sub-tables';
+                hideSpan.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    container.querySelectorAll('table.tbl').forEach(t => t.style.display = 'none');
+                    container.querySelectorAll('.mb-toggle-h3').forEach(h => {
+                        const icon = h.querySelector('.mb-toggle-icon');
+                        if (icon) icon.textContent = '▲';
+                    });
+                };
+
+                let suffixText = ' all Release Types';
+                if (pageType === 'artist-releasegroups') {
+                    suffixText = ' all ReleaseGroup Types';
+                }
+                masterToggle.appendChild(document.createTextNode('[ '));
+                masterToggle.appendChild(showSpan);
+                masterToggle.appendChild(document.createTextNode(' | '));
+                masterToggle.appendChild(hideSpan);
+                masterToggle.appendChild(document.createTextNode(' ]'));
+                masterToggle.appendChild(document.createTextNode(suffixText));
+
+                targetHeader.appendChild(masterToggle);
+
+                // Append global filter here for grouped pages
+                targetHeader.appendChild(filterContainer);
+                filterContainer.style.display = 'inline-flex';
+                filterContainer.style.marginLeft = '15px';
+                filterContainer.style.verticalAlign = 'middle';
+            }
+        }
+
+        const existingTables = container.querySelectorAll('table.tbl');
+
+        if (query) {
+            existingTables.forEach((table, idx) => {
+                if (idx >= dataArray.length) {
+                    const h3 = table.previousElementSibling;
+                    if (h3 && h3.classList.contains('mb-toggle-h3')) h3.remove();
+                    table.remove();
+                }
+            });
+        }
+
+        // Track where to insert the elements
+        let lastInsertedElement = targetHeader;
+
+        dataArray.forEach((group, index) => {
+            let table, h3, tbody;
+            if (query && existingTables[index]) {
+                table = existingTables[index];
+                h3 = table.previousElementSibling;
+                tbody = table.querySelector('tbody');
+                tbody.innerHTML = '';
+            } else {
+                h3 = document.createElement('h3');
+                h3.className = 'mb-toggle-h3';
+                h3.title = 'Collapse/Uncollapse table section';
+                table = document.createElement('table');
+                table.className = 'tbl';
+                // Apply indentation to the table to match the sub-header
+                table.style.marginLeft = '1.5em';
+                table.style.width = 'calc(100% - 1.5em)';
+                if (templateHead) table.appendChild(templateHead.cloneNode(true));
+                addColumnFilterRow(table);
+                tbody = document.createElement('tbody');
+                table.appendChild(tbody);
+            }
+
+            group.rows.forEach(r => tbody.appendChild(r));
+
+            if (!query) {
+                // Logic changed: Do not hide the table or H3 even if group.rows.length is 0
+                table.style.display = '';
+                h3.style.display = '';
+
+                const catLower = group.category.toLowerCase();
+                const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < Lib.settings.sa_auto_expand;
+                table.style.display = shouldStayOpen ? '' : 'none';
+
+                h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${group.category} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
+
+                // Placement Logic: If targetHeader exists, insert after it/previous element. Otherwise, append to container.
+                if (lastInsertedElement) {
+                    lastInsertedElement.after(h3);
+                    h3.after(table);
+                    lastInsertedElement = table; // Update pointer for the next group
+                } else {
+                    container.appendChild(h3);
+                    container.appendChild(table);
+                }
+
+                h3.addEventListener('click', () => {
+                    const isHidden = table.style.display === 'none';
+                    table.style.display = isHidden ? '' : 'none';
+                    h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
+                });
+                makeTableSortableUnified(table, `${group.category}_${index}`);
+            } else if (h3 && h3.classList.contains('mb-toggle-h3')) {
+                // Update the count in the header during filtering
+                const countStat = h3.querySelector('.mb-row-count-stat');
+                const totalInGroup = groupedRows.find(g => g.category === group.category)?.rows.length || 0;
+                if (countStat) {
+                    countStat.textContent = (group.rows.length === totalInGroup) ? `(${totalInGroup})` : `(${group.rows.length} of ${totalInGroup})`;
+                }
+            }
+        });
+    }
+#+end_example
+
+but do NOT change the current code only add logging statements
+
+
+*
+
+1:43:50.615 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: place-performances 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: multi 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing script for path: /place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Signalling other scripts to stop... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Starting fetch process... null
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Total pages to fetch: 1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Starting clutter element removal. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Entering non-paginated subgroup extraction block. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Subgroup table found. Scanning 164 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Testing row count for subgrouping. Total rows: 164 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 1] Detected subgroup header: "engineering location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 8] Detected subgroup header: "producing location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 14] Detected subgroup header: "recording location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 115] Found potential "See all" link: "See all 9,127 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Extracted: recording location for -> 9127 total relationships (Backend count). 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 116] Detected subgroup header: "shooting location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 139] Detected subgroup header: "recording location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Successfully extracted metadata for 5 subgroups. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?page=1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "engineering location for". Rows so far: 0 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "producing location for". Rows so far: 6 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 11 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "shooting location for". Rows so far: 112 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 134 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Page 1/1 processed in 1.33s. Rows on page: 158. Total: 158 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering starting... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Updated H2 header count: (158) 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting renderGroupedTable with 4 categories. Query: "" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Cloning table head for template. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Marking column 1 ("Release events") for removal. Match: "Release events", Setting: "sa_remove_release_events" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Removing 1 columns from table. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Successfully deleted column: Release events 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target header identified for pageType "place-performances": <h2 class=​"mb-h2-processed mb-toggle-h2" title=​"Click to Collapse/​Uncollapse section (Ctrl+Click to toggle all in this column)​" style=​"cursor:​ pointer;​ user-select:​ none;​">​…​</h2>​<span class=​"mb-toggle-icon">​▼​</span>​"Performances"<span class=​"mb-row-count-stat">​(158)​</span>​<span class=​"mb-master-toggle">​…​</span>​<span style=​"display:​ inline-flex;​ align-items:​ center;​ white-space:​ nowrap;​ gap:​ 5px;​ margin-left:​ 15px;​ vertical-align:​ middle;​">​…​</span>​flex<span class=​"mb-filter-wrapper" style=​"position:​ relative;​ display:​ inline-block;​">​…​</span>​<input placeholder=​"Global Filter..." title=​"Enter global filter string" style=​"font-size:​ 1em;​ padding:​ 2px 20px 2px 6px;​ border:​ 2px solid rgb(204, 204, 204)​;​ border-radius:​ 3px;​ width:​ 500px;​ height:​ 24px;​ box-sizing:​ border-box;​ transition:​ box-shadow 0.2s;​">​<span title=​"Clear global filter" style=​"position:​ absolute;​ right:​ 5px;​ top:​ 50%;​ transform:​ translateY(-50%)​;​ cursor:​ pointer;​ font-size:​ 0.6em;​ color:​ rgb(153, 153, 153)​;​ user-select:​ none;​">​✕​</span>​</span>​<label title=​"Case Sensitive Filtering" style=​"font-size:​ 0.8em;​ cursor:​ pointer;​ font-weight:​ normal;​ display:​ flex;​ align-items:​ center;​ height:​ 24px;​ margin:​ 0px;​">​…​</label>​flex<input type=​"checkbox" style=​"margin-right:​ 2px;​ vertical-align:​ middle;​">​"Cc"</label>​<label title=​"RegExp Filtering" style=​"font-size:​ 0.8em;​ cursor:​ pointer;​ font-weight:​ normal;​ display:​ flex;​ align-items:​ center;​ height:​ 24px;​ margin:​ 0px;​">​…​</label>​flex<input type=​"checkbox" style=​"margin-right:​ 2px;​ vertical-align:​ middle;​">​"Rx"</label>​</span>​</h2>​
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 No query provided; performing initial cleanup of existing elements. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Injecting master toggle and filter container. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "engineering location for" with 6 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "engineering location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "engineering location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "producing location for" with 5 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "producing location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "producing location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "recording location for" with 125 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "recording location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "recording location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "shooting location for" with 22 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "shooting location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "shooting location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Finished renderGroupedTable. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Running final cleanup... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Initializing collapsible H2 headers... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering finished in 6.40ms 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 158. Total Time: 2.16s 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Toggling table for "shooting location for". New state: visible 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Toggling table for "recording location for". New state: visible 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Toggling table for "producing location for". New state: visible 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Toggling table for "engineering location for". New state: visible
+
+Instead of
+
+#+begin_example
+[Row 1] Detected subgroup header: "engineering location for" 
+[Row 8] Detected subgroup header: "producing location for" 
+[Row 14] Detected subgroup header: "recording location for" 
+[Row 115] Found potential "See all" link: "See all 9,127 relationships" 
+Extracted: recording location for -> 9127 total relationships (Backend count). 
+[Row 116] Detected subgroup header: "shooting location for" 
+[Row 139] Detected subgroup header: "recording location for" 
+Successfully extracted metadata for 5 subgroups. 
+#+end_example
+
+please output
+
+#+begin_example
+[Row 1] Detected subgroup header: "engineering location for" 
+Total rows in "engineering location for": <number fo rows>
+[Row 8] Detected subgroup header: "producing location for" 
+Total rows in "producing location for": <number fo rows>
+#+end_example
+
+and so on in the following code
+
+#+begin_example
+        if (activeDefinition && activeDefinition.non_paginated) {
+            Lib.debug('parse', 'Entering non-paginated subgroup extraction block.');
+            const table = doc.querySelector('table.tbl');
+            if (table) {
+                Lib.debug('parse', `Subgroup table found. Scanning ${table.querySelectorAll('tr').length} rows.`);
+
+                // Removed 'const' keyword here so it populates the variable defined above
+                subgroupData = [];
+
+                let currentSubgroup = 'Unknown';
+                let totalRows = 0;
+                let localSubgroupCount = 0;
+                const rows = table.querySelectorAll('tr');
+
+                Lib.debug('parse', `Testing row count for subgrouping. Total rows: ${rows.length}`);
+
+                // low level debugging
+                // rows.forEach((row, index) => {
+                //     // 1. Check classes on every row to see what MusicBrainz is actually providing
+                //     if (index < 10 || row.classList.contains('subh')) {
+                //         Lib.debug('parse', `[Row ${index}] classes: "${row.className}", nodeName: ${row.nodeName}`);
+                //     }
+
+                //     // 2. Check if the specific subh class is present
+                //     if (row.classList.contains('subh')) {
+                //         const th = row.querySelector('th');
+                //         Lib.debug('parse', `[Row ${index}] FOUND subh. TH content: "${th ? th.textContent.trim() : 'null'}"`);
+                //     }
+                // });
+
+                // // 3. Log the "See all" link search result specifically
+                // const seeAllLinks = doc.querySelectorAll('td > a[href*="performances"]');
+                // Lib.debug('parse', `DEBUG: Found ${seeAllLinks.length} potential "See all" links.`);
+                // seeAllLinks.forEach((link, i) => {
+                //     Lib.debug('parse', `Link ${i}: text="${link.textContent}", href="${link.href}"`);
+                // });
+
+                rows.forEach((row, index) => {
+                    // Detect sub-grouping headers (e.g., "recording location for")
+                    if (row.classList.contains('subh')) {
+                        const thWithColspan = row.querySelector('th[colspan]');
+                        if (thWithColspan) {
+                            currentSubgroup = thWithColspan.textContent.replace(/\s+/g, ' ').trim();
+                            localSubgroupCount = 0; // Reset local counter for the new section
+                            Lib.debug('parse', `[Row ${index}] Detected subgroup header: "${currentSubgroup}"`);
+
+                            const metaEntry = {
+                                subgroup: currentSubgroup,
+                                url: null,
+                                totalRowsPerSubGroup: 0,
+                                totalRows: totalRows
+                            };
+                            subgroupData.push(metaEntry);
+                        }
+                        return;
+                    }
+
+                    // Count actual data rows found in the DOM
+                    const isDataRow = row.querySelector('td') && !row.querySelector('td[colspan]');
+                    if (isDataRow) {
+                        localSubgroupCount++;
+                        totalRows++; // Default increment, will be adjusted if "See all" is found
+
+                        if (subgroupData.length > 0) {
+                            const currentEntry = subgroupData[subgroupData.length - 1];
+                            currentEntry.totalRowsPerSubGroup = localSubgroupCount;
+                            currentEntry.totalRows = totalRows;
+                        }
+                    }
+
+                    // Look for the "See all" relationship link row
+                    const seeAllCell = row.querySelector('td[colspan]');
+                    if (seeAllCell) {
+                        const link = seeAllCell.querySelector('a');
+                        if (link) {
+                            const linkText = link.textContent.trim();
+                            if (linkText.toLowerCase().includes('see all')) {
+                                Lib.debug('parse', `[Row ${index}] Found potential "See all" link: "${linkText}"`);
+
+                                const href = link.getAttribute('href') || '';
+                                const match = linkText.match(/See all ([\d,.]+) relationships/i);
+                                const totalRowsFromLink = match ? parseInt(match[1].replace(/[,.]/g, ''), 10) : 0;
+
+                                if (href.includes('link_type_id') || href.includes('direction') || totalRowsFromLink > 0) {
+                                    if (subgroupData.length > 0) {
+                                        const currentEntry = subgroupData[subgroupData.length - 1];
+
+                                        // If we found a "See all" number, it represents the real backend count
+                                        if (totalRowsFromLink > 0) {
+                                            // Adjust global totalRows: remove local count added so far for this group, add the real backend count
+                                            totalRows = (totalRows - localSubgroupCount) + totalRowsFromLink;
+
+                                            currentEntry.totalRowsPerSubGroup = totalRowsFromLink;
+                                            currentEntry.totalRows = totalRows;
+                                        }
+
+                                        currentEntry.url = href ? new URL(href, window.location.origin).href : null;
+
+                                        console.log(JSON.stringify(currentEntry));
+                                        Lib.info('parse', `Extracted: ${currentSubgroup} -> ${currentEntry.totalRowsPerSubGroup} total relationships (Backend count).`);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Dump complete data array at the end
+                console.log('Final Subgroup Data:', subgroupData);
+
+                if (subgroupData.length > 0) {
+                    Lib.info('parse', `Successfully extracted metadata for ${subgroupData.length} subgroups.`);
+                } else {
+                    Lib.debug('parse', 'No "See all" links found. All subgroups likely below the display threshold.');
+                }
+            } else {
+                Lib.debug('parse', 'Target table.tbl not found for subgroup extraction.');
+            }
+        }
+#+end_example
+
+** new debug
+
+#+begin_example
+12:07:08.508 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: place-performances 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: multi 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing script for path: /place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Signalling other scripts to stop... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Starting fetch process... null
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Total pages to fetch: 1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Starting clutter element removal. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Entering non-paginated subgroup extraction block. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Subgroup table found. Scanning 164 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Testing row count for subgrouping. Total rows: 164 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 1] Detected subgroup header: "engineering location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "engineering location for": 6 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 8] Detected subgroup header: "producing location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "producing location for": 5 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 14] Detected subgroup header: "recording location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "recording location for": 9127 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 115] Found potential "See all" link: "See all 9,127 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 116] Detected subgroup header: "shooting location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "shooting location for": 22 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 139] Detected subgroup header: "recording location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "recording location for": 24 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Successfully extracted metadata for 5 subgroups. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?page=1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "engineering location for". Rows so far: 0 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "producing location for". Rows so far: 6 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 11 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "shooting location for". Rows so far: 112 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 134 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Page 1/1 processed in 0.99s. Rows on page: 158. Total: 158 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering starting... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Updated H2 header count: (158) 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting renderGroupedTable with 4 categories. Query: "" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Cloning table head for template. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Marking column 1 ("Release events") for removal. Match: "Release events", Setting: "sa_remove_release_events" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Removing 1 columns from table. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Successfully deleted column: Release events 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target header identified for pageType "place-performances": <h2 class=​"mb-h2-processed mb-toggle-h2" title=​"Click to Collapse/​Uncollapse section (Ctrl+Click to toggle all in this column)​" style=​"cursor:​ pointer;​ user-select:​ none;​">​…​</h2>​<span class=​"mb-toggle-icon">​▼​</span>​"Performances"<span class=​"mb-row-count-stat">​(158)​</span>​<span class=​"mb-master-toggle">​…​</span>​<span style=​"display:​ inline-flex;​ align-items:​ center;​ white-space:​ nowrap;​ gap:​ 5px;​ margin-left:​ 15px;​ vertical-align:​ middle;​">​…​</span>​flex<span class=​"mb-filter-wrapper" style=​"position:​ relative;​ display:​ inline-block;​">​…​</span>​<input placeholder=​"Global Filter..." title=​"Enter global filter string" style=​"font-size:​ 1em;​ padding:​ 2px 20px 2px 6px;​ border:​ 2px solid rgb(204, 204, 204)​;​ border-radius:​ 3px;​ width:​ 500px;​ height:​ 24px;​ box-sizing:​ border-box;​ transition:​ box-shadow 0.2s;​">​<span title=​"Clear global filter" style=​"position:​ absolute;​ right:​ 5px;​ top:​ 50%;​ transform:​ translateY(-50%)​;​ cursor:​ pointer;​ font-size:​ 0.6em;​ color:​ rgb(153, 153, 153)​;​ user-select:​ none;​">​✕​</span>​</span>​<label title=​"Case Sensitive Filtering" style=​"font-size:​ 0.8em;​ cursor:​ pointer;​ font-weight:​ normal;​ display:​ flex;​ align-items:​ center;​ height:​ 24px;​ margin:​ 0px;​">​…​</label>​flex<input type=​"checkbox" style=​"margin-right:​ 2px;​ vertical-align:​ middle;​">​"Cc"</label>​<label title=​"RegExp Filtering" style=​"font-size:​ 0.8em;​ cursor:​ pointer;​ font-weight:​ normal;​ display:​ flex;​ align-items:​ center;​ height:​ 24px;​ margin:​ 0px;​">​…​</label>​flex<input type=​"checkbox" style=​"margin-right:​ 2px;​ vertical-align:​ middle;​">​"Rx"</label>​</span>​</h2>​
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 No query provided; performing initial cleanup of existing elements. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Injecting master toggle and filter container. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "engineering location for" with 6 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "engineering location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "engineering location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "producing location for" with 5 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "producing location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "producing location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "recording location for" with 125 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "recording location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "recording location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "shooting location for" with 22 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "shooting location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "shooting location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Finished renderGroupedTable. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Running final cleanup... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Initializing collapsible H2 headers... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering finished in 8.90ms 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 158. Total Time: 1.92s 
+#+end_example
+
+* remove
+
+In the uploaded userscript,
+
+please rewrite the function
+
+#+begin_example
+    async function startFetchingProcess(e, overrideParams = null) {
+#+end_example
+
+so that for URLs of type  https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances (pageType "place-performances")
+table rows are removed from memory during fetching 
+which have the following structure
+
+#+begin_example
+<tr>
+  <td>
+  </td>
+  <td>
+  </td>
+  <td colspan="4" style="padding: 1em; text-align: right;" class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO">
+    <a href="https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?direction=1&amp;link_type_id=693&amp;page=1">See all 9,127 relationships
+    </a>
+  </td>
+</tr>
+#+end_example
+
+(so basically there could be a '<a href="...">See all <number of relationships> relationships' in one of the data cells)
+before adding them to the data structures for rerendering on the final page.
+
+The code which needs changes/additions is located after the line
+
+#+begin_src bash
+for (let p = 1; p <= maxPage; p++) {
+#+end_src
+
+Please do NOT remove existing working code, comments or debug statements. ONLY add the removel logic
+
+* check
+
+Does the addition of the following code
+
+#+begin_example
+if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+    // START NEW REMOVAL LOGIC
+    // Check for "See all relationships" link in place-performances pages
+    if (pageType === 'place-performances') {
+        const seeAllCell = node.querySelector('td[colspan]');
+        if (seeAllCell) {
+            const link = seeAllCell.querySelector('a');
+            if (link && link.textContent.toLowerCase().includes('see all')) {
+                Lib.debug('parse', `[Page ${p}] Skipping "See all" relationship row at row index ${index}.`);
+                return; // Skip adding this row to data structures
+            }
+        }
+    }
+    // END NEW REMOVAL LOGIC
+}
+#+end_example
+
+in the right place of the following code block
+
+#+begin_example
+                        tableBody.childNodes.forEach(node => {
+                            if (node.nodeName === 'TR') {
+                                if (node.classList.contains('subh')) {
+                                    currentStatus = node.textContent.trim() || 'Unknown';
+                                    // TODO: for 'place-performances' check as we can have same named categories but different entities, like releases and recordings recorded at the same place
+                                    if ((pageType === 'releasegroup-releases' || pageType === 'place-performances') && currentStatus !== lastCategorySeenAcrossPages) {
+                                        Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
+                                    }
+                                } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+                                    const newRow = document.importNode(node, true);
+
+                                    // Extraction logic for MB-Name and Comment
+                                    const tdName = document.createElement('td');
+                                    const tdComment = document.createElement('td');
+                                    if (mainColIdx !== -1 && pageType !== 'artist-releasegroups') {
+                                        const targetCell = newRow.cells[mainColIdx];
+                                        if (targetCell) {
+                                            const nameLink = targetCell.querySelector('a bdi')?.closest('a');
+                                            if (nameLink) tdName.appendChild(nameLink.cloneNode(true));
+                                            const commentBdi = targetCell.querySelector('.comment bdi');
+                                            if (commentBdi) tdComment.textContent = commentBdi.textContent.trim();
+                                        }
+                                    }
+
+                                    // Handling Country/Date split
+                                    const tdSplitC = document.createElement('td');
+                                    const tdSplitD = document.createElement('td');
+                                    if (typesWithSplitCD.includes(pageType) && countryDateIdx !== -1) {
+                                        const cdCell = newRow.cells[countryDateIdx];
+                                        if (cdCell) {
+                                            const events = Array.from(cdCell.querySelectorAll('.release-event'));
+                                            events.forEach((ev, i) => {
+                                                const countrySpan = ev.querySelector('.release-country');
+                                                const dateSpan = ev.querySelector('.release-date');
+                                                if (countrySpan) {
+                                                    if (i > 0) tdSplitC.appendChild(document.createTextNode(', '));
+                                                    const flagImg = countrySpan.querySelector('img')?.outerHTML || '';
+                                                    const abbr = countrySpan.querySelector('abbr');
+                                                    const countryCode = abbr ? abbr.textContent.trim() : '';
+                                                    const countryFullName = abbr?.getAttribute('title') || '';
+                                                    const countryA = countrySpan.querySelector('a');
+                                                    const countryHref = countryA?.getAttribute('href') || '#';
+                                                    const spanContainer = document.createElement('span');
+                                                    spanContainer.className = countrySpan.className;
+                                                    if (countryFullName && countryCode) {
+                                                        spanContainer.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
+                                                    } else {
+                                                        spanContainer.innerHTML = countrySpan.innerHTML;
+                                                    }
+                                                    tdSplitC.appendChild(spanContainer);
+                                                }
+                                                if (dateSpan) {
+                                                    if (i > 0) tdSplitD.appendChild(document.createTextNode(', '));
+                                                    tdSplitD.appendChild(document.createTextNode(dateSpan.textContent.trim()));
+                                                }
+                                            });
+                                        }
+                                    }
+
+                                    // Handling Location split
+                                    const tdP = document.createElement('td');
+                                    const tdA = document.createElement('td');
+                                    const tdC = document.createElement('td');
+                                    if (typesWithSplitLocation.includes(pageType) && locationIdx !== -1) {
+                                        const locCell = newRow.cells[locationIdx];
+                                        if (locCell) {
+                                            locCell.querySelectorAll('a').forEach(a => {
+                                                const href = a.getAttribute('href');
+                                                const clonedA = a.cloneNode(true);
+                                                if (href && href.includes('/place/')) {
+                                                    tdP.appendChild(clonedA);
+                                                } else if (href && href.includes('/area/')) {
+                                                    const flagSpan = a.closest('.flag');
+                                                    if (flagSpan) {
+                                                        const flagImg = flagSpan.querySelector('img')?.outerHTML || '';
+                                                        const abbr = flagSpan.querySelector('abbr');
+                                                        const countryCode = abbr ? abbr.textContent.trim() : '';
+                                                        const countryFullName = abbr?.getAttribute('title') || '';
+                                                        const countryHref = a.getAttribute('href') || '#';
+                                                        const span = document.createElement('span');
+                                                        span.className = flagSpan.className;
+                                                        if (countryFullName && countryCode) {
+                                                            span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
+                                                        } else {
+                                                            span.innerHTML = flagSpan.innerHTML;
+                                                        }
+                                                        tdC.appendChild(span);
+                                                    } else {
+                                                        if (tdA.hasChildNodes()) tdA.appendChild(document.createTextNode(', '));
+                                                        tdA.appendChild(clonedA);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+
+                                    [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
+
+                                    if (typesWithSplitCD.includes(pageType)) {
+                                        newRow.appendChild(tdSplitC); newRow.appendChild(tdSplitD);
+                                    } else if (typesWithSplitLocation.includes(pageType)) {
+                                        newRow.appendChild(tdP); newRow.appendChild(tdA); newRow.appendChild(tdC);
+                                    }
+                                    if (pageType !== 'artist-releasegroups') {
+                                        newRow.appendChild(tdName); newRow.appendChild(tdComment);
+                                    }
+                                    if (activeDefinition.tableMode === 'multi') {
+                                        let existingGroup = groupedRows.find(g => g.category === currentStatus);
+                                        if (existingGroup) {
+                                            existingGroup.rows.push(newRow);
+                                        } else {
+                                            groupedRows.push({ category: currentStatus, rows: [newRow] });
+                                        }
+                                        lastCategorySeenAcrossPages = currentStatus;
+                                        pageCategoryMap.set(currentStatus, (pageCategoryMap.get(currentStatus) || 0) + 1);
+                                    } else {
+                                        allRows.push(newRow);
+                                    }
+
+                                    rowsInThisPage++;
+                                    totalRowsAccumulated++;
+                                }
+                            }
+#+end_example
+
+to achieve:
+
+table rows should be removed from memory during fetching which have the following structure
+
+#+begin_example
+<tr>
+  <td>
+  </td>
+  <td>
+  </td>
+  <td colspan="4" style="padding: 1em; text-align: right;" class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO">
+    <a href="https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?direction=1&amp;link_type_id=693&amp;page=1">See all 9,127 relationships
+    </a>
+  </td>
+</tr>
+#+end_example
+
+so basically there could be a '<a href="...">See all <number of relationships> relationships' in one of the data cells
+
+
+**
+
+I get
+
+#+begin_example
+12:59:39.770 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ❌ Critical Error during fetch: ReferenceError: index is not defined
+    at userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1955:132
+    at NodeList.forEach (<anonymous>)
+    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1939:46)
+#+end_example
+
+
+in the code
+
+#+begin_example
+ } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+                                    // START NEW REMOVAL LOGIC
+                                    // Check for "See all relationships" link in place-performances pages
+                                    if (pageType === 'place-performances') {
+                                        const seeAllCell = node.querySelector('td[colspan]');
+                                        if (seeAllCell) {
+                                            const link = seeAllCell.querySelector('a');
+                                            if (link && link.textContent.toLowerCase().includes('see all')) {
+                                                Lib.debug('parse', `[Page ${p}] Skipping "See all" relationship row at row index ${index}.`);
+                                                return; // Skip adding this row to data structures
+                                            }
+                                        }
+                                    }
+                                    // END NEW REMOVAL LOGIC
+#+end_example
+
+
+**
+
+In the uploaded userscript,
+
+table rows should be removed from memory during fetching which have a specific structure
+
+by this code block (in between REMOVAL LOGIC comments
+
+#+begin_example
+                } else {
+                    const tableBody = doc.querySelector('table.tbl tbody');
+                    if (tableBody) {
+                        let currentStatus = 'Unknown';
+                        tableBody.childNodes.forEach(node => {
+                            if (node.nodeName === 'TR') {
+                                if (node.classList.contains('subh')) {
+                                    currentStatus = node.textContent.trim() || 'Unknown';
+                                    // TODO: for 'place-performances' check as we can have same named categories but different entities, like releases and recordings recorded at the same place
+                                    if ((pageType === 'releasegroup-releases' || pageType === 'place-performances') && currentStatus !== lastCategorySeenAcrossPages) {
+                                        Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
+                                    }
+                                } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+                                    // START NEW REMOVAL LOGIC
+                                    // Check for "See all relationships" link in place-performances pages
+                                    if (pageType === 'place-performances') {
+                                        const seeAllCell = node.querySelector('td[colspan]');
+                                        if (seeAllCell) {
+                                            const link = seeAllCell.querySelector('a');
+                                            if (link && link.textContent.toLowerCase().includes('see all')) {
+                                                Lib.debug('parse', `Skipping "See all" relationship row.`);
+                                                return; // Skip adding this row to data structures
+                                            }
+                                        }
+                                    }
+                                    // END NEW REMOVAL LOGIC
+
+                                    const newRow = document.importNode(node, true);
+
+                                    // Extraction logic for MB-Name and Comment
+                                    const tdName = document.createElement('td');
+                                    const tdComment = document.createElement('td');
+                                    if (mainColIdx !== -1 && pageType !== 'artist-releasegroups') {
+                                        const targetCell = newRow.cells[mainColIdx];
+                                        if (targetCell) {
+                                            const nameLink = targetCell.querySelector('a bdi')?.closest('a');
+                                            if (nameLink) tdName.appendChild(nameLink.cloneNode(true));
+                                            const commentBdi = targetCell.querySelector('.comment bdi');
+                                            if (commentBdi) tdComment.textContent = commentBdi.textContent.trim();
+                                        }
+                                    }
+#+end_example
+
+The following console log is created when running the userscript with the URL https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+
+#+begin_example
+13:08:36.984 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Total pages to fetch: 1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Starting clutter element removal. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Entering non-paginated subgroup extraction block. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Subgroup table found. Scanning 164 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Testing row count for subgrouping. Total rows: 164 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 1] Detected subgroup header: "engineering location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "engineering location for": 6 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 8] Detected subgroup header: "producing location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "producing location for": 5 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 14] Detected subgroup header: "recording location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "recording location for": 9127 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 115] Found potential "See all" link: "See all 9,127 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 116] Detected subgroup header: "shooting location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "shooting location for": 22 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 139] Detected subgroup header: "recording location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "recording location for": 24 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Successfully extracted metadata for 5 subgroups. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?page=1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "engineering location for". Rows so far: 0 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "producing location for". Rows so far: 6 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 11 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "shooting location for". Rows so far: 111 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 133 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Page 1/1 processed in 1.15s. Rows on page: 157. Total: 157 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering starting... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Updated H2 header count: (157) 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting renderGroupedTable with 4 categories. Query: "" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Cloning table head for template. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Marking column 1 ("Release events") for removal. Match: "Release events", Setting: "sa_remove_release_events" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Removing 1 columns from table. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Successfully deleted column: Release events 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target header identified for pageType "place-performances": <h2 class=​"mb-h2-processed mb-toggle-h2" title=​"Click to Collapse/​Uncollapse section (Ctrl+Click to toggle all in this column)​" style=​"cursor:​ pointer;​ user-select:​ none;​">​…​</h2>​<span class=​"mb-toggle-icon">​▼​</span>​"Performances"<span class=​"mb-row-count-stat">​(157)​</span>​<span class=​"mb-master-toggle">​…​</span>​<span style=​"display:​ inline-flex;​ align-items:​ center;​ white-space:​ nowrap;​ gap:​ 5px;​ margin-left:​ 15px;​ vertical-align:​ middle;​">​…​</span>​flex<span class=​"mb-filter-wrapper" style=​"position:​ relative;​ display:​ inline-block;​">​…​</span>​<input placeholder=​"Global Filter..." title=​"Enter global filter string" style=​"font-size:​ 1em;​ padding:​ 2px 20px 2px 6px;​ border:​ 2px solid rgb(204, 204, 204)​;​ border-radius:​ 3px;​ width:​ 500px;​ height:​ 24px;​ box-sizing:​ border-box;​ transition:​ box-shadow 0.2s;​">​<span title=​"Clear global filter" style=​"position:​ absolute;​ right:​ 5px;​ top:​ 50%;​ transform:​ translateY(-50%)​;​ cursor:​ pointer;​ font-size:​ 0.6em;​ color:​ rgb(153, 153, 153)​;​ user-select:​ none;​">​✕​</span>​</span>​<label title=​"Case Sensitive Filtering" style=​"font-size:​ 0.8em;​ cursor:​ pointer;​ font-weight:​ normal;​ display:​ flex;​ align-items:​ center;​ height:​ 24px;​ margin:​ 0px;​">​…​</label>​flex<input type=​"checkbox" style=​"margin-right:​ 2px;​ vertical-align:​ middle;​">​"Cc"</label>​<label title=​"RegExp Filtering" style=​"font-size:​ 0.8em;​ cursor:​ pointer;​ font-weight:​ normal;​ display:​ flex;​ align-items:​ center;​ height:​ 24px;​ margin:​ 0px;​">​…​</label>​flex<input type=​"checkbox" style=​"margin-right:​ 2px;​ vertical-align:​ middle;​">​"Rx"</label>​</span>​</h2>​
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 No query provided; performing initial cleanup of existing elements. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Injecting master toggle and filter container. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "engineering location for" with 6 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "engineering location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "engineering location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "producing location for" with 5 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "producing location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "producing location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "recording location for" with 124 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "recording location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "recording location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "shooting location for" with 22 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "shooting location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "shooting location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Finished renderGroupedTable. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Running final cleanup... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Initializing collapsible H2 headers... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering finished in 9.70ms 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 157. Total Time: 2.08s 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Toggling table for "recording location for". New state: visible 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Toggling table for "recording location for". New state: hidden 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Toggling table for "shooting location for". New state: visible 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Toggling table for "shooting location for". New state: hidden 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Toggling table for "recording location for". New state: visible 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Toggling table for "recording location for". New state: hidden
+#+end_example
+
+But the skipped row is essent
+
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?direction=1&link_type_id=693&page=1
+
+#+begin_example
+13:31:15.423 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing script for path: /place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Signalling other scripts to stop... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Starting fetch process... null
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Total pages to fetch: 1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Starting clutter element removal. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Entering non-paginated subgroup extraction block. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Subgroup table found. Scanning 164 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Testing row count for subgrouping. Total rows: 164 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 1] Detected subgroup header: "engineering location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "engineering location for": 6 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 8] Detected subgroup header: "producing location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "producing location for": 5 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 14] Detected subgroup header: "recording location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "recording location for": 9127 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 115] Found potential "See all" link: "See all 9,127 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?direction=1&link_type_id=693&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 116] Detected subgroup header: "shooting location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "shooting location for": 22 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 139] Detected subgroup header: "recording location for" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Total rows in "recording location for": 24 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Successfully extracted metadata for 5 subgroups. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?page=1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "engineering location for". Rows so far: 0 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "producing location for". Rows so far: 6 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 11 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "shooting location for". Rows so far: 111 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "recording location for". Rows so far: 133 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Page 1/1 processed in 1.52s. Rows on page: 157. Total: 157 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering starting... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Updated H2 header count: (157) 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting renderGroupedTable with 4 categories. Query: "" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Cloning table head for template. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Marking column 1 ("Release events") for removal. Match: "Release events", Setting: "sa_remove_release_events" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Removing 1 columns from table. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Successfully deleted column: Release events 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target header identified for pageType "place-performances": <h2 class=​"mb-h2-processed mb-toggle-h2" title=​"Click to Collapse/​Uncollapse section (Ctrl+Click to toggle all in this column)​" style=​"cursor:​ pointer;​ user-select:​ none;​">​…​</h2>​<span class=​"mb-toggle-icon">​▼​</span>​"Performances"<span class=​"mb-row-count-stat">​(157)​</span>​<span class=​"mb-master-toggle">​…​</span>​<span style=​"display:​ inline-flex;​ align-items:​ center;​ white-space:​ nowrap;​ gap:​ 5px;​ margin-left:​ 15px;​ vertical-align:​ middle;​">​…​</span>​flex<span class=​"mb-filter-wrapper" style=​"position:​ relative;​ display:​ inline-block;​">​…​</span>​<input placeholder=​"Global Filter..." title=​"Enter global filter string" style=​"font-size:​ 1em;​ padding:​ 2px 20px 2px 6px;​ border:​ 2px solid rgb(204, 204, 204)​;​ border-radius:​ 3px;​ width:​ 500px;​ height:​ 24px;​ box-sizing:​ border-box;​ transition:​ box-shadow 0.2s;​">​<span title=​"Clear global filter" style=​"position:​ absolute;​ right:​ 5px;​ top:​ 50%;​ transform:​ translateY(-50%)​;​ cursor:​ pointer;​ font-size:​ 0.6em;​ color:​ rgb(153, 153, 153)​;​ user-select:​ none;​">​✕​</span>​</span>​<label title=​"Case Sensitive Filtering" style=​"font-size:​ 0.8em;​ cursor:​ pointer;​ font-weight:​ normal;​ display:​ flex;​ align-items:​ center;​ height:​ 24px;​ margin:​ 0px;​">​…​</label>​flex<input type=​"checkbox" style=​"margin-right:​ 2px;​ vertical-align:​ middle;​">​"Cc"</label>​<label title=​"RegExp Filtering" style=​"font-size:​ 0.8em;​ cursor:​ pointer;​ font-weight:​ normal;​ display:​ flex;​ align-items:​ center;​ height:​ 24px;​ margin:​ 0px;​">​…​</label>​flex<input type=​"checkbox" style=​"margin-right:​ 2px;​ vertical-align:​ middle;​">​"Rx"</label>​</span>​</h2>​
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 No query provided; performing initial cleanup of existing elements. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Injecting master toggle and filter container. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "engineering location for" with 6 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "engineering location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "engineering location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "producing location for" with 5 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "producing location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "producing location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "recording location for" with 124 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "recording location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "recording location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "shooting location for" with 22 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "shooting location for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "shooting location for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Finished renderGroupedTable. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Running final cleanup... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Initializing collapsible H2 headers... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering finished in 8.70ms 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 157. Total Time: 2.81s 
+#+end_example
+
+** differentiate between same named soubgroups of differetn meaning
+
+In the uploaded userscript,
+
+for URLs of type URL https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+
+in order to differentiate between same named sub-groups (e.g. "recording location for") of different meanings (e.g. "recording" versus "release")
+when fetching rows for the pageType "place-performances" and adding them to subgroups for later rendering in their own table on the final page,
+we need to add a unique identifier to the h3 name in the final rendered page. But more importantly when a new sub group is detected during fectching and it has already been used before, the name must be made unique
+
+** Required elements not found. Terminating. {pageType: '', hasHeader: true}
+
+In the uploaded userscript,
+
+why do I get for the following types of URLs
+
+ - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+ - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/artists
+
+e.g. for the latter the console output
+   
+#+begin_example
+17:31:26.587 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType:  
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: unknown 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing script for path: /area/489ce91b-6658-3307-9877-795b68554c98/artists
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ❌ Required elements not found. Terminating. {pageType: '', hasHeader: true}
+#+end_example
+
+
+* refactor column splitting in different functions and take them out of the main flow
+
+* refactor in memory column removel to filter large pagination pages
+
+
+* unique sub group headers
+
+In the uploaded userscript,
+
+the logic to check for duplicated sub header names and counting rows per sub header in the following code block
+
+#+begin_example
+                rows.forEach((row, index) => {
+                    // Detect sub-grouping headers (e.g., "recording location for")
+                    if (row.classList.contains('subh')) {
+                        const thWithColspan = row.querySelector('th[colspan]');
+                        if (thWithColspan) {
+                            let rawName = thWithColspan.textContent.replace(/\s+/g, ' ').trim();
+
+                            // Logic to make the name unique
+                            let uniqueName = rawName;
+                            if (seenSubgroups.has(rawName)) {
+                                let count = seenSubgroups.get(rawName) + 1;
+                                seenSubgroups.set(rawName, count);
+
+                                // Determine suffix based on what follows (e.g., check rows below for context)
+                                // For simplicity, we use the counter, but you can refine this to look for
+                                // entity links if necessary.
+                                uniqueName = `${rawName} (${count})`;
+                            } else {
+                                seenSubgroups.set(rawName, 1);
+                            }
+
+                            currentSubgroup = uniqueName;
+                            localSubgroupCount = 0;
+
+                            const metaEntry = {
+                                subgroup: currentSubgroup, // This is now unique
+                                originalName: rawName,     // Keep the original for display if needed
+                                url: null,
+                                totalRowsPerSubGroup: 0,
+                                totalRows: totalRows
+                            };
+                            subgroupData.push(metaEntry);
+                        }
+                        return;
+                    }
+#+end_example
+
+should also be applied when the actual data is fetched (for rendering later in the final page) in the case we are on a
+URL like https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances , which represents a pageType
+which has no pagination, so all the data is present on that very page. The thing is, that sub header names
+(e.g. "recording location for") can repeat on such a page (rows under each same named sub-heading have a different
+meaning) and right now we accumulate all the rows under the different same named sub headers in the same data structure
+for rendering later.
+
+Please fix
+AND Please do not make any other changes to working code, comments and logging statements.
