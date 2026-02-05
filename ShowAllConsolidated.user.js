@@ -1522,6 +1522,7 @@ let changelog = [
                                     } else {
                                         allRows.push(newRow);
                                     }
+
                                     rowsInThisPage++;
                                     totalRowsAccumulated++;
                                 }
@@ -1558,7 +1559,7 @@ let changelog = [
                         const curPageCount = pageCategoryMap.get(g.category) || 0;
                         return `${g.category}: +${curPageCount} (Total: ${g.rows.length})`;
                     });
-                    console.log(`  Summary: ${summaryParts.join(' | ')}`);
+                    Lib.debug('fetch', `  Summary: ${summaryParts.join(' | ')}`);
                 }
             }
 
@@ -1646,21 +1647,44 @@ let changelog = [
     }
 
     function renderFinalTable(rows) {
+        // Access rows.length to get the actual count
+        const rowCount = Array.isArray(rows) ? rows.length : 0;
+        Lib.info('render', `Starting renderFinalTable with ${rowCount} rows.`);
+
         const tbody = document.querySelector('table.tbl tbody');
-        if (!tbody) return;
+        if (!tbody) {
+            Lib.error('render', 'Abort: #tbody container not found.');
+            return;
+        }
+
         tbody.innerHTML = '';
-        rows.forEach(r => tbody.appendChild(r));
+
+        if (rowCount > 0) {
+            rows.forEach(r => tbody.appendChild(r));
+        } else {
+            Lib.warn('render', 'No rows provided to renderFinalTable.');
+        }
+
+        Lib.info('render', `Finished renderFinalTable. Injected ${rowCount} rows into DOM.`);
     }
 
     function renderGroupedTable(dataArray, isArtistMain, query = '') {
+        Lib.info('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}"`);
+
         const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
-        if (!container) return;
+        if (!container) {
+            Lib.error('render', 'Abort: #content container not found.');
+            return;
+        }
 
         let templateHead = null;
         const firstTable = document.querySelector('table.tbl');
         if (firstTable && firstTable.tHead) {
+            Lib.info('render', 'Cloning table head for template.');
             templateHead = firstTable.tHead.cloneNode(true);
             cleanupHeaders(templateHead);
+        } else {
+            Lib.warn('render', 'No template table head found.');
         }
 
         // Identify the target anchor header based on page type
@@ -1688,6 +1712,7 @@ let changelog = [
                 showSpan.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    Lib.info('render', 'Master toggle: Showing all tables.');
                     container.querySelectorAll('table.tbl').forEach(t => t.style.display = '');
                     container.querySelectorAll('.mb-toggle-h3').forEach(h => {
                         const icon = h.querySelector('.mb-toggle-icon');
@@ -1701,6 +1726,7 @@ let changelog = [
                 hideSpan.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    Lib.info('render', 'Master toggle: Hiding all tables.');
                     container.querySelectorAll('table.tbl').forEach(t => t.style.display = 'none');
                     container.querySelectorAll('.mb-toggle-h3').forEach(h => {
                         const icon = h.querySelector('.mb-toggle-icon');
@@ -1732,6 +1758,7 @@ let changelog = [
         const existingTables = container.querySelectorAll('table.tbl');
 
         if (query) {
+            Lib.info('render', `Filtering: Cleaning up overflow tables beyond data length (${dataArray.length}).`);
             existingTables.forEach((table, idx) => {
                 if (idx >= dataArray.length) {
                     const h3 = table.previousElementSibling;
@@ -1745,13 +1772,16 @@ let changelog = [
         let lastInsertedElement = targetHeader;
 
         dataArray.forEach((group, index) => {
+            Lib.info('render', `Processing group: "${group.category}" with ${group.rows.length} rows.`);
             let table, h3, tbody;
             if (query && existingTables[index]) {
+                Lib.info('render', `Reusing existing table at index ${index} for group "${group.category}".`);
                 table = existingTables[index];
                 h3 = table.previousElementSibling;
                 tbody = table.querySelector('tbody');
                 tbody.innerHTML = '';
             } else {
+                Lib.info('render', `Creating new table and H3 for group "${group.category}".`);
                 h3 = document.createElement('h3');
                 h3.className = 'mb-toggle-h3';
                 h3.title = 'Collapse/Uncollapse table section';
@@ -1776,8 +1806,12 @@ let changelog = [
                 const catLower = group.category.toLowerCase();
                 const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < Lib.settings.sa_auto_expand;
                 table.style.display = shouldStayOpen ? '' : 'none';
+                Lib.info('render', `Group "${group.category}" auto-expand status: ${shouldStayOpen}`);
 
-                h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${group.category} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
+                // For place-performances, ensure the H3 text reflects the unique name established during fetching.
+                let h3DisplayName = group.category;
+
+                h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${h3DisplayName} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
 
                 // Placement Logic: If targetHeader exists, insert after it/previous element. Otherwise, append to container.
                 if (lastInsertedElement) {
@@ -1791,6 +1825,7 @@ let changelog = [
 
                 h3.addEventListener('click', () => {
                     const isHidden = table.style.display === 'none';
+                    Lib.info('render', `Toggling table for "${group.category}". New state: ${isHidden ? 'visible' : 'hidden'}`);
                     table.style.display = isHidden ? '' : 'none';
                     h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
                 });
@@ -1804,6 +1839,7 @@ let changelog = [
                 }
             }
         });
+        Lib.info('render', 'Finished renderGroupedTable.');
     }
 
     /**
@@ -2110,6 +2146,7 @@ let changelog = [
     }
 
     function fetchHtml(url) {
+        Lib.debug('fetch', `Initiating fetch for URL: ${url}`);
         return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({
                 method: 'GET', url: url,
