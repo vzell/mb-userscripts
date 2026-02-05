@@ -895,7 +895,7 @@ let changelog = [
             filterInput.style.border = '2px solid #ccc';
         }
 
-        // Apply red box to global filter if active
+        // Apply colored box to global filter if active
         filterInput.style.boxShadow = globalQueryRaw ? '0 0 2px 2px red' : '';
 
         const __activeEl = document.activeElement;
@@ -917,7 +917,7 @@ let changelog = [
                 const table = tables[groupIdx];
                 const colFiltersRaw = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
                     .map(inp => {
-                        // Apply green box to column filter if active
+                        // Apply colored box to column filter if active
                         inp.style.boxShadow = inp.value ? '0 0 2px 2px green' : '';
                         return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
                     }) : [];
