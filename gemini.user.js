@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.2.1+2026-02-04
+// @version      2.3.1+2026-02-05
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -20,6 +20,8 @@
 // @match        *://*.musicbrainz.org/series/*
 // @match        *://*.musicbrainz.org/place/*/events
 // @match        *://*.musicbrainz.org/place/*/performances
+// @match        *://*.musicbrainz.org/area/*
+// @match        *://*.musicbrainz.org/search*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_setValue
@@ -42,6 +44,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '2.3.1+2026-02-05', description: 'Apply unique subgroup naming logic (duplicate header handling) during the fetch phase for correct grouping.'},
     {version: '2.3.0+2026-02-05', description: 'Handle multitable pages of type "non_paginated" like Place-Performances.'},
     {version: '2.2.1+2026-02-04', description: 'Refactor column removal in final rendered table. Supports now "Release events" column from jesus2099 Super Mind Control script.'},
     {version: '2.2.0+2026-02-04', description: 'Support for "Show all Performances for Recordings".'},
@@ -277,18 +280,101 @@ let changelog = [
     // --- Configuration: Page Definitions ---
     // Define all supported page types, their detection logic, and specific UI configurations here.
     const pageDefinitions = [
+        // Search pages
+        // TODO: Set 'Found 43 results for "guit"' as the anchor for number of found rows
+        {
+            type: 'search',
+            match: (path) => path.includes('/search'),
+            buttons: [ { label: 'Show all search results' } ],
+            tableMode: 'single'
+        },
+        // Area pages
+        {
+            type: 'area-artists',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
+            buttons: [ { label: 'Show all Artists for Areas' } ],
+            // TODO: features: { splitArea: true },
+            tableMode: 'single'
+        },
+        {
+            type: 'area-events',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Areas' } ],
+            features: { splitLocation: true },
+            tableMode: 'single'
+        },
+        {
+            type: 'area-labels',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/labels/),
+            buttons: [ { label: 'Show all Labels for Areas' } ],
+            // TODO: features: { splitArea: true },
+            tableMode: 'single'
+        },
+        {
+            type: 'area-releases',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/),
+            buttons: [ { label: 'Show all Releases for Areas' } ],
+            features: { splitCD: true },
+            tableMode: 'single'
+        },
+        {
+            type: 'area-places',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/places/),
+            buttons: [ { label: 'Show all Places for Areas' } ],
+            // TODO: features: { splitArea: true },
+            tableMode: 'single'
+        },
+        {
+            type: 'area-aliases',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Areas' } ],
+            tableMode: 'single'
+        },
+        {
+            type: 'area-recordings',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/),
+            buttons: [ { label: 'Show all Recordings for Areas' } ],
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'area-works',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/works/),
+            buttons: [ { label: 'Show all Works for Areas' } ],
+            tableMode: 'multi',
+            non_paginated: true
+        },
         {
             type: 'place-performances',
             match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/performances/),
-            buttons: [ { label: 'Show all Performances for Recordings' } ], // Default button
+            buttons: [ { label: 'Show all Performances for Recordings' } ],
             tableMode: 'multi',
             non_paginated: true
         },
         {
             type: 'work-recordings',
-            match: (path, params) => (path.startsWith('/work/') && params.get('direction') === '2' && params.get('link_type_id') === '278') || path.match(/\/work\/[a-f0-9-]{36}$/),
-            buttons: [ { label: 'Show all Work Recordings' } ], // Default button
-            tableMode: 'single'
+            // match: (path, params) => (path.startsWith('/work/') && params.get('direction') === '2' && params.get('link_type_id') === '278') || path.match(/\/work\/[a-f0-9-]{36}$/),
+            match: (path) => path.match(/\/work\/[a-f0-9-]{36}$/),
+            buttons: [ { label: 'Show all Work Recordings' } ],
+            tableMode: 'multi',
+            non_paginated: true
+            // tableMode: 'single'
+        },
+        // Artist pages
+        {
+            type: 'artist-relationships',
+            match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/),
+            buttons: [ { label: 'Show all Relationships for Artists' } ],
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        // TODO: Needs to be handled separately - actually mult table native, but each table has it's on h2 header
+        {
+            type: 'artist-aliases',
+            match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Artists' } ],
+            tableMode: 'multi',
+            non_paginated: true
         },
         {
             type: 'artist-releasegroups',
@@ -377,20 +463,21 @@ let changelog = [
         if (def.match(path, params)) {
             pageType = def.type;
             activeDefinition = def;
+            // Add debug logs for tablemode and pagetype at the beginning of execution
+            Lib.debug('init', `Detected pageType: ${pageType}`);
+            Lib.debug('init', `Detected tableMode: ${activeDefinition ? activeDefinition.tableMode : 'unknown'}`);
             break; // Stop at first match (priority based on array order)
         }
     }
 
-    // Add debug logs for tablemode and pagetype at the beginning of execution
-    Lib.debug('init', `Detected pageType: ${pageType}`);
-    Lib.debug('init', `Detected tableMode: ${activeDefinition ? activeDefinition.tableMode : 'unknown'}`);
-
     // 2. Locate Header
+    // TODO: probably need to be fixed for "Search" pages - should also be refactored in the "pageDefinitions" variable
     let headerContainer = document.querySelector('.artistheader h1') ||
                           document.querySelector('.rgheader h1') ||
                           document.querySelector('.labelheader h1') ||
                           document.querySelector('.seriesheader h1') ||
                           document.querySelector('.placeheader h1') ||
+                          document.querySelector('.areaheader h1') ||
                           document.querySelector('.recordingheader h1') ||
                           document.querySelector('h1 a bdi')?.parentNode ||
                           document.querySelector('h1');
@@ -703,10 +790,7 @@ let changelog = [
         } else if (pageType === 'releasegroup-releases') {
             targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
         } else if (pageType === 'place-performances') {
-            targetH2 = Array.from(document.querySelectorAll('h2'))
-                .find(h => h.childNodes[0]?.nodeType === Node.TEXT_NODE &&
-                      h.childNodes[0].textContent.trim() === 'Performances');
-            //targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Performances'));
+            targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Performances'));
         }
 
         if (!targetH2) {
@@ -904,7 +988,7 @@ let changelog = [
             filterInput.style.border = '2px solid #ccc';
         }
 
-        // Apply red box to global filter if active
+        // Apply colored box to global filter if active
         filterInput.style.boxShadow = globalQueryRaw ? '0 0 2px 2px red' : '';
 
         const __activeEl = document.activeElement;
@@ -926,7 +1010,7 @@ let changelog = [
                 const table = tables[groupIdx];
                 const colFiltersRaw = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
                     .map(inp => {
-                        // Apply green box to column filter if active
+                        // Apply colored box to column filter if active
                         inp.style.boxShadow = inp.value ? '0 0 2px 2px green' : '';
                         return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
                     }) : [];
@@ -1195,7 +1279,7 @@ let changelog = [
      * @param {Object} overrideParams - Specific query parameters for artist-releasegroups buttons
      */
     async function startFetchingProcess(e, overrideParams = null) {
-        // Fix: Capture currentTarget immediately before any awaits
+        // Capture currentTarget immediately before any awaits
         const activeBtn = e.currentTarget;
         e.preventDefault();
         e.stopPropagation();
@@ -1245,9 +1329,9 @@ let changelog = [
             // For non-paginated types (like Place-Performances), initially assume maxPage is 1
             Lib.info('fetch', 'Context: Non-paginated page definition. Initially assuming maxPage = 1.');
             maxPage = 1;
-        } else if (pageType === 'work-recordings' && !params.get('direction')) {
-            Lib.info('fetch', 'Context: work-recordings page. Fetching maxPage with specific parameters.');
-            maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
+        // } else if (pageType === 'work-recordings' && !params.get('direction')) {
+        //     Lib.info('fetch', 'Context: work-recordings page. Fetching maxPage with specific parameters.');
+        //     maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
         } else if (overrideParams) {
             Lib.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
             maxPage = await fetchMaxPageGeneric(path, overrideParams);
@@ -1329,6 +1413,7 @@ let changelog = [
 
         // Define subgroupData outside the block so it is accessible during the rendering phase
         let subgroupData = [];
+        let seenSubgroups = new Map(); // Track occurrences of names
 
         // This block will only be executed for non-paginated pages to get their subgroup structure
         if (activeDefinition && activeDefinition.non_paginated) {
@@ -1396,14 +1481,28 @@ let changelog = [
                     if (row.classList.contains('subh')) {
                         const thWithColspan = row.querySelector('th[colspan]');
                         if (thWithColspan) {
-                            currentSubgroup = thWithColspan.textContent.replace(/\s+/g, ' ').trim();
-                            localSubgroupCount = 0; // Reset local counter for the new section
+                            let rawName = thWithColspan.textContent.replace(/\s+/g, ' ').trim();
 
-                            Lib.debug('parse', `[Row ${index}] Detected subgroup header: "${currentSubgroup}"`);
-                            Lib.info('parse', `Total rows in "${currentSubgroup}": ${subgroupTotals.get(index) || 0}`);
+                            // Logic to make the name unique
+                            let uniqueName = rawName;
+                            if (seenSubgroups.has(rawName)) {
+                                let count = seenSubgroups.get(rawName) + 1;
+                                seenSubgroups.set(rawName, count);
+
+                                // Determine suffix based on what follows (e.g., check rows below for context)
+                                // For simplicity, we use the counter, but you can refine this to look for
+                                // entity links if necessary.
+                                uniqueName = `${rawName} (${count})`;
+                            } else {
+                                seenSubgroups.set(rawName, 1);
+                            }
+
+                            currentSubgroup = uniqueName;
+                            localSubgroupCount = 0;
 
                             const metaEntry = {
-                                subgroup: currentSubgroup,
+                                subgroup: currentSubgroup, // This is now unique
+                                originalName: rawName,     // Keep the original for display if needed
                                 url: null,
                                 totalRowsPerSubGroup: 0,
                                 totalRows: totalRows
@@ -1440,7 +1539,7 @@ let changelog = [
                                 const totalRowsFromLink = match ? parseInt(match[1].replace(/[,.]/g, ''), 10) : 0;
 
                                 if (href.includes('link_type_id') || href.includes('direction') || totalRowsFromLink > 0) {
-				    Lib.debug('parse', `Link for all rows: href="${href}"`);
+                                    Lib.debug('parse', `Link for all rows: href="${href}"`);
                                     if (subgroupData.length > 0) {
                                         const currentEntry = subgroupData[subgroupData.length - 1];
 
@@ -1496,10 +1595,7 @@ let changelog = [
                 fetchUrl.searchParams.set('page', p.toString());
 
                 // Apply linkTypeID parameters for specific pageTypes
-                if (pageType === 'work-recordings') {
-                    fetchUrl.searchParams.set('direction', '2');
-                    fetchUrl.searchParams.set('link_type_id', '278');
-                } else if (overrideParams) {
+                if (overrideParams) {
                     Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
                 } else {
                     if (params.has('direction')) fetchUrl.searchParams.set('direction', params.get('direction'));
@@ -1507,6 +1603,18 @@ let changelog = [
                     if (params.has('all')) fetchUrl.searchParams.set('all', params.get('all'));
                     if (params.has('va')) fetchUrl.searchParams.set('va', params.get('va'));
                 }
+                // Apply query parameters for specific pageTypes
+                // if (pageType === 'work-recordings') {
+                //     fetchUrl.searchParams.set('direction', '2');
+                //     fetchUrl.searchParams.set('link_type_id', '278');
+                // } else if (overrideParams) {
+                //     Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
+                // } else {
+                //     if (params.has('direction')) fetchUrl.searchParams.set('direction', params.get('direction'));
+                //     if (params.has('link_type_id')) fetchUrl.searchParams.set('link_type_id', params.get('link_type_id'));
+                //     if (params.has('all')) fetchUrl.searchParams.set('all', params.get('all'));
+                //     if (params.has('va')) fetchUrl.searchParams.set('va', params.get('va'));
+                // }
 
                 const html = await fetchHtml(fetchUrl.toString());
                 const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -1544,7 +1652,7 @@ let changelog = [
                         while (h3 && h3.nodeName !== 'H3') h3 = h3.previousElementSibling;
                         const category = h3 ? h3.textContent.trim() : 'Other';
 
-                        // Logic to handle grouped data and repeat headers
+                        // Logic to handle grouped data and repeating headers
                         if (category !== lastCategorySeenAcrossPages) {
                             Lib.debug('fetch', `Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
                             groupedRows.push({ category: category, rows: [] });
@@ -1567,18 +1675,31 @@ let changelog = [
                     const tableBody = doc.querySelector('table.tbl tbody');
                     if (tableBody) {
                         let currentStatus = 'Unknown';
+                        let seenFetchSubgroups = new Map();
+
                         tableBody.childNodes.forEach(node => {
                             if (node.nodeName === 'TR') {
                                 if (node.classList.contains('subh')) {
-                                    currentStatus = node.textContent.trim() || 'Unknown';
+                                    const th = node.querySelector('th');
+                                    let rawName = (th ? th.textContent : node.textContent).replace(/\s+/g, ' ').trim() || 'Unknown';
+
+                                    if (seenFetchSubgroups.has(rawName)) {
+                                        let count = seenFetchSubgroups.get(rawName) + 1;
+                                        seenFetchSubgroups.set(rawName, count);
+                                        currentStatus = `${rawName} (${count})`;
+                                    } else {
+                                        seenFetchSubgroups.set(rawName, 1);
+                                        currentStatus = rawName;
+                                    }
+
                                     // TODO: for 'place-performances' check as we can have same named categories but different entities, like releases and recordings recorded at the same place
                                     if ((pageType === 'releasegroup-releases' || pageType === 'place-performances') && currentStatus !== lastCategorySeenAcrossPages) {
                                         Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
                                     }
                                 } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
-                                    // START row REMOVAL LOGIC
-                                    // Check for "See all relationships" link in place-performances pages
-                                    if (pageType === 'place-performances') {
+                                    // Remove artificial non-data rows on non-paginated pages which have a link "See all <number of rows> relationships" to the full dataset instead
+                                    // if (pageType === 'place-performances') {
+                                    if (activeDefinition && activeDefinition.non_paginated) {
                                         const seeAllCell = node.querySelector('td[colspan]');
                                         if (seeAllCell) {
                                             const link = seeAllCell.querySelector('a');
@@ -1588,7 +1709,6 @@ let changelog = [
                                             }
                                         }
                                     }
-                                    // END row REMOVAL LOGIC
 
                                     const newRow = document.importNode(node, true);
 
@@ -1688,6 +1808,7 @@ let changelog = [
                                         newRow.appendChild(tdName); newRow.appendChild(tdComment);
                                     }
                                     if (activeDefinition.tableMode === 'multi') {
+                                        // Check if this category group already exists to consolidate subgroup tables
                                         let existingGroup = groupedRows.find(g => g.category === currentStatus);
                                         if (existingGroup) {
                                             existingGroup.rows.push(newRow);
@@ -1736,8 +1857,7 @@ let changelog = [
                         const curPageCount = pageCategoryMap.get(g.category) || 0;
                         return `${g.category}: +${curPageCount} (Total: ${g.rows.length})`;
                     });
-                    Lib.debug(`  Summary: ${summaryParts.join(' | ')}`);
-                    console.log(`  Summary: ${summaryParts.join(' | ')}`);
+                    Lib.debug('fetch', `  Summary: ${summaryParts.join(' | ')}`);
                 }
             }
 
@@ -1872,9 +1992,7 @@ let changelog = [
         } else if (pageType === 'releasegroup-releases') {
             targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
         } else if (pageType === 'place-performances') {
-            targetHeader = Array.from(document.querySelectorAll('h2'))
-                .find(h => h.childNodes[0]?.nodeType === Node.TEXT_NODE &&
-                      h.childNodes[0].textContent.trim() === 'Performances');
+            targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Performances'));
         }
         Lib.info('render', `Target header identified for pageType "${pageType}":`, targetHeader);
 
@@ -1996,7 +2114,10 @@ let changelog = [
                 table.style.display = shouldStayOpen ? '' : 'none';
                 Lib.info('render', `Group "${group.category}" auto-expand status: ${shouldStayOpen}`);
 
-                h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${group.category} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
+                // For place-performances, ensure the H3 text reflects the unique name established during fetching.
+                let h3DisplayName = group.category;
+
+                h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${h3DisplayName} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
 
                 // Placement Logic: If targetHeader exists, insert after it/previous element. Otherwise, append to container.
                 if (lastInsertedElement) {
