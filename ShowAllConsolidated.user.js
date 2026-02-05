@@ -1186,7 +1186,7 @@ let changelog = [
      * @param {Object} overrideParams - Specific query parameters for artist-releasegroups buttons
      */
     async function startFetchingProcess(e, overrideParams = null) {
-        // Fix: Capture currentTarget immediately before any awaits
+        // Capture currentTarget immediately before any awaits
         const activeBtn = e.currentTarget;
         e.preventDefault();
         e.stopPropagation();
@@ -1379,7 +1379,7 @@ let changelog = [
                         while (h3 && h3.nodeName !== 'H3') h3 = h3.previousElementSibling;
                         const category = h3 ? h3.textContent.trim() : 'Other';
 
-                        // Logic to handle grouped data and repeat headers
+                        // Logic to handle grouped data and repeating headers
                         if (category !== lastCategorySeenAcrossPages) {
                             Lib.debug('fetch', `Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
                             groupedRows.push({ category: category, rows: [] });
