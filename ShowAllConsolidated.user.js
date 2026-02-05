@@ -353,7 +353,7 @@ let changelog = [
         {
             type: 'work-recordings',
             // match: (path, params) => (path.startsWith('/work/') && params.get('direction') === '2' && params.get('link_type_id') === '278') || path.match(/\/work\/[a-f0-9-]{36}$/),
-g            match: (path) => path.match(/\/work\/[a-f0-9-]{36}$/),
+            match: (path) => path.match(/\/work\/[a-f0-9-]{36}$/),
             buttons: [ { label: 'Show all Work Recordings' } ],
             tableMode: 'multi',
             non_paginated: true
