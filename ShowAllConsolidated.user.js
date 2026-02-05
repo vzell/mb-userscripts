@@ -279,15 +279,15 @@ let changelog = [
     // --- Configuration: Page Definitions ---
     // Define all supported page types, their detection logic, and specific UI configurations here.
     const pageDefinitions = [
-	// Search pages
-	// TODO: Set 'Found 43 results for "guit"' as the anchor for number of found rows
+        // Search pages
+        // TODO: Set 'Found 43 results for "guit"' as the anchor for number of found rows
         {
             type: 'search',
             match: (path) => path.includes('/search'),
             buttons: [ { label: 'Show all search results' } ],
             tableMode: 'single'
         },
-	// Area pages
+        // Area pages
         {
             type: 'area-artists',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
@@ -359,7 +359,7 @@ let changelog = [
             non_paginated: true
             // tableMode: 'single'
         },
-	// Artist pages
+        // Artist pages
         {
             type: 'artist-relationships',
             match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/),
@@ -367,7 +367,7 @@ let changelog = [
             tableMode: 'multi',
             non_paginated: true
         },
-	// TODO: Needs to be handled separately - actually mult table native, but each table has it's on h2 header
+        // TODO: Needs to be handled separately - actually mult table native, but each table has it's on h2 header
         {
             type: 'artist-aliases',
             match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/aliases/),
@@ -462,9 +462,9 @@ let changelog = [
         if (def.match(path, params)) {
             pageType = def.type;
             activeDefinition = def;
-	    // Add debug logs for tablemode and pagetype at the beginning of execution
-	    Lib.debug('init', `Detected pageType: ${pageType}`);
-	    Lib.debug('init', `Detected tableMode: ${activeDefinition ? activeDefinition.tableMode : 'unknown'}`);
+            // Add debug logs for tablemode and pagetype at the beginning of execution
+            Lib.debug('init', `Detected pageType: ${pageType}`);
+            Lib.debug('init', `Detected tableMode: ${activeDefinition ? activeDefinition.tableMode : 'unknown'}`);
             break; // Stop at first match (priority based on array order)
         }
     }
