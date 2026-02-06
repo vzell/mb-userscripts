@@ -1765,6 +1765,14 @@ let changelog = [
                                             const link = seeAllCell.querySelector('a');
                                             if (link && link.textContent.toLowerCase().includes('see all')) {
                                                 Lib.debug('parse', `Skipping "See all" relationship row.`);
+
+                                                // Capture the URL to allow "Show all" button creation in the header
+                                                // Find the correct group object using the currentStatus category name
+                                                const currentGroup = groupedRows.find(g => g.category === currentStatus);
+                                                if (currentGroup) {
+                                                    currentGroup.seeAllUrl = link.getAttribute('href');
+                                                    Lib.debug('parse', `Stored See All URL for ${currentStatus}: ${currentGroup.seeAllUrl}`);
+                                                }
                                                 return; // Skip adding this row to data structures
                                             }
                                         }
@@ -2202,6 +2210,21 @@ let changelog = [
                 } else {
                     container.appendChild(h3);
                     container.appendChild(table);
+                }
+
+                // New Logic: Add "Show all" button if a seeAllUrl was found
+                if (group.seeAllUrl) {
+                    const showAllBtn = document.createElement('button');
+                    showAllBtn.textContent = 'Show all';
+                    showAllBtn.style.cssText = 'font-size:0.6em; margin-left:10px; padding:1px 4px; cursor:pointer; vertical-align:middle;';
+                    showAllBtn.type = 'button';
+                    showAllBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Set the URL and trigger the global startFetchingProcess logic
+                        window.location.href = new URL(group.seeAllUrl, window.location.origin).href;
+                    };
+                    h3.appendChild(showAllBtn);
                 }
 
                 h3.addEventListener('click', () => {
