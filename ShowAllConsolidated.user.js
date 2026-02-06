@@ -1665,7 +1665,9 @@ let changelog = [
                 let locationIdx = -1;
                 let mainColIdx = -1;
                 let indicesToExclude = [];
-                const mainHeaders = ['Recording', 'Event', 'Release', 'Work', 'Title', 'Name'];
+		// Header name for which a generic split into MB-Name and Comment columns will be done
+		// TODO: Add 'Label' for "Area-Labels" view, but take care that in "Label" is also used in "Releasegroup-Releases" views
+                const mainHeaders = ['Recording', 'Event', 'Release', 'Work', 'Title', 'Name', 'Alias', 'Place'];
 
                 const referenceTable = doc.querySelector('table.tbl');
                 if (referenceTable) {
