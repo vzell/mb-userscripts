@@ -1636,7 +1636,7 @@ let changelog = [
                 const fetchUrl = new URL(baseUrl);
                 fetchUrl.searchParams.set('page', p.toString());
 
-                // Apply linkTypeID parameters for specific pageTypes
+                // Apply link_type_id, and VA (Various Artists) parameters for specific pageTypes
                 if (overrideParams) {
                     Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
                 } else {
