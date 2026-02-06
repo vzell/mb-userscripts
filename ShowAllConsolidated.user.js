@@ -789,30 +789,53 @@ let changelog = [
     }
 
     function updateH2Count(filteredCount, totalCount) {
+        Lib.debug('render', `Starting updateH2Count: filtered=${filteredCount}, total=${totalCount}`);
+
         const table = document.querySelector('table.tbl');
-        if (!table) return;
+        if (!table) {
+            Lib.debug('render', 'Aborting updateH2Count: No table.tbl found on page.');
+            return;
+        }
+
         let allH2s = Array.from(document.querySelectorAll('h2'));
         let targetH2 = null;
 
-        if (pageType === 'artist-releasegroups') {
-            targetH2 = document.querySelector('h2.discography');
-        } else if (pageType === 'releasegroup-releases') {
-            targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
-        } else if (pageType === 'place-performances') {
-            targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Performances'));
-        }
+        Lib.debug('render', `Searching for target H2. Current pageType: ${pageType}`);
+
+        // if (pageType === 'artist-releasegroups') {
+        //     targetH2 = document.querySelector('h2.discography');
+        //     if (targetH2) Lib.debug('render', 'Found targetH2 via selector: h2.discography');
+        // } else if (pageType === 'releasegroup-releases') {
+        //     targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+        //     if (targetH2) Lib.debug('render', 'Found targetH2 by text content "Album"');
+        // } else if (pageType === 'place-performances') {
+        //     targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Performances'));
+        //     if (targetH2) Lib.debug('render', 'Found targetH2 by text content "Performances"');
+        // }
 
         if (!targetH2) {
+            Lib.debug('render', 'Target H2 not found by specific type, falling back to document position logic.');
             for (let i = 0; i < allH2s.length; i++) {
                 if (allH2s[i].compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING) {
                     targetH2 = allH2s[i];
-                } else break;
+                } else {
+                    Lib.debug('render', `Stopping H2 search at index ${i}: table no longer follows this header.`);
+                    break;
+                }
             }
         }
 
+        let targetH2Name = targetH2.textContent.trim().substring(0, 30)
+
         if (targetH2) {
+            Lib.debug('render', `Target H2 identified: "${targetH2Name}..."`);
+
             const existing = targetH2.querySelector('.mb-row-count-stat');
-            if (existing) existing.remove();
+            if (existing) {
+                Lib.debug('render', 'Removing existing row count stat span.');
+                existing.remove();
+            }
+
             const span = document.createElement('span');
             span.className = 'mb-row-count-stat';
             const countText = (filteredCount === totalCount) ? `(${totalCount})` : `(${filteredCount} of ${totalCount})`;
@@ -821,24 +844,33 @@ let changelog = [
             // Positioning Logic: Ensure the row count stays immediately after header text, before Master Toggle or Global Filter
             const referenceNode = targetH2.querySelector('.mb-master-toggle') || filterContainer;
             if (referenceNode && referenceNode.parentNode === targetH2) {
+                Lib.debug('render', `Inserting count span before referenceNode: ${referenceNode.className || referenceNode.tagName}`);
                 targetH2.insertBefore(span, referenceNode);
             } else {
+                Lib.debug('render', 'No valid referenceNode found inside targetH2; appending count span to end.');
                 targetH2.appendChild(span);
             }
 
             // Append global filter here for non-grouped pages (Artist/RG pages handle this in renderGroupedTable)
-            if (pageType !== 'artist-releasegroups' &&
-                pageType !== 'releasegroup-releases' &&
-                pageType !== 'place-performances') {
+            // if (pageType !== 'artist-releasegroups' &&
+            //     pageType !== 'releasegroup-releases' &&
+            //     pageType !== 'place-performances') {
+            if (activeDefinition.tableMode !== 'multi') {
+
                 if (filterContainer.parentNode !== targetH2) {
+                    Lib.debug('render', 'Appending filterContainer to targetH2.');
                     targetH2.appendChild(filterContainer);
                     filterContainer.style.display = 'inline-flex';
                     filterContainer.style.marginLeft = '15px';
                     filterContainer.style.verticalAlign = 'middle';
+                } else {
+                    Lib.debug('render', 'filterContainer is already attached to targetH2.');
                 }
             }
 
-            Lib.debug('render', `Updated H2 header count: ${countText}`);
+            Lib.debug('render', `Updated H2 header ${targetH2Name} count: ${countText}`);
+        } else {
+            Lib.debug('render', 'Failed to identify a target H2 header for count update.');
         }
     }
 
