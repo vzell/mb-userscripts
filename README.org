@@ -29359,7 +29359,26 @@ I actually get an "Unknown" for all the h3 headers, wheraes before it worked for
 
 In the uploaded userscript,
 
+when rendering a subgroup table below the "rawName" with the number of rows inside the subgroup appended in brackets,
+create an additional button with text "Show all" after the "rawname (<number of rows>)" h3 headers for those subgroups
+where a "seeAllCell" is encuntered. So basically when this code is executed
 
+#+begin_example
+                                else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+                                    // Remove artificial non-data rows on non-paginated pages which have a link "See all <number of rows> relationships" to the full dataset instead
+                                    if (activeDefinition && activeDefinition.non_paginated) {
+                                        const seeAllCell = node.querySelector('td[colspan]');
+                                        if (seeAllCell) {
+                                            const link = seeAllCell.querySelector('a');
+                                            if (link && link.textContent.toLowerCase().includes('see all')) {
+                                                Lib.debug('parse', `Skipping "See all" relationship row.`);
+                                                return; // Skip adding this row to data structures
+                                            }
+                                        }
+                                    }
+#+end_example
+
+the corresponding h3 header should have an additional button appended in the same line
 
 * comparison
 ** unknown - Releasegroup-Releases
@@ -29802,3 +29821,4 @@ Actually the second logic with "seenFetchSubgroups" is right, but the subgroup h
 
 SO basically in the second case I also want the rawName to be extracted from the subheadder name.
 So please fix the extraction logic so that rawName reflects the actual subgroup header name (like "engineering location for") instead of "Unknown"
+
