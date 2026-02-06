@@ -1297,6 +1297,7 @@ let changelog = [
             });
         }
 
+	// On "Artist-Releasegroups" pages we do not create the "MB-Name" and disambiguation "Comment" columns
         if (pageType !== 'artist-releasegroups') {
             const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
             if (!headersText.includes('MB-Name')) {
@@ -1317,7 +1318,7 @@ let changelog = [
     /**
      * Generalized fetching process
      * @param {Event} e - The click event
-     * @param {Object} overrideParams - Specific query parameters for artist-releasegroups buttons
+     * @param {Object} overrideParams - Specific query parameters for artist-releasegroups and artist-releases buttons
      */
     async function startFetchingProcess(e, overrideParams = null) {
         // Capture currentTarget immediately before any awaits
