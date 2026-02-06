@@ -2046,7 +2046,7 @@ let changelog = [
             });
 
             if (targetHeader) {
-                Lib.info('render', 'Injecting master toggle and filter container.');
+                Lib.info('render', ` Injecting master toggle and filter container after target header ${targetH2Name}.`);
                 const masterToggle = document.createElement('span');
                 masterToggle.className = 'mb-master-toggle';
 
@@ -2078,10 +2078,7 @@ let changelog = [
                     });
                 };
 
-                let suffixText = ' all Release Types';
-                if (pageType === 'artist-releasegroups') {
-                    suffixText = ' all ReleaseGroup Types';
-                }
+                let suffixText = ' all Types';
                 masterToggle.appendChild(document.createTextNode('[ '));
                 masterToggle.appendChild(showSpan);
                 masterToggle.appendChild(document.createTextNode(' | '));
@@ -2152,7 +2149,7 @@ let changelog = [
                 table.style.display = shouldStayOpen ? '' : 'none';
                 Lib.info('render', `Group "${group.category}" auto-expand status: ${shouldStayOpen}`);
 
-                // For place-performances, ensure the H3 text reflects the unique name established during fetching.
+                // Ensure the H3 text reflects the unique name established during fetching.
                 let h3DisplayName = group.category;
 
                 h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${h3DisplayName} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
