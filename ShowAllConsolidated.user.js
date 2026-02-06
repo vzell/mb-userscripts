@@ -1335,7 +1335,7 @@ let changelog = [
 
         // Determine maxPage based on context
         if (activeDefinition && activeDefinition.non_paginated) {
-            // For non-paginated types (like Place-Performances), initially assume maxPage is 1
+            // For non-paginated types, initially assume maxPage is 1
             Lib.info('fetch', 'Context: Non-paginated page definition. Initially assuming maxPage = 1.');
             maxPage = 1;
         // } else if (pageType === 'work-recordings' && !params.get('direction')) {
