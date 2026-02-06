@@ -29329,3 +29329,476 @@ for rendering later.
 
 Please fix
 AND Please do not make any other changes to working code, comments and logging statements.
+
+** fix
+
+With your proposed patch
+
+#+begin_example
+-                                    currentStatus = node.textContent.trim() || 'Unknown';
++                                    const th = node.querySelector('th');
++                                    let rawName = (th ? th.textContent : node.textContent).replace(/\s+/g, ' ').trim() || 'Unknown';
++
++                                    if (seenFetchSubgroups.has(rawName)) {
++                                        let count = seenFetchSubgroups.get(rawName) + 1;
++                                        seenFetchSubgroups.set(rawName, count);
++                                        currentStatus = `${rawName} (${count})`;
++                                    } else {
++                                        seenFetchSubgroups.set(rawName, 1);
++                                        currentStatus = rawName;
++                                    }
++
+                                     // TODO: for 'place-performances' check as we can have same named categories but different entities, like releases and recordings recorded at the same place
+                                     if ((pageType === 'releasegroup-releases' || pageType === 'place-performances') && currentStatus !== lastCategorySeenAcrossPages) {
+#+end_example
+
+I actually get an "Unknown" for all the h3 headers, wheraes before it worked for all pages
+
+
+* create button on h3 header when more than 100 rows
+
+In the uploaded userscript,
+
+
+
+* comparison
+** unknown - Releasegroup-Releases
+
+#+begin_example
+🧹 Signalling other scripts to stop... 
+📥 Starting fetch process... null
+📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+📥 Found "Next" link. Extracted page: 2 
+📥 Total pages to fetch: 2 
+🧹 Starting clutter element removal. 
+🧹 Removed 2 jesus2099 bigbox elements. 
+📥 Initiating fetch for URL: https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c 
+📥 Initiating fetch for URL: https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c?page=1 
+📥 Subgroup Change/Type: "Unknown". Rows so far: 0 
+📥 Subgroup Change/Type: "Unknown (2)". Rows so far: 96 
+📥 Subgroup Change/Type: "Unknown (3)". Rows so far: 99 
+📥 Page 1/2 processed in 0.79s. Rows on page: 100. Total: 100 
+📥   Summary: Unknown: +96 (Total: 96) | Unknown (2): +3 (Total: 3) | Unknown (3): +1 (Total: 1) 
+📥 Initiating fetch for URL: https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c?page=2 
+📥 Subgroup Change/Type: "Unknown". Rows so far: 100 
+📥 Subgroup Change/Type: "Unknown (2)". Rows so far: 123 
+📥 Page 2/2 processed in 0.89s. Rows on page: 24. Total: 124 
+📥   Summary: Unknown: +23 (Total: 119) | Unknown (2): +1 (Total: 4) | Unknown (3): +0 (Total: 1) 
+🎨 DOM rendering starting... 
+🎨 Updated H2 header count: (124) 
+🎨 Starting renderGroupedTable with 3 categories. Query: "" 
+🎨 Cloning table head for template. 
+🧹 Marking column 2 ("Relationships") for removal. Match: "Relationships", Setting: "sa_remove_rel" 
+🧹 Skipping removal of column 10 ("Tagger"). Setting "sa_remove_tagger" is disabled. 
+🧹 Removing 1 columns from table. 
+🧹 Successfully deleted column: Relationships 
+🎨 Target header identified for pageType "releasegroup-releases": <h2 class=​"mb-h2-processed mb-toggle-h2" title=​"Click to Collapse/​Uncollapse section (Ctrl+Click to toggle all in this column)​" style=​"cursor:​ pointer;​ user-select:​ none;​">​…​</h2>​
+🎨 No query provided; performing initial cleanup of existing elements. 
+🎨 Injecting master toggle and filter container. 
+🎨 Processing group: "Unknown" with 119 rows. 
+🎨 Creating new table and H3 for group "Unknown". 
+🎨 Group "Unknown" auto-expand status: false 
+🎨 Processing group: "Unknown (2)" with 4 rows. 
+🎨 Creating new table and H3 for group "Unknown (2)". 
+🎨 Group "Unknown (2)" auto-expand status: false 
+🎨 Processing group: "Unknown (3)" with 1 rows. 
+🎨 Creating new table and H3 for group "Unknown (3)". 
+🎨 Group "Unknown (3)" auto-expand status: false 
+🎨 Finished renderGroupedTable. 
+🧹 Running final cleanup... 
+🧹 No Sanojjonas elements found during final cleanup. 
+🧹 Final cleanup complete: No consecutive <br> tags found. 
+🎨 Initializing collapsible H2 headers... 
+🚀 Initializing aggressive full-width sidebar toggle. 
+🎨 DOM rendering finished in 8.50ms 
+✅ Process complete. Final Row Count: 124. Total Time: 5.73s 
+#+end_example
+
+** unknown - Place-Performances
+
+#+begin_example
+🧹 Signalling other scripts to stop... 
+📥 Starting fetch process... null
+📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+📥 Total pages to fetch: 1 
+🧹 Starting clutter element removal. 
+📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances 
+📝 Entering non-paginated subgroup extraction block. 
+📝 Subgroup table found. Scanning 164 rows. 
+📝 Testing row count for subgrouping. Total rows: 164 
+📝 [Row 115] Found potential "See all" link: "See all 9,127 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?direction=1&link_type_id=693&page=1" 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1927 {"subgroup":"recording location for","originalName":"recording location for","url":"https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?direction=1&link_type_id=693&page=1","totalRowsPerSubGroup":9127,"totalRows":9138}
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1936 Final Subgroup Data: Array(5)
+📝 Successfully extracted metadata for 5 subgroups. 
+📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?page=1 
+📥 Subgroup Change/Type: "Unknown". Rows so far: 0 
+📥 Subgroup Change/Type: "Unknown (2)". Rows so far: 6 
+📥 Subgroup Change/Type: "Unknown (3)". Rows so far: 11 
+📝 Skipping "See all" relationship row. 
+📥 Subgroup Change/Type: "Unknown (4)". Rows so far: 111 
+📥 Subgroup Change/Type: "Unknown (5)". Rows so far: 133 
+📥 Page 1/1 processed in 0.85s. Rows on page: 157. Total: 157 
+📥   Summary: Unknown: +6 (Total: 6) | Unknown (2): +5 (Total: 5) | Unknown (3): +100 (Total: 100) | Unknown (4): +22 (Total: 22) | Unknown (5): +24 (Total: 24) 
+🎨 DOM rendering starting... 
+🎨 Updated H2 header count: (157) 
+🎨 Starting renderGroupedTable with 5 categories. Query: "" 
+🎨 Cloning table head for template. 
+🧹 No columns were matched for removal based on current settings. 
+🎨 Target header identified for pageType "place-performances": <h2 class=​"mb-h2-processed mb-toggle-h2" title=​"Click to Collapse/​Uncollapse section (Ctrl+Click to toggle all in this column)​" style=​"cursor:​ pointer;​ user-select:​ none;​">​…​</h2>​
+🎨 No query provided; performing initial cleanup of existing elements. 
+🎨 Injecting master toggle and filter container. 
+🎨 Processing group: "Unknown" with 6 rows. 
+🎨 Creating new table and H3 for group "Unknown". 
+🎨 Group "Unknown" auto-expand status: false 
+🎨 Processing group: "Unknown (2)" with 5 rows. 
+🎨 Creating new table and H3 for group "Unknown (2)". 
+🎨 Group "Unknown (2)" auto-expand status: false 
+🎨 Processing group: "Unknown (3)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (3)". 
+🎨 Group "Unknown (3)" auto-expand status: false 
+🎨 Processing group: "Unknown (4)" with 22 rows. 
+🎨 Creating new table and H3 for group "Unknown (4)". 
+🎨 Group "Unknown (4)" auto-expand status: false 
+🎨 Processing group: "Unknown (5)" with 24 rows. 
+🎨 Creating new table and H3 for group "Unknown (5)". 
+🎨 Group "Unknown (5)" auto-expand status: false 
+🎨 Finished renderGroupedTable. 
+🧹 Running final cleanup... 
+🧹 No Sanojjonas elements found during final cleanup. 
+🧹 Final cleanup complete: No consecutive <br> tags found. 
+🎨 Initializing collapsible H2 headers... 
+🚀 Initializing aggressive full-width sidebar toggle. 
+🎨 DOM rendering finished in 4.60ms 
+✅ Process complete. Final Row Count: 157. Total Time: 1.68s 
+#+end_example
+
+** Artist-Relationships
+
+#+begin_example
+🧹 Signalling other scripts to stop... 
+📥 Starting fetch process... null
+📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+📥 Total pages to fetch: 1 
+🧹 Starting clutter element removal. 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships 
+📝 Entering non-paginated subgroup extraction block. 
+📝 Subgroup table found. Scanning 1364 rows. 
+📝 Testing row count for subgrouping. Total rows: 1364 
+📝 [Row 150] Found potential "See all" link: "See all 423 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=869&page=1" 
+:"https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=869&page=1","totalRowsPerSubGroup":423,"totalRows":470}
+📝 [Row 252] Found potential "See all" link: "See all 4,358 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1" 
+4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1","totalRowsPerSubGroup":4358,"totalRows":4828}
+📝 [Row 356] Found potential "See all" link: "See all 568 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=156&page=1" 
+3a-edb18f7d336f/relationships?direction=1&link_type_id=156&page=1","totalRowsPerSubGroup":568,"totalRows":5397}
+📝 [Row 458] Found potential "See all" link: "See all 566 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=141&page=1" 
+-edb18f7d336f/relationships?direction=1&link_type_id=141&page=1","totalRowsPerSubGroup":566,"totalRows":5963}
+📝 [Row 560] Found potential "See all" link: "See all 65,595 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=149&page=1" 
+18f7d336f/relationships?direction=1&link_type_id=149&page=1","totalRowsPerSubGroup":65595,"totalRows":71558}
+📝 [Row 664] Found potential "See all" link: "See all 500 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709&page=1" 
+artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709&page=1","totalRowsPerSubGroup":500,"totalRows":72059}
+📝 [Row 766] Found potential "See all" link: "See all 664 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=1" 
+url":"https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=1","totalRowsPerSubGroup":664,"totalRows":72723}
+📝 [Row 868] Found potential "See all" link: "See all 247 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=44&page=1" 
+-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=44&page=1","totalRowsPerSubGroup":247,"totalRows":72970}
+📝 [Row 1139] Found potential "See all" link: "See all 894 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=168&page=1" 
+943a-edb18f7d336f/relationships?direction=1&link_type_id=168&page=1","totalRowsPerSubGroup":894,"totalRows":74024}
+📝 [Row 1241] Found potential "See all" link: "See all 874 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=165&page=1" 
+-edb18f7d336f/relationships?direction=1&link_type_id=165&page=1","totalRowsPerSubGroup":874,"totalRows":74898}
+📝 [Row 1343] Found potential "See all" link: "See all 129 relationships" 
+📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=161&page=1" 
+4-943a-edb18f7d336f/relationships?direction=1&link_type_id=161&page=1","totalRowsPerSubGroup":129,"totalRows":75027}
+, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+📝 Successfully extracted metadata for 24 subgroups. 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1 
+📝 Skipping "See all" relationship row. 
+📝 Skipping "See all" relationship row. 
+📝 Skipping "See all" relationship row. 
+📝 Skipping "See all" relationship row. 
+📝 Skipping "See all" relationship row. 
+📝 Skipping "See all" relationship row. 
+📝 Skipping "See all" relationship row. 
+📝 Skipping "See all" relationship row. 
+📝 Skipping "See all" relationship row. 
+📝 Skipping "See all" relationship row. 
+📝 Skipping "See all" relationship row. 
+📥 Page 1/1 processed in 13.94s. Rows on page: 1328. Total: 1328 
+📥   Summary: Unknown: +47 (Total: 47) | Unknown (2): +100 (Total: 100) | Unknown (3): +100 (Total: 100) | Unknown (4): +1 (Total: 1) | Unknown (5): +100 (Total: 100) | Unknown (6): +100 (Total: 100) | Unknown (7): +100 (Total: 100) | Unknown (8): +1 (Total: 1) | Unknown (9): +100 (Total: 100) | Unknown (10): +100 (Total: 100) | Unknown (11): +100 (Total: 100) | Unknown (12): +14 (Total: 14) | Unknown (13): +1 (Total: 1) | Unknown (14): +4 (Total: 4) | Unknown (15): +1 (Total: 1) | Unknown (16): +42 (Total: 42) | Unknown (17): +4 (Total: 4) | Unknown (18): +32 (Total: 32) | Unknown (19): +17 (Total: 17) | Unknown (20): +45 (Total: 45) | Unknown (21): +100 (Total: 100) | Unknown (22): +100 (Total: 100) | Unknown (23): +100 (Total: 100) | Unknown (24): +19 (Total: 19) 
+🎨 DOM rendering starting... 
+🎨 Updated H2 header count: (1328) 
+🎨 Starting renderGroupedTable with 24 categories. Query: "" 
+🎨 Cloning table head for template. 
+🧹 No columns were matched for removal based on current settings. 
+🎨 Target header identified for pageType "artist-relationships": null
+🎨 No query provided; performing initial cleanup of existing elements. 
+🎨 Processing group: "Unknown" with 47 rows. 
+🎨 Creating new table and H3 for group "Unknown". 
+🎨 Group "Unknown" auto-expand status: false 
+🎨 Processing group: "Unknown (2)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (2)". 
+🎨 Group "Unknown (2)" auto-expand status: false 
+🎨 Processing group: "Unknown (3)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (3)". 
+🎨 Group "Unknown (3)" auto-expand status: false 
+🎨 Processing group: "Unknown (4)" with 1 rows. 
+🎨 Creating new table and H3 for group "Unknown (4)". 
+🎨 Group "Unknown (4)" auto-expand status: false 
+🎨 Processing group: "Unknown (5)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (5)". 
+🎨 Group "Unknown (5)" auto-expand status: false 
+🎨 Processing group: "Unknown (6)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (6)". 
+🎨 Group "Unknown (6)" auto-expand status: false 
+🎨 Processing group: "Unknown (7)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (7)". 
+🎨 Group "Unknown (7)" auto-expand status: false 
+🎨 Processing group: "Unknown (8)" with 1 rows. 
+🎨 Creating new table and H3 for group "Unknown (8)". 
+🎨 Group "Unknown (8)" auto-expand status: false 
+🎨 Processing group: "Unknown (9)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (9)". 
+🎨 Group "Unknown (9)" auto-expand status: false 
+🎨 Processing group: "Unknown (10)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (10)". 
+🎨 Group "Unknown (10)" auto-expand status: false 
+🎨 Processing group: "Unknown (11)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (11)". 
+🎨 Group "Unknown (11)" auto-expand status: false 
+🎨 Processing group: "Unknown (12)" with 14 rows. 
+🎨 Creating new table and H3 for group "Unknown (12)". 
+🎨 Group "Unknown (12)" auto-expand status: false 
+🎨 Processing group: "Unknown (13)" with 1 rows. 
+🎨 Creating new table and H3 for group "Unknown (13)". 
+🎨 Group "Unknown (13)" auto-expand status: false 
+🎨 Processing group: "Unknown (14)" with 4 rows. 
+🎨 Creating new table and H3 for group "Unknown (14)". 
+🎨 Group "Unknown (14)" auto-expand status: false 
+🎨 Processing group: "Unknown (15)" with 1 rows. 
+🎨 Creating new table and H3 for group "Unknown (15)". 
+🎨 Group "Unknown (15)" auto-expand status: false 
+🎨 Processing group: "Unknown (16)" with 42 rows. 
+🎨 Creating new table and H3 for group "Unknown (16)". 
+🎨 Group "Unknown (16)" auto-expand status: false 
+🎨 Processing group: "Unknown (17)" with 4 rows. 
+🎨 Creating new table and H3 for group "Unknown (17)". 
+🎨 Group "Unknown (17)" auto-expand status: false 
+🎨 Processing group: "Unknown (18)" with 32 rows. 
+🎨 Creating new table and H3 for group "Unknown (18)". 
+🎨 Group "Unknown (18)" auto-expand status: false 
+🎨 Processing group: "Unknown (19)" with 17 rows. 
+🎨 Creating new table and H3 for group "Unknown (19)". 
+🎨 Group "Unknown (19)" auto-expand status: false 
+🎨 Processing group: "Unknown (20)" with 45 rows. 
+🎨 Creating new table and H3 for group "Unknown (20)". 
+🎨 Group "Unknown (20)" auto-expand status: false 
+🎨 Processing group: "Unknown (21)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (21)". 
+🎨 Group "Unknown (21)" auto-expand status: false 
+🎨 Processing group: "Unknown (22)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (22)". 
+🎨 Group "Unknown (22)" auto-expand status: false 
+🎨 Processing group: "Unknown (23)" with 100 rows. 
+🎨 Creating new table and H3 for group "Unknown (23)". 
+🎨 Group "Unknown (23)" auto-expand status: false 
+🎨 Processing group: "Unknown (24)" with 19 rows. 
+🎨 Creating new table and H3 for group "Unknown (24)". 
+🎨 Group "Unknown (24)" auto-expand status: false 
+🎨 Finished renderGroupedTable. 
+🧹 Running final cleanup... 
+🧹 Sanojjonas elements found during final cleanup. Removing now... 
+🧹 Removing Sanojjonas containers... 
+🧹 Found consecutive <br> tags: removed 9 tags at instance 1. 
+🧹 Final cleanup complete: Removed a total of 9 consecutive <br> tags across 1 locations. 
+🎨 Initializing collapsible H2 headers... 
+🚀 Initializing aggressive full-width sidebar toggle. 
+🎨 DOM rendering finished in 38.10ms 
+✅ Process complete. Final Row Count: 1328. Total Time: 26.45s 
+#+end_example
+
+* debug
+
+In the uploaded userscript,
+
+please add comprehensive debug logging statements to the following function
+
+#+begin_example
+    function updateH2Count(filteredCount, totalCount) {
+        const table = document.querySelector('table.tbl');
+        if (!table) return;
+        let allH2s = Array.from(document.querySelectorAll('h2'));
+        let targetH2 = null;
+
+        if (pageType === 'artist-releasegroups') {
+            targetH2 = document.querySelector('h2.discography');
+        } else if (pageType === 'releasegroup-releases') {
+            targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+        } else if (pageType === 'place-performances') {
+            targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Performances'));
+        }
+
+        if (!targetH2) {
+            for (let i = 0; i < allH2s.length; i++) {
+                if (allH2s[i].compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                    targetH2 = allH2s[i];
+                } else break;
+            }
+        }
+
+        if (targetH2) {
+            const existing = targetH2.querySelector('.mb-row-count-stat');
+            if (existing) existing.remove();
+            const span = document.createElement('span');
+            span.className = 'mb-row-count-stat';
+            const countText = (filteredCount === totalCount) ? `(${totalCount})` : `(${filteredCount} of ${totalCount})`;
+            span.textContent = countText;
+
+            // Positioning Logic: Ensure the row count stays immediately after header text, before Master Toggle or Global Filter
+            const referenceNode = targetH2.querySelector('.mb-master-toggle') || filterContainer;
+            if (referenceNode && referenceNode.parentNode === targetH2) {
+                targetH2.insertBefore(span, referenceNode);
+            } else {
+                targetH2.appendChild(span);
+            }
+
+            // Append global filter here for non-grouped pages (Artist/RG pages handle this in renderGroupedTable)
+            if (pageType !== 'artist-releasegroups' &&
+                pageType !== 'releasegroup-releases' &&
+                pageType !== 'place-performances') {
+                if (filterContainer.parentNode !== targetH2) {
+                    targetH2.appendChild(filterContainer);
+                    filterContainer.style.display = 'inline-flex';
+                    filterContainer.style.marginLeft = '15px';
+                    filterContainer.style.verticalAlign = 'middle';
+                }
+            }
+
+            Lib.debug('render', `Updated H2 header count: ${countText}`);
+        }
+    }
+#+end_example
+
+Show me just the enriched function
+
+
+* if (mainColIdx === -1 && (pageType === 'releasegroup-releases' || pageType === 'place-performances')) mainColIdx = 0;
+
+In the uploaded userscript,
+what is the meaning of this line
+
+#+begin_example
+if (mainColIdx === -1 && (pageType === 'releasegroup-releases' || pageType === 'place-performances')) mainColIdx = 0;
+#+end_example
+
+
+* why
+
+In the uploaded userscript,
+
+with the following code
+
+#+begin_example
+                    if (tableBody) {
+                        let currentStatus = 'Unknown';
+                        let seenFetchSubgroups = new Map();  // needed for unique subgroup header names
+
+                        tableBody.childNodes.forEach(node => {
+                            if (node.nodeName === 'TR') {
+                                if (node.classList.contains('subh')) {
+
+                                    // for Releasegroup-Releases pages where named subgroup headers can appear over paginated pages
+                                    currentStatus = node.textContent.trim() || 'Unknown';
+
+                                    // const th = node.querySelector('th');
+                                    // let rawName = (th ? th.textContent : node.textContent).replace(/\s+/g, ' ').trim() || 'Unknown';
+
+                                    // if (seenFetchSubgroups.has(rawName)) {
+                                    //     let count = seenFetchSubgroups.get(rawName) + 1;
+                                    //     seenFetchSubgroups.set(rawName, count);
+                                    //     currentStatus = `${rawName} (${count})`;
+                                    // } else {
+                                    //     seenFetchSubgroups.set(rawName, 1);
+                                    //     currentStatus = rawName;
+                                    // }
+
+                                    if ((activeDefinition.tableMode === 'multi') && currentStatus !== lastCategorySeenAcrossPages) {
+                                        Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
+                                    }
+#+end_example
+
+the following console output is produced
+
+#+begin_example
+📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?page=1 
+🚀 Checking default mainColIdx for pageType: place-performances, current mainColIdx: 1 
+📥 Subgroup Change/Type: "engineering location for". Rows so far: 0 
+📥 Subgroup Change/Type: "producing location for". Rows so far: 6 
+📥 Subgroup Change/Type: "recording location for". Rows so far: 11 
+📝 Skipping "See all" relationship row. 
+📥 Subgroup Change/Type: "shooting location for". Rows so far: 111 
+📥 Subgroup Change/Type: "recording location for". Rows so far: 133 
+📥 Page 1/1 processed in 0.73s. Rows on page: 157. Total: 157 
+📥   Summary: engineering location for: +6 (Total: 6) | producing location for: +5 (Total: 5) | recording location for: +124 (Total: 124) | shooting location for: +22 (Total: 22)
+#+end_example
+
+but when I change the code to
+
+#+begin_example
+                    if (tableBody) {
+                        let currentStatus = 'Unknown';
+                        let seenFetchSubgroups = new Map();  // needed for unique subgroup header names
+
+                        tableBody.childNodes.forEach(node => {
+                            if (node.nodeName === 'TR') {
+                                if (node.classList.contains('subh')) {
+
+                                    // for Releasegroup-Releases pages where named subgroup headers can appear over paginated pages
+                                    //currentStatus = node.textContent.trim() || 'Unknown';
+
+                                    const th = node.querySelector('th');
+                                    let rawName = (th ? th.textContent : node.textContent).replace(/\s+/g, ' ').trim() || 'Unknown';
+
+                                    if (seenFetchSubgroups.has(rawName)) {
+                                        let count = seenFetchSubgroups.get(rawName) + 1;
+                                        seenFetchSubgroups.set(rawName, count);
+                                        currentStatus = `${rawName} (${count})`;
+                                    } else {
+                                        seenFetchSubgroups.set(rawName, 1);
+                                        currentStatus = rawName;
+                                    }
+
+                                    if ((activeDefinition.tableMode === 'multi') && currentStatus !== lastCategorySeenAcrossPages) {
+                                        Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
+                                    }
+#+end_example
+
+I get
+
+#+begin_example
+📥 Initiating fetch for URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?page=1 
+🚀 Checking default mainColIdx for pageType: place-performances, current mainColIdx: 1 
+📥 Subgroup Change/Type: "Unknown". Rows so far: 0 
+📥 Subgroup Change/Type: "Unknown (2)". Rows so far: 6 
+📥 Subgroup Change/Type: "Unknown (3)". Rows so far: 11 
+📝 Skipping "See all" relationship row. 
+📥 Subgroup Change/Type: "Unknown (4)". Rows so far: 111 
+📥 Subgroup Change/Type: "Unknown (5)". Rows so far: 133 
+📥 Page 1/1 processed in 1.30s. Rows on page: 157. Total: 157
+📥   Summary: Unknown: +6 (Total: 6) | Unknown (2): +5 (Total: 5) | Unknown (3): +100 (Total: 100) | Unknown (4): +22 (Total: 22) | Unknown (5): +24 (Total: 24)
+#+end_example
+
+
+Actually the second logic with "seenFetchSubgroups" is right, but the subgroup header should NOT have the value
+"Unknown" but instead the values what the first console log block shows.
+
+SO basically in the second case I also want the rawName to be extracted from the subheadder name.
+So please fix the extraction logic so that rawName reflects the actual subgroup header name (like "engineering location for") instead of "Unknown"

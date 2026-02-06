@@ -1726,17 +1726,39 @@ let changelog = [
                     const tableBody = doc.querySelector('table.tbl tbody');
                     if (tableBody) {
                         let currentStatus = 'Unknown';
+                        let seenFetchSubgroups = new Map();  // needed for unique subgroup header names
+
                         tableBody.childNodes.forEach(node => {
                             if (node.nodeName === 'TR') {
                                 if (node.classList.contains('subh')) {
-                                    currentStatus = node.textContent.trim() || 'Unknown';
-                                    // TODO: for 'place-performances' check as we can have same named categories but different entities, like releases and recordings recorded at the same place
-                                    if ((pageType === 'releasegroup-releases' || pageType === 'place-performances') && currentStatus !== lastCategorySeenAcrossPages) {
+
+                                    const th = node.querySelector('th');
+
+                                    // Prefer anchor text if present (MusicBrainz usually puts the label here)
+                                    let rawName =
+                                        th?.querySelector('a')?.textContent?.trim() ||
+                                        th?.textContent?.trim() ||
+                                        node.textContent?.trim() ||
+                                        'Unknown';
+
+                                    // Normalize whitespace
+                                    rawName = rawName.replace(/\s+/g, ' ');
+
+                                    if (seenFetchSubgroups.has(rawName)) {
+                                        let count = seenFetchSubgroups.get(rawName) + 1;
+                                        seenFetchSubgroups.set(rawName, count);
+                                        currentStatus = `${rawName} (${count})`;
+                                    } else {
+                                        seenFetchSubgroups.set(rawName, 1);
+                                        currentStatus = rawName;
+                                    }
+
+                                    if ((activeDefinition.tableMode === 'multi') && currentStatus !== lastCategorySeenAcrossPages) {
                                         Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
                                     }
-                                } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+                                }
+                                else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     // Remove artificial non-data rows on non-paginated pages which have a link "See all <number of rows> relationships" to the full dataset instead
-                                    // if (pageType === 'place-performances') {
                                     if (activeDefinition && activeDefinition.non_paginated) {
                                         const seeAllCell = node.querySelector('td[colspan]');
                                         if (seeAllCell) {
