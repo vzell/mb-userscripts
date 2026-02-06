@@ -29822,3 +29822,78 @@ Actually the second logic with "seenFetchSubgroups" is right, but the subgroup h
 SO basically in the second case I also want the rawName to be extracted from the subheadder name.
 So please fix the extraction logic so that rawName reflects the actual subgroup header name (like "engineering location for") instead of "Unknown"
 
+
+* add direction
+
+In the uploaded userscript,
+please add the following functionality:
+
+- extract the following query parameters from the current webpage, if available
+  
+#+begin_example
+direction
+link_type_id
+#+end_example
+
+and add them dynamically as "params"
+
+like in the definition for
+
+#+begin_example
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: 'Official artist RGs', params: { all: '0', va: '0' } },
+                { label: 'Non-official artist RGs', params: { all: '1', va: '0' } },
+                { label: 'Official various artists RGs', params: { all: '0', va: '1' } },
+                { label: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
+            ],
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+to the current evaluated "pageType" for further processing. So basically "overrideParams" should be adjusted for further
+processing when the "fetchMaxPageGeneric" function is called
+
+
+*
+
+In the uploaded userscript,
+
+#+begin_example
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:652 Uncaught (in promise) ReferenceError: searchParams is not defined
+    at userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:652:9
+    at Array.forEach (<anonymous>)
+    at userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:651:35
+    at Proxy.<anonymous> (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:2946:3)
+    at At (<anonymous>:10:89)
+    at userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1:87
+    at window.__f__mlbikt36.7t (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1:523)
+    at At (<anonymous>:10:89)
+    at r.setMessageListener.r (<anonymous>:90:23)
+    at <anonymous>:93:52
+    at _ (<anonymous>:22:406)
+#+end_example
+
+*
+
+In the uploaded userscript,
+
+How can I match URLs of type https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?page=1&direction=1&link_type_id=693
+with the query parameters "direction" and "link_type_id"" in the following definition
+
+#+begin_example
+        {
+            type: 'place-performances',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/performances/),
+            buttons: [ { label: 'Show all Performances for Recordings' } ],
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+regarding their values. so the values can be arbitrary
+
