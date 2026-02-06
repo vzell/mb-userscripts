@@ -2023,16 +2023,34 @@ let changelog = [
             Lib.warn('render', 'No template table head found.');
         }
 
-        // Identify the target anchor header based on page type
+        let allH2s = Array.from(document.querySelectorAll('h2'));
         let targetHeader = null;
-        if (pageType === 'artist-releasegroups') {
-            targetHeader = document.querySelector('h2.discography');
-        } else if (pageType === 'releasegroup-releases') {
-            targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
-        } else if (pageType === 'place-performances') {
-            targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Performances'));
+
+        Lib.debug('render', `Searching for target H2. Current pageType: ${pageType}`);
+
+        // TODO: Identify the target anchor header based on page type - generalize
+        // if (pageType === 'artist-releasegroups') {
+        //     targetHeader = document.querySelector('h2.discography');
+        // } else if (pageType === 'releasegroup-releases') {
+        //     targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
+        // } else if (pageType === 'place-performances') {
+        //     targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Performances'));
+        // }
+        // Lib.info('render', `Target header identified for pageType "${pageType}":`, targetHeader);
+
+        if (!targetHeader) {
+            Lib.debug('render', 'Target H2 not found by specific type, falling back to document position logic.');
+            for (let i = 0; i < allH2s.length; i++) {
+                if (allH2s[i].compareDocumentPosition(firstTable) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                    targetHeader = allH2s[i];
+                } else {
+                    Lib.debug('render', `Stopping H2 search at index ${i}: table no longer follows this header.`);
+                    break;
+                }
+            }
         }
-        Lib.info('render', `Target header identified for pageType "${pageType}":`, targetHeader);
+
+        let targetH2Name = targetHeader.textContent.trim().substring(0, 30)
 
         if (!query) {
             Lib.info('render', 'No query provided; performing initial cleanup of existing elements.');
