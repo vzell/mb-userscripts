@@ -1297,7 +1297,7 @@ let changelog = [
             });
         }
 
-	// On "Artist-Releasegroups" pages we do not create the "MB-Name" and disambiguation "Comment" columns
+        // On "Artist-Releasegroups" pages we do not create the "MB-Name" and disambiguation "Comment" columns
         if (pageType !== 'artist-releasegroups') {
             const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
             if (!headersText.includes('MB-Name')) {
@@ -1665,8 +1665,8 @@ let changelog = [
                 let locationIdx = -1;
                 let mainColIdx = -1;
                 let indicesToExclude = [];
-		// Header name for which a generic split into MB-Name and Comment columns will be done
-		// TODO: Add 'Label' for "Area-Labels" view, but take care that in "Label" is also used in "Releasegroup-Releases" views
+                // Header name for which a generic split into MB-Name and Comment columns will be done
+                // TODO: Add 'Label' for "Area-Labels" view, but take care that in "Label" is also used in "Releasegroup-Releases" views
                 const mainHeaders = ['Recording', 'Event', 'Release', 'Work', 'Title', 'Name', 'Alias', 'Place'];
 
                 const referenceTable = doc.querySelector('table.tbl');
@@ -1686,12 +1686,12 @@ let changelog = [
                     });
                 }
 
-		Lib.debug('init', `Checking default mainColIdx for pageType: ${pageType}, current mainColIdx: ${mainColIdx}`);
-		//if (mainColIdx === -1 && (pageType === 'releasegroup-releases' || pageType === 'place-performances')) {
-		if (mainColIdx === -1 && (pageType === 'releasegroup-releases')) {
+                Lib.debug('init', `Checking default mainColIdx for pageType: ${pageType}, current mainColIdx: ${mainColIdx}`);
+                //if (mainColIdx === -1 && (pageType === 'releasegroup-releases' || pageType === 'place-performances')) {
+                if (mainColIdx === -1 && (pageType === 'releasegroup-releases')) {
                     mainColIdx = 0;
                     Lib.debug('init', `mainColIdx was -1, forced to 0 for pageType: ${pageType}`);
-		}
+                }
                 //if (mainColIdx === -1 && (pageType === 'releasegroup-releases' || pageType === 'place-performances')) mainColIdx = 0;
 
                 let rowsInThisPage = 0;
