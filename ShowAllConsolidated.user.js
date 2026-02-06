@@ -19,7 +19,7 @@
 // @match        *://*.musicbrainz.org/label/*
 // @match        *://*.musicbrainz.org/series/*
 // @match        *://*.musicbrainz.org/place/*/events
-// @match        *://*.musicbrainz.org/place/*/performances
+// @match        *://*.musicbrainz.org/place/*/performances*
 // @match        *://*.musicbrainz.org/area/*
 // @match        *://*.musicbrainz.org/search*
 // @grant        GM_xmlhttpRequest
@@ -273,8 +273,16 @@ let changelog = [
     }
 
     const currentUrl = new URL(window.location.href);
+    const basePath = currentUrl.origin + currentUrl.pathname;
     const path = currentUrl.pathname;
     const params = currentUrl.searchParams;
+    const isFilteredRelationshipPage = params.has('link_type_id');
+
+    Lib.debug('init', `URL: ${currentUrl}`);
+    Lib.debug('init', `URL basepath: ${basePath}`);
+    Lib.debug('init', `URL path: ${path}`);
+    Lib.debug('init', `Query parameters: ${params}`);
+    Lib.debug('init', `Has "link_type_id": ${isFilteredRelationshipPage}`);
 
     // --- Configuration: Page Definitions ---
 
