@@ -30248,7 +30248,7 @@ I’ll break this down cleanly and then give you a concrete fix strategy.
 
 What is actually happening (high-level)
 
-You have two fundamentally different page contexts, but your script treats them too similarly:
+We have two fundamentally different page contexts, but your script treats them too similarly:
 
 1️⃣ Base artist relationships page (no query params)
 /artist/<mbid>/relationships
@@ -30263,8 +30263,7 @@ Many subgroups (arranged, instruments, vocals, …)
 Each subgroup may contain a “See all N relationships” row
 
 Pagination is hidden behind those “See all” links
-
-Your script correctly:
+Oour script correctly:
 
 Detects this as non-paginated
 
@@ -30289,7 +30288,7 @@ There are no subgroups
 
 All rows belong to the same relationship type (“instruments” here)
 
-Your script incorrectly re-enters the “non-paginated subgroup extraction mode”.
+Our script incorrectly re-enters the “non-paginated subgroup extraction mode”.
 
 That’s the core bug.
 
@@ -30301,13 +30300,13 @@ Even though the context contains parameters:
 📥 Starting fetch process... {direction: '1', link_type_id: '148'}
 
 
-You still do:
+We still do:
 
 📥 Initiating fetch for URL:
 https://musicbrainz.org/artist/.../relationships
 
 
-➡️ You drop the query parameters for the first fetch
+➡️ We drop the query parameters for the first fetch
 ➡️ Script thinks: “Ah, non-paginated, subgroup table”
 
 🔥 Bug #2: Non-paginated subgroup logic runs when it should not
@@ -30336,7 +30335,7 @@ That happens because:
 
 No .subh rows exist
 
-Your grouping logic still expects them
+Our grouping logic still expects them
 
 So everything falls into the default bucket (Unknown)
 
@@ -30355,8 +30354,8 @@ Even if page=1 and maxPage isn’t detected yet.
 
 The fix: split logic by semantic page mode
 
-You already have all the data you need.
-You just need one decisive switch early.
+We already have all the data you need.
+We just need one decisive switch early.
 
 1️⃣ Introduce a clear relationship page mode
 
@@ -30465,7 +30464,7 @@ Exactly how MusicBrainz should work, just faster and nicer.
 
 TL;DR
 
-Your script currently confuses:
+My script currently confuses:
 
 “Non-paginated subgroup page”
 
@@ -30484,4 +30483,423 @@ Patch this directly into ShowAllConsolidated.user.js
 Or refactor the relationship handling into a clean mini state machine
 
 Just tell me how deep you want to go.
+#+end_example
+
+** ask gemini
+
+In the uploaded userscript,
+
+when starting with the following URL
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
+I get
+
+the following console output (some debugging statements are coming from the requred library)
+
+#+begin_example
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: artist-relationships 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: multi 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing script for path: /artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: artist-relationships 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: multi 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing script for path: /artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+#+end_example
+
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=869
+
+When I then press the "Show all Relationships for Artists" button I get
+
+#+begin_example
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Signalling other scripts to stop... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Starting fetch process... null
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Total pages to fetch: 1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Starting clutter element removal. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Entering non-paginated subgroup extraction block. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Subgroup table found. Scanning 1364 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Testing row count for subgrouping. Total rows: 1364 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 150] Found potential "See all" link: "See all 423 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=869&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 252] Found potential "See all" link: "See all 4,358 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 356] Found potential "See all" link: "See all 568 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=156&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 458] Found potential "See all" link: "See all 566 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=141&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 560] Found potential "See all" link: "See all 65,595 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=149&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 664] Found potential "See all" link: "See all 500 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 766] Found potential "See all" link: "See all 664 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 868] Found potential "See all" link: "See all 247 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=44&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 1139] Found potential "See all" link: "See all 894 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=168&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 1241] Found potential "See all" link: "See all 874 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=165&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 1343] Found potential "See all" link: "See all 129 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=161&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Successfully extracted metadata for 24 subgroups. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Checking default mainColIdx for pageType: artist-relationships, current mainColIdx: 1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "arranged". Rows so far: 0 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "holds phonographic copyright (℗) for". Rows so far: 47 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Stored See All URL for holds phonographic copyright (℗) for: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=869 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "instruments". Rows so far: 147 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Stored See All URL for instruments: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=148 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "instruments arranged". Rows so far: 247 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "performed". Rows so far: 248 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Stored See All URL for performed: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=156 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "produced". Rows so far: 348 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Stored See All URL for produced: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=141 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "vocals". Rows so far: 448 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Stored See All URL for vocals: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=149 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "composed". Rows so far: 548 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "holds copyright (©) for". Rows so far: 549 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Stored See All URL for holds copyright (©) for: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=709 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "holds phonographic copyright (℗) for (2)". Rows so far: 649 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Stored See All URL for holds phonographic copyright (℗) for (2): https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=710 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "instruments (2)". Rows so far: 749 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Stored See All URL for instruments (2): https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=44 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "liner notes for". Rows so far: 849 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "lyrics". Rows so far: 863 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "performed (2)". Rows so far: 864 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "photography". Rows so far: 868 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "produced (2)". Rows so far: 869 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "published". Rows so far: 911 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "vocals (2)". Rows so far: 915 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "tribute albums". Rows so far: 947 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "arranged (2)". Rows so far: 964 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "composed (2)". Rows so far: 1009 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Stored See All URL for composed (2): https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=168 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "lyrics (2)". Rows so far: 1109 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Stored See All URL for lyrics (2): https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=165 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "published (2)". Rows so far: 1209 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Skipping "See all" relationship row. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Stored See All URL for published (2): https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=161 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Subgroup Change/Type: "wrote". Rows so far: 1309 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Page 1/1 processed in 10.33s. Rows on page: 1328. Total: 1328 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥   Summary: arranged: +47 (Total: 47) | holds phonographic copyright (℗) for: +100 (Total: 100) | instruments: +100 (Total: 100) | instruments arranged: +1 (Total: 1) | performed: +100 (Total: 100) | produced: +100 (Total: 100) | vocals: +100 (Total: 100) | composed: +1 (Total: 1) | holds copyright (©) for: +100 (Total: 100) | holds phonographic copyright (℗) for (2): +100 (Total: 100) | instruments (2): +100 (Total: 100) | liner notes for: +14 (Total: 14) | lyrics: +1 (Total: 1) | performed (2): +4 (Total: 4) | photography: +1 (Total: 1) | produced (2): +42 (Total: 42) | published: +4 (Total: 4) | vocals (2): +32 (Total: 32) | tribute albums: +17 (Total: 17) | arranged (2): +45 (Total: 45) | composed (2): +100 (Total: 100) | lyrics (2): +100 (Total: 100) | published (2): +100 (Total: 100) | wrote: +19 (Total: 19) 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering starting... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting updateH2Count: filtered=1328, total=1328 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Searching for target H2. Current pageType: artist-relationships 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Stopping H2 search at index 2: table no longer follows this header. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target H2 identified: "Appearances..." 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Updated H2 header Appearances count: (1328) 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting renderGroupedTable with 24 categories. Query: "" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Cloning table head for template. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 No columns were matched for removal based on current settings. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Searching for target H2. Current pageType: artist-relationships 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Stopping H2 search at index 2: table no longer follows this header. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 No query provided; performing initial cleanup of existing elements. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨  Injecting master toggle and filter container after target header Appearances(1328). 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "arranged" with 47 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "arranged". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "arranged" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "holds phonographic copyright (℗) for" with 100 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "holds phonographic copyright (℗) for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "holds phonographic copyright (℗) for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "instruments" with 100 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "instruments". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "instruments" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "instruments arranged" with 1 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "instruments arranged". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "instruments arranged" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "performed" with 100 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "performed". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "performed" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "produced" with 100 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "produced". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "produced" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "vocals" with 100 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "vocals". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "vocals" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "composed" with 1 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "composed". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "composed" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "holds copyright (©) for" with 100 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "holds copyright (©) for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "holds copyright (©) for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "holds phonographic copyright (℗) for (2)" with 100 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "holds phonographic copyright (℗) for (2)". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "holds phonographic copyright (℗) for (2)" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "instruments (2)" with 100 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "instruments (2)". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "instruments (2)" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "liner notes for" with 14 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "liner notes for". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "liner notes for" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "lyrics" with 1 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "lyrics". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "lyrics" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "performed (2)" with 4 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "performed (2)". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "performed (2)" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "photography" with 1 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "photography". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "photography" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "produced (2)" with 42 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "produced (2)". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "produced (2)" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "published" with 4 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "published". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "published" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "vocals (2)" with 32 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "vocals (2)". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "vocals (2)" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "tribute albums" with 17 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "tribute albums". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "tribute albums" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "arranged (2)" with 45 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "arranged (2)". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "arranged (2)" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "composed (2)" with 100 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "composed (2)". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "composed (2)" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "lyrics (2)" with 100 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "lyrics (2)". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "lyrics (2)" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "published (2)" with 100 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "published (2)". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "published (2)" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "wrote" with 19 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "wrote". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "wrote" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Finished renderGroupedTable. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Running final cleanup... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Sanojjonas elements found during final cleanup. Removing now... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Removing Sanojjonas containers... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Found consecutive <br> tags: removed 9 tags at instance 1. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Final cleanup complete: Removed a total of 9 consecutive <br> tags across 1 locations. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Initializing collapsible H2 headers... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering finished in 39.50ms 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 1328. Total Time: 21.09s 
+#+end_example
+
+When I now for example press the generated button "Show all" on the "instruments (100)" h3 heading I'm redirected to the following URL "instruments" relationships URL
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=148
+
+which has all the pagination for actually handling the complete data retrieval with the newly generated button "Show all Relationships for Artists" (but this time with query parameters)
+
+The console logging for this step is
+
+#+begin_example
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: artist-relationships 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: multi 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing script for path: /artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+#+end_example
+
+When I now again press the button button "Show all Relationships for Artists" I get the following console output
+
+#+begin_example
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Signalling other scripts to stop... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Starting fetch process... {direction: '1', link_type_id: '148'}
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Total pages to fetch: 1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Starting clutter element removal. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Entering non-paginated subgroup extraction block. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Subgroup table found. Scanning 1364 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Testing row count for subgrouping. Total rows: 1364 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 150] Found potential "See all" link: "See all 423 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=869&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 252] Found potential "See all" link: "See all 4,358 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 356] Found potential "See all" link: "See all 568 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=156&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 458] Found potential "See all" link: "See all 566 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=141&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 560] Found potential "See all" link: "See all 65,595 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=149&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 664] Found potential "See all" link: "See all 500 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 766] Found potential "See all" link: "See all 664 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 868] Found potential "See all" link: "See all 247 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=44&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 1139] Found potential "See all" link: "See all 894 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=168&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 1241] Found potential "See all" link: "See all 874 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=165&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 [Row 1343] Found potential "See all" link: "See all 129 relationships" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Link for all rows: href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=161&page=1" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Successfully extracted metadata for 24 subgroups. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=148 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Checking default mainColIdx for pageType: artist-relationships, current mainColIdx: 1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Page 1/1 processed in 1.32s. Rows on page: 250. Total: 250 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥   Summary: Unknown: +250 (Total: 250) 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering starting... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting updateH2Count: filtered=250, total=250 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Searching for target H2. Current pageType: artist-relationships 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target H2 identified: "“instruments” relationships..." 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Updated H2 header “instruments” relationships count: (250) 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting renderGroupedTable with 1 categories. Query: "" 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Cloning table head for template. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 No columns were matched for removal based on current settings. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Searching for target H2. Current pageType: artist-relationships 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 No query provided; performing initial cleanup of existing elements. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨  Injecting master toggle and filter container after target header “instruments” relationships(25. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Processing group: "Unknown" with 250 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Creating new table and H3 for group "Unknown". 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Group "Unknown" auto-expand status: false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Finished renderGroupedTable. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Running final cleanup... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Sanojjonas elements found during final cleanup. Removing now... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Removing Sanojjonas containers... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Found consecutive <br> tags: removed 9 tags at instance 1. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Final cleanup complete: Removed a total of 9 consecutive <br> tags across 1 locations. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Initializing collapsible H2 headers... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering finished in 5.90ms 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 250. Total Time: 12.37s 
+#+end_example
+
+and the h2 heading says '"instruments" relationship (250)" with a h3 sub-heading which says "Unknown (250)"
+
+I would expect that all the paginated pages which could be deduced from the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=148
+would be loaded.
+
+Please fix
+
+Actually the same 'h3 sub-heading which says "Unknown (250)"' shows up evertime I click one of the "Show all" overflow buttons on the previous page. (side question, why is it always 250 ?)
+
+Here my analysys so far
+
+#+begin_example
+We have two fundamentally different page contexts, but your script treats them too similarly:
+
+1️⃣ Base artist relationships page (no query params)
+/artist/<mbid>/relationships
+
+
+MusicBrainz behavior:
+
+One huge table
+
+Many subgroups (arranged, instruments, vocals, …)
+
+Each subgroup may contain a “See all N relationships” row
+
+Pagination is hidden behind those “See all” links
+
+My script correctly:
+
+Detects this as non-paginated
+
+Extracts subgroup metadata
+
+Stores seeAllUrl per subgroup
+
+Builds grouped tables (H3 sections)
+✅ This part works very well.
+
+2️⃣ Filtered relationship page (with link_type_id)
+/artist/<mbid>/relationships?page=1&direction=1&link_type_id=148
+
+
+MusicBrainz behavior:
+
+Page already shows only ONE relationship type
+
+Pagination is real and visible
+
+There are no subgroups
+
+All rows belong to the same relationship type (“instruments” here)
+
+My script incorrectly re-enters the “non-paginated subgroup extraction mode”.
+
+That’s the core bug.
+
+The smoking guns in your logs
+🔥 Bug #1: Wrong fetch base URL (again)
+
+Even though the context contains parameters:
+
+📥 Starting fetch process... {direction: '1', link_type_id: '148'}
+
+
+We still do:
+
+📥 Initiating fetch for URL:
+https://musicbrainz.org/artist/.../relationships
+
+
+➡️ I drop the query parameters for the first fetch
+➡️ Script thinks: “Ah, non-paginated, subgroup table”
+
+🔥 Bug #2: Non-paginated subgroup logic runs when it should not
+
+This line should never happen on a filtered page:
+
+📝 Entering non-paginated subgroup extraction block.
+
+
+Filtered pages:
+
+Have real pagination
+
+Have no subgroup headers
+
+Should skip subgroup detection entirely
+
+🔥 Bug #3: Grouping collapses to Unknown
+
+On the filtered page:
+
+📥 Summary: Unknown: +250 (Total: 250)
+
+
+That happens because:
+
+No .subh rows exist
+
+My grouping logic still expects them
+
+So everything falls into the default bucket (Unknown)
+
+Which is technically correct given the wrong mode — but logically wrong.
+
+The real root cause (important)
+❌ Current assumption (implicit)
+
+“If the page initially looks non-paginated, then always treat it as subgroup-based.”
+
+✅ Correct rule
+
+If link_type_id is present → this is a filtered relationship page → treat as paginated single-group mode.
+
+Even if page=1 and maxPage isn’t detected yet.
+
+The fix: split logic by semantic page mode
 #+end_example
