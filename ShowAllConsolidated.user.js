@@ -277,6 +277,15 @@ let changelog = [
     const params = currentUrl.searchParams;
 
     // --- Configuration: Page Definitions ---
+
+    // There are different types of MusicBrainz pages
+    // | Page type               | multiple tables           | paginated | table header                         |
+    // |-------------------------+---------------------------+-----------+--------------------------------------|
+    // | Artist-Releasegroups    | native                    | x         | h2, not repeating on paginated pages |
+    // | Releasegroup-Releases   | single table, subgrouping | x         | h2, repeating on paginated pages     |
+    // | Place-Performances, ... | single table, subgrouping |           | h2, repeating on single page         |
+    // | Events                  | single table              | x         | h3,                                  |
+
     // Define all supported page types, their detection logic, and specific UI configurations here.
     const pageDefinitions = [
         // Search pages
@@ -367,12 +376,12 @@ let changelog = [
             tableMode: 'multi',
             non_paginated: true
         },
-        // TODO: Needs to be handled separately - actually mult table native, but each table has it's on h2 header
+        // TODO: Needs to be handled separately - actually multi table native, but each table has it's own h2 header
         {
             type: 'artist-aliases',
             match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Artists' } ],
-            tableMode: 'multi',
+            tableMode: 'multi', // native tables, h2 headers
             non_paginated: true
         },
         {
@@ -385,7 +394,7 @@ let changelog = [
                 { label: 'Official various artists RGs', params: { all: '0', va: '1' } },
                 { label: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
             ],
-            tableMode: 'multi'
+            tableMode: 'multi' // native tables, h3 headers
         },
         {
             type: 'releases',
@@ -419,7 +428,8 @@ let changelog = [
             type: 'releasegroup-releases',
             match: (path) => path.includes('/release-group/'),
             features: { splitCD: true },
-            tableMode: 'multi'
+            tableMode: 'multi',
+            non_paginated: false
         },
         {
             type: 'recording-releases',
