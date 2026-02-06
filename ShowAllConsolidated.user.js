@@ -1685,7 +1685,14 @@ let changelog = [
                         if (mainHeaders.includes(txt)) mainColIdx = idx;
                     });
                 }
-                if (mainColIdx === -1 && (pageType === 'releasegroup-releases' || pageType === 'place-performances')) mainColIdx = 0;
+
+		Lib.debug('init', `Checking default mainColIdx for pageType: ${pageType}, current mainColIdx: ${mainColIdx}`);
+		//if (mainColIdx === -1 && (pageType === 'releasegroup-releases' || pageType === 'place-performances')) {
+		if (mainColIdx === -1 && (pageType === 'releasegroup-releases')) {
+                    mainColIdx = 0;
+                    Lib.debug('init', `mainColIdx was -1, forced to 0 for pageType: ${pageType}`);
+		}
+                //if (mainColIdx === -1 && (pageType === 'releasegroup-releases' || pageType === 'place-performances')) mainColIdx = 0;
 
                 let rowsInThisPage = 0;
                 let pageCategoryMap = new Map();
