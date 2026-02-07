@@ -14,6 +14,7 @@
 // @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
 // @match        *://*.musicbrainz.org/artist/*
 // @match        *://*.musicbrainz.org/release-group/*
+// @match        *://*.musicbrainz.org/release/*
 // @match        *://*.musicbrainz.org/work/*
 // @match        *://*.musicbrainz.org/recording/*
 // @match        *://*.musicbrainz.org/label/*
@@ -574,6 +575,14 @@ let changelog = [
             match: (path) => path.includes('/release-group/'),
             buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
             features: { splitCD: true },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+        // Releases pages
+        {
+            type: 'release-discids',
+            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/discids/),
+            buttons: [ { label: 'Show all Disc IDs for Releases' } ],
             tableMode: 'multi',
             non_paginated: false
         },
