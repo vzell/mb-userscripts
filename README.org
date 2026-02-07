@@ -18732,7 +18732,10 @@ user script "BatchEditCoverArt.user.js"
 to reload the page after removeing images
 
 
-* I once mentioned this new userscript in the
+* MusicBrainz forum
+
+I once mentioned this new userscript in the
+
 https://community.metabrainz.org/t/chabans-userscripts-and-bookmarklet-support-thread/768583/53 topic, but I think it
 belongs to here, as I recently made some more changes to it.
 
@@ -22810,7 +22813,6 @@ with /place/*/performances
     else if (path.includes('/recording')) pageType = 'recording';
     else if (path.includes('/place')) pageType = 'place-events';
 #+end_example
-
 
 * DONE || txt.startsWith('Tagger') || txt.startsWith('Rating'))
 * DONE fix filtering for just visible data
@@ -31289,6 +31291,7 @@ visual feedback (“cleared”) animation
 
 * refactor in memory column removel to filter large pagination pages
 
+
 * TODO:
 ** generalize generating "MB-Name" and "Comment"
 *** https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/artists
@@ -31367,3 +31370,6 @@ https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerpri
 
 *** TODO add "warn" level in library
 ** check all "link_type_id" pages separately for anomalies
+** fix search pages
+
+
