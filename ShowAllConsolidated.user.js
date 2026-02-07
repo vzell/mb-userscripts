@@ -555,7 +555,7 @@ let changelog = [
     buttonsToRender.forEach(conf => {
         const eb = document.createElement('button');
         eb.textContent = conf.label;
-        eb.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+        eb.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px;';
         eb.type = 'button';
         // If params are defined in config, pass them; otherwise standard fetch
         eb.onclick = (e) => startFetchingProcess(e, conf.params || null);
@@ -565,10 +565,10 @@ let changelog = [
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
-    stopBtn.style.cssText = 'display:none; font-size:0.5em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box;';
+    stopBtn.style.cssText = 'display:none; font-size:0.8em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box; border-radius:6px;';
 
     const statusDisplay = document.createElement('span');
-    statusDisplay.style.cssText = 'font-size:0.5em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+    statusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 
     const progressContainer = document.createElement('div');
     progressContainer.id = 'mb-fetch-progress-container';
@@ -2006,7 +2006,8 @@ let changelog = [
             const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
 
-            statusDisplay.textContent = `Loaded ${pagesProcessed} pages (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
+	    const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
+	    statusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
             timerDisplay.textContent = ''; // Explicitly clear any temp text
 
             Lib.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
@@ -2196,8 +2197,8 @@ let changelog = [
                 table.style.display = shouldStayOpen ? '' : 'none';
                 Lib.info('render', `Group "${group.category}" auto-expand status: ${shouldStayOpen}`);
 
-                // Ensure the H3 text reflects the unique name established during fetching.
-                let h3DisplayName = group.category;
+                // Ensure the H3 text reflects the unique name established during fetching and Capitalize the first character
+                let h3DisplayName = group.category.charAt(0).toUpperCase() + group.category.slice(1);
 
                 h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${h3DisplayName} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
 
@@ -2217,7 +2218,7 @@ let changelog = [
                     // Use the stored seeAllCount to update button text
                     const countSuffix = group.seeAllCount ? ` ${group.seeAllCount}` : '';
                     showAllBtn.textContent = `Show all${countSuffix}`;
-                    showAllBtn.style.cssText = 'font-size:1em; margin-left:10px; padding:1px 4px; cursor:pointer; vertical-align:middle;';
+                    showAllBtn.style.cssText = 'font-size:1em; margin-left:10px; padding:1px 4px; cursor:pointer; vertical-align:middle; border-radius:4px;';
                     showAllBtn.type = 'button';
                     showAllBtn.onclick = (e) => {
                         e.preventDefault();

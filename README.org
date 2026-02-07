@@ -30997,6 +30997,7 @@ in the code block
 #+end_example
 
 * button style
+** show all
 
 In the uploaded userscript "ShowAllConsolidated.user.js" please adjust the code so that in the currently generated code for the h3 header and the appended button
 
@@ -31012,3 +31013,92 @@ In the uploaded userscript "ShowAllConsolidated.user.js" please adjust the code 
 #+end_example
 
 the button gets the same styling like the h3 header text, "Show all" should be in the same font heigth (without bolding) and the <number of rows> also same heigth but in BOLD
+
+* 4 buttons
+
+In the uploaded userscript "ShowAllConsolidated.user.js" please adjust the following code 
+
+#+begin_example
+    buttonsToRender.forEach(conf => {
+        const eb = document.createElement('button');
+        eb.textContent = conf.label;
+        eb.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box;';
+        eb.type = 'button';
+        // If params are defined in config, pass them; otherwise standard fetch
+        eb.onclick = (e) => startFetchingProcess(e, conf.params || null);
+        controlsContainer.appendChild(eb);
+        allActionButtons.push(eb);
+    });
+#+end_example
+
+so that in the currently generated HTML code for the h1 headers and the appended buttons
+
+#+begin_example
+<div class="wrap-anywhere artistheader person-icon">
+  <h1>
+    <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">
+      <bdi>Bruce Springsteen
+      </bdi>
+    </a>
+    <div id="mb-show-all-controls-container" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: 10px; vertical-align: middle; line-height: 1;">
+      <button type="button" style="font-size: 0.5em; padding: 2px 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box;">Official artist RGs
+      </button>
+      <button type="button" style="font-size: 0.5em; padding: 2px 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box;">Non-official artist RGs
+      </button>
+      <button type="button" style="font-size: 0.5em; padding: 2px 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box;">Official various artists RGs
+      </button>
+      <button type="button" style="font-size: 0.5em; padding: 2px 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box;">Non-official various artists RGs
+      </button>
+      <button style="display: none; font-size: 0.5em; padding: 2px 6px; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47); height: 24px; box-sizing: border-box;">Stop
+      </button>
+      <span style="font-size: 0.5em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold;">
+      </span>
+      <div id="mb-fetch-progress-container" style="display: none; width: 300px; height: 26px; background-color: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204); border-radius: 3px; overflow: hidden; position: relative; vertical-align: middle;">
+	<div id="mb-fetch-progress-bar" style="width: 0%; height: 100%; transition: width 0.3s, background-color 0.3s; position: absolute; left: 0px; top: 0px;">
+	</div>
+	<div id="mb-fetch-progress-text" style="position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: black; z-index: 1; pointer-events: none; padding: 0px 10px; box-sizing: border-box;">
+	</div>
+      </div>
+      <span style="font-size: 0.5em; color: rgb(102, 102, 102); display: flex; align-items: center; height: 24px;">
+      </span>
+      <span style="font-size: 0.5em; color: rgb(102, 102, 102); display: flex; align-items: center; height: 24px;">
+      </span>
+    </div>
+  </h1>
+</div>
+#+end_example
+
+the buttons get more rounded corners and the text heigth should increased
+
+* text
+
+Change the text from
+
+#+begin_example
+            statusDisplay.textContent = `Loaded ${pagesProcessed} pages (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
+#+end_example
+
+to
+
+#+begin_example
+            statusDisplay.textContent = `Loaded ${pagesProcessed} page (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
+#+end_example
+
+if the number of pages is exactly 1
+
+* upercase first char
+
+In the case of URLs of type "non_paginated: true" like for example https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+adjust the first character of the h3 header to be uppercase
+
+So this example
+
+#+begin_example
+<h3 class="mb-toggle-h3" title="Collapse/Uncollapse table section"><span class="mb-toggle-icon">▲</span>arranged <span class="mb-row-count-stat">(47)</span></h3>
+#+end_example
+
+should look like
+
+#+begin_example
+<h3 class="mb-toggle-h3" title="Collapse/Uncollapse table section"><span class="mb-toggle-icon">▲</span>Arranged <span class="mb-row-count-stat">(47)</span></h3>
+#+end_example
