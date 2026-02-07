@@ -30903,3 +30903,30 @@ Even if page=1 and maxPage isn’t detected yet.
 
 The fix: split logic by semantic page mode
 #+end_example
+
+* show row number
+
+In the uploaded userscript,
+
+change the button text from "Show all" "Show all <number of rows from the seeAllCell> rows"
+#+begin_example
+                // Add "Show all" button if a seeAllUrl was found
+                if (group.seeAllUrl) {
+                    const showAllBtn = document.createElement('button');
+                    showAllBtn.textContent = 'Show all';
+                    showAllBtn.style.cssText = 'font-size:0.6em; margin-left:10px; padding:1px 4px; cursor:pointer; vertical-align:middle;';
+                    showAllBtn.type = 'button';
+                    showAllBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Set the URL and trigger the global startFetchingProcess logic
+                        window.location.href = new URL(group.seeAllUrl, window.location.origin).href;
+                    };
+                    h3.appendChild(showAllBtn);
+#+end_example
+
+#+begin_example
+
+                    // Look for the "See all" relationship link row
+                    const seeAllCell = row.querySelector('td[colspan]')
+#+end_example

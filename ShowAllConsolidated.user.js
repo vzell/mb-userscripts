@@ -2249,7 +2249,7 @@ let changelog = [
                     container.appendChild(table);
                 }
 
-                // New Logic: Add "Show all" button if a seeAllUrl was found
+                // Add "Show all" button if a seeAllUrl was found
                 if (group.seeAllUrl) {
                     const showAllBtn = document.createElement('button');
                     showAllBtn.textContent = 'Show all';
