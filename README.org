@@ -31329,12 +31329,10 @@ to render the new webpage in a new tab instead of replacing the current one depe
 
 
 * TODO:
-
 ** generalize generating "MB-Name" and "Comment"
 *** https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/artists
 *** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/artists
 *** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels
-
 
 ** generalize column data splitting
 
@@ -31367,6 +31365,7 @@ Add that column artificially if NOT on the first paginated page
 https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
 
 ** fingerprints
+*** initial
 
 In the uploaded userscript
 
@@ -31401,3 +31400,12 @@ the following console log
     at renderFinalTable (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:2519:17)
     at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:2449:17)
 #+end_example
+
+*** [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ❌ No rows provided to renderFinalTable.
+
+#+begin_example
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints
+#+end_example
+
+*** TODO add "warn" level in library
+
