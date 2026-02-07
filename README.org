@@ -31361,3 +31361,7 @@ Add that column artificially if NOT on the first paginated page
 ** place pages, "recording location for" overflow always has 250 rows and "Unknow" header name
 
 ** on aliases page, remove "Show all" button when NO aliases present
+
+** show all button is alost invisible
+m
+https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases

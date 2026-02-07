@@ -481,13 +481,13 @@ let changelog = [
         {
             type: 'work-recordings-filtered',
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Work Recordings (filtered)' } ],
+            buttons: [ { label: 'Show all Recordings for Work (filtered)' } ],
             tableMode: 'single' // Paginated single list
         },
         {
             type: 'work-recordings',
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Work Recordings' } ],
+            buttons: [ { label: 'Show all Recordings for Work' } ],
             tableMode: 'multi',
             non_paginated: true
         },
@@ -541,23 +541,34 @@ let changelog = [
         {
             type: 'recordings',
             match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
             features: { splitCD: false }, // Explicitly false (default), but shown for clarity
             tableMode: 'single'
         },
         {
             type: 'releases',
             match: (path) => path.includes('/releases'),
+            buttons: [ { label: 'Show all Releases for Artist' } ],
             features: { splitCD: true },
             tableMode: 'single'
         },
         {
             type: 'works',
             match: (path) => path.includes('/works'),
+            buttons: [ { label: 'Show all Works for Artist' } ],
+            tableMode: 'single'
+        },
+        // ReleaseGroups pages
+        {
+            type: 'releasegroup-aliases',
+            match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { releasegroup: 'Show all Aliases for Releasegroups' } ],
             tableMode: 'single'
         },
         {
             type: 'releasegroup-releases',
             match: (path) => path.includes('/release-group/'),
+            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
             features: { splitCD: true },
             tableMode: 'multi',
             non_paginated: false
@@ -565,12 +576,14 @@ let changelog = [
         {
             type: 'recording-releases',
             match: (path) => path.includes('/recording'),
+            buttons: [ { label: 'Show all Releases for Recording' } ],
             features: { splitCD: true },
             tableMode: 'single'
         },
         {
             type: 'events',
             match: (path) => path.includes('/events'),
+            buttons: [ { label: 'Show all Events for Artist' } ],
             features: { splitLocation: true },
             tableMode: 'single'
         }
