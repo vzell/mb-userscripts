@@ -21,6 +21,7 @@
 // @match        *://*.musicbrainz.org/place/*/events
 // @match        *://*.musicbrainz.org/place/*/performances*
 // @match        *://*.musicbrainz.org/area/*
+// @match        *://*.musicbrainz.org/instrument/*
 // @match        *://*.musicbrainz.org/search*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
@@ -1491,176 +1492,175 @@ let changelog = [
         let totalRenderingTime = 0;
 
         const baseUrl = window.location.origin + window.location.pathname;
-
-//------------------------------------------------------------------------------------------------------------------------
-
         const fetchUrl = new URL(baseUrl);
         const html = await fetchHtml(fetchUrl.toString());
         const doc = new DOMParser().parseFromString(html, 'text/html');
 
-        // Define subgroupData outside the block so it is accessible during the rendering phase
-        let subgroupData = [];
-        let seenSubgroups = new Map(); // Track occurrences of names
+//------------------------------------------------------------------------------------------------------------------------
 
-        // This block will only be executed for non-paginated pages to get their subgroup structure
-        if (activeDefinition && activeDefinition.non_paginated) {
-            Lib.debug('parse', 'Entering non-paginated subgroup extraction block.');
-            const table = doc.querySelector('table.tbl');
-            if (table) {
-                const rows = table.querySelectorAll('tr');
-                Lib.debug('parse', `Subgroup table found. Scanning ${rows.length} rows.`);
+        // // Define subgroupData outside the block so it is accessible during the rendering phase
+        // let subgroupData = [];
+        // let seenSubgroups = new Map(); // Track occurrences of names
 
-                // Removed 'const' keyword here so it populates the variable defined above
-                subgroupData = [];
+        // // This block will only be executed for non-paginated pages to get their subgroup structure
+        // if (activeDefinition && activeDefinition.non_paginated) {
+        //     Lib.debug('parse', 'Entering non-paginated subgroup extraction block.');
+        //     const table = doc.querySelector('table.tbl');
+        //     if (table) {
+        //         const rows = table.querySelectorAll('tr');
+        //         Lib.debug('parse', `Subgroup table found. Scanning ${rows.length} rows.`);
 
-                // Pre-scan to calculate final counts for each subgroup for logging purposes
-                const subgroupTotals = new Map();
-                let scanSubIdx = -1;
-                rows.forEach((r, i) => {
-                    if (r.classList.contains('subh')) {
-                        scanSubIdx = i;
-                        subgroupTotals.set(i, 0);
-                    } else if (scanSubIdx !== -1) {
-                        const isDataRow = r.querySelector('td') && !r.querySelector('td[colspan]');
-                        if (isDataRow) {
-                            subgroupTotals.set(scanSubIdx, subgroupTotals.get(scanSubIdx) + 1);
-                        } else {
-                            const link = r.querySelector('td[colspan] a');
-                            if (link && link.textContent.toLowerCase().includes('see all')) {
-                                const m = link.textContent.match(/See all ([\d,.]+) relationships/i);
-                                if (m) {
-                                    subgroupTotals.set(scanSubIdx, parseInt(m[1].replace(/[,.]/g, ''), 10));
-                                }
-                            }
-                        }
-                    }
-                });
+        //         // Removed 'const' keyword here so it populates the variable defined above
+        //         subgroupData = [];
 
-                let currentSubgroup = 'Unknown';
-                let totalRows = 0;
-                let localSubgroupCount = 0;
+        //         // Pre-scan to calculate final counts for each subgroup for logging purposes
+        //         const subgroupTotals = new Map();
+        //         let scanSubIdx = -1;
+        //         rows.forEach((r, i) => {
+        //             if (r.classList.contains('subh')) {
+        //                 scanSubIdx = i;
+        //                 subgroupTotals.set(i, 0);
+        //             } else if (scanSubIdx !== -1) {
+        //                 const isDataRow = r.querySelector('td') && !r.querySelector('td[colspan]');
+        //                 if (isDataRow) {
+        //                     subgroupTotals.set(scanSubIdx, subgroupTotals.get(scanSubIdx) + 1);
+        //                 } else {
+        //                     const link = r.querySelector('td[colspan] a');
+        //                     if (link && link.textContent.toLowerCase().includes('see all')) {
+        //                         const m = link.textContent.match(/See all ([\d,.]+) relationships/i);
+        //                         if (m) {
+        //                             subgroupTotals.set(scanSubIdx, parseInt(m[1].replace(/[,.]/g, ''), 10));
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         });
 
-                Lib.debug('parse', `Testing row count for subgrouping. Total rows: ${rows.length}`);
+        //         let currentSubgroup = 'Unknown';
+        //         let totalRows = 0;
+        //         let localSubgroupCount = 0;
 
-                // low level debugging
-                // rows.forEach((row, index) => {
-                //      // 1. Check classes on every row to see what MusicBrainz is actually providing
-                //      if (index < 10 || row.classList.contains('subh')) {
-                //          Lib.debug('parse', `[Row ${index}] classes: "${row.className}", nodeName: ${row.nodeName}`);
-                //      }
+        //         Lib.debug('parse', `Testing row count for subgrouping. Total rows: ${rows.length}`);
 
-                //      // 2. Check if the specific subh class is present
-                //      if (row.classList.contains('subh')) {
-                //          const th = row.querySelector('th');
-                //          Lib.debug('parse', `[Row ${index}] FOUND subh. TH content: "${th ? th.textContent.trim() : 'null'}"`);
-                //      }
-                // });
+        //         // low level debugging
+        //         // rows.forEach((row, index) => {
+        //         //      // 1. Check classes on every row to see what MusicBrainz is actually providing
+        //         //      if (index < 10 || row.classList.contains('subh')) {
+        //         //          Lib.debug('parse', `[Row ${index}] classes: "${row.className}", nodeName: ${row.nodeName}`);
+        //         //      }
 
-                // // 3. Log the "See all" link search result specifically
-                // const seeAllLinks = doc.querySelectorAll('td > a[href*="performances"]');
-                // Lib.debug('parse', `DEBUG: Found ${seeAllLinks.length} potential "See all" links.`);
-                // seeAllLinks.forEach((link, i) => {
-                //      Lib.debug('parse', `Link ${i}: text="${link.textContent}", href="${link.href}"`);
-                // });
+        //         //      // 2. Check if the specific subh class is present
+        //         //      if (row.classList.contains('subh')) {
+        //         //          const th = row.querySelector('th');
+        //         //          Lib.debug('parse', `[Row ${index}] FOUND subh. TH content: "${th ? th.textContent.trim() : 'null'}"`);
+        //         //      }
+        //         // });
 
-                rows.forEach((row, index) => {
-                    // Detect sub-grouping headers (e.g., "recording location for")
-                    if (row.classList.contains('subh')) {
-                        const thWithColspan = row.querySelector('th[colspan]');
-                        if (thWithColspan) {
-                            let rawName = thWithColspan.textContent.replace(/\s+/g, ' ').trim();
+        //         // // 3. Log the "See all" link search result specifically
+        //         // const seeAllLinks = doc.querySelectorAll('td > a[href*="performances"]');
+        //         // Lib.debug('parse', `DEBUG: Found ${seeAllLinks.length} potential "See all" links.`);
+        //         // seeAllLinks.forEach((link, i) => {
+        //         //      Lib.debug('parse', `Link ${i}: text="${link.textContent}", href="${link.href}"`);
+        //         // });
 
-                            // Logic to make the name unique
-                            let uniqueName = rawName;
-                            if (seenSubgroups.has(rawName)) {
-                                let count = seenSubgroups.get(rawName) + 1;
-                                seenSubgroups.set(rawName, count);
+        //         rows.forEach((row, index) => {
+        //             // Detect sub-grouping headers (e.g., "recording location for")
+        //             if (row.classList.contains('subh')) {
+        //                 const thWithColspan = row.querySelector('th[colspan]');
+        //                 if (thWithColspan) {
+        //                     let rawName = thWithColspan.textContent.replace(/\s+/g, ' ').trim();
 
-                                // Determine suffix based on what follows (e.g., check rows below for context)
-                                // For simplicity, we use the counter, but you can refine this to look for
-                                // entity links if necessary.
-                                uniqueName = `${rawName} (${count})`;
-                            } else {
-                                seenSubgroups.set(rawName, 1);
-                            }
+        //                     // Logic to make the name unique
+        //                     let uniqueName = rawName;
+        //                     if (seenSubgroups.has(rawName)) {
+        //                         let count = seenSubgroups.get(rawName) + 1;
+        //                         seenSubgroups.set(rawName, count);
 
-                            currentSubgroup = uniqueName;
-                            localSubgroupCount = 0;
+        //                         // Determine suffix based on what follows (e.g., check rows below for context)
+        //                         // For simplicity, we use the counter, but you can refine this to look for
+        //                         // entity links if necessary.
+        //                         uniqueName = `${rawName} (${count})`;
+        //                     } else {
+        //                         seenSubgroups.set(rawName, 1);
+        //                     }
 
-                            const metaEntry = {
-                                subgroup: currentSubgroup, // This is now unique
-                                originalName: rawName,     // Keep the original for display if needed
-                                url: null,
-                                totalRowsPerSubGroup: 0,
-                                totalRows: totalRows
-                            };
-                            subgroupData.push(metaEntry);
-                        }
-                        return;
-                    }
+        //                     currentSubgroup = uniqueName;
+        //                     localSubgroupCount = 0;
 
-                    // Count actual data rows found in the DOM
-                    const isDataRow = row.querySelector('td') && !row.querySelector('td[colspan]');
-                    if (isDataRow) {
-                        localSubgroupCount++;
-                        totalRows++; // Default increment, will be adjusted if "See all" is found
+        //                     const metaEntry = {
+        //                         subgroup: currentSubgroup, // This is now unique
+        //                         originalName: rawName,     // Keep the original for display if needed
+        //                         url: null,
+        //                         totalRowsPerSubGroup: 0,
+        //                         totalRows: totalRows
+        //                     };
+        //                     subgroupData.push(metaEntry);
+        //                 }
+        //                 return;
+        //             }
 
-                        if (subgroupData.length > 0) {
-                            const currentEntry = subgroupData[subgroupData.length - 1];
-                            currentEntry.totalRowsPerSubGroup = localSubgroupCount;
-                            currentEntry.totalRows = totalRows;
-                        }
-                    }
+        //             // Count actual data rows found in the DOM
+        //             const isDataRow = row.querySelector('td') && !row.querySelector('td[colspan]');
+        //             if (isDataRow) {
+        //                 localSubgroupCount++;
+        //                 totalRows++; // Default increment, will be adjusted if "See all" is found
 
-                    // Look for the "See all" relationship link row
-                    const seeAllCell = row.querySelector('td[colspan]');
-                    if (seeAllCell) {
-                        const link = seeAllCell.querySelector('a');
-                        if (link) {
-                            const linkText = link.textContent.trim();
-                            if (linkText.toLowerCase().includes('see all')) {
-                                Lib.debug('parse', `[Row ${index}] Found potential "See all" link: "${linkText}"`);
+        //                 if (subgroupData.length > 0) {
+        //                     const currentEntry = subgroupData[subgroupData.length - 1];
+        //                     currentEntry.totalRowsPerSubGroup = localSubgroupCount;
+        //                     currentEntry.totalRows = totalRows;
+        //                 }
+        //             }
 
-                                const href = link.getAttribute('href') || '';
-                                const match = linkText.match(/See all ([\d,.]+) relationships/i);
-                                const totalRowsFromLink = match ? parseInt(match[1].replace(/[,.]/g, ''), 10) : 0;
+        //             // Look for the "See all" relationship link row
+        //             const seeAllCell = row.querySelector('td[colspan]');
+        //             if (seeAllCell) {
+        //                 const link = seeAllCell.querySelector('a');
+        //                 if (link) {
+        //                     const linkText = link.textContent.trim();
+        //                     if (linkText.toLowerCase().includes('see all')) {
+        //                         Lib.debug('parse', `[Row ${index}] Found potential "See all" link: "${linkText}"`);
 
-                                if (href.includes('link_type_id') || href.includes('direction') || totalRowsFromLink > 0) {
-                                    Lib.debug('parse', `Link for all rows: href="${href}"`);
-                                    if (subgroupData.length > 0) {
-                                        const currentEntry = subgroupData[subgroupData.length - 1];
+        //                         const href = link.getAttribute('href') || '';
+        //                         const match = linkText.match(/See all ([\d,.]+) relationships/i);
+        //                         const totalRowsFromLink = match ? parseInt(match[1].replace(/[,.]/g, ''), 10) : 0;
 
-                                        // If we found a "See all" number, it represents the real backend count
-                                        if (totalRowsFromLink > 0) {
-                                            // Adjust global totalRows: remove local count added so far for this group, add the real backend count
-                                            totalRows = (totalRows - localSubgroupCount) + totalRowsFromLink;
+        //                         if (href.includes('link_type_id') || href.includes('direction') || totalRowsFromLink > 0) {
+        //                             Lib.debug('parse', `Link for all rows: href="${href}"`);
+        //                             if (subgroupData.length > 0) {
+        //                                 const currentEntry = subgroupData[subgroupData.length - 1];
 
-                                            currentEntry.totalRowsPerSubGroup = totalRowsFromLink;
-                                            currentEntry.totalRows = totalRows;
-                                        }
+        //                                 // If we found a "See all" number, it represents the real backend count
+        //                                 if (totalRowsFromLink > 0) {
+        //                                     // Adjust global totalRows: remove local count added so far for this group, add the real backend count
+        //                                     totalRows = (totalRows - localSubgroupCount) + totalRowsFromLink;
 
-                                        currentEntry.url = href ? new URL(href, window.location.origin).href : null;
+        //                                     currentEntry.totalRowsPerSubGroup = totalRowsFromLink;
+        //                                     currentEntry.totalRows = totalRows;
+        //                                 }
 
-                                        console.log(JSON.stringify(currentEntry));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
+        //                                 currentEntry.url = href ? new URL(href, window.location.origin).href : null;
 
-                // Dump complete data array at the end
-                console.log('Final Subgroup Data:', subgroupData);
+        //                                 console.log(JSON.stringify(currentEntry));
+        //                             }
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         });
 
-                if (subgroupData.length > 0) {
-                    Lib.info('parse', `Successfully extracted metadata for ${subgroupData.length} subgroups.`);
-                } else {
-                    Lib.debug('parse', 'No "See all" links found. All subgroups likely below the display threshold.');
-                }
-            } else {
-                Lib.debug('parse', 'Target table.tbl not found for subgroup extraction.');
-            }
-        }
+        //         // Dump complete data array at the end
+        //         console.log('Final Subgroup Data:', subgroupData);
+
+        //         if (subgroupData.length > 0) {
+        //             Lib.info('parse', `Successfully extracted metadata for ${subgroupData.length} subgroups.`);
+        //         } else {
+        //             Lib.debug('parse', 'No "See all" links found. All subgroups likely below the display threshold.');
+        //         }
+        //     } else {
+        //         Lib.debug('parse', 'Target table.tbl not found for subgroup extraction.');
+        //     }
+        // }
 
 //------------------------------------------------------------------------------------------------------------------------
 
