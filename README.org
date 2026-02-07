@@ -31316,10 +31316,6 @@ https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings?pag
 
 Add that column artificially if NOT on the first paginated page
 
-** place pages, "recording location for" overflow always has 250 rows and "Unknow" header name
-
-https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances?page=1&direction=1&link_type_id=693
-
 ** on aliases page, remove "Show all" button when NO aliases present
 
 ** show all button is almost invisible
