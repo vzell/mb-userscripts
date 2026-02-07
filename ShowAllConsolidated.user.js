@@ -298,11 +298,37 @@ let changelog = [
     // Define all supported page types, their detection logic, and specific UI configurations here.
     const pageDefinitions = [
         // Search pages
-        // TODO: Set 'Found 43 results for "guit"' as the anchor for number of found rows
+        // TODO: Set 'Found 43 results for "guitar"' as the anchor for number of found rows
         {
             type: 'search',
             match: (path) => path.includes('/search'),
             buttons: [ { label: 'Show all search results' } ],
+            tableMode: 'single'
+        },
+        // Instrument pages
+        {
+            type: 'instrument-artists',
+            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/artists/),
+            buttons: [ { label: 'Show all Artists for Instruments' } ],
+            tableMode: 'single'
+        },
+        {
+            type: 'instrument-releases',
+            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/releases/),
+            buttons: [ { label: 'Show all Releases for Instruments' } ],
+            features: { splitCD: true },
+            tableMode: 'single'
+        },
+        {
+            type: 'instrument-recordings',
+            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/recordings/),
+            buttons: [ { label: 'Show all Recordings for Instruments' } ],
+            tableMode: 'single'
+        },
+        {
+            type: 'instrument-aliases',
+            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Instruments' } ],
             tableMode: 'single'
         },
         // Area pages
