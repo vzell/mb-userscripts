@@ -379,7 +379,6 @@ let changelog = [
             buttons: [ { label: 'Show all Aliases for Areas' } ],
             tableMode: 'single'
         },
-        // Area-Recordings pages
         {
             type: 'area-recordings-filtered',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && params.has('link_type_id'),
@@ -394,7 +393,6 @@ let changelog = [
             tableMode: 'multi',
             non_paginated: true
         },
-        // Area-Works pages
         {
             type: 'area-works-filtered',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && params.has('link_type_id'),
@@ -478,6 +476,12 @@ let changelog = [
             tableMode: 'single'
         },
         // Work pages
+        {
+            type: 'work-aliases',
+            match: (path) => path.match(/\/work\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Work' } ],
+            tableMode: 'single'
+        },
         {
             type: 'work-recordings-filtered',
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
@@ -573,13 +577,22 @@ let changelog = [
             tableMode: 'multi',
             non_paginated: false
         },
+        // Recording pages
+        {
+            type: 'recording-aliases',
+            match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { recording: 'Show all Aliases for Recordings' } ],
+            tableMode: 'single'
+        },
         {
             type: 'recording-releases',
             match: (path) => path.includes('/recording'),
             buttons: [ { label: 'Show all Releases for Recording' } ],
             features: { splitCD: true },
-            tableMode: 'single'
+            tableMode: 'multi',
+            non_paginated: false
         },
+        // Event pages
         {
             type: 'events',
             match: (path) => path.includes('/events'),
