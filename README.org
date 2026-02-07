@@ -30995,3 +30995,20 @@ in the code block
                     h3.appendChild(showAllBtn);
                 }
 #+end_example
+
+* button style
+
+In the uploaded userscript "ShowAllConsolidated.user.js" please adjust the code so that in the currently generated code for the h3 header and the appended button
+
+#+begin_example
+<h3 class="mb-toggle-h3" title="Collapse/Uncollapse table section">
+  <span class="mb-toggle-icon">▲
+  </span>recording location for
+  <span class="mb-row-count-stat">(100)
+  </span>
+  <button type="button" style="font-size: 0.6em; margin-left: 10px; padding: 1px 4px; cursor: pointer; vertical-align: middle;">Show all 9,127
+  </button>
+</h3>
+#+end_example
+
+the button gets the same styling like the h3 header text, "Show all" should be in the same font heigth (without bolding) and the <number of rows> also same heigth but in BOLD

@@ -2217,7 +2217,7 @@ let changelog = [
                     // Use the stored seeAllCount to update button text
                     const countSuffix = group.seeAllCount ? ` ${group.seeAllCount}` : '';
                     showAllBtn.textContent = `Show all${countSuffix}`;
-                    showAllBtn.style.cssText = 'font-size:0.6em; margin-left:10px; padding:1px 4px; cursor:pointer; vertical-align:middle;';
+                    showAllBtn.style.cssText = 'font-size:1em; margin-left:10px; padding:1px 4px; cursor:pointer; vertical-align:middle;';
                     showAllBtn.type = 'button';
                     showAllBtn.onclick = (e) => {
                         e.preventDefault();
