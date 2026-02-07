@@ -1708,7 +1708,7 @@ let changelog = [
                         while (h3 && h3.nodeName !== 'H3') h3 = h3.previousElementSibling;
                         const category = h3 ? h3.textContent.trim() : 'Other';
 
-                        // Logic to handle grouped data and repeating headers
+                        // Logic to handle grouped data and repeating headers over multiple paginated pages (e.g. "Album + Live")
                         if (category !== lastCategorySeenAcrossPages) {
                             Lib.debug('fetch', `Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
                             groupedRows.push({ category: category, rows: [] });
@@ -1761,8 +1761,7 @@ let changelog = [
                                     if ((activeDefinition.tableMode === 'multi') && currentStatus !== lastCategorySeenAcrossPages) {
                                         Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
                                     }
-                                }
-                                else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+                                } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
                                     // Remove artificial non-data rows on non-paginated pages which have a link "See all <number of rows> relationships" to the full dataset instead
                                     if (activeDefinition && activeDefinition.non_paginated) {
                                         const seeAllCell = node.querySelector('td[colspan]');
@@ -1771,12 +1770,17 @@ let changelog = [
                                             if (link && link.textContent.toLowerCase().includes('see all')) {
                                                 Lib.debug('parse', `Skipping "See all" relationship row.`);
 
-                                                // Capture the URL to allow "Show all" button creation in the header
-                                                // Find the correct group object using the currentStatus category name
+                                                // Capture the URL and the count to allow "Show all <n>" button creation in the h3 header for overflow tables
                                                 const currentGroup = groupedRows.find(g => g.category === currentStatus);
                                                 if (currentGroup) {
+                                                    const linkText = link.textContent;
                                                     currentGroup.seeAllUrl = link.getAttribute('href');
-                                                    Lib.debug('parse', `Stored See All URL for ${currentStatus}: ${currentGroup.seeAllUrl}`);
+
+                                                    // Extract the number of rows from the link text
+                                                    const match = linkText.match(/See all ([\d,.]+) relationships/i);
+                                                    currentGroup.seeAllCount = match ? match[1] : null;
+
+                                                    Lib.debug('parse', `Stored "See All" URL and Count for ${currentStatus}: ${currentGroup.seeAllUrl} (${currentGroup.seeAllCount}) `);
                                                 }
                                                 return; // Skip adding this row to data structures
                                             }
@@ -2210,7 +2214,9 @@ let changelog = [
                 // Add "Show all" button if a seeAllUrl was found
                 if (group.seeAllUrl) {
                     const showAllBtn = document.createElement('button');
-                    showAllBtn.textContent = 'Show all';
+                    // Use the stored seeAllCount to update button text
+                    const countSuffix = group.seeAllCount ? ` ${group.seeAllCount}` : '';
+                    showAllBtn.textContent = `Show all${countSuffix}`;
                     showAllBtn.style.cssText = 'font-size:0.6em; margin-left:10px; padding:1px 4px; cursor:pointer; vertical-align:middle;';
                     showAllBtn.type = 'button';
                     showAllBtn.onclick = (e) => {

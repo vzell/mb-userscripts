@@ -30905,6 +30905,7 @@ The fix: split logic by semantic page mode
 #+end_example
 
 * show row number
+** 1
 
 In the uploaded userscript,
 
@@ -30929,4 +30930,68 @@ change the button text from "Show all" "Show all <number of rows from the seeAll
 
                     // Look for the "See all" relationship link row
                     const seeAllCell = row.querySelector('td[colspan]')
+#+end_example
+
+** 2
+
+In the uploaded userscript,
+
+in the following code block
+
+#+begin_example
+                                } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+                                    // Remove artificial non-data rows on non-paginated pages which have a link "See all <number of rows> relationships" to the full dataset instead
+                                    if (activeDefinition && activeDefinition.non_paginated) {
+                                        const seeAllCell = node.querySelector('td[colspan]');
+                                        if (seeAllCell) {
+                                            const link = seeAllCell.querySelector('a');
+                                            if (link && link.textContent.toLowerCase().includes('see all')) {
+                                                Lib.debug('parse', `Skipping "See all" relationship row.`);
+
+                                                // Capture the URL to allow "Show all" button creation in the header
+                                                // Find the correct group object using the currentStatus category name
+                                                const currentGroup = groupedRows.find(g => g.category === currentStatus);
+                                                if (currentGroup) {
+                                                    currentGroup.seeAllUrl = link.getAttribute('href');
+                                                    Lib.debug('parse', `Stored See All URL for ${currentStatus}: ${currentGroup.seeAllUrl}`);
+                                                }
+                                                return; // Skip adding this row to data structures
+                                            }
+                                        }
+                                    }
+#+end_example
+
+please please store the number of rows from the "Show all <number of rows> relationships" additionally to the variable
+"currentGroup"
+
+#+begin_example
+currentGroup.seeAllUrl = link.getAttribute('href');
+#+end_example
+
+like in the similar code block 
+
+#+begin_example
+                                const match = linkText.match(/See all ([\d,.]+) relationships/i);
+                                const totalRowsFromLink = match ? parseInt(match[1].replace(/[,.]/g, ''), 10) : 0;
+#+end_example
+
+and use it on the "Show all" button as an additional text like "Show all <number of rows>"
+
+in the code block
+
+#+begin_example
+                // Add "Show all" button if a seeAllUrl was found
+                if (group.seeAllUrl) {
+                    const showAllBtn = document.createElement('button');
+                    showAllBtn.textContent = 'Show all';
+                    showAllBtn.style.cssText = 'font-size:0.6em; margin-left:10px; padding:1px 4px; cursor:pointer; vertical-align:middle;';
+                    showAllBtn.type = 'button';
+                    showAllBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Set the URL and trigger the global startFetchingProcess logic
+                        window.location.href = new URL(group.seeAllUrl, window.location.origin).href;
+                    };
+                    h3.appendChild(showAllBtn);
+                }
 #+end_example
