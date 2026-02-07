@@ -18,8 +18,7 @@
 // @match        *://*.musicbrainz.org/recording/*
 // @match        *://*.musicbrainz.org/label/*
 // @match        *://*.musicbrainz.org/series/*
-// @match        *://*.musicbrainz.org/place/*/events
-// @match        *://*.musicbrainz.org/place/*/performances*
+// @match        *://*.musicbrainz.org/place/*
 // @match        *://*.musicbrainz.org/area/*
 // @match        *://*.musicbrainz.org/instrument/*
 // @match        *://*.musicbrainz.org/search*
@@ -409,6 +408,13 @@ let changelog = [
             tableMode: 'multi',
             non_paginated: true
         },
+        // Place pages
+        {
+            type: 'place-events',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Places' } ],
+            tableMode: 'single'
+        },
         {
             type: 'place-performances',
             match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/performances/),
@@ -417,7 +423,27 @@ let changelog = [
             non_paginated: true
         },
         {
-        // Work-Recordings pages
+            type: 'place-aliases',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Place' } ],
+            tableMode: 'single'
+        },
+        // Series pages
+        {
+            type: 'series-aliases',
+            match: (path) => path.match(/\/series\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Series' } ],
+            tableMode: 'single'
+        },
+        {
+            type: 'series-releases',
+            match: (path) => path.includes('/series'),
+            buttons: [ { label: 'Show all Releases for Series' } ],
+            features: { splitCD: true },
+            tableMode: 'single'
+        },
+        // Work pages
+        {
             type: 'work-recordings-filtered',
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Work Recordings (filtered)' } ],
@@ -511,17 +537,6 @@ let changelog = [
             type: 'label-releases',
             match: (path) => path.includes('/label'),
             features: { splitCD: true },
-            tableMode: 'single'
-        },
-        {
-            type: 'series-releases',
-            match: (path) => path.includes('/series'),
-            features: { splitCD: true },
-            tableMode: 'single'
-        },
-        {
-            type: 'place-concerts',
-            match: (path) => path.match(/\/place\/.*\/events/),
             tableMode: 'single'
         },
         {
