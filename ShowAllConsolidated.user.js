@@ -78,6 +78,12 @@ let changelog = [
 
     // CONFIG SCHEMA
     const configSchema = {
+        sa_render_in_new_tab: {
+            label: "Render overflow tables in a new tab",
+            type: "checkbox",
+            default: true,
+            description: "Render overflow tables in a new tab"
+        },
         sa_collabsable_sidebar: {
             label: "Collabsable sidebar (experimental)",
             type: "checkbox",
@@ -2032,8 +2038,8 @@ let changelog = [
             const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
 
-	    const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
-	    statusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
+            const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
+            statusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
             timerDisplay.textContent = ''; // Explicitly clear any temp text
 
             Lib.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
@@ -2249,8 +2255,16 @@ let changelog = [
                     showAllBtn.onclick = (e) => {
                         e.preventDefault();
                         e.stopPropagation();
+
+                        const targetUrl = new URL(group.seeAllUrl, window.location.origin).href;
+                        Lib.debug('navigation', `Opening overflow table: ${targetUrl} (New tab: ${Lib.settings.sa_render_in_new_tab})`);
+
                         // Set the URL and trigger the global startFetchingProcess logic
-                        window.location.href = new URL(group.seeAllUrl, window.location.origin).href;
+                        if (Lib.settings.sa_render_in_new_tab) {
+                            window.open(targetUrl, '_blank');
+                        } else {
+                            window.location.href = targetUrl;
+                        }
                     };
                     h3.appendChild(showAllBtn);
                 }

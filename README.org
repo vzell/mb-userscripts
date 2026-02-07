@@ -31290,9 +31290,51 @@ should look like
 #+end_example
 
 
+* make the new table appear in a new tab
+
+In the uploaded userscript "ShowAllConsolidated.user.js" please adjust the following code 
+
+#+begin_example
+                // Add "Show all" button if a seeAllUrl was found
+                if (group.seeAllUrl) {
+                    const showAllBtn = document.createElement('button');
+                    // Use the stored seeAllCount to update button text
+                    const countSuffix = group.seeAllCount ? ` ${group.seeAllCount}` : '';
+                    showAllBtn.textContent = `Show all${countSuffix}`;
+                    showAllBtn.style.cssText = 'font-size:1em; margin-left:10px; padding:1px 4px; cursor:pointer; vertical-align:middle; border-radius:4px;';
+                    showAllBtn.type = 'button';
+                    showAllBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Set the URL and trigger the global startFetchingProcess logic
+                        window.location.href = new URL(group.seeAllUrl, window.location.origin).href;
+                    };
+                    h3.appendChild(showAllBtn);
+                }
+
+#+end_example
+
+to render the new webpage in a new tab instead of replacing the current one depending on a boolean flag which should be configurable
+
+#+begin_example
+    // CONFIG SCHEMA
+    const configSchema = {
+        sa_render_in_new_tab: {
+            label: "Render overflow tables in a new tab",
+            type: "checkbox",
+            default: true,
+            description: "Render overflow tables in a new tab"
+        },
+#+end_example
+
+
 * TODO:
 
 ** generalize generating "MB-Name" and "Comment"
+*** https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/artists
+*** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/artists
+*** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels
+
 
 ** generalize column data splitting
 
@@ -31305,3 +31347,14 @@ should look like
 *** Begin area
 *** End area
  
+** Area-Release has a mixture of single table paginated (Releases) and multitable with subheadings (Relationships)
+
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
+
+** pages with link_type_id
+
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings?page=2&direction=1&link_type_id=698
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings?page=3&direction=1&link_type_id=698 - has an additional "Credited as" column
+
+Add that column artificially if NOT on the first paginated page
+
