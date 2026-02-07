@@ -31368,4 +31368,4 @@ https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerpri
 #+end_example
 
 *** TODO add "warn" level in library
-
+** check all "link_type_id" pages separately for anomalies
