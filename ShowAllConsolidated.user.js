@@ -389,7 +389,6 @@ let changelog = [
         {
             type: 'area-recordings',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
-            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/),
             buttons: [ { label: 'Show all Recordings for Areas' } ],
             tableMode: 'multi',
             non_paginated: true
@@ -416,14 +415,13 @@ let changelog = [
         },
         {
             type: 'place-performances-filtered',
-            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Performances for Recordings (filtered)' } ],
-            tableMode: 'multi',
-            non_paginated: true
+            tableMode: 'single' // Paginated single list
         },
         {
             type: 'place-performances',
-            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Performances for Recordings' } ],
             tableMode: 'multi',
             non_paginated: true
@@ -457,14 +455,14 @@ let changelog = [
         },
         {
             type: 'label-relationships-filtered',
-            match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Relationships for Labels (filtered)' } ],
             tableMode: 'multi',
             non_paginated: true
         },
         {
             type: 'label-relationships',
-            match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Relationships for Labels' } ],
             tableMode: 'multi',
             non_paginated: true
