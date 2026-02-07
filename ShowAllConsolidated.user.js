@@ -162,7 +162,7 @@ let changelog = [
           ? new VZMBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, DEBUG_ENABLED)
           : {
               settings: {},
-              info: console.log, debug: console.log, error: console.error, time: console.time, timeEnd: console.timeEnd
+              info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
           };
 
     Lib.info('init', "Script loaded with external library!");
@@ -582,6 +582,12 @@ let changelog = [
             type: 'recording-aliases',
             match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { recording: 'Show all Aliases for Recordings' } ],
+            tableMode: 'single'
+        },
+        {
+            type: 'recording-fingerprints',
+            match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/fingerprints/),
+            buttons: [ { recording: 'Show all Fingerprints for Recordings' } ],
             tableMode: 'single'
         },
         {
@@ -2140,7 +2146,7 @@ let changelog = [
         if (rowCount > 0) {
             rows.forEach(r => tbody.appendChild(r));
         } else {
-            Lib.warn('render', 'No rows provided to renderFinalTable.');
+            Lib.error('render', 'No rows provided to renderFinalTable.');
         }
 
         Lib.info('render', `Finished renderFinalTable. Injected ${rowCount} rows into DOM.`);
@@ -2162,7 +2168,7 @@ let changelog = [
             templateHead = firstTable.tHead.cloneNode(true);
             cleanupHeaders(templateHead);
         } else {
-            Lib.warn('render', 'No template table head found.');
+            Lib.error('render', 'No template table head found.');
         }
 
         let allH2s = Array.from(document.querySelectorAll('h2'));
