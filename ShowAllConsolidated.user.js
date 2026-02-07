@@ -347,16 +347,31 @@ let changelog = [
             buttons: [ { label: 'Show all Aliases for Areas' } ],
             tableMode: 'single'
         },
+        // Area-Recordings pages
+        {
+            type: 'area-recordings-filtered',
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Areas (filtered)' } ],
+            tableMode: 'single' // Paginated single list
+        },
         {
             type: 'area-recordings',
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/),
             buttons: [ { label: 'Show all Recordings for Areas' } ],
             tableMode: 'multi',
             non_paginated: true
         },
+        // Area-Works pages
+        {
+            type: 'area-works-filtered',
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Works for Areas (filtered)' } ],
+            tableMode: 'single' // Paginated single list
+        },
         {
             type: 'area-works',
-            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/works/),
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Works for Areas' } ],
             tableMode: 'multi',
             non_paginated: true
@@ -369,20 +384,25 @@ let changelog = [
             non_paginated: true
         },
         {
+        // Work-Recordings pages
+            type: 'work-recordings-filtered',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Work Recordings (filtered)' } ],
+            tableMode: 'single' // Paginated single list
+        },
+        {
             type: 'work-recordings',
-            // match: (path, params) => (path.startsWith('/work/') && params.get('direction') === '2' && params.get('link_type_id') === '278') || path.match(/\/work\/[a-f0-9-]{36}$/),
-            match: (path) => path.match(/\/work\/[a-f0-9-]{36}$/),
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Work Recordings' } ],
             tableMode: 'multi',
             non_paginated: true
-            // tableMode: 'single'
         },
         // Artist pages
         {
             type: 'artist-relationships-filtered',
             // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships (Filtered)' } ],
+            buttons: [ { label: 'Show all Relationships (filtered)' } ],
             tableMode: 'single' // Paginated single list
         },
         {
