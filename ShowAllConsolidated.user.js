@@ -44,6 +44,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '2.3.1+2026-02-07', description: 'Fix detection of filtered MusicBrainz pages (link_type_id) to allow proper pagination instead of treating them as overview pages (e.g. Artist-Relationships.'},
     {version: '2.3.0+2026-02-05', description: 'Handle multitable pages of type "non_paginated" like Place-Performances.'},
     {version: '2.2.1+2026-02-04', description: 'Refactor column removal in final rendered table. Supports now "Release events" column from jesus2099 Super Mind Control script.'},
     {version: '2.2.0+2026-02-04', description: 'Support for "Show all Performances for Recordings".'},
@@ -378,8 +379,16 @@ let changelog = [
         },
         // Artist pages
         {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships (Filtered)' } ],
+            tableMode: 'single' // Paginated single list
+        },
+        {
             type: 'artist-relationships',
-            match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/),
+            // Only match if NO link_type_id is present (the overview page)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Relationships for Artists' } ],
             tableMode: 'multi',
             non_paginated: true
