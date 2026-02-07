@@ -416,8 +416,15 @@ let changelog = [
             tableMode: 'single'
         },
         {
+            type: 'place-performances-filtered',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Recordings (filtered)' } ],
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
             type: 'place-performances',
-            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/performances/),
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Performances for Recordings' } ],
             tableMode: 'multi',
             non_paginated: true
@@ -439,6 +446,34 @@ let changelog = [
             type: 'series-releases',
             match: (path) => path.includes('/series'),
             buttons: [ { label: 'Show all Releases for Series' } ],
+            features: { splitCD: true },
+            tableMode: 'single'
+        },
+        // Labels pages
+        {
+            type: 'label-aliases',
+            match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Labels' } ],
+            tableMode: 'single'
+        },
+        {
+            type: 'label-relationships-filtered',
+            match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Labels (filtered)' } ],
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships',
+            match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Labels' } ],
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-releases',
+            match: (path) => path.includes('/label'),
+            buttons: [ { label: 'Show all Releases for Labels' } ],
             features: { splitCD: true },
             tableMode: 'single'
         },
@@ -530,12 +565,6 @@ let changelog = [
         {
             type: 'recording-releases',
             match: (path) => path.includes('/recording'),
-            features: { splitCD: true },
-            tableMode: 'single'
-        },
-        {
-            type: 'label-releases',
-            match: (path) => path.includes('/label'),
             features: { splitCD: true },
             tableMode: 'single'
         },
