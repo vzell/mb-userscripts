@@ -839,17 +839,6 @@ let changelog = [
 
         Lib.debug('render', `Searching for target H2. Current pageType: ${pageType}`);
 
-        // if (pageType === 'artist-releasegroups') {
-        //     targetH2 = document.querySelector('h2.discography');
-        //     if (targetH2) Lib.debug('render', 'Found targetH2 via selector: h2.discography');
-        // } else if (pageType === 'releasegroup-releases') {
-        //     targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
-        //     if (targetH2) Lib.debug('render', 'Found targetH2 by text content "Album"');
-        // } else if (pageType === 'place-performances') {
-        //     targetH2 = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Performances'));
-        //     if (targetH2) Lib.debug('render', 'Found targetH2 by text content "Performances"');
-        // }
-
         if (!targetH2) {
             Lib.debug('render', 'Target H2 not found by specific type, falling back to document position logic.');
             for (let i = 0; i < allH2s.length; i++) {
@@ -888,10 +877,6 @@ let changelog = [
                 targetH2.appendChild(span);
             }
 
-            // Append global filter here for non-grouped pages (Artist/RG pages handle this in renderGroupedTable)
-            // if (pageType !== 'artist-releasegroups' &&
-            //     pageType !== 'releasegroup-releases' &&
-            //     pageType !== 'place-performances') {
             if (activeDefinition.tableMode !== 'multi') {
 
                 if (filterContainer.parentNode !== targetH2) {
@@ -1408,9 +1393,6 @@ let changelog = [
             // For non-paginated types, initially assume maxPage is 1
             Lib.info('fetch', 'Context: Non-paginated page definition. Initially assuming maxPage = 1.');
             maxPage = 1;
-        // } else if (pageType === 'work-recordings' && !params.get('direction')) {
-        //     Lib.info('fetch', 'Context: work-recordings page. Fetching maxPage with specific parameters.');
-        //     maxPage = await fetchMaxPageGeneric(path, { direction: '2', link_type_id: '278' });
         } else if (overrideParams) {
             Lib.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
             maxPage = await fetchMaxPageGeneric(path, overrideParams);
@@ -1682,18 +1664,6 @@ let changelog = [
                     if (params.has('all')) fetchUrl.searchParams.set('all', params.get('all'));
                     if (params.has('va')) fetchUrl.searchParams.set('va', params.get('va'));
                 }
-                // Apply query parameters for specific pageTypes
-                // if (pageType === 'work-recordings') {
-                //     fetchUrl.searchParams.set('direction', '2');
-                //     fetchUrl.searchParams.set('link_type_id', '278');
-                // } else if (overrideParams) {
-                //     Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
-                // } else {
-                //     if (params.has('direction')) fetchUrl.searchParams.set('direction', params.get('direction'));
-                //     if (params.has('link_type_id')) fetchUrl.searchParams.set('link_type_id', params.get('link_type_id'));
-                //     if (params.has('all')) fetchUrl.searchParams.set('all', params.get('all'));
-                //     if (params.has('va')) fetchUrl.searchParams.set('va', params.get('va'));
-                // }
 
                 const html = await fetchHtml(fetchUrl.toString());
                 const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -1724,12 +1694,10 @@ let changelog = [
                 }
 
                 Lib.debug('init', `Checking default mainColIdx for pageType: ${pageType}, current mainColIdx: ${mainColIdx}`);
-                //if (mainColIdx === -1 && (pageType === 'releasegroup-releases' || pageType === 'place-performances')) {
                 if (mainColIdx === -1 && (pageType === 'releasegroup-releases')) {
                     mainColIdx = 0;
                     Lib.debug('init', `mainColIdx was -1, forced to 0 for pageType: ${pageType}`);
                 }
-                //if (mainColIdx === -1 && (pageType === 'releasegroup-releases' || pageType === 'place-performances')) mainColIdx = 0;
 
                 let rowsInThisPage = 0;
                 let pageCategoryMap = new Map();
@@ -2094,16 +2062,6 @@ let changelog = [
         let targetHeader = null;
 
         Lib.debug('render', `Searching for target H2. Current pageType: ${pageType}`);
-
-        // TODO: Identify the target anchor header based on page type - generalize
-        // if (pageType === 'artist-releasegroups') {
-        //     targetHeader = document.querySelector('h2.discography');
-        // } else if (pageType === 'releasegroup-releases') {
-        //     targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Album'));
-        // } else if (pageType === 'place-performances') {
-        //     targetHeader = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Performances'));
-        // }
-        // Lib.info('render', `Target header identified for pageType "${pageType}":`, targetHeader);
 
         if (!targetHeader) {
             Lib.debug('render', 'Target H2 not found by specific type, falling back to document position logic.');
