@@ -31307,8 +31307,7 @@ visual feedback (“cleared”) animation
    
 *** Begin area
 *** End area
- 
-** Area-Release has a mixture of single table paginated (Releases) and multitable with subheadings (Relationships)
+** Area-Releases has a mixture of single table paginated (Releases) and multitable with subheadings (Relationships)
 
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
 
@@ -31372,4 +31371,109 @@ https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerpri
 ** check all "link_type_id" pages separately for anomalies
 ** fix search pages
 
+In the uploaded userscript
+
+I get for the following URL https://musicbrainz.org/search?query=Asbury+Park&type=area&method=indexed
+(pageType: search) the following console output
+
+#+begin_example
+🚀 Settings entry added to Editing menu. 
+🚀 Script loaded with external library! 
+🚀 URL: https://musicbrainz.org/search?query=Asbury+Park&type=area&method=indexed 
+🚀 URL basepath: https://musicbrainz.org/search 
+🚀 URL path: /search 
+🚀 Query parameters: query=Asbury+Park&type=area&method=indexed 
+🚀 Has "link_type_id": false 
+🚀 Detected pageType: search 
+🚀 Detected tableMode: single 
+🚀 Initializing script for path: /search
+🧹 Signalling other scripts to stop... 
+📥 Starting fetch process... null
+📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+📥 Found "Next" link. Extracted page: 13 
+📥 Total pages to fetch: 13 
+🧹 Starting clutter element removal. 
+📥 Initiating fetch for URL: https://musicbrainz.org/search 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=1 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 1/13 processed in 0.32s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=2 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 2/13 processed in 0.23s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=3 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 3/13 processed in 0.44s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=4 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 4/13 processed in 0.34s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=5 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 5/13 processed in 0.38s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=6 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 6/13 processed in 0.32s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=7 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 7/13 processed in 0.48s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=8 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 8/13 processed in 0.39s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=9 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 9/13 processed in 0.25s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=10 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 10/13 processed in 0.39s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=11 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 11/13 processed in 0.70s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=12 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 12/13 processed in 0.22s. Rows on page: 0. Total: 0 
+📥 Initiating fetch for URL: https://musicbrainz.org/search?page=13 
+🚀 Checking default mainColIdx for pageType: search, current mainColIdx: -1 
+📥 Page 13/13 processed in 0.44s. Rows on page: 0. Total: 0 
+🎨 DOM rendering starting... 
+🎨 Starting updateH2Count: filtered=0, total=0 
+🎨 Searching for target H2. Current pageType: search 
+🎨 Target H2 not found by specific type, falling back to document position logic. 
+❌ Critical Error during fetch: TypeError: Cannot read properties of null (reading 'textContent')
+    at updateH2Count (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1340:37)
+    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:2267:13)
+userscript.html?name=sanojjonas-visualise-stuff.user.js&id=39cb5d25-a89a-401b-9c61-6d1089d68abe:1137 Uncaught TypeError: Cannot set properties of null (setting 'style')
+    at window.onresize (userscript.html?name=sanojjonas-visualise-stuff.user.js&id=39cb5d25-a89a-401b-9c61-6d1089d68abe:1137:15)
+#+end_example
+
+It should actually behave like all the other pageTypes.
+
+I realize that this kind of pages do NOT have an h2 header like all the other pages, to place the number of rows in the
+datatable, instead there is p element of class "pageselector-results" with the following structure:
+
+#+begin_example
+<p class="pageselector-results">Found <number of results> results for "<search string>"</p>
+#+end_example
+
+e.g.
+
+#+begin_example
+<p class="pageselector-results">Found 314 results for "Asbury Park"</p>
+#+end_example
+
+so the number of found searches together with the global filter search field should be placed in brackets behind that
+string.
+
+Probably the following variable also has to be changed accordingly
+
+#+begin_example
+    // TODO: probably need to be fixed for "Search" pages - should also be refactored in the "pageDefinitions" variable
+    let headerContainer = document.querySelector('.artistheader h1') ||
+                          document.querySelector('.rgheader h1') ||
+                          document.querySelector('.labelheader h1') ||
+                          document.querySelector('.seriesheader h1') ||
+                          document.querySelector('.placeheader h1') ||
+                          document.querySelector('.areaheader h1') ||
+                          document.querySelector('.recordingheader h1') ||
+                          document.querySelector('h1 a bdi')?.parentNode ||
+                          document.querySelector('h1');
+#+end_example
 

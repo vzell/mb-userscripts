@@ -309,7 +309,7 @@ let changelog = [
         {
             type: 'search',
             match: (path) => path.includes('/search'),
-            buttons: [ { label: 'Show all search results' } ],
+            buttons: [ { label: 'Show all Search results' } ],
             tableMode: 'single'
         },
         // Instrument pages
