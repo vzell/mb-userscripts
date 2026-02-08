@@ -1636,6 +1636,7 @@ let changelog = [
 
                 let countryDateIdx = -1;
                 let locationIdx = -1;
+                let areaIdx = -1;
                 let mainColIdx = -1;
                 let indicesToExclude = [];
                 // Header name for which a generic split into MB-Name and Comment columns will be done
@@ -1654,6 +1655,8 @@ let changelog = [
                             countryDateIdx = idx;
                         } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
                             locationIdx = idx;
+                        } else if (typesWithSplitArea.includes(pageType) && txt === 'Area') {
+                            areaIdx = idx;
                         }
                         if (mainHeaders.includes(txt)) mainColIdx = idx;
                     });
