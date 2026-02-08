@@ -346,7 +346,7 @@ let changelog = [
             type: 'area-artists',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
             buttons: [ { label: 'Show all Artists for Areas' } ],
-            // TODO: features: { splitArea: true },
+            features: { splitArea: true },
             tableMode: 'single'
         },
         {
@@ -360,7 +360,7 @@ let changelog = [
             type: 'area-labels',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/labels/),
             buttons: [ { label: 'Show all Labels for Areas' } ],
-            // TODO: features: { splitArea: true },
+            features: { splitArea: true },
             tableMode: 'single'
         },
         {
@@ -374,7 +374,7 @@ let changelog = [
             type: 'area-places',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/places/),
             buttons: [ { label: 'Show all Places for Areas' } ],
-            // TODO: features: { splitArea: true },
+            features: { splitArea: true },
             tableMode: 'single'
         },
         {
@@ -659,6 +659,7 @@ let changelog = [
     // 3. Set Feature Flags based on active definition
     const typesWithSplitCD = (activeDefinition && activeDefinition.features?.splitCD) ? [pageType] : [];
     const typesWithSplitLocation = (activeDefinition && activeDefinition.features?.splitLocation) ? [pageType] : [];
+    const typesWithSplitArea = (activeDefinition && activeDefinition.features?.splitArea) ? [pageType] : [];
 
     // --- UI Elements ---
     const controlsContainer = document.createElement('div');
@@ -1447,6 +1448,18 @@ let changelog = [
             });
         }
 
+        if (typesWithSplitArea.includes(pageType)) {
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+            ['MB-Area', 'Country'].forEach(col => {
+                if (!headersText.includes(col)) {
+                    const th = document.createElement('th');
+                    th.textContent = col;
+                    th.style.backgroundColor = headerBgColor;
+                    theadRow.appendChild(th);
+                }
+            });
+        }
+
         // On "Artist-Releasegroups" pages we do not create the "MB-Name" and disambiguation "Comment" columns
         if (pageType !== 'artist-releasegroups') {
             const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
@@ -1793,7 +1806,7 @@ let changelog = [
                                         }
                                     }
 
-                                    // Handling Location split
+                                    // Handling Location split (Place, Area and Country)
                                     const tdP = document.createElement('td');
                                     const tdA = document.createElement('td');
                                     const tdC = document.createElement('td');
@@ -1830,16 +1843,58 @@ let changelog = [
                                         }
                                     }
 
+                                    // Handling Area split (MB-Area and Country)
+                                    const tdAreaOnly = document.createElement('td');
+                                    const tdCountryOnly = document.createElement('td');
+                                    if (typesWithSplitArea.includes(pageType) && locationIdx !== -1) {
+                                        const locCell = newRow.cells[locationIdx];
+                                        if (locCell) {
+                                            locCell.querySelectorAll('a').forEach(a => {
+                                                const href = a.getAttribute('href');
+                                                const clonedA = a.cloneNode(true);
+                                                if (href && href.includes('/area/')) {
+                                                    const flagSpan = a.closest('.flag');
+                                                    if (flagSpan) {
+                                                        const flagImg = flagSpan.querySelector('img')?.outerHTML || '';
+                                                        const abbr = flagSpan.querySelector('abbr');
+                                                        const countryCode = abbr ? abbr.textContent.trim() : '';
+                                                        const countryFullName = abbr?.getAttribute('title') || '';
+                                                        const countryHref = a.getAttribute('href') || '#';
+                                                        const span = document.createElement('span');
+                                                        span.className = flagSpan.className;
+                                                        if (countryFullName && countryCode) {
+                                                            span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
+                                                        } else {
+                                                            span.innerHTML = flagSpan.innerHTML;
+                                                        }
+                                                        tdCountryOnly.appendChild(span);
+                                                    } else {
+                                                        if (tdAreaOnly.hasChildNodes()) tdAreaOnly.appendChild(document.createTextNode(', '));
+                                                        tdAreaOnly.appendChild(clonedA);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
 
                                     if (typesWithSplitCD.includes(pageType)) {
-                                        newRow.appendChild(tdSplitC); newRow.appendChild(tdSplitD);
+                                        newRow.appendChild(tdSplitC);
+                                        newRow.appendChild(tdSplitD);
                                     } else if (typesWithSplitLocation.includes(pageType)) {
-                                        newRow.appendChild(tdP); newRow.appendChild(tdA); newRow.appendChild(tdC);
+                                        newRow.appendChild(tdP);
+                                        newRow.appendChild(tdA);
+                                        newRow.appendChild(tdC);
+                                    } else if (typesWithSplitArea.includes(pageType)) {
+                                        newRow.appendChild(tdAreaOnly);
+                                        newRow.appendChild(tdCountryOnly);
                                     }
+
                                     if (pageType !== 'artist-releasegroups') {
                                         newRow.appendChild(tdName); newRow.appendChild(tdComment);
                                     }
+
                                     if (activeDefinition.tableMode === 'multi') {
                                         // Check if this category group already exists to consolidate subgroup tables
                                         let existingGroup = groupedRows.find(g => g.category === currentStatus);

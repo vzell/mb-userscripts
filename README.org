@@ -31293,30 +31293,215 @@ visual feedback (“cleared”) animation
 
 
 * TODO:
-** generalize generating "MB-Name" and "Comment"
-*** https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/artists
-*** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/artists
-*** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels
-
 ** generalize column data splitting
 *** Area
+**** initial
 
- - Split "Illinois, United States" in State and Country if available
- - Amsterdam, Noord-Holland (North Holland), Netherlands, Kingdom of the Netherlands
- - United States
-   
+In the uploaded script,
+
+introduce a new 'features: { splitArea: true }' in the pageDefinitions, where we have a TODO statement right now
+
+#+begin_example
+        // Area pages
+        {
+            type: 'area-artists',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
+            buttons: [ { label: 'Show all Artists for Areas' } ],
+            // TODO: features: { splitArea: true },
+            tableMode: 'single'
+        },
+#+end_example
+
+and then add a new block like the following
+
+#+begin_example
+                                    // Handling Location split
+                                    const tdP = document.createElement('td');
+                                    const tdA = document.createElement('td');
+                                    const tdC = document.createElement('td');
+                                    if (typesWithSplitLocation.includes(pageType) && locationIdx !== -1) {
+                                        const locCell = newRow.cells[locationIdx];
+                                        if (locCell) {
+                                            locCell.querySelectorAll('a').forEach(a => {
+                                                const href = a.getAttribute('href');
+                                                const clonedA = a.cloneNode(true);
+                                                if (href && href.includes('/place/')) {
+                                                    tdP.appendChild(clonedA);
+                                                } else if (href && href.includes('/area/')) {
+                                                    const flagSpan = a.closest('.flag');
+                                                    if (flagSpan) {
+                                                        const flagImg = flagSpan.querySelector('img')?.outerHTML || '';
+                                                        const abbr = flagSpan.querySelector('abbr');
+                                                        const countryCode = abbr ? abbr.textContent.trim() : '';
+                                                        const countryFullName = abbr?.getAttribute('title') || '';
+                                                        const countryHref = a.getAttribute('href') || '#';
+                                                        const span = document.createElement('span');
+                                                        span.className = flagSpan.className;
+                                                        if (countryFullName && countryCode) {
+                                                            span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
+                                                        } else {
+                                                            span.innerHTML = flagSpan.innerHTML;
+                                                        }
+                                                        tdC.appendChild(span);
+                                                    } else {
+                                                        if (tdA.hasChildNodes()) tdA.appendChild(document.createTextNode(', '));
+                                                        tdA.appendChild(clonedA);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+#+end_example
+
+to extract two new columns "MB-Area" and "Country" like above. The only difference is that the "Place" part in the case
+of the "Area" columns doesn't exist
+
+ - Split "Illinois, United States" in "Illinois" and "United States" 
+ - Split "Amsterdam, Noord-Holland (North Holland), Netherlands, Kingdom of the Netherlands" in "Amsterdam, Noord-Holland (North Holland), Netherlands" and "Kingdom of the Netherlands"
+ - Split "United States" in "" and "United States"
+
+but leave the flag icon in the country column intact
+
+**** gemini
+
+#+begin_example
+To implement the requested features, we will update the pageDefinitions to enable splitArea and add the row-processing logic to extract the "MB-Area" and "Country" columns.
+
+Step 1: Update pageDefinitions
+Replace the TODO statements in the pageDefinitions array for area-artists, area-labels, and area-places to enable the new feature.
+
+JavaScript
+        // Area pages
+        {
+            type: 'area-artists',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
+            buttons: [ { label: 'Show all Artists for Areas' } ],
+            features: { splitArea: true },
+            tableMode: 'single'
+        },
+        // ... (keep area-events as is)
+        {
+            type: 'area-labels',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/labels/),
+            buttons: [ { label: 'Show all Labels for Areas' } ],
+            features: { splitArea: true },
+            tableMode: 'single'
+        },
+        // ... (keep others until area-places)
+        {
+            type: 'area-places',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/places/),
+            buttons: [ { label: 'Show all Places for Areas' } ],
+            features: { splitArea: true },
+            tableMode: 'single'
+        },
+Step 2: Initialize Feature Flags
+Locate the feature flag initialization section and add typesWithSplitArea.
+
+JavaScript
+    // 3. Set Feature Flags based on active definition
+    const typesWithSplitCD = (activeDefinition && activeDefinition.features?.splitCD) ? [pageType] : [];
+    const typesWithSplitLocation = (activeDefinition && activeDefinition.features?.splitLocation) ? [pageType] : [];
+    const typesWithSplitArea = (activeDefinition && activeDefinition.features?.splitArea) ? [pageType] : [];
+Step 3: Implement Row Extraction Logic
+Find the section where rows are processed (near the typesWithSplitLocation block) and insert the logic to handle the Area split.
+
+Per your instructions, this logic handles the "MB-Area" and "Country" columns while keeping the flag icon intact and omitting the "Place" column logic found in location splits.
+
+JavaScript
+                                    // Handling Location split
+                                    const tdP = document.createElement('td');
+                                    const tdA = document.createElement('td');
+                                    const tdC = document.createElement('td');
+                                    if (typesWithSplitLocation.includes(pageType) && locationIdx !== -1) {
+                                        const locCell = newRow.cells[locationIdx];
+                                        if (locCell) {
+                                            locCell.querySelectorAll('a').forEach(a => {
+                                                const href = a.getAttribute('href');
+                                                const clonedA = a.cloneNode(true);
+                                                if (href && href.includes('/place/')) {
+                                                    tdP.appendChild(clonedA);
+                                                } else if (href && href.includes('/area/')) {
+                                                    const flagSpan = a.closest('.flag');
+                                                    if (flagSpan) {
+                                                        const flagImg = flagSpan.querySelector('img')?.outerHTML || '';
+                                                        const abbr = flagSpan.querySelector('abbr');
+                                                        const countryCode = abbr ? abbr.textContent.trim() : '';
+                                                        const countryFullName = abbr?.getAttribute('title') || '';
+                                                        const countryHref = a.getAttribute('href') || '#';
+                                                        const span = document.createElement('span');
+                                                        span.className = flagSpan.className;
+                                                        if (countryFullName && countryCode) {
+                                                            span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
+                                                        } else {
+                                                            span.innerHTML = flagSpan.innerHTML;
+                                                        }
+                                                        tdC.appendChild(span);
+                                                    } else {
+                                                        if (tdA.hasChildNodes()) tdA.appendChild(document.createTextNode(', '));
+                                                        tdA.appendChild(clonedA);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+
+                                    // Handling Area split (MB-Area and Country)
+                                    const tdAreaOnly = document.createElement('td');
+                                    const tdCountryOnly = document.createElement('td');
+                                    if (typesWithSplitArea.includes(pageType) && locationIdx !== -1) {
+                                        const locCell = newRow.cells[locationIdx];
+                                        if (locCell) {
+                                            locCell.querySelectorAll('a').forEach(a => {
+                                                const href = a.getAttribute('href');
+                                                const clonedA = a.cloneNode(true);
+                                                if (href && href.includes('/area/')) {
+                                                    const flagSpan = a.closest('.flag');
+                                                    if (flagSpan) {
+                                                        const flagImg = flagSpan.querySelector('img')?.outerHTML || '';
+                                                        const abbr = flagSpan.querySelector('abbr');
+                                                        const countryCode = abbr ? abbr.textContent.trim() : '';
+                                                        const countryFullName = abbr?.getAttribute('title') || '';
+                                                        const countryHref = a.getAttribute('href') || '#';
+                                                        const span = document.createElement('span');
+                                                        span.className = flagSpan.className;
+                                                        if (countryFullName && countryCode) {
+                                                            span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
+                                                        } else {
+                                                            span.innerHTML = flagSpan.innerHTML;
+                                                        }
+                                                        tdCountryOnly.appendChild(span);
+                                                    } else {
+                                                        if (tdAreaOnly.hasChildNodes()) tdAreaOnly.appendChild(document.createTextNode(', '));
+                                                        tdAreaOnly.appendChild(clonedA);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+Step 4: Append New Columns to the Row
+Update the row-appending logic to include the new columns when splitArea is active.
+
+JavaScript
+            if (typesWithSplitCD.includes(pageType)) {
+                newRow.appendChild(tdSplitC);
+                newRow.appendChild(tdSplitD);
+            } else if (typesWithSplitLocation.includes(pageType)) {
+                newRow.appendChild(tdP);
+                newRow.appendChild(tdA);
+                newRow.appendChild(tdC);
+            } else if (typesWithSplitArea.includes(pageType)) {
+                newRow.appendChild(tdAreaOnly);
+                newRow.appendChild(tdCountryOnly);
+            }
+          
+#+end_example
+
 *** Begin area
 *** End area
 ** Area-Releases has a mixture of single table paginated (Releases) and multitable with subheadings (Relationships)
 
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
-
-** pages with link_type_id
-
-https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings?page=2&direction=1&link_type_id=698
-https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings?page=3&direction=1&link_type_id=698 - has an additional "Credited as" column
-
-Add that column artificially if NOT on the first paginated page
 
 ** on aliases page, remove "Show all" button when NO aliases present
 
@@ -31369,7 +31554,21 @@ https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerpri
 
 *** TODO add "warn" level in library
 ** check all "link_type_id" pages separately for anomalies
-** fix search pages always showing 0 rows also the header is there
+*** pages with link_type_id - has an additional "Credited as" column
+
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings?page=2&direction=1&link_type_id=698
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings?page=3&direction=1&link_type_id=698 - has an additional "Credited as" column
+
+Add that column artificially if NOT on the first paginated page
+
+*** column mismatch when rendering the overflow table
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=168
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=4&direction=1&link_type_id=168 - additional "Creditet as" column
+
+same for "lyrics" 165
+
+** DONE fix search pages always showing 0 rows also the header is there
 *** initial
 
 In the uploaded userscript
@@ -31615,8 +31814,11 @@ Do we need more debug statement sto pinpoint the problem
 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 600. Total Time: 8.05s 
 #+end_example
 
-
 ** check logic of mainColIdx and mainHeaders
+*** generalize generating "MB-Name" and "Comment"
+**** https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/artists
+**** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/artists
+**** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels
 *** initial
 
 In the uploaded userscript
@@ -31693,8 +31895,368 @@ The following two code blocks could also be rewritten in that case
                                     }
 #+end_example
 
+*** gemini
+
+#+begin_example
+Here is the refactored solution. This approach introduces a new property extractMainColumn within the features object of your pageDefinitions.
+
+This allows you to specify exactly which column (by header name or index) should be used for the split, or omit the property to disable the feature entirely (as requested for Search or Artist-ReleaseGroups).
+
+1. Update pageDefinitions
+You need to update your pageDefinitions array to include the extractMainColumn property in the features object for the pages where you want this logic to apply.
+
+Here is the strategy for the values:
+
+'String': Look for a header with this exact text.
+
+['Array', 'Of', 'Strings']: Look for any of these headers (useful if MB changes terminology).
+
+0 (Number): Force a specific column index (replaces the releasegroup-releases hack).
+
+undefined / null: Feature disabled (replaces the pageType !== '...' checks).
+
+Example updates for your pageDefinitions:
+
+JavaScript
+    const pageDefinitions = [
+        {
+            type: 'search',
+            match: (path) => path.includes('/search'),
+            buttons: [ { label: 'Show all Search results' } ],
+            tableMode: 'single',
+            // No features defined -> extractMainColumn is undefined -> Feature DISABLED
+        },
+        // ...
+        {
+            type: 'instrument-releases',
+            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/releases/),
+            buttons: [ { label: 'Show all Releases for Instruments' } ],
+            features: {
+                splitCD: true,
+                extractMainColumn: ['Release', 'Title'] // Enable for Release/Title
+            },
+            tableMode: 'single'
+        },
+        // ...
+        {
+            type: 'artist-releasegroups',
+            // ...
+            features: {
+                 // extractMainColumn is undefined -> Feature DISABLED (Matches your old exclusion logic)
+            },
+            tableMode: 'multi'
+        },
+        {
+            type: 'releasegroup-releases',
+            match: (path) => path.includes('/release-group/'),
+            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
+            features: {
+                splitCD: true,
+                extractMainColumn: 0 // FORCE Index 0 (Matches your old hack)
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+        {
+            type: 'events',
+            match: (path) => path.includes('/events'),
+            buttons: [ { label: 'Show all Events for Artist' } ],
+            features: {
+                splitLocation: true,
+                extractMainColumn: 'Event' // Specific header
+            },
+            tableMode: 'single'
+        }
+        // ... You must apply extractMainColumn to all other page types where you want the split!
+        // Common mappings:
+        // Works -> 'Work'
+        // Recordings -> 'Recording'
+        // Places -> 'Place'
+        // Labels -> 'Label'
+        // Aliases -> 'Alias'
+    ];
+2. Refactor cleanupHeaders
+Replace the hardcoded pageType exclusion with a check for the new configuration property.
+
+JavaScript
+        // Check if the generic split feature is enabled for this page definition
+        const mainColConfig = activeDefinition.features?.extractMainColumn;
+        const isMainColEnabled = mainColConfig !== undefined && mainColConfig !== null;
+
+        // On pages where the configuration is enabled, create the "MB-Name" and "Comment" columns
+        if (isMainColEnabled) {
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+            if (!headersText.includes('MB-Name')) {
+                const thN = document.createElement('th');
+                thN.textContent = 'MB-Name';
+                thN.style.backgroundColor = headerBgColor;
+                theadRow.appendChild(thN);
+            }
+            if (!headersText.includes('Comment')) {
+                const thC = document.createElement('th');
+                thC.textContent = 'Comment';
+                thC.style.backgroundColor = headerBgColor;
+                theadRow.appendChild(thC);
+            }
+        }
+3. Refactor Header Detection in startFetchingProcess
+This replaces the block containing the mainHeaders array and the releasegroup-releases hack.
+
+JavaScript
+                let countryDateIdx = -1;
+                let locationIdx = -1;
+                let mainColIdx = -1;
+                let indicesToExclude = [];
+
+                // Retrieve configuration for the main column extraction
+                const mainColConfig = activeDefinition.features?.extractMainColumn;
+
+                // If configuration is a specific number, force that index immediately
+                if (typeof mainColConfig === 'number') {
+                    mainColIdx = mainColConfig;
+                    Lib.debug('init', `mainColIdx forced to ${mainColIdx} by configuration.`);
+                }
+                // Prepare candidates list if config is string or array
+                const mainColCandidates = Array.isArray(mainColConfig) ? mainColConfig : (mainColConfig ? [mainColConfig] : []);
+
+                const referenceTable = doc.querySelector('table.tbl');
+                if (referenceTable) {
+                    referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
+                        const txt = th.textContent.trim();
+                        if (Lib.settings.sa_remove_rel && txt.startsWith('Relationships')) indicesToExclude.push(idx);
+                        else if (Lib.settings.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToExclude.push(idx);
+                        else if (Lib.settings.sa_remove_rating && txt.startsWith('Rating')) indicesToExclude.push(idx);
+                        else if (Lib.settings.sa_remove_tagger && txt.startsWith('Tagger')) indicesToExclude.push(idx);
+                        else if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
+                            countryDateIdx = idx;
+                        } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
+                            locationIdx = idx;
+                        }
+
+                        // Dynamic detection based on config candidates
+                        // We only search if mainColIdx wasn't already forced by a number config
+                        if (mainColIdx === -1 && mainColCandidates.includes(txt)) {
+                            mainColIdx = idx;
+                        }
+                    });
+                }
+
+                Lib.debug('init', `Determined mainColIdx: ${mainColIdx} for pageType: ${pageType}`);
+4. Refactor Row Extraction
+Replace the hardcoded pageType check with a check for mainColIdx. Since mainColIdx will remain -1 if the feature is disabled (undefined in config), this handles the logic cleanly.
+
+JavaScript
+                                    // Extraction logic for MB-Name and Comment
+                                    const tdName = document.createElement('td');
+                                    const tdComment = document.createElement('td');
+
+                                    // If a main column was identified (via config or detection), perform the extraction
+                                    if (mainColIdx !== -1) {
+                                        const targetCell = newRow.cells[mainColIdx];
+                                        if (targetCell) {
+                                            const nameLink = targetCell.querySelector('a bdi')?.closest('a');
+                                            if (nameLink) tdName.appendChild(nameLink.cloneNode(true));
+                                            const commentBdi = targetCell.querySelector('.comment bdi');
+                                            if (commentBdi) tdComment.textContent = commentBdi.textContent.trim();
+                                        }
+                                    }
+                                    
+#+end_example
+
 *** chatgpt
 
 #+begin_example
-mainPageHeader.txt
+Yeah — this is a very sensible refactor 👍
+Right now mainHeaders + mainColIdx are doing two jobs at once:
+
+Deciding whether a page type even supports the generic split
+
+Guessing which column to use by matching header text
+
+That’s why the logic is spreading and why artist-releasegroups needs special-casing in three places.
+
+The clean way out is exactly what you suggest:
+👉 make the “MB-Name / Comment source column” a pageType capability, not a global heuristic.
+
+Below is a concrete, low-risk refactor that keeps behavior identical but centralizes all decisions in pageDefinitions.
+
+1️⃣ Extend pageDefinitions
+
+Add an optional property, for example:
+
+pageDefinitions = {
+    'artist-releasegroups': {
+        /* existing config */
+        mainSplitHeader: null, // explicitly disables MB-Name/Comment
+    },
+
+    'releasegroup-releases': {
+        /* existing config */
+        mainSplitHeader: 'Release',
+    },
+
+    'recording-relationships': {
+        /* existing config */
+        mainSplitHeader: 'Recording',
+    },
+
+    'work-relationships': {
+        /* existing config */
+        mainSplitHeader: 'Work',
+    },
+
+    'place-performances': {
+        /* existing config */
+        mainSplitHeader: 'Place',
+    },
+
+    'search': {
+        /* existing config */
+        mainSplitHeader: null,
+    },
+};
+
+
+Rules:
+
+mainSplitHeader: string → enable generic split and use that column
+
+mainSplitHeader: null / undefined → feature disabled for that pageType
+
+No more guessing, no more mainHeaders list
+
+2️⃣ Replace mainHeaders + mainColIdx detection
+Before
+const mainHeaders = ['Recording', 'Event', 'Release', 'Work', 'Title', 'Name', 'Alias', 'Place'];
+...
+if (mainHeaders.includes(txt)) mainColIdx = idx;
+
+After (pageType-driven)
+const pageDef = pageDefinitions[pageType] || {};
+const mainSplitHeader = pageDef.mainSplitHeader ?? null;
+
+const referenceTable = doc.querySelector('table.tbl');
+if (referenceTable && mainSplitHeader) {
+    referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
+        const txt = th.textContent.trim();
+
+        if (Lib.settings.sa_remove_rel && txt.startsWith('Relationships')) indicesToExclude.push(idx);
+        else if (Lib.settings.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToExclude.push(idx);
+        else if (Lib.settings.sa_remove_rating && txt.startsWith('Rating')) indicesToExclude.push(idx);
+        else if (Lib.settings.sa_remove_tagger && txt.startsWith('Tagger')) indicesToExclude.push(idx);
+        else if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
+            countryDateIdx = idx;
+        } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
+            locationIdx = idx;
+        }
+
+        if (txt === mainSplitHeader) {
+            mainColIdx = idx;
+        }
+    });
+}
+
+Keep your existing fallback (unchanged behavior)
+Lib.debug('init', `Checking default mainColIdx for pageType: ${pageType}, current mainColIdx: ${mainColIdx}`);
+
+if (mainColIdx === -1 && pageType === 'releasegroup-releases') {
+    mainColIdx = 0;
+    Lib.debug('init', `mainColIdx was -1, forced to 0 for pageType: ${pageType}`);
+}
+
+3️⃣ Rewrite header creation (no more hardcoded pageType checks)
+Before
+if (pageType !== 'artist-releasegroups') {
+    ...
+}
+
+After
+const pageDef = pageDefinitions[pageType] || {};
+const hasMainSplit = typeof pageDef.mainSplitHeader === 'string';
+
+if (hasMainSplit) {
+    const headersText = Array.from(theadRow.cells)
+        .map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+
+    if (!headersText.includes('MB-Name')) {
+        const thN = document.createElement('th');
+        thN.textContent = 'MB-Name';
+        thN.style.backgroundColor = headerBgColor;
+        theadRow.appendChild(thN);
+    }
+
+    if (!headersText.includes('Comment')) {
+        const thC = document.createElement('th');
+        thC.textContent = 'Comment';
+        thC.style.backgroundColor = headerBgColor;
+        theadRow.appendChild(thC);
+    }
+}
+
+
+This automatically:
+
+Enables the feature where configured
+
+Disables it for artist-releasegroups, search, etc.
+
+Removes all pageType name coupling
+
+4️⃣ Rewrite extraction logic (same simplification)
+Before
+if (mainColIdx !== -1 && pageType !== 'artist-releasegroups') {
+    ...
+}
+
+After
+const pageDef = pageDefinitions[pageType] || {};
+const hasMainSplit = typeof pageDef.mainSplitHeader === 'string';
+
+const tdName = document.createElement('td');
+const tdComment = document.createElement('td');
+
+if (hasMainSplit && mainColIdx !== -1) {
+    const targetCell = newRow.cells[mainColIdx];
+    if (targetCell) {
+        const nameLink = targetCell.querySelector('a bdi')?.closest('a');
+        if (nameLink) tdName.appendChild(nameLink.cloneNode(true));
+
+        const commentBdi = targetCell.querySelector('.comment bdi');
+        if (commentBdi) tdComment.textContent = commentBdi.textContent.trim();
+    }
+}
+
+5️⃣ Why this refactor is solid
+
+You gain:
+
+🧠 Single source of truth (pageDefinitions)
+
+🚫 No magic header lists
+
+🧩 No scattered pageType exceptions
+
+🛠 Easy future extension (e.g. "Label" for Area-Labels)
+
+🧪 Much easier to reason about bugs
+
+You do NOT change:
+
+Existing behavior
+
+Fallback logic
+
+Debug output
+
+Column extraction semantics
+
+If you want, next step could be:
+
+supporting multiple possible headers (mainSplitHeader: ['Name','Title'])
+
+or letting pageDefinitions specify a custom extractor for weird pages
+
+Just say the word.
+
+
 #+end_example
