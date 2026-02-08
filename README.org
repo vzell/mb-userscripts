@@ -31842,6 +31842,28 @@ Everything before the "," in front of "Country" should be part of the new "MB-Ar
   </span>,
 #+end_example
 
+**** add colname
+
+Change the debug output from 
+
+#+begin_src bash
+                Lib.debug(
+                    'indices',
+                    `Detected indices → mainColIdx=${mainColIdx}, countryDateIdx=${countryDateIdx}, areaIdx=${areaIdx}, locationIdx=${locationIdx}, excluded=[${indicesToExclude.join(',')}] for pageType: ${pageType}`
+                );
+#+end_src
+
+to
+
+#+begin_src bash
+                Lib.debug(
+                    'indices',
+                    `Detected indices → mainColIdx=${mainColIdx} (<mainColIdx name>), countryDateIdx=${countryDateIdx} (<countraDateIdx> name), areaIdx=${areaIdx} (<areaIdx name>), locationIdx=${locationIdx} (<locationIdx name>), excluded=[${indicesToExclude.join(',')}] for pageType: ${pageType}`
+                );
+#+end_src
+
+so basically also include in brackets the columns names not only the index numbers, e.g. '(<mainColIdx name>)'
+
 *** Begin area
 *** End area
 ** Area-Releases has a mixture of single table paginated (Releases) and multitable with subheadings (Relationships)
@@ -32605,3 +32627,54 @@ or letting pageDefinitions specify a custom extractor for weird pages
 
 Just say the word.
 #+end_example
+
+** Upcase second char in "“recording location for” relationships" ==> "“Recording location for” relationships"
+
+** handle "Local" disambigs/comments
+
+In the uploaded userscript
+
+#+begin_example
+                                    // If a main column was identified (via config or detection), perform the extraction
+                                    if (mainColIdx !== -1) {
+                                        const targetCell = newRow.cells[mainColIdx];
+                                        if (targetCell) {
+                                            const nameLink = targetCell.querySelector('a bdi')?.closest('a');
+                                            if (nameLink) tdName.appendChild(nameLink.cloneNode(true));
+                                            const commentBdi = targetCell.querySelector('.comment bdi');
+                                            if (commentBdi) tdComment.textContent = commentBdi.textContent.trim();
+                                        }
+                                    }
+#+end_example
+
+Do not only account for the "MB-Name" column to be found inside '<bdi>' elements and the "Comment" column inside '<span class="comment"> --> <bdi>'
+as can be seen in the following example:
+
+#+begin_example
+<td>
+  <a class="wrap-anywhere" href="/release/9e630e98-055b-49aa-857b-981bb4e3c70f">
+    <bdi>A Town Hall Concert
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>sterero
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+The extraction would be "MB-Name: A Town Hall Concert", "Comment: stereo" in this case,
+but also support the following fragment
+
+#+begin_example
+<td>German
+  <!-- -->
+  <!-- -->(
+  <span class="comment">primary
+  </span>)
+</td>
+#+end_example
+
+with the "MB-Name" column to be found right after the '<td>' element and the "Comment" column inside '<span class="comment">' without the inner '<bdi>'
+
+The extraction would be "MB-Name: German", "Comment: primary" in this case.

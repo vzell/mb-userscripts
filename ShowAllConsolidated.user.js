@@ -321,25 +321,38 @@ let changelog = [
             type: 'instrument-artists',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/artists/),
             buttons: [ { label: 'Show all Artists for Instruments' } ],
+            features: {
+                splitArea: true,
+                extractMainColumn: 'Artist' // Specific header
+            },
             tableMode: 'single'
         },
         {
             type: 'instrument-releases',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/releases/),
             buttons: [ { label: 'Show all Releases for Instruments' } ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release' // Specific header
+            },
             tableMode: 'single'
         },
         {
             type: 'instrument-recordings',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/recordings/),
             buttons: [ { label: 'Show all Recordings for Instruments' } ],
+            features: {
+                extractMainColumn: 'Name' // Specific header
+            },
             tableMode: 'single'
         },
         {
             type: 'instrument-aliases',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Instruments' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
             tableMode: 'single'
         },
         // Area pages
@@ -397,18 +410,27 @@ let changelog = [
             type: 'area-aliases',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Areas' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
             tableMode: 'single'
         },
         {
             type: 'area-recordings-filtered',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Areas (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'single' // Paginated single list
         },
         {
             type: 'area-recordings',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Areas' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'multi',
             non_paginated: true
         },
@@ -416,6 +438,9 @@ let changelog = [
             type: 'area-works-filtered',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Works for Areas (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'single' // Paginated single list
         },
         {
@@ -423,6 +448,9 @@ let changelog = [
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Works for Areas' } ],
             tableMode: 'multi',
+            features: {
+                extractMainColumn: 'Title'
+            },
             non_paginated: true
         },
         // Place pages
@@ -1709,6 +1737,7 @@ let changelog = [
                 let areaIdx = -1;
                 let mainColIdx = -1;
                 let indicesToExclude = [];
+                const headerNames = []; // Array to store header names for debugging
 
                 // Retrieve configuration for the main column extraction
                 const mainColConfig = activeDefinition.features?.extractMainColumn;
@@ -1725,6 +1754,8 @@ let changelog = [
                 if (referenceTable) {
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
+                        headerNames[idx] = txt; // Store the name
+
                         if (Lib.settings.sa_remove_rel && txt.startsWith('Relationships')) indicesToExclude.push(idx);
                         else if (Lib.settings.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToExclude.push(idx);
                         else if (Lib.settings.sa_remove_rating && txt.startsWith('Rating')) indicesToExclude.push(idx);
@@ -1745,10 +1776,10 @@ let changelog = [
                     });
                 }
 
-                Lib.debug('init', `Determined mainColIdx: ${mainColIdx} for pageType: ${pageType}`);
+                // Updated Debug Output with Column Names
                 Lib.debug(
                     'indices',
-                    `Detected indices → mainColIdx=${mainColIdx}, countryDateIdx=${countryDateIdx}, areaIdx=${areaIdx}, locationIdx=${locationIdx}, excluded=[${indicesToExclude.join(',')}]`
+                    `Detected indices → mainColIdx=${mainColIdx} (${headerNames[mainColIdx] || 'N/A'}), countryDateIdx=${countryDateIdx} (${headerNames[countryDateIdx] || 'N/A'}), areaIdx=${areaIdx} (${headerNames[areaIdx] || 'N/A'}), locationIdx=${locationIdx} (${headerNames[locationIdx] || 'N/A'}), excluded=[${indicesToExclude.join(',')}] for pageType: ${pageType}`
                 );
 
                 let rowsInThisPage = 0;
