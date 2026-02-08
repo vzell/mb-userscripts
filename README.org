@@ -31702,6 +31702,52 @@ All other column splitting works, is the culprit somewhere in "// Handling Area 
 
 #+end_example
 
+**** after index fix
+
+In the uploaded script,
+
+please change the current code for "Area" splitting in
+
+#+begin_example
+                                    // Handling Area split (MB-Area and Country)
+                                    const tdAreaOnly = document.createElement('td');
+                                    const tdCountryOnly = document.createElement('td');
+                                    if (typesWithSplitArea.includes(pageType) && areaIdx !== -1) {
+                                        const locCell = newRow.cells[areaIdx];
+                                        if (locCell) {
+                                            locCell.querySelectorAll('a').forEach(a => {
+                                                const href = a.getAttribute('href');
+                                                const clonedA = a.cloneNode(true);
+                                                if (href && href.includes('/area/')) {
+                                                    const flagSpan = a.closest('.flag');
+                                                    if (flagSpan) {
+                                                        const flagImg = flagSpan.querySelector('img')?.outerHTML || '';
+                                                        const abbr = flagSpan.querySelector('abbr');
+                                                        const countryCode = abbr ? abbr.textContent.trim() : '';
+                                                        const countryFullName = abbr?.getAttribute('title') || '';
+                                                        const countryHref = a.getAttribute('href') || '#';
+                                                        const span = document.createElement('span');
+                                                        span.className = flagSpan.className;
+                                                        if (countryFullName && countryCode) {
+                                                            span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
+                                                        } else {
+                                                            span.innerHTML = flagSpan.innerHTML;
+                                                        }
+                                                        tdCountryOnly.appendChild(span);
+                                                    } else {
+                                                        if (tdAreaOnly.hasChildNodes()) tdAreaOnly.appendChild(document.createTextNode(', '));
+                                                        tdAreaOnly.appendChild(clonedA);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+#+end_example
+
+to use a more robust "Node-based Splitting" approach. Instead of just looking for <a> tags, we should iterate through
+all childNodes. This ensures that the commas, the text inside aliases (<i>), and the specific flag spans are correctly
+sorted into their respective new columns while maintaining the original MusicBrainz styling.
+
 Here are the typical HTML structures of the initial "Area" column
 
 #+begin_example

@@ -1942,33 +1942,45 @@ let changelog = [
                                     const tdAreaOnly = document.createElement('td');
                                     const tdCountryOnly = document.createElement('td');
                                     if (typesWithSplitArea.includes(pageType) && areaIdx !== -1) {
-                                        const locCell = newRow.cells[areaIdx];
-                                        if (locCell) {
-                                            locCell.querySelectorAll('a').forEach(a => {
-                                                const href = a.getAttribute('href');
-                                                const clonedA = a.cloneNode(true);
-                                                if (href && href.includes('/area/')) {
-                                                    const flagSpan = a.closest('.flag');
-                                                    if (flagSpan) {
-                                                        const flagImg = flagSpan.querySelector('img')?.outerHTML || '';
-                                                        const abbr = flagSpan.querySelector('abbr');
-                                                        const countryCode = abbr ? abbr.textContent.trim() : '';
-                                                        const countryFullName = abbr?.getAttribute('title') || '';
-                                                        const countryHref = a.getAttribute('href') || '#';
-                                                        const span = document.createElement('span');
-                                                        span.className = flagSpan.className;
-                                                        if (countryFullName && countryCode) {
-                                                            span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
-                                                        } else {
-                                                            span.innerHTML = flagSpan.innerHTML;
-                                                        }
-                                                        tdCountryOnly.appendChild(span);
-                                                    } else {
-                                                        if (tdAreaOnly.hasChildNodes()) tdAreaOnly.appendChild(document.createTextNode(', '));
-                                                        tdAreaOnly.appendChild(clonedA);
+                                        const areaCell = newRow.cells[areaIdx];
+                                        if (areaCell) {
+                                            const nodes = Array.from(areaCell.childNodes);
+                                            // Identify the node that contains the flag (the country)
+                                            const countryNodeIndex = nodes.findIndex(node =>
+                                                node.nodeType === 1 && (node.classList.contains('flag') || node.querySelector('.flag'))
+                                            );
+
+                                            nodes.forEach((node, idx) => {
+                                                if (idx === countryNodeIndex) {
+                                                    // This is the country node, move to Country column
+                                                    tdCountryOnly.appendChild(node.cloneNode(true));
+                                                } else {
+                                                    // Check if this node is a comma/whitespace separator adjacent to the country
+                                                    // We skip these to avoid dangling commas like "Philadelphia, "
+                                                    const isCommaSeparator = node.nodeType === 3 && node.textContent.trim() === ',';
+                                                    const isAdjacentToCountry = (idx === countryNodeIndex - 1 || idx === countryNodeIndex + 1);
+
+                                                    if (isCommaSeparator && isAdjacentToCountry) {
+                                                        return;
                                                     }
+
+                                                    // All other nodes (smaller areas, aliases, separators) go to MB-Area
+                                                    tdAreaOnly.appendChild(node.cloneNode(true));
                                                 }
                                             });
+
+                                            // Cleanup: Remove any leading/trailing commas or empty text nodes from the new cells
+                                            const trimCell = (cell) => {
+                                                while (cell.firstChild && cell.nodeType === 1 && (cell.firstChild.nodeType === 3 && (cell.firstChild.textContent.trim() === ',' || !cell.firstChild.textContent.trim()))) {
+                                                    cell.removeChild(cell.firstChild);
+                                                }
+                                                while (cell.lastChild && cell.nodeType === 1 && (cell.lastChild.nodeType === 3 && (cell.lastChild.textContent.trim() === ',' || !cell.lastChild.textContent.trim()))) {
+                                                    cell.removeChild(cell.lastChild);
+                                                }
+                                            };
+
+                                            trimCell(tdAreaOnly);
+                                            trimCell(tdCountryOnly);
                                         }
                                     }
 
