@@ -45,6 +45,8 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '2.3.3+2026-02-08', description: 'Fix URL construction to preserve query parameters (fixes Search pages). Added extra debugging for table detection.'},
+    {version: '2.3.2+2026-02-08', description: 'Fix support for Search pages: target .pageselector-results instead of h2 for row counts/filters.'},
     {version: '2.3.1+2026-02-07', description: 'Fix detection of filtered MusicBrainz pages (link_type_id) to allow proper pagination instead of treating them as overview pages (e.g. Artist-Relationships.'},
     {version: '2.3.0+2026-02-05', description: 'Handle multitable pages of type "non_paginated" like Place-Performances.'},
     {version: '2.2.1+2026-02-04', description: 'Refactor column removal in final rendered table. Supports now "Release events" column from jesus2099 Super Mind Control script.'},
@@ -301,16 +303,17 @@ let changelog = [
     // | Releasegroup-Releases   | single table, subgrouping | x         | h2, repeating on paginated pages     |
     // | Place-Performances, ... | single table, subgrouping |           | h2, repeating on single page         |
     // | Events                  | single table              | x         | h3,                                  |
+    // | Search                  | single table              | x         | p.pageselector-results               |
 
     // Define all supported page types, their detection logic, and specific UI configurations here.
     const pageDefinitions = [
         // Search pages
-        // TODO: Set 'Found 43 results for "guitar"' as the anchor for number of found rows
         {
             type: 'search',
             match: (path) => path.includes('/search'),
             buttons: [ { label: 'Show all Search results' } ],
-            tableMode: 'single'
+            tableMode: 'single',
+            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
         },
         // Instrument pages
         {
@@ -633,7 +636,7 @@ let changelog = [
     }
 
     // 2. Locate Header
-    // TODO: probably need to be fixed for "Search" pages - should also be refactored in the "pageDefinitions" variable
+    // Refactored to handle "Search" pages (generic h1) and typical entity headers
     let headerContainer = document.querySelector('.artistheader h1') ||
                           document.querySelector('.rgheader h1') ||
                           document.querySelector('.labelheader h1') ||
@@ -642,6 +645,7 @@ let changelog = [
                           document.querySelector('.areaheader h1') ||
                           document.querySelector('.recordingheader h1') ||
                           document.querySelector('h1 a bdi')?.parentNode ||
+                          document.querySelector('#content h1') || // Often catches search result headers
                           document.querySelector('h1');
 
     if (pageType) Lib.prefix = `[VZ-ShowAllEntities: ${pageType}]`;
@@ -955,6 +959,14 @@ let changelog = [
 
         Lib.debug('render', `Searching for target H2. Current pageType: ${pageType}`);
 
+        // Prioritize explicit selector from definition (e.g., for Search pages which have no h2)
+        if (activeDefinition && activeDefinition.rowTargetSelector) {
+            targetH2 = document.querySelector(activeDefinition.rowTargetSelector);
+            if (targetH2) {
+                Lib.debug('render', `Target found using rowTargetSelector: ${activeDefinition.rowTargetSelector}`);
+            }
+        }
+
         if (!targetH2) {
             Lib.debug('render', 'Target H2 not found by specific type, falling back to document position logic.');
             for (let i = 0; i < allH2s.length; i++) {
@@ -967,10 +979,10 @@ let changelog = [
             }
         }
 
-        let targetH2Name = targetH2.textContent.trim().substring(0, 30)
-
         if (targetH2) {
-            Lib.debug('render', `Target H2 identified: "${targetH2Name}..."`);
+            // Safe access to textContent
+            let targetH2Name = targetH2.textContent ? targetH2.textContent.trim().substring(0, 30) : 'Unknown Header';
+            Lib.debug('render', `Target element identified: "${targetH2Name}..."`);
 
             const existing = targetH2.querySelector('.mb-row-count-stat');
             if (existing) {
@@ -1006,7 +1018,7 @@ let changelog = [
                 }
             }
 
-            Lib.debug('render', `Updated H2 header ${targetH2Name} count: ${countText}`);
+            Lib.debug('render', `Updated header/target ${targetH2Name} count: ${countText}`);
         } else {
             Lib.debug('render', 'Failed to identify a target H2 header for count update.');
         }
@@ -1581,10 +1593,6 @@ let changelog = [
         let totalRenderingTime = 0;
 
         const baseUrl = window.location.origin + window.location.pathname;
-        const fetchUrl = new URL(baseUrl);
-        const html = await fetchHtml(fetchUrl.toString());
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-
         let pagesProcessed = 0;
         let cumulativeFetchTime = 0;
         let lastCategorySeenAcrossPages = null;
@@ -1599,18 +1607,16 @@ let changelog = [
                 pagesProcessed++;
 
                 const pageStartTime = performance.now();
-                const fetchUrl = new URL(baseUrl);
+
+                // FIX: Initialize fetchUrl from the full current URL to preserve Search parameters (query, type, etc.)
+                const fetchUrl = new URL(window.location.href);
                 fetchUrl.searchParams.set('page', p.toString());
 
-                // Apply link_type_id, and VA (Various Artists) parameters for specific pageTypes
                 if (overrideParams) {
                     Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
-                } else {
-                    if (params.has('direction')) fetchUrl.searchParams.set('direction', params.get('direction'));
-                    if (params.has('link_type_id')) fetchUrl.searchParams.set('link_type_id', params.get('link_type_id'));
-                    if (params.has('all')) fetchUrl.searchParams.set('all', params.get('all'));
-                    if (params.has('va')) fetchUrl.searchParams.set('va', params.get('va'));
                 }
+
+                Lib.debug('fetch', `Fetching URL for page ${p}: ${fetchUrl.toString()}`);
 
                 const html = await fetchHtml(fetchUrl.toString());
                 const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -1675,8 +1681,11 @@ let changelog = [
                         });
                     });
                 } else {
-                    const tableBody = doc.querySelector('table.tbl tbody');
+                    // Try to find tbody. If not found, fall back to table (useful for non-standard tables like some search results)
+                    const tableBody = doc.querySelector('table.tbl tbody') || doc.querySelector('table.tbl');
+
                     if (tableBody) {
+                        Lib.debug('parse', `Table body found. Processing child nodes. Total nodes: ${tableBody.childNodes.length}`);
                         let currentStatus = 'Unknown';
                         let seenFetchSubgroups = new Map();  // needed for unique subgroup header names
 
@@ -1850,6 +1859,8 @@ let changelog = [
                                 }
                             }
                         });
+                    } else {
+                        Lib.debug('parse', 'No table body found in fetched document.');
                     }
                 }
                 const pageDuration = performance.now() - pageStartTime;
@@ -2027,7 +2038,7 @@ let changelog = [
             }
         }
 
-        let targetH2Name = targetHeader.textContent.trim().substring(0, 30)
+        let targetH2Name = targetHeader ? targetHeader.textContent.trim().substring(0, 30) : 'Unknown';
 
         if (!query) {
             Lib.info('render', 'No query provided; performing initial cleanup of existing elements.');
