@@ -1942,7 +1942,7 @@ let changelog = [
                                     const tdAreaOnly = document.createElement('td');
                                     const tdCountryOnly = document.createElement('td');
                                     if (typesWithSplitArea.includes(pageType) && areaIdx !== -1) {
-                                        const locCell = newRow.cells[locationIdx];
+                                        const locCell = newRow.cells[areaIdx];
                                         if (locCell) {
                                             locCell.querySelectorAll('a').forEach(a => {
                                                 const href = a.getAttribute('href');

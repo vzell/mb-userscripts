@@ -31583,7 +31583,7 @@ In the uploaded script,
 
 where is the missing piece ?
 I get empty columns for "MB-Name" and "Country", also the column headers get rendered in the final datatable.
-Do we need more debug log statements to pinpoint the issue. All other column splitting works, is the culprit somewhere in "// Handling Area split (MB-Area and Country)"
+Do we need more debug log statements to pinpoint the issue.
 
 #+begin_example
 🚀 Settings entry added to Editing menu. 
@@ -31661,6 +31661,139 @@ Do we need more debug log statements to pinpoint the issue. All other column spl
 🎨 Inserting count span before referenceNode: SPAN 
 🎨 filterContainer is already attached to targetH2. 
 🎨 Updated header/target ▼Labels(300)✕CcRx count: (300) 
+#+end_example
+
+All other column splitting works, is the culprit somewhere in "// Handling Area split (MB-Area and Country)"
+
+#+begin_example
+                                    // Handling Area split (MB-Area and Country)
+                                    const tdAreaOnly = document.createElement('td');
+                                    const tdCountryOnly = document.createElement('td');
+                                    if (typesWithSplitArea.includes(pageType) && areaIdx !== -1) {
+                                        const locCell = newRow.cells[locationIdx];
+                                        if (locCell) {
+                                            locCell.querySelectorAll('a').forEach(a => {
+                                                const href = a.getAttribute('href');
+                                                const clonedA = a.cloneNode(true);
+                                                if (href && href.includes('/area/')) {
+                                                    const flagSpan = a.closest('.flag');
+                                                    if (flagSpan) {
+                                                        const flagImg = flagSpan.querySelector('img')?.outerHTML || '';
+                                                        const abbr = flagSpan.querySelector('abbr');
+                                                        const countryCode = abbr ? abbr.textContent.trim() : '';
+                                                        const countryFullName = abbr?.getAttribute('title') || '';
+                                                        const countryHref = a.getAttribute('href') || '#';
+                                                        const span = document.createElement('span');
+                                                        span.className = flagSpan.className;
+                                                        if (countryFullName && countryCode) {
+                                                            span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
+                                                        } else {
+                                                            span.innerHTML = flagSpan.innerHTML;
+                                                        }
+                                                        tdCountryOnly.appendChild(span);
+                                                    } else {
+                                                        if (tdAreaOnly.hasChildNodes()) tdAreaOnly.appendChild(document.createTextNode(', '));
+                                                        tdAreaOnly.appendChild(clonedA);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+
+#+end_example
+
+Here are the typical HTML structures of the initial "Area" column
+
+#+begin_example
+<td>
+  <a href="/area/0eeb01c2-6e31-46ad-96b8-319749f731d2">
+    <bdi>Philadelphia
+    </bdi>
+  </a>,
+  <a href="/area/75d8fdcf-03e9-43d9-9399-131b8e118b0b">
+    <bdi>Pennsylvania
+    </bdi>
+  </a>,
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+</td>
+
+<td>
+  <a href="/area/e8e317a1-268c-4e46-9db1-f10af959ffca">
+    <bdi>Amsterdam
+    </bdi>
+  </a>,
+  <a href="/area/61d4a9f2-68f1-4cec-a25f-e8f953954459">
+    <bdi>Noord-Holland
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">North Holland
+      </i>
+    </bdi>)
+  </span>,
+  <span class="flag flag-NL">
+    <a href="/area/ef1b7cc0-cd26-36f4-8ea0-04d9623786c7">
+      <bdi>Netherlands
+      </bdi>
+    </a>
+  </span>,
+  <a href="/area/aee96acc-29ab-4f1b-b23d-52012b29c25b">
+    <bdi>Kingdom of the Netherlands
+    </bdi>
+  </a>
+</td>
+
+<td>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+</td>
+
+<td>
+  <a href="/area/a36544c1-cb40-4f44-9e0e-7a5a69e403a8">
+    <bdi>New Jersey
+    </bdi>
+  </a>,
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+</td>
+#+end_example
+
+The new "Country" column should always be extracted from the
+
+#+begin_example
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+#+end_example
+
+leaving the flag intact.
+
+Everything before the "," in front of "Country" should be part of the new "MB-Area" column also the text inside the '<i title="Primary alias">'
+
+#+begin_example
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">North Holland
+      </i>
+    </bdi>)
+  </span>,
 #+end_example
 
 *** Begin area
@@ -32425,6 +32558,4 @@ supporting multiple possible headers (mainSplitHeader: ['Name','Title'])
 or letting pageDefinitions specify a custom extractor for weird pages
 
 Just say the word.
-
-
 #+end_example
