@@ -1941,7 +1941,7 @@ let changelog = [
                                     // Handling Area split (MB-Area and Country)
                                     const tdAreaOnly = document.createElement('td');
                                     const tdCountryOnly = document.createElement('td');
-                                    if (typesWithSplitArea.includes(pageType) && locationIdx !== -1) {
+                                    if (typesWithSplitArea.includes(pageType) && areaIdx !== -1) {
                                         const locCell = newRow.cells[locationIdx];
                                         if (locCell) {
                                             locCell.querySelectorAll('a').forEach(a => {
