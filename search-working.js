@@ -346,35 +346,50 @@ let changelog = [
             type: 'area-artists',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
             buttons: [ { label: 'Show all Artists for Areas' } ],
-            features: { splitArea: true },
+            features: {
+                splitArea: true,
+                extractMainColumn: 'Artist' // Specific header
+            },
             tableMode: 'single'
         },
         {
             type: 'area-events',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
             buttons: [ { label: 'Show all Events for Areas' } ],
-            features: { splitLocation: true },
+            features: {
+                splitLocation: true,
+                extractMainColumn: 'Event'
+            },
             tableMode: 'single'
         },
         {
             type: 'area-labels',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/labels/),
             buttons: [ { label: 'Show all Labels for Areas' } ],
-            features: { splitArea: true },
+            features: {
+                splitArea: true,
+                extractMainColumn: 'Label' // Specific header
+            },
             tableMode: 'single'
         },
         {
             type: 'area-releases',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/),
             buttons: [ { label: 'Show all Releases for Areas' } ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
             tableMode: 'single'
         },
         {
             type: 'area-places',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/places/),
             buttons: [ { label: 'Show all Places for Areas' } ],
-            features: { splitArea: true },
+            features: {
+                splitArea: true,
+                extractMainColumn: 'Place'
+            },
             tableMode: 'single'
         },
         {
@@ -414,18 +429,27 @@ let changelog = [
             type: 'place-events',
             match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
             buttons: [ { label: 'Show all Events for Places' } ],
+            features: {
+                extractMainColumn: 'Event'
+            },
             tableMode: 'single'
         },
         {
             type: 'place-performances-filtered',
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Performances for Recordings (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'single' // Paginated single list
         },
         {
             type: 'place-performances',
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Performances for Recordings' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'multi',
             non_paginated: true
         },
@@ -446,7 +470,10 @@ let changelog = [
             type: 'series-releases',
             match: (path) => path.includes('/series'),
             buttons: [ { label: 'Show all Releases for Series' } ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
             tableMode: 'single'
         },
         // Labels pages
@@ -474,7 +501,10 @@ let changelog = [
             type: 'label-releases',
             match: (path) => path.includes('/label'),
             buttons: [ { label: 'Show all Releases for Labels' } ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
             tableMode: 'single'
         },
         // Work pages
@@ -488,12 +518,18 @@ let changelog = [
             type: 'work-recordings-filtered',
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Work (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'single' // Paginated single list
         },
         {
             type: 'work-recordings',
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Work' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'multi',
             non_paginated: true
         },
@@ -541,14 +577,20 @@ let changelog = [
                 { label: 'Official artist releases', params: { va: '0' } },
                 { label: 'Various artist releases', params: { va: '1' } }
             ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
             tableMode: 'single'
         },
         {
             type: 'recordings',
             match: (path) => path.includes('/recordings'),
             buttons: [ { label: 'Show all Recordings for Artist' } ],
-            features: { splitCD: false }, // Explicitly false (default), but shown for clarity
+            features: {
+                splitCD: false, // Explicitly false (default), but shown for clarity
+                extractMainColumn: 'Name'
+            },
             tableMode: 'single'
         },
         {
@@ -562,6 +604,9 @@ let changelog = [
             type: 'works',
             match: (path) => path.includes('/works'),
             buttons: [ { label: 'Show all Works for Artist' } ],
+            features: {
+                extractMainColumn: 'Work'
+            },
             tableMode: 'single'
         },
         // ReleaseGroups pages
@@ -575,7 +620,10 @@ let changelog = [
             type: 'releasegroup-releases',
             match: (path) => path.includes('/release-group/'),
             buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
             tableMode: 'multi',
             non_paginated: false
         },
@@ -604,7 +652,10 @@ let changelog = [
             type: 'recording-releases',
             match: (path) => path.includes('/recording'),
             buttons: [ { label: 'Show all Releases for Recording' } ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release title'
+            },
             tableMode: 'multi',
             non_paginated: false
         },
@@ -613,7 +664,10 @@ let changelog = [
             type: 'events',
             match: (path) => path.includes('/events'),
             buttons: [ { label: 'Show all Events for Artist' } ],
-            features: { splitLocation: true },
+            features: {
+                splitLocation: true,
+                extractMainColumn: 'Event'
+            },
             tableMode: 'single'
         }
     ];
@@ -1469,8 +1523,12 @@ let changelog = [
             });
         }
 
-        // On "Artist-Releasegroups" pages we do not create the "MB-Name" and disambiguation "Comment" columns
-        if (pageType !== 'artist-releasegroups') {
+        // Check if the generic split feature is enabled for this page definition
+        const mainColConfig = activeDefinition.features?.extractMainColumn;
+        const isMainColEnabled = mainColConfig !== undefined && mainColConfig !== null;
+
+        // On pages where the configuration is enabled, create the "MB-Name" and "Comment" columns
+        if (isMainColEnabled) {
             const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
             if (!headersText.includes('MB-Name')) {
                 const thN = document.createElement('th');
@@ -1650,9 +1708,17 @@ let changelog = [
                 let areaIdx = -1;
                 let mainColIdx = -1;
                 let indicesToExclude = [];
-                // Header name for which a generic split into MB-Name and Comment columns will be done
-                // TODO: Add 'Label' for "Area-Labels" view, but take care that in "Label" is also used in "Releasegroup-Releases" views
-                const mainHeaders = ['Recording', 'Event', 'Release', 'Work', 'Title', 'Name', 'Alias', 'Place'];
+
+                // Retrieve configuration for the main column extraction
+                const mainColConfig = activeDefinition.features?.extractMainColumn;
+
+                // If configuration is a specific number, force that index immediately
+                if (typeof mainColConfig === 'number') {
+                    mainColIdx = mainColConfig;
+                    Lib.debug('init', `mainColIdx forced to ${mainColIdx} by configuration.`);
+                }
+                // Prepare candidates list if config is string or array
+                const mainColCandidates = Array.isArray(mainColConfig) ? mainColConfig : (mainColConfig ? [mainColConfig] : []);
 
                 const referenceTable = doc.querySelector('table.tbl');
                 if (referenceTable) {
@@ -1669,16 +1735,16 @@ let changelog = [
                         } else if (typesWithSplitArea.includes(pageType) && txt === 'Area') {
                             areaIdx = idx;
                         }
-                        if (mainHeaders.includes(txt)) mainColIdx = idx;
+
+                        // Dynamic detection based on config candidates
+                        // We only search if mainColIdx wasn't already forced by a number config
+                        if (mainColIdx === -1 && mainColCandidates.includes(txt)) {
+                            mainColIdx = idx;
+                        }
                     });
                 }
 
-                Lib.debug('init', `Checking default mainColIdx for pageType: ${pageType}, current mainColIdx: ${mainColIdx}`);
-                if (mainColIdx === -1 && (pageType === 'releasegroup-releases')) {
-                    mainColIdx = 0;
-                    Lib.debug('init', `mainColIdx was -1, forced to 0 for pageType: ${pageType}`);
-                }
-
+                Lib.debug('init', `Determined mainColIdx: ${mainColIdx} for pageType: ${pageType}`);
                 Lib.debug(
                     'indices',
                     `Detected indices → mainColIdx=${mainColIdx}, countryDateIdx=${countryDateIdx}, areaIdx=${areaIdx}, locationIdx=${locationIdx}, excluded=[${indicesToExclude.join(',')}]`
@@ -1788,7 +1854,9 @@ let changelog = [
                                     // Extraction logic for MB-Name and Comment
                                     const tdName = document.createElement('td');
                                     const tdComment = document.createElement('td');
-                                    if (mainColIdx !== -1 && pageType !== 'artist-releasegroups') {
+
+                                    // If a main column was identified (via config or detection), perform the extraction
+                                    if (mainColIdx !== -1) {
                                         const targetCell = newRow.cells[mainColIdx];
                                         if (targetCell) {
                                             const nameLink = targetCell.querySelector('a bdi')?.closest('a');

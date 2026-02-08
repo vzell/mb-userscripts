@@ -31292,7 +31292,7 @@ visual feedback (“cleared”) animation
 * refactor in memory column removel to filter large pagination pages
 
 
-* TODO:
+* TODO - last ones for now
 ** generalize column data splitting
 *** Area
 **** initial
@@ -32085,6 +32085,7 @@ This replaces the block containing the mainHeaders array and the releasegroup-re
 JavaScript
                 let countryDateIdx = -1;
                 let locationIdx = -1;
+                let areaIdx = -1;
                 let mainColIdx = -1;
                 let indicesToExclude = [];
 
@@ -32111,6 +32112,8 @@ JavaScript
                             countryDateIdx = idx;
                         } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
                             locationIdx = idx;
+                        } else if (typesWithSplitArea.includes(pageType) && txt === 'Area') {
+                            areaIdx = idx;
                         }
 
                         // Dynamic detection based on config candidates
@@ -32140,7 +32143,6 @@ JavaScript
                                             if (commentBdi) tdComment.textContent = commentBdi.textContent.trim();
                                         }
                                     }
-                                    
 #+end_example
 
 *** chatgpt
