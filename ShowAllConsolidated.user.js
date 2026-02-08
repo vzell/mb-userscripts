@@ -315,6 +315,9 @@ let changelog = [
             match: (path) => path.includes('/search'),
             buttons: [ { label: 'Show all Search results' } ],
             tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name' // Specific header
+            },
             rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
         },
         // Instrument pages

@@ -31294,7 +31294,7 @@ visual feedback (“cleared”) animation
 
 * TODO - last ones for now
 ** generalize column data splitting
-*** Area
+*** DONE Area
 **** initial
 
 In the uploaded script,
@@ -32822,4 +32822,4 @@ Console output:
   </span>
 </td>
 #+end_example
-
+** search pages sometime have invisble column 0 and last column (Edit)
