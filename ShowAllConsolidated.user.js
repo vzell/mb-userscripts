@@ -22,6 +22,7 @@
 // @match        *://*.musicbrainz.org/place/*
 // @match        *://*.musicbrainz.org/area/*
 // @match        *://*.musicbrainz.org/instrument/*
+// @match        *://*.musicbrainz.org/event/*
 // @match        *://*.musicbrainz.org/search*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
@@ -320,7 +321,7 @@ let changelog = [
         {
             type: 'instrument-artists',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/artists/),
-            buttons: [ { label: 'Show all Artists for Instruments' } ],
+            buttons: [ { label: 'Show all Artists for Instrument' } ],
             features: {
                 splitArea: true,
                 extractMainColumn: 'Artist' // Specific header
@@ -330,7 +331,7 @@ let changelog = [
         {
             type: 'instrument-releases',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/releases/),
-            buttons: [ { label: 'Show all Releases for Instruments' } ],
+            buttons: [ { label: 'Show all Releases for Instrument' } ],
             features: {
                 splitCD: true,
                 extractMainColumn: 'Release' // Specific header
@@ -340,7 +341,7 @@ let changelog = [
         {
             type: 'instrument-recordings',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/recordings/),
-            buttons: [ { label: 'Show all Recordings for Instruments' } ],
+            buttons: [ { label: 'Show all Recordings for Instrument' } ],
             features: {
                 extractMainColumn: 'Name' // Specific header
             },
@@ -349,7 +350,7 @@ let changelog = [
         {
             type: 'instrument-aliases',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Instruments' } ],
+            buttons: [ { label: 'Show all Aliases for Instrument' } ],
             features: {
                 extractMainColumn: 'Locale' // Specific header
             },
@@ -359,7 +360,7 @@ let changelog = [
         {
             type: 'area-artists',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
-            buttons: [ { label: 'Show all Artists for Areas' } ],
+            buttons: [ { label: 'Show all Artists for Area' } ],
             features: {
                 splitArea: true,
                 extractMainColumn: 'Artist' // Specific header
@@ -369,7 +370,7 @@ let changelog = [
         {
             type: 'area-events',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
-            buttons: [ { label: 'Show all Events for Areas' } ],
+            buttons: [ { label: 'Show all Events for Area' } ],
             features: {
                 splitLocation: true,
                 extractMainColumn: 'Event'
@@ -379,7 +380,7 @@ let changelog = [
         {
             type: 'area-labels',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/labels/),
-            buttons: [ { label: 'Show all Labels for Areas' } ],
+            buttons: [ { label: 'Show all Labels for Area' } ],
             features: {
                 splitArea: true,
                 extractMainColumn: 'Label' // Specific header
@@ -389,7 +390,7 @@ let changelog = [
         {
             type: 'area-releases',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/),
-            buttons: [ { label: 'Show all Releases for Areas' } ],
+            buttons: [ { label: 'Show all Releases for Area' } ],
             features: {
                 splitCD: true,
                 extractMainColumn: 'Release'
@@ -399,7 +400,7 @@ let changelog = [
         {
             type: 'area-places',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/places/),
-            buttons: [ { label: 'Show all Places for Areas' } ],
+            buttons: [ { label: 'Show all Places for Area' } ],
             features: {
                 splitArea: true,
                 extractMainColumn: 'Place'
@@ -409,7 +410,7 @@ let changelog = [
         {
             type: 'area-aliases',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Areas' } ],
+            buttons: [ { label: 'Show all Aliases for Area' } ],
             features: {
                 extractMainColumn: 'Locale' // Specific header
             },
@@ -418,7 +419,7 @@ let changelog = [
         {
             type: 'area-recordings-filtered',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Areas (filtered)' } ],
+            buttons: [ { label: 'Show all Recordings for Area (filtered)' } ],
             features: {
                 extractMainColumn: 'Title'
             },
@@ -427,7 +428,7 @@ let changelog = [
         {
             type: 'area-recordings',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Areas' } ],
+            buttons: [ { label: 'Show all Recordings for Area' } ],
             features: {
                 extractMainColumn: 'Title'
             },
@@ -437,7 +438,7 @@ let changelog = [
         {
             type: 'area-works-filtered',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Works for Areas (filtered)' } ],
+            buttons: [ { label: 'Show all Works for Area (filtered)' } ],
             features: {
                 extractMainColumn: 'Title'
             },
@@ -446,7 +447,7 @@ let changelog = [
         {
             type: 'area-works',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Works for Areas' } ],
+            buttons: [ { label: 'Show all Works for Area' } ],
             tableMode: 'multi',
             features: {
                 extractMainColumn: 'Title'
@@ -455,9 +456,18 @@ let changelog = [
         },
         // Place pages
         {
+            type: 'place-aliases',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Place' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
             type: 'place-events',
             match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
-            buttons: [ { label: 'Show all Events for Places' } ],
+            buttons: [ { label: 'Show all Events for Place' } ],
             features: {
                 extractMainColumn: 'Event'
             },
@@ -466,7 +476,7 @@ let changelog = [
         {
             type: 'place-performances-filtered',
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Recordings (filtered)' } ],
+            buttons: [ { label: 'Show all Performances for Place (filtered)' } ],
             features: {
                 extractMainColumn: 'Title'
             },
@@ -475,24 +485,21 @@ let changelog = [
         {
             type: 'place-performances',
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Recordings' } ],
+            buttons: [ { label: 'Show all Performances for Place' } ],
             features: {
                 extractMainColumn: 'Title'
             },
             tableMode: 'multi',
             non_paginated: true
         },
-        {
-            type: 'place-aliases',
-            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Place' } ],
-            tableMode: 'single'
-        },
         // Series pages
         {
             type: 'series-aliases',
             match: (path) => path.match(/\/series\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Series' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
             tableMode: 'single'
         },
         {
@@ -505,31 +512,40 @@ let changelog = [
             },
             tableMode: 'single'
         },
-        // Labels pages
+        // Label pages
         {
             type: 'label-aliases',
             match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Labels' } ],
+            buttons: [ { label: 'Show all Aliases for Label' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
             tableMode: 'single'
         },
         {
             type: 'label-relationships-filtered',
             match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Labels (filtered)' } ],
+            buttons: [ { label: 'Show all Relationships for Label (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title' // Specific header
+            },
             tableMode: 'multi',
             non_paginated: true
         },
         {
             type: 'label-relationships',
             match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Labels' } ],
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                extractMainColumn: 'Title' // Specific header
+            },
             tableMode: 'multi',
             non_paginated: true
         },
         {
             type: 'label-releases',
             match: (path) => path.includes('/label'),
-            buttons: [ { label: 'Show all Releases for Labels' } ],
+            buttons: [ { label: 'Show all Releases for Label' } ],
             features: {
                 splitCD: true,
                 extractMainColumn: 'Release'
@@ -541,6 +557,9 @@ let changelog = [
             type: 'work-aliases',
             match: (path) => path.match(/\/work\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Work' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
             tableMode: 'single'
         },
         {
@@ -567,14 +586,20 @@ let changelog = [
             type: 'artist-relationships-filtered',
             // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships (filtered)' } ],
+            buttons: [ { label: 'Show all Relationships for Artist (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'single' // Paginated single list
         },
         {
             type: 'artist-relationships',
             // Only match if NO link_type_id is present (the overview page)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artists' } ],
+            buttons: [ { label: 'Show all Relationships for Artist' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'multi',
             non_paginated: true
         },
@@ -582,7 +607,10 @@ let changelog = [
         {
             type: 'artist-aliases',
             match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Artists' } ],
+            buttons: [ { label: 'Show all Aliases for Artist' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
             tableMode: 'multi', // native tables, h2 headers
             non_paginated: true
         },
@@ -599,7 +627,7 @@ let changelog = [
             tableMode: 'multi' // native tables, h3 headers
         },
         {
-            type: 'releases',
+            type: 'artist-releases',
             // Artist Releases page (Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
             buttons: [
@@ -613,7 +641,7 @@ let changelog = [
             tableMode: 'single'
         },
         {
-            type: 'recordings',
+            type: 'artist-recordings',
             match: (path) => path.includes('/recordings'),
             buttons: [ { label: 'Show all Recordings for Artist' } ],
             features: {
@@ -622,15 +650,15 @@ let changelog = [
             },
             tableMode: 'single'
         },
+        // {
+        //     type: 'releases',
+        //     match: (path) => path.includes('/releases'),
+        //     buttons: [ { label: 'Show all Releases for Artist' } ],
+        //     features: { splitCD: true },
+        //     tableMode: 'single'
+        // },
         {
-            type: 'releases',
-            match: (path) => path.includes('/releases'),
-            buttons: [ { label: 'Show all Releases for Artist' } ],
-            features: { splitCD: true },
-            tableMode: 'single'
-        },
-        {
-            type: 'works',
+            type: 'artist-works',
             match: (path) => path.includes('/works'),
             buttons: [ { label: 'Show all Works for Artist' } ],
             features: {
@@ -642,7 +670,10 @@ let changelog = [
         {
             type: 'releasegroup-aliases',
             match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { releasegroup: 'Show all Aliases for Releasegroups' } ],
+            buttons: [ { label: 'Show all Aliases for Releasegroup' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
             tableMode: 'single'
         },
         {
@@ -656,11 +687,20 @@ let changelog = [
             tableMode: 'multi',
             non_paginated: false
         },
-        // Releases pages
+        // Release pages
+        {
+            type: 'release-aliases',
+            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Release' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
         {
             type: 'release-discids',
             match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/discids/),
-            buttons: [ { label: 'Show all Disc IDs for Releases' } ],
+            buttons: [ { label: 'Show all Disc IDs for Release' } ],
             tableMode: 'multi',
             non_paginated: false
         },
@@ -668,13 +708,16 @@ let changelog = [
         {
             type: 'recording-aliases',
             match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { recording: 'Show all Aliases for Recordings' } ],
+            buttons: [ { label: 'Show all Aliases for Recording' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
             tableMode: 'single'
         },
         {
             type: 'recording-fingerprints',
             match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/fingerprints/),
-            buttons: [ { recording: 'Show all Fingerprints for Recordings' } ],
+            buttons: [ { label: 'Show all Fingerprints for Recording' } ],
             tableMode: 'single'
         },
         {
@@ -689,6 +732,15 @@ let changelog = [
             non_paginated: false
         },
         // Event pages
+        {
+            type: 'event-aliases',
+            match: (path) => path.match(/\/event\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Event' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
         {
             type: 'events',
             match: (path) => path.includes('/events'),

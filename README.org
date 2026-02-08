@@ -32630,7 +32630,7 @@ Just say the word.
 
 ** Upcase second char in "“recording location for” relationships" ==> "“Recording location for” relationships"
 
-** handle "Local" disambigs/comments
+** handle "Locale" disambigs/comments
 
 In the uploaded userscript
 
@@ -32678,3 +32678,148 @@ but also support the following fragment
 with the "MB-Name" column to be found right after the '<td>' element and the "Comment" column inside '<span class="comment">' without the inner '<bdi>'
 
 The extraction would be "MB-Name: German", "Comment: primary" in this case.
+
+** No Locale output
+
+In the uploaded userscript
+
+why does the following code (in the case of https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases URLs, pageType: 'instrument-aliases')
+
+#+begin_example
+                                    // Extraction logic for MB-Name and Comment
+                                    const tdName = document.createElement('td');
+                                    const tdComment = document.createElement('td');
+
+                                    // If a main column was identified (via config or detection), perform the extraction
+                                    if (mainColIdx !== -1) {
+                                        const targetCell = newRow.cells[mainColIdx];
+                                        if (targetCell) {
+                                            // 1. Name Extraction: Supports <a><bdi>, plain <a>, or raw text (e.g., "German")
+                                            const nameLink = targetCell.querySelector('a bdi')?.closest('a') || targetCell.querySelector('a');
+                                            if (nameLink) {
+                                                tdName.appendChild(nameLink.cloneNode(true));
+                                            } else {
+                                                // Fallback: Clone cell and remove comment to extract pure text name
+                                                const cellClone = targetCell.cloneNode(true);
+                                                const commentInClone = cellClone.querySelector('.comment');
+                                                if (commentInClone) commentInClone.remove();
+                                                // Clean up parentheses often used as separators for plain text names
+                                                tdName.textContent = cellClone.textContent.replace(/[()]/g, '').trim();
+                                            }
+
+                                            // 2. Comment Extraction: Supports <span class="comment"><bdi> or just <span class="comment">
+                                            const commentEl = targetCell.querySelector('.comment');
+                                            if (commentEl) {
+                                                const commentBdi = commentEl.querySelector('bdi');
+                                                const rawComment = commentBdi ? commentBdi.textContent : commentEl.textContent;
+                                                // Strip surrounding parentheses and trim
+                                                tdComment.textContent = rawComment.replace(/[()]/g, '').trim();
+                                            }
+                                        }
+                                    }
+#+end_example
+
+NOT produce any output in the new "MB-Name" and "Comment" columns
+
+What should happen:
+
+Do not only account for the "MB-Name" column to be found inside '<bdi>' elements and the "Comment" column inside '<span class="comment"> --> <bdi>'
+as can be seen in the following example:
+
+#+begin_example
+<td>
+  <a class="wrap-anywhere" href="/release/9e630e98-055b-49aa-857b-981bb4e3c70f">
+    <bdi>A Town Hall Concert
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>sterero
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+The extraction would be "MB-Name: A Town Hall Concert", "Comment: stereo" in this case,
+but also support the following fragment
+
+#+begin_example
+<td>German
+  <!-- -->
+  <!-- -->(
+  <span class="comment">primary
+  </span>)
+</td>
+#+end_example
+
+with the "MB-Name" column to be found right after the '<td>' element and the "Comment" column inside '<span class="comment">' without the inner '<bdi>'
+
+The extraction would be "MB-Name: German", "Comment: primary" in this case.
+
+Console output:
+
+#+begin_example
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL basepath: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL path: /instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Query parameters:  
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Has "link_type_id": false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: instrument-aliases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: single 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing script for path: /instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Signalling other scripts to stop... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Starting fetch process... null
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 No pagination element found; assuming single page (maxPage = 1). 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Total pages to fetch: 1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Starting clutter element removal. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Fetching URL for page 1: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases?page=1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases?page=1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Detected indices → mainColIdx=5 (Locale), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: instrument-aliases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📝 Table body found. Processing child nodes. Total nodes: 27 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Page 1/1 processed in 0.67s. Rows on page: 27. Total: 27 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering starting... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting updateH2Count: filtered=27, total=27 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Searching for target H2. Current pageType: instrument-aliases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target element identified: "Aliases..." 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Appending filterContainer to targetH2. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Updated header/target Aliases count: (27) 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting renderFinalTable with 27 rows. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Final table structure → headers=6, rowCells=8 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Finished renderFinalTable. Injected 27 rows into DOM. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 cleanupHeaders() called → existing headers=[Alias | Sort name | Begin date | End date | Type | Locale] 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 No columns were matched for removal based on current settings. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Injecting synthetic header: MB-Name 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Injecting synthetic header: Comment 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Running final cleanup... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Initializing collapsible H2 headers... 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering finished in 3.40ms 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 27. Total Time: 0.68s 
+#+end_example
+
+** Add support for "Primary alias" in "comment"
+
+#+begin_example
+<td>
+  <span class="blank-icon">
+  </span>
+  <a class="wrap-anywhere" href="/event/26cead1c-a5fa-4677-873a-312412c6dc91">
+    <bdi>2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Southside Johnny &amp; The Asbury Jukes at The Stone Pony
+      </i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
