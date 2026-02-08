@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.2.1+2026-02-04
+// @version      2.3.3+2026-02-08
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -346,35 +346,50 @@ let changelog = [
             type: 'area-artists',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
             buttons: [ { label: 'Show all Artists for Areas' } ],
-            // TODO: features: { splitArea: true },
+            features: {
+                splitArea: true,
+                extractMainColumn: 'Artist' // Specific header
+            },
             tableMode: 'single'
         },
         {
             type: 'area-events',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
             buttons: [ { label: 'Show all Events for Areas' } ],
-            features: { splitLocation: true },
+            features: {
+                splitLocation: true,
+                extractMainColumn: 'Event'
+            },
             tableMode: 'single'
         },
         {
             type: 'area-labels',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/labels/),
             buttons: [ { label: 'Show all Labels for Areas' } ],
-            // TODO: features: { splitArea: true },
+            features: {
+                splitArea: true,
+                extractMainColumn: 'Label' // Specific header
+            },
             tableMode: 'single'
         },
         {
             type: 'area-releases',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/),
             buttons: [ { label: 'Show all Releases for Areas' } ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
             tableMode: 'single'
         },
         {
             type: 'area-places',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/places/),
             buttons: [ { label: 'Show all Places for Areas' } ],
-            // TODO: features: { splitArea: true },
+            features: {
+                splitArea: true,
+                extractMainColumn: 'Place'
+            },
             tableMode: 'single'
         },
         {
@@ -414,18 +429,27 @@ let changelog = [
             type: 'place-events',
             match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
             buttons: [ { label: 'Show all Events for Places' } ],
+            features: {
+                extractMainColumn: 'Event'
+            },
             tableMode: 'single'
         },
         {
             type: 'place-performances-filtered',
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Performances for Recordings (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'single' // Paginated single list
         },
         {
             type: 'place-performances',
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Performances for Recordings' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'multi',
             non_paginated: true
         },
@@ -446,7 +470,10 @@ let changelog = [
             type: 'series-releases',
             match: (path) => path.includes('/series'),
             buttons: [ { label: 'Show all Releases for Series' } ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
             tableMode: 'single'
         },
         // Labels pages
@@ -474,7 +501,10 @@ let changelog = [
             type: 'label-releases',
             match: (path) => path.includes('/label'),
             buttons: [ { label: 'Show all Releases for Labels' } ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
             tableMode: 'single'
         },
         // Work pages
@@ -488,12 +518,18 @@ let changelog = [
             type: 'work-recordings-filtered',
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Work (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'single' // Paginated single list
         },
         {
             type: 'work-recordings',
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Work' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'multi',
             non_paginated: true
         },
@@ -541,14 +577,20 @@ let changelog = [
                 { label: 'Official artist releases', params: { va: '0' } },
                 { label: 'Various artist releases', params: { va: '1' } }
             ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
             tableMode: 'single'
         },
         {
             type: 'recordings',
             match: (path) => path.includes('/recordings'),
             buttons: [ { label: 'Show all Recordings for Artist' } ],
-            features: { splitCD: false }, // Explicitly false (default), but shown for clarity
+            features: {
+                splitCD: false, // Explicitly false (default), but shown for clarity
+                extractMainColumn: 'Name'
+            },
             tableMode: 'single'
         },
         {
@@ -562,6 +604,9 @@ let changelog = [
             type: 'works',
             match: (path) => path.includes('/works'),
             buttons: [ { label: 'Show all Works for Artist' } ],
+            features: {
+                extractMainColumn: 'Work'
+            },
             tableMode: 'single'
         },
         // ReleaseGroups pages
@@ -575,7 +620,10 @@ let changelog = [
             type: 'releasegroup-releases',
             match: (path) => path.includes('/release-group/'),
             buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
             tableMode: 'multi',
             non_paginated: false
         },
@@ -604,7 +652,10 @@ let changelog = [
             type: 'recording-releases',
             match: (path) => path.includes('/recording'),
             buttons: [ { label: 'Show all Releases for Recording' } ],
-            features: { splitCD: true },
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release title'
+            },
             tableMode: 'multi',
             non_paginated: false
         },
@@ -613,7 +664,10 @@ let changelog = [
             type: 'events',
             match: (path) => path.includes('/events'),
             buttons: [ { label: 'Show all Events for Artist' } ],
-            features: { splitLocation: true },
+            features: {
+                splitLocation: true,
+                extractMainColumn: 'Event'
+            },
             tableMode: 'single'
         }
     ];
@@ -659,6 +713,7 @@ let changelog = [
     // 3. Set Feature Flags based on active definition
     const typesWithSplitCD = (activeDefinition && activeDefinition.features?.splitCD) ? [pageType] : [];
     const typesWithSplitLocation = (activeDefinition && activeDefinition.features?.splitLocation) ? [pageType] : [];
+    const typesWithSplitArea = (activeDefinition && activeDefinition.features?.splitArea) ? [pageType] : [];
 
     // --- UI Elements ---
     const controlsContainer = document.createElement('div');
@@ -1376,6 +1431,11 @@ let changelog = [
         const theadRow = (headerElement.tagName === 'THEAD') ? headerElement.querySelector('tr') : headerElement;
         if (!theadRow) return;
 
+        Lib.debug(
+            'cleanup',
+            `cleanupHeaders() called → existing headers=[${Array.from(theadRow.cells).map(th => th.textContent.trim()).join(' | ')}]`
+        );
+
         const headers = Array.from(theadRow.cells);
         const indicesToRemove = [];
 
@@ -1425,12 +1485,14 @@ let changelog = [
                 const thC = document.createElement('th');
                 thC.textContent = 'Country';
                 thC.style.backgroundColor = headerBgColor;
+                Lib.debug('cleanup', 'Injecting synthetic header: Country');
                 theadRow.appendChild(thC);
             }
             if (!headersText.includes('Date')) {
                 const thD = document.createElement('th');
                 thD.textContent = 'Date';
                 thD.style.backgroundColor = headerBgColor;
+                Lib.debug('cleanup', 'Injecting synthetic header: Date');
                 theadRow.appendChild(thD);
             }
         }
@@ -1442,24 +1504,44 @@ let changelog = [
                     const th = document.createElement('th');
                     th.textContent = col;
                     th.style.backgroundColor = headerBgColor;
+                    Lib.debug('cleanup', `Injecting synthetic header: ${col}`);
                     theadRow.appendChild(th);
                 }
             });
         }
 
-        // On "Artist-Releasegroups" pages we do not create the "MB-Name" and disambiguation "Comment" columns
-        if (pageType !== 'artist-releasegroups') {
+        if (typesWithSplitArea.includes(pageType)) {
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+            ['MB-Area', 'Country'].forEach(col => {
+                if (!headersText.includes(col)) {
+                    const th = document.createElement('th');
+                    th.textContent = col;
+                    th.style.backgroundColor = headerBgColor;
+                    Lib.debug('cleanup', `Injecting synthetic header: ${col}`);
+                    theadRow.appendChild(th);
+                }
+            });
+        }
+
+        // Check if the generic split feature is enabled for this page definition
+        const mainColConfig = activeDefinition.features?.extractMainColumn;
+        const isMainColEnabled = mainColConfig !== undefined && mainColConfig !== null;
+
+        // On pages where the configuration is enabled, create the "MB-Name" and "Comment" columns
+        if (isMainColEnabled) {
             const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
             if (!headersText.includes('MB-Name')) {
                 const thN = document.createElement('th');
                 thN.textContent = 'MB-Name';
                 thN.style.backgroundColor = headerBgColor;
+                Lib.debug('cleanup', 'Injecting synthetic header: MB-Name');
                 theadRow.appendChild(thN);
             }
             if (!headersText.includes('Comment')) {
                 const thC = document.createElement('th');
                 thC.textContent = 'Comment';
                 thC.style.backgroundColor = headerBgColor;
+                Lib.debug('cleanup', 'Injecting synthetic header: Comment');
                 theadRow.appendChild(thC);
             }
         }
@@ -1623,11 +1705,20 @@ let changelog = [
 
                 let countryDateIdx = -1;
                 let locationIdx = -1;
+                let areaIdx = -1;
                 let mainColIdx = -1;
                 let indicesToExclude = [];
-                // Header name for which a generic split into MB-Name and Comment columns will be done
-                // TODO: Add 'Label' for "Area-Labels" view, but take care that in "Label" is also used in "Releasegroup-Releases" views
-                const mainHeaders = ['Recording', 'Event', 'Release', 'Work', 'Title', 'Name', 'Alias', 'Place'];
+
+                // Retrieve configuration for the main column extraction
+                const mainColConfig = activeDefinition.features?.extractMainColumn;
+
+                // If configuration is a specific number, force that index immediately
+                if (typeof mainColConfig === 'number') {
+                    mainColIdx = mainColConfig;
+                    Lib.debug('init', `mainColIdx forced to ${mainColIdx} by configuration.`);
+                }
+                // Prepare candidates list if config is string or array
+                const mainColCandidates = Array.isArray(mainColConfig) ? mainColConfig : (mainColConfig ? [mainColConfig] : []);
 
                 const referenceTable = doc.querySelector('table.tbl');
                 if (referenceTable) {
@@ -1641,16 +1732,23 @@ let changelog = [
                             countryDateIdx = idx;
                         } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
                             locationIdx = idx;
+                        } else if (typesWithSplitArea.includes(pageType) && txt === 'Area') {
+                            areaIdx = idx;
                         }
-                        if (mainHeaders.includes(txt)) mainColIdx = idx;
+
+                        // Dynamic detection based on config candidates
+                        // We only search if mainColIdx wasn't already forced by a number config
+                        if (mainColIdx === -1 && mainColCandidates.includes(txt)) {
+                            mainColIdx = idx;
+                        }
                     });
                 }
 
-                Lib.debug('init', `Checking default mainColIdx for pageType: ${pageType}, current mainColIdx: ${mainColIdx}`);
-                if (mainColIdx === -1 && (pageType === 'releasegroup-releases')) {
-                    mainColIdx = 0;
-                    Lib.debug('init', `mainColIdx was -1, forced to 0 for pageType: ${pageType}`);
-                }
+                Lib.debug('init', `Determined mainColIdx: ${mainColIdx} for pageType: ${pageType}`);
+                Lib.debug(
+                    'indices',
+                    `Detected indices → mainColIdx=${mainColIdx}, countryDateIdx=${countryDateIdx}, areaIdx=${areaIdx}, locationIdx=${locationIdx}, excluded=[${indicesToExclude.join(',')}]`
+                );
 
                 let rowsInThisPage = 0;
                 let pageCategoryMap = new Map();
@@ -1672,8 +1770,16 @@ let changelog = [
                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
                             if (row.cells.length > 1) {
                                 const newRow = document.importNode(row, true);
+                                Lib.debug(
+                                    'row',
+                                    `Row cloned → initial cell count=${newRow.cells.length}`
+                                );
                                 [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
                                 currentGroup.rows.push(newRow);
+                                Lib.debug(
+                                    'row',
+                                    `Row BEFORE push → cells=${newRow.cells.length}, mainColIdx=${mainColIdx}, countryDateIdx=${countryDateIdx}`
+                                );
                                 rowsInThisPage++;
                                 totalRowsAccumulated++;
                                 pageCategoryMap.set(category, (pageCategoryMap.get(category) || 0) + 1);
@@ -1748,7 +1854,9 @@ let changelog = [
                                     // Extraction logic for MB-Name and Comment
                                     const tdName = document.createElement('td');
                                     const tdComment = document.createElement('td');
-                                    if (mainColIdx !== -1 && pageType !== 'artist-releasegroups') {
+
+                                    // If a main column was identified (via config or detection), perform the extraction
+                                    if (mainColIdx !== -1) {
                                         const targetCell = newRow.cells[mainColIdx];
                                         if (targetCell) {
                                             const nameLink = targetCell.querySelector('a bdi')?.closest('a');
@@ -1793,7 +1901,7 @@ let changelog = [
                                         }
                                     }
 
-                                    // Handling Location split
+                                    // Handling Location split (Place, Area and Country)
                                     const tdP = document.createElement('td');
                                     const tdA = document.createElement('td');
                                     const tdC = document.createElement('td');
@@ -1830,16 +1938,70 @@ let changelog = [
                                         }
                                     }
 
+                                    // Handling Area split (MB-Area and Country)
+                                    const tdAreaOnly = document.createElement('td');
+                                    const tdCountryOnly = document.createElement('td');
+                                    if (typesWithSplitArea.includes(pageType) && areaIdx !== -1) {
+                                        const areaCell = newRow.cells[areaIdx];
+                                        if (areaCell) {
+                                            const nodes = Array.from(areaCell.childNodes);
+                                            // Identify the node that contains the flag (the country)
+                                            const countryNodeIndex = nodes.findIndex(node =>
+                                                node.nodeType === 1 && (node.classList.contains('flag') || node.querySelector('.flag'))
+                                            );
+
+                                            nodes.forEach((node, idx) => {
+                                                if (idx === countryNodeIndex) {
+                                                    // This is the country node, move to Country column
+                                                    tdCountryOnly.appendChild(node.cloneNode(true));
+                                                } else {
+                                                    // Check if this node is a comma/whitespace separator adjacent to the country
+                                                    // We skip these to avoid dangling commas like "Philadelphia, "
+                                                    const isCommaSeparator = node.nodeType === 3 && node.textContent.trim() === ',';
+                                                    const isAdjacentToCountry = (idx === countryNodeIndex - 1 || idx === countryNodeIndex + 1);
+
+                                                    if (isCommaSeparator && isAdjacentToCountry) {
+                                                        return;
+                                                    }
+
+                                                    // All other nodes (smaller areas, aliases, separators) go to MB-Area
+                                                    tdAreaOnly.appendChild(node.cloneNode(true));
+                                                }
+                                            });
+
+                                            // Cleanup: Remove any leading/trailing commas or empty text nodes from the new cells
+                                            const trimCell = (cell) => {
+                                                while (cell.firstChild && cell.nodeType === 1 && (cell.firstChild.nodeType === 3 && (cell.firstChild.textContent.trim() === ',' || !cell.firstChild.textContent.trim()))) {
+                                                    cell.removeChild(cell.firstChild);
+                                                }
+                                                while (cell.lastChild && cell.nodeType === 1 && (cell.lastChild.nodeType === 3 && (cell.lastChild.textContent.trim() === ',' || !cell.lastChild.textContent.trim()))) {
+                                                    cell.removeChild(cell.lastChild);
+                                                }
+                                            };
+
+                                            trimCell(tdAreaOnly);
+                                            trimCell(tdCountryOnly);
+                                        }
+                                    }
+
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
 
                                     if (typesWithSplitCD.includes(pageType)) {
-                                        newRow.appendChild(tdSplitC); newRow.appendChild(tdSplitD);
+                                        newRow.appendChild(tdSplitC);
+                                        newRow.appendChild(tdSplitD);
                                     } else if (typesWithSplitLocation.includes(pageType)) {
-                                        newRow.appendChild(tdP); newRow.appendChild(tdA); newRow.appendChild(tdC);
+                                        newRow.appendChild(tdP);
+                                        newRow.appendChild(tdA);
+                                        newRow.appendChild(tdC);
+                                    } else if (typesWithSplitArea.includes(pageType)) {
+                                        newRow.appendChild(tdAreaOnly);
+                                        newRow.appendChild(tdCountryOnly);
                                     }
+
                                     if (pageType !== 'artist-releasegroups') {
                                         newRow.appendChild(tdName); newRow.appendChild(tdComment);
                                     }
+
                                     if (activeDefinition.tableMode === 'multi') {
                                         // Check if this category group already exists to consolidate subgroup tables
                                         let existingGroup = groupedRows.find(g => g.category === currentStatus);
@@ -1992,6 +2154,15 @@ let changelog = [
         }
 
         tbody.innerHTML = '';
+
+        const table = tbody.closest('table');
+        const thCount = table?.querySelectorAll('thead th')?.length || 0;
+        const tdCount = rows[0]?.cells?.length || 0;
+
+        Lib.debug(
+            'render',
+            `Final table structure → headers=${thCount}, rowCells=${tdCount}`
+        );
 
         if (rowCount > 0) {
             rows.forEach(r => tbody.appendChild(r));
