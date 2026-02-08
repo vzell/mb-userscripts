@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.3.3+2026-02-08
+// @version      2.3.2+2026-02-08
 // @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -45,7 +45,6 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '2.3.3+2026-02-08', description: 'Fix URL construction to preserve query parameters (fixes Search pages). Added extra debugging for table detection.'},
     {version: '2.3.2+2026-02-08', description: 'Fix support for Search pages: target .pageselector-results instead of h2 for row counts/filters.'},
     {version: '2.3.1+2026-02-07', description: 'Fix detection of filtered MusicBrainz pages (link_type_id) to allow proper pagination instead of treating them as overview pages (e.g. Artist-Relationships.'},
     {version: '2.3.0+2026-02-05', description: 'Handle multitable pages of type "non_paginated" like Place-Performances.'},
@@ -1332,7 +1331,7 @@ let changelog = [
                 const finalHit = globalHit && colHit;
                 if (finalHit) {
                     if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
-                    colFilters.forEach(f => highlightText(r, f.val, isCaseSensitive, f.idx, isRegExp));
+                    colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
                 }
                 return finalHit;
             });
@@ -1593,6 +1592,10 @@ let changelog = [
         let totalRenderingTime = 0;
 
         const baseUrl = window.location.origin + window.location.pathname;
+        const fetchUrl = new URL(baseUrl);
+        const html = await fetchHtml(fetchUrl.toString());
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+
         let pagesProcessed = 0;
         let cumulativeFetchTime = 0;
         let lastCategorySeenAcrossPages = null;
@@ -1607,16 +1610,18 @@ let changelog = [
                 pagesProcessed++;
 
                 const pageStartTime = performance.now();
-
-                // FIX: Initialize fetchUrl from the full current URL to preserve Search parameters (query, type, etc.)
-                const fetchUrl = new URL(window.location.href);
+                const fetchUrl = new URL(baseUrl);
                 fetchUrl.searchParams.set('page', p.toString());
 
+                // Apply link_type_id, and VA (Various Artists) parameters for specific pageTypes
                 if (overrideParams) {
                     Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
+                } else {
+                    if (params.has('direction')) fetchUrl.searchParams.set('direction', params.get('direction'));
+                    if (params.has('link_type_id')) fetchUrl.searchParams.set('link_type_id', params.get('link_type_id'));
+                    if (params.has('all')) fetchUrl.searchParams.set('all', params.get('all'));
+                    if (params.has('va')) fetchUrl.searchParams.set('va', params.get('va'));
                 }
-
-                Lib.debug('fetch', `Fetching URL for page ${p}: ${fetchUrl.toString()}`);
 
                 const html = await fetchHtml(fetchUrl.toString());
                 const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -1685,7 +1690,6 @@ let changelog = [
                     const tableBody = doc.querySelector('table.tbl tbody') || doc.querySelector('table.tbl');
 
                     if (tableBody) {
-                        Lib.debug('parse', `Table body found. Processing child nodes. Total nodes: ${tableBody.childNodes.length}`);
                         let currentStatus = 'Unknown';
                         let seenFetchSubgroups = new Map();  // needed for unique subgroup header names
 
@@ -1859,8 +1863,6 @@ let changelog = [
                                 }
                             }
                         });
-                    } else {
-                        Lib.debug('parse', 'No table body found in fetched document.');
                     }
                 }
                 const pageDuration = performance.now() - pageStartTime;
