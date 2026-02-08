@@ -1377,6 +1377,11 @@ let changelog = [
         const theadRow = (headerElement.tagName === 'THEAD') ? headerElement.querySelector('tr') : headerElement;
         if (!theadRow) return;
 
+        Lib.debug(
+            'cleanup',
+            `cleanupHeaders() called → existing headers=[${Array.from(theadRow.cells).map(th => th.textContent.trim()).join(' | ')}]`
+        );
+
         const headers = Array.from(theadRow.cells);
         const indicesToRemove = [];
 
@@ -1426,12 +1431,14 @@ let changelog = [
                 const thC = document.createElement('th');
                 thC.textContent = 'Country';
                 thC.style.backgroundColor = headerBgColor;
+                Lib.debug('cleanup', 'Injecting synthetic header: Country');
                 theadRow.appendChild(thC);
             }
             if (!headersText.includes('Date')) {
                 const thD = document.createElement('th');
                 thD.textContent = 'Date';
                 thD.style.backgroundColor = headerBgColor;
+                Lib.debug('cleanup', 'Injecting synthetic header: Date');
                 theadRow.appendChild(thD);
             }
         }
@@ -1443,6 +1450,7 @@ let changelog = [
                     const th = document.createElement('th');
                     th.textContent = col;
                     th.style.backgroundColor = headerBgColor;
+                    Lib.debug('cleanup', `Injecting synthetic header: ${col}`);
                     theadRow.appendChild(th);
                 }
             });
@@ -1455,6 +1463,7 @@ let changelog = [
                     const th = document.createElement('th');
                     th.textContent = col;
                     th.style.backgroundColor = headerBgColor;
+                    Lib.debug('cleanup', `Injecting synthetic header: ${col}`);
                     theadRow.appendChild(th);
                 }
             });
@@ -1467,12 +1476,14 @@ let changelog = [
                 const thN = document.createElement('th');
                 thN.textContent = 'MB-Name';
                 thN.style.backgroundColor = headerBgColor;
+                Lib.debug('cleanup', 'Injecting synthetic header: MB-Name');
                 theadRow.appendChild(thN);
             }
             if (!headersText.includes('Comment')) {
                 const thC = document.createElement('th');
                 thC.textContent = 'Comment';
                 thC.style.backgroundColor = headerBgColor;
+                Lib.debug('cleanup', 'Injecting synthetic header: Comment');
                 theadRow.appendChild(thC);
             }
         }
@@ -1668,6 +1679,11 @@ let changelog = [
                     Lib.debug('init', `mainColIdx was -1, forced to 0 for pageType: ${pageType}`);
                 }
 
+                Lib.debug(
+                    'indices',
+                    `Detected indices → mainColIdx=${mainColIdx}, countryDateIdx=${countryDateIdx}, areaIdx=${areaIdx}, locationIdx=${locationIdx}, excluded=[${indicesToExclude.join(',')}]`
+                );
+
                 let rowsInThisPage = 0;
                 let pageCategoryMap = new Map();
 
@@ -1688,8 +1704,16 @@ let changelog = [
                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
                             if (row.cells.length > 1) {
                                 const newRow = document.importNode(row, true);
+                                Lib.debug(
+                                    'row',
+                                    `Row cloned → initial cell count=${newRow.cells.length}`
+                                );
                                 [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
                                 currentGroup.rows.push(newRow);
+                                Lib.debug(
+                                    'row',
+                                    `Row BEFORE push → cells=${newRow.cells.length}, mainColIdx=${mainColIdx}, countryDateIdx=${countryDateIdx}`
+                                );
                                 rowsInThisPage++;
                                 totalRowsAccumulated++;
                                 pageCategoryMap.set(category, (pageCategoryMap.get(category) || 0) + 1);
@@ -2050,6 +2074,15 @@ let changelog = [
         }
 
         tbody.innerHTML = '';
+
+        const table = tbody.closest('table');
+        const thCount = table?.querySelectorAll('thead th')?.length || 0;
+        const tdCount = rows[0]?.cells?.length || 0;
+
+        Lib.debug(
+            'render',
+            `Final table structure → headers=${thCount}, rowCells=${tdCount}`
+        );
 
         if (rowCount > 0) {
             rows.forEach(r => tbody.appendChild(r));

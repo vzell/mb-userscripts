@@ -31497,6 +31497,86 @@ JavaScript
           
 #+end_example
 
+**** empty columns for "MB-Name" and "Country"
+
+In the uploaded script,
+
+where is the missing piece ?
+I get empty columns for "MB-Name" and "Country", also the column headers get rendered in the final datatable.
+Do we need more debug log statements to pinpoint the issue
+
+**** debug logging
+
+#+begin_example
+🚀 Settings entry added to Editing menu. 
+🚀 Script loaded with external library! 
+🚀 URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels 
+🚀 URL basepath: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels 
+🚀 URL path: /area/489ce91b-6658-3307-9877-795b68554c98/labels 
+🚀 Query parameters:  
+🚀 Has "link_type_id": false 
+🚀 Detected pageType: area-labels 
+🚀 Detected tableMode: single 
+🚀 Initializing script for path: /area/489ce91b-6658-3307-9877-795b68554c98/labels
+🧹 Signalling other scripts to stop... 
+📥 Starting fetch process... null
+📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+📥 Found "Next" link. Extracted page: 473 
+📥 Total pages to fetch: 473 
+🧹 Starting clutter element removal. 
+📥 Fetching URL for page 1: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels?page=1 
+📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels?page=1 
+🚀 Checking default mainColIdx for pageType: area-labels, current mainColIdx: -1 
+📝 Detected indices → mainColIdx=-1, countryDateIdx=-1, areaIdx=4, locationIdx=-1, excluded=[] 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 1/473 processed in 0.88s. Rows on page: 100. Total: 100 
+📥 Fetching URL for page 2: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels?page=2 
+📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels?page=2 
+🚀 Checking default mainColIdx for pageType: area-labels, current mainColIdx: -1 
+📝 Detected indices → mainColIdx=-1, countryDateIdx=-1, areaIdx=4, locationIdx=-1, excluded=[] 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 2/473 processed in 0.96s. Rows on page: 100. Total: 200 
+📥 Fetching URL for page 3: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels?page=3 
+📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels?page=3 
+🚀 Checking default mainColIdx for pageType: area-labels, current mainColIdx: -1 
+📝 Detected indices → mainColIdx=-1, countryDateIdx=-1, areaIdx=4, locationIdx=-1, excluded=[] 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 3/473 processed in 0.91s. Rows on page: 100. Total: 300 
+📥 Fetching URL for page 4: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels?page=4 
+📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/labels?page=4 
+🧹 Stop requested by user. 
+🚀 Checking default mainColIdx for pageType: area-labels, current mainColIdx: -1 
+📝 Detected indices → mainColIdx=-1, countryDateIdx=-1, areaIdx=4, locationIdx=-1, excluded=[] 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 4/473 processed in 1.41s. Rows on page: 100. Total: 400 
+🧹 Fetch loop stopped at page 5 
+🎨 DOM rendering starting... 
+🎨 Starting updateH2Count: filtered=400, total=400 
+🎨 Searching for target H2. Current pageType: area-labels 
+🎨 Target H2 not found by specific type, falling back to document position logic. 
+🎨 Stopping H2 search at index 1: table no longer follows this header. 
+🎨 Target element identified: "Labels..." 
+🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+🎨 Appending filterContainer to targetH2. 
+🎨 Updated header/target Labels count: (400) 
+🎨 Starting renderFinalTable with 400 rows. 
+🎨 Final table structure → headers=8, rowCells=12 
+🎨 Finished renderFinalTable. Injected 400 rows into DOM. 
+🧹 cleanupHeaders() called → existing headers=[ | Label | Type | Code | Area | Begin | End | Rating] 
+🧹 Skipping removal of column 7 ("Rating"). Setting "sa_remove_rating" is disabled. 
+🧹 No columns were matched for removal based on current settings. 
+🧹 Injecting synthetic header: MB-Area 
+🧹 Injecting synthetic header: Country 
+🧹 Injecting synthetic header: MB-Name 
+🧹 Injecting synthetic header: Comment 
+🧹 Running final cleanup... 
+🧹 No Sanojjonas elements found during final cleanup. 
+🧹 Final cleanup complete: No consecutive <br> tags found. 
+🎨 Initializing collapsible H2 headers... 
+🎨 DOM rendering finished in 49.30ms 
+✅ Process complete. Final Row Count: 400. Total Time: 4.22s
+#+end_example
+
 *** Begin area
 *** End area
 ** Area-Releases has a mixture of single table paginated (Releases) and multitable with subheadings (Relationships)
