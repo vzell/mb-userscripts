@@ -1332,7 +1332,7 @@ let changelog = [
                 const finalHit = globalHit && colHit;
                 if (finalHit) {
                     if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
-                    colFilters.forEach(f => highlightText(r, f.val, isCaseSensitive, f.idx, isRegExp));
+                    colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
                 }
                 return finalHit;
             });
