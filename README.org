@@ -32742,6 +32742,18 @@ Just say the word.
 
 ** Upcase second char in "“recording location for” relationships" ==> "“Recording location for” relationships"
 
+
+In the uploaded userscript
+
+Change the following line of code
+
+#+begin_example
+let h3DisplayName = group.category.charAt(0).toUpperCase() + group.category.slice(1);
+#+end_example
+
+which currently ensures the H3 text reflects the unique name established during fetching and Capitalize the first
+character, so that if the first character is already the typographic charcter “ the second characher should instead be Capitalized
+
 ** Add support for extracting "Primary alias" in disambiguation "comment"
 
 https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
@@ -33358,7 +33370,7 @@ but we need to parse "Artist credits" separately
 
 *** on aliases page, remove "Show all" button when NO aliases present
 *** remove the 'colspan=2' from the first td for most of th aliases pages by adding a new variable in their routing definition
-** bigger summary text for search pages
+** DONE bigger summary text for search pages
 *** initial
 
 In the uploaded userscript
@@ -33392,7 +33404,7 @@ would become
 Direct search: Found 3 results for "Asbury" (3)
 #+end_example
 
-*** how to add search method
+** DONE add search method to h2
 
 In the uploaded userscript
 

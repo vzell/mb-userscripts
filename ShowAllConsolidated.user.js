@@ -2480,8 +2480,16 @@ let changelog = [
                 table.style.display = shouldStayOpen ? '' : 'none';
                 Lib.info('render', `Group "${group.category}" auto-expand status: ${shouldStayOpen}`);
 
-                // Ensure the H3 text reflects the unique name established during fetching and Capitalize the first character
-                let h3DisplayName = group.category.charAt(0).toUpperCase() + group.category.slice(1);
+                // Ensure the H3 text reflects the unique name established during fetching and Capitalize the first or second character
+                let h3DisplayName = group.category;
+                if (h3DisplayName.length > 0) {
+                    // Check if the first character is the typographic opening double quote “
+                    if (h3DisplayName.startsWith('“') && h3DisplayName.length > 1) {
+                        h3DisplayName = h3DisplayName[0] + h3DisplayName.charAt(1).toUpperCase() + h3DisplayName.slice(2);
+                    } else {
+                        h3DisplayName = h3DisplayName.charAt(0).toUpperCase() + h3DisplayName.slice(1);
+                    }
+                }
 
                 h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${h3DisplayName} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
 
