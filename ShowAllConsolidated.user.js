@@ -1801,7 +1801,7 @@ let changelog = [
 
                 const pageStartTime = performance.now();
 
-                // FIX: Initialize fetchUrl from the full current URL to preserve Search parameters (query, type, etc.)
+                // Initialize fetchUrl from the full current URL to preserve Search parameters (query, type, etc.)
                 const fetchUrl = new URL(window.location.href);
                 fetchUrl.searchParams.set('page', p.toString());
 
