@@ -46,6 +46,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '2.7.0+2026-02-09', description: 'Transform search results paragraph into collapsible H2 header.'},
     {version: '2.6.0+2026-02-08', description: 'Add "Area splitting".'},
     {version: '2.5.1+2026-02-08', description: 'Fix URL construction to preserve query parameters (fixes Search pages). Added extra debugging for table detection.'},
     {version: '2.5.0+2026-02-08', description: 'Fix support for Search pages: target .pageselector-results instead of h2 for row counts/filters.'},
@@ -316,7 +317,8 @@ let changelog = [
             buttons: [ { label: 'Show all Search results' } ],
             tableMode: 'single',
             features: {
-                extractMainColumn: 'Name' // Specific header
+                extractMainColumn: 'Name', // Specific header
+                transformToH2: true        // New flag to trigger <h2> transformation
             },
             rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
         },
@@ -1120,6 +1122,16 @@ let changelog = [
         }
 
         if (targetH2) {
+            // Transformation logic for non-H2 targets (e.g. search results paragraph)
+            if (activeDefinition.features?.transformToH2 && targetH2.tagName !== 'H2') {
+                Lib.debug('render', `Transforming ${targetH2.tagName} to H2 per configuration.`);
+                const newH2 = document.createElement('h2');
+                // Preserve original content
+                newH2.innerHTML = targetH2.innerHTML;
+                targetH2.replaceWith(newH2);
+                targetH2 = newH2; // Update reference for subsequent operations
+            }
+
             // Safe access to textContent
             let targetH2Name = targetH2.textContent ? targetH2.textContent.trim().substring(0, 30) : 'Unknown Header';
             Lib.debug('render', `Target element identified: "${targetH2Name}..."`);

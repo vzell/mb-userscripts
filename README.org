@@ -31870,11 +31870,11 @@ so basically also include in brackets the columns names not only the index numbe
 
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
 
-
 ** show all button is almost invisible
 
 https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
 
+** search pages sometime have invisble column 0 and last column (Edit)
 ** fingerprints
 *** initial
 
@@ -31886,15 +31886,6 @@ pageType = recording-fingerprints
 the following console log
 
 #+begin_example
-🚀 Script loaded with external library! 
-🚀 URL: https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints 
-🚀 URL basepath: https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints 
-🚀 URL path: /recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints 
-🚀 Query parameters:  
-🚀 Has "link_type_id": false 
-🚀 Detected pageType: recording-fingerprints 
-🚀 Detected tableMode: single 
-🚀 Initializing script for path: /recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints
 🧹 Signalling other scripts to stop... 
 📥 Starting fetch process... null
 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
@@ -31905,7 +31896,7 @@ the following console log
 📥 Initiating fetch for URL: https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints?page=1 
 📝 Detected indices → mainColIdx=-1 (N/A), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: recording-fingerprints 
 📝 No table body found in fetched document. 
-📥 Page 1/1 processed in 0.84s. Rows on page: 0. Total: 0 
+📥 Page 1/1 processed in 0.75s. Rows on page: 0. Total: 0 
 🎨 DOM rendering starting... 
 🎨 Starting updateH2Count: filtered=0, total=0 
 🎨 Searching for target H2. Current pageType: recording-fingerprints 
@@ -31927,9 +31918,11 @@ the following console log
 🧹 No Sanojjonas elements found during final cleanup. 
 🧹 Final cleanup complete: No consecutive <br> tags found. 
 🎨 Initializing collapsible H2 headers... 
-🎨 DOM rendering finished in 14.80ms 
-✅ Process complete. Final Row Count: 0. Total Time: 0.86s
+🎨 DOM rendering finished in 12.40ms 
+✅ Process complete. Final Row Count: 0. Total Time: 0.77s
 #+end_example
+
+The HTML structure to parse is
 
 #+begin_example
 <div class="acoustid-fingerprints">
@@ -32771,10 +32764,8 @@ https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91/aliases
 </td>
 #+end_example
 
-** search pages sometime have invisble column 0 and last column (Edit)
-
 ** aliases pages
-*** No Locale output
+*** DONE No Locale output
 
 In the uploaded userscript
 
@@ -32945,17 +32936,7 @@ Console output:
 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 27. Total Time: 0.68s 
 #+end_example
 
-*** On Artist-Aliases parse the h2 headers separately
-
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/aliases
-
-Actually "Aliases" works
-
-but we need to parse "Artist credits" separately
-
-*** on aliases page, remove "Show all" button when NO aliases present
-*** remove the 'colspan=2' from the first td for most of th aliases pages by adding a new variable in their routing definition
-*** handle "Locale" disambigs/comments ==> colspan: 2
+*** DONE handle "Locale" disambigs/comments ==> colspan: 2
 **** initial
 
 In the uploaded userscript
@@ -33367,3 +33348,46 @@ cells[index]	Actual content
 5	<td class="actions"></td> ❌
 #+end_example
 
+*** On Artist-Aliases parse the h2 headers separately
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/aliases
+
+Actually "Aliases" works
+
+but we need to parse "Artist credits" separately
+
+*** on aliases page, remove "Show all" button when NO aliases present
+*** remove the 'colspan=2' from the first td for most of th aliases pages by adding a new variable in their routing definition
+** bigger summary text for search pages
+*** initial
+
+In the uploaded userscript
+
+in the final rendering logic, when the rowTargetSelector is 'p.pageselector-results', the script should transform that
+paragraph into a collapsible <h2> element, matching the visual style of other entity pages like labels or artists.
+
+#+begin_example
+<p class="pageselector-results">Found 3 results for "Asbury"<span class="mb-row-count-stat">(3)</span>
+#+end_example
+
+To implement the transformation of the search results paragraph into a collapsible <h2> element, we need to modify the
+updateH2Count function. This ensures that when the script identifies the target element via rowTargetSelector (like
+p.pageselector-results), it swaps it for an <h2> if the transformToH2 feature flag is enabled. This new <h2> will then
+be processed by the existing makeH2sCollapsible logic.
+
+*** add method to h2
+
+Prepend the query parameter value from "method" (e.g) from the rendered URL together with the string " search: " to the
+current h2 header,
+
+so, given the URL https://musicbrainz.org/search?query=Asbury&type=area&limit=50&method=direct
+
+#+begin_example
+Found 3 results for "Asbury" (3)
+#+end_example
+
+would become
+
+#+begin_example
+Direct search: Found 3 results for "Asbury" (3)
+#+end_example
