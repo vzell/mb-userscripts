@@ -83,7 +83,7 @@ let changelog = [
 
     // CONFIG SCHEMA
     const configSchema = {
-        sa_render_in_new_tab: {
+        sa_render_overflow_tables_in_new_tab: {
             label: "Render overflow tables in a new tab",
             type: "checkbox",
             default: true,
