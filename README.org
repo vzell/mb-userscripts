@@ -30848,7 +30848,7 @@ https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72
 Check for "No releases found which feature this recording."
 
 
-* new columns for labels
+* new columns e.g. for labels
 
 https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c
 
@@ -31287,7 +31287,81 @@ visual feedback (“cleared”) animation
 
 
 * refactor column splitting in different functions and take them out of the main flow
+** initial
 
+In the uploaded script,
+is it possible to refactor the current column splitting in different functions and take them out of the main flow
+
+** answer
+
+#+begin_example
+It is definitely possible to refactor the column splitting logic into standalone functions and move them out of the main execution flow.
+
+In the current script, logic for handling splitCD, splitLocation, and splitArea often resides within the row processing or parsing loops. By extracting these into a dedicated utility object or private functions, you can make the main flow much more readable and maintainable.
+
+Recommended Refactoring Strategy
+You can consolidate the splitting logic into a helper object called ColumnSplitter. This allows the main fetching and rendering logic to simply "ask" for a split value without caring about the implementation details.
+
+1. Define the Splitting Utility
+Add these helper functions to the script (e.g., before the startFetchingProcess function):
+
+JavaScript
+const ColumnSplitter = {
+    /**
+     * Extracts the split category based on the feature type.
+     */
+    getCategory: function(row, features) {
+        if (features.splitCD) return this.extractCD(row);
+        if (features.splitLocation) return this.extractLocation(row);
+        if (features.splitArea) return this.extractArea(row);
+        return "General";
+    },
+
+    extractCD: function(row) {
+        // Logic moved from main loop: Extracts "CD 1", "Digital Media", etc.
+        const discCell = row.querySelector('.disc-number') || row.cells[0]; 
+        return discCell ? discCell.textContent.trim() : "Other";
+    },
+
+    extractLocation: function(row) {
+        // Logic moved from main loop: Extracts Venue or City
+        const locationCell = row.querySelector('.location-name');
+        return locationCell ? locationCell.textContent.trim() : "Unknown Location";
+    },
+
+    extractArea: function(row) {
+        // Logic moved from main loop: Extracts Country/Area information
+        const areaCell = row.querySelector('.area-name');
+        return areaCell ? areaCell.textContent.trim() : "Unknown Area";
+    }
+};
+2. Update the Main Flow
+In the section where rows are processed (likely inside your fetching loop), you can now replace complex if/else chains with a single call to the refactored logic:
+
+JavaScript
+// Inside the row processing loop:
+allRows.forEach(row => {
+    // OLD: 
+    // let cat = "";
+    // if (activeDefinition.features.splitCD) { ... }
+    // else if (activeDefinition.features.splitLocation) { ... }
+    
+    // NEW (Refactored):
+    const category = ColumnSplitter.getCategory(row, activeDefinition.features);
+    
+    // Continue with grouping logic...
+});
+Benefits of this Refactor
+Readability: The main startFetchingProcess and rendering functions become significantly shorter.
+
+Scalability: If you need to add a new split type (e.g., splitFormat or splitYear), you only need to add one function to the ColumnSplitter object and a flag in the pageDefinitions.
+
+Instruction Compliance: This approach allows you to keep your existing debug logging statements (Lib.debug) inside the specific extraction functions without cluttering the main logic.
+
+Implementation Detail for Search Results
+Since you recently added logic to transform search results (converting p to h2), you can also wrap that transformation into a dedicated function like handleSearchHeaderTransformation(target) to keep the initialization flow clean.
+
+#+end_example
 
 * refactor in memory column removel to filter large pagination pages
 
@@ -31866,6 +31940,7 @@ so basically also include in brackets the columns names not only the index numbe
 
 *** Begin area
 *** End area
+** generate new "total tracks" column based on multiple mediums of a release
 ** Area-Releases has a mixture of single table paginated (Releases) and multitable with subheadings (Relationships)
 
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
@@ -31874,7 +31949,7 @@ https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
 
 https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
 
-** search pages sometime have invisble column 0 and last column (Edit)
+** search pages sometime have invisible column 0 and last column (Edit)
 ** fingerprints
 *** initial
 
