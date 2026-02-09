@@ -1124,6 +1124,17 @@ let changelog = [
         if (targetH2) {
             // Transformation logic for non-H2 targets (e.g. search results paragraph)
             if (activeDefinition.features?.transformToH2 && targetH2.tagName !== 'H2') {
+
+                // Get the method value from the URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const methodValue = urlParams.get('method'); // e.g., "direct"
+
+                if (pageType === 'search' && methodValue) {
+                    // Format the string (Capitalize first letter + " search: ")
+                    const prefix = methodValue.charAt(0).toUpperCase() + methodValue.slice(1) + " search: ";
+                    Lib.debug('render', `Search method identified: "${prefix}..."`);
+                }
+
                 Lib.debug('render', `Transforming ${targetH2.tagName} to H2 per configuration.`);
                 const newH2 = document.createElement('h2');
                 // Preserve original content
