@@ -2516,10 +2516,10 @@ let changelog = [
                         e.stopPropagation();
 
                         const targetUrl = new URL(group.seeAllUrl, window.location.origin).href;
-                        Lib.debug('navigation', `Opening overflow table: ${targetUrl} (New tab: ${Lib.settings.sa_render_in_new_tab})`);
+                        Lib.debug('navigation', `Opening overflow table: ${targetUrl} (New tab: ${Lib.settings.sa_render_overflow_tables_in_new_tab})`);
 
                         // Set the URL and trigger the global startFetchingProcess logic
-                        if (Lib.settings.sa_render_in_new_tab) {
+                        if (Lib.settings.sa_render_overflow_tables_in_new_tab) {
                             window.open(targetUrl, '_blank');
                         } else {
                             window.location.href = targetUrl;
