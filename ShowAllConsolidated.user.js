@@ -1129,16 +1129,19 @@ let changelog = [
                 const urlParams = new URLSearchParams(window.location.search);
                 const methodValue = urlParams.get('method'); // e.g., "direct"
 
+                let prefix = ""; // Initialize prefix as empty string
                 if (pageType === 'search' && methodValue) {
                     // Format the string (Capitalize first letter + " search: ")
-                    const prefix = methodValue.charAt(0).toUpperCase() + methodValue.slice(1) + " search: ";
+                    prefix = methodValue.charAt(0).toUpperCase() + methodValue.slice(1) + " search: ";
                     Lib.debug('render', `Search method identified: "${prefix}..."`);
                 }
 
                 Lib.debug('render', `Transforming ${targetH2.tagName} to H2 per configuration.`);
                 const newH2 = document.createElement('h2');
-                // Preserve original content
-                newH2.innerHTML = targetH2.innerHTML;
+
+                // Prepend the prefix to the original content
+                newH2.innerHTML = prefix + targetH2.innerHTML;
+
                 targetH2.replaceWith(newH2);
                 targetH2 = newH2; // Update reference for subsequent operations
             }
