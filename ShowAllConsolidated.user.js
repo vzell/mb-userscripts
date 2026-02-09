@@ -1947,8 +1947,8 @@ let changelog = [
 
                                     // If a main column was identified (via config or detection), perform the extraction
                                     if (mainColIdx !== -1) {
-					// When accessing a row, resolve logical column → real cell
-					const targetCell = getCellByLogicalIndex(newRow, mainColIdx);
+                                        // When accessing a row, resolve logical column → real cell
+                                        const targetCell = getCellByLogicalIndex(newRow, mainColIdx);
                                         if (targetCell) {
                                             // 1. Extract Name
                                             // Priority: Specific Entity Link (a > bdi) -> First Link -> First Meaningful Text
