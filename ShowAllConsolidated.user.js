@@ -655,13 +655,6 @@ let changelog = [
             },
             tableMode: 'single'
         },
-        // {
-        //     type: 'releases',
-        //     match: (path) => path.includes('/releases'),
-        //     buttons: [ { label: 'Show all Releases for Artist' } ],
-        //     features: { splitCD: true },
-        //     tableMode: 'single'
-        // },
         {
             type: 'artist-works',
             match: (path) => path.includes('/works'),
