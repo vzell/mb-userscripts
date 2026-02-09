@@ -31870,7 +31870,6 @@ so basically also include in brackets the columns names not only the index numbe
 
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
 
-** on aliases page, remove "Show all" button when NO aliases present
 
 ** show all button is almost invisible
 
@@ -31887,30 +31886,150 @@ pageType = recording-fingerprints
 the following console log
 
 #+begin_example
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Signalling other scripts to stop... 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Starting fetch process... null
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 No pagination element found; assuming single page (maxPage = 1). 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Total pages to fetch: 1 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🧹 Starting clutter element removal. 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Initiating fetch for URL: https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints?page=1 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Checking default mainColIdx for pageType: recording-fingerprints, current mainColIdx: -1 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 📥 Page 1/1 processed in 0.51s. Rows on page: 0. Total: 0 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 DOM rendering starting... 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting updateH2Count: filtered=0, total=0 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Searching for target H2. Current pageType: recording-fingerprints 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target H2 not found by specific type, falling back to document position logic. 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Target H2 identified: "Associated AcoustIDs(0)✕CcRx..." 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Removing existing row count stat span. 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Inserting count span before referenceNode: SPAN 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 filterContainer is already attached to targetH2. 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Updated H2 header Associated AcoustIDs(0)✕CcRx count: (0) 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🎨 Starting renderFinalTable with 0 rows. 
-[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ❌ Critical Error during fetch: TypeError: Lib.warn is not a function
-    at renderFinalTable (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:2519:17)
-    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:2449:17)
+🚀 Script loaded with external library! 
+🚀 URL: https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints 
+🚀 URL basepath: https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints 
+🚀 URL path: /recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints 
+🚀 Query parameters:  
+🚀 Has "link_type_id": false 
+🚀 Detected pageType: recording-fingerprints 
+🚀 Detected tableMode: single 
+🚀 Initializing script for path: /recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints
+🧹 Signalling other scripts to stop... 
+📥 Starting fetch process... null
+📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+📥 No pagination element found; assuming single page (maxPage = 1). 
+📥 Total pages to fetch: 1 
+🧹 Starting clutter element removal. 
+📥 Fetching URL for page 1: https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints?page=1 
+📥 Initiating fetch for URL: https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints?page=1 
+📝 Detected indices → mainColIdx=-1 (N/A), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: recording-fingerprints 
+📝 No table body found in fetched document. 
+📥 Page 1/1 processed in 0.84s. Rows on page: 0. Total: 0 
+🎨 DOM rendering starting... 
+🎨 Starting updateH2Count: filtered=0, total=0 
+🎨 Searching for target H2. Current pageType: recording-fingerprints 
+🎨 Target H2 not found by specific type, falling back to document position logic. 
+🎨 Stopping H2 search at index 1: table no longer follows this header. 
+🎨 Target element identified: "Associated AcoustIDs..." 
+🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+🎨 Appending filterContainer to targetH2. 
+🎨 Updated header/target Associated AcoustIDs count: (0) 
+🎨 Starting renderFinalTable with 0 rows. 
+🎨 Final table structure → headers=2, rowCells=0 
+❌ No rows provided to renderFinalTable. 
+🎨 Finished renderFinalTable. Injected 0 rows into DOM. 
+🧹 cleanupHeaders() called → existing headers=[AcoustID | Actions] 
+🧹 No columns were matched for removal based on current settings. 
+🧹 Injecting synthetic header: MB-Name 
+🧹 Injecting synthetic header: Comment 
+🧹 Running final cleanup... 
+🧹 No Sanojjonas elements found during final cleanup. 
+🧹 Final cleanup complete: No consecutive <br> tags found. 
+🎨 Initializing collapsible H2 headers... 
+🎨 DOM rendering finished in 14.80ms 
+✅ Process complete. Final Row Count: 0. Total Time: 0.86s
+#+end_example
+
+#+begin_example
+<div class="acoustid-fingerprints">
+  <table class="tbl">
+    <thead>
+      <tr>
+	<th>AcoustID
+	</th>
+	<th class="actions">Actions
+	</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="odd">
+	<td>
+	  <code>
+	    <a class="external jesus2099userjs131731acoustid" href="//acoustid.org/track/1b9dbdd5-7551-4b88-bfed-378f256ff97b">1b9dbdd5-7551-4b88-bfed-378f256ff97b
+	    </a>
+	  </code>
+	</td>
+	<td class="actions">
+	  <a class="external" href="//acoustid.org/edit/toggle-track-mbid?track_gid=1b9dbdd5-7551-4b88-bfed-378f256ff97b&amp;mbid=e94a1986-8853-4c1e-932b-cec1e01914a7&amp;state=1">Unlink
+	  </a>
+	</td>
+      </tr>
+      <tr class="even">
+	<td>
+	  <code>
+	    <a class="external jesus2099userjs131731acoustid" href="//acoustid.org/track/2fe640bb-b481-4ee6-a941-fd5bdf2bb571">2fe640bb-b481-4ee6-a941-fd5bdf2bb571
+	    </a>
+	  </code>
+	</td>
+	<td class="actions">
+	  <a class="external" href="//acoustid.org/edit/toggle-track-mbid?track_gid=2fe640bb-b481-4ee6-a941-fd5bdf2bb571&amp;mbid=e94a1986-8853-4c1e-932b-cec1e01914a7&amp;state=1">Unlink
+	  </a>
+	</td>
+      </tr>
+      <tr class="odd">
+	<td>
+	  <code>
+	    <a class="external jesus2099userjs131731acoustid" href="//acoustid.org/track/5c3bfc29-fd9d-4095-a568-872accf59f0a">5c3bfc29-fd9d-4095-a568-872accf59f0a
+	    </a>
+	  </code>
+	</td>
+	<td class="actions">
+	  <a class="external" href="//acoustid.org/edit/toggle-track-mbid?track_gid=5c3bfc29-fd9d-4095-a568-872accf59f0a&amp;mbid=e94a1986-8853-4c1e-932b-cec1e01914a7&amp;state=1">Unlink
+	  </a>
+	</td>
+      </tr>
+      <tr class="even">
+	<td>
+	  <code>
+	    <a class="external jesus2099userjs131731acoustid" href="//acoustid.org/track/6c890c34-b07e-4b12-96ba-dad5f92d4614">6c890c34-b07e-4b12-96ba-dad5f92d4614
+	    </a>
+	  </code>
+	</td>
+	<td class="actions">
+	  <a class="external" href="//acoustid.org/edit/toggle-track-mbid?track_gid=6c890c34-b07e-4b12-96ba-dad5f92d4614&amp;mbid=e94a1986-8853-4c1e-932b-cec1e01914a7&amp;state=1">Unlink
+	  </a>
+	</td>
+      </tr>
+      <tr class="odd">
+	<td>
+	  <code>
+	    <a class="external jesus2099userjs131731acoustid" href="//acoustid.org/track/82b1c8af-7b97-438e-9bad-41c972c02b74">82b1c8af-7b97-438e-9bad-41c972c02b74
+	    </a>
+	  </code>
+	</td>
+	<td class="actions">
+	  <a class="external" href="//acoustid.org/edit/toggle-track-mbid?track_gid=82b1c8af-7b97-438e-9bad-41c972c02b74&amp;mbid=e94a1986-8853-4c1e-932b-cec1e01914a7&amp;state=1">Unlink
+	  </a>
+	</td>
+      </tr>
+      <tr class="even">
+	<td>
+	  <code>
+	    <a class="external jesus2099userjs131731acoustid" href="//acoustid.org/track/c81a1777-2cb6-42ca-8f38-3eda3c08dc6e">c81a1777-2cb6-42ca-8f38-3eda3c08dc6e
+	    </a>
+	  </code>
+	</td>
+	<td class="actions">
+	  <a class="external" href="//acoustid.org/edit/toggle-track-mbid?track_gid=c81a1777-2cb6-42ca-8f38-3eda3c08dc6e&amp;mbid=e94a1986-8853-4c1e-932b-cec1e01914a7&amp;state=1">Unlink
+	  </a>
+	</td>
+      </tr>
+      <tr class="odd">
+	<td>
+	  <code>
+	    <a class="external disabled-acoustid jesus2099userjs131731acoustid" href="//acoustid.org/track/c3fcf3d2-ceb2-4f2e-b2d4-06d0f6b7204a">c3fcf3d2-ceb2-4f2e-b2d4-06d0f6b7204a
+	    </a>
+	  </code>
+	</td>
+	<td class="actions">
+	  <a class="external" href="//acoustid.org/edit/toggle-track-mbid?track_gid=c3fcf3d2-ceb2-4f2e-b2d4-06d0f6b7204a&amp;mbid=e94a1986-8853-4c1e-932b-cec1e01914a7&amp;state=0">Link
+	  </a>
+	</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 #+end_example
 
 *** [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ❌ No rows provided to renderFinalTable.
@@ -32181,7 +32300,7 @@ Do we need more debug statement sto pinpoint the problem
 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 600. Total Time: 8.05s 
 #+end_example
 
-** check logic of mainColIdx and mainHeaders
+** DONE check logic of mainColIdx and mainHeaders
 *** generalize generating "MB-Name" and "Comment"
 **** https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/artists
 **** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/artists
@@ -32630,56 +32749,32 @@ Just say the word.
 
 ** Upcase second char in "“recording location for” relationships" ==> "“Recording location for” relationships"
 
-** handle "Locale" disambigs/comments
+** Add support for extracting "Primary alias" in disambiguation "comment"
 
-In the uploaded userscript
-
-#+begin_example
-                                    // If a main column was identified (via config or detection), perform the extraction
-                                    if (mainColIdx !== -1) {
-                                        const targetCell = newRow.cells[mainColIdx];
-                                        if (targetCell) {
-                                            const nameLink = targetCell.querySelector('a bdi')?.closest('a');
-                                            if (nameLink) tdName.appendChild(nameLink.cloneNode(true));
-                                            const commentBdi = targetCell.querySelector('.comment bdi');
-                                            if (commentBdi) tdComment.textContent = commentBdi.textContent.trim();
-                                        }
-                                    }
-#+end_example
-
-Do not only account for the "MB-Name" column to be found inside '<bdi>' elements and the "Comment" column inside '<span class="comment"> --> <bdi>'
-as can be seen in the following example:
+https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
+https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91/aliases
 
 #+begin_example
 <td>
-  <a class="wrap-anywhere" href="/release/9e630e98-055b-49aa-857b-981bb4e3c70f">
-    <bdi>A Town Hall Concert
+  <span class="blank-icon">
+  </span>
+  <a class="wrap-anywhere" href="/event/26cead1c-a5fa-4677-873a-312412c6dc91">
+    <bdi>2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA
     </bdi>
   </a>
   <span class="comment">(
-    <bdi>sterero
+    <bdi>
+      <i title="Primary alias">Southside Johnny &amp; The Asbury Jukes at The Stone Pony
+      </i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show
     </bdi>)
   </span>
 </td>
 #+end_example
 
-The extraction would be "MB-Name: A Town Hall Concert", "Comment: stereo" in this case,
-but also support the following fragment
+** search pages sometime have invisble column 0 and last column (Edit)
 
-#+begin_example
-<td>German
-  <!-- -->
-  <!-- -->(
-  <span class="comment">primary
-  </span>)
-</td>
-#+end_example
-
-with the "MB-Name" column to be found right after the '<td>' element and the "Comment" column inside '<span class="comment">' without the inner '<bdi>'
-
-The extraction would be "MB-Name: German", "Comment: primary" in this case.
-
-** No Locale output
+** aliases pages
+*** No Locale output
 
 In the uploaded userscript
 
@@ -32758,6 +32853,52 @@ The extraction would be "MB-Name: German", "Comment: primary" in this case.
 Console output:
 
 #+begin_example
+🚀 Settings entry added to Editing menu. 
+🚀 Script loaded with external library! 
+🚀 URL: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases 
+🚀 URL basepath: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases 
+🚀 URL path: /instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases 
+🚀 Query parameters:  
+🚀 Has "link_type_id": false 
+🚀 Detected pageType: instrument-aliases 
+🚀 Detected tableMode: single 
+🚀 Initializing script for path: /instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases
+🧹 Signalling other scripts to stop... 
+📥 Starting fetch process... null
+📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+📥 No pagination element found; assuming single page (maxPage = 1). 
+📥 Total pages to fetch: 1 
+🧹 Starting clutter element removal. 
+📥 Fetching URL for page 1: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases?page=1 
+📥 Initiating fetch for URL: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases?page=1 
+📝 Detected indices → mainColIdx=5 (Locale), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: instrument-aliases 
+📝 Table body found. Processing child nodes. Total nodes: 27 
+📥 Page 1/1 processed in 0.81s. Rows on page: 27. Total: 27 
+🎨 DOM rendering starting... 
+🎨 Starting updateH2Count: filtered=27, total=27 
+🎨 Searching for target H2. Current pageType: instrument-aliases 
+🎨 Target H2 not found by specific type, falling back to document position logic. 
+🎨 Stopping H2 search at index 1: table no longer follows this header. 
+🎨 Target element identified: "Aliases..." 
+🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+🎨 Appending filterContainer to targetH2. 
+🎨 Updated header/target Aliases count: (27) 
+🎨 Starting renderFinalTable with 27 rows. 
+🎨 Final table structure → headers=6, rowCells=8 
+🎨 Finished renderFinalTable. Injected 27 rows into DOM. 
+🧹 cleanupHeaders() called → existing headers=[Alias | Sort name | Begin date | End date | Type | Locale] 
+🧹 No columns were matched for removal based on current settings. 
+🧹 Injecting synthetic header: MB-Name 
+🧹 Injecting synthetic header: Comment 
+🧹 Running final cleanup... 
+🧹 No Sanojjonas elements found during final cleanup. 
+🧹 Final cleanup complete: No consecutive <br> tags found. 
+🎨 Initializing collapsible H2 headers... 
+🎨 DOM rendering finished in 8.90ms 
+✅ Process complete. Final Row Count: 27. Total Time: 0.82s 
+#+end_example
+
+#+begin_example
 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases 
@@ -32804,22 +32945,425 @@ Console output:
 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ✅ Process complete. Final Row Count: 27. Total Time: 0.68s 
 #+end_example
 
-** Add support for "Primary alias" in "comment"
+*** On Artist-Aliases parse the h2 headers separately
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/aliases
+
+Actually "Aliases" works
+
+but we need to parse "Artist credits" separately
+
+*** on aliases page, remove "Show all" button when NO aliases present
+*** remove the 'colspan=2' from the first td for most of th aliases pages by adding a new variable in their routing definition
+*** handle "Locale" disambigs/comments ==> colspan: 2
+**** initial
+
+In the uploaded userscript
+
+#+begin_example
+                                    // Extraction logic for MB-Name and Comment
+                                    const tdName = document.createElement('td');
+                                    const tdComment = document.createElement('td');
+
+                                    // If a main column was identified (via config or detection), perform the extraction
+                                    if (mainColIdx !== -1) {
+                                        const targetCell = newRow.cells[mainColIdx];
+                                        if (targetCell) {
+                                            const nameLink = targetCell.querySelector('a bdi')?.closest('a');
+                                            if (nameLink) tdName.appendChild(nameLink.cloneNode(true));
+                                            const commentBdi = targetCell.querySelector('.comment bdi');
+                                            if (commentBdi) tdComment.textContent = commentBdi.textContent.trim();
+                                        }
+                                    }
+#+end_example
+
+Do not only account for the "MB-Name" column to be found inside '<bdi>' elements and the "Comment" column inside '<span class="comment"> --> <bdi>'
+as can be seen in the following example:
 
 #+begin_example
 <td>
-  <span class="blank-icon">
-  </span>
-  <a class="wrap-anywhere" href="/event/26cead1c-a5fa-4677-873a-312412c6dc91">
-    <bdi>2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA
+  <a class="wrap-anywhere" href="/release/9e630e98-055b-49aa-857b-981bb4e3c70f">
+    <bdi>A Town Hall Concert
     </bdi>
   </a>
   <span class="comment">(
-    <bdi>
-      <i title="Primary alias">Southside Johnny &amp; The Asbury Jukes at The Stone Pony
-      </i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show
+    <bdi>sterero
     </bdi>)
   </span>
 </td>
 #+end_example
-** search pages sometime have invisble column 0 and last column (Edit)
+
+The extraction would be "MB-Name: A Town Hall Concert", "Comment: stereo" in this case,
+but also support the following fragment
+
+#+begin_example
+<td>German
+  <!-- -->
+  <!-- -->(
+  <span class="comment">primary
+  </span>)
+</td>
+#+end_example
+
+with the "MB-Name" column to be found right after the '<td>' element and the "Comment" column inside '<span class="comment">' without the inner '<bdi>'
+
+The extraction would be "MB-Name: German", "Comment: primary" in this case.
+
+**** logging
+
+Please add comprehensive debug statement to the following code
+
+#+begin_example
+                                    const newRow = document.importNode(node, true);
+
+                                    // Extraction logic for MB-Name and Comment
+                                    const tdName = document.createElement('td');
+                                    const tdComment = document.createElement('td');
+
+                                    // If a main column was identified (via config or detection), perform the extraction
+                                    if (mainColIdx !== -1) {
+                                        const targetCell = newRow.cells[mainColIdx];
+                                        if (targetCell) {
+                                            // 1. Extract Name
+                                            // Priority: Specific Entity Link (a > bdi) -> First Link -> First Meaningful Text
+                                            const nameLink = targetCell.querySelector('a bdi')?.closest('a');
+                                            if (nameLink) {
+                                                tdName.appendChild(nameLink.cloneNode(true));
+                                            } else {
+                                                // Fallback: Scan child nodes for the first non-comment content
+                                                let foundName = false;
+                                                for (const node of targetCell.childNodes) {
+                                                    // Skip comments and scripts
+                                                    if (node.nodeType === Node.ELEMENT_NODE) {
+                                                        if (node.classList.contains('comment') || node.tagName === 'SCRIPT' || node.tagName === 'STYLE') continue;
+                                                        if (node.tagName === 'A') {
+                                                            tdName.appendChild(node.cloneNode(true));
+                                                            foundName = true;
+                                                            break;
+                                                        }
+                                                    } else if (node.nodeType === Node.TEXT_NODE) {
+                                                        const txt = node.textContent.trim();
+                                                        // Check for meaningful text (ignoring common separators like parens often wrapping comments)
+                                                        if (txt && txt !== '(' && txt !== ')' && txt !== ',') {
+                                                            tdName.textContent = txt;
+                                                            foundName = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                // Fallback if iteration found nothing (e.g. complex nesting): get text excluding comments
+                                                if (!foundName) {
+                                                    const clone = targetCell.cloneNode(true);
+                                                    clone.querySelectorAll('.comment').forEach(el => el.remove());
+                                                    tdName.textContent = clone.textContent.trim();
+                                                }
+                                            }
+
+                                            // 2. Extract Comment
+                                            // Priority: .comment > bdi -> .comment text
+                                            const commentSpan = targetCell.querySelector('.comment');
+                                            if (commentSpan) {
+                                                // If bdi exists (standard entity comment), use it; otherwise use the span text (simple comment)
+                                                const val = commentSpan.querySelector('bdi') || commentSpan;
+                                                tdComment.textContent = val.textContent.trim();
+                                            }
+                                        }
+                                    }
+#+end_example
+
+use the following example code from my logging library
+
+#+begin_example
+Lib.debug('parse', `Stored "See All" URL and Count for ${currentStatus}: ${currentGroup.seeAllUrl} (${currentGroup.seeAllCount}) `);
+#+end_example
+
+**** answer
+
+#+begin_example
+const newRow = document.importNode(node, true);
+Lib.debug('parse', 'Imported row via document.importNode()');
+
+// Extraction logic for MB-Name and Comment
+const tdName = document.createElement('td');
+const tdComment = document.createElement('td');
+
+Lib.debug('parse', `mainColIdx = ${mainColIdx}`);
+
+// If a main column was identified (via config or detection), perform the extraction
+if (mainColIdx !== -1) {
+
+    const targetCell = newRow.cells[mainColIdx];
+
+    Lib.debug(
+        'parse',
+        `Resolved targetCell for mainColIdx=${mainColIdx}; ` +
+        `total cells=${newRow.cells.length}; ` +
+        `targetCell ${targetCell ? 'FOUND' : 'MISSING'}`
+    );
+
+    if (targetCell) {
+
+        Lib.debug('parse', `targetCell.innerHTML = ${targetCell.innerHTML}`);
+
+        // ───────────────────────────────────────────
+        // 1. Extract Name
+        // ───────────────────────────────────────────
+
+        const nameLink = targetCell.querySelector('a bdi')?.closest('a');
+
+        Lib.debug(
+            'parse',
+            `Name lookup via "a > bdi": ${nameLink ? 'FOUND' : 'NOT FOUND'}`
+        );
+
+        if (nameLink) {
+
+            tdName.appendChild(nameLink.cloneNode(true));
+
+            Lib.debug(
+                'parse',
+                `Name extracted from linked <a>: "${nameLink.textContent.trim()}"`
+            );
+
+        } else {
+
+            Lib.debug(
+                'parse',
+                `Falling back to scanning targetCell.childNodes (${targetCell.childNodes.length})`
+            );
+
+            let foundName = false;
+
+            for (const child of targetCell.childNodes) {
+
+                Lib.debug(
+                    'parse',
+                    `Inspecting child node: ` +
+                    `type=${child.nodeType}, ` +
+                    `tag=${child.tagName || 'TEXT'}, ` +
+                    `class=${child.classList?.value || '-'}, ` +
+                    `text="${child.textContent?.trim()}"`
+                );
+
+                // Skip comments and scripts
+                if (child.nodeType === Node.ELEMENT_NODE) {
+
+                    if (
+                        child.classList.contains('comment') ||
+                        child.tagName === 'SCRIPT' ||
+                        child.tagName === 'STYLE'
+                    ) {
+                        Lib.debug(
+                            'parse',
+                            `Skipping excluded element: <${child.tagName}>.${child.classList?.value || ''}`
+                        );
+                        continue;
+                    }
+
+                    if (child.tagName === 'A') {
+
+                        tdName.appendChild(child.cloneNode(true));
+                        foundName = true;
+
+                        Lib.debug(
+                            'parse',
+                            `Name extracted from <A>: "${child.textContent.trim()}"`
+                        );
+
+                        break;
+                    }
+
+                } else if (child.nodeType === Node.TEXT_NODE) {
+
+                    const txt = child.textContent.trim();
+
+                    Lib.debug('parse', `Text node candidate: "${txt}"`);
+
+                    // Check for meaningful text
+                    if (txt && txt !== '(' && txt !== ')' && txt !== ',') {
+
+                        tdName.textContent = txt;
+                        foundName = true;
+
+                        Lib.debug(
+                            'parse',
+                            `Name extracted from TEXT node: "${txt}"`
+                        );
+
+                        break;
+                    }
+                }
+            }
+
+            // Fallback if iteration found nothing (e.g. complex nesting)
+            if (!foundName) {
+
+                Lib.debug(
+                    'parse',
+                    'No name found during scan; using deep clone fallback (removing .comment nodes)'
+                );
+
+                const clone = targetCell.cloneNode(true);
+
+                const removedComments = [];
+                clone.querySelectorAll('.comment').forEach(el => {
+                    removedComments.push(el.textContent.trim());
+                    el.remove();
+                });
+
+                tdName.textContent = clone.textContent.trim();
+
+                Lib.debug(
+                    'parse',
+                    `Removed comment text: [${removedComments.join(' | ')}]`
+                );
+
+                Lib.debug(
+                    'parse',
+                    `Name extracted via fallback textContent: "${tdName.textContent}"`
+                );
+            }
+        }
+
+        // ───────────────────────────────────────────
+        // 2. Extract Comment
+        // ───────────────────────────────────────────
+
+        const commentSpan = targetCell.querySelector('.comment');
+
+        Lib.debug(
+            'parse',
+            `.comment lookup: ${commentSpan ? 'FOUND' : 'NOT FOUND'}`
+        );
+
+        if (commentSpan) {
+
+            const val = commentSpan.querySelector('bdi') || commentSpan;
+
+            Lib.debug(
+                'parse',
+                `Comment extracted from ${val.tagName}: "${val.textContent.trim()}"`
+            );
+
+            tdComment.textContent = val.textContent.trim();
+        }
+
+    } else {
+        Lib.debug('parse', 'targetCell is undefined despite valid mainColIdx');
+    }
+
+} else {
+    Lib.debug('parse', 'mainColIdx === -1, skipping name/comment extraction');
+}
+
+Lib.debug(
+    'parse',
+    `Final extraction result → Name: "${tdName.textContent}", Comment: "${tdComment.textContent}"`
+);
+#+end_example
+
+**** replace
+
+#+begin_example
+const targetCell = getCellByLogicalIndex(newRow, mainColIdx);
+#+end_example
+
+**** debug output
+
+First row from the parsed table
+
+#+begin_example
+<tr class="odd">
+  <td colspan="2">
+    <bdi>Gitarre
+    </bdi>
+  </td>
+  <td>
+  </td>
+  <td>
+  </td>
+  <td>Instrument name
+  </td>
+  <td>German
+    <!-- -->
+    <!-- -->(
+    <span class="comment">primary
+    </span>)
+  </td>
+  <td class="actions">
+  </td>
+</tr>
+#+end_example
+
+and the debug output
+
+#+begin_example
+🚀 Settings entry added to Editing menu. 
+🚀 Script loaded with external library! 
+🚀 URL: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases 
+🚀 URL basepath: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases 
+🚀 URL path: /instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases 
+🚀 Query parameters:  
+🚀 Has "link_type_id": false 
+🚀 Detected pageType: instrument-aliases 
+🚀 Detected tableMode: single 
+🚀 Initializing script for path: /instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases
+🧹 Signalling other scripts to stop... 
+📥 Starting fetch process... null
+📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+📥 No pagination element found; assuming single page (maxPage = 1). 
+📥 Total pages to fetch: 1 
+🧹 Starting clutter element removal. 
+📥 Fetching URL for page 1: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases?page=1 
+📥 Initiating fetch for URL: https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases?page=1 
+📝 Detected indices → mainColIdx=5 (Locale), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: instrument-aliases 
+📝 Table body found. Processing child nodes. Total nodes: 27 
+📝 Imported row via document.importNode() 
+📝 mainColIdx = 5 
+📝 Resolved targetCell for mainColIdx=5; total cells=6; targetCell FOUND 
+📝 targetCell.innerHTML =  
+📝 Name lookup via "a > bdi": NOT FOUND 
+📝 Falling back to scanning targetCell.childNodes (0) 
+📝 No name found during scan; using deep clone fallback (removing .comment nodes) 
+📝 Removed comment text: [] 
+📝 Name extracted via fallback textContent: "" 
+📝 .comment lookup: NOT FOUND 
+📝 Final extraction result → Name: "", Comment: "" 
+📝 Imported row via document.importNode() 
+📝 mainColIdx = 5 
+📝 Resolved targetCell for mainColIdx=5; total cells=6; targetCell FOUND 
+📝 targetCell.innerHTML =  
+📝 Name lookup via "a > bdi": NOT FOUND 
+📝 Falling back to scanning targetCell.childNodes (0) 
+📝 No name found during scan; using deep clone fallback (removing .comment nodes) 
+📝 Removed comment text: [] 
+📝 Name extracted via fallback textContent: "" 
+📝 .comment lookup: NOT FOUND 
+📝 Final extraction result → Name: "", Comment: "" 
+📝 Imported row via document.importNode() 
+📝 mainColIdx = 5 
+📝 Resolved targetCell for mainColIdx=5; total cells=6; targetCell FOUND 
+📝 targetCell.innerHTML =  
+📝 Name lookup via "a > bdi": NOT FOUND 
+📝 Falling back to scanning targetCell.childNodes (0) 
+📝 No name found during scan; using deep clone fallback (removing .comment nodes) 
+📝 Removed comment text: [] 
+📝 Name extracted via fallback textContent: "" 
+📝 .comment lookup: NOT FOUND 
+📝 Final extraction result → Name: "", Comment: "" 
+#+end_example
+
+**** analysis
+
+#+begin_example
+But look again at the real cells after colspan resolution:
+
+cells[index]	Actual content
+0	<td colspan="2"><bdi>Gitarre</bdi>
+1	<td></td>
+2	<td></td>
+3	<td>Instrument name</td>
+4	<td>German (<span class="comment">primary</span>)</td>
+5	<td class="actions"></td> ❌
+#+end_example
+

@@ -721,6 +721,9 @@ let changelog = [
             type: 'recording-fingerprints',
             match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/fingerprints/),
             buttons: [ { label: 'Show all Fingerprints for Recording' } ],
+            features: {
+                extractMainColumn: 'AcoustID' // Specific header
+            },
             tableMode: 'single'
         },
         {
@@ -1944,12 +1947,52 @@ let changelog = [
 
                                     // If a main column was identified (via config or detection), perform the extraction
                                     if (mainColIdx !== -1) {
-                                        const targetCell = newRow.cells[mainColIdx];
+					// When accessing a row, resolve logical column → real cell
+					const targetCell = getCellByLogicalIndex(newRow, mainColIdx);
                                         if (targetCell) {
+                                            // 1. Extract Name
+                                            // Priority: Specific Entity Link (a > bdi) -> First Link -> First Meaningful Text
                                             const nameLink = targetCell.querySelector('a bdi')?.closest('a');
-                                            if (nameLink) tdName.appendChild(nameLink.cloneNode(true));
-                                            const commentBdi = targetCell.querySelector('.comment bdi');
-                                            if (commentBdi) tdComment.textContent = commentBdi.textContent.trim();
+                                            if (nameLink) {
+                                                tdName.appendChild(nameLink.cloneNode(true));
+                                            } else {
+                                                // Fallback: Scan child nodes for the first non-comment content
+                                                let foundName = false;
+                                                for (const node of targetCell.childNodes) {
+                                                    // Skip comments and scripts
+                                                    if (node.nodeType === Node.ELEMENT_NODE) {
+                                                        if (node.classList.contains('comment') || node.tagName === 'SCRIPT' || node.tagName === 'STYLE') continue;
+                                                        if (node.tagName === 'A') {
+                                                            tdName.appendChild(node.cloneNode(true));
+                                                            foundName = true;
+                                                            break;
+                                                        }
+                                                    } else if (node.nodeType === Node.TEXT_NODE) {
+                                                        const txt = node.textContent.trim();
+                                                        // Check for meaningful text (ignoring common separators like parens often wrapping comments)
+                                                        if (txt && txt !== '(' && txt !== ')' && txt !== ',') {
+                                                            tdName.textContent = txt;
+                                                            foundName = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                // Fallback if iteration found nothing (e.g. complex nesting): get text excluding comments
+                                                if (!foundName) {
+                                                    const clone = targetCell.cloneNode(true);
+                                                    clone.querySelectorAll('.comment').forEach(el => el.remove());
+                                                    tdName.textContent = clone.textContent.trim();
+                                                }
+                                            }
+
+                                            // 2. Extract Comment
+                                            // Priority: .comment > bdi -> .comment text
+                                            const commentSpan = targetCell.querySelector('.comment');
+                                            if (commentSpan) {
+                                                // If bdi exists (standard entity comment), use it; otherwise use the span text (simple comment)
+                                                const val = commentSpan.querySelector('bdi') || commentSpan;
+                                                tdComment.textContent = val.textContent.trim();
+                                            }
                                         }
                                     }
 
@@ -2773,6 +2816,16 @@ let changelog = [
         } else {
             Lib.info('cleanup', 'Final cleanup complete: No consecutive <br> tags found.');
         }
+    }
+
+    function getCellByLogicalIndex(row, logicalIdx) {
+        let col = 0;
+        for (const cell of row.cells) {
+            const span = cell.colSpan || 1;
+            if (col + span > logicalIdx) return cell;
+            col += span;
+        }
+        return null;
     }
 
     function fetchHtml(url) {
