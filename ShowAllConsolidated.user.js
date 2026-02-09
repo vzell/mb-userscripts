@@ -721,10 +721,8 @@ let changelog = [
             type: 'recording-fingerprints',
             match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/fingerprints/),
             buttons: [ { label: 'Show all Fingerprints for Recording' } ],
-            features: {
-                extractMainColumn: 'AcoustID' // Specific header
-            },
             tableMode: 'single'
+            //rowTargetSelector: '.acoustid-fingerprints table.tbl'
         },
         {
             type: 'recording-releases',
