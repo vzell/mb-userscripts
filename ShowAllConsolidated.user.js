@@ -46,6 +46,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '3.2.0+2026-02-10', description: 'Fix Artist-Aliases pages not rendering the "Artist credits" table with sorting/filtering'},
     {version: '3.1.0+2026-02-10', description: 'Fix overflow tables for Area-Releases pages in the case of Relationship subtable'},
     {version: '3.0.0+2026-02-10', description: 'Add support for Area-Releases pages with multiple different initial table data'},
     {version: '2.7.0+2026-02-09', description: 'Transform search results paragraph into collapsible H2 header.'},
@@ -1812,8 +1813,8 @@ let changelog = [
                     if (isOtherConfigHeader) {
                         Lib.debug('cleanup', `Removing other configured section starting with header: "${headerText}"`);
 
-                        // Adjust logic: remove everything starting with the h2 header AND eventual optional elements
-                        // after it PLUS the final table
+                        // Remove everything starting with the h2 header AND eventual optional elements after it PLUS
+                        // the final table
                         let next = h.nextElementSibling;
                         let tableRemoved = false;
 
@@ -1821,15 +1822,19 @@ let changelog = [
                             let toRemove = next;
                             next = next.nextElementSibling;
 
+                            // Safety check: stop if we hit another H2 header before finding a table to prevent over-deletion
+                            // Note: H3 headers are allowed as they're often subsections within the main H2 section
+                            if (toRemove.tagName === 'H2') {
+                                Lib.debug('cleanup', `Stopping cleanup at next H2 header before finding table. This may indicate incomplete section removal.`);
+                                break;
+                            }
+
                             // Check if this sibling is the final table to remove
                             if (toRemove.tagName === 'TABLE' && toRemove.classList.contains('tbl')) {
                                 tableRemoved = true;
                             }
 
                             toRemove.remove();
-
-                            // Safety check: stop if we hit another header before finding a table to prevent over-deletion
-                            if (next && ['H2', 'H3'].includes(next.tagName)) break;
                         }
 
                         // Finally remove the header itself

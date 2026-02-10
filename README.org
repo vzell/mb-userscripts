@@ -32381,7 +32381,6 @@ page.
 
 In the uploaded userscript
 
-In the userscript ShowAllConsolidated.user.js
 in the case of
 
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/aliases
@@ -32428,7 +32427,8 @@ and pageType "artist-aliases" when pressing the button for "Show all Artist Cred
 
 actually the wole page gets rerendered but the "Aliases" header of the first table is missing (actually the whole header
 plus the corresponding table should be removed already in this case) and under the h2 header "Artist credits" the table
-doesn't get processed at all. Please parse the above URL and check if maybe the HTML code is different than on other
+doesn't get processed at all.
+Please parse the uploaded HTML code and check if the HTML code is different than on other
 MusicBrainz pages and that's why th current code maybe doens't work.
 
 *** country/date not working, check other pages which using it Area-Releases
@@ -34047,7 +34047,114 @@ Actually "Aliases" works
 but we need to parse "Artist credits" separately
 
 *** on aliases page, remove "Show all" button when NO aliases present
-*** remove the 'colspan=2' from the first td for most of th aliases pages by adding a new variable in their routing definition
+*** remove the 'colspan=2' from the first td for most of the aliases pages by adding a new variable in their routing definition
+
+In the uploaded userscript
+
+in the case of most aliases pages, e.g. https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/aliases
+
+and corresponding pageType "instrument-aliases" when pressing the button for "Show all Aliases for Instruments" in the
+final rendered page the extracted "locale name" (e.g. value 'German' in the following HTML snippet of the table from the
+above URL in the first row) column and the extracted "locale type" column (e.g. value 'primary' in the following HTML
+snippet of the table from the above URL in the first row)
+
+#+begin_example
+<table class="tbl">
+  <thead>
+    <tr>
+      <th>Alias
+      </th>
+      <th>Sort name
+      </th>
+      <th>Begin date
+      </th>
+      <th>End date
+      </th>
+      <th>Type
+      </th>
+      <th>Locale
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="odd">
+      <td colspan="2">
+	<bdi>Gitarre
+	</bdi>
+      </td>
+      <td>
+      </td>
+      <td>
+      </td>
+      <td>Instrument name
+      </td>
+      <td>German
+	<!-- -->
+	<!-- -->(
+	<span class="comment">primary
+	</span>)
+      </td>
+      <td class="actions">
+      </td>
+    </tr>
+    <tr class="even">
+      <td colspan="2">
+	<bdi>κιθάρα
+	</bdi>
+      </td>
+      <td>
+      </td>
+      <td>
+      </td>
+      <td>Instrument name
+      </td>
+      <td>Greek
+	<!-- -->
+	<!-- -->(
+	<span class="comment">primary
+	</span>)
+      </td>
+      <td class="actions">
+      </td>
+    </tr>
+    <tr class="odd">
+      <td colspan="2">
+	<bdi>κιθάρες
+	</bdi>
+      </td>
+      <td>
+      </td>
+      <td>
+      </td>
+      <td>Search hint
+      </td>
+      <td>
+      </td>
+      <td class="actions">
+      </td>
+    </tr>
+  </tbody>
+</table>
+#+end_example
+
+are shifted one column to the right compared to the rendered header columns. So in this example the extracted "locale
+name" is located under the "Comment" header column instead of the "MB-Name" header column.
+
+The problem in the case of these "aliases" pages with my current code seems to be in the HTML structure of these
+"aliases" tables. Every row has the following structure in the artificial "first" column
+
+#+begin_example
+      <td colspan="2">
+	<bdi>κιθάρες
+	</bdi>
+      </td>
+#+end_example
+
+So basically it spans already 2 columns.
+
+Please fix my code so that it special cases this cases for aliases tables.
+
+
 ** DONE bigger summary text for search pages
 *** initial
 
