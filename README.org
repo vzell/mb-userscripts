@@ -32380,6 +32380,8 @@ page.
 *** aliases
 
 In the uploaded userscript
+
+In the userscript ShowAllConsolidated.user.js
 in the case of
 
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/aliases
@@ -32425,7 +32427,9 @@ and pageType "artist-aliases" when pressing the button for "Show all Artist Cred
 #+end_example
 
 actually the wole page gets rerendered but the "Aliases" header of the first table is missing (actually the whole header
-plus the corresponding table should be removed already in this case) and "Artist credits" table doesn't get processed at all
+plus the corresponding table should be removed already in this case) and under the h2 header "Artist credits" the table
+doesn't get processed at all. Please parse the above URL and check if maybe the HTML code is different than on other
+MusicBrainz pages and that's why th current code maybe doens't work.
 
 *** country/date not working, check other pages which using it Area-Releases
 

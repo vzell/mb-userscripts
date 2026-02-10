@@ -1817,7 +1817,7 @@ let changelog = [
                         let next = h.nextElementSibling;
                         let tableRemoved = false;
 
-                       while (next && !tableRemoved) {
+			while (next && !tableRemoved) {
                             let toRemove = next;
                             next = next.nextElementSibling;
 
