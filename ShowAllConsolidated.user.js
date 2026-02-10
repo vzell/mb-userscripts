@@ -393,14 +393,39 @@ let changelog = [
             tableMode: 'single'
         },
         {
+            type: 'area-releases-filtered',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/) && params.has('link_type_id'),
+            buttons: [
+                {
+                    label: 'Show all Release Relationships for Area (filtered)',
+                    targetHeader: 'Relationships',
+                    tableMode: 'single',
+                    non_paginated: false,
+                    extractMainColumn: 'Title'
+                }
+            ]
+        },
+        {
             type: 'area-releases',
-            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/),
-            buttons: [ { label: 'Show all Releases for Area' } ],
-            features: {
-                splitCD: true,
-                extractMainColumn: 'Release'
-            },
-            tableMode: 'single'
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/) && !params.has('link_type_id'),
+            buttons: [
+                {
+                    label: 'Show all Releases for Area',
+                    targetHeader: 'Releases',
+                    tableMode: 'single',
+                    extractMainColumn: 'Release',
+                    features: {
+                        splitCD: true
+                    }
+                },
+                {
+                    label: 'Show all Release Relationships for Area',
+                    targetHeader: 'Relationships',
+                    tableMode: 'multi',
+                    non_paginated: true,
+                    extractMainColumn: 'Title'
+                }
+            ]
         },
         {
             type: 'area-places',
@@ -612,12 +637,19 @@ let changelog = [
         {
             type: 'artist-aliases',
             match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Artist' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
-            tableMode: 'multi', // native tables, h2 headers
-            non_paginated: true
+            buttons: [
+                {
+                    label: 'Show all Aliases for Artist',
+                    targetHeader: 'Aliases',
+                    tableMode: 'single',
+                    extractMainColumn: 'Locale'
+                },
+                {
+                    label: 'Show all Artist Credits for Artist',
+                    targetHeader: 'Artist credits',
+                    tableMode: 'single'
+                }
+            ],
         },
         {
             type: 'artist-releasegroups',
@@ -756,12 +788,14 @@ let changelog = [
 
     // 1. Detect Page Type
     let pageType = '';
-    let activeDefinition = null;
+    let baseDefinition = null;   // Store the permanent base definition
+    let activeDefinition = null; // Will be updated dynamically during fetch
 
     for (const def of pageDefinitions) {
         if (def.match(path, params)) {
             pageType = def.type;
-            activeDefinition = def;
+            baseDefinition = def;   // Save the base reference
+            activeDefinition = def; // Set default active definition
             // Add debug logs for tablemode and pagetype at the beginning of execution
             Lib.debug('init', `Detected pageType: ${pageType}`);
             Lib.debug('init', `Detected tableMode: ${activeDefinition ? activeDefinition.tableMode : 'unknown'}`);
@@ -812,8 +846,8 @@ let changelog = [
         eb.textContent = conf.label;
         eb.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px;';
         eb.type = 'button';
-        // If params are defined in config, pass them; otherwise standard fetch
-        eb.onclick = (e) => startFetchingProcess(e, conf.params || null);
+        // Pass the entire config object
+        eb.onclick = (e) => startFetchingProcess(e, conf, activeDefinition);
         controlsContainer.appendChild(eb);
         allActionButtons.push(eb);
     });
@@ -969,6 +1003,39 @@ let changelog = [
     let isLoaded = false;
     let stopRequested = false;
     let multiTableSortStates = new Map();
+
+    /**
+     * Filters tables from a document/container based on a preceding header text.
+     */
+    function parseDocumentForTables(doc, targetHeader) {
+        let tablesToProcess = [];
+
+        if (targetHeader) {
+            const headers = Array.from(doc.querySelectorAll('h2'));
+            const foundH2 = headers.find(h => h.textContent.trim().toLowerCase().includes(targetHeader.toLowerCase()));
+
+            if (foundH2) {
+                Lib.debug('parse', `Found header ${foundH2}`);
+                let next = foundH2.nextElementSibling;
+                while (next && next.nodeName !== 'H2') {
+                    if (next.classList.contains('tbl')) {
+                        Lib.debug('parse', `Found table...`);
+                        tablesToProcess.push(next);
+                    } else {
+                        const innerTables = next.querySelectorAll('table.tbl');
+                        if (innerTables.length > 0) tablesToProcess.push(...Array.from(innerTables));
+                    }
+                    next = next.nextElementSibling;
+                }
+            }
+        } else {
+            Lib.debug('parse', 'No targetHeader provided; returning all tables found in container.');
+            tablesToProcess = Array.from(doc.querySelectorAll('table.tbl'));
+        }
+
+        Lib.debug('parse', `parseDocumentForTables: Found ${tablesToProcess.length} total tables. Target header filter: "${targetHeader || 'none'}"`);
+        return tablesToProcess;
+    }
 
     /**
      * Removes various clutter elements from the MusicBrainz page to prepare for consolidated view.
@@ -1651,16 +1718,119 @@ let changelog = [
         }
     }
 
+    function determineMaxPageFromDOM() {
+        let maxPage = 1;
+
+        Lib.debug('fetch', 'Context: Standard pagination. Parsing "ul.pagination" from current page.');
+        const pagination = document.querySelector('ul.pagination');
+        if (pagination) {
+            const links = Array.from(pagination.querySelectorAll('li a'));
+            const nextIdx = links.findIndex(a => a.textContent.trim() === 'Next');
+            if (nextIdx > 0) {
+                const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
+                const p = urlObj.searchParams.get('page');
+                if (p) {
+                    maxPage = parseInt(p, 10);
+                    Lib.debug('fetch', `determineMaxPageFromDOM: Found "Next" link. Extracted page: ${maxPage}`);
+                }
+            } else if (links.length > 0) {
+                const pageNumbers = links
+                      .map(a => {
+                          const p = new URL(a.href, window.location.origin).searchParams.get('page');
+                          return p ? parseInt(p, 10) : 1;
+                      })
+                      .filter(num => !isNaN(num));
+                if (pageNumbers.length > 0) {
+                    maxPage = Math.max(...pageNumbers);
+                    Lib.debug('fetch', `determineMaxPageFromDOM: Parsed page numbers from list. Max found: ${maxPage}`);
+                }
+            }
+            return maxPage;
+        } else {
+            return maxPage;
+            Lib.debug('fetch', 'determineMaxPageFromDOM: No pagination element found; assuming single page (maxPage = 1).');
+        }
+    }
+
     /**
      * Generalized fetching process
      * @param {Event} e - The click event
      * @param {Object} overrideParams - Specific query parameters for artist-releasegroups and artist-releases buttons
      */
-    async function startFetchingProcess(e, overrideParams = null) {
-        // Capture currentTarget immediately before any awaits
-        const activeBtn = e.currentTarget;
+    async function startFetchingProcess(e, buttonConfig, baseDef) {
+        // MERGE LOGIC: Combine base definition with button-specific overrides
+        // We create a new object to avoid polluting the original definition
+        const mergedFeatures = {
+            ...(baseDef.features || {}),
+            ...(buttonConfig.features || {})
+        };
+
+        // Handle specific case: 'extractMainColumn' might be at root of button config (per your example)
+        // but the script expects it inside 'features'.
+        if (buttonConfig.extractMainColumn) {
+            mergedFeatures.extractMainColumn = buttonConfig.extractMainColumn;
+        }
+
+        // Update the GLOBAL activeDefinition so helper functions (cleanupHeaders, etc.) see the changes
+        activeDefinition = {
+            ...baseDef,
+            ...buttonConfig,
+            features: mergedFeatures
+        };
+
+        const activeBtn = e.target;
+        // Now access properties from the NEW activeDefinition
+        const overrideParams = activeDefinition.params || null;
+        const targetHeader = activeDefinition.targetHeader || null;
+
         e.preventDefault();
         e.stopPropagation();
+
+        // UI Cleanup: If targeting a specific header, remove ONLY those h2 headers and
+        // their associated tables from the current page which are part of the OTHER button configurations.
+        if (targetHeader && activeDefinition && activeDefinition.buttons) {
+            const otherHeaders = activeDefinition.buttons
+                .map(b => b.targetHeader)
+                .filter(oh => oh && oh !== targetHeader);
+
+            if (otherHeaders.length > 0) {
+                const container = document.getElementById('content') || document.body;
+
+                // Specifically target h2 headers that belong to other configurations
+                container.querySelectorAll('h2').forEach(h => {
+                    const headerText = h.textContent.trim();
+                    const isOtherConfigHeader = otherHeaders.some(oh => headerText.startsWith(oh));
+
+                    if (isOtherConfigHeader) {
+                        Lib.debug('cleanup', `Removing other configured section starting with header: "${headerText}"`);
+
+                        // Adjust logic: remove everything starting with the h2 header AND eventual optional elements
+                        // after it PLUS the final table
+                        let next = h.nextElementSibling;
+                        let tableRemoved = false;
+
+                       while (next && !tableRemoved) {
+                            let toRemove = next;
+                            next = next.nextElementSibling;
+
+                            // Check if this sibling is the final table to remove
+                            if (toRemove.tagName === 'TABLE' && toRemove.classList.contains('tbl')) {
+                                tableRemoved = true;
+                            }
+
+                            toRemove.remove();
+
+                            // Safety check: stop if we hit another header before finding a table to prevent over-deletion
+                            if (next && ['H2', 'H3'].includes(next.tagName)) break;
+                        }
+
+                        // Finally remove the header itself
+                        h.remove();
+                    }
+                });
+                Lib.debug('cleanup', `Cleaned UI to target header: "${targetHeader}"`);
+            }
+        }
 
         // Reload the page if a fetch process has already run to fix column-level filter unresponsiveness
         if (isLoaded) {
@@ -1711,33 +1881,8 @@ let changelog = [
             Lib.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
             maxPage = await fetchMaxPageGeneric(path, overrideParams);
         } else {
-            Lib.debug('fetch', 'Context: Standard pagination. Parsing "ul.pagination" from current page.');
-            const pagination = document.querySelector('ul.pagination');
-            if (pagination) {
-                const links = Array.from(pagination.querySelectorAll('li a'));
-                const nextIdx = links.findIndex(a => a.textContent.trim() === 'Next');
-                if (nextIdx > 0) {
-                    const urlObj = new URL(links[nextIdx - 1].href, window.location.origin);
-                    const p = urlObj.searchParams.get('page');
-                    if (p) {
-                        maxPage = parseInt(p, 10);
-                        Lib.debug('fetch', `Found "Next" link. Extracted page: ${maxPage}`);
-                    }
-                } else if (links.length > 0) {
-                    const pageNumbers = links
-                        .map(a => {
-                            const p = new URL(a.href, window.location.origin).searchParams.get('page');
-                            return p ? parseInt(p, 10) : 1;
-                        })
-                        .filter(num => !isNaN(num));
-                    if (pageNumbers.length > 0) {
-                        maxPage = Math.max(...pageNumbers);
-                        Lib.debug('fetch', `Parsed page numbers from list. Max found: ${maxPage}`);
-                    }
-                }
-            } else {
-                Lib.debug('fetch', 'No pagination element found; assuming single page (maxPage = 1).');
-            }
+            Lib.info('fetch', 'Context: Paginated page definition. Fetching maxPage from DOM.');
+            maxPage = determineMaxPageFromDOM();
         }
 
         const maxThreshold = Lib.settings.sa_max_page;
@@ -1779,6 +1924,9 @@ let changelog = [
         let totalRenderingTime = 0;
 
         const baseUrl = window.location.origin + window.location.pathname;
+        const currentUrlParams = new URLSearchParams(window.location.search);
+        const currentPageNum = parseInt(currentUrlParams.get('page') || '1', 10);
+
         let pagesProcessed = 0;
         let cumulativeFetchTime = 0;
         let lastCategorySeenAcrossPages = null;
@@ -1802,10 +1950,26 @@ let changelog = [
                     Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
                 }
 
-                Lib.debug('fetch', `Fetching URL for page ${p}: ${fetchUrl.toString()}`);
+                let doc;
+                try {
+                    // If this page matches the current browser page and no specific overrides are requested, use the
+                    // existing document instead of a redundant network fetch.
+                    if (p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
+                        Lib.info('fetch', `Page ${p} is current page. Using existing document.`);
+                        doc = document;
+                   } else {
+                        Lib.info('fetch', `Fetching URL for page ${p}: ${fetchUrl.toString()}`);
+                        const html = await fetchHtml(fetchUrl.toString());
+                        doc = new DOMParser().parseFromString(html, "text/html");
+                    }
 
-                const html = await fetchHtml(fetchUrl.toString());
-                const doc = new DOMParser().parseFromString(html, 'text/html');
+                    if (!doc) {
+                        throw new Error(`Failed to obtain document for page ${p}`);
+                    }
+                } catch (e) {
+                    Lib.error('fetch', `Error fetching/parsing page ${p}:`, e);
+                    break; // Stop fetching further pages on error
+                }
 
                 let countryDateIdx = -1;
                 let locationIdx = -1;
@@ -1825,7 +1989,19 @@ let changelog = [
                 // Prepare candidates list if config is string or array
                 const mainColCandidates = Array.isArray(mainColConfig) ? mainColConfig : (mainColConfig ? [mainColConfig] : []);
 
-                const referenceTable = doc.querySelector('table.tbl');
+                // Use parseDocumentForTables to filter which tables we actually process
+                const tablesToProcess = parseDocumentForTables(doc, targetHeader);
+
+                if (tablesToProcess.length === 0) {
+                    Lib.debug('fetch', `No tables found matching "${targetHeader}" on page ${p} to parse. Skipping.`);
+                    continue;
+                } else {
+                    Lib.debug('fetch', `Found matching table "${tablesToProcess[0]}" on page ${p} to process.`);
+                }
+
+                // Use the first matching table to establish indices/headers if not already done
+                const referenceTable = tablesToProcess[0];
+
                 if (referenceTable) {
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
@@ -1877,16 +2053,16 @@ let changelog = [
                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
                             if (row.cells.length > 1) {
                                 const newRow = document.importNode(row, true);
-                                Lib.debug(
-                                    'row',
-                                    `Row cloned → initial cell count=${newRow.cells.length}`
-                                );
+                                // Lib.debug(
+                                //     'row',
+                                //     `Row cloned → initial cell count=${newRow.cells.length}`
+                                // );
                                 [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
                                 currentGroup.rows.push(newRow);
-                                Lib.debug(
-                                    'row',
-                                    `Row BEFORE push → cells=${newRow.cells.length}, mainColIdx=${mainColIdx}, countryDateIdx=${countryDateIdx}`
-                                );
+                                // Lib.debug(
+                                //     'row',
+                                //     `Row BEFORE push → cells=${newRow.cells.length}, mainColIdx=${mainColIdx}, countryDateIdx=${countryDateIdx}`
+                                // );
                                 rowsInThisPage++;
                                 totalRowsAccumulated++;
                                 pageCategoryMap.set(category, (pageCategoryMap.get(category) || 0) + 1);

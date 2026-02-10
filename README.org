@@ -32427,6 +32427,7 @@ and pageType "artist-aliases" when pressing the button for "Show all Artist Cred
 actually the wole page gets rerendered but the "Aliases" header of the first table is missing (actually the whole header
 plus the corresponding table should be removed already in this case) and "Artist credits" table doesn't get processed at all
 
+*** country/date not working, check other pages which using it
 
 ** show all button is almost invisible
 
