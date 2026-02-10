@@ -32427,7 +32427,122 @@ and pageType "artist-aliases" when pressing the button for "Show all Artist Cred
 actually the wole page gets rerendered but the "Aliases" header of the first table is missing (actually the whole header
 plus the corresponding table should be removed already in this case) and "Artist credits" table doesn't get processed at all
 
-*** country/date not working, check other pages which using it
+*** country/date not working, check other pages which using it Area-Releases
+
+In the uploaded userscript
+in the case of https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
+
+and pageType "area-releases" when pressing the button for "Show all Releases for Area"
+
+the following console log is produced
+
+#+begin_example
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL basepath: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL path: /area/489ce91b-6658-3307-9877-795b68554c98/releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Query parameters:  
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Has "link_type_id": false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: area-releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: undefined 
+[VZ-ShowAllEntities: area-releases] 🚀 Initializing script for path: /area/489ce91b-6658-3307-9877-795b68554c98/releases
+[VZ-ShowAllEntities: area-releases] 🧹 Removing other configured section starting with header: "Relationships" 
+[VZ-ShowAllEntities: area-releases] 🧹 Cleaned UI to target header: "Releases" 
+[VZ-ShowAllEntities: area-releases] 🧹 Signalling other scripts to stop... 
+[VZ-ShowAllEntities: area-releases] 📥 Starting fetch process... null
+[VZ-ShowAllEntities: area-releases] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+[VZ-ShowAllEntities: area-releases] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+[VZ-ShowAllEntities: area-releases] 📥 determineMaxPageFromDOM: Found "Next" link. Extracted page: 8450 
+[VZ-ShowAllEntities: area-releases] 📥 Total pages to fetch: 8450 
+[VZ-ShowAllEntities: area-releases] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntities: area-releases] 📥 Page 1 is current page. Using existing document. 
+[VZ-ShowAllEntities: area-releases] 📝 Found header [object HTMLHeadingElement] 
+[VZ-ShowAllEntities: area-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "Releases" 
+[VZ-ShowAllEntities: area-releases] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+[VZ-ShowAllEntities: area-releases] 📝 Detected indices → mainColIdx=1 (Release), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: area-releases 
+[VZ-ShowAllEntities: area-releases] 📝 Table body found. Processing child nodes. Total nodes: 100 
+[VZ-ShowAllEntities: area-releases] 📥 Page 1/8450 processed in 0.00s. Rows on page: 100. Total: 100 
+[VZ-ShowAllEntities: area-releases] 📥 Fetching URL for page 2: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=2 
+[VZ-ShowAllEntities: area-releases] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=2 
+[VZ-ShowAllEntities: area-releases] 📝 Found header [object HTMLHeadingElement] 
+[VZ-ShowAllEntities: area-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "Releases" 
+[VZ-ShowAllEntities: area-releases] 📥 Found matching table "[object HTMLTableElement]" on page 2 to process. 
+[VZ-ShowAllEntities: area-releases] 📝 Detected indices → mainColIdx=1 (Release), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: area-releases 
+[VZ-ShowAllEntities: area-releases] 📝 Table body found. Processing child nodes. Total nodes: 100 
+[VZ-ShowAllEntities: area-releases] 📥 Page 2/8450 processed in 6.70s. Rows on page: 100. Total: 200 
+[VZ-ShowAllEntities: area-releases] 📥 Fetching URL for page 3: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=3 
+[VZ-ShowAllEntities: area-releases] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=3 
+[VZ-ShowAllEntities: area-releases] 🧹 Stop requested by user. 
+[VZ-ShowAllEntities: area-releases] 📝 Found header [object HTMLHeadingElement] 
+[VZ-ShowAllEntities: area-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "Releases" 
+[VZ-ShowAllEntities: area-releases] 📥 Found matching table "[object HTMLTableElement]" on page 3 to process. 
+[VZ-ShowAllEntities: area-releases] 📝 Detected indices → mainColIdx=1 (Release), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: area-releases 
+[VZ-ShowAllEntities: area-releases] 📝 Table body found. Processing child nodes. Total nodes: 100 
+[VZ-ShowAllEntities: area-releases] 📥 Page 3/8450 processed in 7.05s. Rows on page: 100. Total: 300 
+[VZ-ShowAllEntities: area-releases] 🧹 Fetch loop stopped at page 4 
+[VZ-ShowAllEntities: area-releases] 🎨 DOM rendering starting... 
+[VZ-ShowAllEntities: area-releases] 🎨 Starting updateH2Count: filtered=300, total=300 
+[VZ-ShowAllEntities: area-releases] 🎨 Searching for target H2. Current pageType: area-releases 
+[VZ-ShowAllEntities: area-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: area-releases] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: area-releases] 🎨 Target element identified: "Releases..." 
+[VZ-ShowAllEntities: area-releases] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ-ShowAllEntities: area-releases] 🎨 Appending filterContainer to targetH2. 
+[VZ-ShowAllEntities: area-releases] 🎨 Updated header/target Releases count: (300) 
+[VZ-ShowAllEntities: area-releases] 🎨 Starting renderFinalTable with 300 rows. 
+[VZ-ShowAllEntities: area-releases] 🎨 Final table structure → headers=9, rowCells=11 
+[VZ-ShowAllEntities: area-releases] 🎨 Finished renderFinalTable. Injected 300 rows into DOM. 
+[VZ-ShowAllEntities: area-releases] 🧹 cleanupHeaders() called → existing headers=[ | Release | Artist | Format | Tracks | Country/Date | Label | Catalog# | Barcode] 
+[VZ-ShowAllEntities: area-releases] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: area-releases] 🧹 Injecting synthetic header: MB-Name 
+[VZ-ShowAllEntities: area-releases] 🧹 Injecting synthetic header: Comment 
+[VZ-ShowAllEntities: area-releases] 🧹 Running final cleanup... 
+[VZ-ShowAllEntities: area-releases] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ-ShowAllEntities: area-releases] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntities: area-releases] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntities: area-releases] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ-ShowAllEntities: area-releases] 🎨 DOM rendering finished in 8.30ms 
+[VZ-ShowAllEntities: area-releases] ✅ Process complete. Final Row Count: 300. Total Time: 13.77s 
+#+end_example
+
+but the configuration clearly states that the "Country/Date" column should be splitted
+
+#+begin_example
+                    features: {
+                        splitCD: true
+                    }
+#+end_example
+
+in
+
+#+begin_example
+        {
+            type: 'area-releases',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/) && !params.has('link_type_id'),
+            buttons: [
+                {
+                    label: 'Show all Releases for Area',
+                    targetHeader: 'Releases',
+                    tableMode: 'single',
+                    extractMainColumn: 'Release',
+                    features: {
+                        splitCD: true
+                    }
+                },
+                {
+                    label: 'Show all Release Relationships for Area',
+                    targetHeader: 'Relationships',
+                    tableMode: 'multi',
+                    non_paginated: true,
+                    extractMainColumn: 'Title'
+                }
+            ]
+        },
+#+end_example
+
+which clearly doesn't happen as
+there are NO new "Country" and "Date" columns in the final rendered page.
 
 ** show all button is almost invisible
 

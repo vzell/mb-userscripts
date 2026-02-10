@@ -827,9 +827,10 @@ let changelog = [
     }
 
     // 3. Set Feature Flags based on active definition
-    const typesWithSplitCD = (activeDefinition && activeDefinition.features?.splitCD) ? [pageType] : [];
-    const typesWithSplitLocation = (activeDefinition && activeDefinition.features?.splitLocation) ? [pageType] : [];
-    const typesWithSplitArea = (activeDefinition && activeDefinition.features?.splitArea) ? [pageType] : [];
+    // These are evaluated dynamically during fetch based on button-specific features
+    let typesWithSplitCD = [];
+    let typesWithSplitLocation = [];
+    let typesWithSplitArea = [];
 
     // --- UI Elements ---
     const controlsContainer = document.createElement('div');
@@ -1779,6 +1780,11 @@ let changelog = [
             ...buttonConfig,
             features: mergedFeatures
         };
+
+        // Update feature flags based on the merged activeDefinition
+        typesWithSplitCD = (activeDefinition.features?.splitCD) ? [pageType] : [];
+        typesWithSplitLocation = (activeDefinition.features?.splitLocation) ? [pageType] : [];
+        typesWithSplitArea = (activeDefinition.features?.splitArea) ? [pageType] : [];
 
         const activeBtn = e.target;
         // Now access properties from the NEW activeDefinition
