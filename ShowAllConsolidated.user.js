@@ -46,6 +46,8 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '3.1.0+2026-02-10', description: 'Fix overflow tables for Area-Releases pages in the case of Relationship subtable'},
+    {version: '3.0.0+2026-02-10', description: 'Add support for Area-Releases pages with multiple different initial table data'},
     {version: '2.7.0+2026-02-09', description: 'Transform search results paragraph into collapsible H2 header.'},
     {version: '2.6.0+2026-02-08', description: 'Add "Area splitting".'},
     {version: '2.5.1+2026-02-08', description: 'Fix URL construction to preserve query parameters (fixes Search pages). Added extra debugging for table detection.'},
