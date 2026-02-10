@@ -1890,6 +1890,7 @@ let changelog = [
             Lib.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
             maxPage = await fetchMaxPageGeneric(path, overrideParams);
         } else {
+            Lib.info('fetch', 'Context: Paginated page definition. Fetching maxPage from DOM.');
             maxPage = determineMaxPageFromDOM();
         }
 
