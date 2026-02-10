@@ -32379,8 +32379,53 @@ page.
 
 *** aliases
 
+In the uploaded userscript
+in the case of
+
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/aliases
 
+and pageType "artist-aliases" when pressing the button for "Show all Artist Credits for Artist"
+
+#+begin_example
+[VZ-ShowAllEntities: artist-aliases] 🧹 Removing other configured section starting with header: "Aliases" 
+[VZ-ShowAllEntities: artist-aliases] 🧹 Cleaned UI to target header: "Artist credits" 
+[VZ-ShowAllEntities: artist-aliases] 🧹 Signalling other scripts to stop... 
+[VZ-ShowAllEntities: artist-aliases] 📥 Starting fetch process... null
+[VZ-ShowAllEntities: artist-aliases] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+[VZ-ShowAllEntities: artist-aliases] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+[VZ-ShowAllEntities: artist-aliases] 📥 Total pages to fetch: 1 
+[VZ-ShowAllEntities: artist-aliases] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntities: artist-aliases] 📥 Page 1 is current page. Using existing document. 
+[VZ-ShowAllEntities: artist-aliases] 📝 Found header [object HTMLHeadingElement] 
+[VZ-ShowAllEntities: artist-aliases] 📝 Found table... 
+[VZ-ShowAllEntities: artist-aliases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "Artist credits" 
+[VZ-ShowAllEntities: artist-aliases] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+[VZ-ShowAllEntities: artist-aliases] 📝 Detected indices → mainColIdx=-1 (N/A), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: artist-aliases 
+[VZ-ShowAllEntities: artist-aliases] 📝 Table body found. Processing child nodes. Total nodes: 5 
+[VZ-ShowAllEntities: artist-aliases] 📥 Page 1/1 processed in 0.00s. Rows on page: 5. Total: 5 
+[VZ-ShowAllEntities: artist-aliases] 🎨 DOM rendering starting... 
+[VZ-ShowAllEntities: artist-aliases] 🎨 Starting updateH2Count: filtered=5, total=5 
+[VZ-ShowAllEntities: artist-aliases] 🎨 Searching for target H2. Current pageType: artist-aliases 
+[VZ-ShowAllEntities: artist-aliases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: artist-aliases] 🎨 Stopping H2 search at index 0: table no longer follows this header. 
+[VZ-ShowAllEntities: artist-aliases] 🎨 Failed to identify a target H2 header for count update. 
+[VZ-ShowAllEntities: artist-aliases] 🎨 Starting renderFinalTable with 5 rows. 
+[VZ-ShowAllEntities: artist-aliases] 🎨 Final table structure → headers=7, rowCells=9 
+[VZ-ShowAllEntities: artist-aliases] 🎨 Finished renderFinalTable. Injected 5 rows into DOM. 
+[VZ-ShowAllEntities: artist-aliases] 🧹 cleanupHeaders() called → existing headers=[Alias | Sort name | Begin date | End date | Type | Locale | Actions] 
+[VZ-ShowAllEntities: artist-aliases] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: artist-aliases] 🧹 cleanupHeaders() called → existing headers=[Name | Actions] 
+[VZ-ShowAllEntities: artist-aliases] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: artist-aliases] 🧹 Running final cleanup... 
+[VZ-ShowAllEntities: artist-aliases] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ-ShowAllEntities: artist-aliases] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntities: artist-aliases] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntities: artist-aliases] 🎨 DOM rendering finished in 2.80ms 
+[VZ-ShowAllEntities: artist-aliases] ✅ Process complete. Final Row Count: 5. Total Time: 0.00s 
+#+end_example
+
+actually the wole page gets rerendered but the "Aliases" header of the first table is missing (actually the whole header
+plus the corresponding table should be removed already in this case) and "Artist credits" table doesn't get processed at all
 
 
 ** show all button is almost invisible
