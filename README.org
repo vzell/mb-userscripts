@@ -32027,7 +32027,6 @@ function parseDocumentForTables(container, targetHeader) {
     }
 #+end_example
 
-
 *** UI Cleanup:
 
 In the uploaded userscript
@@ -32236,6 +32235,153 @@ I think the problem is in this code
 This code should not be executed in the case when a non_paginated table is being deteced and already there (the cleanup has been run), so basically the current visible tabel should be processed and rendered for the final page
 
 Please fix, it should actually just parse the non_paginated page below the h2 header "Relationships" and generate the final page
+
+*** overflow page bug with just 250 rows - comparison
+
+In the uploaded userscript
+there is a discrepancy when generating the final rendered page for initially paginated pages with the query parameters
+"direction" and "link_type_id" are used:
+
+For the good, functioning case of e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=1
+
+I get the following console output
+
+#+begin_example
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL basepath: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL path: /artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Query parameters: direction=1&link_type_id=710&page=1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Has "link_type_id": true 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: artist-relationships-filtered 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: single 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🚀 Initializing script for path: /artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+[VZ-ShowAllEntities: artist-relationships-filtered] 🧹 Signalling other scripts to stop... 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Starting fetch process... null
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 determineMaxPageFromDOM: Found "Next" link. Extracted page: 3 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Total pages to fetch: 3 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Page 1 is current page. Using existing document. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 Detected indices → mainColIdx=1 (Title), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: artist-relationships-filtered 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 Table body found. Processing child nodes. Total nodes: 250 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Page 1/3 processed in 0.01s. Rows on page: 250. Total: 250 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Fetching URL for page 2: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=2 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=2 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Found matching table "[object HTMLTableElement]" on page 2 to process. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 Detected indices → mainColIdx=1 (Title), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: artist-relationships-filtered 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 Table body found. Processing child nodes. Total nodes: 250 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Page 2/3 processed in 1.20s. Rows on page: 250. Total: 500 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Fetching URL for page 3: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=3 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=3 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Found matching table "[object HTMLTableElement]" on page 3 to process. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 Detected indices → mainColIdx=1 (Title), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: artist-relationships-filtered 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📝 Table body found. Processing child nodes. Total nodes: 164 
+[VZ-ShowAllEntities: artist-relationships-filtered] 📥 Page 3/3 processed in 1.03s. Rows on page: 164. Total: 664 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 DOM rendering starting... 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 Starting updateH2Count: filtered=664, total=664 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 Searching for target H2. Current pageType: artist-relationships-filtered 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 Target element identified: "“holds phonographic copyright ..." 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 Appending filterContainer to targetH2. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 Updated header/target “holds phonographic copyright  count: (664) 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 Starting renderFinalTable with 664 rows. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 Final table structure → headers=5, rowCells=7 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 Finished renderFinalTable. Injected 664 rows into DOM. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🧹 cleanupHeaders() called → existing headers=[Date | Title | Credited as | Attributes | Artist] 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🧹 Injecting synthetic header: MB-Name 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🧹 Injecting synthetic header: Comment 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🧹 Running final cleanup... 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🧹 Sanojjonas elements found during final cleanup. Removing now... 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🧹 Removing Sanojjonas containers... 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🧹 Found consecutive <br> tags: removed 9 tags at instance 1. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🧹 Final cleanup complete: Removed a total of 9 consecutive <br> tags across 1 locations. 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntities: artist-relationships-filtered] 🎨 DOM rendering finished in 19.70ms 
+[VZ-ShowAllEntities: artist-relationships-filtered] ✅ Process complete. Final Row Count: 664. Total Time: 2.26s 
+#+end_example
+
+I the BAD, non-functioning case e.g. the URL https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direction=1&link_type_id=835&page=1
+
+the following
+
+#+begin_example
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direction=1&link_type_id=835&page=1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL basepath: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL path: /area/489ce91b-6658-3307-9877-795b68554c98/releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Query parameters: direction=1&link_type_id=835&page=1 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Has "link_type_id": true 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: area-releases-filtered 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: undefined 
+[VZ-ShowAllEntities: area-releases-filtered] 🚀 Initializing script for path: /area/489ce91b-6658-3307-9877-795b68554c98/releases
+[VZ-ShowAllEntities: area-releases-filtered] 🧹 Signalling other scripts to stop... 
+[VZ-ShowAllEntities: area-releases-filtered] 📥 Starting fetch process... null
+[VZ-ShowAllEntities: area-releases-filtered] 📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+[VZ-ShowAllEntities: area-releases-filtered] 📥 Total pages to fetch: 1 
+[VZ-ShowAllEntities: area-releases-filtered] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntities: area-releases-filtered] 📥 Page 1 is current page. Using existing document. 
+[VZ-ShowAllEntities: area-releases-filtered] 📝 Found header [object HTMLHeadingElement] 
+[VZ-ShowAllEntities: area-releases-filtered] 📝 Found table... 
+[VZ-ShowAllEntities: area-releases-filtered] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "Relationships" 
+[VZ-ShowAllEntities: area-releases-filtered] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+[VZ-ShowAllEntities: area-releases-filtered] 📝 Detected indices → mainColIdx=1 (Title), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: area-releases-filtered 
+[VZ-ShowAllEntities: area-releases-filtered] 📝 Table body found. Processing child nodes. Total nodes: 250 
+[VZ-ShowAllEntities: area-releases-filtered] 📥 Page 1/1 processed in 0.01s. Rows on page: 250. Total: 250 
+[VZ-ShowAllEntities: area-releases-filtered] 📥   Summary: Unknown: +250 (Total: 250) 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 DOM rendering starting... 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Starting updateH2Count: filtered=250, total=250 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Searching for target H2. Current pageType: area-releases-filtered 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Target element identified: "“manufacturing location for” r..." 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Updated header/target “manufacturing location for” r count: (250) 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Starting renderGroupedTable with 1 categories. Query: "" 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Cloning table head for template. 
+[VZ-ShowAllEntities: area-releases-filtered] 🧹 cleanupHeaders() called → existing headers=[Date | Title | Credited as | Attributes | Artist] 
+[VZ-ShowAllEntities: area-releases-filtered] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: area-releases-filtered] 🧹 Injecting synthetic header: MB-Name 
+[VZ-ShowAllEntities: area-releases-filtered] 🧹 Injecting synthetic header: Comment 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Searching for target H2. Current pageType: area-releases-filtered 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 No query provided; performing initial cleanup of existing elements. 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨  Injecting master toggle and filter container after target header “manufacturing location for” r. 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Processing group: "Unknown" with 250 rows. 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Creating new table and H3 for group "Unknown". 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Group "Unknown" auto-expand status: false 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Finished renderGroupedTable. 
+[VZ-ShowAllEntities: area-releases-filtered] 🧹 Running final cleanup... 
+[VZ-ShowAllEntities: area-releases-filtered] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ-ShowAllEntities: area-releases-filtered] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntities: area-releases-filtered] 🎨 DOM rendering finished in 14.60ms 
+[VZ-ShowAllEntities: area-releases-filtered] ✅ Process complete. Final Row Count: 250. Total Time: 0.02s 
+#+end_example
+
+So it seems for the special case when the pageType is "area-releases-filtered", although when pressing the action
+button, the pagination information IS available, the script somehow chooses to use just the rows from the current, first
+page.
+
+*** aliases
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/aliases
+
+
 
 ** show all button is almost invisible
 
@@ -33848,6 +33994,7 @@ match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
 ** talk to
 *** jesus2009 - render ing of coverimages befreo table and before each row
 *** xxx -for RGs read in all releases and make collpasable
+
 
 * support for per button configuration
 
