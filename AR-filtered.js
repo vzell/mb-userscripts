@@ -397,19 +397,10 @@ let changelog = [
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/) && params.has('link_type_id'),
             buttons: [
                 {
-                    label: 'Show all Releases for Area',
-                    targetHeader: 'Releases',
-                    tableMode: 'single',
-                    extractMainColumn: 'Release',
-                    features: {
-                        splitCD: true
-                    }
-                },
-                {
                     label: 'Show all Release Relationships for Area (filtered)',
                     targetHeader: 'Relationships',
-                    tableMode: 'multi',
-                    non_paginated: true,
+                    tableMode: 'single',
+                    non_paginated: false,
                     extractMainColumn: 'Title'
                 }
             ]
