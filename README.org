@@ -31363,6 +31363,7 @@ Since you recently added logic to transform search results (converting p to h2),
 
 #+end_example
 
+
 * refactor in memory column removel to filter large pagination pages
 
 
@@ -31942,8 +31943,299 @@ so basically also include in brackets the columns names not only the index numbe
 *** End area
 ** generate new "total tracks" column based on multiple mediums of a release
 ** Area-Releases has a mixture of single table paginated (Releases) and multitable with subheadings (Relationships)
+*** code flow
 
-https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
+In the uploaded script,
+- generate a high level code flow diagram
+- and a textual high level description
+
+*** initial
+
+In the uploaded script,
+because MusicBrainz pages could potentially have more entry points to parse related data in the final rendered data table or data tables
+e.g. httṕs://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
+
+In that specific URL of pageType: 'area-releases', we have the following two h2 headers:
+
+- Releases: paginated access to data (tableMode: 'single')
+- Relationships: non_paginated access to data (tableMode: 'multi')
+
+Please extend the "pageDefinitions" variable to support a variable which specifies which h2 header should be targeted
+for data acumulation and display when pressing the corresponding action button (there should one action button per h2
+header generated for these types of pages). The other (or maybe others) should be deleted from the final renderd page.
+The "tableMode" and "non_paginated" mode should be specifyable for each button clicked
+
+Please refactor accordingly.
+
+*** Please add comprehensive debug statement to the following code
+
+Please add comprehensive debug statement to the following code
+
+#+begin_example
+    function parseDocumentForTables(container, targetHeader) {
+        const tables = Array.from(container.querySelectorAll('table.tbl'));
+        if (!targetHeader) return tables;
+
+        return tables.filter(table => {
+            let prev = table.previousElementSibling;
+            // Traverse upwards to find the nearest H2 or H3
+            while (prev) {
+                if (['H2', 'H3'].includes(prev.tagName)) {
+                    return prev.textContent.trim().startsWith(targetHeader);
+                }
+                prev = prev.previousElementSibling;
+            }
+            return false;
+        });
+    }
+#+end_example
+
+*** answer
+
+#+begin_example
+function parseDocumentForTables(container, targetHeader) {
+        const tables = Array.from(container.querySelectorAll('table.tbl'));
+        Lib.debug('parse', `parseDocumentForTables: Found ${tables.length} total tables. Target header filter: "${targetHeader || 'none'}"`);
+
+        if (!targetHeader) {
+            Lib.debug('parse', 'No targetHeader provided; returning all tables found in container.');
+            return tables;
+        }
+
+        const filteredTables = tables.filter((table, index) => {
+            let prev = table.previousElementSibling;
+            Lib.debug('parse', `Inspecting table index ${index} (ID: ${table.id || 'N/A'}, Classes: ${table.className})`);
+
+            // Traverse upwards to find the nearest H2 or H3
+            while (prev) {
+                if (['H2', 'H3'].includes(prev.tagName)) {
+                    const headerText = prev.textContent.trim();
+                    const isMatch = headerText.startsWith(targetHeader);
+
+                    Lib.debug('parse', `Found preceding header <${prev.tagName}>: "${headerText}". Start-match with "${targetHeader}": ${isMatch}`);
+                    return isMatch;
+                }
+                prev = prev.previousElementSibling;
+            }
+
+            Lib.debug('parse', `Table index ${index} excluded: No preceding H2 or H3 found in the DOM path.`);
+            return false;
+        });
+
+        Lib.debug('parse', `Filtering complete. Returning ${filteredTables.length} tables matching the criteria.`);
+        return filteredTables;
+    }
+#+end_example
+
+
+*** UI Cleanup:
+
+In the uploaded userscript
+
+During the UI Cleanup, when a targetHeader is active, the script should automatically remove ONLY those h2 headers and
+their associated tables from the current page to provide a clean, consolidated view, which are part of the OTHER button
+configurations.
+
+Actually because each h2 header and the table below it are not inside a "div" container, adjust the logic so that
+everything starting with the h2 header AND evenual optional elements after it PLUS the final table is removed from the current page
+
+Please fix the following code
+
+#+begin_example
+    async function startFetchingProcess(e, buttonConfig) {
+        const activeBtn = e.target;
+        const overrideParams = buttonConfig.params || null;
+        const targetHeader = buttonConfig.targetHeader || null;
+        e.preventDefault();
+        e.stopPropagation();
+    // async function startFetchingProcess(e, overrideParams = null) {
+    //     // Capture currentTarget immediately before any awaits
+    //     const activeBtn = e.currentTarget;
+
+        // UI Cleanup: If targeting a specific header, remove all other headers and tables from the current page
+        if (targetHeader) {
+            const container = document.getElementById('content') || document.body;
+            container.querySelectorAll('h2, h3').forEach(h => {
+                if (!h.textContent.trim().startsWith(targetHeader)) {
+                    // Remove this header and any immediate table following it
+                    let next = h.nextElementSibling;
+                    while (next && !['H2', 'H3'].includes(next.tagName)) {
+                        let toRemove = next;
+                        next = next.nextElementSibling;
+                        if (toRemove.tagName === 'TABLE' && toRemove.classList.contains('tbl')) {
+                            toRemove.remove();
+                        } else if (toRemove.tagName === 'BR') {
+                            toRemove.remove();
+                        }
+                    }
+                    h.remove();
+                }
+            });
+            Lib.debug('cleanup', `Cleaned UI to target header: "${targetHeader}"`);
+        }
+#+end_example
+
+*** debug - releases
+
+In the uploaded userscript
+for the URL https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
+
+when pressing the button "Show all Releases for Area" I get the following console log
+
+#+begin_example
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL basepath: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL path: /area/489ce91b-6658-3307-9877-795b68554c98/releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Query parameters:  
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Has "link_type_id": false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: area-releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: undefined 
+[VZ-ShowAllEntities: area-releases] 🚀 Initializing script for path: /area/489ce91b-6658-3307-9877-795b68554c98/releases
+[VZ-ShowAllEntities: area-releases] 🧹 Removing other configured section starting with header: "Relationships" 
+[VZ-ShowAllEntities: area-releases] 🧹 Cleaned UI to target header: "Releases" 
+[VZ-ShowAllEntities: area-releases] 🧹 Signalling other scripts to stop... 
+[VZ-ShowAllEntities: area-releases] 📥 Starting fetch process... null
+[VZ-ShowAllEntities: area-releases] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+[VZ-ShowAllEntities: area-releases] 📥 Found "Next" link. Extracted page: 8448 
+[VZ-ShowAllEntities: area-releases] 📥 Total pages to fetch: 8448 
+[VZ-ShowAllEntities: area-releases] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntities: area-releases] 📥 Fetching URL for page 1: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=1 
+[VZ-ShowAllEntities: area-releases] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=1 
+[VZ-ShowAllEntities: area-releases] 📝 parseDocumentForTables: Found 2 total tables. Target header filter: "Releases" 
+[VZ-ShowAllEntities: area-releases] 📝 Inspecting table index 0 (ID: N/A, Classes: tbl mergeable-table) 
+[VZ-ShowAllEntities: area-releases] 📝 Table index 0 excluded: No preceding H2 or H3 found in the DOM path. 
+[VZ-ShowAllEntities: area-releases] 📝 Inspecting table index 1 (ID: N/A, Classes: tbl) 
+[VZ-ShowAllEntities: area-releases] 📝 Found preceding header <H2>: "Relationships". Start-match with "Releases": false 
+[VZ-ShowAllEntities: area-releases] 📝 Filtering complete. Returning 0 tables matching the criteria. 
+[VZ-ShowAllEntities: area-releases] 📥 No tables found matching "Releases" on page 1 to parse. Skipping. 
+[VZ-ShowAllEntities: area-releases] 📥 Fetching URL for page 2: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=2 
+[VZ-ShowAllEntities: area-releases] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=2 
+[VZ-ShowAllEntities: area-releases] 📝 parseDocumentForTables: Found 2 total tables. Target header filter: "Releases" 
+[VZ-ShowAllEntities: area-releases] 📝 Inspecting table index 0 (ID: N/A, Classes: tbl mergeable-table) 
+[VZ-ShowAllEntities: area-releases] 📝 Table index 0 excluded: No preceding H2 or H3 found in the DOM path. 
+[VZ-ShowAllEntities: area-releases] 📝 Inspecting table index 1 (ID: N/A, Classes: tbl) 
+[VZ-ShowAllEntities: area-releases] 📝 Found preceding header <H2>: "Relationships". Start-match with "Releases": false 
+[VZ-ShowAllEntities: area-releases] 📝 Filtering complete. Returning 0 tables matching the criteria. 
+[VZ-ShowAllEntities: area-releases] 📥 No tables found matching "Releases" on page 2 to parse. Skipping. 
+[VZ-ShowAllEntities: area-releases] 📥 Fetching URL for page 3: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=3 
+[VZ-ShowAllEntities: area-releases] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=3 
+[VZ-ShowAllEntities: area-releases] 🧹 Stop requested by user. 
+[VZ-ShowAllEntities: area-releases] 📝 parseDocumentForTables: Found 2 total tables. Target header filter: "Releases" 
+[VZ-ShowAllEntities: area-releases] 📝 Inspecting table index 0 (ID: N/A, Classes: tbl mergeable-table) 
+[VZ-ShowAllEntities: area-releases] 📝 Table index 0 excluded: No preceding H2 or H3 found in the DOM path. 
+[VZ-ShowAllEntities: area-releases] 📝 Inspecting table index 1 (ID: N/A, Classes: tbl) 
+[VZ-ShowAllEntities: area-releases] 📝 Found preceding header <H2>: "Relationships". Start-match with "Releases": false 
+[VZ-ShowAllEntities: area-releases] 📝 Filtering complete. Returning 0 tables matching the criteria. 
+[VZ-ShowAllEntities: area-releases] 📥 No tables found matching "Releases" on page 3 to parse. Skipping. 
+[VZ-ShowAllEntities: area-releases] 🧹 Fetch loop stopped at page 4 
+[VZ-ShowAllEntities: area-releases] 🎨 DOM rendering starting... 
+[VZ-ShowAllEntities: area-releases] 🎨 Starting updateH2Count: filtered=0, total=0 
+[VZ-ShowAllEntities: area-releases] 🎨 Searching for target H2. Current pageType: area-releases 
+[VZ-ShowAllEntities: area-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: area-releases] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: area-releases] 🎨 Target element identified: "Releases..." 
+[VZ-ShowAllEntities: area-releases] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ-ShowAllEntities: area-releases] 🎨 Appending filterContainer to targetH2. 
+[VZ-ShowAllEntities: area-releases] 🎨 Updated header/target Releases count: (0) 
+[VZ-ShowAllEntities: area-releases] 🎨 Starting renderFinalTable with 0 rows. 
+[VZ-ShowAllEntities: area-releases] 🎨 Final table structure → headers=9, rowCells=0 
+[VZ-ShowAllEntities: area-releases] ❌ No rows provided to renderFinalTable. 
+[VZ-ShowAllEntities: area-releases] 🎨 Finished renderFinalTable. Injected 0 rows into DOM. 
+[VZ-ShowAllEntities: area-releases] 🧹 cleanupHeaders() called → existing headers=[ | Release | Artist | Format | Tracks | Country/Date | Label | Catalog# | Barcode] 
+[VZ-ShowAllEntities: area-releases] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: area-releases] 🧹 Injecting synthetic header: Country 
+[VZ-ShowAllEntities: area-releases] 🧹 Injecting synthetic header: Date 
+[VZ-ShowAllEntities: area-releases] 🧹 Running final cleanup... 
+[VZ-ShowAllEntities: area-releases] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ-ShowAllEntities: area-releases] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntities: area-releases] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntities: area-releases] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ-ShowAllEntities: area-releases] 🎨 DOM rendering finished in 4.80ms 
+[VZ-ShowAllEntities: area-releases] ✅ Process complete. Final Row Count: 0. Total Time: 25.79s 
+#+end_example
+
+The final render page has the right h2 header selected, the table header row is also rendered right, but there is NO data included
+
+*** debug - relationships
+
+In the uploaded userscript
+for the URL https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
+
+when pressing the button "Show all Release Relationships for Area" I get the following console log
+
+#+begin_example
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL basepath: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 URL path: /area/489ce91b-6658-3307-9877-795b68554c98/releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Query parameters:  
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Has "link_type_id": false 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected pageType: area-releases 
+[VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] 🚀 Detected tableMode: undefined 
+[VZ-ShowAllEntities: area-releases] 🚀 Initializing script for path: /area/489ce91b-6658-3307-9877-795b68554c98/releases
+[VZ-ShowAllEntities: area-releases] 🧹 Removing other configured section starting with header: "Releases" 
+[VZ-ShowAllEntities: area-releases] 🧹 Cleaned UI to target header: "Relationships" 
+[VZ-ShowAllEntities: area-releases] 🧹 Signalling other scripts to stop... 
+[VZ-ShowAllEntities: area-releases] 📥 Starting fetch process... null
+[VZ-ShowAllEntities: area-releases] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+[VZ-ShowAllEntities: area-releases] 📥 No pagination element found; assuming single page (maxPage = 1). 
+[VZ-ShowAllEntities: area-releases] 📥 Total pages to fetch: 1 
+[VZ-ShowAllEntities: area-releases] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntities: area-releases] 📥 Fetching URL for page 1: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=1 
+[VZ-ShowAllEntities: area-releases] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?page=1 
+[VZ-ShowAllEntities: area-releases] 📝 Found header [object HTMLHeadingElement] 
+[VZ-ShowAllEntities: area-releases] 📝 Found table... 
+[VZ-ShowAllEntities: area-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "Relationships" 
+[VZ-ShowAllEntities: area-releases] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+[VZ-ShowAllEntities: area-releases] 📝 Detected indices → mainColIdx=-1 (N/A), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: area-releases 
+[VZ-ShowAllEntities: area-releases] 📝 Table body found. Processing child nodes. Total nodes: 100 
+[VZ-ShowAllEntities: area-releases] 📥 Page 1/1 processed in 8.14s. Rows on page: 100. Total: 100 
+[VZ-ShowAllEntities: area-releases] 🎨 DOM rendering starting... 
+[VZ-ShowAllEntities: area-releases] 🎨 Starting updateH2Count: filtered=100, total=100 
+[VZ-ShowAllEntities: area-releases] 🎨 Searching for target H2. Current pageType: area-releases 
+[VZ-ShowAllEntities: area-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: area-releases] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: area-releases] 🎨 Target element identified: "Relationships..." 
+[VZ-ShowAllEntities: area-releases] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ-ShowAllEntities: area-releases] 🎨 Appending filterContainer to targetH2. 
+[VZ-ShowAllEntities: area-releases] 🎨 Updated header/target Relationships count: (100) 
+[VZ-ShowAllEntities: area-releases] 🎨 Starting renderFinalTable with 100 rows. 
+[VZ-ShowAllEntities: area-releases] 🎨 Final table structure → headers=5, rowCells=13 
+[VZ-ShowAllEntities: area-releases] 🎨 Finished renderFinalTable. Injected 100 rows into DOM. 
+[VZ-ShowAllEntities: area-releases] 🧹 cleanupHeaders() called → existing headers=[Date | Title | Credited as | Attributes | Artist] 
+[VZ-ShowAllEntities: area-releases] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: area-releases] 🧹 Injecting synthetic header: Country 
+[VZ-ShowAllEntities: area-releases] 🧹 Running final cleanup... 
+[VZ-ShowAllEntities: area-releases] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ-ShowAllEntities: area-releases] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntities: area-releases] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntities: area-releases] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ-ShowAllEntities: area-releases] 🎨 DOM rendering finished in 4.20ms 
+[VZ-ShowAllEntities: area-releases] ✅ Process complete. Final Row Count: 100. Total Time: 8.15s 
+#+end_example
+
+the script actually shows the right h2 header "Relationships" and the corresponding no_paginated table data, but it
+still somehow assumes to fetch the data from the paginated "Releases table" (although just a single page because it
+correctly identifies the maxPage size to be 1 according to no_paginated.
+
+I think the problem is in this code
+
+#+begin_example
+                // Initialize fetchUrl from the full current URL to preserve Search parameters (query, type, etc.)
+                const fetchUrl = new URL(window.location.href);
+                fetchUrl.searchParams.set('page', p.toString());
+
+                if (overrideParams) {
+                    Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
+                }
+#+end_example
+
+This code should not be executed in the case when a non_paginated table is being deteced and already there (the cleanup has been run), so basically the current visible tabel should be processed and rendered for the final page
+
+Please fix, it should actually just parse the non_paginated page below the h2 header "Relationships" and generate the final page
 
 ** show all button is almost invisible
 
@@ -33511,3 +33803,123 @@ in the code block
 
 I want to prepend th "prefix" to the current transformed p to h2 header
 
+** new name for the script (also check library handling)
+
+In the uploaded userscript
+what would be a much shorter and more pregnant name for this userscript, given the current functionlity
+
+** render final page in a new tab
+
+In the uploaded userscript
+
+given the new configuration parameter
+
+#+begin_example
+        sa_render_in_new_tab: {
+            label: "Render final page in a new tab",
+            type: "checkbox",
+            default: true,
+            description: "Render final page in a new tab instead of reusing the current page view"
+        },
+#+end_example
+
+render the final pages, when pressing the action button (or sometimes action buttons, depending on the pageType) in a
+new tab instead of reusing the same page context.
+
+Use the same logic as for
+
+#+begin_example
+        sa_render_overflow_tables_in_new_tab: {
+            label: "Render overflow tables in a new tab",
+            type: "checkbox",
+            default: true,
+            description: "Render overflow tables in a new tab"
+        },
+#+end_example
+
+Does this even work, given the functionality just replaces specific parts of the current page
+
+** check the routing matching rules again
+
+match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
+
+
+* Priority of script execution and interoperation
+** talk to
+*** jesus2009 - render ing of coverimages befreo table and before each row
+*** xxx -for RGs read in all releases and make collpasable
+
+* support for per button configuration
+
+In the uploaded userscript
+
+the configuration parameters supported sub parameters like "features", "tableMode" or "non_paginated" on the "type"
+level, e.g.
+
+#+begin_example
+        {
+            type: 'series-releases',
+            match: (path) => path.includes('/series'),
+            buttons: [ { label: 'Show all Releases for Series' } ],
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'single',
+	    non_paginated: false
+        },
+#+end_example
+
+now all these sub-parameters can also be specified on the "buttons" level, for each button configuration, e.g.
+
+#+begin_example
+        {
+            type: 'area-releases',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/),
+            buttons: [
+                {
+                    label: 'Show all Releases for Area',
+                    targetHeader: 'Releases',
+                    tableMode: 'single',
+                    extractMainColumn: 'Release',
+		    features: {
+			splitCD: true
+		    }
+                },
+                {
+                    label: 'Show all Release Relationships for Area',
+                    targetHeader: 'Relationships',
+                    tableMode: 'multi',
+                    non_paginated: true,
+                    extractMainColumn: 'Title'
+                }
+            ]
+        },
+#+end_example
+
+What needs to be changed in the code, to support this ?
+
+Specifically, the function "startFetchingProcess" looks like it needs to be changed
+
+#+begin_example
+    async function startFetchingProcess(e, buttonConfig, activeDefinition) {
+        const activeBtn = e.target;
+        const overrideParams = buttonConfig.params || null;
+        const targetHeader = buttonConfig.targetHeader || null;
+#+end_example
+
+as it currently does not support the configuration per button, as code like
+
+#+begin_example
+if ((activeDefinition.tableMode === 'multi') && currentStatus !== lastCategorySeenAcrossPages) {
+#+end_example
+
+actually reference the global (per pageType specific parameter), but we need to support the button specific, if
+available in the configuration.
+
+
+
+
+        const tableMode = buttonConfig.tableMode || null;
+        const non_paginated = buttonConfig.non_paginated || false;
+        const features = buttonConfig.features || false;
