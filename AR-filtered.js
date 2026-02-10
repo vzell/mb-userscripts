@@ -2061,16 +2061,16 @@ let changelog = [
                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
                             if (row.cells.length > 1) {
                                 const newRow = document.importNode(row, true);
-                                Lib.debug(
-                                    'row',
-                                    `Row cloned → initial cell count=${newRow.cells.length}`
-                                );
+                                // Lib.debug(
+                                //     'row',
+                                //     `Row cloned → initial cell count=${newRow.cells.length}`
+                                // );
                                 [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
                                 currentGroup.rows.push(newRow);
-                                Lib.debug(
-                                    'row',
-                                    `Row BEFORE push → cells=${newRow.cells.length}, mainColIdx=${mainColIdx}, countryDateIdx=${countryDateIdx}`
-                                );
+                                // Lib.debug(
+                                //     'row',
+                                //     `Row BEFORE push → cells=${newRow.cells.length}, mainColIdx=${mainColIdx}, countryDateIdx=${countryDateIdx}`
+                                // );
                                 rowsInThisPage++;
                                 totalRowsAccumulated++;
                                 pageCategoryMap.set(category, (pageCategoryMap.get(category) || 0) + 1);
