@@ -34393,3 +34393,21 @@ available in the configuration.
         const tableMode = buttonConfig.tableMode || null;
         const non_paginated = buttonConfig.non_paginated || false;
         const features = buttonConfig.features || false;
+
+
+* Wrap debug log statements
+
+In the uploaded userscript
+introduce a new boolean variable for debug logging in "const configSchema"
+
+#+begin_example
+    const configSchema = {
+        sa_enable_debug logging: {
+            label: "Enable debug logging",
+            type: "checkbox",
+            default: true,
+            description: "Enable debug logging in the browser developer console"
+        },
+#+end_example
+
+and wrap all existing debug log statements in an if then block if the bollean is true. Or maybe there is some more clever and recommended way to achieve this.

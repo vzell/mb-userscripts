@@ -11,7 +11,7 @@
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllEntityData.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
-// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZ_MBLibrary.user.js
 // @match        *://*.musicbrainz.org/artist/*
 // @match        *://*.musicbrainz.org/release-group/*
 // @match        *://*.musicbrainz.org/release/*
@@ -47,6 +47,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '4.1.0+2026-02-11', description: 'Pass a function to the library constructor that dynamically checks the debug logging flag.'},
     {version: '4.0.0+2026-02-11', description: 'Userscript renamed to better reflect current functionality.'},
     {version: '3.3.0+2026-02-11', description: 'Fix broken Aliases pages resulting in column misalignment.'},
     {version: '3.2.0+2026-02-10', description: 'Fix Artist-Aliases pages not rendering the "Artist credits" table with sorting/filtering.'},
@@ -85,10 +86,15 @@ let changelog = [
 
     const SCRIPT_ID = "vzell-mb-show-all-entities";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
-    const DEBUG_ENABLED = true
 
     // CONFIG SCHEMA
     const configSchema = {
+        sa_enable_debug_logging: {
+            label: "Enable debug logging",
+            type: "checkbox",
+            default: true,
+            description: "Enable debug logging in the browser developer console"
+        },
         sa_render_overflow_tables_in_new_tab: {
             label: "Render overflow tables in a new tab",
             type: "checkbox",
@@ -169,9 +175,12 @@ let changelog = [
         }
     };
 
-    // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
-    const Lib = (typeof VZMBLibrary !== 'undefined')
-          ? new VZMBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, DEBUG_ENABLED)
+    // Initialize VZ_MBLibrary (Logger + Settings + Changelog)
+    const Lib = (typeof VZ_MBLibrary !== 'undefined')
+          ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, () => {
+              // Dynamic check: returns current value of debug setting
+              return Lib?.settings?.sa_enable_debug_logging ?? true;
+          })
           : {
               settings: {},
               info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
