@@ -47,7 +47,7 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '4.0.0+2026-02-11', description: 'Fix broken Aliases pages resulting in column misalignment.'},
+    {version: '4.0.0+2026-02-11', description: 'Userscript renamed to better reflect current functionality.'},
     {version: '3.3.0+2026-02-11', description: 'Fix broken Aliases pages resulting in column misalignment.'},
     {version: '3.2.0+2026-02-10', description: 'Fix Artist-Aliases pages not rendering the "Artist credits" table with sorting/filtering.'},
     {version: '3.1.0+2026-02-10', description: 'Fix overflow tables for Area-Releases pages in the case of Relationship subtable.'},
