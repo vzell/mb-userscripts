@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      4.1.0+2026-02-11
+// @version      4.2.0+2026-02-12
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -47,6 +47,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '4.2.0+2026-02-11', description: 'Refactor removing columns with a removalMap object.'},
     {version: '4.1.0+2026-02-11', description: 'Pass a function to the library constructor that dynamically checks the debug logging flag.'},
     {version: '4.0.0+2026-02-11', description: 'Userscript renamed to better reflect current functionality.'},
     {version: '3.3.0+2026-02-11', description: 'Fix broken Aliases pages resulting in column misalignment.'},
@@ -2087,20 +2088,36 @@ let changelog = [
                 const referenceTable = tablesToProcess[0];
 
                 if (referenceTable) {
+                    // Map header text prefixes to their corresponding library settings keys
+                    // This matches the structure in cleanupHeaders for consistency
+                    const removalMap = {
+                        'Relationships': 'sa_remove_rel',
+                        'Performance Attributes': 'sa_remove_perf',
+                        'Rating': 'sa_remove_rating',
+                        'Tagger': 'sa_remove_tagger',
+                        'Release events': 'sa_remove_release_events'
+                    };
+
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
                         headerNames[idx] = txt; // Store the name
 
-                        if (Lib.settings.sa_remove_rel && txt.startsWith('Relationships')) indicesToExclude.push(idx);
-                        else if (Lib.settings.sa_remove_perf && txt.startsWith('Performance Attributes')) indicesToExclude.push(idx);
-                        else if (Lib.settings.sa_remove_rating && txt.startsWith('Rating')) indicesToExclude.push(idx);
-                        else if (Lib.settings.sa_remove_tagger && txt.startsWith('Tagger')) indicesToExclude.push(idx);
-                        else if (Lib.settings.sa_remove_release_events && txt.startsWith('Release events')) indicesToExclude.push(idx);
-                        else if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
+                        // Check for columns to exclude
+                        for (const [headerPrefix, settingKey] of Object.entries(removalMap)) {
+                            if (txt.startsWith(headerPrefix) && Lib.settings[settingKey]) {
+                                indicesToExclude.push(idx);
+                                break; // A column can only be excluded once
+                            }
+                        }
+
+                        // Check for special column types (independent of removal checks)
+                        if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
                             countryDateIdx = idx;
-                        } else if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
+                        }
+                        if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
                             locationIdx = idx;
-                        } else if (typesWithSplitArea.includes(pageType) && txt === 'Area') {
+                        }
+                        if (typesWithSplitArea.includes(pageType) && txt === 'Area') {
                             areaIdx = idx;
                         }
 
