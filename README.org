@@ -34141,18 +34141,52 @@ are shifted one column to the right compared to the rendered header columns. So 
 name" is located under the "Comment" header column instead of the "MB-Name" header column.
 
 The problem in the case of these "aliases" pages with my current code seems to be in the HTML structure of these
+"aliases" tables. Every data row has an invisible '<td class="actions"></td>' column which should be removed (in memory)
+before rendering the final table in the final webpage. Actually the header column row does NOT contain a corresponding
+"actions" header column, but instead every data row has a 'colspan="2"' inside the FIRST column
+
+#+begin_example
+      <td colspan="2">
+	<bdi>Gitarre
+	</bdi>
+      </td>
+#+end_example
+
+When fixing my code, take this into account please.
+
+*** colspan
+
+The problem in the case of these "aliases" pages with my current code seems to be in the HTML structure of these
 "aliases" tables. Every row has the following structure in the artificial "first" column
 
 #+begin_example
       <td colspan="2">
 	<bdi>κιθάρες
 	</bdi>
-      </td>
+      </td
 #+end_example
 
 So basically it spans already 2 columns.
 
 Please fix my code so that it special cases this cases for aliases tables.
+
+*** answer
+
+#+begin_example
+
+#+end_example
+
+*** account for artist-aliases
+
+How to best rewrite this code block to account for specific aliases pages for which the logic should not apply, e.g
+"artist-aliases" (make this expandable for future alieses pages)
+
+#+begin_example
+                // 🔥 Alias pages need structural normalization BEFORE row extraction
+                if (/-aliases$/.test(pageType)) {
+                    tablesToProcess.forEach(normalizeAliasTable);
+                }
+#+end_example
 
 
 ** DONE bigger summary text for search pages

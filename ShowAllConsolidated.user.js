@@ -46,9 +46,10 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '3.2.0+2026-02-10', description: 'Fix Artist-Aliases pages not rendering the "Artist credits" table with sorting/filtering'},
-    {version: '3.1.0+2026-02-10', description: 'Fix overflow tables for Area-Releases pages in the case of Relationship subtable'},
-    {version: '3.0.0+2026-02-10', description: 'Add support for Area-Releases pages with multiple different initial table data'},
+    {version: '3.3.0+2026-02-10', description: 'Fix broken Aliases pages resulting in column misalignment.'},
+    {version: '3.2.0+2026-02-10', description: 'Fix Artist-Aliases pages not rendering the "Artist credits" table with sorting/filtering.'},
+    {version: '3.1.0+2026-02-10', description: 'Fix overflow tables for Area-Releases pages in the case of Relationship subtable.'},
+    {version: '3.0.0+2026-02-10', description: 'Add support for Area-Releases pages with multiple different initial table data.'},
     {version: '2.7.0+2026-02-09', description: 'Transform search results paragraph into collapsible H2 header.'},
     {version: '2.6.0+2026-02-08', description: 'Add "Area splitting".'},
     {version: '2.5.1+2026-02-08', description: 'Fix URL construction to preserve query parameters (fixes Search pages). Added extra debugging for table detection.'},
@@ -1007,6 +1008,33 @@ let changelog = [
     let isLoaded = false;
     let stopRequested = false;
     let multiTableSortStates = new Map();
+
+    function normalizeAliasTable(table) {
+        if (!table) return;
+
+        const rows = table.querySelectorAll('tbody tr');
+
+        rows.forEach(tr => {
+            // Remove invisible actions column (body only)
+            const actionsTd = tr.querySelector('td.actions');
+            if (actionsTd) {
+                actionsTd.remove();
+            }
+
+            // Expand first cell if it spans Alias + Sort name
+            const firstTd = tr.querySelector('td[colspan="2"]');
+            if (firstTd) {
+                firstTd.removeAttribute('colspan');
+
+                const sortNameTd = document.createElement('td');
+                sortNameTd.textContent = ''; // MB leaves this empty on alias pages
+
+                firstTd.after(sortNameTd);
+            }
+        });
+
+        Lib.debug('cleanup', 'Normalized alias table structure (actions removed, colspan expanded).');
+    }
 
     /**
      * Filters tables from a document/container based on a preceding header text.
@@ -2004,6 +2032,32 @@ let changelog = [
 
                 // Use parseDocumentForTables to filter which tables we actually process
                 const tablesToProcess = parseDocumentForTables(doc, targetHeader);
+
+                // Alias pageTypes that REQUIRE table normalization
+                const ALIAS_PAGES_WITH_ACTIONS_COLUMN = new Set([
+                    'instrument-aliases',
+                    'label-aliases',
+                    'place-aliases',
+                    'series-aliases',
+                    'event-aliases',
+                    'area-aliases',
+                    // add more here when discovered
+                ]);
+
+                // Alias pageTypes that explicitly do NOT need normalization
+                const ALIAS_PAGES_WITHOUT_ACTIONS_COLUMN = new Set([
+                    'artist-aliases',
+                ]);
+
+                // 🔥 Alias pages need structural normalization BEFORE row extraction
+                // 🔥 Alias pages with known broken table structure
+                if (
+                    pageType.endsWith('-aliases') &&
+                    ALIAS_PAGES_WITH_ACTIONS_COLUMN.has(pageType) &&
+                    !ALIAS_PAGES_WITHOUT_ACTIONS_COLUMN.has(pageType)
+                ) {
+                    tablesToProcess.forEach(normalizeAliasTable);
+                }
 
                 if (tablesToProcess.length === 0) {
                     Lib.debug('fetch', `No tables found matching "${targetHeader}" on page ${p} to parse. Skipping.`);
