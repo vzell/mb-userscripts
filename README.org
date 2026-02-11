@@ -31363,8 +31363,7 @@ Since you recently added logic to transform search results (converting p to h2),
 #+end_example
 
 
-* refactor in memory column removel to filter large pagination pages
-
+* refactor in memory column removal to filter large pagination pages
 
 * TODO - last ones for now
 ** generalize column data splitting
@@ -34287,7 +34286,7 @@ Does this even work, given the functionality just replaces specific parts of the
 
 match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
 
-** TODO add "warn" level in library
+** DONE add "warn" level in library
 
 In the uploaded userscript library "VZMBLibrary.user.js"
 add functionality to support "warnings" in "styles" and "icons"
@@ -34308,10 +34307,11 @@ add functionality to support "warnings" in "styles" and "icons"
 In the uploaded userscript "ShowAllConsolidated.user.js"
 identify additional "Lib.warn" statement usage and potential renames of current Lib.xxxx statements to warn level 
 
-** new name for the script (also check library handling)
+** DONE new name for the script (also check library handling)
 
 In the uploaded userscript
 what would be a much shorter and more pregnant name for this userscript, given the current functionlity
+
 
 * Priority of script execution and interoperation
 ** talk to
@@ -34319,7 +34319,7 @@ what would be a much shorter and more pregnant name for this userscript, given t
 *** xxx -for RGs read in all releases and make collpasable
 
 
-* support for per button configuration
+* DONE support for per button configuration
 
 In the uploaded userscript
 
@@ -34395,7 +34395,7 @@ available in the configuration.
         const features = buttonConfig.features || false;
 
 
-* Wrap debug log statements
+* DONE Wrap debug log statements
 
 In the uploaded userscript
 introduce a new boolean variable for debug logging in "const configSchema"
@@ -34411,3 +34411,139 @@ introduce a new boolean variable for debug logging in "const configSchema"
 #+end_example
 
 and wrap all existing debug log statements in an if then block if the bollean is true. Or maybe there is some more clever and recommended way to achieve this.
+
+
+* MB-Library
+** test statements
+
+#+begin_example
+    Lib.info('init', "INIT: Script loaded with external library!");
+    Lib.info('info', "INFO: Script loaded with external library!");
+    Lib.info('success', "SUCCESS: Script loaded with external library!");
+    Lib.warn('warn', "WARNING: Script loaded with external library!");
+    Lib.error('error', "ERROR: Script loaded with external library!");
+    Lib.time('time', "TIME: Script loaded with external library!");
+#+end_example
+
+** nothing shown
+
+In the uploaded userscript
+why is the following statment never executed, at least nothing is show in the console
+
+#+begin_example
+            Lib.warn('warn', `High page count detected (${maxPage}). This may take a while and could trigger rate limiting.`);
+#+end_example
+
+OK, for https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings we get
+
+#+begin_example
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Script loaded with external library! 
+[VZ-ShowAllEntities: artist-recordings] 🚀 Initializing script for path: /artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+[VZ-ShowAllEntities: artist-recordings] 🧹 Signalling other scripts to stop... 
+[VZ-ShowAllEntities: artist-recordings] 📥 Starting fetch process... null
+[VZ-ShowAllEntities: artist-recordings] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+[VZ-ShowAllEntities: artist-recordings] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntities: artist-recordings] 📥 Page 1 is current page. Using existing document. 
+[VZ-ShowAllEntities: artist-recordings] 📥 Page 1/740 processed in 0.03s. Rows on page: 100. Total: 100 
+[VZ-ShowAllEntities: artist-recordings] 📥 Fetching URL for page 2: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings?page=2 
+[VZ-ShowAllEntities: artist-recordings] 📥 Page 2/740 processed in 1.92s. Rows on page: 100. Total: 200 
+[VZ-ShowAllEntities: artist-recordings] 📥 Fetching URL for page 3: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings?page=3 
+[VZ-ShowAllEntities: artist-recordings] 📥 Page 3/740 processed in 1.10s. Rows on page: 100. Total: 300 
+[VZ-ShowAllEntities: artist-recordings] 📥 Fetching URL for page 4: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings?page=4 
+[VZ-ShowAllEntities: artist-recordings] 🧹 Stop requested by user. 
+[VZ-ShowAllEntities: artist-recordings] 📥 Page 4/740 processed in 1.94s. Rows on page: 100. Total: 400 
+[VZ-ShowAllEntities: artist-recordings] 🧹 Fetch loop stopped at page 5 
+[VZ-ShowAllEntities: artist-recordings] 🎨 Starting renderFinalTable with 400 rows. 
+[VZ-ShowAllEntities: artist-recordings] 🎨 Finished renderFinalTable. Injected 400 rows into DOM. 
+[VZ-ShowAllEntities: artist-recordings] 🧹 Removing 1 columns from table. 
+[VZ-ShowAllEntities: artist-recordings] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntities: artist-recordings] ✅ Process complete. Final Row Count: 400. Total Time: 5.06s 
+#+end_example
+
+
+* fix Place-Performances column shift to the right
+
+In the uploaded userscript
+
+there is a shift of the data columns to the right in the final rendered page when the "sa_remove_release_events" is true.
+
+#+begin_example
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Settings entry added to Editing menu. 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: place-performances 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+[VZ-ShowAllEntities: place-performances] 🚀 Initializing script for path: /place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+[VZ-ShowAllEntities: place-performances] 🧹 Signalling other scripts to stop... 
+[VZ-ShowAllEntities: place-performances] 📥 Starting fetch process... null
+[VZ-ShowAllEntities: place-performances] 📥 Context: Non-paginated page definition. Initially assuming maxPage = 1. 
+[VZ-ShowAllEntities: place-performances] 📥 Total pages to fetch: 1 
+[VZ-ShowAllEntities: place-performances] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntities: place-performances] 📥 Page 1 is current page. Using existing document. 
+[VZ-ShowAllEntities: place-performances] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntities: place-performances] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntities: place-performances] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+[VZ-ShowAllEntities: place-performances] 📝 Detected indices → mainColIdx=2 (Title), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=-1 (N/A), excluded=[] for pageType: place-performances 
+[VZ-ShowAllEntities: place-performances] 📝 Table body found. Processing child nodes. Total nodes: 158 
+[VZ-ShowAllEntities: place-performances] 📥 Subgroup Change/Type: "engineering location for". Rows so far: 0 
+[VZ-ShowAllEntities: place-performances] 📥 Subgroup Change/Type: "producing location for". Rows so far: 6 
+[VZ-ShowAllEntities: place-performances] 📥 Subgroup Change/Type: "recording location for". Rows so far: 11 
+[VZ-ShowAllEntities: place-performances] 📝 Skipping "See all" relationship row. 
+[VZ-ShowAllEntities: place-performances] 📝 Stored "See All" URL and Count for recording location for: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?direction=1&link_type_id=693&page=1 (8,870)  
+[VZ-ShowAllEntities: place-performances] 📥 Subgroup Change/Type: "shooting location for". Rows so far: 111 
+[VZ-ShowAllEntities: place-performances] 📥 Subgroup Change/Type: "recording location for (2)". Rows so far: 133 
+[VZ-ShowAllEntities: place-performances] 📥 Page 1/1 processed in 0.01s. Rows on page: 152. Total: 152 
+[VZ-ShowAllEntities: place-performances] 📥   Summary: engineering location for: +6 (Total: 6) | producing location for: +5 (Total: 5) | recording location for: +100 (Total: 100) | shooting location for: +22 (Total: 22) | recording location for (2): +19 (Total: 19) 
+[VZ-ShowAllEntities: place-performances] 🎨 DOM rendering starting... 
+[VZ-ShowAllEntities: place-performances] 🎨 Starting updateH2Count: filtered=152, total=152 
+[VZ-ShowAllEntities: place-performances] 🎨 Searching for target H2. Current pageType: place-performances 
+[VZ-ShowAllEntities: place-performances] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: place-performances] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: place-performances] 🎨 Target element identified: "Performances..." 
+[VZ-ShowAllEntities: place-performances] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ-ShowAllEntities: place-performances] 🎨 Updated header/target Performances count: (152) 
+[VZ-ShowAllEntities: place-performances] 🎨 Starting renderGroupedTable with 5 categories. Query: "" 
+[VZ-ShowAllEntities: place-performances] 🎨 Cloning table head for template. 
+[VZ-ShowAllEntities: place-performances] 🧹 cleanupHeaders() called → existing headers=[Date | Release events | Title | Attributes | Artist | Length] 
+[VZ-ShowAllEntities: place-performances] 🧹 Marking column 1 ("Release events") for removal. Match: "Release events", Setting: "sa_remove_release_events" 
+[VZ-ShowAllEntities: place-performances] 🧹 Removing 1 columns from table. 
+[VZ-ShowAllEntities: place-performances] 🧹 Successfully deleted column: Release events 
+[VZ-ShowAllEntities: place-performances] 🧹 Injecting synthetic header: MB-Name 
+[VZ-ShowAllEntities: place-performances] 🧹 Injecting synthetic header: Comment 
+[VZ-ShowAllEntities: place-performances] 🎨 Searching for target H2. Current pageType: place-performances 
+[VZ-ShowAllEntities: place-performances] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: place-performances] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: place-performances] 🎨 No query provided; performing initial cleanup of existing elements. 
+[VZ-ShowAllEntities: place-performances] 🎨  Injecting master toggle and filter container after target header Performances(152). 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "engineering location for" with 6 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Creating new table and H3 for group "engineering location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Group "engineering location for" auto-expand status: false 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "producing location for" with 5 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Creating new table and H3 for group "producing location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Group "producing location for" auto-expand status: false 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "recording location for" with 100 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Creating new table and H3 for group "recording location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Group "recording location for" auto-expand status: false 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "shooting location for" with 22 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Creating new table and H3 for group "shooting location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Group "shooting location for" auto-expand status: false 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "recording location for (2)" with 19 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Creating new table and H3 for group "recording location for (2)". 
+[VZ-ShowAllEntities: place-performances] 🎨 Group "recording location for (2)" auto-expand status: false 
+[VZ-ShowAllEntities: place-performances] 🎨 Finished renderGroupedTable. 
+[VZ-ShowAllEntities: place-performances] 🧹 Running final cleanup... 
+[VZ-ShowAllEntities: place-performances] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ-ShowAllEntities: place-performances] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntities: place-performances] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntities: place-performances] 🎨 DOM rendering finished in 21.30ms 
+[VZ-ShowAllEntities: place-performances] ✅ Process complete. Final Row Count: 152. Total Time: 0.03s 
+[VZ-ShowAllEntities: place-performances] 🎨 Toggling table for "engineering location for". New state: visible 
+#+end_example
+
+Could you check why
+
