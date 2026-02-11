@@ -31942,7 +31942,7 @@ so basically also include in brackets the columns names not only the index numbe
 *** Begin area
 *** End area
 ** generate new "total tracks" column based on multiple mediums of a release
-** Area-Releases has a mixture of single table paginated (Releases) and multitable with subheadings (Relationships)
+** DONE Area-Releases has a mixture of single table paginated (Releases) and multitable with subheadings (Relationships)
 *** code flow
 
 In the uploaded script,
@@ -32553,7 +32553,7 @@ there are NO new "Country" and "Date" columns in the final rendered page.
 https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
 
 ** search pages sometime have invisible column 0 and last column (Edit)
-** fingerprints
+** DONE fingerprints
 *** initial
 
 In the uploaded userscript
@@ -32709,7 +32709,6 @@ The HTML structure to parse is
 https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints
 #+end_example
 
-*** TODO add "warn" level in library
 ** check all "link_type_id" pages separately for anomalies
 *** pages with link_type_id - has an additional "Credited as" column
 
@@ -33454,7 +33453,7 @@ https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91/aliases
 </td>
 #+end_example
 
-** aliases pages
+** DONE aliases pages
 *** DONE No Locale output
 
 In the uploaded userscript
@@ -34188,7 +34187,6 @@ How to best rewrite this code block to account for specific aliases pages for wh
                 }
 #+end_example
 
-
 ** DONE bigger summary text for search pages
 *** initial
 
@@ -34255,11 +34253,6 @@ in the code block
 
 I want to prepend th "prefix" to the current transformed p to h2 header
 
-** new name for the script (also check library handling)
-
-In the uploaded userscript
-what would be a much shorter and more pregnant name for this userscript, given the current functionlity
-
 ** render final page in a new tab
 
 In the uploaded userscript
@@ -34295,6 +34288,31 @@ Does this even work, given the functionality just replaces specific parts of the
 
 match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
 
+** TODO add "warn" level in library
+
+In the uploaded userscript library "VZMBLibrary.user.js"
+add functionality to support "warnings" in "styles" and "icons"
+
+#+begin_example
+            styles: {
+                debug: 'color: #7f8c8d; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold;',
+                info: 'color: #2980b9; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 11px;',
+                error: 'color: #c0392b; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; background: #fceae9; padding: 2px 4px; border-radius: 3px;',
+                timer: 'color: #8e44ad; font-family: "Consolas", monospace; font-style: italic; font-weight: bold;',
+                timestamp: 'color: #95a5a6; font-size: 9px; font-weight: normal;'
+            },
+            icons: {
+                init: '🚀', fetch: '📥', render: '🎨', filter: '🔍', sort: '⚖️', cleanup: '🧹', error: '❌', success: '✅', meta: '🎵', timer: '⏱️', ui: '🖥️'
+            },
+#+end_example
+
+In the uploaded userscript "ShowAllConsolidated.user.js"
+identify additional "Lib.warn" statement usage and potential renames of current Lib.xxxx statements to warn level 
+
+** new name for the script (also check library handling)
+
+In the uploaded userscript
+what would be a much shorter and more pregnant name for this userscript, given the current functionlity
 
 * Priority of script execution and interoperation
 ** talk to
