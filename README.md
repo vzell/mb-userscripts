@@ -13,7 +13,7 @@
 <!-- - [MusicBrainz - Show All Recordings In Works](#mb_show_all_recordings_in_works) -->
 <!-- - [MusicBrainz - Show All Events](#mb_show_all_events) -->
 - [MusicBrainz - Show All Entity Data In A Consolidated View](#mb_show_all_entity_data)
-
+- [MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](#mb_show_all_consolidated)
 
 - [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
 - [MusicBrainz - Auto-Select External Link Types For Release Groups](#mb_auto_select_discography_link_type_release_groups)
@@ -135,6 +135,13 @@ Consolidation tool to accumulate paginated and non-paginated (tables with subhea
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllEntityData.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllEntityData.user.js)
+
+## <a name="mb_show_all_consolidated"></a> MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+
+Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllConsolidated.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js)
 
 ## <a name="mb_auto_select_discography_link_type"></a> MusicBrainz - Auto-Select External Link Types
 
