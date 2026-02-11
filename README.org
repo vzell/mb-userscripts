@@ -32430,7 +32430,7 @@ doesn't get processed at all.
 Please parse the uploaded HTML code and check if the HTML code is different than on other
 MusicBrainz pages and that's why th current code maybe doens't work.
 
-*** country/date not working, check other pages which using it Area-Releases
+*** country/date not working in Area-Releases pages, check other pages which using it
 
 In the uploaded userscript
 in the case of https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases

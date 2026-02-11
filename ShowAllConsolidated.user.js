@@ -1,14 +1,14 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+// @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      2.2.1+2026-02-04
-// @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
+// @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllEntityData.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllEntityData.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
 // @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
@@ -34,9 +34,10 @@
 // ==/UserScript==
 
 /*
- * VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
- * is an userscript which accumulates paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.)
- * into a single view with real-time filtering and sorting.
+ * VZ: MusicBrainz - Show All Entity Data In A Consolidated View
+ *
+ * A userscript which accumulates paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events,
+ * Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting.
  *
  * This script has been created by giving the right facts and asking the right questions to Gemini.
  * When Gemini gots stuck, I asked ChatGPT for help, until I got everything right.
@@ -46,7 +47,8 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '3.3.0+2026-02-10', description: 'Fix broken Aliases pages resulting in column misalignment.'},
+    {version: '4.0.0+2026-02-11', description: 'Fix broken Aliases pages resulting in column misalignment.'},
+    {version: '3.3.0+2026-02-11', description: 'Fix broken Aliases pages resulting in column misalignment.'},
     {version: '3.2.0+2026-02-10', description: 'Fix Artist-Aliases pages not rendering the "Artist credits" table with sorting/filtering.'},
     {version: '3.1.0+2026-02-10', description: 'Fix overflow tables for Area-Releases pages in the case of Relationship subtable.'},
     {version: '3.0.0+2026-02-10', description: 'Add support for Area-Releases pages with multiple different initial table data.'},
