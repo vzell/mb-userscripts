@@ -1945,7 +1945,7 @@ let changelog = [
         const maxThreshold = Lib.settings.sa_max_page;
         Lib.debug('fetch', `Total pages to fetch: ${maxPage}`);
         if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
-            Lib.warn('fetch', `High page count detected (${maxPage}). This may take a while and could trigger rate limiting.`);
+            Lib.warn('warn', `High page count detected (${maxPage}). This may take a while and could trigger rate limiting.`);
             activeBtn.style.backgroundColor = '';
             activeBtn.style.color = '';
             activeBtn.disabled = false;
