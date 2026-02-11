@@ -175,18 +175,21 @@ let changelog = [
         }
     };
 
-    // Initialize VZ_MBLibrary (Logger + Settings + Changelog)
+    // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
+    // Use a ref object to avoid circular dependency during initialization
+    const settings = {};
     const Lib = (typeof VZ_MBLibrary !== 'undefined')
           ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, () => {
               // Dynamic check: returns current value of debug setting
-              return Lib?.settings?.sa_enable_debug_logging ?? true;
+              return settings.sa_enable_debug_logging ?? true;
           })
           : {
               settings: {},
               info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
           };
 
-    Lib.info('init', "Script loaded with external library!");
+    // Copy settings reference so the callback can access them
+    Object.assign(settings, Lib.settings);
 
     // --- Sidebar Collapsing & Full Width Stretching Logic ---
     function initSidebarCollapse() {
