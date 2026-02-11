@@ -92,7 +92,7 @@ let changelog = [
         sa_enable_debug_logging: {
             label: "Enable debug logging",
             type: "checkbox",
-            default: true,
+            default: false,
             description: "Enable debug logging in the browser developer console"
         },
         sa_render_overflow_tables_in_new_tab: {
