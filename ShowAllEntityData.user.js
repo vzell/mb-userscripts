@@ -191,6 +191,8 @@ let changelog = [
     // Copy settings reference so the callback can access them
     Object.assign(settings, Lib.settings);
 
+    Lib.info('init', "Script loaded with external library!");
+
     // --- Sidebar Collapsing & Full Width Stretching Logic ---
     function initSidebarCollapse() {
         if (!Lib.settings.sa_collabsable_sidebar) return; // Only available if true
