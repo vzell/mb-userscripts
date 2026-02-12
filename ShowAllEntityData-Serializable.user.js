@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      4.3.0+2026-02-12
+// @version      4.3.1+2026-02-12
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '4.3.1+2026-02-12', description: 'Fix: Remove duplicate filter row when loading from disk. Fix: Restore alternating even/odd row backgrounds.'},
     {version: '4.3.0+2026-02-12', description: 'Add offline storage/cache feature: Save table data to disk and load from disk to avoid re-fetching from MusicBrainz.'},
     {version: '4.2.0+2026-02-11', description: 'Refactor removing columns with a removalMap object.'},
     {version: '4.1.0+2026-02-11', description: 'Pass a function to the library constructor that dynamically checks the debug logging flag.'},
@@ -3201,10 +3202,11 @@ let changelog = [
                 groups: null
             };
 
-            // Serialize table headers
+            // Serialize table headers (exclude the filter row)
             const firstTable = document.querySelector('table.tbl');
             if (firstTable && firstTable.tHead) {
-                const headerRows = Array.from(firstTable.tHead.querySelectorAll('tr'));
+                const headerRows = Array.from(firstTable.tHead.querySelectorAll('tr'))
+                    .filter(row => !row.classList.contains('mb-col-filter-row')); // Exclude filter row
                 dataToSave.headers = headerRows.map(row => {
                     return Array.from(row.cells).map(cell => ({
                         html: cell.innerHTML,
@@ -3272,8 +3274,7 @@ let changelog = [
             //             triggerStandardDownload(url, filename);
             //         }
             //     });
-            // }
-	    // else {
+            // } else {
             triggerStandardDownload(url, filename);
             // }
 
@@ -3335,6 +3336,15 @@ let changelog = [
                         // Create new thead
                         const thead = document.createElement('thead');
                         data.headers.forEach(headerRowCells => {
+                            // Skip filter rows (they contain inputs with class mb-col-filter-input)
+                            const hasFilterInputs = headerRowCells.some(cell =>
+                                cell.html && cell.html.includes('mb-col-filter-input')
+                            );
+                            if (hasFilterInputs) {
+                                Lib.debug('cache', 'Skipping filter row from saved headers');
+                                return;
+                            }
+
                             const tr = document.createElement('tr');
                             headerRowCells.forEach(cellData => {
                                 const cell = document.createElement(cellData.tagName || 'th');
@@ -3355,8 +3365,10 @@ let changelog = [
                     // Multi-table mode: reconstruct grouped rows
                     groupedRows = data.groups.map(group => ({
                         key: group.key,
-                        rows: group.rows.map(rowCells => {
+                        rows: group.rows.map((rowCells, rowIndex) => {
                             const tr = document.createElement('tr');
+                            // Add alternating even/odd class
+                            tr.className = rowIndex % 2 === 0 ? 'even' : 'odd';
                             rowCells.forEach(cellData => {
                                 const td = document.createElement('td');
                                 td.innerHTML = cellData.html;
@@ -3371,8 +3383,10 @@ let changelog = [
                     Lib.info('cache', `Reconstructed ${groupedRows.length} groups with ${data.rowCount} total rows.`);
                 } else if (data.rows) {
                     // Single-table mode: reconstruct allRows
-                    allRows = data.rows.map(rowCells => {
+                    allRows = data.rows.map((rowCells, rowIndex) => {
                         const tr = document.createElement('tr');
+                        // Add alternating even/odd class
+                        tr.className = rowIndex % 2 === 0 ? 'even' : 'odd';
                         rowCells.forEach(cellData => {
                             const td = document.createElement('td');
                             td.innerHTML = cellData.html;

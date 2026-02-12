@@ -31340,9 +31340,111 @@ Here is the return value from the library:
 
 ** fix
 
-- apply alternate white/grey background to rows
-- remove 1st filter column row
-- check for errors on the multitable case
+Please apply the following fixes:
+
+- remove the 1st filter column row when rerendering and loding the data from the filesystem
+
+There is an artificial (non functioning first row after the header column row) left over with column filter fields, this should be removed
+
+For example for the following URL https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
+
+after rerendering I get the following row which should be removed
+
+#+begin_example
+<tr>
+  <th>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="1">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="2">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="3">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="4">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="5">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="6">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="7">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="8" style="box-shadow: green 0px 0px 2px 2px;">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="9">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="10">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="11">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+</tr>
+#+end_example
+
+aftert his one is the FUNCTIONING row with the column filter fields
+
+#+begin_example
+<tr class="mb-col-filter-row"><th></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="1"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="2"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="3"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="4"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="5"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="6"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="7"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="8" style=""><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="9"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="10"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="11"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th></tr>
+#+end_example
+
+- also re-apply the alternate white/grey background to the individual rows
+
+It used to be implemented on the original tables before rerendering as '<tr class="even"' and '<tr class="even"' wsomehow with the class attribute
+
+** check for errors on the multitable case
 
 
 * "Esc" handling in filter field
