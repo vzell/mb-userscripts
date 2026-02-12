@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      4.4.0+2026-02-12
+// @version      4.4.1+2026-02-12
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '4.4.1+2026-02-12', description: 'Add highlightning of pre-filter expression.'},
     {version: '4.4.0+2026-02-12', description: 'Add "pre filter when loading" functionality.'},
     {version: '4.3.1+2026-02-12', description: 'Fix: Remove duplicate filter row when loading from disk. Fix: Restore alternating even/odd row backgrounds.'},
     {version: '4.3.0+2026-02-12', description: 'Add offline storage/cache feature: Save table data to disk and load from disk to avoid re-fetching from MusicBrainz.'},
@@ -154,40 +155,40 @@ let changelog = [
             default: 50,
             description: "Row count threshold to auto-expand tables"
         },
-        sa_prefilter_highlight_color: {
+        sa_pre_filter_highlight_color: {
             label: "Global Prefilter Highlight Color",
             type: "color_picker",
-            default: "#ffff00", // yellow
+            default: "green",
             description: "Text color for global prefilter matches"
         },
-        sa_prefilter_highlight_bg: {
+        sa_pre_filter_highlight_bg: {
             label: "Global Prefilter Highlight Background",
             type: "color_picker",
-            default: "#add8e6", // light blue
+            default: "#FFFFE0", // light yellow
             description: "Background color for global prefilter matches"
         },
-        sa_filter_highlight_color: {
+        sa_global_filter_highlight_color: {
             label: "Global Filter Highlight Color",
             type: "color_picker",
             default: "red",
             description: "Text color for global filter matches"
         },
-        sa_filter_highlight_bg: {
+        sa_global_filter_highlight_bg: {
             label: "Global Filter Highlight Background",
             type: "color_picker",
-            default: "#FFD700",
+            default: "#FFD700", // dark yellow
             description: "Background color for global filter matches"
         },
-        sa_col_filter_highlight_color: {
+        sa_column_filter_highlight_color: {
             label: "Column Filter Highlight Color",
             type: "color_picker",
-            default: "green",
+            default: "red",
             description: "Text color for column filter matches"
         },
-        sa_col_filter_highlight_bg: {
+        sa_column_filter_highlight_bg: {
             label: "Column Filter Highlight Background",
             type: "color_picker",
-            default: "#FFFFE0",
+            default: "#add8e6", // light blue
             description: "Background color for column filter matches"
         }
     };
@@ -1020,16 +1021,27 @@ let changelog = [
     filterContainer.appendChild(caseLabel);
     filterContainer.appendChild(regexpLabel);
 
-    const unhighlightBtn = document.createElement('button');
-    unhighlightBtn.textContent = 'Unhighlight';
-    unhighlightBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
-    unhighlightBtn.onclick = () => {
-        document.querySelectorAll('.mb-filter-highlight, .mb-col-filter-highlight')
+    const unhighlightFilterBtn = document.createElement('button');
+    unhighlightFilterBtn.textContent = 'Unhighlight prefilter';
+    unhighlightFilterBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    unhighlightFilterBtn.onclick = () => {
+        document.querySelectorAll('.mb-pre-filter-highlight')
             .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
 
         Lib.info('filter', 'Prefilter highlights removed.');
     };
-    filterContainer.appendChild(unhighlightBtn);
+    filterContainer.appendChild(unhighlightFilterBtn);
+
+    const unhighlightAllBtn = document.createElement('button');
+    unhighlightAllBtn.textContent = 'Unhighlight all';
+    unhighlightAllBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    unhighlightAllBtn.onclick = () => {
+        document.querySelectorAll('.mb-pre-filter-highlight, .mb-global-filter-highlight, .mb-column-filter-highlight')
+            .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+
+        Lib.info('filter', 'All highlights removed.');
+    };
+    filterContainer.appendChild(unhighlightAllBtn);
 
     const timerDisplay = document.createElement('span');
     timerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
@@ -1067,13 +1079,17 @@ let changelog = [
         .mb-master-toggle { color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; cursor: default; }
         .mb-master-toggle span { cursor: pointer; }
         .mb-master-toggle span:hover { text-decoration: underline; }
-        .mb-filter-highlight {
-            color: ${Lib.settings.sa_filter_highlight_color};
-            background-color: ${Lib.settings.sa_filter_highlight_bg};
+        .mb-column-filter-highlight {
+            color: ${Lib.settings.sa_column_filter_highlight_color};
+            background-color: ${Lib.settings.sa_column_filter_highlight_bg};
         }
-        .mb-col-filter-highlight {
-            color: ${Lib.settings.sa_col_filter_highlight_color};
-            background-color: ${Lib.settings.sa_col_filter_highlight_bg};
+        .mb-global-filter-highlight {
+            color: ${Lib.settings.sa_global_filter_highlight_color};
+            background-color: ${Lib.settings.sa_global_filter_highlight_bg};
+        }
+        .mb-pre-filter-highlight {
+            color: ${Lib.settings.sa_pre_filter_highlight_color};
+            background-color: ${Lib.settings.sa_pre_filter_highlight_bg};
             font-weight: bold;
         }
         .mb-col-filter-input {
@@ -1413,7 +1429,7 @@ let changelog = [
         return textParts.join(' ');
     }
 
-    function highlightText(row, query, isCaseSensitive, targetColIndex = -1, isRegExp = false) {
+    function highlightText(row, query, isCaseSensitive, targetColIndex = -1, isRegExp = false, highlightType = 'auto') {
         if (!query) return;
         let regex;
         const flags = isCaseSensitive ? 'g' : 'gi';
@@ -1429,7 +1445,20 @@ let changelog = [
             regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, flags);
         }
 
-        const className = targetColIndex === -1 ? 'mb-filter-highlight' : 'mb-col-filter-highlight';
+        let className;
+
+        if (highlightType === 'prefilter') {
+            className = 'mb-pre-filter-highlight';
+        } else if (highlightType === 'global') {
+            className = 'mb-global-filter-highlight';
+        } else if (highlightType === 'column') {
+            className = 'mb-column-filter-highlight';
+        } else {
+            // default automatic behaviour (existing logic)
+            className = targetColIndex === -1
+                ? 'mb-global-filter-highlight'
+                : 'mb-column-filter-highlight';
+        }
 
         row.querySelectorAll('td').forEach((td, idx) => {
             if (targetColIndex !== -1 && idx !== targetColIndex) return;
@@ -1579,7 +1608,7 @@ let changelog = [
 
                 const matches = group.rows.map(r => r.cloneNode(true)).filter(r => {
                     // Reset previous highlights (critical for correct filtering)
-                    r.querySelectorAll('.mb-filter-highlight, .mb-col-filter-highlight')
+                    r.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
                         .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
 
                     // Global match
@@ -1664,7 +1693,7 @@ let changelog = [
 
             const filteredRows = allRows.map(row => row.cloneNode(true)).filter(row => {
                 // Reset previous highlights
-                row.querySelectorAll('.mb-filter-highlight, .mb-col-filter-highlight')
+                row.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
                     .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
 
                 const text = getCleanVisibleText(row);
@@ -1994,7 +2023,7 @@ let changelog = [
         stopOtherScripts();
 
         // Clear existing highlights immediately from DOM for visual feedback
-        document.querySelectorAll('.mb-filter-highlight, .mb-col-filter-highlight').forEach(n => {
+        document.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight').forEach(n => {
             n.replaceWith(document.createTextNode(n.textContent));
         });
 
@@ -3532,7 +3561,7 @@ let changelog = [
 
                     tables.forEach(table => {
                         table.querySelectorAll('tbody tr').forEach(row => {
-                            highlightText(row, filterQueryRaw, isCaseSensitive, -1, isRegExp);
+                            highlightText(row, filterQueryRaw, isCaseSensitive, -1, isRegExp, 'prefilter');
                         });
                     });
                 }

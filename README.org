@@ -31617,6 +31617,27 @@ if (data.prefilterExpression) {
 }
 #+end_example
 
+***** one more
+
+thx this works now, except I actually have three highlight CSS settings, the original two
+
+#+begin_example
+mb-filter-highlight      - used for highlightning when using the global input filter field
+mb-col-filter-highlight  - used for highlightning when using the column level input filter fields
+#+end_example
+
+and a new one
+
+#+begin_example
+mb-prefilter-highlight   - should be used when the data was loaded with some prefilter input string
+#+end_example
+
+Please adjust for these facts. Probably the parameters of the function "highlightText" need to be adjusted for the
+different type of filter-highlights, maybe in the line
+
+#+begin_example
+const className = targetColIndex === -1 ? 'mb-filter-highlight' : 'mb-col-filter-highlight';
+#+end_example
 
 **** adjust further
 
