@@ -31554,6 +31554,33 @@ When the filtered data is loaded add the following text in red after the "Rx" ch
 
 and reset the '<filter string for data load>'
 
+**** adjust further
+
+Please further adjust in the following two ways
+
+1.) The new global filter input text field (+ "case sensitivity" or "regex" support) should not be displayed directly on
+the page but instead when pressing the "Load from disk" button there should first be a popup window with these
+elements + 2 new buttons to let the user optionally enter a filter expression before finally either pressing the new
+"Load filtered data from disk" button (which should initiate the actual data load from disk) or pressing the new
+"Cancel" button to cancel the popup (should also be canceled when pressing the "Escape" key). Both buttons should be
+positioned centered below the filter input text field. In case the data is loaded successfully, the following text in
+red should be rendered after the "Load from Disk" button
+
+#+begin_example
+<number of rows> prefiltered with expression <filter string for data load>
+#+end_example
+
+2.) When the data is rerendered after loading from disk, the filter expression should be highlighted (yellow on light
+blue background) in the loaded rows, like the same functionality which is present when the global filter input field is
+used. Another button should be rendered with the text "Unhighlight" after the text
+
+#+begin_example
+<number of rows> prefiltered with expression <filter string for data load>
+#+end_example
+
+from point 1.)
+
+When pressed the highlightning should be removed which was entered for prefiltering.
 
 *** answer gemini - fast
 
