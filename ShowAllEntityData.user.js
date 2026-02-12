@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      4.2.0+2026-02-12
+// @version      4.4.0+2026-02-12
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -30,6 +30,7 @@
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
 // @grant        GM_unregisterMenuCommand
+// @grant        GM_download
 // @license      MIT
 // ==/UserScript==
 
@@ -47,6 +48,9 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '4.4.0+2026-02-12', description: 'Add "pre filter when loading" functionality.'},
+    {version: '4.3.1+2026-02-12', description: 'Fix: Remove duplicate filter row when loading from disk. Fix: Restore alternating even/odd row backgrounds.'},
+    {version: '4.3.0+2026-02-12', description: 'Add offline storage/cache feature: Save table data to disk and load from disk to avoid re-fetching from MusicBrainz.'},
     {version: '4.2.0+2026-02-11', description: 'Refactor removing columns with a removalMap object.'},
     {version: '4.1.0+2026-02-11', description: 'Pass a function to the library constructor that dynamically checks the debug logging flag.'},
     {version: '4.0.0+2026-02-11', description: 'Userscript renamed to better reflect current functionality.'},
@@ -873,6 +877,71 @@ let changelog = [
         controlsContainer.appendChild(eb);
         allActionButtons.push(eb);
     });
+
+    // Add Save to Disk button
+    const saveToDiskBtn = document.createElement('button');
+    saveToDiskBtn.textContent = '💾 Save to Disk';
+    saveToDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#4CAF50; color:white; border:1px solid #45a049; display:none;';
+    saveToDiskBtn.type = 'button';
+    saveToDiskBtn.title = 'Save current table data to disk as JSON';
+    saveToDiskBtn.onclick = () => saveTableDataToDisk();
+    controlsContainer.appendChild(saveToDiskBtn);
+
+    // Add Load from Disk button with hidden file input
+    const loadFromDiskBtn = document.createElement('button');
+    loadFromDiskBtn.textContent = '📂 Load from Disk';
+    loadFromDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#2196F3; color:white; border:1px solid #0b7dda;';
+    loadFromDiskBtn.type = 'button';
+    loadFromDiskBtn.title = 'Load table data from disk (JSON file)';
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
+    fileInput.style.display = 'none';
+    fileInput.onchange = (e) => loadTableDataFromDisk(e.target.files[0]);
+
+    loadFromDiskBtn.onclick = () => fileInput.click();
+    controlsContainer.appendChild(loadFromDiskBtn);
+    controlsContainer.appendChild(fileInput);
+
+    // --- Pre-load Filter UI elements ---
+    const preFilterContainer = document.createElement('span');
+    preFilterContainer.style.cssText = 'display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding-left:6px; border-left:1px solid #ccc; vertical-align:middle; height:24px;';
+
+    const preFilterInput = document.createElement('input');
+    preFilterInput.type = 'text';
+    preFilterInput.placeholder = 'Filter data load...';
+    preFilterInput.title = 'Filter rows while loading from disk';
+    preFilterInput.style.cssText = 'font-size:0.8em; padding:2px 4px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box;';
+
+    const preFilterCaseLabel = document.createElement('label');
+    preFilterCaseLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
+    const preFilterCaseCheckbox = document.createElement('input');
+    preFilterCaseCheckbox.type = 'checkbox';
+    preFilterCaseCheckbox.style.marginRight = '2px';
+    preFilterCaseLabel.appendChild(preFilterCaseCheckbox);
+    preFilterCaseLabel.appendChild(document.createTextNode('Cc'));
+    preFilterCaseLabel.title = 'Case Sensitive (Load)';
+
+    const preFilterRxLabel = document.createElement('label');
+    preFilterRxLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
+    const preFilterRxCheckbox = document.createElement('input');
+    preFilterRxCheckbox.type = 'checkbox';
+    preFilterRxCheckbox.style.marginRight = '2px';
+    preFilterRxLabel.appendChild(preFilterRxCheckbox);
+    preFilterRxLabel.appendChild(document.createTextNode('Rx'));
+    preFilterRxLabel.title = 'RegExp (Load)';
+
+    const preFilterMsg = document.createElement('span');
+    preFilterMsg.id = 'mb-preload-filter-msg';
+    preFilterMsg.style.cssText = 'font-size:0.8em; color:red; margin-left:4px; font-weight:bold; white-space:nowrap;';
+
+    preFilterContainer.appendChild(preFilterInput);
+    preFilterContainer.appendChild(preFilterCaseLabel);
+    preFilterContainer.appendChild(preFilterRxLabel);
+    preFilterContainer.appendChild(preFilterMsg);
+
+    controlsContainer.appendChild(preFilterContainer);
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
@@ -2596,6 +2665,9 @@ let changelog = [
         }
 
         Lib.info('render', `Finished renderFinalTable. Injected ${rowCount} rows into DOM.`);
+
+        // Show the save button now that data is rendered
+        saveToDiskBtn.style.display = 'inline-block';
     }
 
     function renderGroupedTable(dataArray, isArtistMain, query = '') {
@@ -2816,6 +2888,9 @@ let changelog = [
             }
         });
         Lib.info('render', 'Finished renderGroupedTable.');
+
+        // Show the save button now that data is rendered
+        saveToDiskBtn.style.display = 'inline-block';
     }
 
     /**
@@ -3140,5 +3215,328 @@ let changelog = [
                 onerror: reject
             });
         });
+    }
+
+    /**
+     * Serializes current table data (allRows or groupedRows) to JSON and triggers download
+     */
+    function saveTableDataToDisk() {
+        Lib.info('cache', 'Starting table data serialization...');
+
+        if (!isLoaded) {
+            alert('No data loaded yet. Please fetch data first before saving.');
+            return;
+        }
+
+        try {
+            let dataToSave = {
+                version: '1.0',
+                url: window.location.href,
+                pageType: pageType,
+                timestamp: Date.now(),
+                timestampReadable: new Date().toISOString(),
+                tableMode: activeDefinition.tableMode,
+                rowCount: 0,
+                headers: null,
+                rows: null,
+                groups: null
+            };
+
+            // Serialize table headers (exclude the filter row)
+            const firstTable = document.querySelector('table.tbl');
+            if (firstTable && firstTable.tHead) {
+                const headerRows = Array.from(firstTable.tHead.querySelectorAll('tr'))
+                    .filter(row => !row.classList.contains('mb-col-filter-row')); // Exclude filter row
+                dataToSave.headers = headerRows.map(row => {
+                    return Array.from(row.cells).map(cell => ({
+                        html: cell.innerHTML,
+                        colSpan: cell.colSpan || 1,
+                        rowSpan: cell.rowSpan || 1,
+                        tagName: cell.tagName
+                    }));
+                });
+            }
+
+            // Serialize based on table mode
+            if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
+                // Multi-table mode: serialize grouped data
+                dataToSave.groups = groupedRows.map(group => ({
+                    key: group.key,
+                    rows: group.rows.map(row => {
+                        return Array.from(row.cells).map(cell => ({
+                            html: cell.innerHTML,
+                            colSpan: cell.colSpan || 1,
+                            rowSpan: cell.rowSpan || 1
+                        }));
+                    })
+                }));
+                dataToSave.rowCount = groupedRows.reduce((sum, g) => sum + g.rows.length, 0);
+                Lib.info('cache', `Serialized ${dataToSave.groups.length} groups with ${dataToSave.rowCount} total rows.`);
+            } else if (allRows.length > 0) {
+                // Single-table mode: serialize allRows
+                dataToSave.rows = allRows.map(row => {
+                    return Array.from(row.cells).map(cell => ({
+                        html: cell.innerHTML,
+                        colSpan: cell.colSpan || 1,
+                        rowSpan: cell.rowSpan || 1
+                    }));
+                });
+                dataToSave.rowCount = allRows.length;
+                Lib.info('cache', `Serialized ${dataToSave.rowCount} rows.`);
+            } else {
+                alert('No table data available to save.');
+                return;
+            }
+
+            // Create JSON blob and trigger download
+            const jsonStr = JSON.stringify(dataToSave, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            // Generate filename based on page type and timestamp
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const filename = `mb-${pageType}-${timestamp}.json`;
+
+            // Use GM_download if available, otherwise fallback to standard download
+            // if (typeof GM_download !== 'undefined') {
+            //     GM_download({
+            //         url: url,
+            //         name: filename,
+            //         saveAs: true,
+            //         onload: () => {
+            //             Lib.info('cache', `Data saved to ${filename}`);
+            //             URL.revokeObjectURL(url);
+            //         },
+            //         onerror: (err) => {
+            //             Lib.error('cache', 'Download failed:', err);
+            //             URL.revokeObjectURL(url);
+            //             // Fallback to standard download
+            //             triggerStandardDownload(url, filename);
+            //         }
+            //     });
+            // } else {
+            triggerStandardDownload(url, filename);
+            // }
+
+        } catch (err) {
+            Lib.error('cache', 'Failed to serialize table data:', err);
+            alert('Failed to save data: ' + err.message);
+        }
+    }
+
+    /**
+     * Standard download fallback using an anchor element
+     */
+    function triggerStandardDownload(url, filename) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        Lib.info('cache', `Data saved to ${filename}`);
+    }
+
+    /**
+     * Loads table data from a JSON file and re-hydrates the page
+     */
+    function loadTableDataFromDisk(file) {
+        if (!file) {
+            Lib.warn('cache', 'No file selected.');
+            return;
+        }
+
+        // 1. Capture Filter State from the NEW dedicated inputs
+        const filterQueryRaw = preFilterInput.value;
+        const isCaseSensitive = preFilterCaseCheckbox.checked;
+        const isRegExp = preFilterRxCheckbox.checked;
+        const filterQuery = (isCaseSensitive || isRegExp) ? filterQueryRaw : filterQueryRaw.toLowerCase();
+
+        // Clear previous status message
+        preFilterMsg.textContent = '';
+
+        let globalRegex = null;
+        if (filterQueryRaw && isRegExp) {
+            try {
+                globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
+            } catch (e) {
+                alert('Invalid Regular Expression in load filter field. Load aborted.');
+                // Reset file input so change event fires again if they pick same file
+                fileInput.value = '';
+                return;
+            }
+        }
+
+        Lib.info('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}`);
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+
+                // Validation: Check if the file matches the current page type
+                if (data.pageType !== pageType) {
+                    if (!confirm(`Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page. Try loading anyway?`)) {
+                        fileInput.value = '';
+                        return;
+                    }
+                }
+
+                // Validate data structure
+                if (!data.version || !data.pageType || !data.timestamp) {
+                    throw new Error('Invalid data file: missing required fields');
+                }
+
+                Lib.info('cache', `Loaded data version ${data.version} from ${data.timestampReadable} (File total: ${data.rowCount} rows)`);
+
+                // Prepare the page for re-hydration
+                performClutterCleanup();
+
+                // Restore table headers if they were saved
+                if (data.headers && data.headers.length > 0) {
+                    const firstTable = document.querySelector('table.tbl');
+                    if (firstTable) {
+                        if (firstTable.tHead) firstTable.tHead.remove();
+                        const thead = document.createElement('thead');
+                        data.headers.forEach(headerRowCells => {
+                            // Skip filter rows
+                            const hasFilterInputs = headerRowCells.some(cell => cell.html && cell.html.includes('mb-col-filter-input'));
+                            if (hasFilterInputs) return;
+
+                            const tr = document.createElement('tr');
+                            headerRowCells.forEach(cellData => {
+                                const cell = document.createElement(cellData.tagName || 'th');
+                                cell.innerHTML = cellData.html;
+                                if (cellData.colSpan > 1) cell.colSpan = cellData.colSpan;
+                                if (cellData.rowSpan > 1) cell.rowSpan = cellData.rowSpan;
+                                tr.appendChild(cell);
+                            });
+                            thead.appendChild(tr);
+                        });
+                        firstTable.insertBefore(thead, firstTable.firstChild);
+                    }
+                }
+
+                let loadedRowCount = 0;
+
+                // Helper to check if a row matches the pre-load filter
+                const rowMatchesFilter = (tr) => {
+                    if (!filterQueryRaw) return true;
+                    const text = getCleanVisibleText(tr);
+                    if (isRegExp && globalRegex) {
+                        return globalRegex.test(text);
+                    } else {
+                        return isCaseSensitive ? text.includes(filterQuery) : text.toLowerCase().includes(filterQuery);
+                    }
+                };
+
+                // Reconstruct rows from serialized data with Filtering
+                if (data.tableMode === 'multi' && data.groups) {
+                    groupedRows = [];
+                    data.groups.forEach(group => {
+                        const reconstructedRows = [];
+                        group.rows.forEach((rowCells, rowIndex) => {
+                            const tr = document.createElement('tr');
+                            tr.className = rowIndex % 2 === 0 ? 'even' : 'odd';
+                            rowCells.forEach(cellData => {
+                                const td = document.createElement('td');
+                                td.innerHTML = cellData.html;
+                                if (cellData.colSpan > 1) td.colSpan = cellData.colSpan;
+                                if (cellData.rowSpan > 1) td.rowSpan = cellData.rowSpan;
+                                tr.appendChild(td);
+                            });
+
+                            if (rowMatchesFilter(tr)) {
+                                reconstructedRows.push(tr);
+                            }
+                        });
+
+                        groupedRows.push({
+                            key: group.key,
+                            category: group.category || group.key,
+                            rows: reconstructedRows,
+                            originalRows: [...reconstructedRows]
+                        });
+                        loadedRowCount += reconstructedRows.length;
+                    });
+                    allRows = [];
+                } else if (data.rows) {
+                    allRows = [];
+                    data.rows.forEach((rowCells, rowIndex) => {
+                        const tr = document.createElement('tr');
+                        tr.className = rowIndex % 2 === 0 ? 'even' : 'odd';
+                        rowCells.forEach(cellData => {
+                            const td = document.createElement('td');
+                            td.innerHTML = cellData.html;
+                            if (cellData.colSpan > 1) td.colSpan = cellData.colSpan;
+                            if (cellData.rowSpan > 1) td.rowSpan = cellData.rowSpan;
+                            tr.appendChild(td);
+                        });
+
+                        if (rowMatchesFilter(tr)) {
+                            allRows.push(tr);
+                        }
+                    });
+                    loadedRowCount = allRows.length;
+                    groupedRows = [];
+                } else {
+                    throw new Error('Invalid data file: no rows or groups found');
+                }
+
+                isLoaded = true;
+                if (data.tableMode) activeDefinition.tableMode = data.tableMode;
+                if (activeDefinition.tableMode !== 'multi') originalAllRows = [...allRows];
+
+                // Render
+                if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
+                    renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
+                } else if (allRows.length > 0 || loadedRowCount === 0) {
+                    renderFinalTable(allRows);
+                    document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+                    const mainTable = document.querySelector('table.tbl');
+                    if (mainTable) {
+                        addColumnFilterRow(mainTable);
+                        makeTableSortableUnified(mainTable, 'main_table');
+                    }
+                }
+
+                finalCleanup();
+                makeH2sCollapsible();
+                updateH2Count(loadedRowCount, loadedRowCount);
+
+                // Show main filter container (if hidden)
+                if (!filterContainer.parentNode) filterContainer.style.display = 'inline-flex';
+                saveToDiskBtn.style.display = 'inline-block';
+
+                // --- Update UI Feedback for Pre-Filter ---
+                if (filterQueryRaw) {
+                    // Update the red text span
+                    preFilterMsg.textContent = `${loadedRowCount} prefiltered with expression "${filterQueryRaw}"`;
+                    // Reset the input field
+                    preFilterInput.value = '';
+                }
+
+                Lib.info('cache', `Successfully loaded ${loadedRowCount} rows from disk!`);
+                statusDisplay.textContent = `✓ Loaded: ${loadedRowCount} rows`;
+                statusDisplay.style.color = 'green';
+
+                // Reset file input
+                fileInput.value = '';
+
+            } catch (err) {
+                Lib.error('cache', 'Failed to load data from file:', err);
+                alert('Failed to load data: ' + err.message);
+                fileInput.value = '';
+            }
+        };
+
+        reader.onerror = () => {
+            Lib.error('cache', 'Failed to read file');
+            alert('Failed to read file');
+            fileInput.value = '';
+        };
+
+        reader.readAsText(file);
     }
 })();
