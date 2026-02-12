@@ -30881,7 +30881,7 @@ extract comment from the following columns
 * add option to specify filter condition for the initial display already
 
 
-* add fetching to local db storage and reading from it
+* TODO add fetching to local db storage and reading from it
 ** initial
 
 In the uploaded userscript
@@ -31444,8 +31444,212 @@ aftert his one is the FUNCTIONING row with the column filter fields
 
 It used to be implemented on the original tables before rerendering as '<tr class="even"' and '<tr class="even"' wsomehow with the class attribute
 
+** storage
+** What is the meaning of the "General" block under "Settings" tab of a userscript in Tampermonkey, like for example the value e.g. 138
+
+#+begin_example
+How to inspect what is stored
+
+You can quickly check inside your script console:
+
+console.log(await GM.listValues());
+
+
+or
+
+GM_listValues().forEach(k => {
+    console.log(k, GM_getValue(k));
+});
+
+
+That will show you what those 138 entries actually are.
+#+end_example
+
+** Future Improvements
+
+Potential enhancements for the offline storage feature:
+
+Preserve Filter State: Save current filter values and restore them
+Preserve Sort State: Save current sort column/direction
+Preserve UI State: Save expanded/collapsed sections
+Compression: Use gzip to reduce file sizes for large datasets
+Delta Updates: Only save changed rows for incremental updates
+Multiple Snapshots: Manage multiple saved versions per page
+Auto-save: Periodically save data automatically
+Metadata Enhancement: Include more context (user notes, tags)
+
 ** check for errors on the multitable case
 
+In the case of loading back the data coming from multiple tables I get the following errors depending on the pageType (URL)
+
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+- https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings
+  
+For these I get:
+
+#+begin_example
+[VZ-ShowAllEntities: artist-relationships] 🎨  Injecting master toggle and filter container after target header ▼Appearances(1328)[ Show | Hid. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:35.628 [VZ-ShowAllEntities: artist-relationships] 🎨 Processing group: "undefined" with 47 rows. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:35.628 [VZ-ShowAllEntities: artist-relationships] 🎨 Creating new table and H3 for group "undefined". 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:35.628 [VZ-ShowAllEntities: artist-relationships] ❌ Failed to load data from file: TypeError: Cannot read properties of undefined (reading 'toLowerCase')
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3172:49
+    at Array.forEach (<anonymous>)
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3140:19)
+    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3809:21)
+#+end_example
+
+- https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+Here I get:
+
+#+begin_example
+[VZ-ShowAllEntities: releasegroup-releases] 📝 Loading data from file: mb-releasegroup-releases-2026-02-12T16-45-27.json 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.179 [VZ-ShowAllEntities: releasegroup-releases] 📝 Loaded data version 1.0 from 2026-02-12T16:45:27.363Z (124 rows) 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.179 [VZ-ShowAllEntities: releasegroup-releases] 🧹 Starting clutter element removal. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] 📝 Reconstructed 3 groups with 124 total rows. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] 🎨 Starting renderGroupedTable with 3 categories. Query: "" 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] ❌ No template table head found. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.204 [VZ-ShowAllEntities: releasegroup-releases] ❌ Failed to load data from file: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3051:31)
+    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3809:21)
+#+end_example
+
+** saving directly to disk for very large paginated pages
+
+** filtering data when loding from filesystem
+*** question
+
+In the uploaded script,
+
+please add the functionality to directly filter data on the row level when loading from a .json file from the filesystem
+(in case of very long tables, the browser would take forever to render such a page).
+
+Use the already present global filter field to accept a filter condition (same as for filtering standard pages, with either case sensitivity or regex support)
+
+*** answer gemini - fast
+
+#+begin_example
+async function loadTableDataFromDisk(file) {
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+
+                // Validation: Check if the file matches the current page type
+                if (data.pageType !== pageType) {
+                    if (!confirm(`Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page. Try loading anyway?`)) {
+                        return;
+                    }
+                }
+
+                Lib.info('cache', `Loading ${data.rowCount} rows from disk...`);
+                statusDisplay.textContent = '⌛ Processing data...';
+
+                // --- NEW: Row-level filtering before rendering ---
+                const filterValue = filterInput.value.trim();
+                if (filterValue) {
+                    const isRegex = regexpCheckbox.checked;
+                    const isCaseSensitive = caseCheckbox.checked;
+                    let regex;
+
+                    try {
+                        if (isRegex) {
+                            regex = new RegExp(filterValue, isCaseSensitive ? '' : 'i');
+                        } else {
+                            // Escape special chars for non-regex search
+                            const escaped = filterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            regex = new RegExp(escaped, isCaseSensitive ? '' : 'i');
+                        }
+
+                        const originalCount = data.rows.length;
+                        // Filter the rows based on whether any cell content matches the regex
+                        data.rows = data.rows.filter(row => 
+                            row.cells.some(cellText => regex.test(cellText))
+                        );
+
+                        Lib.info('cache', `Filter applied: "${filterValue}" (Rx: ${isRegex}, Cc: ${isCaseSensitive}). Rows reduced from ${originalCount} to ${data.rows.length}.`);
+                    } catch (err) {
+                        Lib.error('cache', 'Invalid Filter/RegExp:', err);
+                        alert('Invalid Filter/RegExp: ' + err.message);
+                    }
+                }
+                // --- End of filtering logic ---
+
+                // Clear current content and prepare for rendering
+                const target = document.querySelector(activeDefinition.rowTargetSelector || 'table.tbl') || headerContainer;
+                const container = target.closest('#content') || document.getElementById('content');
+
+                // Hide original elements
+                const toHide = container.querySelectorAll('table.tbl, .pagination, .pageselector-results, p:not(#mb-show-all-controls-container p)');
+                toHide.forEach(el => el.style.display = 'none');
+
+                // Re-initialize logic similar to startFetchingProcess
+                allRows = data.rows;
+                const mainTable = createBaseTable(data.headers);
+                container.appendChild(mainTable);
+
+                // Add rows to table
+                const tbody = mainTable.querySelector('tbody');
+                if (activeDefinition.tableMode === 'multi') {
+                    // Logic for multi-table (grouped) rendering
+                    groupedRows = groupRowsByHeader(allRows);
+                    renderGroupedTables(groupedRows, container);
+                } else {
+                    // Logic for single table rendering
+                    allRows.forEach(rowData => {
+                        const tr = document.createElement('tr');
+                        rowData.cells.forEach(cellHtml => {
+                            const td = document.createElement('td');
+                            td.innerHTML = cellHtml;
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    
+                    if (allRows.length > 0) {
+                        addColumnFilterRow(mainTable);
+                        makeTableSortableUnified(mainTable, 'main_table');
+                    }
+                }
+
+                // Perform final cleanup and make headers collapsible
+                finalCleanup();
+                makeH2sCollapsible();
+
+                // Update row count in header
+                const totalRows = (activeDefinition.tableMode === 'multi') ?
+                    groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
+                updateH2Count(totalRows, totalRows);
+
+                // Show filter container
+                if (!filterContainer.parentNode) {
+                    filterContainer.style.display = 'inline-flex';
+                }
+
+                // Show the save button now that we have data
+                saveToDiskBtn.style.display = 'inline-block';
+
+                Lib.info('cache', `Successfully loaded ${totalRows} rows!`);
+                statusDisplay.textContent = `✓ Loaded: ${totalRows} rows`;
+                statusDisplay.style.color = 'green';
+
+            } catch (err) {
+                Lib.error('cache', 'Failed to load data from file:', err);
+                alert('Failed to load data: ' + err.message);
+            }
+        };
+
+        reader.onerror = () => {
+            Lib.error('cache', 'Failed to read file');
+            alert('Failed to read file');
+        };
+
+        reader.readAsText(file);
+    }
+#+end_example
 
 * "Esc" handling in filter field
 ** initial
