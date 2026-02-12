@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      4.4.1+2026-02-12
+// @version      4.4.2+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '4.4.2+2026-02-13', description: 'Add popup dialog to enter prefilter string instead of showing it on the main page all the time.'},
     {version: '4.4.1+2026-02-12', description: 'Add highlightning of pre-filter expression.'},
     {version: '4.4.0+2026-02-12', description: 'Add "pre filter when loading" functionality.'},
     {version: '4.3.1+2026-02-12', description: 'Fix: Remove duplicate filter row when loading from disk. Fix: Restore alternating even/odd row backgrounds.'},
