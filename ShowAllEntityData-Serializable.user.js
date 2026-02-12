@@ -903,6 +903,45 @@ let changelog = [
     controlsContainer.appendChild(loadFromDiskBtn);
     controlsContainer.appendChild(fileInput);
 
+    // --- Pre-load Filter UI elements ---
+    const preFilterContainer = document.createElement('span');
+    preFilterContainer.style.cssText = 'display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding-left:6px; border-left:1px solid #ccc; vertical-align:middle; height:24px;';
+
+    const preFilterInput = document.createElement('input');
+    preFilterInput.type = 'text';
+    preFilterInput.placeholder = 'Filter data load...';
+    preFilterInput.title = 'Filter rows while loading from disk';
+    preFilterInput.style.cssText = 'font-size:0.8em; padding:2px 4px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box;';
+
+    const preFilterCaseLabel = document.createElement('label');
+    preFilterCaseLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
+    const preFilterCaseCheckbox = document.createElement('input');
+    preFilterCaseCheckbox.type = 'checkbox';
+    preFilterCaseCheckbox.style.marginRight = '2px';
+    preFilterCaseLabel.appendChild(preFilterCaseCheckbox);
+    preFilterCaseLabel.appendChild(document.createTextNode('Cc'));
+    preFilterCaseLabel.title = 'Case Sensitive (Load)';
+
+    const preFilterRxLabel = document.createElement('label');
+    preFilterRxLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
+    const preFilterRxCheckbox = document.createElement('input');
+    preFilterRxCheckbox.type = 'checkbox';
+    preFilterRxCheckbox.style.marginRight = '2px';
+    preFilterRxLabel.appendChild(preFilterRxCheckbox);
+    preFilterRxLabel.appendChild(document.createTextNode('Rx'));
+    preFilterRxLabel.title = 'RegExp (Load)';
+
+    const preFilterMsg = document.createElement('span');
+    preFilterMsg.id = 'mb-preload-filter-msg';
+    preFilterMsg.style.cssText = 'font-size:0.8em; color:red; margin-left:4px; font-weight:bold; white-space:nowrap;';
+
+    preFilterContainer.appendChild(preFilterInput);
+    preFilterContainer.appendChild(preFilterCaseLabel);
+    preFilterContainer.appendChild(preFilterRxLabel);
+    preFilterContainer.appendChild(preFilterMsg);
+
+    controlsContainer.appendChild(preFilterContainer);
+
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
     stopBtn.style.cssText = 'display:none; font-size:0.8em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box; border-radius:6px;';
@@ -3307,7 +3346,28 @@ let changelog = [
             return;
         }
 
-        Lib.info('cache', `Loading data from file: ${file.name}`);
+        // 1. Capture Filter State from the NEW dedicated inputs
+        const filterQueryRaw = preFilterInput.value;
+        const isCaseSensitive = preFilterCaseCheckbox.checked;
+        const isRegExp = preFilterRxCheckbox.checked;
+        const filterQuery = (isCaseSensitive || isRegExp) ? filterQueryRaw : filterQueryRaw.toLowerCase();
+
+        // Clear previous status message
+        preFilterMsg.textContent = '';
+
+        let globalRegex = null;
+        if (filterQueryRaw && isRegExp) {
+            try {
+                globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
+            } catch (e) {
+                alert('Invalid Regular Expression in load filter field. Load aborted.');
+                // Reset file input so change event fires again if they pick same file
+                fileInput.value = '';
+                return;
+            }
+        }
+
+        Lib.info('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}`);
 
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -3317,6 +3377,7 @@ let changelog = [
                 // Validation: Check if the file matches the current page type
                 if (data.pageType !== pageType) {
                     if (!confirm(`Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page. Try loading anyway?`)) {
+                        fileInput.value = '';
                         return;
                     }
                 }
@@ -3326,7 +3387,7 @@ let changelog = [
                     throw new Error('Invalid data file: missing required fields');
                 }
 
-                Lib.info('cache', `Loaded data version ${data.version} from ${data.timestampReadable} (${data.rowCount} rows)`);
+                Lib.info('cache', `Loaded data version ${data.version} from ${data.timestampReadable} (File total: ${data.rowCount} rows)`);
 
                 // Prepare the page for re-hydration
                 performClutterCleanup();
@@ -3335,22 +3396,12 @@ let changelog = [
                 if (data.headers && data.headers.length > 0) {
                     const firstTable = document.querySelector('table.tbl');
                     if (firstTable) {
-                        // Clear existing thead
-                        if (firstTable.tHead) {
-                            firstTable.tHead.remove();
-                        }
-
-                        // Create new thead
+                        if (firstTable.tHead) firstTable.tHead.remove();
                         const thead = document.createElement('thead');
                         data.headers.forEach(headerRowCells => {
-                            // Skip filter rows (they contain inputs with class mb-col-filter-input)
-                            const hasFilterInputs = headerRowCells.some(cell =>
-                                cell.html && cell.html.includes('mb-col-filter-input')
-                            );
-                            if (hasFilterInputs) {
-                                Lib.debug('cache', 'Skipping filter row from saved headers');
-                                return;
-                            }
+                            // Skip filter rows
+                            const hasFilterInputs = headerRowCells.some(cell => cell.html && cell.html.includes('mb-col-filter-input'));
+                            if (hasFilterInputs) return;
 
                             const tr = document.createElement('tr');
                             headerRowCells.forEach(cellData => {
@@ -3363,18 +3414,29 @@ let changelog = [
                             thead.appendChild(tr);
                         });
                         firstTable.insertBefore(thead, firstTable.firstChild);
-                        Lib.info('cache', 'Restored table headers from saved data.');
                     }
                 }
 
-                // Reconstruct rows from serialized data
+                let loadedRowCount = 0;
+
+                // Helper to check if a row matches the pre-load filter
+                const rowMatchesFilter = (tr) => {
+                    if (!filterQueryRaw) return true;
+                    const text = getCleanVisibleText(tr);
+                    if (isRegExp && globalRegex) {
+                        return globalRegex.test(text);
+                    } else {
+                        return isCaseSensitive ? text.includes(filterQuery) : text.toLowerCase().includes(filterQuery);
+                    }
+                };
+
+                // Reconstruct rows from serialized data with Filtering
                 if (data.tableMode === 'multi' && data.groups) {
-                    // Multi-table mode: reconstruct grouped rows
-                    groupedRows = data.groups.map(group => ({
-                        key: group.key,
-                        rows: group.rows.map((rowCells, rowIndex) => {
+                    groupedRows = [];
+                    data.groups.forEach(group => {
+                        const reconstructedRows = [];
+                        group.rows.forEach((rowCells, rowIndex) => {
                             const tr = document.createElement('tr');
-                            // Add alternating even/odd class
                             tr.className = rowIndex % 2 === 0 ? 'even' : 'odd';
                             rowCells.forEach(cellData => {
                                 const td = document.createElement('td');
@@ -3383,16 +3445,25 @@ let changelog = [
                                 if (cellData.rowSpan > 1) td.rowSpan = cellData.rowSpan;
                                 tr.appendChild(td);
                             });
-                            return tr;
-                        })
-                    }));
-                    allRows = []; // Clear allRows for multi-table mode
-                    Lib.info('cache', `Reconstructed ${groupedRows.length} groups with ${data.rowCount} total rows.`);
+
+                            if (rowMatchesFilter(tr)) {
+                                reconstructedRows.push(tr);
+                            }
+                        });
+
+                        groupedRows.push({
+                            key: group.key,
+                            category: group.category || group.key,
+                            rows: reconstructedRows,
+                            originalRows: [...reconstructedRows]
+                        });
+                        loadedRowCount += reconstructedRows.length;
+                    });
+                    allRows = [];
                 } else if (data.rows) {
-                    // Single-table mode: reconstruct allRows
-                    allRows = data.rows.map((rowCells, rowIndex) => {
+                    allRows = [];
+                    data.rows.forEach((rowCells, rowIndex) => {
                         const tr = document.createElement('tr');
-                        // Add alternating even/odd class
                         tr.className = rowIndex % 2 === 0 ? 'even' : 'odd';
                         rowCells.forEach(cellData => {
                             const td = document.createElement('td');
@@ -3401,32 +3472,26 @@ let changelog = [
                             if (cellData.rowSpan > 1) td.rowSpan = cellData.rowSpan;
                             tr.appendChild(td);
                         });
-                        return tr;
+
+                        if (rowMatchesFilter(tr)) {
+                            allRows.push(tr);
+                        }
                     });
-                    groupedRows = []; // Clear groupedRows for single-table mode
-                    Lib.info('cache', `Reconstructed ${allRows.length} rows.`);
+                    loadedRowCount = allRows.length;
+                    groupedRows = [];
                 } else {
                     throw new Error('Invalid data file: no rows or groups found');
                 }
 
-                // Set the loaded flag and update active definition
                 isLoaded = true;
-                if (data.tableMode) {
-                    activeDefinition.tableMode = data.tableMode;
-                }
+                if (data.tableMode) activeDefinition.tableMode = data.tableMode;
+                if (activeDefinition.tableMode !== 'multi') originalAllRows = [...allRows];
 
-                // Store original data for sorting
-                originalAllRows = [...allRows];
-
-                // Render the data using existing rendering logic
+                // Render
                 if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
-                    // For multi-table mode, store original rows in each group
-                    groupedRows.forEach(g => { g.originalRows = [...g.rows]; });
                     renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
-                } else if (allRows.length > 0) {
-                    // For single-table mode
+                } else if (allRows.length > 0 || loadedRowCount === 0) {
                     renderFinalTable(allRows);
-                    // Add sorting and filtering capabilities
                     document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
                     const mainTable = document.querySelector('table.tbl');
                     if (mainTable) {
@@ -3435,36 +3500,40 @@ let changelog = [
                     }
                 }
 
-                // Perform final cleanup and make headers collapsible
                 finalCleanup();
                 makeH2sCollapsible();
+                updateH2Count(loadedRowCount, loadedRowCount);
 
-                // Update row count in header
-                const totalRows = (activeDefinition.tableMode === 'multi') ?
-                    groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
-                updateH2Count(totalRows, totalRows);
-
-                // Show filter container
-                if (!filterContainer.parentNode) {
-                    filterContainer.style.display = 'inline-flex';
-                }
-
-                // Show the save button now that we have data
+                // Show main filter container (if hidden)
+                if (!filterContainer.parentNode) filterContainer.style.display = 'inline-flex';
                 saveToDiskBtn.style.display = 'inline-block';
 
-                Lib.info('cache', `Successfully loaded ${data.rowCount} rows from disk!`);
-                statusDisplay.textContent = `✓ Loaded from disk: ${data.rowCount} rows`;
+                // --- Update UI Feedback for Pre-Filter ---
+                if (filterQueryRaw) {
+                    // Update the red text span
+                    preFilterMsg.textContent = `${loadedRowCount} prefiltered with expression "${filterQueryRaw}"`;
+                    // Reset the input field
+                    preFilterInput.value = '';
+                }
+
+                Lib.info('cache', `Successfully loaded ${loadedRowCount} rows from disk!`);
+                statusDisplay.textContent = `✓ Loaded: ${loadedRowCount} rows`;
                 statusDisplay.style.color = 'green';
+
+                // Reset file input
+                fileInput.value = '';
 
             } catch (err) {
                 Lib.error('cache', 'Failed to load data from file:', err);
                 alert('Failed to load data: ' + err.message);
+                fileInput.value = '';
             }
         };
 
         reader.onerror = () => {
             Lib.error('cache', 'Failed to read file');
             alert('Failed to read file');
+            fileInput.value = '';
         };
 
         reader.readAsText(file);

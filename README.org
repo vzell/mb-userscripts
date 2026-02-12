@@ -31519,13 +31519,41 @@ userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-
 
 ** filtering data when loding from filesystem
 *** question
+**** initial
 
 In the uploaded script,
 
-please add the functionality to directly filter data on the row level when loading from a .json file from the filesystem
-(in case of very long tables, the browser would take forever to render such a page).
+in the function"function loadTableDataFromDisk(file)" please add the functionality to directly filter data on the row
+level when loading from a .json file from the filesystem (in case of very long tables, the browser would take forever to
+render such a page).
 
-Use the already present global filter field to accept a filter condition (same as for filtering standard pages, with either case sensitivity or regex support)
+Create a new global filter input text field (+ "case sensitivity" or "regex" support) to accept a filter condition (same
+as for filtering standard pages, with additional "case sensitivity" or "regex" support) right beside the "Load from
+Disk" button.
+
+When the filtered data is loaded add the following text in red after the "Rx" checkbox
+
+#+begin_example
+<number of rows> prefiltered with expression <filter string for data load>
+#+end_example
+
+and reset the '<filter string for data load>'
+
+**** refine
+
+Actually, Create a new global filter input text field (+ "case sensitivity" or "regex" support) instead of reusing the
+one present on an already renderd page (so we get the filtering support already on an initial start page URL), to accept
+a filter condition (same as for filtering standard pages, with additional "case sensitivity" or "regex" support) right
+beside the "Load from Disk" button.
+
+When the filtered data is loaded add the following text in red after the "Rx" checkbox
+
+#+begin_example
+<number of rows> prefiltered with expression <filter string for data load>
+#+end_example
+
+and reset the '<filter string for data load>'
+
 
 *** answer gemini - fast
 
@@ -31650,6 +31678,7 @@ async function loadTableDataFromDisk(file) {
         reader.readAsText(file);
     }
 #+end_example
+
 
 * "Esc" handling in filter field
 ** initial
