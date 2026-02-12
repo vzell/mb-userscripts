@@ -31541,6 +31541,8 @@ and reset the '<filter string for data load>'
 
 **** refine
 
+In the uploaded script,
+
 Actually, Create a new global filter input text field (+ "case sensitivity" or "regex" support) instead of reusing the
 one present on an already renderd page (so we get the filtering support already on an initial start page URL), to accept
 a filter condition (same as for filtering standard pages, with additional "case sensitivity" or "regex" support) right
@@ -31553,6 +31555,38 @@ When the filtered data is loaded add the following text in red after the "Rx" ch
 #+end_example
 
 and reset the '<filter string for data load>'
+
+**** refine for highlightning
+
+In the uploaded script,
+
+when the data is rerendered after loading from disk, the filter expression should be highlighted (initially yellow on
+light blue background) in the loaded rows, like the same functionality which is present when the global filter input
+field is used. The colors should be configurable by the user via the two new variables in "const configSchema"
+
+#+begin_example
+        sa_prefilter_highlight_color: {
+            label: "Global Prefilter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for global prefilter matches"
+        },
+        sa_prefilter_highlight_bg: {
+            label: "Global Prefilter Highlight Background",
+            type: "color_picker",
+            default: "#lightblue",
+            description: "Background color for global prefilter matches"
+        },
+#+end_example
+
+Another button should be rendered with the text "Unhighlight" after the text
+
+#+begin_example
+Checkbox [ ] Rx
+#+end_example
+
+in the h2 header line where the global filter is currently positioned. When pressed the highlightning should be removed
+which was entered for prefiltering.
 
 **** adjust further
 
@@ -31570,9 +31604,26 @@ red should be rendered after the "Load from Disk" button
 <number of rows> prefiltered with expression <filter string for data load>
 #+end_example
 
-2.) When the data is rerendered after loading from disk, the filter expression should be highlighted (yellow on light
-blue background) in the loaded rows, like the same functionality which is present when the global filter input field is
-used. Another button should be rendered with the text "Unhighlight" after the text
+2.) When the data is rerendered after loading from disk, the filter expression should be highlighted (initially
+yellow on light blue background) in the loaded rows, like the same functionality which is present when the global filter
+input field is used. The colors should be configurable by the user via the two new variables
+
+#+begin_example
+        sa_prefilter_highlight_color: {
+            label: "Global Prefilter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for global prefilter matches"
+        },
+        sa_prefilter_highlight_bg: {
+            label: "Global Prefilter Highlight Background",
+            type: "color_picker",
+            default: "#lightblue",
+            description: "Background color for global prefilter matches"
+        },
+#+end_example
+
+Another button should be rendered with the text "Unhighlight" after the text
 
 #+begin_example
 <number of rows> prefiltered with expression <filter string for data load>
