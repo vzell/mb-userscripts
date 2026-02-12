@@ -31641,19 +31641,27 @@ const className = targetColIndex === -1 ? 'mb-filter-highlight' : 'mb-col-filter
 
 **** adjust further
 
-Please further adjust in the following two ways
+Please further adjust in the following way
 
-1.) The new global filter input text field (+ "case sensitivity" or "regex" support) should not be displayed directly on
-the page but instead when pressing the "Load from disk" button there should first be a popup window with these
-elements + 2 new buttons to let the user optionally enter a filter expression before finally either pressing the new
-"Load filtered data from disk" button (which should initiate the actual data load from disk) or pressing the new
-"Cancel" button to cancel the popup (should also be canceled when pressing the "Escape" key). Both buttons should be
-positioned centered below the filter input text field. In case the data is loaded successfully, the following text in
-red should be rendered after the "Load from Disk" button
+The new global filter input text field (+ "case sensitivity" or "regex" support)
 
 #+begin_example
-<number of rows> prefiltered with expression <filter string for data load>
+<span style="display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding-left: 6px; border-left: 1px solid rgb(204, 204, 204); vertical-align: middle; height: 24px;">
+  <input type="text" placeholder="Filter data load..." title="Filter rows while loading from disk" style="font-size: 0.8em; padding: 2px 4px; border: 1px solid rgb(204, 204, 204); border-radius: 3px; width: 150px; height: 24px; box-sizing: border-box;">
+  <label title="Case Sensitive (Load)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none;">
+    <input type="checkbox" style="margin-right: 2px;">Cc
+  </label>
+  <label title="RegExp (Load)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none;">
+    <input type="checkbox" style="margin-right: 2px;">Rx
+  </label>
+</span>
 #+end_example
+
+should not be displayed directly on the page but instead when pressing the "Load from disk" button there should first be
+a popup window with this container, to let the user optionally enter a filter expression before finally either pressing
+the new "Load filtered data from disk" button (which should initiate the actual data load from disk) or pressing the new
+"Cancel" button to cancel the popup (should also be canceled when pressing the "Escape" key). Both new buttons should be
+positioned centered below the filter input text field.
 
 2.) When the data is rerendered after loading from disk, the filter expression should be highlighted (initially
 yellow on light blue background) in the loaded rows, like the same functionality which is present when the global filter

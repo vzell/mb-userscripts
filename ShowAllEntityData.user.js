@@ -913,7 +913,7 @@ let changelog = [
     fileInput.style.display = 'none';
     fileInput.onchange = (e) => loadTableDataFromDisk(e.target.files[0]);
 
-    loadFromDiskBtn.onclick = () => fileInput.click();
+    loadFromDiskBtn.onclick = () => showLoadFilterPopup();
     controlsContainer.appendChild(loadFromDiskBtn);
     controlsContainer.appendChild(fileInput);
 
@@ -948,12 +948,6 @@ let changelog = [
     const preFilterMsg = document.createElement('span');
     preFilterMsg.id = 'mb-preload-filter-msg';
     preFilterMsg.style.cssText = 'font-size:0.8em; color:red; margin-left:4px; font-weight:bold; white-space:nowrap;';
-
-    preFilterContainer.appendChild(preFilterInput);
-    preFilterContainer.appendChild(preFilterCaseLabel);
-    preFilterContainer.appendChild(preFilterRxLabel);
-
-    controlsContainer.appendChild(preFilterContainer);
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
@@ -1133,6 +1127,113 @@ let changelog = [
     let isLoaded = false;
     let stopRequested = false;
     let multiTableSortStates = new Map();
+
+    function showLoadFilterPopup() {
+        // --- Overlay ---
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+
+        // --- Modal ---
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            min-width: 320px;
+            font-family: sans-serif;
+        `;
+
+        modal.innerHTML = `
+            <div style="margin-bottom: 12px;">
+                <input id="sa-load-filter-input"
+                    type="text"
+                    placeholder="Filter data load..."
+                    title="Filter rows while loading from disk"
+                    style="width: 100%; font-size: 0.9em; padding: 4px;">
+            </div>
+
+            <div style="display:flex; gap:15px; justify-content:center; margin-bottom:15px;">
+                <label style="cursor:pointer;">
+                    <input type="checkbox" id="sa-load-case"> Cc
+                </label>
+                <label style="cursor:pointer;">
+                    <input type="checkbox" id="sa-load-regex"> Rx
+                </label>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:15px;">
+                <button id="sa-load-confirm">Load filtered data from disk</button>
+                <button id="sa-load-cancel">Cancel</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // --- Focus input ---
+        modal.querySelector('#sa-load-filter-input').focus();
+
+        // --- Close helper ---
+        const closePopup = () => {
+            document.removeEventListener('keydown', escHandler);
+            overlay.remove();
+        };
+
+        // --- ESC key support ---
+        const escHandler = (e) => {
+            if (e.key === 'Escape') closePopup();
+        };
+        document.addEventListener('keydown', escHandler);
+
+        // --- Cancel button ---
+        modal.querySelector('#sa-load-cancel').onclick = closePopup;
+
+        // --- Confirm button ---
+        modal.querySelector('#sa-load-confirm').onclick = () => {
+
+            const filterQueryRaw =
+                modal.querySelector('#sa-load-filter-input').value.trim();
+
+            const isCaseSensitive =
+                modal.querySelector('#sa-load-case').checked;
+
+            const isRegExp =
+                modal.querySelector('#sa-load-regex').checked;
+
+            closePopup();
+
+            triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp);
+        };
+
+        // Optional: close on overlay click (outside modal)
+        overlay.onclick = (e) => {
+            if (e.target === overlay) closePopup();
+        };
+    }
+
+    function triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.json';
+
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                loadTableDataFromDisk(file, filterQueryRaw, isCaseSensitive, isRegExp);
+            }
+        };
+
+        fileInput.click();
+    }
 
     function normalizeAliasTable(table) {
         if (!table) return;
@@ -3393,16 +3494,12 @@ let changelog = [
     /**
      * Loads table data from a JSON file and re-hydrates the page
      */
-    function loadTableDataFromDisk(file) {
+    function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
         if (!file) {
             Lib.warn('cache', 'No file selected.');
             return;
         }
 
-        // 1. Capture Filter State from the NEW dedicated inputs
-        const filterQueryRaw = preFilterInput.value;
-        const isCaseSensitive = preFilterCaseCheckbox.checked;
-        const isRegExp = preFilterRxCheckbox.checked;
         const filterQuery = (isCaseSensitive || isRegExp) ? filterQueryRaw : filterQueryRaw.toLowerCase();
 
         // Clear previous status message
