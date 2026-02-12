@@ -3274,7 +3274,7 @@ let changelog = [
             //     });
             // }
 	    // else {
-                triggerStandardDownload(url, filename);
+            triggerStandardDownload(url, filename);
             // }
 
         } catch (err) {

@@ -1,20 +1,14 @@
 # MusicBrainz UserScripts
 
-- [MusicBrainz - Release Page Enhancer](#mb_release_page_enhancer)
+---
 - [MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages](#mb_customizable_selector)
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
-
-<!-- - [MusicBrainz - Show All ReleaseGroups](#mb_show_all_releasegroups) -->
-<!-- - [MusicBrainz - Show All Releases in ReleaseGroups](#mb_show_all_releases_in_releasegroups) -->
-<!-- - [MusicBrainz - Show All Releases](#mb_show_all_releases) -->
-<!-- - [MusicBrainz - Show All Works](#mb_show_all_works) -->
-<!-- - [MusicBrainz - Show All Recordings](#mb_show_all_recordings) -->
-<!-- - [MusicBrainz - Show All Recordings In Works](#mb_show_all_recordings_in_works) -->
-<!-- - [MusicBrainz - Show All Events](#mb_show_all_events) -->
+---
+- [MusicBrainz - Release Page Enhancer](#mb_release_page_enhancer)
 - [MusicBrainz - Show All Entity Data In A Consolidated View](#mb_show_all_entity_data)
 - [MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](#mb_show_all_consolidated)
-
+---
 - [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
 - [MusicBrainz - Auto-Select External Link Types For Release Groups](#mb_auto_select_discography_link_type_release_groups)
 - [MusicBrainz - Auto-Select External Link Types For Releases](#mb_auto_select_discography_link_type_releases)
@@ -79,55 +73,6 @@ Adds a "NO Label" & "NO Catalognumber" button to the MusicBrainz release editor.
 
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
-
-<!-- ## <a name="mb_show_all_releasegroups"></a> MusicBrainz - Show All ReleaseGroups -->
-
-<!-- Accumulates all release groups from paginated artist pages into a single view grouped by type with sorting. -->
-
-<!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllReleaseGroups.user.js) -->
-<!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleaseGroups.user.js) -->
-
-<!-- ## <a name="mb_show_all_releases_in_releasegroups"></a> MusicBrainz - Show All Releases in ReleaseGroups -->
-
-<!-- Accumulates all releases from paginated release group pages into a single view with filtering and sorting. -->
-
-<!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllReleasesInReleaseGroups.user.js) -->
-<!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleasesInReleaseGroups.user.js) -->
-
-<!-- ## <a name="mb_show_all_releases"></a> MusicBrainz - Show All Releases -->
-
-<!-- Accumulates all releases from paginated artist work pages into a single view with sorting. -->
-
-<!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllReleases.user.js) -->
-<!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllReleases.user.js) -->
-
-<!-- ## <a name="mb_show_all_works"></a> MusicBrainz - Show All Works -->
-
-<!-- Accumulates all works from paginated artist work pages into a single view with sorting. -->
-
-<!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllWorks.user.js) -->
-<!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllWorks.user.js) -->
-
-<!-- ## <a name="mb_show_all_recordings"></a> MusicBrainz - Show All Recordings -->
-
-<!-- Accumulates all recordings from paginated artist recording pages into a single view with separate timing, stop button, pre-load count, and real-time search filter. -->
-
-<!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllRecordings.user.js) -->
-<!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllRecordings.user.js) -->
-
-<!-- ## <a name="mb_show_all_recordings_in_works"></a> MusicBrainz - Show All Recordings In Works -->
-
-<!-- Accumulates all recordings from paginated work recording pages into a single view with sorting. -->
-
-<!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllRecordingsInWorks.user.js) -->
-<!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllRecordingsInWorks.user.js) -->
-
-<!-- ## <a name="mb_show_all_events"></a> MusicBrainz - Show All Events -->
-
-<!-- Accumulates all events from paginated artist work pages into a single view with sorting. -->
-
-<!-- [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ShowAllEvents.user.js) -->
-<!-- [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllEvents.user.js) -->
 
 ## <a name="mb_show_all_entity_data"></a> MusicBrainz - Show All Entity Data In A Consolidated View
 
