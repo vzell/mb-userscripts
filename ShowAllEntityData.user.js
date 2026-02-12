@@ -154,6 +154,18 @@ let changelog = [
             default: 50,
             description: "Row count threshold to auto-expand tables"
         },
+        sa_prefilter_highlight_color: {
+            label: "Global Prefilter Highlight Color",
+            type: "color_picker",
+            default: "#ffff00", // yellow
+            description: "Text color for global prefilter matches"
+        },
+        sa_prefilter_highlight_bg: {
+            label: "Global Prefilter Highlight Background",
+            type: "color_picker",
+            default: "#add8e6", // light blue
+            description: "Background color for global prefilter matches"
+        },
         sa_filter_highlight_color: {
             label: "Global Filter Highlight Color",
             type: "color_picker",
@@ -1007,6 +1019,17 @@ let changelog = [
     filterContainer.appendChild(filterWrapper);
     filterContainer.appendChild(caseLabel);
     filterContainer.appendChild(regexpLabel);
+
+    const unhighlightBtn = document.createElement('button');
+    unhighlightBtn.textContent = 'Unhighlight';
+    unhighlightBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    unhighlightBtn.onclick = () => {
+        document.querySelectorAll('.mb-filter-highlight, .mb-col-filter-highlight')
+            .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+
+        Lib.info('filter', 'Prefilter highlights removed.');
+    };
+    filterContainer.appendChild(unhighlightBtn);
 
     const timerDisplay = document.createElement('span');
     timerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
@@ -3499,6 +3522,19 @@ let changelog = [
                         addColumnFilterRow(mainTable);
                         makeTableSortableUnified(mainTable, 'main_table');
                     }
+                }
+
+                // Apply prefilter highlight after rendering (if prefilter was used)
+                if (filterQueryRaw) {
+                    Lib.debug('cache', `Applying prefilter highlight for: "${filterQueryRaw}"`);
+
+                    const tables = document.querySelectorAll('table.tbl');
+
+                    tables.forEach(table => {
+                        table.querySelectorAll('tbody tr').forEach(row => {
+                            highlightText(row, filterQueryRaw, isCaseSensitive, -1, isRegExp);
+                        });
+                    });
                 }
 
                 finalCleanup();

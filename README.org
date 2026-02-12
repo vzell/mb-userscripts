@@ -31519,7 +31519,7 @@ userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-
 
 ** filtering data when loding from filesystem
 *** question
-**** initial
+**** DONE initial
 
 In the uploaded script,
 
@@ -31539,7 +31539,7 @@ When the filtered data is loaded add the following text in red after the "Rx" ch
 
 and reset the '<filter string for data load>'
 
-**** refine
+**** DONE refine
 
 In the uploaded script,
 
@@ -31557,6 +31557,7 @@ When the filtered data is loaded add the following text in red after the "Rx" ch
 and reset the '<filter string for data load>'
 
 **** refine for highlightning
+***** initial
 
 In the uploaded script,
 
@@ -31587,6 +31588,35 @@ Checkbox [ ] Rx
 
 in the h2 header line where the global filter is currently positioned. When pressed the highlightning should be removed
 which was entered for prefiltering.
+
+***** question chatgpt
+
+Where exactly should I put the following
+
+#+begin_example
+if (savedData.prefilterExpression) {
+    highlightPrefilterMatches(
+        document.querySelector('.sa-data-table-container'),
+        savedData.prefilterExpression
+    );
+}
+#+end_example
+
+because in the uploaded code ther is NO 'renderDataTable(finalData);' and alos NO variable named "savedData".
+
+Please give me more context and the right variable to use
+
+***** fixed code block
+
+#+begin_example
+if (data.prefilterExpression) {
+    highlightPrefilterMatches(
+        document.querySelector('.sa-data-table-container'),
+        data.prefilterExpression
+    );
+}
+#+end_example
+
 
 **** adjust further
 
