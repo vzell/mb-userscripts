@@ -3314,6 +3314,13 @@ let changelog = [
             try {
                 const data = JSON.parse(e.target.result);
 
+                // Validation: Check if the file matches the current page type
+                if (data.pageType !== pageType) {
+                    if (!confirm(`Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page. Try loading anyway?`)) {
+                        return;
+                    }
+                }
+
                 // Validate data structure
                 if (!data.version || !data.pageType || !data.timestamp) {
                     throw new Error('Invalid data file: missing required fields');
