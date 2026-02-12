@@ -31556,7 +31556,7 @@ When the filtered data is loaded add the following text in red after the "Rx" ch
 
 and reset the '<filter string for data load>'
 
-**** refine for highlightning
+**** DONE refine for highlightning
 ***** initial
 
 In the uploaded script,

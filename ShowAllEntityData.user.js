@@ -952,7 +952,6 @@ let changelog = [
     preFilterContainer.appendChild(preFilterInput);
     preFilterContainer.appendChild(preFilterCaseLabel);
     preFilterContainer.appendChild(preFilterRxLabel);
-    preFilterContainer.appendChild(preFilterMsg);
 
     controlsContainer.appendChild(preFilterContainer);
 
@@ -1020,6 +1019,7 @@ let changelog = [
     filterContainer.appendChild(filterWrapper);
     filterContainer.appendChild(caseLabel);
     filterContainer.appendChild(regexpLabel);
+    filterContainer.appendChild(preFilterMsg);
 
     const unhighlightFilterBtn = document.createElement('button');
     unhighlightFilterBtn.textContent = 'Unhighlight prefilter';
@@ -3577,7 +3577,7 @@ let changelog = [
                 // --- Update UI Feedback for Pre-Filter ---
                 if (filterQueryRaw) {
                     // Update the red text span
-                    preFilterMsg.textContent = `${loadedRowCount} prefiltered with expression "${filterQueryRaw}"`;
+                    preFilterMsg.textContent = `${loadedRowCount} rows prefiltered: "${filterQueryRaw}"`;
                     // Reset the input field
                     preFilterInput.value = '';
                 }
