@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      6.9.0+2026-02-13
+// @version      7.0.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '7.0.0+2026-02-13', description: 'Feature: Added Auto-Resize Columns - automatically calculates optimal column widths to prevent text wrapping. Click "↔️ Auto-Resize" to fit each column to its content. Enables horizontal scrolling in content area while keeping sidebar fixed. Perfect for wide tables with many columns.'},
     {version: '6.9.0+2026-02-13', description: 'Feature: Added Table Density Control - choose between Compact (fit more rows), Normal (balanced), or Comfortable (easier reading) spacing options using "📏 Density" button. Adjusts padding, font size, and line height for optimal viewing based on personal preference.'},
     {version: '6.8.0+2026-02-13', description: 'Feature: Added Quick Stats Panel - displays table statistics including row counts, column counts, filter status, memory usage, and more. Click "📊 Stats" button or any visible/hidden item counts. Perfect for understanding data at a glance.'},
     {version: '6.7.0+2026-02-13', description: 'Feature: Added keyboard shortcuts for power users - Ctrl+F (focus filter), Ctrl+Shift+F (clear filters), Ctrl+E (export CSV), Ctrl+S (save), Ctrl+L (load), Escape (clear focused filter), ?/slash (show help). Includes "⌨️ Shortcuts" help button.'},
@@ -1245,6 +1246,189 @@ Note: Shortcuts work when not typing in input fields
 
         // Append menu to body
         document.body.appendChild(menu);
+    }
+
+    /**
+     * Auto-resize table columns to optimal width
+     * Calculates the maximum content width for each column and applies it
+     * Enables horizontal scrolling in the content area (not sidebar)
+     */
+    function autoResizeColumns() {
+        const tables = document.querySelectorAll('table.tbl');
+
+        if (tables.length === 0) {
+            alert('No tables found to resize');
+            Lib.warn('resize', 'No tables found for auto-resize');
+            return;
+        }
+
+        Lib.info('resize', `Auto-resizing ${tables.length} table(s)...`);
+
+        const startTime = performance.now();
+        let totalColumnsResized = 0;
+
+        // Enable horizontal scrolling in content area
+        const content = document.getElementById('content');
+        const sidebar = document.getElementById('sidebar');
+
+        if (content) {
+            // Make content scrollable horizontally
+            content.style.overflowX = 'auto';
+            content.style.overflowY = 'visible';
+
+            // Prevent sidebar from scrolling with content
+            if (sidebar) {
+                sidebar.style.position = 'sticky';
+                sidebar.style.top = '0';
+                sidebar.style.alignSelf = 'flex-start';
+            }
+
+            Lib.debug('resize', 'Enabled horizontal scrolling in content area');
+        }
+
+        tables.forEach((table, tableIndex) => {
+            // Remove any existing width constraints
+            table.style.width = 'auto';
+            table.style.tableLayout = 'auto';
+
+            // Get all columns by checking first row
+            const firstRow = table.querySelector('tbody tr');
+            if (!firstRow) {
+                Lib.warn('resize', `Table ${tableIndex} has no data rows, skipping`);
+                return;
+            }
+
+            const columnCount = firstRow.cells.length;
+            const columnWidths = new Array(columnCount).fill(0);
+
+            // Create temporary measurement container
+            const measureDiv = document.createElement('div');
+            measureDiv.style.cssText = `
+                position: absolute;
+                visibility: hidden;
+                white-space: nowrap;
+                font-family: inherit;
+                font-size: inherit;
+                padding: 4px 8px;
+            `;
+            document.body.appendChild(measureDiv);
+
+            // Measure header widths
+            const headers = table.querySelectorAll('thead th');
+            headers.forEach((th, colIndex) => {
+                if (colIndex >= columnCount) return;
+
+                // Get text content (remove sort icons)
+                const text = th.textContent.replace(/[⇅▲▼]/g, '').trim();
+
+                // Copy styles for accurate measurement
+                const styles = window.getComputedStyle(th);
+                measureDiv.style.fontSize = styles.fontSize;
+                measureDiv.style.fontWeight = styles.fontWeight;
+                measureDiv.style.padding = styles.padding;
+
+                measureDiv.textContent = text;
+                const width = measureDiv.offsetWidth;
+
+                columnWidths[colIndex] = Math.max(columnWidths[colIndex], width);
+            });
+
+            // Measure data cell widths (sample rows for performance)
+            const rows = table.querySelectorAll('tbody tr');
+            const sampleSize = Math.min(rows.length, 100); // Sample up to 100 rows
+            const sampleStep = Math.max(1, Math.floor(rows.length / sampleSize));
+
+            for (let i = 0; i < rows.length; i += sampleStep) {
+                const row = rows[i];
+
+                // Skip hidden rows
+                if (row.style.display === 'none') continue;
+
+                Array.from(row.cells).forEach((cell, colIndex) => {
+                    if (colIndex >= columnCount) return;
+
+                    // Get text content
+                    const text = cell.textContent.trim();
+
+                    // Copy styles for accurate measurement
+                    const styles = window.getComputedStyle(cell);
+                    measureDiv.style.fontSize = styles.fontSize;
+                    measureDiv.style.fontWeight = styles.fontWeight;
+                    measureDiv.style.padding = styles.padding;
+
+                    measureDiv.textContent = text;
+                    const width = measureDiv.offsetWidth;
+
+                    columnWidths[colIndex] = Math.max(columnWidths[colIndex], width);
+                });
+            }
+
+            // Clean up measurement div
+            document.body.removeChild(measureDiv);
+
+            // Apply widths to table columns
+            // Use colgroup for better performance
+            let colgroup = table.querySelector('colgroup');
+            if (!colgroup) {
+                colgroup = document.createElement('colgroup');
+                table.insertBefore(colgroup, table.firstChild);
+            } else {
+                colgroup.innerHTML = ''; // Clear existing cols
+            }
+
+            columnWidths.forEach((width, index) => {
+                const col = document.createElement('col');
+                // Add some padding to the calculated width
+                const finalWidth = Math.ceil(width + 20); // 20px extra for comfort
+                col.style.width = `${finalWidth}px`;
+                colgroup.appendChild(col);
+
+                Lib.debug('resize', `Table ${tableIndex}, Column ${index}: ${finalWidth}px`);
+            });
+
+            // Set table to use fixed layout for consistency
+            table.style.tableLayout = 'fixed';
+
+            // Calculate total table width
+            const totalWidth = columnWidths.reduce((sum, w) => sum + w + 20, 0);
+            table.style.width = `${totalWidth}px`;
+            table.style.minWidth = `${totalWidth}px`;
+
+            totalColumnsResized += columnCount;
+
+            Lib.info('resize', `Table ${tableIndex}: Resized ${columnCount} columns, total width: ${totalWidth}px`);
+        });
+
+        const duration = (performance.now() - startTime).toFixed(0);
+
+        // Update status display
+        const statusDisplay = document.getElementById('mb-status-display');
+        if (statusDisplay) {
+            statusDisplay.textContent = `✓ Auto-resized ${totalColumnsResized} columns in ${duration}ms`;
+            statusDisplay.style.color = 'green';
+        }
+
+        Lib.info('resize', `Auto-resize complete: ${totalColumnsResized} columns in ${duration}ms`);
+    }
+
+    /**
+     * Add auto-resize columns button to UI
+     */
+    function addAutoResizeButton() {
+        const resizeBtn = document.createElement('button');
+        resizeBtn.textContent = '↔️ Auto-Resize';
+        resizeBtn.title = 'Auto-resize columns to optimal width (enables horizontal scrolling)';
+        resizeBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        resizeBtn.type = 'button';
+        resizeBtn.onclick = autoResizeColumns;
+
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (controlsContainer) {
+            controlsContainer.appendChild(resizeBtn);
+            Lib.info('ui', 'Auto-resize button added to controls');
+        } else {
+            Lib.warn('ui', 'Controls container not found, cannot add auto-resize button');
+        }
     }
 
     const SCRIPT_ID = "vzell-mb-show-all-entities";
@@ -4234,6 +4418,9 @@ Note: Shortcuts work when not typing in input fields
             // Add density control
             addDensityControl();
 
+            // Add auto-resize columns button
+            addAutoResizeButton();
+
             isLoaded = true;
             // Initialize sidebar collapse only now if enabled
             if (Lib.settings.sa_collabsable_sidebar) {
@@ -5299,6 +5486,9 @@ Note: Shortcuts work when not typing in input fields
 
                 // Add density control
                 addDensityControl();
+
+                // Add auto-resize columns button
+                addAutoResizeButton();
 
                 updateH2Count(loadedRowCount, loadedRowCount);
 
