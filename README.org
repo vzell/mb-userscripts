@@ -31090,7 +31090,7 @@ two new buttons on each supported URL type and use "Physical Filesystem (GM_down
 
 Please do not make any other changes to working code, comments and logging statements except adding the buttons plus their logic
 
-** chagpt
+** chatgpt
 
 #+begin_example
 Alright — this is a good design and it fits your script very cleanly 👍
@@ -31482,7 +31482,7 @@ Metadata Enhancement: Include more context (user notes, tags)
 
 Performance Upgrade (Highly Recommended)
 
-If you still want to allow rendering 8000+ rows fast, I strongly recommend:
+If I still want to allow rendering 8000+ rows fast, would you strongly recommend the following ? And how could this be implemented ?
 
 Use DocumentFragment
 Disable live highlighting during initial render
@@ -31873,7 +31873,7 @@ when used later in the code. So dont put it at each definition of e.g.
 
 but leave the definition as is and concatenate at usage
 
-** saving directly to disk for very large paginated pages
+** DONE saving directly to disk for very large paginated pages
 
 In the uploaded script,
 
@@ -35251,3 +35251,28 @@ In the following code block
 
 could the "else if" structure somehow be refactored, it looks error prone
 
+
+* Cosmetic
+** elapsed time
+
+what need to be changed to change the text from
+
+#+begin_example
+progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
+#+end_example
+
+
+#+begin_example
+progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`, running since ${elapsed_time};
+#+end_example
+
+
+* mismatch when using Regexps
+
+When using a Regexp like "^Thunder Road" (so a column value must start with "Thunder Road") this works perfectly when
+using the regepx as a filter string for pre-loading from disk, but fails to find any row when using it in the global
+filter field.
+
+For example on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings when preloading it finds
+rows which have "Thunder Road" at the beginning of the "Name" or "Release Group", "MB-Name" columns but fails on the
+latter, 0 rows are shown
