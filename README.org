@@ -35544,6 +35544,16 @@ go with "Sticky Headers - See columns while scrolling", but include the filter r
 
 Ctrl-f
 
+* statistics panel
+
+** wrong stats
+** make it multitable aware
+** create keyboard shorcut
+
+* table density
+
+
+
 * add descriptions to every function call
 
 * make the changelog window scrollable

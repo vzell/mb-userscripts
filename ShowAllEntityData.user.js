@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      6.8.0+2026-02-13
+// @version      6.9.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '6.9.0+2026-02-13', description: 'Feature: Added Table Density Control - choose between Compact (fit more rows), Normal (balanced), or Comfortable (easier reading) spacing options using "📏 Density" button. Adjusts padding, font size, and line height for optimal viewing based on personal preference.'},
     {version: '6.8.0+2026-02-13', description: 'Feature: Added Quick Stats Panel - displays table statistics including row counts, column counts, filter status, memory usage, and more. Click "📊 Stats" button or any visible/hidden item counts. Perfect for understanding data at a glance.'},
     {version: '6.7.0+2026-02-13', description: 'Feature: Added keyboard shortcuts for power users - Ctrl+F (focus filter), Ctrl+Shift+F (clear filters), Ctrl+E (export CSV), Ctrl+S (save), Ctrl+L (load), Escape (clear focused filter), ?/slash (show help). Includes "⌨️ Shortcuts" help button.'},
     {version: '6.6.0+2026-02-13', description: 'Feature: Added CSV export - export visible rows and columns to CSV file using the "📥 Export CSV" button. Automatically generates filename with timestamp and page type. Perfect for using data in Excel, Google Sheets, or other applications.'},
@@ -1036,6 +1037,214 @@ Note: Shortcuts work when not typing in input fields
         } else {
             Lib.warn('ui', 'Controls container not found, cannot add stats button');
         }
+    }
+
+    /**
+     * Table density configurations
+     * Defines padding, font size, and line height for different density levels
+     */
+    const densityOptions = {
+        compact: {
+            label: 'Compact',
+            padding: '2px 6px',
+            fontSize: '0.85em',
+            lineHeight: '1.2',
+            description: 'Tight spacing - fits more rows on screen'
+        },
+        normal: {
+            label: 'Normal',
+            padding: '4px 8px',
+            fontSize: '1em',
+            lineHeight: '1.5',
+            description: 'Default spacing - balanced view'
+        },
+        comfortable: {
+            label: 'Comfortable',
+            padding: '8px 12px',
+            fontSize: '1em',
+            lineHeight: '1.8',
+            description: 'Relaxed spacing - easier to read'
+        }
+    };
+
+    // Track current density (default is normal)
+    let currentDensity = 'normal';
+
+    /**
+     * Apply density settings to table
+     * @param {string} densityKey - Key from densityOptions (compact, normal, comfortable)
+     */
+    function applyTableDensity(densityKey) {
+        if (!densityOptions[densityKey]) {
+            Lib.warn('density', `Unknown density option: ${densityKey}`);
+            return;
+        }
+
+        const config = densityOptions[densityKey];
+        const tables = document.querySelectorAll('table.tbl');
+
+        if (tables.length === 0) {
+            Lib.warn('density', 'No tables found to apply density');
+            return;
+        }
+
+        tables.forEach(table => {
+            // Apply to all cells (headers and data)
+            table.querySelectorAll('td, th').forEach(cell => {
+                cell.style.padding = config.padding;
+                cell.style.fontSize = config.fontSize;
+                cell.style.lineHeight = config.lineHeight;
+            });
+        });
+
+        currentDensity = densityKey;
+
+        // Update status display
+        const statusDisplay = document.getElementById('mb-status-display');
+        if (statusDisplay) {
+            statusDisplay.textContent = `✓ Table density: ${config.label}`;
+            statusDisplay.style.color = 'green';
+        }
+
+        Lib.info('density', `Applied ${config.label} density to ${tables.length} table(s)`);
+    }
+
+    /**
+     * Show table density menu and add density control button
+     */
+    function addDensityControl() {
+        // Create button
+        const densityBtn = document.createElement('button');
+        densityBtn.textContent = '📏 Density';
+        densityBtn.title = 'Change table density (spacing)';
+        densityBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        densityBtn.type = 'button';
+
+        // Create menu
+        const menu = document.createElement('div');
+        menu.className = 'mb-density-menu';
+        menu.style.cssText = `
+            display: none;
+            position: fixed;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10000;
+            min-width: 220px;
+        `;
+
+        // Create menu header
+        const menuHeader = document.createElement('div');
+        menuHeader.style.cssText = 'font-weight: 600; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #ddd; color: #333;';
+        menuHeader.textContent = 'Table Density';
+        menu.appendChild(menuHeader);
+
+        // Create option for each density
+        Object.entries(densityOptions).forEach(([key, config]) => {
+            const option = document.createElement('button');
+            option.type = 'button';
+            option.style.cssText = `
+                display: block;
+                width: 100%;
+                padding: 8px 12px;
+                margin: 3px 0;
+                cursor: pointer;
+                border: 1px solid #ddd;
+                background: white;
+                text-align: left;
+                border-radius: 4px;
+                transition: all 0.2s;
+            `;
+
+            // Create label with icon
+            const labelDiv = document.createElement('div');
+            labelDiv.style.cssText = 'font-weight: 600; margin-bottom: 2px;';
+            labelDiv.textContent = config.label;
+
+            // Create description
+            const descDiv = document.createElement('div');
+            descDiv.style.cssText = 'font-size: 0.85em; color: #666;';
+            descDiv.textContent = config.description;
+
+            option.appendChild(labelDiv);
+            option.appendChild(descDiv);
+
+            // Highlight current selection
+            if (key === currentDensity) {
+                option.style.background = '#e8f5e9';
+                option.style.borderColor = '#4CAF50';
+                option.style.fontWeight = '600';
+            }
+
+            // Hover effect
+            option.onmouseover = () => {
+                if (key !== currentDensity) {
+                    option.style.background = '#f5f5f5';
+                }
+            };
+            option.onmouseout = () => {
+                if (key !== currentDensity) {
+                    option.style.background = 'white';
+                }
+            };
+
+            // Click handler
+            option.onclick = () => {
+                applyTableDensity(key);
+                menu.style.display = 'none';
+
+                // Update button styles
+                menu.querySelectorAll('button').forEach(btn => {
+                    btn.style.background = 'white';
+                    btn.style.borderColor = '#ddd';
+                    btn.style.fontWeight = 'normal';
+                });
+                option.style.background = '#e8f5e9';
+                option.style.borderColor = '#4CAF50';
+                option.style.fontWeight = '600';
+            };
+
+            menu.appendChild(option);
+        });
+
+        // Toggle menu visibility
+        densityBtn.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = menu.style.display === 'block';
+
+            if (isVisible) {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'block';
+
+                // Position menu below button
+                const rect = densityBtn.getBoundingClientRect();
+                menu.style.top = `${rect.bottom + 5}px`;
+                menu.style.left = `${rect.left}px`;
+            }
+        };
+
+        // Close menu when clicking outside
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target) && e.target !== densityBtn) {
+                menu.style.display = 'none';
+            }
+        };
+        document.addEventListener('click', closeMenu);
+
+        // Append to controls container
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (controlsContainer) {
+            controlsContainer.appendChild(densityBtn);
+            Lib.info('ui', 'Density control button added to controls');
+        } else {
+            Lib.warn('ui', 'Controls container not found, cannot add density button');
+        }
+
+        // Append menu to body
+        document.body.appendChild(menu);
     }
 
     const SCRIPT_ID = "vzell-mb-show-all-entities";
@@ -4022,6 +4231,9 @@ Note: Shortcuts work when not typing in input fields
             // Add stats panel button
             addStatsButton();
 
+            // Add density control
+            addDensityControl();
+
             isLoaded = true;
             // Initialize sidebar collapse only now if enabled
             if (Lib.settings.sa_collabsable_sidebar) {
@@ -5084,6 +5296,9 @@ Note: Shortcuts work when not typing in input fields
 
                 // Add stats panel button
                 addStatsButton();
+
+                // Add density control
+                addDensityControl();
 
                 updateH2Count(loadedRowCount, loadedRowCount);
 
