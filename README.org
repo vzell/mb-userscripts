@@ -29901,8 +29901,25 @@ Also allow, besides clicking the ChangeLog popup text filed, the "Esc" key to le
 Please do not make any changes to the code in "AA.user.js", comments, debugging statements except adding a new entry in
 the "setupMenu: function()" of "AA.user.js", see instructions above
 
-** adjust the logic for big tables when filtering on columns, maybe waiting between keystrokes, display filter timing info in status line
+** very large tables and filtering
+
+In the uploaded userscript
+
+When filtering tables with thousends of rows, the current implementation seems to rerender the whole DOM tree as soon as a
+new character has bee typed in the filter field. This takes extremly long and the UI is not responsible in between.
+
+Should the current logic be adjusted, maybe waiting between keystrokes. PLease implment best practices for filtering long tables. 
+
+Maybe also display filter timing info in status line.
+
 ** show sanduhr for long filters
+
+** sorting
+
+Please also check the current logic for sorting tables on specific columns. Please also implement best
+practices/patterns here for very large tables
+
+** what else could be done for improving performance and UI layout in this userscript
 
 * Timings
 ** DONE 0
@@ -31478,7 +31495,7 @@ Multiple Snapshots: Manage multiple saved versions per page
 Auto-save: Periodically save data automatically
 Metadata Enhancement: Include more context (user notes, tags)
 
-** TODO Performance Upgrades
+** DONE Performance Upgrades
 
 Performance Upgrade (Highly Recommended)
 
@@ -35326,7 +35343,7 @@ progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFi
 ** Loaded <n> rows in <elapsed time>s
 
 
-* mismatch when using Regexps
+* DONE mismatch when using Regexps
 
 In the uploaded userscript
 
