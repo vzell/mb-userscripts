@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      6.1.0+2026-02-13
+// @version      6.2.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '6.2.0+2026-02-13', description: 'Performance: Added debounced filtering with configurable delay (default 300ms) to prevent UI freezing with large tables. Added filter timing display in status line showing execution time with color-coded performance indicators.'},
     {version: '6.1.0+2026-02-13', description: 'Fixed Regexp filtering with column filter when decorating symbols like "▶" are in front.'},
     {version: '6.0.0+2026-02-13', description: 'Fixed Regexp filtering with global filter not take into account each column separately.'},
     {version: '5.0.0+2026-02-13', description: 'Implemented a chunked renderer with progess updates when a configurable number of fetched rows is exceeded.'},
@@ -95,6 +96,29 @@ let changelog = [
 (function() {
     'use strict';
 
+    /**
+     * Debounce utility function - delays execution until after wait milliseconds have elapsed
+     * since the last time the debounced function was invoked.
+     * @param {Function} func - The function to debounce
+     * @param {number} wait - The number of milliseconds to delay
+     * @param {boolean} immediate - If true, trigger the function on the leading edge instead of trailing
+     * @returns {Function} The debounced function
+     */
+    function debounce(func, wait, immediate) {
+        let timeout;
+        return function executedFunction(...args) {
+            const context = this;
+            const later = function() {
+                timeout = null;
+                if (!immediate) func.apply(context, args);
+            };
+            const callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+            if (callNow) func.apply(context, args);
+        };
+    }
+
     const SCRIPT_ID = "vzell-mb-show-all-entities";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
 
@@ -105,6 +129,14 @@ let changelog = [
             type: "checkbox",
             default: false,
             description: "Enable debug logging in the browser developer console"
+        },
+        sa_filter_debounce_delay: {
+            label: "Filter debounce delay (ms)",
+            type: "number",
+            default: 300,
+            min: 0,
+            max: 2000,
+            description: "Delay in milliseconds before applying filter after typing stops (0 = instant, 300 = recommended for large tables)"
         },
         sa_render_overflow_tables_in_new_tab: {
             label: "Render overflow tables in a new tab",
@@ -1702,16 +1734,21 @@ let changelog = [
                 e.preventDefault();
                 e.stopPropagation();
                 input.value = '';
-                runFilter();
+                runFilter(); // Immediate for explicit clear action
             };
+
+            // Use debounced version for typing in column filters
+            const debouncedColumnFilter = debounce(() => {
+                Lib.debug('filter', `Column filter updated on column ${idx}: "${input.value}"`);
+                runFilter();
+            }, Lib.settings.sa_filter_debounce_delay || 300);
 
             input.addEventListener('input', (e) => {
                 e.stopPropagation();
-                Lib.debug('filter', `Column filter updated on column ${idx}: "${input.value}"`);
-                runFilter();
+                debouncedColumnFilter();
             });
 
-            // Handle Escape key to clear column filter
+            // Handle Escape key to clear column filter (immediate)
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     e.preventDefault();
@@ -1729,6 +1766,15 @@ let changelog = [
     }
 
     function runFilter() {
+        const filterStartTime = performance.now();
+
+        // Show filtering indicator in status display
+        const statusDisplay = document.getElementById('mb-status-display');
+        if (statusDisplay) {
+            statusDisplay.textContent = '⏳ Filtering...';
+            statusDisplay.style.color = 'orange';
+        }
+
         const isCaseSensitive = caseCheckbox.checked;
         const isRegExp = regexpCheckbox.checked;
         const globalQueryRaw = filterInput.value;
@@ -1920,6 +1966,21 @@ let changelog = [
         }
         // Maintain scroll position after filtering or sorting
         window.scrollTo(0, __scrollY);
+
+        // Calculate and display filter timing
+        const filterEndTime = performance.now();
+        const filterDuration = (filterEndTime - filterStartTime).toFixed(0);
+
+        if (statusDisplay) {
+            const rowCount = activeDefinition.tableMode === 'multi' ?
+                filteredArray.reduce((sum, g) => sum + g.rows.length, 0) :
+                document.querySelectorAll('table.tbl tbody tr').length;
+
+            statusDisplay.textContent = `✓ Filtered ${rowCount} rows in ${filterDuration}ms`;
+            statusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
+        }
+
+        Lib.debug('filter', `Filter completed in ${filterDuration}ms`);
     }
 
     stopBtn.addEventListener('click', (e) => {
@@ -1931,17 +1992,25 @@ let changelog = [
         stopBtn.textContent = 'Stopping...';
     });
 
+    // Create debounced version of runFilter based on user configuration
+    const debouncedRunFilter = debounce(runFilter, Lib.settings.sa_filter_debounce_delay || 300);
+
     // Handle Escape key to clear global filter
     filterInput.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             filterInput.value = '';
-            runFilter();
+            runFilter(); // Use immediate version for clearing
         }
     });
 
-    filterInput.addEventListener('input', runFilter);
+    // Use debounced version for input events
+    filterInput.addEventListener('input', debouncedRunFilter);
+
+    // Use immediate version for checkbox changes (no typing involved)
     caseCheckbox.addEventListener('change', runFilter);
     regexpCheckbox.addEventListener('change', runFilter);
+
+    // Use immediate version for clear button (explicit user action)
     filterClear.addEventListener('click', () => {
         filterInput.value = '';
         runFilter();
