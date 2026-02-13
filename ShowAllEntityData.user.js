@@ -3763,7 +3763,7 @@ let changelog = [
     /**
      * Loads table data from a JSON file and re-hydrates the page
      */
-    async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
+    function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
         if (!file) {
             Lib.warn('cache', 'No file selected.');
             return;
@@ -3789,7 +3789,7 @@ let changelog = [
         Lib.info('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}`);
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
                 const data = JSON.parse(e.target.result);
 
@@ -3913,13 +3913,9 @@ let changelog = [
 
                 // Render
                 if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
-		    renderGroupedTable(groupedRows, pageType === 'artist-releasegroups').catch(err => {
-			Lib.error('render', 'Error rendering grouped table:', err);
-		    });
+                    await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
                 } else if (allRows.length > 0 || loadedRowCount === 0) {
-                    renderFinalTable(allRows).catch(err => {
-			Lib.error('render', 'Error rendering grouped table:', err);
-		    });
+                    await renderFinalTable(allRows);
                     document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
                     const mainTable = document.querySelector('table.tbl');
                     if (mainTable) {
