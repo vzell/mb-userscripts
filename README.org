@@ -31478,6 +31478,20 @@ Multiple Snapshots: Manage multiple saved versions per page
 Auto-save: Periodically save data automatically
 Metadata Enhancement: Include more context (user notes, tags)
 
+** TODO Performance Upgrades
+
+Performance Upgrade (Highly Recommended)
+
+If you still want to allow rendering 8000+ rows fast, I strongly recommend:
+
+Use DocumentFragment
+Disable live highlighting during initial render
+Add virtual scrolling (advanced mode)
+If you'd like, I can give you:
+🔥 A high-performance batch renderer
+⚡ Chunked async rendering (non-blocking UI)
+📊 Progressive render with progress indicator
+
 ** DONE filtering data when loding from filesystem
 *** question
 **** DONE initial
@@ -31777,7 +31791,7 @@ async function loadTableDataFromDisk(file) {
     }
 #+end_example
 
-** check for errors on the multitable case
+** DONE check for errors on the multitable case
 
 In the case of loading back the data coming from multiple tables I get the following errors depending on the pageType (URL)
 
@@ -31820,7 +31834,7 @@ userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-
     at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3809:21)
 #+end_example
 
-*** cosmetic
+*** DONE cosmetic
 
 Change
 
@@ -31859,13 +31873,12 @@ when used later in the code. So dont put it at each definition of e.g.
 
 but leave the definition as is and concatenate at usage
 
-
 ** saving directly to disk for very large paginated pages
 
 In the uploaded script,
 
 when loading data from many pages, for example at
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases data would be fetch from 81 pages (times
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases data would be fetched from 81 pages (times
 100 etries, so 8100 rows) the rendering would take forever.
 
 For such cases we need a popup window at the end of the download stage, which tells us how many rows would be rendered
@@ -31874,25 +31887,9 @@ and offer two new buttons:
 - one button for just saving the table data directly to the filesystem with the "saveTableDataToDisk" function
 - the other button, to actually render the table as usually
 
-** Performance Upgrades
+Is this feasible, or are there other considerations regarding the functionality when reloading directly from the
+filesystem in json form
 
-Performance Upgrade (Highly Recommended)
-
-If you still want to allow rendering 8000+ rows fast, I strongly recommend:
-
-Use DocumentFragment
-
-Disable live highlighting during initial render
-
-Add virtual scrolling (advanced mode)
-
-If you'd like, I can give you:
-
-🔥 A high-performance batch renderer
-
-⚡ Chunked async rendering (non-blocking UI)
-
-📊 Progressive render with progress indicator
 
 
 * "Esc" handling in filter field

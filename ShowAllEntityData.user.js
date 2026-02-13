@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      4.4.3+2026-02-13
+// @version      4.5.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,7 +48,7 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '4.4.3+2026-02-13', description: 'Fix bug when savin data for mutli table pages like Artist-Releasegroups.'},
+    {version: '4.5.0+2026-02-13', description: 'Add large dataset handling by directly offering for saving to disk instead of rendering.'},
     {version: '4.4.2+2026-02-13', description: 'Add popup dialog to enter prefilter string instead of showing it on the main page all the time.'},
     {version: '4.4.1+2026-02-12', description: 'Add highlightning of pre-filter expression.'},
     {version: '4.4.0+2026-02-12', description: 'Add "pre filter when loading" functionality.'},
@@ -156,6 +156,12 @@ let changelog = [
             type: "number",
             default: 50,
             description: "Row count threshold to auto-expand tables"
+        },
+        sa_render_threshold: {
+            label: "Large Dataset Threshold",
+            type: "number",
+            default: 5000,
+            description: "Row count threshold to prompt save-or-render dialog (0 to disable)"
         },
         sa_pre_filter_highlight_color: {
             label: "Global Prefilter Highlight Color",
@@ -696,10 +702,10 @@ let changelog = [
             // Root artist page (Official/Non-Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
-                { label: 'Official artist RGs', params: { all: '0', va: '0' } },
-                { label: 'Non-official artist RGs', params: { all: '1', va: '0' } },
-                { label: 'Official various artists RGs', params: { all: '0', va: '1' } },
-                { label: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
+                { label: '🧮 Official artist RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official artist RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official various artists RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official various artists RGs', params: { all: '1', va: '1' } }
             ],
             tableMode: 'multi' // native tables, h3 headers
         },
@@ -708,8 +714,8 @@ let changelog = [
             // Artist Releases page (Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
             buttons: [
-                { label: 'Official artist releases', params: { va: '0' } },
-                { label: 'Various artist releases', params: { va: '1' } }
+                { label: '🧮 Official artist releases', params: { va: '0' } },
+                { label: '🧮 Various artist releases', params: { va: '1' } }
             ],
             features: {
                 splitCD: true,
@@ -884,8 +890,8 @@ let changelog = [
 
     buttonsToRender.forEach(conf => {
         const eb = document.createElement('button');
-	// Concatenate "🧮 " if label starts with "Show all"
-	eb.textContent = conf.label.startsWith('Show all') ? '🧮 ' + conf.label : conf.label;
+        // Concatenate "🧮 " if label starts with "Show all"
+        eb.textContent = conf.label.startsWith('Show all') ? '🧮 ' + conf.label : conf.label;
         eb.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px;';
         eb.type = 'button';
         // Pass the entire config object
@@ -2027,6 +2033,116 @@ let changelog = [
     }
 
     /**
+     * Shows a modal dialog asking user whether to render, save, or cancel when dataset is large
+     * @param {number} totalRows - The total number of rows fetched
+     * @param {number} pagesProcessed - The number of pages that were fetched
+     * @returns {Promise<string>} - Returns 'render', 'save', or 'cancel'
+     */
+    function showRenderDecisionDialog(totalRows, pagesProcessed) {
+        return new Promise((resolve) => {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+
+            // Create modal dialog
+            const dialog = document.createElement('div');
+            dialog.style.cssText = `
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                max-width: 500px;
+                text-align: center;
+            `;
+
+            const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
+
+            dialog.innerHTML = `
+                <h2 style="margin-top: 0; color: #333;">Large Dataset Fetched</h2>
+                <p style="font-size: 16px; margin: 20px 0;">
+                    Successfully fetched <strong>${totalRows.toLocaleString()} rows</strong> from <strong>${pagesProcessed} ${pageLabel}</strong>.
+                </p>
+                <p style="font-size: 14px; color: #666; margin: 20px 0;">
+                    Rendering this many rows may take a considerable amount of time and could impact browser performance.
+                    You can save the data directly to disk and load it later, or proceed with rendering now.
+                </p>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 25px;">
+                    <button id="mb-dialog-save" style="
+                        padding: 10px 20px;
+                        font-size: 14px;
+                        cursor: pointer;
+                        background: #4CAF50;
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        font-weight: bold;
+                    ">💾 Save to Disk</button>
+                    <button id="mb-dialog-render" style="
+                        padding: 10px 20px;
+                        font-size: 14px;
+                        cursor: pointer;
+                        background: #2196F3;
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        font-weight: bold;
+                    ">🎨 Render Now</button>
+                    <button id="mb-dialog-cancel" style="
+                        padding: 10px 20px;
+                        font-size: 14px;
+                        cursor: pointer;
+                        background: #f44336;
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        font-weight: bold;
+                    ">❌ Cancel</button>
+                </div>
+            `;
+
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+
+            // Add button event listeners
+            document.getElementById('mb-dialog-save').onclick = () => {
+                document.body.removeChild(overlay);
+                resolve('save');
+            };
+
+            document.getElementById('mb-dialog-render').onclick = () => {
+                document.body.removeChild(overlay);
+                resolve('render');
+            };
+
+            document.getElementById('mb-dialog-cancel').onclick = () => {
+                document.body.removeChild(overlay);
+                resolve('cancel');
+            };
+
+            // Allow ESC key to cancel
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    document.body.removeChild(overlay);
+                    document.removeEventListener('keydown', escHandler);
+                    resolve('cancel');
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        });
+    }
+
+    /**
      * Generalized fetching process
      * @param {Event} e - The click event
      * @param {Object} overrideParams - Specific query parameters for artist-releasegroups and artist-releases buttons
@@ -2709,13 +2825,58 @@ let changelog = [
             }
 
             totalFetchingTime = performance.now() - fetchingTimeStart;
+
+            // Calculate total rows before rendering
+            const totalRows = (activeDefinition.tableMode === 'multi') ?
+                             groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
+
+            // --- LARGE DATASET HANDLING ---
+            // If the dataset is very large, offer the user a choice before rendering
+            const renderThreshold = Lib.settings.sa_render_threshold || 5000;
+            if (renderThreshold > 0 && totalRows > renderThreshold) {
+                const userChoice = await showRenderDecisionDialog(totalRows, pagesProcessed);
+
+                if (userChoice === 'save') {
+                    // User chose to save directly without rendering
+                    Lib.info('cache', 'User chose to save data directly without rendering.');
+                    statusDisplay.textContent = `Fetched ${totalRows} rows. Saving to disk...`;
+
+                    // Mark as loaded so saveTableDataToDisk can proceed
+                    isLoaded = true;
+                    saveTableDataToDisk();
+
+                    // Clean up UI
+                    activeBtn.disabled = false;
+                    activeBtn.classList.remove('mb-show-all-btn-loading');
+                    allActionButtons.forEach(b => b.disabled = false);
+                    stopBtn.style.display = 'none';
+                    progressContainer.style.display = 'none';
+
+                    const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
+                    const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
+                    statusDisplay.textContent = `Fetched ${pagesProcessed} ${pageLabel} (${totalRows} rows) in ${fetchSeconds}s - Saved to disk without rendering`;
+                    statusDisplay.style.color = 'green';
+
+                    Lib.info('success', `Process complete. Data saved without rendering. Row Count: ${totalRows}. Fetch Time: ${fetchSeconds}s`);
+                    return; // Exit without rendering
+                } else if (userChoice === 'cancel') {
+                    // User cancelled
+                    Lib.info('cache', 'User cancelled the operation.');
+                    activeBtn.disabled = false;
+                    activeBtn.classList.remove('mb-show-all-btn-loading');
+                    allActionButtons.forEach(b => b.disabled = false);
+                    stopBtn.style.display = 'none';
+                    progressContainer.style.display = 'none';
+                    statusDisplay.textContent = 'Operation cancelled';
+                    return;
+                }
+                // If userChoice === 'render', continue with normal rendering below
+            }
+
             let renderingTimeStart = performance.now();
 
             // --- RENDERING START ---
             Lib.debug('render', 'DOM rendering starting...');
-
-            const totalRows = (activeDefinition.tableMode === 'multi') ?
-                             groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
 
             updateH2Count(totalRows, totalRows);
 
