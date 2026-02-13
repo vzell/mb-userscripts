@@ -31820,6 +31820,46 @@ userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-
     at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3809:21)
 #+end_example
 
+*** cosmetic
+
+Change
+
+#+begin_example
+                Lib.info('cache', `Successfully loaded ${loadedRowCount} rows from disk!`);
+                statusDisplay.textContent = `✓ Loaded: ${loadedRowCount} rows`;
+#+end_example
+
+to
+
+#+begin_example
+                Lib.info('cache', `Successfully loaded ${loadedRowCount} row from disk!`);
+                statusDisplay.textContent = `✓ Loaded: ${loadedRowCount} row`;
+#+end_example
+
+if there is just one row involved
+
+
+Concatenate the unicode symbol and a blank "🧮 " from the variable "pageDefinitions" to every occurence of the button label that start with 'Show all ....'
+when used later in the code. So dont put it at each definition of e.g.
+
+#+begin_example
+        // Search pages
+        {
+            type: 'search',
+            match: (path) => path.includes('/search'),
+            buttons: [ { label: '🧮 Show all Search results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name', // Specific header
+                transformToH2: true        // New flag to trigger <h2> transformation
+            },
+            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
+        },
+#+end_example
+
+but leave the definition as is and concatenate at usage
+
+
 ** saving directly to disk for very large paginated pages
 
 In the uploaded script,

@@ -354,7 +354,7 @@ let changelog = [
         {
             type: 'search',
             match: (path) => path.includes('/search'),
-            buttons: [ { label: '🧮 Show all Search results' } ],
+            buttons: [ { label: 'Show all Search results' } ],
             tableMode: 'single',
             features: {
                 extractMainColumn: 'Name', // Specific header
@@ -884,7 +884,8 @@ let changelog = [
 
     buttonsToRender.forEach(conf => {
         const eb = document.createElement('button');
-        eb.textContent = conf.label;
+	// Concatenate "🧮 " if label starts with "Show all"
+	eb.textContent = conf.label.startsWith('Show all') ? '🧮 ' + conf.label : conf.label;
         eb.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px;';
         eb.type = 'button';
         // Pass the entire config object
@@ -3686,8 +3687,9 @@ let changelog = [
                     preFilterInput.value = '';
                 }
 
-                Lib.info('cache', `Successfully loaded ${loadedRowCount} rows from disk!`);
-                statusDisplay.textContent = `✓ Loaded: ${loadedRowCount} rows`;
+                const rowLabel = loadedRowCount === 1 ? 'row' : 'rows';
+                Lib.info('cache', `Successfully loaded ${loadedRowCount} ${rowLabel} from disk!`);
+                statusDisplay.textContent = `✓ Loaded: ${loadedRowCount} ${rowLabel}`;
                 statusDisplay.style.color = 'green';
 
                 // Reset file input
