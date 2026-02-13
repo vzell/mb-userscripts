@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '7.1.0+2026-02-13', description: 'Modernize the filter expression dialog when loading data from the filesystem.'},
     {version: '7.0.0+2026-02-13', description: 'Feature: Added Auto-Resize Columns - automatically calculates optimal column widths to prevent text wrapping. Click "↔️ Auto-Resize" to fit each column to its content. Enables horizontal scrolling in content area while keeping sidebar fixed. Perfect for wide tables with many columns.'},
     {version: '6.9.0+2026-02-13', description: 'Feature: Added Table Density Control - choose between Compact (fit more rows), Normal (balanced), or Comfortable (easier reading) spacing options using "📏 Density" button. Adjusts padding, font size, and line height for optimal viewing based on personal preference.'},
     {version: '6.8.0+2026-02-13', description: 'Feature: Added Quick Stats Panel - displays table statistics including row counts, column counts, filter status, memory usage, and more. Click "📊 Stats" button or any visible/hidden item counts. Perfect for understanding data at a glance.'},
@@ -2538,7 +2539,7 @@ Note: Shortcuts work when not typing in input fields
 
             <div style="margin-bottom:15px; position:relative;">
                 <div style="display:flex; gap:4px;">
-                    <input id="sa-load-filter-input" type="text" placeholder="Search expression..." 
+                    <input id="sa-load-filter-input" type="text" placeholder="Search expression..."
                         style="flex:1; padding:8px 12px; border:1px solid #ccc; border-radius:6px; font-size:1em; outline:none;">
                     ${history.length > 0 ? `
                     <button id="sa-load-history-toggle" title="Show history" style="padding:0 8px; background:#f0f0f0; border:1px solid #ccc; border-radius:6px; cursor:pointer;">▾</button>
@@ -2570,7 +2571,7 @@ Note: Shortcuts work when not typing in input fields
         const input = dialog.querySelector('#sa-load-filter-input');
         const historyToggle = dialog.querySelector('#sa-load-history-toggle');
         const historyDropdown = dialog.querySelector('#sa-load-history-dropdown');
-        
+
         input.focus();
 
         // Inject hover styles
@@ -2645,10 +2646,10 @@ Note: Shortcuts work when not typing in input fields
             }
 
             closeDialog();
-            
+
             // Trigger the actual file input click
             Lib.info('cache', 'Load confirmed. Triggering file selector...');
-            fileInput.click(); 
+            fileInput.click();
         };
 
         dialog.querySelector('#sa-load-cancel').onclick = closeDialog;
