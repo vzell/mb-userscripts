@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      6.4.0+2026-02-13
+// @version      6.5.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '6.5.0+2026-02-13', description: 'UI: Added column visibility toggle - users can now show/hide individual columns using the "👁️ Columns" button. Includes Select All/Deselect All options for quick control. Perfect for customizing view and focusing on relevant data.'},
     {version: '6.4.0+2026-02-13', description: 'UI: Added sticky table headers - column headers and filter row remain visible while scrolling through large tables. Improves usability when working with thousands of rows.'},
     {version: '6.3.0+2026-02-13', description: 'Performance: Optimized table sorting with async chunked merge sort algorithm for large tables (>5000 rows). Added progress bar for sorts over 10k rows. Improved sort timing display with color-coded indicators. Better numeric column detection.'},
     {version: '6.2.0+2026-02-13', description: 'Performance: Added debounced filtering with configurable delay (default 300ms) to prevent UI freezing with large tables. Added filter timing display in status line showing execution time with color-coded performance indicators.'},
@@ -320,6 +321,190 @@ let changelog = [
 
         document.head.appendChild(style);
         Lib.info('ui', 'Sticky headers enabled - column headers will remain visible while scrolling');
+    }
+
+    /**
+     * Toggle visibility of a specific column in a table
+     * @param {HTMLTableElement} table - The table element
+     * @param {number} columnIndex - Zero-based column index
+     * @param {boolean} show - True to show, false to hide
+     */
+    function toggleColumn(table, columnIndex, show) {
+        const display = show ? '' : 'none';
+
+        // Toggle header cells in all header rows (main header + filter row)
+        const headers = table.querySelectorAll('thead tr');
+        headers.forEach(row => {
+            if (row.cells[columnIndex]) {
+                row.cells[columnIndex].style.display = display;
+            }
+        });
+
+        // Toggle all cells in the column for all body rows
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            if (row.cells[columnIndex]) {
+                row.cells[columnIndex].style.display = display;
+            }
+        });
+
+        Lib.debug('ui', `Column ${columnIndex} ${show ? 'shown' : 'hidden'}`);
+    }
+
+    /**
+     * Add a column visibility toggle button and menu to the controls
+     * Allows users to show/hide columns in the table
+     * @param {HTMLTableElement} table - The table to add controls for
+     */
+    function addColumnVisibilityToggle(table) {
+        // Create toggle button
+        const toggleBtn = document.createElement('button');
+        toggleBtn.textContent = '👁️ Columns';
+        toggleBtn.title = 'Show/hide table columns';
+        toggleBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        toggleBtn.type = 'button';
+
+        // Create dropdown menu container
+        const menu = document.createElement('div');
+        menu.className = 'mb-column-visibility-menu';
+        menu.style.cssText = `
+            display: none;
+            position: fixed;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10000;
+            max-height: 400px;
+            overflow-y: auto;
+            min-width: 200px;
+        `;
+
+        // Get headers from the first row (skip filter row)
+        const headerRow = table.querySelector('thead tr:first-child');
+        if (!headerRow) {
+            Lib.warn('ui', 'No header row found for column visibility toggle');
+            return;
+        }
+
+        const headers = Array.from(headerRow.cells);
+
+        // Store checkbox states
+        const checkboxes = [];
+
+        // Create checkbox for each column
+        headers.forEach((th, index) => {
+            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
+            if (!colName) return; // Skip empty headers
+
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'margin: 5px 0; white-space: nowrap; display: flex; align-items: center;';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = true;
+            checkbox.id = `mb-col-vis-${index}`;
+            checkbox.style.cssText = 'margin-right: 8px; cursor: pointer;';
+            checkbox.dataset.columnIndex = index;
+
+            const label = document.createElement('label');
+            label.htmlFor = checkbox.id;
+            label.textContent = colName;
+            label.style.cssText = 'cursor: pointer; user-select: none; flex: 1;';
+
+            checkbox.addEventListener('change', () => {
+                toggleColumn(table, index, checkbox.checked);
+
+                // Count visible columns
+                const visibleCount = checkboxes.filter(cb => cb.checked).length;
+                Lib.info('ui', `Column "${colName}" ${checkbox.checked ? 'shown' : 'hidden'}. ${visibleCount}/${checkboxes.length} columns visible`);
+            });
+
+            checkboxes.push(checkbox);
+
+            wrapper.appendChild(checkbox);
+            wrapper.appendChild(label);
+            menu.appendChild(wrapper);
+        });
+
+        // Add separator
+        const separator = document.createElement('div');
+        separator.style.cssText = 'margin: 10px 0; padding-top: 10px; border-top: 1px solid #ddd;';
+        menu.appendChild(separator);
+
+        // Add "Select All" / "Deselect All" buttons
+        const buttonRow = document.createElement('div');
+        buttonRow.style.cssText = 'display: flex; gap: 5px;';
+
+        const selectAllBtn = document.createElement('button');
+        selectAllBtn.textContent = 'Select All';
+        selectAllBtn.style.cssText = 'font-size: 0.8em; padding: 4px 8px; cursor: pointer; flex: 1; border-radius: 3px;';
+        selectAllBtn.type = 'button';
+        selectAllBtn.onclick = (e) => {
+            e.stopPropagation();
+            checkboxes.forEach(cb => {
+                if (!cb.checked) {
+                    cb.checked = true;
+                    cb.dispatchEvent(new Event('change'));
+                }
+            });
+        };
+
+        const deselectAllBtn = document.createElement('button');
+        deselectAllBtn.textContent = 'Deselect All';
+        deselectAllBtn.style.cssText = 'font-size: 0.8em; padding: 4px 8px; cursor: pointer; flex: 1; border-radius: 3px;';
+        deselectAllBtn.type = 'button';
+        deselectAllBtn.onclick = (e) => {
+            e.stopPropagation();
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    cb.checked = false;
+                    cb.dispatchEvent(new Event('change'));
+                }
+            });
+        };
+
+        buttonRow.appendChild(selectAllBtn);
+        buttonRow.appendChild(deselectAllBtn);
+        menu.appendChild(buttonRow);
+
+        // Toggle menu visibility
+        toggleBtn.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = menu.style.display === 'block';
+
+            if (isVisible) {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'block';
+
+                // Position menu below button
+                const rect = toggleBtn.getBoundingClientRect();
+                menu.style.top = `${rect.bottom + 5}px`;
+                menu.style.left = `${rect.left}px`;
+            }
+        };
+
+        // Close menu when clicking outside
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target) && e.target !== toggleBtn) {
+                menu.style.display = 'none';
+            }
+        };
+        document.addEventListener('click', closeMenu);
+
+        // Append to controls container
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (controlsContainer) {
+            controlsContainer.appendChild(toggleBtn);
+            Lib.info('ui', 'Column visibility toggle added to controls');
+        } else {
+            Lib.warn('ui', 'Controls container not found, cannot add column visibility toggle');
+        }
+
+        // Append menu to body
+        document.body.appendChild(menu);
     }
 
     const SCRIPT_ID = "vzell-mb-show-all-entities";
@@ -3288,6 +3473,14 @@ let changelog = [
             // Apply sticky headers for better scrolling experience
             applyStickyHeaders();
 
+            // Add column visibility toggle for all tables
+            document.querySelectorAll('table.tbl').forEach((table, index) => {
+                // Only add toggle for the first table to avoid duplicate buttons
+                if (index === 0) {
+                    addColumnVisibilityToggle(table);
+                }
+            });
+
             isLoaded = true;
             // Initialize sidebar collapse only now if enabled
             if (Lib.settings.sa_collabsable_sidebar) {
@@ -4331,6 +4524,13 @@ let changelog = [
                 finalCleanup();
                 makeH2sCollapsible();
                 applyStickyHeaders();
+
+                // Add column visibility toggle for loaded table
+                const mainTable = document.querySelector('table.tbl');
+                if (mainTable) {
+                    addColumnVisibilityToggle(mainTable);
+                }
+
                 updateH2Count(loadedRowCount, loadedRowCount);
 
                 // Show main filter container (if hidden)
