@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      6.7.0+2026-02-13
+// @version      6.8.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '6.8.0+2026-02-13', description: 'Feature: Added Quick Stats Panel - displays table statistics including row counts, column counts, filter status, memory usage, and more. Click "📊 Stats" button or any visible/hidden item counts. Perfect for understanding data at a glance.'},
     {version: '6.7.0+2026-02-13', description: 'Feature: Added keyboard shortcuts for power users - Ctrl+F (focus filter), Ctrl+Shift+F (clear filters), Ctrl+E (export CSV), Ctrl+S (save), Ctrl+L (load), Escape (clear focused filter), ?/slash (show help). Includes "⌨️ Shortcuts" help button.'},
     {version: '6.6.0+2026-02-13', description: 'Feature: Added CSV export - export visible rows and columns to CSV file using the "📥 Export CSV" button. Automatically generates filename with timestamp and page type. Perfect for using data in Excel, Google Sheets, or other applications.'},
     {version: '6.5.0+2026-02-13', description: 'UI: Added column visibility toggle - users can now show/hide individual columns using the "👁️ Columns" button. Includes Select All/Deselect All options for quick control. Perfect for customizing view and focusing on relevant data.'},
@@ -873,6 +874,167 @@ Note: Shortcuts work when not typing in input fields
             Lib.info('ui', 'Keyboard shortcuts help button added to controls');
         } else {
             Lib.warn('ui', 'Controls container not found, cannot add shortcuts help button');
+        }
+    }
+
+    /**
+     * Show table statistics panel
+     * Displays useful information about the current table state
+     */
+    function showStatsPanel() {
+        // Check if panel already exists (toggle behavior)
+        const existing = document.getElementById('mb-stats-panel');
+        if (existing) {
+            existing.remove();
+            return;
+        }
+
+        const table = document.querySelector('table.tbl');
+        if (!table) {
+            alert('No table found to show statistics');
+            Lib.warn('stats', 'No table found for statistics panel');
+            return;
+        }
+
+        // Collect statistics
+        const allRows = table.querySelectorAll('tbody tr');
+        const visibleRows = Array.from(allRows).filter(r => r.style.display !== 'none');
+        const headers = table.querySelectorAll('thead th');
+
+        // Count visible columns
+        const visibleColumns = Array.from(headers).filter(h => h.style.display !== 'none').length;
+        const totalColumns = headers.length;
+
+        // Calculate memory estimate (rough)
+        const avgRowSize = 100; // bytes per row (rough estimate)
+        const memoryKB = Math.round(allRows.length * avgRowSize / 1024);
+
+        // Get filter status
+        const globalFilterInput = document.querySelector('#mb-show-all-controls-container input[placeholder*="Global Filter"]');
+        const globalFilter = globalFilterInput?.value || '';
+        const columnFilters = Array.from(document.querySelectorAll('.mb-col-filter-input'))
+            .filter(inp => inp.value)
+            .length;
+
+        // Calculate percentages
+        const rowPercentage = allRows.length > 0
+            ? Math.round((visibleRows.length / allRows.length) * 100)
+            : 100;
+        const colPercentage = totalColumns > 0
+            ? Math.round((visibleColumns / totalColumns) * 100)
+            : 100;
+
+        // Count hidden items
+        const hiddenRows = allRows.length - visibleRows.length;
+        const hiddenColumns = totalColumns - visibleColumns;
+
+        // Create panel
+        const statsPanel = document.createElement('div');
+        statsPanel.id = 'mb-stats-panel';
+        statsPanel.style.cssText = `
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: white;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            font-size: 0.9em;
+            min-width: 280px;
+            max-width: 350px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        `;
+
+        statsPanel.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #4CAF50; padding-bottom: 10px;">
+                <strong style="font-size: 1.1em; color: #4CAF50;">📊 Table Statistics</strong>
+                <button id="mb-stats-close" style="background: none; border: none; font-size: 1.3em; cursor: pointer; color: #666; padding: 0; line-height: 1;">✕</button>
+            </div>
+            <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px 15px; line-height: 1.8;">
+                <div style="font-weight: 600;">Total Rows:</div>
+                <div>${allRows.length.toLocaleString()}</div>
+
+                <div style="font-weight: 600;">Visible Rows:</div>
+                <div>${visibleRows.length.toLocaleString()} <span style="color: #666; font-size: 0.9em;">(${rowPercentage}%)</span></div>
+
+                <div style="font-weight: 600;">Filtered Out:</div>
+                <div style="color: ${hiddenRows > 0 ? '#f44336' : '#666'};">${hiddenRows.toLocaleString()}</div>
+
+                <div style="font-weight: 600;">Total Columns:</div>
+                <div>${totalColumns}</div>
+
+                <div style="font-weight: 600;">Visible Columns:</div>
+                <div>${visibleColumns} <span style="color: #666; font-size: 0.9em;">(${colPercentage}%)</span></div>
+
+                <div style="font-weight: 600;">Hidden Columns:</div>
+                <div style="color: ${hiddenColumns > 0 ? '#f44336' : '#666'};">${hiddenColumns}</div>
+
+                <div style="font-weight: 600;">Memory Usage:</div>
+                <div>~${memoryKB.toLocaleString()} KB</div>
+
+                <div style="font-weight: 600;">Global Filter:</div>
+                <div style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${globalFilter}">${globalFilter ? `"${globalFilter}"` : '<em style="color: #999;">none</em>'}</div>
+
+                <div style="font-weight: 600;">Column Filters:</div>
+                <div>${columnFilters || 0} active</div>
+
+                <div style="font-weight: 600;">Page Type:</div>
+                <div style="font-family: monospace; font-size: 0.85em;">${pageType || 'unknown'}</div>
+            </div>
+            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 0.85em; color: #666; text-align: center;">
+                Click outside or press Escape to close
+            </div>
+        `;
+
+        document.body.appendChild(statsPanel);
+
+        // Close button handler
+        document.getElementById('mb-stats-close').onclick = () => {
+            statsPanel.remove();
+        };
+
+        // Close on Escape
+        const closeOnEscape = (e) => {
+            if (e.key === 'Escape') {
+                statsPanel.remove();
+                document.removeEventListener('keydown', closeOnEscape);
+            }
+        };
+        document.addEventListener('keydown', closeOnEscape);
+
+        // Close on click outside (after a short delay)
+        setTimeout(() => {
+            const closeOnClickOutside = (e) => {
+                if (!statsPanel.contains(e.target)) {
+                    statsPanel.remove();
+                    document.removeEventListener('click', closeOnClickOutside);
+                }
+            };
+            document.addEventListener('click', closeOnClickOutside);
+        }, 100);
+
+        Lib.info('stats', `Statistics panel displayed: ${visibleRows.length}/${allRows.length} rows, ${visibleColumns}/${totalColumns} columns`);
+    }
+
+    /**
+     * Add statistics panel button to UI
+     */
+    function addStatsButton() {
+        const statsBtn = document.createElement('button');
+        statsBtn.textContent = '📊 Stats';
+        statsBtn.title = 'Show table statistics';
+        statsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        statsBtn.type = 'button';
+        statsBtn.onclick = showStatsPanel;
+
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (controlsContainer) {
+            controlsContainer.appendChild(statsBtn);
+            Lib.info('ui', 'Stats button added to controls');
+        } else {
+            Lib.warn('ui', 'Controls container not found, cannot add stats button');
         }
     }
 
@@ -3857,6 +4019,9 @@ Note: Shortcuts work when not typing in input fields
             initKeyboardShortcuts();
             addShortcutsHelpButton();
 
+            // Add stats panel button
+            addStatsButton();
+
             isLoaded = true;
             // Initialize sidebar collapse only now if enabled
             if (Lib.settings.sa_collabsable_sidebar) {
@@ -4916,6 +5081,9 @@ Note: Shortcuts work when not typing in input fields
                     document._mbKeyboardShortcutsInitialized = true;
                 }
                 addShortcutsHelpButton();
+
+                // Add stats panel button
+                addStatsButton();
 
                 updateH2Count(loadedRowCount, loadedRowCount);
 

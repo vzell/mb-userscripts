@@ -35544,4 +35544,19 @@ go with "Sticky Headers - See columns while scrolling", but include the filter r
 
 Ctrl-f
 
+* add descriptions to every function call
+
+* make the changelog window scrollable
+
+* make a nice pre-filter UI
+
+* overhoule the configuration GUI
+
+* put the "sorted <time> in some other place to not produce eye flicker
+
+* remove "Initial rendering" or replace with real values
+
+
+
+
 
