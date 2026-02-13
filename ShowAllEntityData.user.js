@@ -1436,6 +1436,14 @@ Note: Shortcuts work when not typing in input fields
 
     // CONFIG SCHEMA
     const configSchema = {
+        sa_load_history_limit: {
+            label: 'Load Filter History Limit',
+            type: 'number',
+            default: 10,
+            min: 0,
+            max: 50,
+            description: 'Number of previous filter expressions to remember in the load dialog.'
+        },
         sa_enable_debug_logging: {
             label: "Enable debug logging",
             type: "checkbox",
@@ -2292,7 +2300,7 @@ Note: Shortcuts work when not typing in input fields
     fileInput.style.display = 'none';
     fileInput.onchange = (e) => loadTableDataFromDisk(e.target.files[0]);
 
-    loadFromDiskBtn.onclick = () => showLoadFilterPopup();
+    loadFromDiskBtn.onclick = () => showLoadFilterDialog();
     controlsContainer.appendChild(loadFromDiskBtn);
     controlsContainer.appendChild(fileInput);
 
@@ -2507,97 +2515,237 @@ Note: Shortcuts work when not typing in input fields
     let stopRequested = false;
     let multiTableSortStates = new Map();
 
-    function showLoadFilterPopup() {
-        // --- Overlay ---
+    /**
+     * Shows a modernized dialog to enter pre-filter criteria before loading data from disk.
+     * Includes history of previous filter expressions and triggers the file loading process.
+     */
+    async function showLoadFilterDialog() {
+        const historyLimit = Lib.settings.sa_load_history_limit || 10;
+        let history = GM_getValue('sa_load_filter_history', []);
+
         const overlay = document.createElement('div');
-        overlay.style.cssText = `
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        `;
+        overlay.id = 'sa-load-dialog-overlay';
+        overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:20000; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(2px);';
 
-        // --- Modal ---
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            background: white;
-            padding: 20px;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            min-width: 320px;
-            font-family: sans-serif;
-        `;
+        const dialog = document.createElement('div');
+        dialog.style.cssText = 'background:#fff; padding:24px; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.3); width:380px; font-family:sans-serif; border:1px solid #ccc; position:relative;';
 
-        modal.innerHTML = `
-            <div style="margin-bottom: 12px;">
-                <input id="sa-load-filter-input"
-                    type="text"
-                    placeholder="Filter data load..."
-                    title="Filter rows while loading from disk"
-                    style="width: 100%; font-size: 0.9em; padding: 4px;">
+        dialog.innerHTML = `
+            <div style="margin-bottom:18px; border-bottom:1px solid #eee; padding-bottom:12px;">
+                <h3 style="margin:0; color:#222; font-size:1.2em;">📂 Load Table Data</h3>
+                <p style="margin:5px 0 0; color:#666; font-size:0.85em;">Filter rows while loading from disk</p>
             </div>
 
-            <div style="display:flex; gap:15px; justify-content:center; margin-bottom:15px;">
-                <label style="cursor:pointer;">
-                    <input type="checkbox" id="sa-load-case"> Cc
+            <div style="margin-bottom:15px; position:relative;">
+                <div style="display:flex; gap:4px;">
+                    <input id="sa-load-filter-input" type="text" placeholder="Search expression..." 
+                        style="flex:1; padding:8px 12px; border:1px solid #ccc; border-radius:6px; font-size:1em; outline:none;">
+                    ${history.length > 0 ? `
+                    <button id="sa-load-history-toggle" title="Show history" style="padding:0 8px; background:#f0f0f0; border:1px solid #ccc; border-radius:6px; cursor:pointer;">▾</button>
+                    ` : ''}
+                </div>
+                <div id="sa-load-history-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:20001; max-height:150px; overflow-y:auto; margin-top:4px;">
+                    ${history.map(item => `<div class="sa-history-item" style="padding:8px 12px; cursor:pointer; font-size:0.9em; border-bottom:1px dotted #eee;">${item}</div>`).join('')}
+                </div>
+            </div>
+
+            <div style="display:flex; gap:20px; justify-content:center; margin-bottom:20px; background:#f9f9f9; padding:10px; border-radius:8px;">
+                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;">
+                    <input type="checkbox" id="sa-load-case"> Case Sensitive
                 </label>
-                <label style="cursor:pointer;">
-                    <input type="checkbox" id="sa-load-regex"> Rx
+                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;">
+                    <input type="checkbox" id="sa-load-regex"> Regular Expression
                 </label>
             </div>
 
-            <div style="display:flex; justify-content:center; gap:15px;">
-                <button id="sa-load-confirm">Load filtered data from disk</button>
-                <button id="sa-load-cancel">Cancel</button>
+            <div style="display:flex; gap:12px;">
+                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Load Data</button>
+                <button id="sa-load-cancel" style="flex:1; padding:10px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancel</button>
             </div>
         `;
 
-        overlay.appendChild(modal);
         document.body.appendChild(overlay);
+        overlay.appendChild(dialog);
 
-        // --- Focus input ---
-        modal.querySelector('#sa-load-filter-input').focus();
+        const input = dialog.querySelector('#sa-load-filter-input');
+        const historyToggle = dialog.querySelector('#sa-load-history-toggle');
+        const historyDropdown = dialog.querySelector('#sa-load-history-dropdown');
+        
+        input.focus();
 
-        // --- Close helper ---
-        const closePopup = () => {
-            document.removeEventListener('keydown', escHandler);
+        // Inject hover styles
+        const styleId = 'sa-load-popup-styles';
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.textContent = `
+                .sa-history-item:hover { background: #f0f0f0 !important; }
+                #sa-load-confirm:hover { background: #45a049 !important; }
+                #sa-load-cancel:hover { background: #e0e0e0 !important; }
+            `;
+            document.head.appendChild(style);
+        }
+
+        const closeDialog = () => {
             overlay.remove();
+            document.removeEventListener('keydown', handleEsc);
         };
 
-        // --- ESC key support ---
-        const escHandler = (e) => {
-            if (e.key === 'Escape') closePopup();
-        };
-        document.addEventListener('keydown', escHandler);
-
-        // --- Cancel button ---
-        modal.querySelector('#sa-load-cancel').onclick = closePopup;
-
-        // --- Confirm button ---
-        modal.querySelector('#sa-load-confirm').onclick = () => {
-
-            const filterQueryRaw =
-                modal.querySelector('#sa-load-filter-input').value.trim();
-
-            const isCaseSensitive =
-                modal.querySelector('#sa-load-case').checked;
-
-            const isRegExp =
-                modal.querySelector('#sa-load-regex').checked;
-
-            closePopup();
-
-            triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp);
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                Lib.debug('ui', 'Load dialog closed via Escape key');
+                closeDialog();
+            }
         };
 
-        // Optional: close on overlay click (outside modal)
-        overlay.onclick = (e) => {
-            if (e.target === overlay) closePopup();
+        document.addEventListener('keydown', handleEsc);
+
+        // History Logic
+        if (historyToggle) {
+            historyToggle.onclick = (e) => {
+                e.stopPropagation();
+                historyDropdown.style.display = historyDropdown.style.display === 'none' ? 'block' : 'none';
+            };
+            dialog.querySelectorAll('.sa-history-item').forEach(el => {
+                el.onclick = () => {
+                    input.value = el.textContent;
+                    historyDropdown.style.display = 'none';
+                };
+            });
+        }
+
+        // Close dropdown when clicking elsewhere
+        window.onclick = (e) => {
+            if (historyDropdown && !historyDropdown.contains(e.target) && e.target !== historyToggle) {
+                historyDropdown.style.display = 'none';
+            }
         };
+
+        dialog.querySelector('#sa-load-confirm').onclick = () => {
+            const query = input.value.trim();
+            const useCase = dialog.querySelector('#sa-load-case').checked;
+            const useRegex = dialog.querySelector('#sa-load-regex').checked;
+
+            // Update persistent history
+            if (query && historyLimit > 0) {
+                let updatedHistory = [query, ...history.filter(h => h !== query)].slice(0, historyLimit);
+                GM_setValue('sa_load_filter_history', updatedHistory);
+                Lib.debug('cache', `Updated load filter history. Current count: ${updatedHistory.length}`);
+            }
+
+            // Sync with existing UI variables (assuming global references like preFilterInput)
+            if (typeof preFilterInput !== 'undefined') {
+                preFilterInput.value = query;
+                if (typeof preFilterCaseLabel !== 'undefined') {
+                    preFilterCaseLabel.querySelector('input').checked = useCase;
+                }
+                if (typeof preFilterRegexLabel !== 'undefined') {
+                    preFilterRegexLabel.querySelector('input').checked = useRegex;
+                }
+            }
+
+            closeDialog();
+            
+            // Trigger the actual file input click
+            Lib.info('cache', 'Load confirmed. Triggering file selector...');
+            fileInput.click(); 
+        };
+
+        dialog.querySelector('#sa-load-cancel').onclick = closeDialog;
+        overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
     }
+
+    // function showLoadFilterPopup() {
+    //     // --- Overlay ---
+    //     const overlay = document.createElement('div');
+    //     overlay.style.cssText = `
+    //         position: fixed;
+    //         inset: 0;
+    //         background: rgba(0,0,0,0.4);
+    //         display: flex;
+    //         align-items: center;
+    //         justify-content: center;
+    //         z-index: 10000;
+    //     `;
+
+    //     // --- Modal ---
+    //     const modal = document.createElement('div');
+    //     modal.style.cssText = `
+    //         background: white;
+    //         padding: 20px;
+    //         border-radius: 6px;
+    //         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    //         min-width: 320px;
+    //         font-family: sans-serif;
+    //     `;
+
+    //     modal.innerHTML = `
+    //         <div style="margin-bottom: 12px;">
+    //             <input id="sa-load-filter-input"
+    //                 type="text"
+    //                 placeholder="Filter data load..."
+    //                 title="Filter rows while loading from disk"
+    //                 style="width: 100%; font-size: 0.9em; padding: 4px;">
+    //         </div>
+
+    //         <div style="display:flex; gap:15px; justify-content:center; margin-bottom:15px;">
+    //             <label style="cursor:pointer;">
+    //                 <input type="checkbox" id="sa-load-case"> Cc
+    //             </label>
+    //             <label style="cursor:pointer;">
+    //                 <input type="checkbox" id="sa-load-regex"> Rx
+    //             </label>
+    //         </div>
+
+    //         <div style="display:flex; justify-content:center; gap:15px;">
+    //             <button id="sa-load-confirm">Load filtered data from disk</button>
+    //             <button id="sa-load-cancel">Cancel</button>
+    //         </div>
+    //     `;
+
+    //     overlay.appendChild(modal);
+    //     document.body.appendChild(overlay);
+
+    //     // --- Focus input ---
+    //     modal.querySelector('#sa-load-filter-input').focus();
+
+    //     // --- Close helper ---
+    //     const closePopup = () => {
+    //         document.removeEventListener('keydown', escHandler);
+    //         overlay.remove();
+    //     };
+
+    //     // --- ESC key support ---
+    //     const escHandler = (e) => {
+    //         if (e.key === 'Escape') closePopup();
+    //     };
+    //     document.addEventListener('keydown', escHandler);
+
+    //     // --- Cancel button ---
+    //     modal.querySelector('#sa-load-cancel').onclick = closePopup;
+
+    //     // --- Confirm button ---
+    //     modal.querySelector('#sa-load-confirm').onclick = () => {
+
+    //         const filterQueryRaw =
+    //             modal.querySelector('#sa-load-filter-input').value.trim();
+
+    //         const isCaseSensitive =
+    //             modal.querySelector('#sa-load-case').checked;
+
+    //         const isRegExp =
+    //             modal.querySelector('#sa-load-regex').checked;
+
+    //         closePopup();
+
+    //         triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp);
+    //     };
+
+    //     // Optional: close on overlay click (outside modal)
+    //     overlay.onclick = (e) => {
+    //         if (e.target === overlay) closePopup();
+    //     };
+    // }
 
     function triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) {
         const fileInput = document.createElement('input');

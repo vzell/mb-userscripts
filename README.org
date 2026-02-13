@@ -35535,7 +35535,6 @@ go with "Sticky Headers - See columns while scrolling", but include the filter r
 
 ** multi table
 
-
 * CSV
 ** remove "▶" and others before exporting
 
@@ -35552,8 +35551,11 @@ Ctrl-f
 
 * table density
 
-* autoresize columns
+* Column Visibility Toggle
 
+"Escape" key should make the dialog vanish, or clicking outsoe somewhere
+
+* autoresize columns
 ** initial
 
 While we are at it
@@ -35566,14 +35568,55 @@ horizontal scrollbar if needed (or if not possible, code it). Take into account 
 
 add a toggle functionality to the autoresize columns button, so when clicked the second time, the original column setup should berestored
 
-** add individual column width adjustment with the mouse , like in all other UIs which have resizable table columns
+** add individual column width adjustment with the mouse, like in all other modern UIs which have resizable table columns
 
+** make autoresize work with "Column Visibility Toggle"
+
+when a column with a flag icon is resized it probaly takes into account the nontext width like the "a hre"f or the HTML code
 
 * add descriptions to every function call
 
 * make the changelog window scrollable
 
 * make a nice pre-filter UI
+** initial
+
+In the uploaded userscript
+make the following popup window visually more appealing, with a modern design which fits the rest of the userscript UI elements
+
+#+begin_example
+<div style="background: white; padding: 20px; border-radius: 6px; box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px; min-width: 320px; font-family: sans-serif;">
+            <div style="margin-bottom: 12px;">
+                <input id="sa-load-filter-input" type="text" placeholder="Filter data load..." title="Filter rows while loading from disk" style="width: 100%; font-size: 0.9em; padding: 4px;">
+            </div>
+
+            <div style="display:flex; gap:15px; justify-content:center; margin-bottom:15px;">
+                <label style="cursor:pointer;">
+                    <input type="checkbox" id="sa-load-case"> Cc
+                </label>
+                <label style="cursor:pointer;">
+                    <input type="checkbox" id="sa-load-regex"> Rx
+                </label>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:15px;">
+                <button id="sa-load-confirm">Load filtered data from disk</button>
+                <button id="sa-load-cancel">Cancel</button>
+            </div>
+        </div>
+#+end_example
+
+Also account for remembering the last <n> filterload expressions ()use browser persisten storage) and add a configuration directive to the
+
+#+begin_example
+    const configSchema = {
+#+end_example
+
+structure
+
+* ALL new buttons can potentially be doubled in the UI
+* make the buggy button implementations optional, actually make ALL the buttons optional (configurable), initial only the NON buggy ones
+
 
 * overhoule the configuration GUI
 
@@ -35581,6 +35624,19 @@ add a toggle functionality to the autoresize columns button, so when clicked the
 
 * remove "Initial rendering" or replace with real values
 
+* during initial rendering, the "Load from Disk" button when pressed, should tell the user, that the feature is ONLY avialable after pressing the action button first
+** fix it
+
+When the button '<button id="sa-load-confirm' is clicked the actual data loading should be triggerd
+
+something like this
+
+#+begin_example
+modal.querySelector('#sa-load-confirm').onclick = () => {
+#+end_example
+
+Also handle the
+"Escape" key to let the dialog vanish when pressed.
 
 
 
