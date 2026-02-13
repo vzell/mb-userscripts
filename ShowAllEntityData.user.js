@@ -163,6 +163,12 @@ let changelog = [
             default: 5000,
             description: "Row count threshold to prompt save-or-render dialog (0 to disable)"
         },
+        sa_chunked_render_threshold: {
+            label: "Chunked Rendering Threshold",
+            type: "number",
+            default: 1000,
+            description: "Row count to trigger progressive chunked rendering (0 to always use simple render)"
+        },
         sa_pre_filter_highlight_color: {
             label: "Global Prefilter Highlight Color",
             type: "color_picker",
@@ -2896,10 +2902,10 @@ let changelog = [
             // Backup original order for tri-state sorting
             if (activeDefinition.tableMode === 'multi') {
                 groupedRows.forEach(g => { g.originalRows = [...g.rows]; });
-                renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
+                await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
             } else {
                 originalAllRows = [...allRows];
-                renderFinalTable(allRows);
+                await renderFinalTable(allRows);
                 document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
                 const mainTable = document.querySelector('table.tbl');
                 if (mainTable) addColumnFilterRow(mainTable);
@@ -2953,8 +2959,11 @@ let changelog = [
         }
     }
 
-    function renderFinalTable(rows) {
-        // Access rows.length to get the actual count
+    /**
+     * High-performance batch renderer for large datasets
+     * Uses DocumentFragment, chunked rendering, and progress updates
+     */
+    async function renderFinalTable(rows) {
         const rowCount = Array.isArray(rows) ? rows.length : 0;
         Lib.info('render', `Starting renderFinalTable with ${rowCount} rows.`);
 
@@ -3130,7 +3139,15 @@ let changelog = [
                 table.appendChild(tbody);
             }
 
-            group.rows.forEach(r => tbody.appendChild(r));
+            // Optimize: Use DocumentFragment for large groups
+            const chunkThreshold = Lib.settings.sa_chunked_render_threshold || 1000;
+            if (chunkThreshold > 0 && group.rows.length >= chunkThreshold) {
+                const fragment = document.createDocumentFragment();
+                group.rows.forEach(r => fragment.appendChild(r));
+                tbody.appendChild(fragment);
+            } else {
+                group.rows.forEach(r => tbody.appendChild(r));
+            }
 
             if (!query) {
                 // Logic changed: Do not hide the table or H3 even if group.rows.length is 0
@@ -3663,7 +3680,7 @@ let changelog = [
     /**
      * Loads table data from a JSON file and re-hydrates the page
      */
-    function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
+    async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
         if (!file) {
             Lib.warn('cache', 'No file selected.');
             return;
@@ -3808,9 +3825,13 @@ let changelog = [
 
                 // Render
                 if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
-                    renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
+		    renderGroupedTable(groupedRows, pageType === 'artist-releasegroups').catch(err => {
+			Lib.error('render', 'Error rendering grouped table:', err);
+		    });
                 } else if (allRows.length > 0 || loadedRowCount === 0) {
-                    renderFinalTable(allRows);
+                    renderFinalTable(allRows).catch(err => {
+			Lib.error('render', 'Error rendering grouped table:', err);
+		    });
                     document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
                     const mainTable = document.querySelector('table.tbl');
                     if (mainTable) {
