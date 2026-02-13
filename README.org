@@ -35552,6 +35552,21 @@ Ctrl-f
 
 * table density
 
+* autoresize columns
+
+** initial
+
+While we are at it
+please also add an "autoresize columns" button, so when clicked, the maximum space per column is calculated (to not
+break into the next line) and then rerender with the optimal column width per column.  Let the browser create a
+horizontal scrollbar if needed (or if not possible, code it). Take into account that there is a sidebar identified by
+'<div id="sidebar">', so the eventual scrolling should NOT scroll the sidebar, insted it should take place in the '<div id="content"' container.
+
+** toggle
+
+add a toggle functionality to the autoresize columns button, so when clicked the second time, the original column setup should berestored
+
+** add individual column width adjustment with the mouse , like in all other UIs which have resizable table columns
 
 
 * add descriptions to every function call
