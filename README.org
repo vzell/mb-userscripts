@@ -35529,6 +35529,9 @@ So please fix also the column filtering for regexps to only take real text into 
 
 
 * Sticky header
+** DONE works for single table views
 
 go with "Sticky Headers - See columns while scrolling", but include the filter row with the other stiky headers
+
+** multi table
 
