@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      6.6.0+2026-02-13
+// @version      6.7.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '6.7.0+2026-02-13', description: 'Feature: Added keyboard shortcuts for power users - Ctrl+F (focus filter), Ctrl+Shift+F (clear filters), Ctrl+E (export CSV), Ctrl+S (save), Ctrl+L (load), Escape (clear focused filter), ?/slash (show help). Includes "⌨️ Shortcuts" help button.'},
     {version: '6.6.0+2026-02-13', description: 'Feature: Added CSV export - export visible rows and columns to CSV file using the "📥 Export CSV" button. Automatically generates filename with timestamp and page type. Perfect for using data in Excel, Google Sheets, or other applications.'},
     {version: '6.5.0+2026-02-13', description: 'UI: Added column visibility toggle - users can now show/hide individual columns using the "👁️ Columns" button. Includes Select All/Deselect All options for quick control. Perfect for customizing view and focusing on relevant data.'},
     {version: '6.4.0+2026-02-13', description: 'UI: Added sticky table headers - column headers and filter row remain visible while scrolling through large tables. Improves usability when working with thousands of rows.'},
@@ -636,6 +637,242 @@ let changelog = [
             Lib.info('ui', 'Export CSV button added to controls');
         } else {
             Lib.warn('ui', 'Controls container not found, cannot add export button');
+        }
+    }
+
+    /**
+     * Clear all filters (global and column filters)
+     */
+    function clearAllFilters() {
+        // Clear global filter
+        const filterInput = document.querySelector('#mb-show-all-controls-container input[placeholder*="Global Filter"]');
+        if (filterInput) {
+            filterInput.value = '';
+        }
+
+        // Clear all column filters
+        document.querySelectorAll('.mb-col-filter-input').forEach(input => {
+            input.value = '';
+        });
+
+        // Re-run filter to update display
+        if (typeof runFilter === 'function') {
+            runFilter();
+        }
+
+        Lib.info('shortcuts', 'All filters cleared');
+
+        // Show feedback in status
+        const statusDisplay = document.getElementById('mb-status-display');
+        if (statusDisplay) {
+            statusDisplay.textContent = '✓ All filters cleared';
+            statusDisplay.style.color = 'green';
+        }
+    }
+
+    /**
+     * Show keyboard shortcuts help dialog
+     */
+    function showShortcutsHelp() {
+        const helpText = `
+🎹 Keyboard Shortcuts:
+
+Filter & Search:
+  Ctrl/Cmd + F         Focus global filter
+  Ctrl/Cmd + Shift + F Clear all filters
+  Escape               Clear focused filter
+
+Data Export & Management:
+  Ctrl/Cmd + E         Export to CSV
+  Ctrl/Cmd + S         Save to disk (JSON)
+  Ctrl/Cmd + L         Load from disk
+
+Help:
+  ? or /               Show this help
+
+Note: Shortcuts work when not typing in input fields
+        `.trim();
+
+        const existing = document.getElementById('mb-shortcuts-help');
+        if (existing) {
+            existing.remove();
+            return;
+        }
+
+        const helpDiv = document.createElement('div');
+        helpDiv.id = 'mb-shortcuts-help';
+        helpDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.92);
+            color: white;
+            padding: 25px 35px;
+            border-radius: 10px;
+            z-index: 10000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            white-space: pre-line;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            max-width: 500px;
+            line-height: 1.6;
+        `;
+        helpDiv.textContent = helpText;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '✕ Close';
+        closeBtn.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 4px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        `;
+        closeBtn.onmouseover = () => closeBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+        closeBtn.onmouseout = () => closeBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+        closeBtn.onclick = () => helpDiv.remove();
+
+        helpDiv.appendChild(closeBtn);
+        document.body.appendChild(helpDiv);
+
+        // Close on Escape
+        const closeOnEscape = (e) => {
+            if (e.key === 'Escape') {
+                helpDiv.remove();
+                document.removeEventListener('keydown', closeOnEscape);
+            }
+        };
+        document.addEventListener('keydown', closeOnEscape);
+
+        // Close on click outside (after a short delay to prevent immediate close)
+        setTimeout(() => {
+            const closeOnClickOutside = (e) => {
+                if (!helpDiv.contains(e.target)) {
+                    helpDiv.remove();
+                    document.removeEventListener('click', closeOnClickOutside);
+                }
+            };
+            document.addEventListener('click', closeOnClickOutside);
+        }, 100);
+
+        Lib.info('shortcuts', 'Keyboard shortcuts help displayed');
+    }
+
+    /**
+     * Initialize keyboard shortcuts for common actions
+     * Provides power-user functionality for quick access to features
+     */
+    function initKeyboardShortcuts() {
+        // Prevent duplicate initialization
+        if (document._mbKeyboardShortcutsInitialized) {
+            Lib.debug('shortcuts', 'Keyboard shortcuts already initialized');
+            return;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            // Don't intercept if user is typing in an input or textarea
+            const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+
+            // Exception: Escape key works even in inputs (to clear them)
+            if (e.key !== 'Escape' && isTyping) {
+                return;
+            }
+
+            // Ctrl/Cmd + F: Focus global filter
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                const filterInput = document.querySelector('#mb-show-all-controls-container input[placeholder*="Global Filter"]');
+                if (filterInput) {
+                    filterInput.focus();
+                    filterInput.select();
+                    Lib.debug('shortcuts', 'Global filter focused via Ctrl+F');
+                }
+            }
+
+            // Ctrl/Cmd + Shift + F: Clear all filters
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'F') {
+                e.preventDefault();
+                clearAllFilters();
+            }
+
+            // Ctrl/Cmd + E: Export to CSV
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                exportTableToCSV();
+                Lib.debug('shortcuts', 'CSV export triggered via Ctrl+E');
+            }
+
+            // Ctrl/Cmd + S: Save to disk (JSON)
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                const saveBtn = document.querySelector('button[title*="Save current table data"]');
+                if (saveBtn) {
+                    saveBtn.click();
+                    Lib.debug('shortcuts', 'Save to disk triggered via Ctrl+S');
+                } else {
+                    Lib.warn('shortcuts', 'Save button not found');
+                }
+            }
+
+            // Ctrl/Cmd + L: Load from disk
+            if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+                e.preventDefault();
+                const loadBtn = document.querySelector('button[title*="Load table data from disk"]');
+                if (loadBtn) {
+                    loadBtn.click();
+                    Lib.debug('shortcuts', 'Load from disk triggered via Ctrl+L');
+                } else {
+                    Lib.warn('shortcuts', 'Load button not found');
+                }
+            }
+
+            // Escape: Clear focused filter
+            if (e.key === 'Escape' && isTyping) {
+                if (e.target.classList.contains('mb-col-filter-input')) {
+                    e.target.value = '';
+                    runFilter();
+                    Lib.debug('shortcuts', 'Column filter cleared via Escape');
+                } else if (e.target.placeholder && e.target.placeholder.includes('Global Filter')) {
+                    e.target.value = '';
+                    runFilter();
+                    Lib.debug('shortcuts', 'Global filter cleared via Escape');
+                }
+            }
+
+            // ? or /: Show shortcuts help
+            if ((e.key === '?' || e.key === '/') && !isTyping) {
+                e.preventDefault();
+                showShortcutsHelp();
+            }
+        });
+
+        document._mbKeyboardShortcutsInitialized = true;
+        Lib.info('shortcuts', 'Keyboard shortcuts initialized');
+    }
+
+    /**
+     * Add keyboard shortcuts help button to UI
+     */
+    function addShortcutsHelpButton() {
+        const helpBtn = document.createElement('button');
+        helpBtn.textContent = '⌨️ Shortcuts';
+        helpBtn.title = 'Show keyboard shortcuts (or press ?)';
+        helpBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        helpBtn.type = 'button';
+        helpBtn.onclick = showShortcutsHelp;
+
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (controlsContainer) {
+            controlsContainer.appendChild(helpBtn);
+            Lib.info('ui', 'Keyboard shortcuts help button added to controls');
+        } else {
+            Lib.warn('ui', 'Controls container not found, cannot add shortcuts help button');
         }
     }
 
@@ -3616,6 +3853,10 @@ let changelog = [
             // Add export to CSV button
             addExportButton();
 
+            // Initialize keyboard shortcuts
+            initKeyboardShortcuts();
+            addShortcutsHelpButton();
+
             isLoaded = true;
             // Initialize sidebar collapse only now if enabled
             if (Lib.settings.sa_collabsable_sidebar) {
@@ -4668,6 +4909,13 @@ let changelog = [
 
                 // Add export button
                 addExportButton();
+
+                // Initialize keyboard shortcuts (if not already initialized)
+                if (!document._mbKeyboardShortcutsInitialized) {
+                    initKeyboardShortcuts();
+                    document._mbKeyboardShortcutsInitialized = true;
+                }
+                addShortcutsHelpButton();
 
                 updateH2Count(loadedRowCount, loadedRowCount);
 

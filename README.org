@@ -35538,3 +35538,10 @@ go with "Sticky Headers - See columns while scrolling", but include the filter r
 
 * CSV
 ** remove "▶" and others before exporting
+
+* keyboard shortcuts
+** make the keyboard shortcuts configurable
+
+Ctrl-f
+
+
