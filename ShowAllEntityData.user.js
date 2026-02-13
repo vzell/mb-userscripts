@@ -892,7 +892,7 @@ let changelog = [
         const eb = document.createElement('button');
         // Concatenate "🧮 " if label starts with "Show all"
         eb.textContent = conf.label.startsWith('Show all') ? '🧮 ' + conf.label : conf.label;
-        eb.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px;';
+        eb.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; display: inline-flex; align-items: center; justify-content: center;';
         eb.type = 'button';
         // Pass the entire config object
         eb.onclick = (e) => startFetchingProcess(e, conf, activeDefinition);
@@ -903,7 +903,7 @@ let changelog = [
     // Add Save to Disk button
     const saveToDiskBtn = document.createElement('button');
     saveToDiskBtn.textContent = '💾 Save to Disk';
-    saveToDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#4CAF50; color:white; border:1px solid #45a049; display:none;';
+    saveToDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#4CAF50; color:white; border:1px solid #45a049; display:none; display: inline-flex; align-items: center; justify-content: center;';
     saveToDiskBtn.type = 'button';
     saveToDiskBtn.title = 'Save current table data to disk as JSON';
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
@@ -912,7 +912,7 @@ let changelog = [
     // Add Load from Disk button with hidden file input
     const loadFromDiskBtn = document.createElement('button');
     loadFromDiskBtn.textContent = '📂 Load from Disk';
-    loadFromDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#2196F3; color:white; border:1px solid #0b7dda;';
+    loadFromDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#2196F3; color:white; border:1px solid #0b7dda; display: inline-flex; align-items: center; justify-content: center;';
     loadFromDiskBtn.type = 'button';
     loadFromDiskBtn.title = 'Load table data from disk (JSON file)';
 
