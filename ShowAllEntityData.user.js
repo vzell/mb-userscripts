@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      6.2.0+2026-02-13
+// @version      6.3.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '6.3.0+2026-02-13', description: 'Performance: Optimized table sorting with async chunked merge sort algorithm for large tables (>5000 rows). Added progress bar for sorts over 10k rows. Improved sort timing display with color-coded indicators. Better numeric column detection.'},
     {version: '6.2.0+2026-02-13', description: 'Performance: Added debounced filtering with configurable delay (default 300ms) to prevent UI freezing with large tables. Added filter timing display in status line showing execution time with color-coded performance indicators.'},
     {version: '6.1.0+2026-02-13', description: 'Fixed Regexp filtering with column filter when decorating symbols like "▶" are in front.'},
     {version: '6.0.0+2026-02-13', description: 'Fixed Regexp filtering with global filter not take into account each column separately.'},
@@ -119,6 +120,141 @@ let changelog = [
         };
     }
 
+    /**
+     * Optimized sorting for large arrays using a stable, in-place sort with chunking
+     * @param {Array} array - Array to sort
+     * @param {Function} compareFn - Comparison function
+     * @param {Function} progressCallback - Optional callback for progress updates (percent)
+     * @returns {Promise<Array>} Sorted array
+     */
+    async function sortLargeArray(array, compareFn, progressCallback) {
+        const size = array.length;
+
+        // For small arrays, use native sort
+        if (size < 1000) {
+            array.sort(compareFn);
+            return array;
+        }
+
+        // For medium arrays, use native sort with yield
+        if (size < 5000) {
+            await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+            array.sort(compareFn);
+            return array;
+        }
+
+        // For large arrays, use Tim Sort (merge sort variant) with chunking
+        // This provides stable O(n log n) performance with better cache locality
+        const chunkSize = Math.min(Lib.settings.sa_sort_chunk_size || 5000, size);
+
+        // Step 1: Sort chunks
+        const numChunks = Math.ceil(size / chunkSize);
+        for (let i = 0; i < numChunks; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, size);
+            const chunk = array.slice(start, end);
+            chunk.sort(compareFn);
+
+            // Copy sorted chunk back
+            for (let j = 0; j < chunk.length; j++) {
+                array[start + j] = chunk[j];
+            }
+
+            if (progressCallback) {
+                const progress = Math.round((i + 1) / numChunks * 50); // First 50% is chunk sorting
+                progressCallback(progress);
+            }
+
+            // Yield to UI every chunk
+            if (i % 3 === 0) {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+        }
+
+        // Step 2: Merge sorted chunks
+        let currentSize = chunkSize;
+        let mergeStep = 0;
+        const maxMergeSteps = Math.ceil(Math.log2(numChunks));
+
+        while (currentSize < size) {
+            for (let start = 0; start < size; start += currentSize * 2) {
+                const mid = Math.min(start + currentSize, size);
+                const end = Math.min(start + currentSize * 2, size);
+
+                if (mid < end) {
+                    merge(array, start, mid, end, compareFn);
+                }
+            }
+
+            mergeStep++;
+            if (progressCallback) {
+                const progress = 50 + Math.round((mergeStep / maxMergeSteps) * 50); // Last 50% is merging
+                progressCallback(progress);
+            }
+
+            currentSize *= 2;
+
+            // Yield to UI
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+
+        return array;
+    }
+
+    /**
+     * Merge two sorted portions of an array
+     * @param {Array} array - The array
+     * @param {number} start - Start index of first portion
+     * @param {number} mid - End index of first portion (start of second)
+     * @param {number} end - End index of second portion
+     * @param {Function} compareFn - Comparison function
+     */
+    function merge(array, start, mid, end, compareFn) {
+        const left = array.slice(start, mid);
+        const right = array.slice(mid, end);
+
+        let i = 0, j = 0, k = start;
+
+        while (i < left.length && j < right.length) {
+            if (compareFn(left[i], right[j]) <= 0) {
+                array[k++] = left[i++];
+            } else {
+                array[k++] = right[j++];
+            }
+        }
+
+        while (i < left.length) {
+            array[k++] = left[i++];
+        }
+
+        while (j < right.length) {
+            array[k++] = right[j++];
+        }
+    }
+
+    /**
+     * Create a comparison function for table sorting
+     * @param {number} index - Column index
+     * @param {boolean} isAscending - Sort direction
+     * @param {boolean} isNumeric - Whether to use numeric comparison
+     * @returns {Function} Comparison function
+     */
+    function createSortComparator(index, isAscending, isNumeric) {
+        return (a, b) => {
+            const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
+            const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
+
+            if (isNumeric) {
+                const numA = parseFloat(valA.replace(/[^0-9.-]/g, '')) || 0;
+                const numB = parseFloat(valB.replace(/[^0-9.-]/g, '')) || 0;
+                return isAscending ? numA - numB : numB - numA;
+            }
+
+            const result = valA.localeCompare(valB, undefined, {numeric: true, sensitivity: 'base'});
+            return isAscending ? result : -result;
+        };
+    }
+
     const SCRIPT_ID = "vzell-mb-show-all-entities";
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
 
@@ -137,6 +273,22 @@ let changelog = [
             min: 0,
             max: 2000,
             description: "Delay in milliseconds before applying filter after typing stops (0 = instant, 300 = recommended for large tables)"
+        },
+        sa_sort_chunk_size: {
+            label: "Sort chunk size for large tables",
+            type: "number",
+            default: 5000,
+            min: 1000,
+            max: 50000,
+            description: "Number of rows to process at once when sorting very large tables (higher = faster but may freeze UI)"
+        },
+        sa_sort_progress_threshold: {
+            label: "Show sort progress above (rows)",
+            type: "number",
+            default: 10000,
+            min: 1000,
+            max: 100000,
+            description: "Show progress indicator when sorting tables with more than this many rows"
         },
         sa_render_overflow_tables_in_new_tab: {
             label: "Render overflow tables in a new tab",
@@ -3613,64 +3765,110 @@ let changelog = [
                     }
 
                     // 2. Setup UI Feedback
-                    Lib.debug('sort', `Sorting table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}...`);
-                    sortTimerDisplay.textContent = 'Sorting...⏳';
-
                     const rowCount = targetRows.length;
+                    const showProgressBar = rowCount >= (Lib.settings.sa_sort_progress_threshold || 10000);
                     const showWaitCursor = rowCount > 1000;
+
+                    Lib.debug('sort', `Sorting table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}. Row count: ${rowCount}`);
+
+                    // Update status display
+                    const statusDisplay = document.getElementById('mb-status-display');
+                    if (statusDisplay) {
+                        statusDisplay.textContent = '⏳ Sorting...';
+                        statusDisplay.style.color = 'orange';
+                    }
+
+                    sortTimerDisplay.textContent = 'Sorting...⏳';
 
                     if (showWaitCursor) document.body.classList.add('mb-sorting-active');
 
-                    // 3. Execution (Time-delayed to allow UI render)
-                    setTimeout(() => {
-                        const startSort = performance.now();
+                    // Show progress for large sorts
+                    let progressBar, progressText;
+                    if (showProgressBar && progressContainer) {
+                        progressContainer.style.display = 'block';
+                        progressBar = progressContainer.querySelector('.mb-progress-bar');
+                        progressText = progressContainer.querySelector('.mb-progress-text');
+                        if (progressBar) progressBar.style.width = '0%';
+                        if (progressText) progressText.textContent = 'Sorting: 0%';
+                    }
 
-                        // Update State
-                        state.lastSortIndex = index;
-                        state.sortState = targetState;
+                    // 3. Async Execution
+                    (async () => {
+                        try {
+                            const startSort = performance.now();
 
-                        // Reset visual state for all header buttons in THIS table
-                        table.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
-                        // Highlight only this specific icon
-                        span.classList.add('sort-icon-active');
+                            // Update State
+                            state.lastSortIndex = index;
+                            state.sortState = targetState;
 
-                        // Perform Sort
-                        let sortedData = [];
-                        if (state.sortState === 0) {
-                            sortedData = [...originalRows];
-                        } else {
-                            // Clone before sorting to avoid modifying the original array reference in place immediately
-                            sortedData = [...targetRows];
-                            const isNumeric = colName.includes('Year') || colName.includes('Releases');
-                            const isAscending = state.sortState === 1;
+                            // Reset visual state for all header buttons in THIS table
+                            table.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
+                            // Highlight only this specific icon
+                            span.classList.add('sort-icon-active');
 
-                            sortedData.sort((a, b) => {
-                                const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
-                                const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
-                                if (isNumeric) {
-                                    const numA = parseFloat(valA.replace(/[^0-9.]/g, '')) || 0;
-                                    const numB = parseFloat(valB.replace(/[^0-9.]/g, '')) || 0;
-                                    return isAscending ? numA - numB : numB - numA;
-                                }
-                                return isAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                            });
+                            // Perform Sort
+                            let sortedData = [];
+                            if (state.sortState === 0) {
+                                // Restore original order
+                                sortedData = [...originalRows];
+                            } else {
+                                // Clone array for sorting
+                                sortedData = [...targetRows];
+                                const isNumeric = colName.includes('Year') || colName.includes('Releases') ||
+                                                colName.includes('Track') || colName.includes('Length') ||
+                                                colName.includes('Rating') || colName.includes('#');
+                                const isAscending = state.sortState === 1;
+
+                                // Create comparator
+                                const compareFn = createSortComparator(index, isAscending, isNumeric);
+
+                                // Progress callback for large sorts
+                                const progressCallback = showProgressBar ? (percent) => {
+                                    if (progressBar) progressBar.style.width = `${percent}%`;
+                                    if (progressText) progressText.textContent = `Sorting: ${percent}%`;
+                                } : null;
+
+                                // Use optimized sort for large arrays
+                                await sortLargeArray(sortedData, compareFn, progressCallback);
+                            }
+
+                            // Apply Sorted Data back to Source variables
+                            if (isMultiTable && targetGroup) {
+                                targetGroup.rows = sortedData;
+                            } else {
+                                allRows = sortedData;
+                            }
+
+                            // Re-run filter and render
+                            runFilter();
+
+                            const duration = ((performance.now() - startSort) / 1000).toFixed(2);
+                            const durationMs = (performance.now() - startSort).toFixed(0);
+
+                            // Update displays
+                            sortTimerDisplay.textContent = `Sorted "${colName}": ${duration}s`;
+
+                            if (statusDisplay) {
+                                statusDisplay.textContent = `✓ Sorted ${rowCount} rows in ${durationMs}ms`;
+                                statusDisplay.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
+                            }
+
+                            Lib.info('sort', `Sort completed in ${duration}s for ${rowCount} rows`);
+
+                        } catch (error) {
+                            Lib.error('sort', 'Error during sort:', error);
+                            if (statusDisplay) {
+                                statusDisplay.textContent = '✗ Sort failed';
+                                statusDisplay.style.color = 'red';
+                            }
+                        } finally {
+                            // Cleanup UI
+                            if (showWaitCursor) document.body.classList.remove('mb-sorting-active');
+                            if (showProgressBar && progressContainer) {
+                                progressContainer.style.display = 'none';
+                            }
                         }
-
-                        // Apply Sorted Data back to Source variables
-                        if (isMultiTable && targetGroup) {
-                            targetGroup.rows = sortedData;
-                        } else {
-                            allRows = sortedData;
-                        }
-
-                        // Re-run filter and render
-                        runFilter();
-
-                        const duration = ((performance.now() - startSort) / 1000).toFixed(2);
-                        sortTimerDisplay.textContent = `Sorted "${colName}": ${duration}s`;
-                        if (showWaitCursor) document.body.classList.remove('mb-sorting-active');
-
-                    }, 50); // A short 50ms delay is enough for the UI to paint the "⏳" icon
+                    })();
                 };
                 return span;
             };
