@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      6.0.0+2026-02-13
+// @version      6.1.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '6.1.0+2026-02-13', description: 'Fixed Regexp filtering with column filter when decorating symbols like "▶" are in front.'},
     {version: '6.0.0+2026-02-13', description: 'Fixed Regexp filtering with global filter not take into account each column separately.'},
     {version: '5.0.0+2026-02-13', description: 'Implemented a chunked renderer with progess updates when a configurable number of fetched rows is exceeded.'},
     {version: '4.5.0+2026-02-13', description: 'Add large dataset handling by directly offering for saving to disk instead of rendering.'},
@@ -1547,6 +1548,58 @@ let changelog = [
         return textParts.join(' ');
     }
 
+    /**
+     * Get clean visible text for column filtering, skipping decorative elements
+     * This function filters out common decorative content like:
+     * - Expand/collapse icons (▶, ▼, ►, etc.)
+     * - Image placeholder elements (empty spans with background-images)
+     * - Pure whitespace text nodes
+     */
+    function getCleanColumnText(element) {
+        let textParts = [];
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+            acceptNode: (node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    const tag = node.tagName.toLowerCase();
+                    // Skip script, style, head
+                    if (tag === 'script' || tag === 'style' || tag === 'head') return NodeFilter.FILTER_REJECT;
+
+                    // Skip elements that are purely decorative (image placeholders)
+                    if (node.classList && (
+                        node.classList.contains('artwork-icon') ||
+                        node.classList.contains('caa-icon') ||
+                        node.classList.contains('icon')
+                    )) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+                }
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+
+        let node;
+        while (node = walker.nextNode()) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                const text = node.nodeValue;
+                // Skip text nodes that are just decorative icons or pure whitespace
+                const trimmed = text.trim();
+                if (trimmed && !isDecorativeIcon(trimmed)) {
+                    textParts.push(text);
+                }
+            }
+        }
+        return textParts.join(' ');
+    }
+
+    /**
+     * Check if a string is just a decorative icon character
+     */
+    function isDecorativeIcon(text) {
+        // Common decorative characters used in the UI
+        const decorativeChars = ['▶', '▼', '►', '◄', '▲', '▾', '⏵', '⏷', '⏴', '⏶', '●', '○', '■', '□'];
+        return decorativeChars.includes(text);
+    }
+
     function highlightText(row, query, isCaseSensitive, targetColIndex = -1, isRegExp = false, highlightType = 'auto') {
         if (!query) return;
         let regex;
@@ -1736,7 +1789,7 @@ let changelog = [
                             // For regex patterns, test against each cell individually
                             // This allows anchored patterns like ^Thunder Road to work correctly
                             globalHit = Array.from(r.cells).some(cell => {
-                                const cellText = getCleanVisibleText(cell);
+                                const cellText = getCleanColumnText(cell);
                                 return globalRegex.test(cellText);
                             });
                         } else {
@@ -1749,7 +1802,7 @@ let changelog = [
                     // Column matches
                     let colHit = true;
                     for (const f of colFilters) {
-                        const cellText = getCleanVisibleText(r.cells[f.idx]);
+                        const cellText = getCleanColumnText(r.cells[f.idx]);
                         let match = false;
                         if (isRegExp) {
                             try {
@@ -1826,7 +1879,7 @@ let changelog = [
                         // For regex patterns, test against each cell individually
                         // This allows anchored patterns like ^Thunder Road to work correctly
                         globalHit = Array.from(row.cells).some(cell => {
-                            const cellText = getCleanVisibleText(cell);
+                            const cellText = getCleanColumnText(cell);
                             return globalRegex.test(cellText);
                         });
                     } else {
@@ -1838,7 +1891,7 @@ let changelog = [
 
                 let colHit = true;
                 for (const f of colFilters) {
-                    const cellText = getCleanVisibleText(row.cells[f.idx]);
+                    const cellText = getCleanColumnText(row.cells[f.idx]);
                     let match = false;
                     if (isRegExp) {
                         try {
@@ -3844,7 +3897,7 @@ let changelog = [
                     if (isRegExp && globalRegex) {
                         // For regex patterns, test against each cell individually
                         return Array.from(tr.cells).some(cell => {
-                            const cellText = getCleanVisibleText(cell);
+                            const cellText = getCleanColumnText(cell);
                             return globalRegex.test(cellText);
                         });
                     } else {

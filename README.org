@@ -31891,7 +31891,7 @@ Is this feasible, or are there other considerations regarding the functionality 
 filesystem in json form
 
 
-** syntax errors
+** DONE syntax errors
 
 I had to change the code you generated
 
@@ -35446,3 +35446,54 @@ but instead shifted to the lower end. without the unicode symbol the text is cen
 #+end_example
 
 
+** no match when used in a column level filter
+
+One of your latest fixes regarding filter string handling when interpreted as regexps has fixed the following bugs
+
+#+begin_example
+Where Fixed
+✅ Global filter (multi-table mode) - When filtering grouped data
+✅ Global filter (single-table mode) - When filtering single table data
+✅ Pre-load filter - When loading from JSON with a filter
+#+end_example
+
+But when using regexps in the column filter fields it still breaks when there are icons or other images in front of the
+actual text
+
+e.g. an image of the actual release in fron of the release title
+
+#+begin_example
+<td>
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <a href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive" style="background-size: contain; background-image: url(&quot;//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250&quot;);">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60">
+    <bdi>
+      <span>
+	<span class="mb-global-filter-highlight">Gree
+	</span>tings From Asbury Park, N.J.
+      </span>
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Pitman pressing
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+or a country flag in front of the country name
+
+#+begin_example
+<td>
+  <span class="flag flag-US release-country">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">United States (US)
+    </a>
+  </span>
+</td>
+#+end_example
+
+So please fix also the column filtering for regexps to only take real text into account
