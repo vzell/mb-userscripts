@@ -1100,6 +1100,7 @@ let changelog = [
     saveToDiskBtn.type = 'button';
     saveToDiskBtn.title = 'Save current table data to disk as JSON';
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
+    saveToDiskBtn.style.display = 'none'; // - Changed from 'inline-flex' or similar to 'none'
     controlsContainer.appendChild(saveToDiskBtn);
 
     // Add Load from Disk button with hidden file input

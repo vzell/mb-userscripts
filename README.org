@@ -35342,6 +35342,19 @@ progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFi
 ** Im Batch Rendering dialog: Elapsed time angeben
 ** Loaded <n> rows in <elapsed time>s
 
+** 💾 Save to Disk
+
+In the uploaded userscript
+
+The "💾 Save to Disk"
+
+#+begin_example
+<button type="button" title="Save current table data to disk as JSON" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(76, 175, 80); color: white; border: 1px solid rgb(69, 160, 73); display: inline-flex; align-items: center; justify-content: center;">💾 Save to Disk</button>
+#+end_example
+
+shouldn't be present on the very fist page when the userscript first executes. ONLY after fetching data, so when
+pressing the action button (or one of the action buttons) and loading either all the paginated pages OR pressing the
+"Stop" button if there are lots of pages to load
 
 * DONE mismatch when using Regexps
 
@@ -35514,3 +35527,4 @@ or a country flag in front of the country name
 #+end_example
 
 So please fix also the column filtering for regexps to only take real text into account
+
