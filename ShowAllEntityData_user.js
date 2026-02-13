@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      4.4.2+2026-02-13
+// @version      5.0.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '5.0.0+2026-02-13', description: 'Implemented a chunked renderer with progess updates when a configurable number of fetched rows is exceeded.'},
     {version: '4.4.2+2026-02-13', description: 'Add popup dialog to enter prefilter string instead of showing it on the main page all the time.'},
     {version: '4.4.1+2026-02-12', description: 'Add highlightning of pre-filter expression.'},
     {version: '4.4.0+2026-02-12', description: 'Add "pre filter when loading" functionality.'},
@@ -707,10 +708,10 @@ let changelog = [
             // Root artist page (Official/Non-Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
-                { label: 'Official artist RGs', params: { all: '0', va: '0' } },
-                { label: 'Non-official artist RGs', params: { all: '1', va: '0' } },
-                { label: 'Official various artists RGs', params: { all: '0', va: '1' } },
-                { label: 'Non-official various artists RGs', params: { all: '1', va: '1' } }
+                { label: '🧮 Official artist RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official artist RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official various artists RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official various artists RGs', params: { all: '1', va: '1' } }
             ],
             tableMode: 'multi' // native tables, h3 headers
         },
@@ -719,8 +720,8 @@ let changelog = [
             // Artist Releases page (Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
             buttons: [
-                { label: 'Official artist releases', params: { va: '0' } },
-                { label: 'Various artist releases', params: { va: '1' } }
+                { label: '🧮 Official artist releases', params: { va: '0' } },
+                { label: '🧮 Various artist releases', params: { va: '1' } }
             ],
             features: {
                 splitCD: true,
@@ -897,7 +898,7 @@ let changelog = [
         const eb = document.createElement('button');
         // Concatenate "🧮 " if label starts with "Show all"
         eb.textContent = conf.label.startsWith('Show all') ? '🧮 ' + conf.label : conf.label;
-        eb.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px;';
+        eb.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; display: inline-flex; align-items: center; justify-content: center;';
         eb.type = 'button';
         // Pass the entire config object
         eb.onclick = (e) => startFetchingProcess(e, conf, activeDefinition);
@@ -908,7 +909,7 @@ let changelog = [
     // Add Save to Disk button
     const saveToDiskBtn = document.createElement('button');
     saveToDiskBtn.textContent = '💾 Save to Disk';
-    saveToDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#4CAF50; color:white; border:1px solid #45a049; display:none;';
+    saveToDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#4CAF50; color:white; border:1px solid #45a049; display:none; display: inline-flex; align-items: center; justify-content: center;';
     saveToDiskBtn.type = 'button';
     saveToDiskBtn.title = 'Save current table data to disk as JSON';
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
@@ -917,7 +918,7 @@ let changelog = [
     // Add Load from Disk button with hidden file input
     const loadFromDiskBtn = document.createElement('button');
     loadFromDiskBtn.textContent = '📂 Load from Disk';
-    loadFromDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#2196F3; color:white; border:1px solid #0b7dda;';
+    loadFromDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#2196F3; color:white; border:1px solid #0b7dda; display: inline-flex; align-items: center; justify-content: center;';
     loadFromDiskBtn.type = 'button';
     loadFromDiskBtn.title = 'Load table data from disk (JSON file)';
 

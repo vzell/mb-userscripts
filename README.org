@@ -31891,6 +31891,62 @@ Is this feasible, or are there other considerations regarding the functionality 
 filesystem in json form
 
 
+** syntax errors
+
+I had to change the code you generated
+
+#+begin_example
+                // Render
+                if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
+                    await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
+                } else if (allRows.length > 0 || loadedRowCount === 0) {
+                    await renderFinalTable(allRows);
+                    document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+                    const mainTable = document.querySelector('table.tbl');
+                    if (mainTable) {
+                        addColumnFilterRow(mainTable);
+                        makeTableSortableUnified(mainTable, 'main_table');
+                    }
+                }
+#+end_example
+
+to
+
+#+begin_example
+                // Render
+                if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
+		    renderGroupedTable(groupedRows, pageType === 'artist-releasegroups').catch(err => {
+			Lib.error('render', 'Error rendering grouped table:', err);
+		    });
+                } else if (allRows.length > 0 || loadedRowCount === 0) {
+                    renderFinalTable(allRows).catch(err => {
+			Lib.error('render', 'Error rendering grouped table:', err);
+		    });
+                    document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+                    const mainTable = document.querySelector('table.tbl');
+                    if (mainTable) {
+                        addColumnFilterRow(mainTable);
+                        makeTableSortableUnified(mainTable, 'main_table');
+                    }
+                }
+#+end_example
+
+in order to avoid the following stack trace
+
+#+begin_example
+Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': await is only valid in async functions and the top level bodies of modules (at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:4305:21)
+    at At (<anonymous>:10:89)
+    at m (<anonymous>:21:352)
+    at c (<anonymous>:24:266)
+    at <anonymous>:24:328
+    at co (<anonymous>:18:250)
+    at Object.send (<anonymous>:24:188)
+    at <anonymous>:91:328
+    at _ (<anonymous>:22:406)
+#+end_example
+
+Otherwise the the script woudn't even load
+
 
 * "Esc" handling in filter field
 ** initial
@@ -35268,6 +35324,7 @@ progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFi
 
 ** Im Batch Rendering dialog: Elapsed time angeben
 ** Loaded <n> rows in <elapsed time>s
+
 
 * mismatch when using Regexps
 

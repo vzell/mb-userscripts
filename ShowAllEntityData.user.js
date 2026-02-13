@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      5.0.0+2026-02-13
+// @version      6.0.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '6.0.0+2026-02-13', description: 'Fixed Regexp filtering with global filter not take into account each column separately.'},
     {version: '5.0.0+2026-02-13', description: 'Implemented a chunked renderer with progess updates when a configurable number of fetched rows is exceeded.'},
     {version: '4.5.0+2026-02-13', description: 'Add large dataset handling by directly offering for saving to disk instead of rendering.'},
     {version: '4.4.2+2026-02-13', description: 'Add popup dialog to enter prefilter string instead of showing it on the main page all the time.'},
@@ -2997,19 +2998,88 @@ let changelog = [
             `Final table structure → headers=${thCount}, rowCells=${tdCount}`
         );
 
-        if (rowCount > 0) {
-            rows.forEach(r => tbody.appendChild(r));
-        } else {
+        if (rowCount === 0) {
             Lib.error('render', 'No rows provided to renderFinalTable.');
+            return;
         }
 
-        Lib.info('render', `Finished renderFinalTable. Injected ${rowCount} rows into DOM.`);
+        // Use threshold setting for when to enable chunked rendering
+        const chunkThreshold = Lib.settings.sa_chunked_render_threshold || 1000;
+
+        // For small datasets, use fast simple append
+        if (chunkThreshold === 0 || rowCount < chunkThreshold) {
+            rows.forEach(r => tbody.appendChild(r));
+            Lib.info('render', `Fast render: Injected ${rowCount} rows into DOM.`);
+        } else {
+            // For large datasets, use chunked async rendering with progress
+            await renderRowsChunked(tbody, rows, 'single');
+        }
 
         // Show the save button now that data is rendered
         saveToDiskBtn.style.display = 'inline-block';
     }
 
-    function renderGroupedTable(dataArray, isArtistMain, query = '') {
+    /**
+     * Chunked async renderer with progress updates
+     * Renders rows in batches to avoid blocking the UI thread
+     */
+    async function renderRowsChunked(tbody, rows, mode = 'single') {
+        const totalRows = rows.length;
+        const chunkSize = 500; // Render 500 rows at a time
+        const chunks = Math.ceil(totalRows / chunkSize);
+
+        Lib.info('render', `Chunked render: ${totalRows} rows in ${chunks} chunks of ${chunkSize}`);
+
+        // Show progress indicator
+        const progressMsg = document.createElement('div');
+        progressMsg.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 8px;
+            z-index: 9999;
+            font-size: 16px;
+            text-align: center;
+        `;
+        progressMsg.innerHTML = `
+            <div style="margin-bottom: 10px;">🎨 Rendering rows...</div>
+            <div id="mb-render-progress" style="font-size: 14px;">0 / ${totalRows.toLocaleString()}</div>
+        `;
+        document.body.appendChild(progressMsg);
+        const progressText = document.getElementById('mb-render-progress');
+
+        let rowsRendered = 0;
+
+        for (let i = 0; i < chunks; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, totalRows);
+            const chunk = rows.slice(start, end);
+
+            // Use DocumentFragment for efficient batch insert
+            const fragment = document.createDocumentFragment();
+            chunk.forEach(row => fragment.appendChild(row));
+            tbody.appendChild(fragment);
+
+            rowsRendered += chunk.length;
+
+            // Update progress
+            progressText.textContent = `${rowsRendered.toLocaleString()} / ${totalRows.toLocaleString()}`;
+
+            // Yield to browser to keep UI responsive
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+
+        // Remove progress indicator
+        document.body.removeChild(progressMsg);
+
+        Lib.info('render', `Chunked render complete: ${totalRows} rows rendered in ${chunks} chunks.`);
+    }
+
+    async function renderGroupedTable(dataArray, isArtistMain, query = '') {
         Lib.info('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}"`);
 
         const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
