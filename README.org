@@ -31465,7 +31465,7 @@ GM_listValues().forEach(k => {
 That will show you what those 138 entries actually are.
 #+end_example
 
-** Future Improvements
+** TODO Future Improvements
 
 Potential enhancements for the offline storage feature:
 
@@ -31478,46 +31478,7 @@ Multiple Snapshots: Manage multiple saved versions per page
 Auto-save: Periodically save data automatically
 Metadata Enhancement: Include more context (user notes, tags)
 
-** check for errors on the multitable case
-
-In the case of loading back the data coming from multiple tables I get the following errors depending on the pageType (URL)
-
-- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-- https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings
-  
-For these I get:
-
-#+begin_example
-[VZ-ShowAllEntities: artist-relationships] 🎨  Injecting master toggle and filter container after target header ▼Appearances(1328)[ Show | Hid. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:35.628 [VZ-ShowAllEntities: artist-relationships] 🎨 Processing group: "undefined" with 47 rows. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:35.628 [VZ-ShowAllEntities: artist-relationships] 🎨 Creating new table and H3 for group "undefined". 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:35.628 [VZ-ShowAllEntities: artist-relationships] ❌ Failed to load data from file: TypeError: Cannot read properties of undefined (reading 'toLowerCase')
-    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3172:49
-    at Array.forEach (<anonymous>)
-    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3140:19)
-    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3809:21)
-#+end_example
-
-- https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-
-Here I get:
-
-#+begin_example
-[VZ-ShowAllEntities: releasegroup-releases] 📝 Loading data from file: mb-releasegroup-releases-2026-02-12T16-45-27.json 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.179 [VZ-ShowAllEntities: releasegroup-releases] 📝 Loaded data version 1.0 from 2026-02-12T16:45:27.363Z (124 rows) 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.179 [VZ-ShowAllEntities: releasegroup-releases] 🧹 Starting clutter element removal. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] 📝 Reconstructed 3 groups with 124 total rows. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] 🎨 Starting renderGroupedTable with 3 categories. Query: "" 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] ❌ No template table head found. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.204 [VZ-ShowAllEntities: releasegroup-releases] ❌ Failed to load data from file: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
-    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3051:31)
-    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3809:21)
-#+end_example
-
-** saving directly to disk for very large paginated pages
-
-** filtering data when loding from filesystem
+** DONE filtering data when loding from filesystem
 *** question
 **** DONE initial
 
@@ -31639,7 +31600,7 @@ different type of filter-highlights, maybe in the line
 const className = targetColIndex === -1 ? 'mb-filter-highlight' : 'mb-col-filter-highlight';
 #+end_example
 
-**** adjust further
+**** DONE adjust further
 
 Please further adjust in the following way
 
@@ -31815,6 +31776,83 @@ async function loadTableDataFromDisk(file) {
         reader.readAsText(file);
     }
 #+end_example
+
+** check for errors on the multitable case
+
+In the case of loading back the data coming from multiple tables I get the following errors depending on the pageType (URL)
+
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+- https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings
+  
+For these I get:
+
+#+begin_example
+23:54:42.626 [VZ-ShowAllEntities: artist-releasegroups] 📝 Loading data from file: mb-artist-releasegroups-2026-02-12T16-44-52.json. Prefilter active: false 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.631 [VZ-ShowAllEntities: artist-releasegroups] 📝 Loaded data version 1.0 from 2026-02-12T16:44:52.684Z (File total: 579 rows) 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.631 [VZ-ShowAllEntities: artist-releasegroups] 🧹 Starting clutter element removal. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.654 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Starting renderGroupedTable with 17 categories. Query: "" 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.654 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Cloning table head for template. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.654 [VZ-ShowAllEntities: artist-releasegroups] 🎨 No query provided; performing initial cleanup of existing elements. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.658 [VZ-ShowAllEntities: artist-releasegroups] 🎨  Injecting master toggle and filter container after target header Discography. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.658 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Processing group: "undefined" with 21 rows. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.658 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Creating new table and H3 for group "undefined". 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.659 [VZ-ShowAllEntities: artist-releasegroups] ❌ Failed to load data from file: TypeError: Cannot read properties of undefined (reading 'toLowerCase')
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3371:49
+    at Array.forEach (<anonymous>)
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3339:19)
+    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:4043:21)
+#+end_example
+
+- https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+Here I get:
+
+#+begin_example
+[VZ-ShowAllEntities: releasegroup-releases] 📝 Loading data from file: mb-releasegroup-releases-2026-02-12T16-45-27.json 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.179 [VZ-ShowAllEntities: releasegroup-releases] 📝 Loaded data version 1.0 from 2026-02-12T16:45:27.363Z (124 rows) 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.179 [VZ-ShowAllEntities: releasegroup-releases] 🧹 Starting clutter element removal. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] 📝 Reconstructed 3 groups with 124 total rows. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] 🎨 Starting renderGroupedTable with 3 categories. Query: "" 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] ❌ No template table head found. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.204 [VZ-ShowAllEntities: releasegroup-releases] ❌ Failed to load data from file: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3051:31)
+    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3809:21)
+#+end_example
+
+** saving directly to disk for very large paginated pages
+
+In the uploaded script,
+
+when loading data from many pages, for example at
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases data would be fetch from 81 pages (times
+100 etries, so 8100 rows) the rendering would take forever.
+
+For such cases we need a popup window at the end of the download stage, which tells us how many rows would be rendered
+and offer two new buttons:
+
+- one button for just saving the table data directly to the filesystem with the "saveTableDataToDisk" function
+- the other button, to actually render the table as usually
+
+** Performance Upgrades
+
+Performance Upgrade (Highly Recommended)
+
+If you still want to allow rendering 8000+ rows fast, I strongly recommend:
+
+Use DocumentFragment
+
+Disable live highlighting during initial render
+
+Add virtual scrolling (advanced mode)
+
+If you'd like, I can give you:
+
+🔥 A high-performance batch renderer
+
+⚡ Chunked async rendering (non-blocking UI)
+
+📊 Progressive render with progress indicator
 
 
 * "Esc" handling in filter field

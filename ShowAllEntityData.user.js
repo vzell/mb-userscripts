@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      4.4.2+2026-02-13
+// @version      4.4.3+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '4.4.3+2026-02-13', description: 'Fix bug when savin data for mutli table pages like Artist-Releasegroups.'},
     {version: '4.4.2+2026-02-13', description: 'Add popup dialog to enter prefilter string instead of showing it on the main page all the time.'},
     {version: '4.4.1+2026-02-12', description: 'Add highlightning of pre-filter expression.'},
     {version: '4.4.0+2026-02-12', description: 'Add "pre filter when loading" functionality.'},
@@ -353,7 +354,7 @@ let changelog = [
         {
             type: 'search',
             match: (path) => path.includes('/search'),
-            buttons: [ { label: 'Show all Search results' } ],
+            buttons: [ { label: '🧮 Show all Search results' } ],
             tableMode: 'single',
             features: {
                 extractMainColumn: 'Name', // Specific header
@@ -1753,7 +1754,7 @@ let changelog = [
                 });
 
                 // Always push to filteredArray, even if matches.length is 0, to maintain the table count and restoration capability
-                filteredArray.push({ category: group.category, rows: matches });
+                filteredArray.push({ category: group.category || group.key || 'Unknown', rows: matches });
                 totalFiltered += matches.length;
             });
 
@@ -2941,16 +2942,18 @@ let changelog = [
         let lastInsertedElement = targetHeader;
 
         dataArray.forEach((group, index) => {
-            Lib.info('render', `Processing group: "${group.category}" with ${group.rows.length} rows.`);
+            // Defensive check: ensure category exists
+            const categoryName = group.category || group.key || 'Unknown';
+            Lib.info('render', `Processing group: "${categoryName}" with ${group.rows.length} rows.`);
             let table, h3, tbody;
             if (query && existingTables[index]) {
-                Lib.info('render', `Reusing existing table at index ${index} for group "${group.category}".`);
+                Lib.info('render', `Reusing existing table at index ${index} for group "${categoryName}".`);
                 table = existingTables[index];
                 h3 = table.previousElementSibling;
                 tbody = table.querySelector('tbody');
                 tbody.innerHTML = '';
             } else {
-                Lib.info('render', `Creating new table and H3 for group "${group.category}".`);
+                Lib.info('render', `Creating new table and H3 for group "${categoryName}".`);
                 h3 = document.createElement('h3');
                 h3.className = 'mb-toggle-h3';
                 h3.title = 'Collapse/Uncollapse table section';
@@ -2972,13 +2975,15 @@ let changelog = [
                 table.style.display = '';
                 h3.style.display = '';
 
-                const catLower = group.category.toLowerCase();
+                // Defensive check: ensure category exists, fallback to "Unknown"
+                const categoryName = group.category || group.key || 'Unknown';
+                const catLower = categoryName.toLowerCase();
                 const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < Lib.settings.sa_auto_expand;
                 table.style.display = shouldStayOpen ? '' : 'none';
-                Lib.info('render', `Group "${group.category}" auto-expand status: ${shouldStayOpen}`);
+                Lib.info('render', `Group "${categoryName}" auto-expand status: ${shouldStayOpen}`);
 
                 // Ensure the H3 text reflects the unique name established during fetching and Capitalize the first or second character
-                let h3DisplayName = group.category;
+                let h3DisplayName = categoryName;
                 if (h3DisplayName.length > 0) {
                     // Check if the first character is the typographic opening double quote “
                     if (h3DisplayName.startsWith('“') && h3DisplayName.length > 1) {
@@ -3027,15 +3032,15 @@ let changelog = [
 
                 h3.addEventListener('click', () => {
                     const isHidden = table.style.display === 'none';
-                    Lib.info('render', `Toggling table for "${group.category}". New state: ${isHidden ? 'visible' : 'hidden'}`);
+                    Lib.info('render', `Toggling table for "${categoryName}". New state: ${isHidden ? 'visible' : 'hidden'}`);
                     table.style.display = isHidden ? '' : 'none';
                     h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
                 });
-                makeTableSortableUnified(table, `${group.category}_${index}`);
+                makeTableSortableUnified(table, `${categoryName}_${index}`);
             } else if (h3 && h3.classList.contains('mb-toggle-h3')) {
                 // Update the count in the header during filtering
                 const countStat = h3.querySelector('.mb-row-count-stat');
-                const totalInGroup = groupedRows.find(g => g.category === group.category)?.rows.length || 0;
+                const totalInGroup = groupedRows.find(g => (g.category || g.key || 'Unknown') === categoryName)?.rows.length || 0;
                 if (countStat) {
                     countStat.textContent = (group.rows.length === totalInGroup) ? `(${totalInGroup})` : `(${group.rows.length} of ${totalInGroup})`;
                 }
@@ -3416,6 +3421,7 @@ let changelog = [
                 // Multi-table mode: serialize grouped data
                 dataToSave.groups = groupedRows.map(group => ({
                     key: group.key,
+                    category: group.category,
                     rows: group.rows.map(row => {
                         return Array.from(row.cells).map(cell => ({
                             html: cell.innerHTML,
