@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      6.3.0+2026-02-13
+// @version      6.4.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '6.4.0+2026-02-13', description: 'UI: Added sticky table headers - column headers and filter row remain visible while scrolling through large tables. Improves usability when working with thousands of rows.'},
     {version: '6.3.0+2026-02-13', description: 'Performance: Optimized table sorting with async chunked merge sort algorithm for large tables (>5000 rows). Added progress bar for sorts over 10k rows. Improved sort timing display with color-coded indicators. Better numeric column detection.'},
     {version: '6.2.0+2026-02-13', description: 'Performance: Added debounced filtering with configurable delay (default 300ms) to prevent UI freezing with large tables. Added filter timing display in status line showing execution time with color-coded performance indicators.'},
     {version: '6.1.0+2026-02-13', description: 'Fixed Regexp filtering with column filter when decorating symbols like "▶" are in front.'},
@@ -253,6 +254,72 @@ let changelog = [
             const result = valA.localeCompare(valB, undefined, {numeric: true, sensitivity: 'base'});
             return isAscending ? result : -result;
         };
+    }
+
+    /**
+     * Apply sticky headers to tables so column headers remain visible while scrolling
+     * Includes proper styling for the header row and filter row
+     */
+    function applyStickyHeaders() {
+        // Check if styles already added
+        if (document.getElementById('mb-sticky-headers-style')) {
+            Lib.debug('ui', 'Sticky headers styles already applied');
+            return;
+        }
+
+        const style = document.createElement('style');
+        style.id = 'mb-sticky-headers-style';
+        style.textContent = `
+            /* Sticky headers for main table */
+            table.tbl {
+                position: relative;
+            }
+
+            table.tbl thead {
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                background: white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+            table.tbl thead th {
+                background: white;
+                border-bottom: 2px solid #ddd;
+                /* Ensure proper layering for sort icons */
+                position: relative;
+            }
+
+            /* Ensure filter row also sticks, positioned below the header row */
+            table.tbl thead tr.mb-col-filter-row {
+                position: sticky;
+                /* Adjust this value based on your header row height */
+                /* Default MusicBrainz header is about 30px */
+                top: 30px;
+                background: #f5f5f5;
+                z-index: 99;
+            }
+
+            table.tbl thead tr.mb-col-filter-row th {
+                background: #f5f5f5;
+                border-top: 1px solid #ddd;
+            }
+
+            /* Ensure proper display during scrolling */
+            table.tbl thead th,
+            table.tbl thead tr.mb-col-filter-row th {
+                /* Prevent visual glitches during scroll */
+                will-change: transform;
+            }
+
+            /* Optional: Add a subtle shadow to filter row as well */
+            table.tbl thead tr.mb-col-filter-row {
+                box-shadow: 0 2px 3px rgba(0,0,0,0.05);
+            }
+        `;
+
+        document.head.appendChild(style);
+        Lib.info('ui', 'Sticky headers enabled - column headers will remain visible while scrolling');
     }
 
     const SCRIPT_ID = "vzell-mb-show-all-entities";
@@ -3218,6 +3285,9 @@ let changelog = [
             // Make all H2s collapsible after rendering
             makeH2sCollapsible();
 
+            // Apply sticky headers for better scrolling experience
+            applyStickyHeaders();
+
             isLoaded = true;
             // Initialize sidebar collapse only now if enabled
             if (Lib.settings.sa_collabsable_sidebar) {
@@ -4260,6 +4330,7 @@ let changelog = [
 
                 finalCleanup();
                 makeH2sCollapsible();
+                applyStickyHeaders();
                 updateH2Count(loadedRowCount, loadedRowCount);
 
                 // Show main filter container (if hidden)
