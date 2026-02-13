@@ -31907,7 +31907,6 @@ and offer two new buttons:
 Is this feasible, or are there other considerations regarding the functionality when reloading directly from the
 filesystem in json form
 
-
 ** DONE syntax errors
 
 I had to change the code you generated
@@ -35527,4 +35526,9 @@ or a country flag in front of the country name
 #+end_example
 
 So please fix also the column filtering for regexps to only take real text into account
+
+
+* Sticky header
+
+go with "Sticky Headers - See columns while scrolling", but include the filter row with the other stiky headers
 
