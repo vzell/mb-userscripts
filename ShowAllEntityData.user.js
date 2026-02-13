@@ -1729,12 +1729,18 @@ let changelog = [
                         .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
 
                     // Global match
-                    const text = getCleanVisibleText(r);
                     let globalHit = !globalQuery;
                     if (!globalHit) {
                         if (isRegExp && globalRegex) {
-                            globalHit = globalRegex.test(text);
+                            // For regex patterns, test against each cell individually
+                            // This allows anchored patterns like ^Thunder Road to work correctly
+                            globalHit = Array.from(r.cells).some(cell => {
+                                const cellText = getCleanVisibleText(cell);
+                                return globalRegex.test(cellText);
+                            });
                         } else {
+                            // For non-regex, test against concatenated row text
+                            const text = getCleanVisibleText(r);
                             globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
                         }
                     }
@@ -1813,12 +1819,18 @@ let changelog = [
                 row.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
                     .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
 
-                const text = getCleanVisibleText(row);
                 let globalHit = !globalQuery;
                 if (!globalHit) {
                     if (isRegExp && globalRegex) {
-                        globalHit = globalRegex.test(text);
+                        // For regex patterns, test against each cell individually
+                        // This allows anchored patterns like ^Thunder Road to work correctly
+                        globalHit = Array.from(row.cells).some(cell => {
+                            const cellText = getCleanVisibleText(cell);
+                            return globalRegex.test(cellText);
+                        });
                     } else {
+                        // For non-regex, test against concatenated row text
+                        const text = getCleanVisibleText(row);
                         globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
                     }
                 }
@@ -3759,10 +3771,15 @@ let changelog = [
                 // Helper to check if a row matches the pre-load filter
                 const rowMatchesFilter = (tr) => {
                     if (!filterQueryRaw) return true;
-                    const text = getCleanVisibleText(tr);
                     if (isRegExp && globalRegex) {
-                        return globalRegex.test(text);
+                        // For regex patterns, test against each cell individually
+                        return Array.from(tr.cells).some(cell => {
+                            const cellText = getCleanVisibleText(cell);
+                            return globalRegex.test(cellText);
+                        });
                     } else {
+                        // For non-regex, test against concatenated row text
+                        const text = getCleanVisibleText(tr);
                         return isCaseSensitive ? text.includes(filterQuery) : text.toLowerCase().includes(filterQuery);
                     }
                 };
