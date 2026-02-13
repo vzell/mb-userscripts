@@ -48,7 +48,7 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '7.1.0+2026-02-13', description: 'Modernize the filter expression dialog when loading data from the filesystem.'},
+    {version: '7.1.0+2026-02-14', description: 'Modernize the filter expression dialog when loading data from the filesystem.'},
     {version: '7.0.0+2026-02-13', description: 'Feature: Added Auto-Resize Columns - automatically calculates optimal column widths to prevent text wrapping. Click "↔️ Auto-Resize" to fit each column to its content. Enables horizontal scrolling in content area while keeping sidebar fixed. Perfect for wide tables with many columns.'},
     {version: '6.9.0+2026-02-13', description: 'Feature: Added Table Density Control - choose between Compact (fit more rows), Normal (balanced), or Comfortable (easier reading) spacing options using "📏 Density" button. Adjusts padding, font size, and line height for optimal viewing based on personal preference.'},
     {version: '6.8.0+2026-02-13', description: 'Feature: Added Quick Stats Panel - displays table statistics including row counts, column counts, filter status, memory usage, and more. Click "📊 Stats" button or any visible/hidden item counts. Perfect for understanding data at a glance.'},
