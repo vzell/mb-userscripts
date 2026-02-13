@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      6.5.0+2026-02-13
+// @version      6.6.0+2026-02-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '6.6.0+2026-02-13', description: 'Feature: Added CSV export - export visible rows and columns to CSV file using the "📥 Export CSV" button. Automatically generates filename with timestamp and page type. Perfect for using data in Excel, Google Sheets, or other applications.'},
     {version: '6.5.0+2026-02-13', description: 'UI: Added column visibility toggle - users can now show/hide individual columns using the "👁️ Columns" button. Includes Select All/Deselect All options for quick control. Perfect for customizing view and focusing on relevant data.'},
     {version: '6.4.0+2026-02-13', description: 'UI: Added sticky table headers - column headers and filter row remain visible while scrolling through large tables. Improves usability when working with thousands of rows.'},
     {version: '6.3.0+2026-02-13', description: 'Performance: Optimized table sorting with async chunked merge sort algorithm for large tables (>5000 rows). Added progress bar for sorts over 10k rows. Improved sort timing display with color-coded indicators. Better numeric column detection.'},
@@ -505,6 +506,137 @@ let changelog = [
 
         // Append menu to body
         document.body.appendChild(menu);
+    }
+
+    /**
+     * Export table data to CSV format
+     * Exports only visible rows and columns
+     * Generates filename with timestamp and page type
+     */
+    function exportTableToCSV() {
+        const table = document.querySelector('table.tbl');
+        if (!table) {
+            alert('No table found to export');
+            Lib.error('export', 'No table found for CSV export');
+            return;
+        }
+
+        Lib.info('export', 'Starting CSV export...');
+
+        const rows = [];
+        let totalCells = 0;
+
+        // Get headers from first row
+        const headerRow = table.querySelector('thead tr:first-child');
+        if (headerRow) {
+            const headers = [];
+            Array.from(headerRow.cells).forEach(cell => {
+                // Skip hidden columns
+                if (cell.style.display === 'none') return;
+
+                // Clean header text (remove sort icons)
+                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
+                // Remove extra whitespace
+                headerText = headerText.replace(/\s+/g, ' ');
+                headers.push(headerText);
+            });
+            rows.push(headers);
+            totalCells += headers.length;
+            Lib.debug('export', `Exported ${headers.length} headers: ${headers.join(', ')}`);
+        }
+
+        // Get data rows (only visible ones)
+        const dataRows = table.querySelectorAll('tbody tr');
+        let rowsExported = 0;
+        let rowsSkipped = 0;
+
+        dataRows.forEach(row => {
+            // Skip hidden rows (filtered out)
+            if (row.style.display === 'none') {
+                rowsSkipped++;
+                return;
+            }
+
+            const cells = [];
+            Array.from(row.cells).forEach((cell, index) => {
+                // Skip hidden columns
+                if (cell.style.display === 'none') return;
+
+                // Get text content and clean it up
+                let text = cell.textContent.trim();
+
+                // Remove extra whitespace
+                text = text.replace(/\s+/g, ' ');
+
+                // Escape quotes (CSV standard: " becomes "")
+                text = text.replace(/"/g, '""');
+
+                // Wrap in quotes if contains comma, newline, or quote
+                if (text.includes(',') || text.includes('\n') || text.includes('"')) {
+                    text = `"${text}"`;
+                }
+
+                cells.push(text);
+            });
+
+            if (cells.length > 0) {
+                rows.push(cells);
+                totalCells += cells.length;
+                rowsExported++;
+            }
+        });
+
+        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
+
+        // Create CSV string
+        const csv = rows.map(row => row.join(',')).join('\n');
+
+        // Create Blob and download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName = pageType || 'table';
+        const filename = `musicbrainz-${pageName}-${timestamp}.csv`;
+        link.download = filename;
+
+        // Trigger download
+        link.click();
+
+        // Cleanup
+        URL.revokeObjectURL(url);
+
+        // Update status
+        const statusDisplay = document.getElementById('mb-status-display');
+        if (statusDisplay) {
+            statusDisplay.textContent = `✓ Exported ${rowsExported} rows to ${filename}`;
+            statusDisplay.style.color = 'green';
+        }
+
+        Lib.info('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
+    }
+
+    /**
+     * Add export to CSV button to the controls
+     */
+    function addExportButton() {
+        const exportBtn = document.createElement('button');
+        exportBtn.textContent = '📥 Export CSV';
+        exportBtn.title = 'Export visible rows and columns to CSV file';
+        exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        exportBtn.type = 'button';
+        exportBtn.onclick = exportTableToCSV;
+
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (controlsContainer) {
+            controlsContainer.appendChild(exportBtn);
+            Lib.info('ui', 'Export CSV button added to controls');
+        } else {
+            Lib.warn('ui', 'Controls container not found, cannot add export button');
+        }
     }
 
     const SCRIPT_ID = "vzell-mb-show-all-entities";
@@ -3481,6 +3613,9 @@ let changelog = [
                 }
             });
 
+            // Add export to CSV button
+            addExportButton();
+
             isLoaded = true;
             // Initialize sidebar collapse only now if enabled
             if (Lib.settings.sa_collabsable_sidebar) {
@@ -4530,6 +4665,9 @@ let changelog = [
                 if (mainTable) {
                     addColumnVisibilityToggle(mainTable);
                 }
+
+                // Add export button
+                addExportButton();
 
                 updateH2Count(loadedRowCount, loadedRowCount);
 

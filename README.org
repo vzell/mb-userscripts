@@ -35535,3 +35535,6 @@ go with "Sticky Headers - See columns while scrolling", but include the filter r
 
 ** multi table
 
+
+* CSV
+** remove "▶" and others before exporting
