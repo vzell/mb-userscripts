@@ -35266,8 +35266,12 @@ progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFi
 progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`, running since ${elapsed_time};
 #+end_example
 
+** Im Batch Rendering dialog: Elapsed time angeben
+** Loaded <n> rows in <elapsed time>s
 
 * mismatch when using Regexps
+
+In the uploaded userscript
 
 When using a Regexp like "^Thunder Road" (so a column value must start with "Thunder Road") this works perfectly when
 using the regepx as a filter string for pre-loading from disk, but fails to find any row when using it in the global
@@ -35276,3 +35280,112 @@ filter field.
 For example on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings when preloading it finds
 rows which have "Thunder Road" at the beginning of the "Name" or "Release Group", "MB-Name" columns but fails on the
 latter, 0 rows are shown
+
+This the code for the global filter
+
+#+begin_example
+    function runFilter() {
+        const isCaseSensitive = caseCheckbox.checked;
+        const isRegExp = regexpCheckbox.checked;
+        const globalQueryRaw = filterInput.value;
+        const globalQuery = (isCaseSensitive || isRegExp) ? globalQueryRaw : globalQueryRaw.toLowerCase();
+
+        let globalRegex = null;
+        if (globalQueryRaw && isRegExp) {
+            try {
+                globalRegex = new RegExp(globalQueryRaw, isCaseSensitive ? '' : 'i');
+                filterInput.style.border = '2px solid #ccc'; // Reset to standard if valid
+            } catch (e) {
+                filterInput.style.border = '2px solid red'; // Visual cue for invalid Regex
+            }
+        } else {
+            filterInput.style.border = '2px solid #ccc';
+        }
+#+end_example
+
+and this for prefilter
+
+#+begin_example
+    async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
+        if (!file) {
+            Lib.warn('cache', 'No file selected.');
+            return;
+        }
+
+        const filterQuery = (isCaseSensitive || isRegExp) ? filterQueryRaw : filterQueryRaw.toLowerCase();
+
+        // Clear previous status message
+        preFilterMsg.textContent = '';
+
+        let globalRegex = null;
+        if (filterQueryRaw && isRegExp) {
+            try {
+                globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
+            } catch (e) {
+                alert('Invalid Regular Expression in load filter field. Load aborted.');
+                // Reset file input so change event fires again if they pick same file
+                fileInput.value = '';
+                return;
+            }
+        }
+#+end_example
+
+* DONE error
+
+#+begin_example
+        // Pass the entire config object
+	// Solution: Call the async function and handle the promise without using the 'await' keyword
+	eb.onclick = (e) => {
+	    startFetchingProcess(e, conf, activeDefinition).catch(err => {
+		console.error("Error in fetching process:", err);
+	    });
+	};
+        //eb.onclick = async (e) => await startFetchingProcess(e, conf, activeDefinition);
+
+#+end_example
+
+* DONE text and unicode misalignment
+
+Why is the "🧮 Show all Recordings for Artist" text not centered between top and bottom of the button 
+
+#+begin_example
+<button
+  type="button"
+  style="
+    font-size: 0.8em;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition: transform 0.1s,
+    box-shadow 0.1s;
+    height: 24px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    background-color: rgb(255, 204, 204);
+    color: black;"
+    disabled="" class="mb-show-all-btn-loading">🧮 Show all Recordings for Artist</button>
+#+end_example
+
+but instead shifted to the lower end. without the unicode symbol the text is centered.
+
+#+begin_example
+<button
+  type="button"
+  style="
+    font-size: 0.8em;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition: transform 0.1s,
+    box-shadow 0.1s;
+    height: 24px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    background-color: rgb(255, 204, 204);
+    color: black;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  "
+    disabled="" class="mb-show-all-btn-loading">🧮 Show all Recordings for Artist</button>
+#+end_example
+
+
