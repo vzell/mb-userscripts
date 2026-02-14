@@ -36122,17 +36122,46 @@ Search filter for settings
 
 ** TODO Optional Next Level Enhancements
 
-Please also add:
+In the uploaded userscript library 
+please implement (in the "showModal: function ()")
 
-Actually just implement onyl these pof the previous list:
-
-Resizable corner
-Sticky SAVE button shadow
+ - Resizable corner
+ - Sticky SAVE button shadow
+ - overall light grey backgound color
 
 
 Dark mode
 Restore modal position
 Animated collapse transitions
+
+**
+
+#+begin_example
+		    resize: 'both',        // ✅ resizable corner
+                    overflow: 'hidden'     // required for resize to work properly
+#+end_example
+
+
+** improve
+
+Add all of these:
+
+- Add resize constraints (min/max)
+- Store resized size in GM storage
+- Improve drag + resize interaction
+- Replace native resize with custom modern handle
+
+and show me the resulting complete new "showModal: function ()")
+
+Please DO NOT remove the current
+
+#+begin_example
+/* ================= COLLAPSIBLE SECTIONS ================= */
+/* ================= SEARCH ================= */
+/* ================= COLOR PICKER (iro.js preserved!) ================= */
+#+end_example
+
+functionality
 
 * put the "sorted <time> in some other place to not produce eye flicker
 
