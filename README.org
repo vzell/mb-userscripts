@@ -35574,7 +35574,7 @@ horizontal scrollbar if needed (or if not possible, code it). Take into account 
 I uploaded a new version with all the changes so far. Now please add additionally a toggle functionality to the
 autoresize columns button, so when clicked the second time, the original column setup should be restored
 
-** make autoresize work with "Column Visibility Toggle"
+** special icons
 
 Take as an example the following URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
@@ -35584,6 +35584,14 @@ abbreviated country name. Please fix, but take into account probably other colum
 are only discovered later)
 
 ** add individual column width adjustment with the mouse, like in all other modern UIs which have resizable table columns
+
+Add the following feature:
+
+Add individual column width adjustment with the mouse, like in all other modern UIs which have resizable table columns.
+The current toggle button should also listen to such changes and change its name to "Restore Width" and also when
+pressing the button actually restore the manual column width adjustments.
+
+** make autoresize work with "Column Visibility Toggle"
 
 * add descriptions to every function call
 

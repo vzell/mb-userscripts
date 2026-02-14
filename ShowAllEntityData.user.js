@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      7.1.1+2026-02-14
+// @version      7.2.0+2026-02-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '7.2.0+2026-02-14', description: 'Feature: Added manual column resizing - drag column edges with mouse to adjust widths (like Excel/Sheets). Resize handles appear after auto-resize or when manually adjusting. Button changes to "Restore Width" during manual resizing. Restore button restores both auto-resized and manually adjusted columns to original state. Visual feedback with hover highlights and green active indicator.'},
     {version: '7.1.1+2026-02-14', description: 'Fix: Auto-Resize Columns now accurately measures cells with images, icons, and links. Previously used text-only measurement which caused columns with flag icons (like Country/Date) to be artificially wider. Now clones actual cell content preserving HTML structure for precise width calculation.'},
     {version: '7.1.0+2026-02-14', description: 'Enhancement: Auto-Resize Columns now has toggle functionality - click once to resize, click again to restore original widths. Button changes to "↔️ Restore Width" when active with green highlight. Original table state is preserved and fully restored including colgroup, table layout, and scroll settings.'},
     {version: '7.0.0+2026-02-13', description: 'Feature: Added Auto-Resize Columns - automatically calculates optimal column widths to prevent text wrapping. Click "↔️ Auto-Resize" to fit each column to its content. Enables horizontal scrolling in content area while keeping sidebar fixed. Perfect for wide tables with many columns.'},
@@ -1252,7 +1253,170 @@ Note: Shortcuts work when not typing in input fields
 
     // Track auto-resize state
     let isAutoResized = false;
+    let isManuallyResized = false;
     const originalTableStates = new Map(); // Store original states per table
+
+    /**
+     * Make table columns resizable with mouse drag
+     * Adds resize handles to column headers
+     * @param {HTMLTableElement} table - The table to make resizable
+     */
+    function makeColumnsResizable(table) {
+        const headers = table.querySelectorAll('thead tr:first-child th');
+
+        headers.forEach((th, index) => {
+            // Skip if already has resizer
+            if (th.querySelector('.column-resizer')) return;
+
+            // Create resize handle
+            const resizer = document.createElement('div');
+            resizer.className = 'column-resizer';
+            resizer.style.cssText = `
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 8px;
+                height: 100%;
+                cursor: col-resize;
+                user-select: none;
+                z-index: 1;
+                background: transparent;
+            `;
+
+            // Visual indicator on hover
+            resizer.addEventListener('mouseenter', () => {
+                resizer.style.background = 'rgba(0, 0, 0, 0.1)';
+            });
+            resizer.addEventListener('mouseleave', () => {
+                if (!resizer.classList.contains('resizing')) {
+                    resizer.style.background = 'transparent';
+                }
+            });
+
+            let startX, startWidth, colIndex;
+
+            resizer.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                startX = e.pageX;
+                startWidth = th.offsetWidth;
+                colIndex = index;
+
+                resizer.classList.add('resizing');
+                resizer.style.background = 'rgba(76, 175, 80, 0.3)';
+
+                // Store original state if not already stored
+                if (!isManuallyResized && !isAutoResized) {
+                    tables.forEach(table => {
+                        originalTableStates.set(table, storeOriginalTableState(table));
+                    });
+                }
+
+                isManuallyResized = true;
+
+                // Update button to show restore option
+                updateResizeButtonState(true);
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+
+                // Prevent text selection during resize
+                document.body.style.userSelect = 'none';
+
+                Lib.debug('resize', `Started resizing column ${colIndex} from width ${startWidth}px`);
+            });
+
+            function onMouseMove(e) {
+                const delta = e.pageX - startX;
+                const newWidth = Math.max(30, startWidth + delta); // Min width 30px
+
+                // Apply width to the column
+                setColumnWidth(table, colIndex, newWidth);
+            }
+
+            function onMouseUp(e) {
+                resizer.classList.remove('resizing');
+                resizer.style.background = 'transparent';
+
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+
+                // Re-enable text selection
+                document.body.style.userSelect = '';
+
+                const finalWidth = th.offsetWidth;
+                Lib.info('resize', `Finished resizing column ${colIndex} to ${finalWidth}px`);
+
+                // Update status
+                const statusDisplay = document.getElementById('mb-status-display');
+                if (statusDisplay) {
+                    statusDisplay.textContent = `✓ Column ${colIndex + 1} resized to ${finalWidth}px`;
+                    statusDisplay.style.color = 'green';
+                }
+            }
+
+            // Make th position relative for absolute positioning of resizer
+            th.style.position = 'relative';
+            th.appendChild(resizer);
+        });
+
+        Lib.info('resize', `Made ${headers.length} columns resizable`);
+    }
+
+    /**
+     * Set width for a specific column across all rows
+     * @param {HTMLTableElement} table - The table
+     * @param {number} colIndex - Column index
+     * @param {number} width - Width in pixels
+     */
+    function setColumnWidth(table, colIndex, width) {
+        // Ensure table has fixed layout
+        table.style.tableLayout = 'fixed';
+
+        // Use colgroup for efficient column sizing
+        let colgroup = table.querySelector('colgroup');
+        if (!colgroup) {
+            colgroup = document.createElement('colgroup');
+            table.insertBefore(colgroup, table.firstChild);
+
+            // Create col elements for all columns
+            const firstRow = table.querySelector('tbody tr');
+            const colCount = firstRow ? firstRow.cells.length : 0;
+            for (let i = 0; i < colCount; i++) {
+                const col = document.createElement('col');
+                colgroup.appendChild(col);
+            }
+        }
+
+        // Set width on the specific col element
+        const cols = colgroup.querySelectorAll('col');
+        if (cols[colIndex]) {
+            cols[colIndex].style.width = `${width}px`;
+        }
+    }
+
+    /**
+     * Update resize button state to reflect manual/auto resize status
+     * @param {boolean} isResized - Whether table is currently resized
+     */
+    function updateResizeButtonState(isResized) {
+        const resizeBtn = document.querySelector('button[title*="Auto-resize"], button[title*="Restore original"]');
+
+        if (!resizeBtn) return;
+
+        if (isResized) {
+            resizeBtn.textContent = '↔️ Restore Width';
+            resizeBtn.title = 'Restore original column widths (click to toggle)';
+            resizeBtn.style.background = '#e8f5e9';
+            resizeBtn.style.borderColor = '#4CAF50';
+        } else {
+            resizeBtn.textContent = '↔️ Auto-Resize';
+            resizeBtn.title = 'Auto-resize columns to optimal width (enables horizontal scrolling)';
+            resizeBtn.style.background = '';
+            resizeBtn.style.borderColor = '';
+        }
+    }
 
     /**
      * Store original table state before resizing
@@ -1322,6 +1486,7 @@ Note: Shortcuts work when not typing in input fields
      * Auto-resize table columns to optimal width (with toggle)
      * First click: Resize columns to optimal width
      * Second click: Restore original column widths
+     * Also handles manual resizing - restores to original state
      */
     function toggleAutoResizeColumns() {
         const tables = document.querySelectorAll('table.tbl');
@@ -1334,8 +1499,8 @@ Note: Shortcuts work when not typing in input fields
 
         const resizeBtn = document.querySelector('button[title*="Auto-resize"], button[title*="Restore original"]');
 
-        // Toggle: If already resized, restore original state
-        if (isAutoResized) {
+        // Toggle: If already resized (auto or manual), restore original state
+        if (isAutoResized || isManuallyResized) {
             Lib.info('resize', 'Restoring original column widths...');
 
             tables.forEach((table, tableIndex) => {
@@ -1344,6 +1509,11 @@ Note: Shortcuts work when not typing in input fields
                     restoreOriginalTableState(table, state);
                     Lib.debug('resize', `Table ${tableIndex}: Restored original state`);
                 }
+
+                // Remove resize handles
+                table.querySelectorAll('.column-resizer').forEach(resizer => {
+                    resizer.remove();
+                });
             });
 
             // Restore scroll state
@@ -1352,14 +1522,10 @@ Note: Shortcuts work when not typing in input fields
             // Clear stored states
             originalTableStates.clear();
             isAutoResized = false;
+            isManuallyResized = false;
 
             // Update button appearance
-            if (resizeBtn) {
-                resizeBtn.textContent = '↔️ Auto-Resize';
-                resizeBtn.title = 'Auto-resize columns to optimal width (enables horizontal scrolling)';
-                resizeBtn.style.background = '';
-                resizeBtn.style.borderColor = '';
-            }
+            updateResizeButtonState(false);
 
             // Update status display
             const statusDisplay = document.getElementById('mb-status-display');
@@ -1525,6 +1691,9 @@ Note: Shortcuts work when not typing in input fields
 
             totalColumnsResized += columnCount;
 
+            // Add manual resize handles
+            makeColumnsResizable(table);
+
             Lib.info('resize', `Table ${tableIndex}: Resized ${columnCount} columns, total width: ${totalWidth}px`);
         });
 
@@ -1534,17 +1703,12 @@ Note: Shortcuts work when not typing in input fields
         isAutoResized = true;
 
         // Update button appearance to show active state
-        if (resizeBtn) {
-            resizeBtn.textContent = '↔️ Restore Width';
-            resizeBtn.title = 'Restore original column widths (click to toggle)';
-            resizeBtn.style.background = '#e8f5e9';
-            resizeBtn.style.borderColor = '#4CAF50';
-        }
+        updateResizeButtonState(true);
 
         // Update status display
         const statusDisplay = document.getElementById('mb-status-display');
         if (statusDisplay) {
-            statusDisplay.textContent = `✓ Auto-resized ${totalColumnsResized} columns in ${duration}ms (click again to restore)`;
+            statusDisplay.textContent = `✓ Auto-resized ${totalColumnsResized} columns in ${duration}ms (drag column edges to adjust)`;
             statusDisplay.style.color = 'green';
         }
 
