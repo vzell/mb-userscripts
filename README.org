@@ -28888,9 +28888,21 @@ You can get the script at https://github.com/vzell/mb-userscripts under [Accumul
 #+end_example
 
 
-* copy image links for releases to final rendered data if available, or grap them again on the rendered page
+* interact with other USERSCRIPTs - jesus2099
+** copy image links for releases to final rendered data if available, or grap them again on the rendered page
 
-* copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+** copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+** redirect to an artificial page after rendering and call all plugins again, maybe my own versions
+
+Lets say I enter a web page with tabular data, where a couple of userscripts are running and enrich the data with new
+columns. One of the scripts provide a button and when pressed does something to the data and but stays on the same page
+but most of the enriched data is gone.
+
+How can I achieve that after the script which provides the button has run, the same registered other userscripts run
+automatically again. What pattern could be used ?
+
+I actually would want this for the uploaded userscript to happen, as it has the button logic, and I would refire after rendering the final page, the other scripts which already run, when the button was rendered
 
 
 * make the whole sidebar vanish to the right side of the browser window
@@ -29012,20 +29024,9 @@ Also call the initSidebarCollapse(); function only on the final rendered page, a
 
 
 
-* redirect to an artificial page after rendering and call all plugins again, maybe my own versions
-
-Lets say I enter a web page with tabular data, where a couple of userscripts are running and enrich the data with new
-columns. One of the scripts provide a button and when pressed does something to the data and but stays on the same page
-but most of the enriched data is gone.
-
-How can I achieve that after the script which provides the button has run, the same registered other userscripts run
-automatically again. What pattern could be used ?
-
-I actually would want this for the uploaded userscript to happen, as it has the button logic, and I would refire after rendering the final page, the other scripts which already run, when the button was rendered
-
-
-* remove or fix "Tagger" column
-** DONE initial
+* generalize special column handling (e.g. Tagger, jesus2099 image handling, collapsing RGs, Advance Relationship icons ==> discogs, SL, MB
+** remove or fix "Tagger" column
+*** DONE initial
 
 In the uploaded script, please handle the "Tagger" and "Rating" columns (see also the the "Relationships" and "Performance Attributes" column handling) but based on two new javascript boolean const flags in the beginning of the userscript
 (make them configurable by the user through the tampermonkey browser usermenu). Only if the flags are true remove them from the final datatable.
@@ -29045,7 +29046,7 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
    1026:            cleanupHeaders(templateHead);
 #+end_example
 
-** clicking the tagger link should not create a new page but instead just execute the action in the background
+*** clicking the tagger link should not create a new page but instead just execute the action in the background
 
 
 * DOM rendering
@@ -30465,7 +30466,7 @@ See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/kon
 
 
 * Release page enhancer / MB page enhancer
-** create a userscript which shows coverart on the mainpage in miniature form
+** DONE create a userscript which shows coverart on the mainpage in miniature form
 *** DONE initial
 
 In the uploaded userscript ShowAllConsolidated.user.js", create a userscript for URLs of type
@@ -30669,63 +30670,7 @@ I would like to use the nice friendly name
 #+end_example
 
 
-* userscript match conditions
-** 1
-
-Why is for the following URL
-
-https://musicbrainz.org/release/add
-
-the userscript with the following definition still executed:
-
-#+begin_example
-// ==UserScript==
-// @name         VZ: MusicBrainz - Release Page Enhancer
-// @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.5+2026-02-01
-// @description  Enhance Release Page with show all cover art images on the page itself, collapsible with configurable image size
-// @author       Gemini (directed by vzell)
-// @tag          AI generated
-// @homepageURL  https://github.com/vzell/mb-userscripts
-// @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
-// @match        *://*.musicbrainz.org/release/*
-// @exclude      *://*.musicbrainz.org/release/add
-// @exclude      *://*.musicbrainz.org/release/*/*
-// @grant        GM_info
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @grant        GM_registerMenuCommand
-// @grant        GM_unregisterMenuCommand
-// @license      MIT
-// ==/UserScript==
-#+end_example
-
-** release
-
-How to best formulate a userscript match condition to exactly match the following types of URLs, which have MusicBrainz MBIDs at the end
-
-#+begin_example
-https://musicbrainz.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29
-#+end_example
-
-Currently I have
-
-#+begin_example
-// @match        *://*.musicbrainz.org/release/*
-#+end_example
-
-which is much to broad and also runs on
-
-#+begin_example
-https://musicbrainz.org/release/add
-#+end_example
-
-
-* require - WORKFLOW
+* Userscripts - WORKFLOW
 ** temporary workflow
 
 If you find yourself updating the library frequently and don't want to bump the main script version every time, you can temporarily append a "cache buster" to the @require line in your local dev copy:
@@ -30862,17 +30807,78 @@ curl -v https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.
 
 curl -v https://purge.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
 
+** userscript match conditions
+*** 1
+
+Why is for the following URL
+
+https://musicbrainz.org/release/add
+
+the userscript with the following definition still executed:
+
+#+begin_example
+// ==UserScript==
+// @name         VZ: MusicBrainz - Release Page Enhancer
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      0.9.5+2026-02-01
+// @description  Enhance Release Page with show all cover art images on the page itself, collapsible with configurable image size
+// @author       Gemini (directed by vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
+// @match        *://*.musicbrainz.org/release/*
+// @exclude      *://*.musicbrainz.org/release/add
+// @exclude      *://*.musicbrainz.org/release/*/*
+// @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
+// @license      MIT
+// ==/UserScript==
+#+end_example
+
+*** release
+
+How to best formulate a userscript match condition to exactly match the following types of URLs, which have MusicBrainz MBIDs at the end
+
+#+begin_example
+https://musicbrainz.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29
+#+end_example
+
+Currently I have
+
+#+begin_example
+// @match        *://*.musicbrainz.org/release/*
+#+end_example
+
+which is much to broad and also runs on
+
+#+begin_example
+https://musicbrainz.org/release/add
+#+end_example
+
 
 * exclude standalone recordings
 
 https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72
 
-Check for "No releases found which feature this recording."
+Check for "No releases found which feature this recording." under the h2 header "Appears on releases".
+In that case don't even render the additional action buttons when entering such a pahe, but still log it to the console
 
 
-* new columns e.g. for labels
+* TODO new columns e.g. for labels
 
+In the uploaded script,
+
+generalize the extraction (or refactoring) of data from a specified column e.g. in
 https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c
+
+to include the following example data
 
 ** extract the real format
 
@@ -30891,8 +30897,7 @@ extract comment from the following columns
  - Release title
  - Label
 
-
-* case sensitive (global, column specific clickable)
+** DONE case sensitive (global, column specific clickable)
 
 
 * add option to specify filter condition for the initial display already
