@@ -36110,7 +36110,7 @@ Please add the following enhancements to the following function in the uploaded 
 
 Additionally the description column in the settings table should be much wider and not break the description text
 
-** TODO add features
+** DONE add features
 
 Yes, please also provide:
 
@@ -36122,21 +36122,17 @@ Search filter for settings
 
 ** TODO Optional Next Level Enhancements
 
-If you want we can now add:
+Please also add:
 
-Persist section collapse state
-
-Persist last search term
-
-Dark mode
+Actually just implement onyl these pof the previous list:
 
 Resizable corner
-
-Restore modal position
-
-Animated collapse transitions
-
 Sticky SAVE button shadow
+
+
+Dark mode
+Restore modal position
+Animated collapse transitions
 
 * put the "sorted <time> in some other place to not produce eye flicker
 
