@@ -35581,7 +35581,7 @@ when a column with a flag icon is resized it probaly takes into account the nont
 * make a nice pre-filter UI
 ** initial
 
-In the uploaded userscript
+n the uploaded userscript
 make the following popup window visually more appealing, with a modern design which fits the rest of the userscript UI elements
 
 #+begin_example
@@ -35606,12 +35606,7 @@ make the following popup window visually more appealing, with a modern design wh
         </div>
 #+end_example
 
-Also account for remembering the last <n> filterload expressions ()use browser persisten storage) and add a configuration directive to the
-
-#+begin_example
-    const configSchema = {
-#+end_example
-
+Also account for remembering the last <n> filterload expressions (use browser persisten storage) and add a configuration directive to the
 structure
 
 * ALL new buttons can potentially be doubled in the UI
@@ -35619,6 +35614,67 @@ structure
 
 
 * overhoule the configuration GUI
+** initial
+
+In the uploaded userscript "ShowAllEntityData.user.js" and library "VZ_MBLibrary-1.1.0.user.js"
+
+please modernize the UI (but leave the current table implementation of settings) and sync it's look and feel with the
+rest of the current userscript UI elements, for configuring the settings from the following variable (add shortcut for
+the UI in the already existing shortcut function)
+
+#+begin_example
+    // CONFIG SCHEMA
+    const configSchema = {
+#+end_example
+
+When possible externalize as much as possible to the library for reuse.
+
+Please add support for dividers in the configSchema variable which should visually also separate the different sections in the configuration dialog
+
+For example, all the "sa_<...>_color" variables
+
+#+begin_example
+        sa_pre_filter_highlight_color: {
+            label: "Global Prefilter Highlight Color",
+            type: "color_picker",
+            default: "green",
+            description: "Text color for global prefilter matches"
+        },
+        sa_pre_filter_highlight_bg: {
+            label: "Global Prefilter Highlight Background",
+            type: "color_picker",
+            default: "#FFFFE0", // light yellow
+            description: "Background color for global prefilter matches"
+        },
+        sa_global_filter_highlight_color: {
+            label: "Global Filter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for global filter matches"
+        },
+        sa_global_filter_highlight_bg: {
+            label: "Global Filter Highlight Background",
+            type: "color_picker",
+            default: "#FFD700", // dark yellow
+            description: "Background color for global filter matches"
+        },
+        sa_column_filter_highlight_color: {
+            label: "Column Filter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for column filter matches"
+        },
+        sa_column_filter_highlight_bg: {
+            label: "Column Filter Highlight Background",
+            type: "color_picker",
+            default: "#add8e6", // light blue
+            description: "Background color for column filter matches"
+        }
+#+end_example
+
+should have their own section inclusive a nice self explaining heading
+
+Of course make everything expandable, BUT dont' break existing code
 
 * put the "sorted <time> in some other place to not produce eye flicker
 
