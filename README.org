@@ -35638,6 +35638,27 @@ modal.querySelector('#sa-load-confirm').onclick = () => {
 Also handle the
 "Escape" key to let the dialog vanish when pressed.
 
+* After loading from JSON, remove artefacts
+
+** initial
+
+In the uploaded userscript
+
+after loading from JSON, without pressing any action button on first page entrance, the pagination buttons are still
+there. They should be remove, together with probably other stuff which is not yet knowm. Please create a
+cleanupAfterInitialLoad function which does exactly this (it shoul be expandable).
+
+Please also create a function description, like in the ohter function at the beginning of the script
+
+
+** action
+
+After loading from JSON, remove artefacts like
+
+- both of the pagination buttons
+- some text below some tables
+
+  
 
 
 

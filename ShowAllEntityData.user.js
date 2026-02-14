@@ -5290,6 +5290,32 @@ Note: Shortcuts work when not typing in input fields
         }
     }
 
+    /**
+     * Cleans up original page elements (like pagination) after data is loaded directly from disk.
+     * This ensures that irrelevant navigation or structural elements from the initial page load
+     * do not clutter the consolidated view when bypassing the standard fetch process.
+     * Designed to be easily expandable for future UI cleanup requirements.
+     */
+    function cleanupAfterInitialLoad() {
+        Lib.info('cleanup', 'Running cleanup after initial data load from disk...');
+
+        // 1. Remove pagination elements
+        const paginationElements = document.querySelectorAll('ul.pagination, nav.pagination, .pageselector');
+        if (paginationElements.length > 0) {
+            paginationElements.forEach(el => el.remove());
+            Lib.debug('cleanup', `Removed ${paginationElements.length} pagination elements.`);
+        }
+
+        // --- Expandable section for future cleanup tasks ---
+
+        // 2. Add future element removals here:
+        // const otherElements = document.querySelectorAll('.some-other-class');
+        // if (otherElements.length > 0) {
+        //     otherElements.forEach(el => el.remove());
+        //     Lib.debug('cleanup', `Removed ${otherElements.length} other elements.`);
+        // }
+    }
+
     function getCellByLogicalIndex(row, logicalIdx) {
         let col = 0;
         for (const cell of row.cells) {
@@ -5483,6 +5509,7 @@ Note: Shortcuts work when not typing in input fields
 
                 // Prepare the page for re-hydration
                 performClutterCleanup();
+                cleanupAfterInitialLoad();
 
                 // Restore table headers if they were saved
                 if (data.headers && data.headers.length > 0) {
