@@ -30786,13 +30786,13 @@ Push the Production script.
 *** local
 
 #+begin_example
-// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZ_MBLibrary.user.js
 #+end_example
 
 *** CDN
 
 #+begin_example
-// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZ_MBLibrary-2.1.0.user.js
 #+end_example
 
 *** raw github
@@ -36106,15 +36106,37 @@ Please add the following enhancements to the following function in the uploaded 
 - The "Escape" key should also close the "ChangeLog" window
 - The area for the actual changelog entries in the popup windowd should be scrollable to accomodate much more entries
 
+** wider description column
+
+Additionally the description column in the settings table should be much wider and not break the description text
+
 ** TODO add features
 
-If you want, I can also provide:
+Yes, please also provide:
 
 Smooth open animation
 Draggable modal
-Auto-resizing width based on content
+Auto-resizing width based on content (especially the description column in the settings table should be much wider and not break the description text)
 Collapsible config sections
 Search filter for settings
+
+** TODO Optional Next Level Enhancements
+
+If you want we can now add:
+
+Persist section collapse state
+
+Persist last search term
+
+Dark mode
+
+Resizable corner
+
+Restore modal position
+
+Animated collapse transitions
+
+Sticky SAVE button shadow
 
 * put the "sorted <time> in some other place to not produce eye flicker
 
