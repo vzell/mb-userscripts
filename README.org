@@ -35658,7 +35658,8 @@ After loading from JSON, remove artefacts like
 - both of the pagination buttons
 - some text below some tables
 
-  
+* Ctrl-clicking an h2 header row looses focus
+
 
 
 
