@@ -36120,7 +36120,7 @@ Auto-resizing width based on content (especially the description column in the s
 Collapsible config sections
 Search filter for settings
 
-** TODO Optional Next Level Enhancements
+** DONE Optional Next Level Enhancements
 
 In the uploaded userscript library 
 please implement (in the "showModal: function ()")
@@ -36134,13 +36134,12 @@ Dark mode
 Restore modal position
 Animated collapse transitions
 
-**
+** DONE ✅ resizable corner
 
 #+begin_example
 		    resize: 'both',        // ✅ resizable corner
                     overflow: 'hidden'     // required for resize to work properly
 #+end_example
-
 
 ** improve
 
@@ -36162,6 +36161,24 @@ Please DO NOT remove the current
 #+end_example
 
 functionality
+
+** more cosmetic
+
+Add also this:
+
+• Make row hover highlight
+• Add subtle table borders
+• Improve contrast hierarchy
+• Or give the whole modal a modern 2026 design polish
+
+but don't remove any existing functionality
+
+** remove
+
+Remove
+
+• Make row hover highlight
+
 
 * put the "sorted <time> in some other place to not produce eye flicker
 
