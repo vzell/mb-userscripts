@@ -35571,13 +35571,14 @@ horizontal scrollbar if needed (or if not possible, code it). Take into account 
 
 ** toggle
 
-add a toggle functionality to the autoresize columns button, so when clicked the second time, the original column setup should berestored
+I uploaded a new version with all the changes so far. Now please add additionally a toggle functionality to the
+autoresize columns button, so when clicked the second time, the original column setup should be restored
 
 ** add individual column width adjustment with the mouse, like in all other modern UIs which have resizable table columns
 
 ** make autoresize work with "Column Visibility Toggle"
 
-when a column with a flag icon is resized it probaly takes into account the nontext width like the "a hre"f or the HTML code
+when a column with a flag icon is resized it probaly takes into account the nontext width like the 'a href' URLparams
 
 * add descriptions to every function call
 
@@ -35586,7 +35587,7 @@ when a column with a flag icon is resized it probaly takes into account the nont
 * make a nice pre-filter UI
 ** initial
 
-n the uploaded userscript
+In the uploaded userscript
 make the following popup window visually more appealing, with a modern design which fits the rest of the userscript UI elements
 
 #+begin_example
@@ -35720,6 +35721,8 @@ After loading from JSON, remove artefacts like
 - some text below some tables
 
 * Ctrl-clicking an h2 header row looses focus
+
+* Replace the "Warning: This .." to the same nice dialig like after the loading of lots of pages
 
 
 

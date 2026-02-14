@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      7.0.0+2026-02-14
+// @version      7.1.0+2026-02-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,7 +48,7 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '7.1.0+2026-02-14', description: 'Modernize the filter expression dialog when loading data from the filesystem.'},
+    {version: '7.1.0+2026-02-14', description: 'Enhancement: Auto-Resize Columns now has toggle functionality - click once to resize, click again to restore original widths. Button changes to "↔️ Restore Width" when active with green highlight. Original table state is preserved and fully restored including colgroup, table layout, and scroll settings.'},
     {version: '7.0.0+2026-02-13', description: 'Feature: Added Auto-Resize Columns - automatically calculates optimal column widths to prevent text wrapping. Click "↔️ Auto-Resize" to fit each column to its content. Enables horizontal scrolling in content area while keeping sidebar fixed. Perfect for wide tables with many columns.'},
     {version: '6.9.0+2026-02-13', description: 'Feature: Added Table Density Control - choose between Compact (fit more rows), Normal (balanced), or Comfortable (easier reading) spacing options using "📏 Density" button. Adjusts padding, font size, and line height for optimal viewing based on personal preference.'},
     {version: '6.8.0+2026-02-13', description: 'Feature: Added Quick Stats Panel - displays table statistics including row counts, column counts, filter status, memory usage, and more. Click "📊 Stats" button or any visible/hidden item counts. Perfect for understanding data at a glance.'},
@@ -1249,12 +1249,80 @@ Note: Shortcuts work when not typing in input fields
         document.body.appendChild(menu);
     }
 
+    // Track auto-resize state
+    let isAutoResized = false;
+    const originalTableStates = new Map(); // Store original states per table
+
     /**
-     * Auto-resize table columns to optimal width
-     * Calculates the maximum content width for each column and applies it
-     * Enables horizontal scrolling in the content area (not sidebar)
+     * Store original table state before resizing
+     * @param {HTMLTableElement} table - The table element
+     * @returns {Object} Original state object
      */
-    function autoResizeColumns() {
+    function storeOriginalTableState(table) {
+        const state = {
+            tableWidth: table.style.width,
+            tableMinWidth: table.style.minWidth,
+            tableLayout: table.style.tableLayout,
+            colgroup: null
+        };
+
+        // Store colgroup if it exists
+        const colgroup = table.querySelector('colgroup');
+        if (colgroup) {
+            state.colgroup = colgroup.cloneNode(true);
+        }
+
+        return state;
+    }
+
+    /**
+     * Restore original table state
+     * @param {HTMLTableElement} table - The table element
+     * @param {Object} state - Original state object
+     */
+    function restoreOriginalTableState(table, state) {
+        // Restore table styles
+        table.style.width = state.tableWidth || '';
+        table.style.minWidth = state.tableMinWidth || '';
+        table.style.tableLayout = state.tableLayout || '';
+
+        // Remove current colgroup
+        const currentColgroup = table.querySelector('colgroup');
+        if (currentColgroup) {
+            currentColgroup.remove();
+        }
+
+        // Restore original colgroup if it existed
+        if (state.colgroup) {
+            table.insertBefore(state.colgroup.cloneNode(true), table.firstChild);
+        }
+    }
+
+    /**
+     * Restore original content/sidebar state
+     */
+    function restoreOriginalScrollState() {
+        const content = document.getElementById('content');
+        const sidebar = document.getElementById('sidebar');
+
+        if (content) {
+            content.style.overflowX = '';
+            content.style.overflowY = '';
+        }
+
+        if (sidebar) {
+            sidebar.style.position = '';
+            sidebar.style.top = '';
+            sidebar.style.alignSelf = '';
+        }
+    }
+
+    /**
+     * Auto-resize table columns to optimal width (with toggle)
+     * First click: Resize columns to optimal width
+     * Second click: Restore original column widths
+     */
+    function toggleAutoResizeColumns() {
         const tables = document.querySelectorAll('table.tbl');
 
         if (tables.length === 0) {
@@ -1263,10 +1331,56 @@ Note: Shortcuts work when not typing in input fields
             return;
         }
 
+        const resizeBtn = document.querySelector('button[title*="Auto-resize"], button[title*="Restore original"]');
+
+        // Toggle: If already resized, restore original state
+        if (isAutoResized) {
+            Lib.info('resize', 'Restoring original column widths...');
+
+            tables.forEach((table, tableIndex) => {
+                const state = originalTableStates.get(table);
+                if (state) {
+                    restoreOriginalTableState(table, state);
+                    Lib.debug('resize', `Table ${tableIndex}: Restored original state`);
+                }
+            });
+
+            // Restore scroll state
+            restoreOriginalScrollState();
+
+            // Clear stored states
+            originalTableStates.clear();
+            isAutoResized = false;
+
+            // Update button appearance
+            if (resizeBtn) {
+                resizeBtn.textContent = '↔️ Auto-Resize';
+                resizeBtn.title = 'Auto-resize columns to optimal width (enables horizontal scrolling)';
+                resizeBtn.style.background = '';
+                resizeBtn.style.borderColor = '';
+            }
+
+            // Update status display
+            const statusDisplay = document.getElementById('mb-status-display');
+            if (statusDisplay) {
+                statusDisplay.textContent = '✓ Restored original column widths';
+                statusDisplay.style.color = 'green';
+            }
+
+            Lib.info('resize', 'Original column widths restored');
+            return;
+        }
+
+        // First click: Auto-resize columns
         Lib.info('resize', `Auto-resizing ${tables.length} table(s)...`);
 
         const startTime = performance.now();
         let totalColumnsResized = 0;
+
+        // Store original states before modifying
+        tables.forEach(table => {
+            originalTableStates.set(table, storeOriginalTableState(table));
+        });
 
         // Enable horizontal scrolling in content area
         const content = document.getElementById('content');
@@ -1402,10 +1516,21 @@ Note: Shortcuts work when not typing in input fields
 
         const duration = (performance.now() - startTime).toFixed(0);
 
+        // Mark as resized
+        isAutoResized = true;
+
+        // Update button appearance to show active state
+        if (resizeBtn) {
+            resizeBtn.textContent = '↔️ Restore Width';
+            resizeBtn.title = 'Restore original column widths (click to toggle)';
+            resizeBtn.style.background = '#e8f5e9';
+            resizeBtn.style.borderColor = '#4CAF50';
+        }
+
         // Update status display
         const statusDisplay = document.getElementById('mb-status-display');
         if (statusDisplay) {
-            statusDisplay.textContent = `✓ Auto-resized ${totalColumnsResized} columns in ${duration}ms`;
+            statusDisplay.textContent = `✓ Auto-resized ${totalColumnsResized} columns in ${duration}ms (click again to restore)`;
             statusDisplay.style.color = 'green';
         }
 
@@ -1421,7 +1546,7 @@ Note: Shortcuts work when not typing in input fields
         resizeBtn.title = 'Auto-resize columns to optimal width (enables horizontal scrolling)';
         resizeBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
         resizeBtn.type = 'button';
-        resizeBtn.onclick = autoResizeColumns;
+        resizeBtn.onclick = toggleAutoResizeColumns;
 
         const controlsContainer = document.getElementById('mb-show-all-controls-container');
         if (controlsContainer) {
