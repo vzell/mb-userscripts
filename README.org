@@ -35574,11 +35574,16 @@ horizontal scrollbar if needed (or if not possible, code it). Take into account 
 I uploaded a new version with all the changes so far. Now please add additionally a toggle functionality to the
 autoresize columns button, so when clicked the second time, the original column setup should be restored
 
-** add individual column width adjustment with the mouse, like in all other modern UIs which have resizable table columns
-
 ** make autoresize work with "Column Visibility Toggle"
 
-when a column with a flag icon is resized it probaly takes into account the nontext width like the 'a href' URLparams
+Take as an example the following URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+When the column named "Country/Date", wich has a flag icon in front of the abbreviated country naem, is resized it
+occupies artificially more space then needed. Probably takes into account the nontext width like the 'a href' URL in the
+abbreviated country name. Please fix, but take into account probably other columns which exhibit the same problem (and
+are only discovered later)
+
+** add individual column width adjustment with the mouse, like in all other modern UIs which have resizable table columns
 
 * add descriptions to every function call
 

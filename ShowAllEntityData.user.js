@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      7.1.0+2026-02-14
+// @version      7.1.1+2026-02-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '7.1.1+2026-02-14', description: 'Fix: Auto-Resize Columns now accurately measures cells with images, icons, and links. Previously used text-only measurement which caused columns with flag icons (like Country/Date) to be artificially wider. Now clones actual cell content preserving HTML structure for precise width calculation.'},
     {version: '7.1.0+2026-02-14', description: 'Enhancement: Auto-Resize Columns now has toggle functionality - click once to resize, click again to restore original widths. Button changes to "↔️ Restore Width" when active with green highlight. Original table state is preserved and fully restored including colgroup, table layout, and scroll settings.'},
     {version: '7.0.0+2026-02-13', description: 'Feature: Added Auto-Resize Columns - automatically calculates optimal column widths to prevent text wrapping. Click "↔️ Auto-Resize" to fit each column to its content. Enables horizontal scrolling in content area while keeping sidebar fixed. Perfect for wide tables with many columns.'},
     {version: '6.9.0+2026-02-13', description: 'Feature: Added Table Density Control - choose between Compact (fit more rows), Normal (balanced), or Comfortable (easier reading) spacing options using "📏 Density" button. Adjusts padding, font size, and line height for optimal viewing based on personal preference.'},
@@ -1433,19 +1434,28 @@ Note: Shortcuts work when not typing in input fields
             headers.forEach((th, colIndex) => {
                 if (colIndex >= columnCount) return;
 
-                // Get text content (remove sort icons)
-                const text = th.textContent.replace(/[⇅▲▼]/g, '').trim();
+                // Clone the entire content to preserve HTML structure (images, links, etc.)
+                const contentClone = th.cloneNode(true);
+
+                // Remove sort icons/buttons from the clone
+                contentClone.querySelectorAll('.sort-icon-btn, .sort-icon').forEach(el => el.remove());
 
                 // Copy styles for accurate measurement
                 const styles = window.getComputedStyle(th);
                 measureDiv.style.fontSize = styles.fontSize;
                 measureDiv.style.fontWeight = styles.fontWeight;
                 measureDiv.style.padding = styles.padding;
+                measureDiv.style.fontFamily = styles.fontFamily;
 
-                measureDiv.textContent = text;
+                // Clear previous content and add the clone
+                measureDiv.innerHTML = '';
+                measureDiv.appendChild(contentClone);
+
                 const width = measureDiv.offsetWidth;
 
                 columnWidths[colIndex] = Math.max(columnWidths[colIndex], width);
+
+                Lib.debug('resize', `Header ${colIndex}: "${th.textContent.trim()}" = ${width}px`);
             });
 
             // Measure data cell widths (sample rows for performance)
@@ -1462,16 +1472,20 @@ Note: Shortcuts work when not typing in input fields
                 Array.from(row.cells).forEach((cell, colIndex) => {
                     if (colIndex >= columnCount) return;
 
-                    // Get text content
-                    const text = cell.textContent.trim();
+                    // Clone the entire content to preserve HTML structure (images, links, etc.)
+                    const contentClone = cell.cloneNode(true);
 
                     // Copy styles for accurate measurement
                     const styles = window.getComputedStyle(cell);
                     measureDiv.style.fontSize = styles.fontSize;
                     measureDiv.style.fontWeight = styles.fontWeight;
                     measureDiv.style.padding = styles.padding;
+                    measureDiv.style.fontFamily = styles.fontFamily;
 
-                    measureDiv.textContent = text;
+                    // Clear previous content and add the clone
+                    measureDiv.innerHTML = '';
+                    measureDiv.appendChild(contentClone);
+
                     const width = measureDiv.offsetWidth;
 
                     columnWidths[colIndex] = Math.max(columnWidths[colIndex], width);
