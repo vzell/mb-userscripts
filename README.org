@@ -35561,7 +35561,7 @@ Ctrl-f
 "Escape" key should make the dialog vanish, or clicking outsoe somewhere
 
 * autoresize columns
-** initial
+** DONE initial
 
 While we are at it
 please also add an "autoresize columns" button, so when clicked, the maximum space per column is calculated (to not
@@ -35569,12 +35569,12 @@ break into the next line) and then rerender with the optimal column width per co
 horizontal scrollbar if needed (or if not possible, code it). Take into account that there is a sidebar identified by
 '<div id="sidebar">', so the eventual scrolling should NOT scroll the sidebar, insted it should take place in the '<div id="content"' container.
 
-** toggle
+** DONE toggle
 
 I uploaded a new version with all the changes so far. Now please add additionally a toggle functionality to the
 autoresize columns button, so when clicked the second time, the original column setup should be restored
 
-** special icons
+** DONE special icons
 
 Take as an example the following URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
@@ -35592,6 +35592,120 @@ The current toggle button should also listen to such changes and change its name
 pressing the button actually restore the manual column width adjustments.
 
 ** make autoresize work with "Column Visibility Toggle"
+
+** fixes and new features
+
+The following additional features need to be implemented:
+
+1.) The individual column width adjustment with the mouse should already be present after the first display of the
+rendered page (after clicking the action button "Show all..."). Right now it only works after pressing the "Auto-Resize" button.
+
+2.) In the "Column Visibility" feature:
+
+- currently the pull down list where you can specify which columns should be visible, will vanish if you repress the "👁️ Columns" button.
+  Please implement that is also vanished when pressing the "Escape" key.
+- The button text should be changed to "👁️ Visible Columns"
+
+3.) In the "Export to CSV" feature, rename the button to "Export 💾" and add, when clicking the button, a pull down list
+with different export options:
+
+- the currently supported CSV export
+- additionally JSON export
+
+3.) Make all the newly introduced new features, currently accessible via button clicks
+
+- Column Visibility Toggle 👁️
+- Export to CSV 💾
+- Keyboard Shortcuts ⌨️
+- Quick Stats Panel 📊
+- Table Density Options 📏
+- Column Resizing ↔️
+- 💾 Save to Disk / 📂 Load from Disk
+
+opinionated for the end-user, by introducing new configuration options in the variable
+
+#+begin_example
+    // CONFIG SCHEMA
+    const configSchema = {
+#+end_example
+
+of the form 'sa_<name of new feature>'
+
+#+begin_example
+        sa_<name of new feature>: {
+            label: 'name of new feature',
+            type: 'checkbox',
+            default: true,
+            description: 'Disable <name of new feature description>.'
+        },
+#+end_example
+
+While you're at it please modernize the configuration UI (but leave the current table implementation of settings) and
+sync it's look and feel with the rest of the current userscript UI elements (also add a shortcut for the UI in the
+already existing shortcut functionality "Keyboard Shortcuts ⌨️")
+
+- When possible externalize as much as possible to the uploaded library "VZ_MBLibrary-1.1.0.user.js" for reuse.
+- Please also add support for dividers in the configSchema variable which should visually also separate the different
+  sections in the configuration dialog
+
+For example, all the "sa_<...>_color" variables
+
+#+begin_example
+        sa_pre_filter_highlight_color: {
+            label: "Global Prefilter Highlight Color",
+            type: "color_picker",
+            default: "green",
+            description: "Text color for global prefilter matches"
+        },
+        sa_pre_filter_highlight_bg: {
+            label: "Global Prefilter Highlight Background",
+            type: "color_picker",
+            default: "#FFFFE0", // light yellow
+            description: "Background color for global prefilter matches"
+        },
+        sa_global_filter_highlight_color: {
+            label: "Global Filter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for global filter matches"
+        },
+        sa_global_filter_highlight_bg: {
+            label: "Global Filter Highlight Background",
+            type: "color_picker",
+            default: "#FFD700", // dark yellow
+            description: "Background color for global filter matches"
+        },
+        sa_column_filter_highlight_color: {
+            label: "Column Filter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for column filter matches"
+        },
+        sa_column_filter_highlight_bg: {
+            label: "Column Filter Highlight Background",
+            type: "color_picker",
+            default: "#add8e6", // light blue
+            description: "Background color for column filter matches"
+        }
+#+end_example
+
+but also all the newly intorduced "sa_<name of new feature>" should have their own section inclusive a nice self
+explaining heading
+
+Of course make everything expandable, BUT dont' break existing code
+
+** fix initila resize of columns
+
+the resize handles are present now after initial load, but it's not possible to actually resize
+
+** fix one last time
+
+This actually works now after initial rendering of the page, also after pressing the "Auto-Resize" button, but NOT when
+pressing the "Restore Width" button and returning to the original state. In that case the resize handle is not visible
+anymore.
+
+** fix "Release" column changes width when actually manually dragging the "Artist" column
+
 
 * add descriptions to every function call
 
@@ -35695,6 +35809,7 @@ should have their own section inclusive a nice self explaining heading
 
 Of course make everything expandable, BUT dont' break existing code
 
+
 * put the "sorted <time> in some other place to not produce eye flicker
 
 * remove "Initial rendering" or replace with real values
@@ -35702,7 +35817,7 @@ Of course make everything expandable, BUT dont' break existing code
 * during initial rendering, the "Load from Disk" button when pressed, should tell the user, that the feature is ONLY avialable after pressing the action button first
 ** fix it
 
-When the button '<button id="sa-load-confirm' is clicked the actual data loading should be triggerd
+When the button '<button id="sa-load-confirm' is clicked the actual data loading should be triggered
 
 something like this
 
@@ -35710,11 +35825,10 @@ something like this
 modal.querySelector('#sa-load-confirm').onclick = () => {
 #+end_example
 
-Also handle the
-"Escape" key to let the dialog vanish when pressed.
+Also handle the "Escape" key to let the dialog vanish when pressed.
 
-* After loading from JSON, remove artefacts
 
+* DONE After loading from JSON, remove artefacts
 ** initial
 
 In the uploaded userscript
@@ -35725,7 +35839,6 @@ cleanupAfterInitialLoad function which does exactly this (it shoul be expandable
 
 Please also create a function description, like in the ohter function at the beginning of the script
 
-
 ** action
 
 After loading from JSON, remove artefacts like
@@ -35733,10 +35846,52 @@ After loading from JSON, remove artefacts like
 - both of the pagination buttons
 - some text below some tables
 
+
 * Ctrl-clicking an h2 header row looses focus
 
-* Replace the "Warning: This .." to the same nice dialig like after the loading of lots of pages
+* Replace the "Warning: This .." to the same nice dialog like after the loading of lots of pages
 
+* add global exclude filter
 
+* Place the 'Sorted "<column name>": <elapsed>s'
 
+Place the 'Sorted "<column name>": <elapsed>s' after the "Unhighlight all" button
 
+*     statusDisplay.id = 'mb-status-display';
+
+#+begin_example
+    const statusDisplay = document.createElement('span');
+    statusDisplay.id = 'mb-status-display';
+    statusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+#+end_example
+
+* ❌ Error during sort: ReferenceError: filteredArray is not defined
+
+#+begin_example
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Toggling table for "Official". New state: visible 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Starting renderGroupedTable with 3 categories. Query: "re-run" 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Cloning table head for template. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Filtering: Cleaning up overflow tables beyond data length (3). 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Processing group: "Official" with 119 rows. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Reusing existing table at index 0 for group "Official". 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Processing group: "Promotion" with 4 rows. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Reusing existing table at index 1 for group "Promotion". 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Processing group: "Bootleg" with 1 rows. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Reusing existing table at index 2 for group "Bootleg". 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Finished renderGroupedTable. 
+[VZ-ShowAllEntities: releasegroup-releases] ❌ Error during sort: ReferenceError: filteredArray is not defined
+    at runFilter (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:4149:17)
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:5891:29
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Starting renderGroupedTable with 3 categories. Query: "re-run" 
+#+end_example
+
+#+begin_example
+        if (statusDisplay) {
+            const rowCount = activeDefinition.tableMode === 'multi' ?
+                filteredArray.reduce((sum, g) => sum + g.rows.length, 0) :
+                document.querySelectorAll('table.tbl tbody tr').length;
+
+            statusDisplay.textContent = `✓ Filtered ${rowCount} rows in ${filterDuration}ms`;
+            statusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
+        }
+#+end_example

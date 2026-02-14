@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      7.2.0+2026-02-14
+// @version      7.3.2+2026-02-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,9 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '7.3.2+2026-02-14', description: 'Fix: Resize handles now persist after clicking "Restore Width" button. Previously handles were removed during restore and not re-added, preventing further manual resizing. Now handles are automatically restored so users can continue resizing columns after restoration.'},
+    {version: '7.3.1+2026-02-14', description: 'Fix: Manual column resizing now works correctly on initial page load. Fixed undefined variable bug that prevented drag-to-resize from functioning when resize handles were added automatically.'},
+    {version: '7.3.0+2026-02-14', description: 'Enhancement: Manual column resizing now enabled immediately on page render - no need to click Auto-Resize first. Button labels improved: "👁️ Visible Columns" (was "Columns"), "Export 💾" (was "Export CSV"). Users can now drag column edges to resize as soon as table loads.'},
     {version: '7.2.0+2026-02-14', description: 'Feature: Added manual column resizing - drag column edges with mouse to adjust widths (like Excel/Sheets). Resize handles appear after auto-resize or when manually adjusting. Button changes to "Restore Width" during manual resizing. Restore button restores both auto-resized and manually adjusted columns to original state. Visual feedback with hover highlights and green active indicator.'},
     {version: '7.1.1+2026-02-14', description: 'Fix: Auto-Resize Columns now accurately measures cells with images, icons, and links. Previously used text-only measurement which caused columns with flag icons (like Country/Date) to be artificially wider. Now clones actual cell content preserving HTML structure for precise width calculation.'},
     {version: '7.1.0+2026-02-14', description: 'Enhancement: Auto-Resize Columns now has toggle functionality - click once to resize, click again to restore original widths. Button changes to "↔️ Restore Width" when active with green highlight. Original table state is preserved and fully restored including colgroup, table layout, and scroll settings.'},
@@ -367,7 +370,7 @@ let changelog = [
     function addColumnVisibilityToggle(table) {
         // Create toggle button
         const toggleBtn = document.createElement('button');
-        toggleBtn.textContent = '👁️ Columns';
+        toggleBtn.textContent = '👁️ Visible Columns';
         toggleBtn.title = 'Show/hide table columns';
         toggleBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
         toggleBtn.type = 'button';
@@ -631,7 +634,7 @@ let changelog = [
      */
     function addExportButton() {
         const exportBtn = document.createElement('button');
-        exportBtn.textContent = '📥 Export CSV';
+        exportBtn.textContent = 'Export 💾';
         exportBtn.title = 'Export visible rows and columns to CSV file';
         exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
         exportBtn.type = 'button';
@@ -1308,8 +1311,10 @@ Note: Shortcuts work when not typing in input fields
 
                 // Store original state if not already stored
                 if (!isManuallyResized && !isAutoResized) {
-                    tables.forEach(table => {
-                        originalTableStates.set(table, storeOriginalTableState(table));
+                    // Get all tables and store their states
+                    const allTables = document.querySelectorAll('table.tbl');
+                    allTables.forEach(tbl => {
+                        originalTableStates.set(tbl, storeOriginalTableState(tbl));
                     });
                 }
 
@@ -1514,6 +1519,9 @@ Note: Shortcuts work when not typing in input fields
                 table.querySelectorAll('.column-resizer').forEach(resizer => {
                     resizer.remove();
                 });
+
+                // Re-add resize handles so users can resize again
+                makeColumnsResizable(table);
             });
 
             // Restore scroll state
@@ -4872,6 +4880,11 @@ Note: Shortcuts work when not typing in input fields
 
             // Add auto-resize columns button
             addAutoResizeButton();
+
+            // Enable manual column resizing on all tables immediately
+            document.querySelectorAll('table.tbl').forEach(table => {
+                makeColumnsResizable(table);
+            });
 
             isLoaded = true;
             // Initialize sidebar collapse only now if enabled
