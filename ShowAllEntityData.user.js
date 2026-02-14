@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      7.3.2+2026-02-14
+// @version      7.4.0+2026-02-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -11,7 +11,7 @@
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllEntityData.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
-// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZ_MBLibrary-1.1.0.user.js
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZ_MBLibrary-2.0.0.user.js
 // @match        *://*.musicbrainz.org/artist/*
 // @match        *://*.musicbrainz.org/release-group/*
 // @match        *://*.musicbrainz.org/release/*
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '7.4.0+2026-02-14', description: 'New configuration dialog with sections and dividers. Make all UI features opinionated.'},
     {version: '7.3.2+2026-02-14', description: 'Fix: Resize handles now persist after clicking "Restore Width" button. Previously handles were removed during restore and not re-added, preventing further manual resizing. Now handles are automatically restored so users can continue resizing columns after restoration.'},
     {version: '7.3.1+2026-02-14', description: 'Fix: Manual column resizing now works correctly on initial page load. Fixed undefined variable bug that prevented drag-to-resize from functioning when resize handles were added automatically.'},
     {version: '7.3.0+2026-02-14', description: 'Enhancement: Manual column resizing now enabled immediately on page render - no need to click Auto-Resize first. Button labels improved: "👁️ Visible Columns" (was "Columns"), "Export 💾" (was "Export CSV"). Users can now drag column edges to resize as soon as table loads.'},
@@ -696,6 +697,9 @@ Data Export & Management:
   Ctrl/Cmd + S         Save to disk (JSON)
   Ctrl/Cmd + L         Load from disk
 
+Settings:
+  Ctrl/Cmd + ,         Open settings dialog
+
 Help:
   ? or /               Show this help
 
@@ -791,6 +795,13 @@ Note: Shortcuts work when not typing in input fields
             // Exception: Escape key works even in inputs (to clear them)
             if (e.key !== 'Escape' && isTyping) {
                 return;
+            }
+
+            // Ctrl/Cmd + , : Open settings
+            if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+                e.preventDefault();
+                Lib.showSettings();
+                Lib.debug('shortcuts', 'Settings dialog opened via Ctrl+,');
             }
 
             // Ctrl/Cmd + F: Focus global filter
@@ -1521,7 +1532,9 @@ Note: Shortcuts work when not typing in input fields
                 });
 
                 // Re-add resize handles so users can resize again
-                makeColumnsResizable(table);
+                if (Lib.settings.sa_enable_column_resizing) {
+                    makeColumnsResizable(table);
+                }
             });
 
             // Restore scroll state
@@ -1700,7 +1713,9 @@ Note: Shortcuts work when not typing in input fields
             totalColumnsResized += columnCount;
 
             // Add manual resize handles
-            makeColumnsResizable(table);
+            if (Lib.settings.sa_enable_column_resizing) {
+                makeColumnsResizable(table);
+            }
 
             Lib.info('resize', `Table ${tableIndex}: Resized ${columnCount} columns, total width: ${totalWidth}px`);
         });
@@ -1748,6 +1763,21 @@ Note: Shortcuts work when not typing in input fields
 
     // CONFIG SCHEMA
     const configSchema = {
+        // ============================================================
+        // GENERIC SECTION
+        // ============================================================
+        divider_: {
+            type: 'divider',
+            label: '🛠️ Generic settings'
+        },
+
+        sa_enable_debug_logging: {
+            label: "Enable debug logging",
+            type: "checkbox",
+            default: false,
+            description: "Enable debug logging in the browser developer console"
+        },
+
         sa_load_history_limit: {
             label: 'Load Filter History Limit',
             type: 'number',
@@ -1756,28 +1786,218 @@ Note: Shortcuts work when not typing in input fields
             max: 50,
             description: 'Number of previous filter expressions to remember in the load dialog.'
         },
-        sa_enable_debug_logging: {
-            label: "Enable debug logging",
+
+        // ============================================================
+        // EXPERIMENTAL FEATURES SECTION
+        // ============================================================
+        divider_experimental: {
+            type: 'divider',
+            label: '🔬 EXPERIMENTAL FEATURES'
+        },
+
+        sa_collabsable_sidebar: {
+            label: "Collabsable sidebar (experimental)",
             type: "checkbox",
             default: false,
-            description: "Enable debug logging in the browser developer console"
+            description: "Render sidebar collabsable"
         },
+        // ============================================================
+        // OPTIONAL COLUMN REMOVAL FROM FINAL RENDERED PAGE SECTION
+        // ============================================================
+        divider_column_removal: {
+            type: 'divider',
+            label: '🧮 OPTIONAL COLUMN REMOVAL FROM FINAL RENDERED PAGE'
+        },
+
+        sa_remove_tagger: {
+            label: "Remove Tagger column",
+            type: "checkbox",
+            default: false,
+            description: "Remove the Tagger column from the final rendered tables"
+        },
+
+        sa_remove_release_events: {
+            label: 'Remove "Release events" column from "Place-Performances" pages',
+            type: "checkbox",
+            default: true,
+            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
+        },
+
+        sa_remove_rating: {
+            label: "Remove Rating column",
+            type: "checkbox",
+            default: false,
+            description: "Remove the Rating column from the final rendered tables"
+        },
+
+        sa_remove_rel: {
+            label: "Remove Relationships column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Relationships column from the final rendered tables"
+        },
+
+        sa_remove_perf: {
+            label: "Remove Performance column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Performance column from the final rendered tables"
+        },
+
+        // ============================================================
+        // UI FEATURES SECTION
+        // ============================================================
+        divider_ui_features: {
+            type: 'divider',
+            label: '🎨 UI FEATURES'
+        },
+
+        sa_enable_column_visibility: {
+            label: 'Enable Column Visibility Toggle',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "👁️ Visible Columns" button for toggling column visibility'
+        },
+
+        sa_enable_export: {
+            label: 'Enable Export',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "Export 💾" button for exporting data to CSV/JSON'
+        },
+
+        sa_enable_keyboard_shortcuts: {
+            label: 'Enable Keyboard Shortcuts',
+            type: 'checkbox',
+            default: true,
+            description: 'Enable keyboard shortcuts and show the "⌨️ Shortcuts" help button'
+        },
+
+        sa_enable_stats_panel: {
+            label: 'Enable Quick Stats Panel',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "📊 Stats" button for displaying table statistics'
+        },
+
+        sa_enable_density_control: {
+            label: 'Enable Table Density Control',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "📏 Density" button for adjusting table spacing'
+        },
+
+        sa_enable_column_resizing: {
+            label: 'Enable Column Resizing',
+            type: 'checkbox',
+            default: true,
+            description: 'Enable manual column resizing with mouse drag and "↔️ Auto-Resize" button'
+        },
+
+        sa_enable_save_load: {
+            label: 'Enable Save/Load to Disk',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
+        },
+
+        sa_enable_sticky_headers: {
+            label: 'Enable Sticky Headers',
+            type: 'checkbox',
+            default: true,
+            description: 'Keep table headers visible when scrolling'
+        },
+
+        // ============================================================
+        // FILTER HIGHLIGHT COLORS SECTION
+        // ============================================================
+        divider_filter_colors: {
+            type: 'divider',
+            label: '🎨 FILTER HIGHLIGHT COLORS'
+        },
+
+        sa_pre_filter_highlight_color: {
+            label: "Global Prefilter Highlight Color",
+            type: "color_picker",
+            default: "green",
+            description: "Text color for global prefilter matches"
+        },
+
+        sa_pre_filter_highlight_bg: {
+            label: "Global Prefilter Highlight Background",
+            type: "color_picker",
+            default: "#FFFFE0",
+            description: "Background color for global prefilter matches"
+        },
+
+        sa_global_filter_highlight_color: {
+            label: "Global Filter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for global filter matches"
+        },
+
+        sa_global_filter_highlight_bg: {
+            label: "Global Filter Highlight Background",
+            type: "color_picker",
+            default: "#FFD700",
+            description: "Background color for global filter matches"
+        },
+
+        sa_column_filter_highlight_color: {
+            label: "Column Filter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for column filter matches"
+        },
+
+        sa_column_filter_highlight_bg: {
+            label: "Column Filter Highlight Background",
+            type: "color_picker",
+            default: "#add8e6",
+            description: "Background color for column filter matches"
+        },
+
+        // ============================================================
+        // PERFORMANCE SETTINGS SECTION
+        // ============================================================
+        divider_performance: {
+            type: 'divider',
+            label: '⚡ PERFORMANCE SETTINGS'
+        },
+
         sa_filter_debounce_delay: {
             label: "Filter debounce delay (ms)",
             type: "number",
             default: 300,
             min: 0,
             max: 2000,
-            description: "Delay in milliseconds before applying filter after typing stops (0 = instant, 300 = recommended for large tables)"
+            description: "Delay before applying filter after typing stops"
         },
+
         sa_sort_chunk_size: {
-            label: "Sort chunk size for large tables",
+            label: "Sort chunk size",
             type: "number",
             default: 5000,
             min: 1000,
             max: 50000,
-            description: "Number of rows to process at once when sorting very large tables (higher = faster but may freeze UI)"
+            description: "Rows to process at once when sorting large tables"
         },
+
+        sa_render_threshold: {
+            label: "Large Dataset Threshold",
+            type: "number",
+            default: 5000,
+            description: "Row count threshold to prompt save-or-render dialog (0 to disable)"
+        },
+
+        sa_chunked_render_threshold: {
+            label: "Chunked Rendering Threshold",
+            type: "number",
+            default: 1000,
+            description: "Row count to trigger progressive chunked rendering (0 to always use simple render)"
+        },
+
         sa_sort_progress_threshold: {
             label: "Show sort progress above (rows)",
             type: "number",
@@ -1786,48 +2006,14 @@ Note: Shortcuts work when not typing in input fields
             max: 100000,
             description: "Show progress indicator when sorting tables with more than this many rows"
         },
+
         sa_render_overflow_tables_in_new_tab: {
             label: "Render overflow tables in a new tab",
             type: "checkbox",
             default: true,
             description: "Render overflow tables in a new tab"
         },
-        sa_collabsable_sidebar: {
-            label: "Collabsable sidebar (experimental)",
-            type: "checkbox",
-            default: false,
-            description: "Render sidebar collabsable"
-        },
-        sa_remove_tagger: {
-            label: "Remove Tagger column",
-            type: "checkbox",
-            default: false,
-            description: "Remove the Tagger column from the final rendered tables"
-        },
-        sa_remove_release_events: {
-            label: 'Remove "Release events" column from "Place-Performances" pages',
-            type: "checkbox",
-            default: true,
-            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
-        },
-        sa_remove_rating: {
-            label: "Remove Rating column",
-            type: "checkbox",
-            default: false,
-            description: "Remove the Rating column from the final rendered tables"
-        },
-        sa_remove_rel: {
-            label: "Remove Relationships column",
-            type: "checkbox",
-            default: true,
-            description: "Remove the Relationships column from the final rendered tables"
-        },
-        sa_remove_perf: {
-            label: "Remove Performance column",
-            type: "checkbox",
-            default: true,
-            description: "Remove the Performance column from the final rendered tables"
-        },
+
         sa_max_page: {
             label: "Max Page Warning",
             type: "number",
@@ -1839,55 +2025,8 @@ Note: Shortcuts work when not typing in input fields
             type: "number",
             default: 50,
             description: "Row count threshold to auto-expand tables"
-        },
-        sa_render_threshold: {
-            label: "Large Dataset Threshold",
-            type: "number",
-            default: 5000,
-            description: "Row count threshold to prompt save-or-render dialog (0 to disable)"
-        },
-        sa_chunked_render_threshold: {
-            label: "Chunked Rendering Threshold",
-            type: "number",
-            default: 1000,
-            description: "Row count to trigger progressive chunked rendering (0 to always use simple render)"
-        },
-        sa_pre_filter_highlight_color: {
-            label: "Global Prefilter Highlight Color",
-            type: "color_picker",
-            default: "green",
-            description: "Text color for global prefilter matches"
-        },
-        sa_pre_filter_highlight_bg: {
-            label: "Global Prefilter Highlight Background",
-            type: "color_picker",
-            default: "#FFFFE0", // light yellow
-            description: "Background color for global prefilter matches"
-        },
-        sa_global_filter_highlight_color: {
-            label: "Global Filter Highlight Color",
-            type: "color_picker",
-            default: "red",
-            description: "Text color for global filter matches"
-        },
-        sa_global_filter_highlight_bg: {
-            label: "Global Filter Highlight Background",
-            type: "color_picker",
-            default: "#FFD700", // dark yellow
-            description: "Background color for global filter matches"
-        },
-        sa_column_filter_highlight_color: {
-            label: "Column Filter Highlight Color",
-            type: "color_picker",
-            default: "red",
-            description: "Text color for column filter matches"
-        },
-        sa_column_filter_highlight_bg: {
-            label: "Column Filter Highlight Background",
-            type: "color_picker",
-            default: "#add8e6", // light blue
-            description: "Background color for column filter matches"
         }
+
     };
 
     // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
@@ -2597,7 +2736,10 @@ Note: Shortcuts work when not typing in input fields
     saveToDiskBtn.title = 'Save current table data to disk as JSON';
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
     saveToDiskBtn.style.display = 'none'; // - Changed from 'inline-flex' or similar to 'none'
-    controlsContainer.appendChild(saveToDiskBtn);
+
+    if (Lib.settings.sa_enable_save_load) {
+        controlsContainer.appendChild(saveToDiskBtn);
+    }
 
     // Add Load from Disk button with hidden file input
     const loadFromDiskBtn = document.createElement('button');
@@ -2613,8 +2755,11 @@ Note: Shortcuts work when not typing in input fields
     fileInput.onchange = (e) => loadTableDataFromDisk(e.target.files[0]);
 
     loadFromDiskBtn.onclick = () => showLoadFilterDialog();
-    controlsContainer.appendChild(loadFromDiskBtn);
-    controlsContainer.appendChild(fileInput);
+
+    if (Lib.settings.sa_enable_save_load) {
+        controlsContainer.appendChild(loadFromDiskBtn);
+        controlsContainer.appendChild(fileInput);
+    }
 
     // --- Pre-load Filter UI elements ---
     const preFilterContainer = document.createElement('span');
@@ -2966,98 +3111,6 @@ Note: Shortcuts work when not typing in input fields
         dialog.querySelector('#sa-load-cancel').onclick = closeDialog;
         overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
     }
-
-    // function showLoadFilterPopup() {
-    //     // --- Overlay ---
-    //     const overlay = document.createElement('div');
-    //     overlay.style.cssText = `
-    //         position: fixed;
-    //         inset: 0;
-    //         background: rgba(0,0,0,0.4);
-    //         display: flex;
-    //         align-items: center;
-    //         justify-content: center;
-    //         z-index: 10000;
-    //     `;
-
-    //     // --- Modal ---
-    //     const modal = document.createElement('div');
-    //     modal.style.cssText = `
-    //         background: white;
-    //         padding: 20px;
-    //         border-radius: 6px;
-    //         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    //         min-width: 320px;
-    //         font-family: sans-serif;
-    //     `;
-
-    //     modal.innerHTML = `
-    //         <div style="margin-bottom: 12px;">
-    //             <input id="sa-load-filter-input"
-    //                 type="text"
-    //                 placeholder="Filter data load..."
-    //                 title="Filter rows while loading from disk"
-    //                 style="width: 100%; font-size: 0.9em; padding: 4px;">
-    //         </div>
-
-    //         <div style="display:flex; gap:15px; justify-content:center; margin-bottom:15px;">
-    //             <label style="cursor:pointer;">
-    //                 <input type="checkbox" id="sa-load-case"> Cc
-    //             </label>
-    //             <label style="cursor:pointer;">
-    //                 <input type="checkbox" id="sa-load-regex"> Rx
-    //             </label>
-    //         </div>
-
-    //         <div style="display:flex; justify-content:center; gap:15px;">
-    //             <button id="sa-load-confirm">Load filtered data from disk</button>
-    //             <button id="sa-load-cancel">Cancel</button>
-    //         </div>
-    //     `;
-
-    //     overlay.appendChild(modal);
-    //     document.body.appendChild(overlay);
-
-    //     // --- Focus input ---
-    //     modal.querySelector('#sa-load-filter-input').focus();
-
-    //     // --- Close helper ---
-    //     const closePopup = () => {
-    //         document.removeEventListener('keydown', escHandler);
-    //         overlay.remove();
-    //     };
-
-    //     // --- ESC key support ---
-    //     const escHandler = (e) => {
-    //         if (e.key === 'Escape') closePopup();
-    //     };
-    //     document.addEventListener('keydown', escHandler);
-
-    //     // --- Cancel button ---
-    //     modal.querySelector('#sa-load-cancel').onclick = closePopup;
-
-    //     // --- Confirm button ---
-    //     modal.querySelector('#sa-load-confirm').onclick = () => {
-
-    //         const filterQueryRaw =
-    //             modal.querySelector('#sa-load-filter-input').value.trim();
-
-    //         const isCaseSensitive =
-    //             modal.querySelector('#sa-load-case').checked;
-
-    //         const isRegExp =
-    //             modal.querySelector('#sa-load-regex').checked;
-
-    //         closePopup();
-
-    //         triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp);
-    //     };
-
-    //     // Optional: close on overlay click (outside modal)
-    //     overlay.onclick = (e) => {
-    //         if (e.target === overlay) closePopup();
-    //     };
-    // }
 
     function triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) {
         const fileInput = document.createElement('input');
@@ -4855,36 +4908,50 @@ Note: Shortcuts work when not typing in input fields
             makeH2sCollapsible();
 
             // Apply sticky headers for better scrolling experience
-            applyStickyHeaders();
+            if (Lib.settings.sa_enable_sticky_headers) {
+                applyStickyHeaders();
+            }
 
             // Add column visibility toggle for all tables
-            document.querySelectorAll('table.tbl').forEach((table, index) => {
-                // Only add toggle for the first table to avoid duplicate buttons
-                if (index === 0) {
-                    addColumnVisibilityToggle(table);
-                }
-            });
+            if (Lib.settings.sa_enable_column_visibility) {
+                document.querySelectorAll('table.tbl').forEach((table, index) => {
+                    // Only add toggle for the first table to avoid duplicate buttons
+                    if (index === 0) {
+                        addColumnVisibilityToggle(table);
+                    }
+                });
+            }
 
             // Add export to CSV button
-            addExportButton();
+            if (Lib.settings.sa_enable_export) {
+                addExportButton();
+            }
 
             // Initialize keyboard shortcuts
-            initKeyboardShortcuts();
-            addShortcutsHelpButton();
+            if (Lib.settings.sa_enable_keyboard_shortcuts) {
+                initKeyboardShortcuts();
+                addShortcutsHelpButton();
+            }
 
             // Add stats panel button
-            addStatsButton();
+            if (Lib.settings.sa_enable_stats_panel) {
+                addStatsButton();
+            }
 
             // Add density control
-            addDensityControl();
+            if (Lib.settings.sa_enable_density_control) {
+                addDensityControl();
+            }
 
             // Add auto-resize columns button
-            addAutoResizeButton();
+            if (Lib.settings.sa_enable_column_resizing) {
+                addAutoResizeButton();
 
-            // Enable manual column resizing on all tables immediately
-            document.querySelectorAll('table.tbl').forEach(table => {
-                makeColumnsResizable(table);
-            });
+                // Enable manual column resizing on all tables immediately
+                document.querySelectorAll('table.tbl').forEach(table => {
+                    makeColumnsResizable(table);
+                });
+            }
 
             isLoaded = true;
             // Initialize sidebar collapse only now if enabled
@@ -4959,7 +5026,9 @@ Note: Shortcuts work when not typing in input fields
         }
 
         // Show the save button now that data is rendered
-        saveToDiskBtn.style.display = 'inline-block';
+        if (Lib.settings.sa_enable_save_load) {
+            saveToDiskBtn.style.display = 'inline-block';
+        }
     }
 
     /**
@@ -5254,7 +5323,9 @@ Note: Shortcuts work when not typing in input fields
         Lib.info('render', 'Finished renderGroupedTable.');
 
         // Show the save button now that data is rendered
-        saveToDiskBtn.style.display = 'inline-block';
+        if (Lib.settings.sa_enable_save_load) {
+            saveToDiskBtn.style.display = 'inline-block';
+        }
     }
 
     /**
@@ -5955,38 +6026,55 @@ Note: Shortcuts work when not typing in input fields
 
                 finalCleanup();
                 makeH2sCollapsible();
-                applyStickyHeaders();
+                if (Lib.settings.sa_enable_sticky_headers) {
+                    applyStickyHeaders();
+                }
 
                 // Add column visibility toggle for loaded table
-                const mainTable = document.querySelector('table.tbl');
-                if (mainTable) {
-                    addColumnVisibilityToggle(mainTable);
+                if (Lib.settings.sa_enable_column_visibility) {
+                    const mainTable = document.querySelector('table.tbl');
+                    if (mainTable) {
+                        addColumnVisibilityToggle(mainTable);
+                    }
                 }
 
                 // Add export button
-                addExportButton();
+                if (Lib.settings.sa_enable_export) {
+                    addExportButton();
+                }
 
                 // Initialize keyboard shortcuts (if not already initialized)
-                if (!document._mbKeyboardShortcutsInitialized) {
-                    initKeyboardShortcuts();
-                    document._mbKeyboardShortcutsInitialized = true;
+                if (Lib.settings.sa_enable_keyboard_shortcuts) {
+                    if (!document._mbKeyboardShortcutsInitialized) {
+                        initKeyboardShortcuts();
+                        document._mbKeyboardShortcutsInitialized = true;
+                    }
+                    addShortcutsHelpButton();
                 }
-                addShortcutsHelpButton();
 
                 // Add stats panel button
-                addStatsButton();
+                if (Lib.settings.sa_enable_stats_panel) {
+                    addStatsButton();
+                }
 
                 // Add density control
-                addDensityControl();
+                if (Lib.settings.sa_enable_density_control) {
+                    addDensityControl();
+                }
 
+                if (Lib.settings.sa_enable_column_resizing) {
                 // Add auto-resize columns button
-                addAutoResizeButton();
+                    addAutoResizeButton();
+                }
 
                 updateH2Count(loadedRowCount, loadedRowCount);
 
                 // Show main filter container (if hidden)
                 if (!filterContainer.parentNode) filterContainer.style.display = 'inline-flex';
-                saveToDiskBtn.style.display = 'inline-block';
+
+                if (Lib.settings.sa_enable_save_load) {
+                    saveToDiskBtn.style.display = 'inline-block';
+                }
 
                 // --- Update UI Feedback for Pre-Filter ---
                 if (filterQueryRaw) {

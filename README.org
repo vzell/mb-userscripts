@@ -35612,7 +35612,9 @@ with different export options:
 - the currently supported CSV export
 - additionally JSON export
 
-3.) Make all the newly introduced new features, currently accessible via button clicks
+** 3.) Make all the newly introduced new features, currently accessible via button clicks
+
+Make all the newly introduced new features, currently accessible via button clicks
 
 - Column Visibility Toggle 👁️
 - Export to CSV 💾
@@ -35694,17 +35696,17 @@ explaining heading
 
 Of course make everything expandable, BUT dont' break existing code
 
-** fix initila resize of columns
+** DONE fix initial resize of columns
 
 the resize handles are present now after initial load, but it's not possible to actually resize
 
-** fix one last time
+** DONE fix one last time
 
 This actually works now after initial rendering of the page, also after pressing the "Auto-Resize" button, but NOT when
 pressing the "Restore Width" button and returning to the original state. In that case the resize handle is not visible
 anymore.
 
-** fix "Release" column changes width when actually manually dragging the "Artist" column
+** TODO fix "Release" column changes width when actually manually dragging the "Artist" column
 
 
 * add descriptions to every function call
@@ -35895,3 +35897,5 @@ Place the 'Sorted "<column name>": <elapsed>s' after the "Unhighlight all" butto
             statusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
         }
 #+end_example
+
+* remove config menu when
