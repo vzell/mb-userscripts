@@ -35538,27 +35538,30 @@ So please fix also the column filtering for regexps to only take real text into 
 
 go with "Sticky Headers - See columns while scrolling", but include the filter row with the other stiky headers
 
-** multi table
+** multi table mode
+** make the whole MB page header up to the filter row sticky
 
-* CSV
+* Export CSV
 ** remove "▶" and others before exporting
+** add more formats, JSON, ORG ,pde, etc
 
 * keyboard shortcuts
 ** make the keyboard shortcuts configurable
 
 Ctrl-f
 
-* statistics panel
+** problem with browser defined keyboard shortcust, e.g. Ctrl++ ==> increase font instead of "Settings" dialog
 
+* statistics panel
 ** wrong stats
 ** make it multitable aware
 ** create keyboard shorcut
 
+
 * table density
 
 * Column Visibility Toggle
-
-"Escape" key should make the dialog vanish, or clicking outsoe somewhere
+** "Escape" key should make the dialog vanish, or clicking outside somewhere
 
 * autoresize columns
 ** DONE initial
@@ -35612,7 +35615,7 @@ with different export options:
 - the currently supported CSV export
 - additionally JSON export
 
-** 3.) Make all the newly introduced new features, currently accessible via button clicks
+** DONE 3.) Make all the newly introduced new features, currently accessible via button clicks
 
 Make all the newly introduced new features, currently accessible via button clicks
 
@@ -35749,7 +35752,7 @@ structure
 
 
 * overhoule the configuration GUI
-** initial
+** DONE initial
 
 In the uploaded userscript "ShowAllEntityData.user.js" and library "VZ_MBLibrary-1.1.0.user.js"
 
@@ -35811,6 +35814,307 @@ should have their own section inclusive a nice self explaining heading
 
 Of course make everything expandable, BUT dont' break existing code
 
+** Keeps header + footer fixed while entries scroll in config dialog
+
+Please add the following enhancements to the following function in the uploaded library
+
+#+begin_example
+        const settingsInterface = {
+            values: {},
+            init: function() {
+                if (!configSchema) return;
+                for (const key in configSchema) {
+                    this.values[key] = GM_getValue(key, configSchema[key].default);
+                }
+            },
+            // Helper to determine if text should be black or white based on background hex
+            getContrastYIQ: function(hexcolor) {
+                hexcolor = hexcolor.replace("#", "");
+                const r = parseInt(hexcolor.substr(0, 2), 16);
+                const g = parseInt(hexcolor.substr(2, 2), 16);
+                const b = parseInt(hexcolor.substr(4, 2), 16);
+                const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                return (yiq >= 128) ? 'black' : 'white';
+            },
+            applyColorPreview: function(inputId, color) {
+                const input = document.getElementById(inputId);
+                const btn = document.getElementById(`${inputId}-picker-btn`);
+                if (input) {
+                    input.style.backgroundColor = color;
+                    input.style.color = this.getContrastYIQ(color);
+                }
+                if (btn) {
+                    btn.style.backgroundColor = color;
+                }
+            },
+            save: function(newValues) {
+                for (const key in newValues) {
+                    GM_setValue(key, newValues[key]);
+                }
+                loggerInterface.info('init', "Settings saved. Reloading...");
+                location.reload();
+            },
+            showModal: function() {
+                if (!configSchema) return;
+                const overlay = document.createElement("div");
+                overlay.id = `${scriptId}-settings-overlay`;
+                Object.assign(overlay.style, {
+                    position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '10000', display: 'flex',
+                    justifyContent: 'center', alignItems: 'center'
+                });
+
+                const container = document.createElement("div");
+                container.id = `${scriptId}-config-container`;
+                Object.assign(container.style, {
+                    backgroundColor: 'white',
+                    border: '2px solid #4CAF50',
+                    borderRadius: '8px',
+                    padding: '20px',
+                    color: '#333',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    minWidth: '600px',
+                    maxWidth: '800px',
+                    maxHeight: '80vh',
+                    overflowY: 'auto',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+                });
+
+                const tableRows = Object.entries(configSchema).map(([key, cfg]) => {
+                    // Handle divider type
+                    if (cfg.type === 'divider') {
+                        return `
+                            <tr>
+                                <td colspan="3" style="background: linear-gradient(to right, #999, #ccc, #999); padding: 12px 8px; text-align: center;">
+                                    <strong style="color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); font-size: 1.1em; letter-spacing: 1px;">
+                                        ${cfg.label}
+                                    </strong>
+                                </td>
+                            </tr>`;
+                    }
+
+                    const inputId = `${scriptId}-input-${key}`;
+                    const isCheck = cfg.type === "checkbox";
+                    const isColor = cfg.type === "color_picker";
+                    const isNumber = cfg.type === "number";
+                    const valAttr = isCheck
+                        ? (this.values[key] ? 'checked' : '')
+                        : `value="${this.values[key]}"`;
+
+                    let inputHtml = '';
+
+                    if (isCheck) {
+                        inputHtml = `<input type="checkbox" id="${inputId}" ${valAttr} style="margin-left: 5px;">`;
+                    } else if (isNumber) {
+                        inputHtml = `<input type="number" id="${inputId}" ${valAttr} min="${cfg.min || 0}" max="${cfg.max || 100}" style="width: 80px; margin-left: 5px;">`;
+                    } else {
+                        inputHtml = `<input type="text" id="${inputId}" ${valAttr} style="width: 120px; margin-left: 5px; transition: background 0.2s;">`;
+                    }
+
+                    if (isColor) {
+                        inputHtml += `<button id="${inputId}-picker-btn" type="button" style="margin-left: 5px; cursor: pointer; border: 1px solid #666; width: 24px; height: 24px; vertical-align: middle;" title="Open Color Picker">🎨</button>`;
+                    }
+
+                    return `
+                        <tr>
+                            <th style="background-color: rgb(204, 204, 204); text-align: left; padding-left: inherit;">
+                                <label style="white-space: nowrap; text-shadow: rgb(153, 153, 153) 1px 1px 2px;">
+                                    ${cfg.label}: ${inputHtml}
+                                </label>
+                            </th>
+                            <td style="opacity: 0.666; text-align: center;">${cfg.default}</td>
+                            <td style="margin-bottom: 0.4em;">${cfg.description}</td>
+                        </tr>`;
+                }).join('');
+
+                container.innerHTML = `
+                    <p style="text-align: right; margin: 0px;">
+                        <a id="${scriptId}-reset" style="cursor: pointer; font-weight: bold; color: black;">RESET</a> |
+                        <a id="${scriptId}-close" style="cursor: pointer; font-weight: bold; color: black;">CLOSE</a>
+                    </p>
+                    <h4 style="text-shadow: white 0px 0px 8px; font-size: 1.5em; margin-top: 0px;">${scriptName.toUpperCase()}</h4>
+                    <p><h2>Settings are applied immediately upon saving.</h2></p>
+                    <table border="2" cellpadding="4" cellspacing="1" style="width: 100%; border-collapse: separate; background: #eee;">
+                        <thead>
+                            <tr style="background-color: #ccc;">
+                                <th>setting</th>
+                                <th>default setting</th>
+                                <th>description</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                    <div style="margin-top: 15px; text-align: right;">
+                        <button id="${scriptId}-save-btn" style="padding: 4px 12px; cursor: pointer; font-weight: bold;">SAVE</button>
+                    </div>
+                    <div id="${scriptId}-picker-container" style="position: absolute; display: none; background: #eee; border: 1px solid #999; padding: 10px; z-index: 10001; box-shadow: 2px 2px 10px rgba(0,0,0,0.2);"></div>
+                `;
+
+                overlay.appendChild(container);
+                document.body.appendChild(overlay);
+
+                const pickerContainer = document.getElementById(`${scriptId}-picker-container`);
+
+                // Initial color preview application
+                Object.entries(configSchema).forEach(([key, cfg]) => {
+                    if (cfg.type === "color_picker") {
+                        const inputId = `${scriptId}-input-${key}`;
+                        this.applyColorPreview(inputId, this.values[key]);
+
+                        const btn = document.getElementById(`${inputId}-picker-btn`);
+                        const input = document.getElementById(inputId);
+
+                        // Allow manual typing to update preview too
+                        input.addEventListener('input', (e) => {
+                            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                                this.applyColorPreview(inputId, e.target.value);
+                            }
+                        });
+
+                        btn.onclick = (e) => {
+                            e.stopPropagation();
+                            pickerContainer.innerHTML = '';
+                            pickerContainer.style.display = 'block';
+                            pickerContainer.style.top = `${btn.offsetTop + 30}px`;
+                            pickerContainer.style.left = `${btn.offsetLeft}px`;
+
+                            if (typeof iro !== 'undefined') {
+                                const activePicker = new iro.ColorPicker(`#${scriptId}-picker-container`, {
+                                    width: 150,
+                                    color: input.value || cfg.default
+                                });
+
+                                activePicker.on('color:change', (color) => {
+                                    // console.debug('New Hex:', color.hexString);
+                                    input.value = color.hexString;
+                                    this.applyColorPreview(inputId, color.hexString);
+                                });
+                            } else {
+                                loggerInterface.error('error', "iro.js library not found!");
+                                pickerContainer.textContent = "iro.js missing";
+                            }
+                        };
+                    }
+                });
+
+                const closeDialog = () => {
+                    if (document.body.contains(overlay)) document.body.removeChild(overlay);
+                    window.removeEventListener("keydown", handleEsc);
+                };
+                const handleEsc = (e) => { if (e.key === "Escape") closeDialog(); };
+                window.addEventListener("keydown", handleEsc);
+
+                document.getElementById(`${scriptId}-save-btn`).onclick = () => {
+                    const newValues = {};
+                    for (const key in configSchema) {
+                        // Skip dividers
+                        if (configSchema[key].type === 'divider') continue;
+
+                        const input = document.getElementById(`${scriptId}-input-${key}`);
+                        newValues[key] = configSchema[key].type === "checkbox" ? input.checked : input.value;
+                    }
+                    this.save(newValues);
+                    closeDialog();
+                };
+                document.getElementById(`${scriptId}-reset`).onclick = () => {
+                    for (const key in configSchema) {
+                        // Skip dividers
+                        if (configSchema[key].type === 'divider') continue;
+
+                        const input = document.getElementById(`${scriptId}-input-${key}`);
+                        if (configSchema[key].type === "checkbox") {
+                            input.checked = configSchema[key].default;
+                        } else {
+                            input.value = configSchema[key].default;
+                            if (configSchema[key].type === "color_picker") {
+                                this.applyColorPreview(inputId, configSchema[key].default);
+                            }
+                        }
+                    }
+                };
+                document.getElementById(`${scriptId}-close`).onclick = closeDialog;
+
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) closeDialog();
+                    if (!pickerContainer.contains(e.target)) pickerContainer.style.display = 'none';
+                };
+            }
+        };
+#+end_example
+
+Keep header + footer part fixed while just the table itself scrolls
+
+** esc key handling for the "ChangeLog" popup + scrollable area for the actual changelog entries
+
+Please add the following enhancements to the following function in the uploaded library
+
+#+begin_example
+        const changelogInterface = {
+            show: function() {
+                if (!changelog || changelog.length === 0) return;
+                let logDiv = document.getElementById(`${scriptId}-changelog`);
+                if (!logDiv) {
+                    logDiv = document.createElement("div");
+                    logDiv.id = `${scriptId}-changelog`;
+                    // Setup the modal container
+                    logDiv.style.cssText = "position:fixed; left:0; right:0; top:10em; z-index:3000009; margin-left:auto; margin-right:auto; min-height:8em; width:50%; background-color:#eee; color:#111; border-radius:5px; padding:1.5em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid #ccc; display:none; flex-direction: column;";
+
+                    // Title with two new lines (via margin-bottom)
+                    const title = document.createElement("b");
+                    title.style.whiteSpace = "pre-wrap";
+                    title.textContent = `${scriptName}\n\nChangeLog:    .... click to dismiss`;
+                    logDiv.appendChild(title);
+
+                    // Version List
+                    const list = document.createElement("ul");
+                    list.style.marginTop = "0.5em";
+                    list.style.flexGrow = "1";
+                    changelog.forEach(entry => {
+                        const li = document.createElement("li");
+                        //li.style.marginBottom = "0.5em";
+                        li.innerHTML = `<i>${entry.version}</i> - ${entry.description}`;
+                        list.appendChild(li);
+                    });
+                    logDiv.appendChild(list);
+
+                    // Added CLOSE button at the bottom
+                    const footer = document.createElement("div");
+                    footer.style.textAlign = "right";
+                    footer.style.marginTop = "1em";
+
+                    const closeBtn = document.createElement("button");
+                    closeBtn.textContent = "CLOSE";
+                    closeBtn.style.cssText = "padding: 4px 12px; cursor: pointer; font-weight: bold; border: 1px solid #999; border-radius: 3px; background: #ddd;";
+                    closeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        logDiv.style.display = 'none';
+                    };
+
+                    footer.appendChild(closeBtn);
+                    logDiv.appendChild(footer);
+
+                    document.body.appendChild(logDiv);
+
+                    // Still allow clicking the background to dismiss
+                    logDiv.addEventListener('click', () => { logDiv.style.display = 'none'; }, false);
+                }
+                logDiv.style.display = 'block';
+            }
+        };
+#+end_example
+
+- The "Escape" key should also close the "ChangeLog" window
+- The area for the actual changelog entries in the popup windowd should be scrollable to accomodate much more entries
+
+** TODO add features
+
+If you want, I can also provide:
+
+Smooth open animation
+Draggable modal
+Auto-resizing width based on content
+Collapsible config sections
+Search filter for settings
 
 * put the "sorted <time> in some other place to not produce eye flicker
 
@@ -35898,4 +36202,4 @@ Place the 'Sorted "<column name>": <elapsed>s' after the "Unhighlight all" butto
         }
 #+end_example
 
-* remove config menu when
+* remove config menu when called from MusicBrainz "Editing" menu, when pressing Esc
