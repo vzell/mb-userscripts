@@ -3013,7 +3013,7 @@ Note: Shortcuts work when not typing in input fields
     filterContainer.appendChild(preFilterMsg);
 
     const unhighlightFilterBtn = document.createElement('button');
-    unhighlightFilterBtn.textContent = 'Unhighlight prefilter';
+    unhighlightFilterBtn.textContent = '🎨 Unhighlight prefilter';
     unhighlightFilterBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
     unhighlightFilterBtn.onclick = () => {
         document.querySelectorAll('.mb-pre-filter-highlight')
@@ -3024,7 +3024,7 @@ Note: Shortcuts work when not typing in input fields
     filterContainer.appendChild(unhighlightFilterBtn);
 
     const unhighlightAllBtn = document.createElement('button');
-    unhighlightAllBtn.textContent = 'Unhighlight all';
+    unhighlightAllBtn.textContent = '🎨 Unhighlight all';
     unhighlightAllBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
     unhighlightAllBtn.onclick = () => {
         document.querySelectorAll('.mb-pre-filter-highlight, .mb-global-filter-highlight, .mb-column-filter-highlight')
@@ -4355,8 +4355,9 @@ Note: Shortcuts work when not typing in input fields
                     Successfully fetched <strong>${totalRows.toLocaleString()} rows</strong> from <strong>${pagesProcessed} ${pageLabel}</strong>.
                 </p>
                 <p style="font-size: 14px; color: #666; margin: 20px 0;">
-                    Rendering this many rows may take a considerable amount of time and could impact browser performance.
-                    You can save the data directly to disk and load it later, or proceed with rendering now.
+                    Rendering this many rows may take a considerable amount of time and could impact your browser performance
+                    or even make your browser completely unusable. You can instead SAVE the data directly to disk and LOAD it
+                    with a PRE-FILTER condition LATER (to decrease the number of rows to make the rendering feasible) or proceed with rendering now.
                 </p>
                 <div style="display: flex; gap: 10px; justify-content: center; margin-top: 25px;">
                     <button id="mb-dialog-save" style="
