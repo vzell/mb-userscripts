@@ -35850,7 +35850,9 @@ anymore.
 
 ** TODO fix "Release" column changes width when actually manually dragging the "Artist" column
 
-** TODO When calculating the minimum width of a column take the sort symbols into account e.g.the "Date" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=869
+** DONE When calculating the minimum width of a column take the sort symbols into account e.g.the "Date" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=869
+
+In the uploaded userscript
 
 The following bug description is for all pages which have columns where the maximum length inside the corresponding data
 cells acorss the whole table never exceeds the lenght of the column headr name.  In this case the widths of the symobls

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.10.0+2026-02-15
+// @version      9.11.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.11.0+2026-02-15', description: 'Fix: Auto-Resize now includes sorting symbol widths (⇅, ▲, ▼) in column header measurement. Previously columns with short data could be sized too narrow, cutting off header content.'},
     {version: '9.10.0+2026-02-15', description: 'Fix: Column visibility menu now auto-sizes to content without scrollbars. Status display font sizes adjusted to better correspond with h2/h3 header text heights.'},
     {version: '9.9.0+2026-02-15', description: 'Enhancement: Column visibility menu now has a draggable header and additional separator with close instructions.'},
     {version: '9.8.0+2026-02-15', description: 'Enhancement: Separate sorting and filtering status displays with different fonts for clarity. Applied to both single-table and multi-table pages.'},
@@ -1795,8 +1796,8 @@ Note: Shortcuts work when not typing in input fields
                 // Clone the entire content to preserve HTML structure (images, links, etc.)
                 const contentClone = th.cloneNode(true);
 
-                // Remove sort icons/buttons from the clone
-                contentClone.querySelectorAll('.sort-icon-btn, .sort-icon').forEach(el => el.remove());
+                // DO NOT remove sort icons - they need to be measured as they're always present in headers
+                // The sorting symbols (⇅, ▲, ▼) take up space and must be included in width calculation
 
                 // Copy styles for accurate measurement
                 const styles = window.getComputedStyle(th);
@@ -3032,7 +3033,7 @@ Note: Shortcuts work when not typing in input fields
 
     const globalStatusDisplay = document.createElement('span');
     globalStatusDisplay.id = 'mb-global-status-display';
-    globalStatusDisplay.style.cssText = 'font-size:1.0em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+    globalStatusDisplay.style.cssText = 'font-size:0.85em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 
     const progressContainer = document.createElement('div');
     progressContainer.id = 'mb-fetch-progress-container';
@@ -3164,7 +3165,7 @@ Note: Shortcuts work when not typing in input fields
 
     const statusDisplay = document.createElement('span');
     statusDisplay.id = 'mb-status-display';
-    statusDisplay.style.cssText = 'font-size:1.0em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; gap:4px;';
+    statusDisplay.style.cssText = 'font-size:0.85em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; gap:4px;';
 
     // Create separate filter and sort status displays
     const filterStatusDisplay = document.createElement('span');
