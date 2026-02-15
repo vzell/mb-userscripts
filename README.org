@@ -35881,7 +35881,25 @@ So the whole interaction between "auto-resize" and "visible columns" functionali
 
 *** still buggy
 
+In https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c for example
 
+there is still a bug present:
+
+When "Auto-resize" button is clicked, specifically the "Label" column where the data cells have large values, are
+resized properly, but when removing lets say the "Tracks" column with the "Visible Columns" button, the "Label" column
+is not perfectly auto-resized anymore, but instead spreads over multiple rows. Also some other columns exhibit the same
+behaviour. Including such a hidden column again, 'fixes' everything again.
+
+Additionally the h2 status line display the wrong column count "totalColumnsResized" in
+
+#+begin_example
+if (statusDisplay) {
+            statusDisplay.textContent = `✓ Auto-resized ${totalColumnsResized} columns in ${duration}ms (drag column edges to adjust)`;
+            statusDisplay.style.color = 'green';
+        }
+#+end_example
+
+For example in https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the value is displayed as 26 columns, also there are only 13 columns
 
 *** works
 

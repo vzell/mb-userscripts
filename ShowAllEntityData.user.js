@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.12.0+2026-02-15
+// @version      9.13.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.13.0+2026-02-15', description: 'Fix: Hiding/showing columns after Auto-Resize now properly updates column widths and table layout. Previously caused text wrapping and misalignment. Hidden columns now properly removed from width calculation, shown columns re-measured. Status message now shows correct visible column count (not summed across tables).'},
     {version: '9.12.0+2026-02-15', description: 'Fix: Auto-Resize now properly handles hidden columns from Visible Columns feature. Previously caused rendering glitches where content spread across wrong columns. Now skips hidden columns entirely during measurement and sizing.'},
     {version: '9.11.0+2026-02-15', description: 'Fix: Auto-Resize now includes sorting symbol widths (⇅, ▲, ▼) in column header measurement. Previously columns with short data could be sized too narrow, cutting off header content.'},
     {version: '9.10.0+2026-02-15', description: 'Fix: Column visibility menu now auto-sizes to content without scrollbars. Status display font sizes adjusted to better correspond with h2/h3 header text heights.'},
@@ -354,9 +355,9 @@ let changelog = [
     }
 
     /**
-     * Toggle visibility of a specific column in a table
-     * @param {HTMLTableElement} table - The table element
-     * @param {number} columnIndex - Zero-based column index
+     * Toggle visibility of a column across all tables
+     * @param {HTMLTableElement} table - Reference table (not used, kept for compatibility)
+     * @param {number} columnIndex - Index of the column to toggle
      * @param {boolean} show - True to show, false to hide
      */
     function toggleColumn(table, columnIndex, show) {
@@ -380,6 +381,108 @@ let changelog = [
                     row.cells[columnIndex].style.display = display;
                 }
             });
+
+            // If auto-resize is active, update the colgroup and table width
+            if (isAutoResized) {
+                const colgroup = currentTable.querySelector('colgroup');
+                if (colgroup && colgroup.children[columnIndex]) {
+                    const col = colgroup.children[columnIndex];
+                    if (show) {
+                        // Need to re-measure this column to get proper width
+                        // Create temporary measurement container
+                        const measureDiv = document.createElement('div');
+                        measureDiv.style.cssText = `
+                            position: absolute;
+                            visibility: hidden;
+                            white-space: nowrap;
+                            font-family: inherit;
+                            font-size: inherit;
+                            padding: 4px 8px;
+                        `;
+                        document.body.appendChild(measureDiv);
+
+                        let maxWidth = 0;
+
+                        // Measure header
+                        const th = headers[0]?.cells[columnIndex];
+                        if (th) {
+                            const contentClone = th.cloneNode(true);
+                            const styles = window.getComputedStyle(th);
+                            measureDiv.style.fontSize = styles.fontSize;
+                            measureDiv.style.fontWeight = styles.fontWeight;
+                            measureDiv.style.padding = styles.padding;
+                            measureDiv.style.fontFamily = styles.fontFamily;
+                            measureDiv.innerHTML = '';
+                            measureDiv.appendChild(contentClone);
+                            maxWidth = Math.max(maxWidth, measureDiv.offsetWidth);
+                        }
+
+                        // Measure sample data cells (up to 100 rows)
+                        const dataRows = currentTable.querySelectorAll('tbody tr');
+                        const sampleSize = Math.min(dataRows.length, 100);
+                        const sampleStep = Math.max(1, Math.floor(dataRows.length / sampleSize));
+
+                        for (let i = 0; i < dataRows.length; i += sampleStep) {
+                            const row = dataRows[i];
+                            if (row.style.display === 'none') continue;
+                            const cell = row.cells[columnIndex];
+                            if (cell) {
+                                const contentClone = cell.cloneNode(true);
+                                const styles = window.getComputedStyle(cell);
+                                measureDiv.style.fontSize = styles.fontSize;
+                                measureDiv.style.fontWeight = styles.fontWeight;
+                                measureDiv.style.padding = styles.padding;
+                                measureDiv.style.fontFamily = styles.fontFamily;
+                                measureDiv.innerHTML = '';
+                                measureDiv.appendChild(contentClone);
+                                maxWidth = Math.max(maxWidth, measureDiv.offsetWidth);
+                            }
+                        }
+
+                        document.body.removeChild(measureDiv);
+
+                        // Set the measured width
+                        const finalWidth = Math.ceil(maxWidth + 20);
+                        col.style.width = `${finalWidth}px`;
+                        col.style.display = '';
+                        
+                        Lib.debug('ui', `Column ${columnIndex} shown and re-measured: ${finalWidth}px`);
+                    } else {
+                        // Hide column in colgroup
+                        col.style.width = '0px';
+                        col.style.display = 'none';
+                    }
+                }
+
+                // Recalculate table width based on currently visible columns
+                const firstRow = currentTable.querySelector('tbody tr');
+                if (firstRow) {
+                    const columnCount = firstRow.cells.length;
+                    const columnWidths = [];
+
+                    // Get current widths from colgroup
+                    if (colgroup) {
+                        for (let i = 0; i < columnCount; i++) {
+                            const col = colgroup.children[i];
+                            const th = headers[0]?.cells[i];
+                            const isVisible = th && th.style.display !== 'none';
+                            
+                            if (col && isVisible) {
+                                const width = parseInt(col.style.width) || 0;
+                                columnWidths.push(width);
+                            }
+                        }
+                    }
+
+                    // Calculate new total width
+                    const totalWidth = columnWidths.reduce((sum, w) => sum + w, 0);
+                    if (totalWidth > 0) {
+                        currentTable.style.width = `${totalWidth}px`;
+                        currentTable.style.minWidth = `${totalWidth}px`;
+                        Lib.debug('ui', `Table width updated to ${totalWidth}px after toggling column ${columnIndex}`);
+                    }
+                }
+            }
         });
 
         Lib.debug('ui', `Column ${columnIndex} ${show ? 'shown' : 'hidden'} in ${allTables.length} table(s)`);
@@ -1737,6 +1840,7 @@ Note: Shortcuts work when not typing in input fields
 
         const startTime = performance.now();
         let totalColumnsResized = 0;
+        let tableCount = 0;
 
         // Store original states before modifying
         tables.forEach(table => {
@@ -1801,7 +1905,7 @@ Note: Shortcuts work when not typing in input fields
             // Measure header widths (ONLY for visible columns)
             headers.forEach((th, colIndex) => {
                 if (colIndex >= columnCount) return;
-
+                
                 // Skip hidden columns
                 if (!columnVisible[colIndex]) {
                     Lib.debug('resize', `Header ${colIndex}: Skipped (hidden)`);
@@ -1845,7 +1949,7 @@ Note: Shortcuts work when not typing in input fields
 
                 Array.from(row.cells).forEach((cell, colIndex) => {
                     if (colIndex >= columnCount) return;
-
+                    
                     // Skip hidden columns
                     if (!columnVisible[colIndex]) return;
 
@@ -1885,7 +1989,7 @@ Note: Shortcuts work when not typing in input fields
             let visibleColumnCount = 0;
             columnWidths.forEach((width, index) => {
                 const col = document.createElement('col');
-
+                
                 // Only set width for VISIBLE columns
                 if (columnVisible[index]) {
                     // Add some padding to the calculated width
@@ -1899,7 +2003,7 @@ Note: Shortcuts work when not typing in input fields
                     col.style.display = 'none';
                     Lib.debug('resize', `Table ${tableIndex}, Column ${index}: 0px (hidden)`);
                 }
-
+                
                 colgroup.appendChild(col);
             });
 
@@ -1913,7 +2017,14 @@ Note: Shortcuts work when not typing in input fields
             table.style.width = `${totalWidth}px`;
             table.style.minWidth = `${totalWidth}px`;
 
-            totalColumnsResized += visibleColumnCount;
+            // Track statistics for status message
+            if (visibleColumnCount > 0) {
+                tableCount++;
+                // Only set totalColumnsResized from the first table (all tables have same columns)
+                if (totalColumnsResized === 0) {
+                    totalColumnsResized = visibleColumnCount;
+                }
+            }
 
             // Add manual resize handles
             if (Lib.settings.sa_enable_column_resizing) {
@@ -1934,11 +2045,16 @@ Note: Shortcuts work when not typing in input fields
         // Update status display
         const statusDisplay = document.getElementById('mb-status-display');
         if (statusDisplay) {
-            statusDisplay.textContent = `✓ Auto-resized ${totalColumnsResized} columns in ${duration}ms (drag column edges to adjust)`;
+            let message = `✓ Auto-resized ${totalColumnsResized} visible column${totalColumnsResized !== 1 ? 's' : ''}`;
+            if (tableCount > 1) {
+                message += ` across ${tableCount} tables`;
+            }
+            message += ` in ${duration}ms (drag column edges to adjust)`;
+            statusDisplay.textContent = message;
             statusDisplay.style.color = 'green';
         }
 
-        Lib.info('resize', `Auto-resize complete: ${totalColumnsResized} columns in ${duration}ms`);
+        Lib.info('resize', `Auto-resize complete: ${totalColumnsResized} visible columns across ${tableCount} table(s) in ${duration}ms`);
     }
 
     /**
