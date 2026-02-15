@@ -35867,7 +35867,7 @@ has been used to filter out columns from display and after the "Auto-Resize" but
 table is somehow messed up. Specifically the header columns for "Country/Date" and Label" shrink to a minimum, only the
 "⇅" symbol and one character + half of the next character are visible.
 
-The following addiktional glitches show up:
+The following additional glitches show up:
 
  - The data cells of the "Country/Date" column show the country flag, the abbreviated country name like US and the date part SPREAD over THREE columns "Country/Date" itself but alos the next two columns "Label" and "Catalog#"
  - The "Label" cells show the complete label text but wrapped after a couple of chars again and again, so they actually use multiple rows for display
@@ -35900,6 +35900,10 @@ if (statusDisplay) {
 #+end_example
 
 For example in https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the value is displayed as 26 columns, also there are only 13 columns
+
+*** color the "Visible Columns" button red, when not all columns are displayed
+
+Render the "Visible Columns" button in red, when not all columns are displayed/selected.
 
 *** works
 

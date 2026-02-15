@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.13.0+2026-02-15
+// @version      9.14.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.14.0+2026-02-15', description: 'Enhancement: "Visible Columns" button now displays in red when not all columns are visible, providing visual feedback about hidden columns.'},
     {version: '9.13.0+2026-02-15', description: 'Fix: Hiding/showing columns after Auto-Resize now properly updates column widths and table layout. Previously caused text wrapping and misalignment. Hidden columns now properly removed from width calculation, shown columns re-measured. Status message now shows correct visible column count (not summed across tables).'},
     {version: '9.12.0+2026-02-15', description: 'Fix: Auto-Resize now properly handles hidden columns from Visible Columns feature. Previously caused rendering glitches where content spread across wrong columns. Now skips hidden columns entirely during measurement and sizing.'},
     {version: '9.11.0+2026-02-15', description: 'Fix: Auto-Resize now includes sorting symbol widths (⇅, ▲, ▼) in column header measurement. Previously columns with short data could be sized too narrow, cutting off header content.'},
@@ -445,7 +446,7 @@ let changelog = [
                         const finalWidth = Math.ceil(maxWidth + 20);
                         col.style.width = `${finalWidth}px`;
                         col.style.display = '';
-                        
+
                         Lib.debug('ui', `Column ${columnIndex} shown and re-measured: ${finalWidth}px`);
                     } else {
                         // Hide column in colgroup
@@ -466,7 +467,7 @@ let changelog = [
                             const col = colgroup.children[i];
                             const th = headers[0]?.cells[i];
                             const isVisible = th && th.style.display !== 'none';
-                            
+
                             if (col && isVisible) {
                                 const width = parseInt(col.style.width) || 0;
                                 columnWidths.push(width);
@@ -585,6 +586,22 @@ let changelog = [
         // Store checkbox states
         const checkboxes = [];
 
+        // Function to update button color based on column visibility
+        const updateButtonColor = () => {
+            const allChecked = checkboxes.every(cb => cb.checked);
+            if (allChecked) {
+                // All columns visible - default color
+                toggleBtn.style.backgroundColor = '';
+                toggleBtn.style.color = '';
+                toggleBtn.style.border = '';
+            } else {
+                // Some columns hidden - red color
+                toggleBtn.style.backgroundColor = '#dc3545';
+                toggleBtn.style.color = 'white';
+                toggleBtn.style.border = '1px solid #bd2130';
+            }
+        };
+
         // Create checkbox for each column
         headers.forEach((th, index) => {
             const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
@@ -611,6 +628,9 @@ let changelog = [
                 // Count visible columns
                 const visibleCount = checkboxes.filter(cb => cb.checked).length;
                 Lib.info('ui', `Column "${colName}" ${checkbox.checked ? 'shown' : 'hidden'}. ${visibleCount}/${checkboxes.length} columns visible`);
+
+                // Update button color
+                updateButtonColor();
             });
 
             checkboxes.push(checkbox);
@@ -641,6 +661,8 @@ let changelog = [
                     cb.dispatchEvent(new Event('change'));
                 }
             });
+            // Update button color after all checkboxes processed
+            updateButtonColor();
         };
 
         const deselectAllBtn = document.createElement('button');
@@ -655,6 +677,8 @@ let changelog = [
                     cb.dispatchEvent(new Event('change'));
                 }
             });
+            // Update button color after all checkboxes processed
+            updateButtonColor();
         };
 
         buttonRow.appendChild(selectAllBtn);
@@ -1905,7 +1929,7 @@ Note: Shortcuts work when not typing in input fields
             // Measure header widths (ONLY for visible columns)
             headers.forEach((th, colIndex) => {
                 if (colIndex >= columnCount) return;
-                
+
                 // Skip hidden columns
                 if (!columnVisible[colIndex]) {
                     Lib.debug('resize', `Header ${colIndex}: Skipped (hidden)`);
@@ -1949,7 +1973,7 @@ Note: Shortcuts work when not typing in input fields
 
                 Array.from(row.cells).forEach((cell, colIndex) => {
                     if (colIndex >= columnCount) return;
-                    
+
                     // Skip hidden columns
                     if (!columnVisible[colIndex]) return;
 
@@ -1989,7 +2013,7 @@ Note: Shortcuts work when not typing in input fields
             let visibleColumnCount = 0;
             columnWidths.forEach((width, index) => {
                 const col = document.createElement('col');
-                
+
                 // Only set width for VISIBLE columns
                 if (columnVisible[index]) {
                     // Add some padding to the calculated width
@@ -2003,7 +2027,7 @@ Note: Shortcuts work when not typing in input fields
                     col.style.display = 'none';
                     Lib.debug('resize', `Table ${tableIndex}, Column ${index}: 0px (hidden)`);
                 }
-                
+
                 colgroup.appendChild(col);
             });
 
