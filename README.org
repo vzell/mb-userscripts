@@ -29022,7 +29022,6 @@ functionality onyl available if true.
 
 Also call the initSidebarCollapse(); function only on the final rendered page, after pressing the action button
 
-
 ** sidebar
 
 In the uploaded userscript,
@@ -29035,6 +29034,7 @@ Please implement this, so that we get the complete real estate when the sidebar 
 account that in the non-collapsed state the sidebar container usually has it's own scrollbar because it has lots of
 content. Make sure that an eventual scrollbar on the "content container does not collide with the sidebar container.
 
+** TODO when sidebar is toggled there is artificial empty spece reachable with the horizonatl scrollbar
 
 * generalize special column handling (e.g. Tagger, jesus2099 image handling, collapsing RGs, Advance Relationship icons ==> discogs, SL, MB
 ** remove or fix "Tagger" column
@@ -37400,7 +37400,30 @@ sortStatusDisplay
 and render them with different colors behind each other
 
 * shortcuts
-Ctr-f ==> change
+
+Ctr-f/g ==> change
 
 * stats
+
 completely bullshit
+
+
+* Works
+
+d595878 * origin/master ctrl-f
+d8c6a0e * new status display functions
+abed1ca * reorder buttons
+7ac4289 * Better sidebar toggling to get more real estate for data container
+f38cb74 * add better button text with icons
+fcd29c2 * reorg
+1249f34 * Fix: Status display now correctly shows sorting/filtering results for muti table views
+4e8bfe9 * add new clear all filter button
+1c7941f * New status display handling, global and sorting/filtering related
+6d9c638 * document all functions
+cad16a2 * add missing id
+ee5406e * better info message
+->19c2bda * native browser confirm ==> warning popup + export complete popup
+  c7fd156 * adjust dialog width
+35eca40 * info popup for download complete
+cb7a31f * Close menu on Escape key
+  8f751f5 * button texts inline-flex, centered

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.4.0+2026-02-15
+// @version      9.5.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.5.0+2026-02-15', description: 'Reintroduce browser native "confirm" instead of modal dialog, otherwise execution hangs.'},
     {version: '9.4.0+2026-02-15', description: 'Reorderd action buttons in a more logic workflow.'},
     {version: '9.3.0+2026-02-15', description: 'Fix: Better sidebar toggling to get more real estate for data container when sidebar is collapsed.'},
     {version: '9.2.0+2026-02-15', description: 'Fix: Status display now correctly shows sorting/filtering results with table name and column info. Fixed ReferenceError that caused "Sort failed" and "Filtering..." to persist incorrectly.'},
@@ -4570,81 +4571,12 @@ Note: Shortcuts work when not typing in input fields
         Lib.debug('fetch', `Total pages to fetch: ${maxPage}`);
 
         // If page count is above threshold, show modal
-        if (maxPage > maxThreshold) {
-            return new Promise((resolve) => {
-                // Create overlay
-                const overlay = document.createElement('div');
-                overlay.style.cssText = `
-                    position: fixed;
-                    top:0; left:0; width:100%; height:100%;
-                    background: rgba(0,0,0,0.5);
-                    display:flex; justify-content:center; align-items:center;
-                    z-index:20000; backdrop-filter: blur(2px);
-                `;
-
-                // Create dialog
-                const dialog = document.createElement('div');
-                dialog.style.cssText = `
-                    background:white; padding:20px; border-radius:12px;
-                    box-shadow:0 8px 32px rgba(0,0,0,0.3);
-                    max-width:480px; width:90%;
-                    font-family:sans-serif; text-align:left;
-                `;
-
-                // Message
-                const msg = document.createElement('div');
-                msg.style.marginBottom = '18px';
-                msg.textContent = `Warning: This MusicBrainz entity has ${maxPage} pages.
-                                   It's more than the configured maximum (${maxThreshold}) and could result in performance, memory or timing issues when downloading. Proceed?`;
-
-                // Buttons container
-                const btnContainer = document.createElement('div');
-                btnContainer.style.cssText = 'display:flex; justify-content:flex-end; gap:12px;';
-
-                const cancelBtn = document.createElement('button');
-                cancelBtn.textContent = 'Cancel';
-                cancelBtn.style.cssText = 'padding:6px 12px; border-radius:6px; cursor:pointer; border:1px solid #ccc; background:#f0f0f0;';
-                cancelBtn.onclick = () => {
-                    cleanup(false);
-                };
-
-                const proceedBtn = document.createElement('button');
-                proceedBtn.textContent = 'Proceed';
-                proceedBtn.style.cssText = 'padding:6px 12px; border-radius:6px; cursor:pointer; border:none; background:#4CAF50; color:white;';
-                proceedBtn.onclick = () => {
-                    cleanup(true);
-                };
-
-                btnContainer.appendChild(cancelBtn);
-                btnContainer.appendChild(proceedBtn);
-                dialog.appendChild(msg);
-                dialog.appendChild(btnContainer);
-                overlay.appendChild(dialog);
-                document.body.appendChild(overlay);
-
-                // Escape key closes as cancel
-                const onEscape = (e) => {
-                    if (e.key === 'Escape') cleanup(false);
-                };
-                document.addEventListener('keydown', onEscape);
-
-                // Cleanup function
-                function cleanup(confirmed) {
-                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-                    document.removeEventListener('keydown', onEscape);
-                    if (!confirmed) {
-                        Lib.warn('warn', `High page count detected (${maxPage}). This may take a while and could trigger rate limiting.`);
-                        activeBtn.style.backgroundColor = '';
-                        activeBtn.style.color = '';
-                        activeBtn.disabled = false;
-                        globalStatusDisplay.textContent = '';
-                    }
-                    resolve(confirmed); // returns true if Proceed clicked
-                }
-            }).then((proceed) => {
-                if (!proceed) return; // user cancelled, exit function
-                // Continue with fetching pages...
-            });
+        if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
+            Lib.warn('warn', `High page count detected (${maxPage}). This may take a while and could trigger rate limiting.`);
+            activeBtn.style.backgroundColor = '';
+            activeBtn.style.color = '';
+            activeBtn.disabled = false;
+            statusDisplay.textContent = '';
         }
 
         stopRequested = false;
