@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.1.0+2026-02-15
+// @version      9.2.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.2.0+2026-02-15', description: 'Fix: Status display now correctly shows sorting/filtering results with table name and column info. Fixed ReferenceError that caused "Sort failed" and "Filtering..." to persist incorrectly.'},
     {version: '9.1.0+2026-02-15', description: 'Add new clear all filter button, global AND column level.'},
     {version: '9.0.0+2026-02-15', description: 'New status display handling, global and sorting/filtering related.'},
     {version: '8.0.0+2026-02-15', description: 'Function descriptions throughout.'},
@@ -3858,8 +3859,8 @@ Note: Shortcuts work when not typing in input fields
 
         Lib.debug('filter', 'runFilter(): active element =', __activeEl?.className || '(none)');
 
+        let filteredArray = []; // Declare outside to be accessible in status display
         if (activeDefinition.tableMode === 'multi') {
-            const filteredArray = [];
             let totalFiltered = 0;
             let totalAbsolute = 0;
 
@@ -4034,7 +4035,21 @@ Note: Shortcuts work when not typing in input fields
                 filteredArray.reduce((sum, g) => sum + g.rows.length, 0) :
                 document.querySelectorAll('table.tbl tbody tr').length;
 
-            statusDisplay.textContent = `✓ Filtered ${rowCount} rows in ${filterDuration}ms`;
+            // Build filter info string
+            const filterParts = [];
+            if (globalQuery) {
+                filterParts.push(`global:"${globalQuery}"`);
+            }
+
+            // Count active column filters
+            const activeColFilters = document.querySelectorAll('.mb-col-filter-input');
+            const activeColCount = Array.from(activeColFilters).filter(inp => inp.value).length;
+            if (activeColCount > 0) {
+                filterParts.push(`${activeColCount} column filter${activeColCount > 1 ? 's' : ''}`);
+            }
+
+            const filterInfo = filterParts.length > 0 ? ` [${filterParts.join(', ')}]` : '';
+            statusDisplay.textContent = `✓ Filtered ${rowCount} rows in ${filterDuration}ms${filterInfo}`;
             statusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
         }
 
@@ -5887,7 +5902,8 @@ Note: Shortcuts work when not typing in input fields
                             const durationMs = (performance.now() - startSort).toFixed(0);
 
                             if (statusDisplay) {
-                                statusDisplay.textContent = `✓ Sorted on column "${colName}": ${rowCount} rows in ${durationMs}ms`;
+                                const tableName = isMultiTable && targetGroup ? (targetGroup.category || targetGroup.key || sortKey) : 'table';
+                                statusDisplay.textContent = `✓ Sorted [${tableName}] column "${colName}": ${rowCount} rows in ${durationMs}ms`;
                                 statusDisplay.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
                             }
 
