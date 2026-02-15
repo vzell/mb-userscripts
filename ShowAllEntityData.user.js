@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.0.0+2026-02-15
+// @version      9.1.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.1.0+2026-02-15', description: 'Add new clear all filter button, global AND column level.'},
     {version: '9.0.0+2026-02-15', description: 'New status display handling, global and sorting/filtering related.'},
     {version: '8.0.0+2026-02-15', description: 'Function descriptions throughout.'},
     {version: '7.4.0+2026-02-14', description: 'New configuration dialog with sections and dividers. Make all UI features opinionated.'},
@@ -2971,29 +2972,57 @@ Note: Shortcuts work when not typing in input fields
     };
     filterContainer.appendChild(unhighlightAllBtn);
 
+    const clearColumnFiltersBtn = document.createElement('button');
+    clearColumnFiltersBtn.textContent = 'Clear all column filters';
+    clearColumnFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    clearColumnFiltersBtn.onclick = () => {
+        // Clear all column filters only
+        document.querySelectorAll('.mb-col-filter-input').forEach(input => {
+            input.value = '';
+        });
+
+        // Re-run filter to update display
+        if (typeof runFilter === 'function') {
+            runFilter();
+        }
+
+        Lib.info('filter', 'All column filters cleared');
+
+        // Show feedback in status
+        const statusDisplay = document.getElementById('mb-status-display');
+        if (statusDisplay) {
+            statusDisplay.textContent = '✓ All column filters cleared';
+            statusDisplay.style.color = 'green';
+        }
+    };
+    filterContainer.appendChild(clearColumnFiltersBtn);
+
     const clearAllFiltersBtn = document.createElement('button');
     clearAllFiltersBtn.textContent = 'Clear all filters';
     clearAllFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
-    clearAllFiltersBtn.onclick = clearAllFilters;
+    clearAllFiltersBtn.onclick = () => {
+        // Clear global filter
+        filterInput.value = '';
+        filterClear.click(); // This will trigger the clear handler
+
+        // Also call the main clearAllFilters function
+        clearAllFilters();
+    };
     filterContainer.appendChild(clearAllFiltersBtn);
 
     const statusDisplay = document.createElement('span');
     statusDisplay.id = 'mb-status-display';
-    statusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+    statusDisplay.style.cssText = 'font-size:0.8em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
     filterContainer.appendChild(statusDisplay);
 
     const timerDisplay = document.createElement('span');
     timerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
-
-    const sortTimerDisplay = document.createElement('span');
-    sortTimerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
 
     controlsContainer.appendChild(stopBtn);
     controlsContainer.appendChild(globalStatusDisplay);
     controlsContainer.appendChild(progressContainer);
     // Filter container is NOT appended here anymore; moved to H2 later
     controlsContainer.appendChild(timerDisplay);
-    controlsContainer.appendChild(sortTimerDisplay);
 
     const style = document.createElement('style');
     style.textContent = `
@@ -5233,8 +5262,6 @@ Note: Shortcuts work when not typing in input fields
 
             const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
             globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s`;
-            //globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
-            timerDisplay.textContent = ''; // Explicitly clear any temp text
 
             Lib.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
@@ -5794,8 +5821,6 @@ Note: Shortcuts work when not typing in input fields
                         statusDisplay.style.color = 'orange';
                     }
 
-                    sortTimerDisplay.textContent = 'Sorting...⏳';
-
                     if (showWaitCursor) document.body.classList.add('mb-sorting-active');
 
                     // Show progress for large sorts
@@ -5860,9 +5885,6 @@ Note: Shortcuts work when not typing in input fields
 
                             const duration = ((performance.now() - startSort) / 1000).toFixed(2);
                             const durationMs = (performance.now() - startSort).toFixed(0);
-
-                            // Update displays
-                            //sortTimerDisplay.textContent = `Sorted "${colName}": ${duration}s`;
 
                             if (statusDisplay) {
                                 statusDisplay.textContent = `✓ Sorted on column "${colName}": ${rowCount} rows in ${durationMs}ms`;

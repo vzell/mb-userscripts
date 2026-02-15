@@ -36966,3 +36966,119 @@ should be renamed to "globalStatusDisplay" instead.
 
 The current "statusDisplay" variable should be rendered after the newly introduced "Clear all filters" button
 
+* new button with text "Clear all filters"
+
+Add a new button with text "Clear all filters" should be created after the "Clear all column filters" button and when
+pressed call the function "clearAllFilters" and additionally clear the global filter.
+
+* multi tables sorting and filtering status display errors
+
+When sorting and filtering on multitable pages like https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+
+I get the following behaviour:
+
+- sorting actually works, but the status line says: "✗ Sort failed"
+- filtering actually works, but the status line says: "⏳ Filtering..."
+
+So everything is actually working but the status is wrong. It should also display the name of the table and column where sorting/filtering actually happens
+
+#+begin_example
+[VZ-ShowAllEntities: place-performances] ⚖️ Sorting table "engineering location for_0" by column: "Title" (index: 1) to state 2. Row count: 6 
+[VZ-ShowAllEntities: place-performances] 🔍 runFilter(): active element = (none)
+[VZ-ShowAllEntities: place-performances] 🎨 Starting renderGroupedTable with 5 categories. Query: "re-run" 
+[VZ-ShowAllEntities: place-performances] 🎨 Cloning table head for template. 
+[VZ-ShowAllEntities: place-performances] 🧹 cleanupHeaders() called → existing headers=[⇅ Date ▲▼ | ⇅ Title ▲▼ | ⇅ Attributes ▲▼ | ⇅ Artist ▲▼ | ⇅ Length ▲▼ | ⇅ MB-Name ▲▼ | ⇅ Comment ▲▼] 
+[VZ-ShowAllEntities: place-performances] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: place-performances] 🎨 Searching for target H2. Current pageType: place-performances 
+[VZ-ShowAllEntities: place-performances] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: place-performances] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: place-performances] 🎨 Filtering: Cleaning up overflow tables beyond data length (5). 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "engineering location for" with 6 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 0 for group "engineering location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "producing location for" with 5 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 1 for group "producing location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "recording location for" with 100 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 2 for group "recording location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "shooting location for" with 22 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 3 for group "shooting location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "recording location for (2)" with 16 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 4 for group "recording location for (2)". 
+[VZ-ShowAllEntities: place-performances] 🎨 Finished renderGroupedTable. 
+[VZ-ShowAllEntities: place-performances] 🎨 Starting updateH2Count: filtered=149, total=149 
+[VZ-ShowAllEntities: place-performances] 🎨 Searching for target H2. Current pageType: place-performances 
+[VZ-ShowAllEntities: place-performances] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: place-performances] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: place-performances] 🎨 Target element identified: "▼Performances(149)[ Show | Hid..." 
+[VZ-ShowAllEntities: place-performances] 🎨 Removing existing row count stat span. 
+[VZ-ShowAllEntities: place-performances] 🎨 Inserting count span before referenceNode: mb-master-toggle 
+[VZ-ShowAllEntities: place-performances] 🎨 Updated header/target ▼Performances(149)[ Show | Hid count: (149) 
+[VZ-ShowAllEntities: place-performances] ❌ Error during sort: ReferenceError: filteredArray is not defined
+    at runFilter (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:4832:17)
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:6682:29
+
+[VZ-ShowAllEntities: place-performances] 🔍 Column filter updated on column 1: "I" 
+[VZ-ShowAllEntities: place-performances] 🔍 runFilter(): active element = mb-col-filter-input
+[VZ-ShowAllEntities: place-performances] 🎨 Starting renderGroupedTable with 5 categories. Query: "re-run" 
+[VZ-ShowAllEntities: place-performances] 🎨 Cloning table head for template. 
+[VZ-ShowAllEntities: place-performances] 🧹 cleanupHeaders() called → existing headers=[⇅ Date ▲▼ | ⇅ Title ▲▼ | ⇅ Attributes ▲▼ | ⇅ Artist ▲▼ | ⇅ Length ▲▼ | ⇅ MB-Name ▲▼ | ⇅ Comment ▲▼] 
+[VZ-ShowAllEntities: place-performances] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: place-performances] 🎨 Searching for target H2. Current pageType: place-performances 
+[VZ-ShowAllEntities: place-performances] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: place-performances] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: place-performances] 🎨 Filtering: Cleaning up overflow tables beyond data length (5). 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "engineering location for" with 5 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 0 for group "engineering location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "producing location for" with 5 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 1 for group "producing location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "recording location for" with 100 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 2 for group "recording location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "shooting location for" with 22 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 3 for group "shooting location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "recording location for (2)" with 16 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 4 for group "recording location for (2)". 
+[VZ-ShowAllEntities: place-performances] 🎨 Finished renderGroupedTable. 
+[VZ-ShowAllEntities: place-performances] 🔍 Attempting focus restore: tableIdx=0, colIdx=1 
+[VZ-ShowAllEntities: place-performances] 🔍 Restored focus to column filter input 
+[VZ-ShowAllEntities: place-performances] 🎨 Starting updateH2Count: filtered=148, total=149 
+[VZ-ShowAllEntities: place-performances] 🎨 Searching for target H2. Current pageType: place-performances 
+[VZ-ShowAllEntities: place-performances] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: place-performances] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: place-performances] 🎨 Target element identified: "▼Performances(149)[ Show | Hid..." 
+[VZ-ShowAllEntities: place-performances] 🎨 Removing existing row count stat span. 
+[VZ-ShowAllEntities: place-performances] 🎨 Inserting count span before referenceNode: mb-master-toggle 
+[VZ-ShowAllEntities: place-performances] 🎨 Updated header/target ▼Performances(149)[ Show | Hid count: (148 of 149) 
+ferenceError: filteredArray is not defined
+c:4832:17)
+[VZ-ShowAllEntities: place-performances] 🔍 Column filter updated on column 1: "It" 
+[VZ-ShowAllEntities: place-performances] 🔍 runFilter(): active element = mb-col-filter-input
+[VZ-ShowAllEntities: place-performances] 🎨 Starting renderGroupedTable with 5 categories. Query: "re-run" 
+[VZ-ShowAllEntities: place-performances] 🎨 Cloning table head for template. 
+[VZ-ShowAllEntities: place-performances] 🧹 cleanupHeaders() called → existing headers=[⇅ Date ▲▼ | ⇅ Title ▲▼ | ⇅ Attributes ▲▼ | ⇅ Artist ▲▼ | ⇅ Length ▲▼ | ⇅ MB-Name ▲▼ | ⇅ Comment ▲▼] 
+[VZ-ShowAllEntities: place-performances] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: place-performances] 🎨 Searching for target H2. Current pageType: place-performances 
+[VZ-ShowAllEntities: place-performances] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: place-performances] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: place-performances] 🎨 Filtering: Cleaning up overflow tables beyond data length (5). 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "engineering location for" with 1 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 0 for group "engineering location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "producing location for" with 5 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 1 for group "producing location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "recording location for" with 100 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 2 for group "recording location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "shooting location for" with 22 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 3 for group "shooting location for". 
+[VZ-ShowAllEntities: place-performances] 🎨 Processing group: "recording location for (2)" with 16 rows. 
+[VZ-ShowAllEntities: place-performances] 🎨 Reusing existing table at index 4 for group "recording location for (2)". 
+[VZ-ShowAllEntities: place-performances] 🎨 Finished renderGroupedTable. 
+[VZ-ShowAllEntities: place-performances] 🔍 Attempting focus restore: tableIdx=0, colIdx=1 
+[VZ-ShowAllEntities: place-performances] 🔍 Restored focus to column filter input 
+[VZ-ShowAllEntities: place-performances] 🎨 Starting updateH2Count: filtered=144, total=149 
+[VZ-ShowAllEntities: place-performances] 🎨 Searching for target H2. Current pageType: place-performances 
+[VZ-ShowAllEntities: place-performances] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: place-performances] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: place-performances] 🎨 Target element identified: "▼Performances(148 of 149)[ Sho..." 
+[VZ-ShowAllEntities: place-performances] 🎨 Removing existing row count stat span. 
+[VZ-ShowAllEntities: place-performances] 🎨 Inserting count span before referenceNode: mb-master-toggle 
+[VZ-ShowAllEntities: place-performances] 🎨 Updated header/target ▼Performances(148 of 149)[ Sho count: (144 of 149)     
+#+end_example
+
