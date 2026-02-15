@@ -4381,15 +4381,86 @@ Note: Shortcuts work when not typing in input fields
             maxPage = determineMaxPageFromDOM();
         }
 
+        // --- USERSCRIPT WARNING POPUP ---
         const maxThreshold = Lib.settings.sa_max_page;
         Lib.debug('fetch', `Total pages to fetch: ${maxPage}`);
-        if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
-            Lib.warn('warn', `High page count detected (${maxPage}). This may take a while and could trigger rate limiting.`);
-            activeBtn.style.backgroundColor = '';
-            activeBtn.style.color = '';
-            activeBtn.disabled = false;
-            statusDisplay.textContent = '';
-            return;
+
+        // If page count is above threshold, show modal
+        if (maxPage > maxThreshold) {
+            return new Promise((resolve) => {
+                // Create overlay
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed;
+                    top:0; left:0; width:100%; height:100%;
+                    background: rgba(0,0,0,0.5);
+                    display:flex; justify-content:center; align-items:center;
+                    z-index:20000; backdrop-filter: blur(2px);
+                `;
+
+                // Create dialog
+                const dialog = document.createElement('div');
+                dialog.style.cssText = `
+                    background:white; padding:20px; border-radius:12px;
+                    box-shadow:0 8px 32px rgba(0,0,0,0.3);
+                    max-width:480px; width:90%;
+                    font-family:sans-serif; text-align:left;
+                `;
+
+                // Message
+                const msg = document.createElement('div');
+                msg.style.marginBottom = '18px';
+                msg.textContent = `Warning: This MusicBrainz entity has ${maxPage} pages.
+                                   It's more than the configured maximum (${maxThreshold}) and could result in performance, memory or timing issues when downloading. Proceed?`;
+
+                // Buttons container
+                const btnContainer = document.createElement('div');
+                btnContainer.style.cssText = 'display:flex; justify-content:flex-end; gap:12px;';
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.style.cssText = 'padding:6px 12px; border-radius:6px; cursor:pointer; border:1px solid #ccc; background:#f0f0f0;';
+                cancelBtn.onclick = () => {
+                    cleanup(false);
+                };
+
+                const proceedBtn = document.createElement('button');
+                proceedBtn.textContent = 'Proceed';
+                proceedBtn.style.cssText = 'padding:6px 12px; border-radius:6px; cursor:pointer; border:none; background:#4CAF50; color:white;';
+                proceedBtn.onclick = () => {
+                    cleanup(true);
+                };
+
+                btnContainer.appendChild(cancelBtn);
+                btnContainer.appendChild(proceedBtn);
+                dialog.appendChild(msg);
+                dialog.appendChild(btnContainer);
+                overlay.appendChild(dialog);
+                document.body.appendChild(overlay);
+
+                // Escape key closes as cancel
+                const onEscape = (e) => {
+                    if (e.key === 'Escape') cleanup(false);
+                };
+                document.addEventListener('keydown', onEscape);
+
+                // Cleanup function
+                function cleanup(confirmed) {
+                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                    document.removeEventListener('keydown', onEscape);
+                    if (!confirmed) {
+                        Lib.warn('warn', `High page count detected (${maxPage}). This may take a while and could trigger rate limiting.`);
+                        activeBtn.style.backgroundColor = '';
+                        activeBtn.style.color = '';
+                        activeBtn.disabled = false;
+                        statusDisplay.textContent = '';
+                    }
+                    resolve(confirmed); // returns true if Proceed clicked
+                }
+            }).then((proceed) => {
+                if (!proceed) return; // user cancelled, exit function
+                // Continue with fetching pages...
+            });
         }
 
         stopRequested = false;
@@ -5081,7 +5152,8 @@ Note: Shortcuts work when not typing in input fields
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
 
             const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
-            statusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
+            statusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s`;
+            //statusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
             timerDisplay.textContent = ''; // Explicitly clear any temp text
 
             Lib.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
@@ -5956,7 +6028,66 @@ Note: Shortcuts work when not typing in input fields
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
+
         Lib.info('cache', `Data saved to ${filename}`);
+
+        // --- INFO POPUP TO ALERT USER (WITH FADE OUT) ---
+        const infoPopup = document.createElement('div');
+        infoPopup.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 1px solid #888;
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 400px;
+            text-align: center;
+            font-family: sans-serif;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        `;
+
+        const msg = document.createElement('div');
+        msg.textContent = 'CSV export complete. Please monitor your browser for the file download.';
+        msg.style.marginBottom = '15px';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Close';
+        closeBtn.style.cssText = `
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background-color: #f0f0f0;
+        `;
+        closeBtn.type = 'button';
+
+        // Close function with fade out
+        const closePopup = () => {
+            infoPopup.style.opacity = '0';
+            // Remove from DOM after transition
+            setTimeout(() => {
+                if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
+                document.removeEventListener('keydown', onEscape);
+            }, 300); // match the CSS transition duration
+        };
+
+        // Button click closes popup
+        closeBtn.addEventListener('click', closePopup);
+
+        // Escape key closes popup
+        const onEscape = (e) => {
+            if (e.key === 'Escape') closePopup();
+        };
+        document.addEventListener('keydown', onEscape);
+
+        infoPopup.appendChild(msg);
+        infoPopup.appendChild(closeBtn);
+        document.body.appendChild(infoPopup);
     }
 
     /**

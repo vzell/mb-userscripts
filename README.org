@@ -35533,7 +35533,7 @@ or a country flag in front of the country name
 So please fix also the column filtering for regexps to only take real text into account
 
 
-* Sticky header
+* Sticky headers
 ** DONE works for single table views
 
 go with "Sticky Headers - See columns while scrolling", but include the filter row with the other stiky headers
@@ -35541,11 +35541,12 @@ go with "Sticky Headers - See columns while scrolling", but include the filter r
 ** multi table mode
 ** make the whole MB page header up to the filter row sticky
 
+
 * Export CSV
 ** remove "▶" and others before exporting
 ** add more formats, JSON, ORG ,pde, etc
 
-** create info popup
+** DONE create info popup
 
 In the following function, after the line
 
@@ -35673,13 +35674,14 @@ Ctrl-f
 
 ** problem with browser defined keyboard shortcust, e.g. Ctrl++ ==> increase font instead of "Settings" dialog
 
+
 * statistics panel
 ** wrong stats
 ** make it multitable aware
 ** create keyboard shorcut
 
 
-* table density
+* DONE table density
 
 * DONE Column Visibility Toggle
 ** "Escape" key should make the dialog vanish, or clicking outside somewhere
@@ -36406,7 +36408,8 @@ Place the 'Sorted "<column name>": <elapsed>s' after the "Unhighlight all" butto
 
 * remove config menu when called from MusicBrainz "Editing" menu, when pressing Esc
 
-* adjust dialog width when "Search expression..." would grow larger than initila dialog size, but constrain the dialog to not get wieder that the browser window
+
+* DONE adjust dialog width when "Search expression..." would grow larger than initila dialog size, but constrain the dialog to not get wieder that the browser window
 
 In the following code
 
@@ -36461,3 +36464,23 @@ adjust the dialog width when "Search expression..." would grow larger than the i
         document.body.appendChild(overlay);
         overlay.appendChild(dialog);
 #+end_example
+
+
+* confirm
+
+The following warning message appears in a native browser window I think,
+
+#+begin_example
+        const maxThreshold = Lib.settings.sa_max_page;
+        Lib.debug('fetch', `Total pages to fetch: ${maxPage}`);
+        if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
+            Lib.warn('warn', `High page count detected (${maxPage}). This may take a while and could trigger rate limiting.`);
+            activeBtn.style.backgroundColor = '';
+            activeBtn.style.color = '';
+            activeBtn.disabled = false;
+            statusDisplay.textContent = '';
+            return;
+        }
+#+end_example
+
+how can we change this to a userscript generated popup
