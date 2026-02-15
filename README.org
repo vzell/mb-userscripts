@@ -36188,6 +36188,11 @@ Please apply the same look-and-feel to the changelog "show: function ()"
   - dates in italic
   - the actual changelog entry in the curretn font
 
+** adjustment
+
+- make the version column smaller, actually it should only occupy as much space (maybe a little more than a typical date entry "11.4.0+2026-02-01")
+- make the description column initially wider
+
 * put the "sorted <time> in some other place to not produce eye flicker
 
 * remove "Initial rendering" or replace with real values
