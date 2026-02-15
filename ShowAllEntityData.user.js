@@ -6052,7 +6052,7 @@ Note: Shortcuts work when not typing in input fields
         `;
 
         const msg = document.createElement('div');
-        msg.textContent = 'CSV export complete. Please monitor your browser for the file download.';
+        msg.textContent = 'Saving of JSON table data to the filesystem initiated. Please monitor your browser for the file download.';
         msg.style.marginBottom = '15px';
 
         const closeBtn = document.createElement('button');
