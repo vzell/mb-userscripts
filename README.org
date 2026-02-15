@@ -37082,3 +37082,276 @@ c:4832:17)
 [VZ-ShowAllEntities: place-performances] 🎨 Updated header/target ▼Performances(148 of 149)[ Sho count: (144 of 149)     
 #+end_example
 
+
+* Checks
+** question
+
+In the uploaded userscript
+
+- Check for all unused variables and function definitions
+- Check for obvious code which could make it into a functions without breaking the rest of the big userscript
+- check for code blocks which could easily be refactored to make the code more clear
+
+** answer
+
+#+begin_example
+This is an impressive and highly functional Tampermonkey script! Managing DOM manipulation, chunked rendering, filtering, and cross-tab/file states in vanilla JavaScript is no small feat.
+
+I have reviewed the script based on your guidelines. Here is a breakdown of unused code, extraction candidates, and areas that would significantly benefit from refactoring for clarity.
+
+1. Unused Variables and Functions
+Unused Functions:
+
+triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) (around line 1618): This function is completely orphaned. The file selection and loading logic is actually handled by the <input type="file"> element created around line 1319 and triggered inside showLoadFilterDialog(). You can safely delete the triggerDiskLoad function.
+
+Dead UI Elements (Never appended to the DOM):
+
+Around line 1334, several pre-filter UI elements are created but never appended to the document:
+
+preFilterContainer
+
+preFilterInput
+
+preFilterCaseLabel
+
+preFilterCaseCheckbox
+
+preFilterRxLabel
+
+preFilterRxCheckbox
+
+(Note: preFilterMsg is appended later, so it is used, but the inputs themselves are legacy code likely superseded by your showLoadFilterDialog modal).
+
+Unused (or Dead-End) Variables:
+
+timerDisplay: Created around line 1406 (const timerDisplay = document.createElement('span');) and appended to the controls, but its text content is never updated during the fetching, sorting, or filtering operations (the script uses globalStatusDisplay and statusDisplay instead).
+
+basePath and isFilteredRelationshipPage: These are declared at the top and only ever used in the Lib.debug('init', ...) statements. Because you want to keep debug logging, these shouldn't be removed, but be aware they serve no logical purpose outside of the console.
+
+2. Code Extraction Candidates (DRY Principle)
+There are several highly repetitive blocks of code that can be extracted into shared helper functions without changing any logic.
+
+A. The Fade-Out Notification Popups
+You have an identical ~45-line block of code for a pop-up alert in both exportTableToCSV() and triggerStandardDownload().
+
+Refactor: Extract this into a reusable UI helper.
+
+JavaScript
+/**
+ * Shows a temporary fade-out notification popup
+ * @param {string} messageText - The message to display
+ */
+function showNotificationPopup(messageText) {
+    const infoPopup = document.createElement('div');
+    infoPopup.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border: 1px solid #888;
+        border-radius: 6px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 400px;
+        text-align: center;
+        font-family: sans-serif;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    `;
+
+    const msg = document.createElement('div');
+    msg.textContent = messageText;
+    msg.style.marginBottom = '15px';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = `
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        border: 1px solid #555;
+        background-color: #f0f0f0;
+    `;
+    closeBtn.type = 'button';
+
+    // Close function with fade out
+    const closePopup = () => {
+        infoPopup.style.opacity = '0';
+        // Remove from DOM after transition
+        setTimeout(() => {
+            if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
+            document.removeEventListener('keydown', onEscape);
+        }, 300); // match the CSS transition duration
+    };
+
+    // Button click closes popup
+    closeBtn.addEventListener('click', closePopup);
+
+    // Escape key closes popup
+    const onEscape = (e) => {
+        if (e.key === 'Escape') closePopup();
+    };
+    document.addEventListener('keydown', onEscape);
+
+    infoPopup.appendChild(msg);
+    infoPopup.appendChild(closeBtn);
+    document.body.appendChild(infoPopup);
+}
+B. Highlight Resetting
+The logic to clear previous .mb-global-filter-highlight and .mb-column-filter-highlight tags is repeated four times (in runFilter single mode, runFilter multi mode, startFetchingProcess cleanup, and the "Unhighlight all" button).
+
+Refactor:
+
+JavaScript
+function clearHighlights(containerElement) {
+    containerElement.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
+        .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+}
+C. Button Generation Boilerplate
+Creating top-bar buttons (addExportButton, addDensityControl, addStatsButton, addAutoResizeButton) involves 10-12 lines of identical document.createElement and inline CSS boilerplate.
+
+Refactor: Create a createToolbarButton(label, title, onClickHandler) to generate and return these buttons.
+
+3. Refactoring for Clarity
+A. Massive duplication inside runFilter()
+The runFilter() function has two entirely separate blocks for activeDefinition.tableMode === 'multi' and single table mode. Inside both blocks, the 40+ line loop that resets highlights, checks Regex/Case matches against the global filter, checks the column filters, and applies new highlight spans is 100% duplicated.
+
+You can pull the row-evaluation logic out into a single helper function, drastically cleaning up runFilter():
+
+JavaScript
+/**
+ * Evaluates if a row matches the given filters and applies highlights if necessary.
+ * Returns true if it matches, false otherwise.
+ */
+function evaluateAndHighlightRow(row, globalQuery, globalQueryRaw, globalRegex, colFilters, isCaseSensitive, isRegExp) {
+    // Reset previous highlights (critical for correct filtering)
+    clearHighlights(row);
+
+    // Global match
+    let globalHit = !globalQuery;
+    if (!globalHit) {
+        if (isRegExp && globalRegex) {
+            // For regex patterns, test against each cell individually
+            // This allows anchored patterns like ^Thunder Road to work correctly
+            globalHit = Array.from(row.cells).some(cell => {
+                const cellText = getCleanColumnText(cell);
+                return globalRegex.test(cellText);
+            });
+        } else {
+            // For non-regex, test against concatenated row text
+            const text = getCleanVisibleText(row);
+            globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
+        }
+    }
+
+    // Column matches
+    let colHit = true;
+    for (const f of colFilters) {
+        const cellText = getCleanColumnText(row.cells[f.idx]);
+        let match = false;
+        if (isRegExp) {
+            try {
+                match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
+            } catch (e) {
+                match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+            }
+        } else {
+            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+        }
+        if (!match) {
+            colHit = false;
+            break;
+        }
+    }
+
+    const finalHit = globalHit && colHit;
+    if (finalHit) {
+        if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+        colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
+    }
+    
+    return finalHit;
+}
+With this in place, your matches = group.rows.map(r => r.cloneNode(true)).filter(r => { ... }) just becomes a clean, single line call to evaluateAndHighlightRow(...).
+
+B. The startFetchingProcess Function Complexity
+This function is over 600 lines long. The core of its complexity lies around line 2140: tableBody.childNodes.forEach(node => { ... }). Inside this loop, you're parsing DOM elements, splitting specific columns (Country/Date, Location, Area), extracting data, and applying column exclusions.
+
+Refactor Idea: Move the column manipulation blocks out of the loop.
+For example, the 25-line chunk handling Country/Date splitting could become:
+
+JavaScript
+function splitCountryDateCell(newRow, countryDateIdx) {
+    const tdSplitC = document.createElement('td');
+    const tdSplitD = document.createElement('td');
+    
+    const cdCell = newRow.cells[countryDateIdx];
+    if (cdCell) {
+        const events = Array.from(cdCell.querySelectorAll('.release-event'));
+        events.forEach((ev, i) => {
+            // ... (existing logic) ...
+        });
+    }
+    return { tdSplitC, tdSplitD };
+}
+Doing this for Location and Area as well would shave hundreds of lines of visual noise off startFetchingProcess and make the primary data-collection loop much easier to follow.
+#+end_example
+
+* Reorder
+** question
+
+- Reorder all functions sorted at the end of the file
+- Leave
+
+#+begin_example
+let changelog = [changelog
+const SCRIPT_ID = "vzell-mb-show-all-entities";
+const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
+// CONFIG SCHEMA
+const configSchema = {
+const pageDefinitions = [
+#+end_example
+
+at the very beginning of the file (in that order if possible, and if it does not break the code)
+and other variable definitions after it.
+
+Is that even possible without breaking the code
+
+** answer
+*** claude
+
+#+begin_example
+Code Reorganization
+New structure (from top to bottom):
+
+Changelog (line 50) - Moved to right after userscript header
+IIFE start (function() { 'use strict'; (line 115)
+SCRIPT_ID (line 119)
+SCRIPT_NAME (line 120)
+configSchema (line 123)
+pageDefinitions (line 411)
+All utility functions (line 902+)
+Lib initialization (line 2625)
+Rest of execution code
+
+Why This Works
+JavaScript function declarations are hoisted, meaning they can be defined anywhere and used before their definition in the source code. The functions reference Lib, configSchema, and other variables, but they're only called after everything is initialized, so there's no dependency issue.
+The constants (SCRIPT_ID, SCRIPT_NAME, configSchema, pageDefinitions) are now at the top because:
+
+They have no dependencies (except SCRIPT_NAME uses GM_info which is globally available)
+Lib initialization needs them, so they must come before it
+They're configuration/metadata, so having them at the top improves code organization
+
+Changes Made
+
+Version: Updated to 9.1.2+2026-02-15
+Changelog: Added entry about code reorganization
+Syntax: Verified with Node.js - all valid JavaScript
+
+The reorganized code is functionally identical to the original but much more readable with all configuration at the top!
+#+end_example
+
+*** gemini
+
