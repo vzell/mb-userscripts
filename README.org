@@ -37388,3 +37388,14 @@ Export to CSV 💾
 
 
 * sorting / filtering (clear all column filters) status on multi table views for each sub table, separate sorting AND filtering in two sections
+
+sorting / filtering (clear all column filters) status on multi table views for each sub table, separate sorting AND
+filtering in two sections
+
+add new
+
+filterStatusDisplay
+sortStatusDisplay
+
+and render them with different colors behind each other
+
