@@ -35690,12 +35690,12 @@ Ctrl-f
 
 * DONE table density
 
-* TODO Column Visibility Toggle
+* DONE Column Visibility Toggle
 ** "Escape" key should make the dialog vanish, or clicking outside somewhere
 
 In the following code, right now the pull-down menu with the checkbox list only closes when clicking somewhere outsode of the list.
 The "Escape" key should also make the dialog vanish.
-** TODO on mutitable view toggling a column ONLY toggles the first table, should toggle all
+** DONE on mutitable view toggling a column ONLY toggles the first table, should toggle all
 
 In the uploaded userscript
 
@@ -37106,8 +37106,7 @@ c:4832:17)
 ** question
 
 In the uploaded userscript
-
-- Check for all unused variables and function definitions
+ for all unused variables and function definitions
 - Check for obvious code which could make it into a functions without breaking the rest of the big userscript
 - check for code blocks which could easily be refactored to make the code more clear
 
@@ -37389,16 +37388,58 @@ Export to CSV 💾
 
 
 * sorting / filtering (clear all column filters) status on multi table views for each sub table, separate sorting AND filtering in two sections
+** initial
 
-sorting / filtering (clear all column filters) status on multi table views for each sub table, separate sorting AND
-filtering in two sections
+In the uploaded userscript
+
+there are currently two variables which produce status display information
+
+- globalStatusDisplay
+  
+#+begin_example
+    const globalStatusDisplay = document.createElement('span');
+    globalStatusDisplay.id = 'mb-global-status-display';
+    globalStatusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+
+    controlsContainer.appendChild(globalStatusDisplay);
+#+end_example
+
+- statusDisplay
+
+#+begin_example
+    const statusDisplay = document.createElement('span');
+    statusDisplay.id = 'mb-status-display';
+    statusDisplay.style.cssText = 'font-size:0.8em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+
+    filterContainer.appendChild(statusDisplay);
+#+end_example
+
+I need a third type of display on mutli table pages like e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
+In each h3 header, like e.g.
+
+#+begin_example
+<h3 class="mb-toggle-h3" title="Collapse/Uncollapse table section"><span class="mb-toggle-icon">▼</span>Instruments arranged <span class="mb-row-count-stat">(1)</span></h3>
+#+end_example
+
+for the specific sub-table create a new button with corresponding action off clearing all the column
+filters on that specific sub-table and add a sub-table specific display after the button to display sorting and filtering releation information for the sub-table only.
+
+That functionality is currently located at the level of "statusDisplay". Only the status information of filtering on the global level should be placed there in the case of multitable pages.
+
+The implemenation for single table pages should not be changed
+** separate
+
+Do not let the info about the current column specific sorting and filtering state overwrite each other, instead separate
+sorting AND filtering in two sections.
 
 add new
 
-filterStatusDisplay
-sortStatusDisplay
+- filterStatusDisplay
+- sortStatusDisplay
 
-and render them with different colors behind each other
+and render them with different fonts behind each other. Do this for all status display (per table, on multi table pages and also for singel table pges)
+
 
 * shortcuts
 
