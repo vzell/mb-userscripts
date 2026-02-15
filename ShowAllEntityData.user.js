@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.3.0+2026-02-15
+// @version      9.4.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,7 +48,8 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '9.3.0+2026-02-15', description: 'Fix: Better sidebar toggling to get more real estate for data container when sidebar is collapsed'},
+    {version: '9.4.0+2026-02-15', description: 'Reorderd action buttons in a more logic workflow.'},
+    {version: '9.3.0+2026-02-15', description: 'Fix: Better sidebar toggling to get more real estate for data container when sidebar is collapsed.'},
     {version: '9.2.0+2026-02-15', description: 'Fix: Status display now correctly shows sorting/filtering results with table name and column info. Fixed ReferenceError that caused "Sort failed" and "Filtering..." to persist incorrectly.'},
     {version: '9.1.0+2026-02-15', description: 'Add new clear all filter button, global AND column level.'},
     {version: '9.0.0+2026-02-15', description: 'New status display handling, global and sorting/filtering related.'},
@@ -5279,6 +5280,16 @@ Note: Shortcuts work when not typing in input fields
                 applyStickyHeaders();
             }
 
+            // Add auto-resize columns button
+            if (Lib.settings.sa_enable_column_resizing) {
+                addAutoResizeButton();
+
+                // Enable manual column resizing on all tables immediately
+                document.querySelectorAll('table.tbl').forEach(table => {
+                    makeColumnsResizable(table);
+                });
+            }
+
             // Add column visibility toggle for all tables
             if (Lib.settings.sa_enable_column_visibility) {
                 document.querySelectorAll('table.tbl').forEach((table, index) => {
@@ -5289,9 +5300,14 @@ Note: Shortcuts work when not typing in input fields
                 });
             }
 
-            // Add export to CSV button
-            if (Lib.settings.sa_enable_export) {
-                addExportButton();
+            // Add density control
+            if (Lib.settings.sa_enable_density_control) {
+                addDensityControl();
+            }
+
+            // Add stats panel button
+            if (Lib.settings.sa_enable_stats_panel) {
+                addStatsButton();
             }
 
             // Initialize keyboard shortcuts
@@ -5300,24 +5316,9 @@ Note: Shortcuts work when not typing in input fields
                 addShortcutsHelpButton();
             }
 
-            // Add stats panel button
-            if (Lib.settings.sa_enable_stats_panel) {
-                addStatsButton();
-            }
-
-            // Add density control
-            if (Lib.settings.sa_enable_density_control) {
-                addDensityControl();
-            }
-
-            // Add auto-resize columns button
-            if (Lib.settings.sa_enable_column_resizing) {
-                addAutoResizeButton();
-
-                // Enable manual column resizing on all tables immediately
-                document.querySelectorAll('table.tbl').forEach(table => {
-                    makeColumnsResizable(table);
-                });
+            // Add export to CSV button
+            if (Lib.settings.sa_enable_export) {
+                addExportButton();
             }
 
             isLoaded = true;
@@ -6479,6 +6480,11 @@ Note: Shortcuts work when not typing in input fields
                     applyStickyHeaders();
                 }
 
+                // Add auto-resize columns button
+                if (Lib.settings.sa_enable_column_resizing) {
+                    addAutoResizeButton();
+                }
+
                 // Add column visibility toggle for loaded table
                 if (Lib.settings.sa_enable_column_visibility) {
                     const mainTable = document.querySelector('table.tbl');
@@ -6487,9 +6493,14 @@ Note: Shortcuts work when not typing in input fields
                     }
                 }
 
-                // Add export button
-                if (Lib.settings.sa_enable_export) {
-                    addExportButton();
+                // Add density control
+                if (Lib.settings.sa_enable_density_control) {
+                    addDensityControl();
+                }
+
+                // Add stats panel button
+                if (Lib.settings.sa_enable_stats_panel) {
+                    addStatsButton();
                 }
 
                 // Initialize keyboard shortcuts (if not already initialized)
@@ -6501,19 +6512,9 @@ Note: Shortcuts work when not typing in input fields
                     addShortcutsHelpButton();
                 }
 
-                // Add stats panel button
-                if (Lib.settings.sa_enable_stats_panel) {
-                    addStatsButton();
-                }
-
-                // Add density control
-                if (Lib.settings.sa_enable_density_control) {
-                    addDensityControl();
-                }
-
-                if (Lib.settings.sa_enable_column_resizing) {
-                // Add auto-resize columns button
-                    addAutoResizeButton();
+                // Add export button
+                if (Lib.settings.sa_enable_export) {
+                    addExportButton();
                 }
 
                 updateH2Count(loadedRowCount, loadedRowCount);

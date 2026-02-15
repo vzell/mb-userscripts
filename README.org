@@ -35693,14 +35693,14 @@ Ctrl-f
 
 * DONE table density
 
-* DONE Column Visibility Toggle
+* TODO Column Visibility Toggle
 ** "Escape" key should make the dialog vanish, or clicking outside somewhere
 
 In the following code, right now the pull-down menu with the checkbox list only closes when clicking somewhere outsode of the list.
 The "Escape" key should also make the dialog vanish.
+** TODO on mutitable view toggling a column ONLY toggles the first table, should toggle all
 
-
-* autoresize columns
+* TODO autoresize columns
 ** DONE initial
 
 While we are at it
@@ -35847,6 +35847,8 @@ pressing the "Restore Width" button and returning to the original state. In that
 anymore.
 
 ** TODO fix "Release" column changes width when actually manually dragging the "Artist" column
+
+** TODO When calculating the minimum width of a column take the sort symbols into account e.g.the "Date" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=869
 
 
 * DONE add descriptions to every function call
@@ -37109,6 +37111,7 @@ In the uploaded userscript
 - check for code blocks which could easily be refactored to make the code more clear
 
 ** answer
+*** gemini
 
 #+begin_example
 This is an impressive and highly functional Tampermonkey script! Managing DOM manipulation, chunked rendering, filtering, and cross-tab/file states in vanilla JavaScript is no small feat.
@@ -37371,3 +37374,17 @@ The reorganized code is functionally identical to the original but much more rea
 
 *** gemini
 
+
+* DONE reorder Buttons
+
+Please reorder the following buttons in the order supplied (instead of current order)
+
+↔️ Auto-Resize
+👁️ Visible Columns
+📏 Density
+📊 Stats
+⌨️ Shortcuts
+Export to CSV 💾
+
+
+* sorting / filtering (clear all column filters) status on multi table views for each sub table, separate sorting AND filtering in two sections
