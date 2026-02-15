@@ -2974,7 +2974,7 @@ Note: Shortcuts work when not typing in input fields
     filterContainer.appendChild(unhighlightAllBtn);
 
     const clearColumnFiltersBtn = document.createElement('button');
-    clearColumnFiltersBtn.textContent = 'Clear all column filters';
+    clearColumnFiltersBtn.textContent = '✗ Clear all column filters';
     clearColumnFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
@@ -2999,7 +2999,7 @@ Note: Shortcuts work when not typing in input fields
     filterContainer.appendChild(clearColumnFiltersBtn);
 
     const clearAllFiltersBtn = document.createElement('button');
-    clearAllFiltersBtn.textContent = 'Clear all filters';
+    clearAllFiltersBtn.textContent = '✗ Clear ALL filters';
     clearAllFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
     clearAllFiltersBtn.onclick = () => {
         // Clear global filter
