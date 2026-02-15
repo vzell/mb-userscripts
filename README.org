@@ -37399,3 +37399,8 @@ sortStatusDisplay
 
 and render them with different colors behind each other
 
+* shortcuts
+Ctr-f ==> change
+
+* stats
+completely bullshit
