@@ -35852,24 +35852,32 @@ anymore.
 
 ** TODO When calculating the minimum width of a column take the sort symbols into account e.g.the "Date" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=869
 
-** TODO Bug
+The following bug description is for all pages which have columns where the maximum length inside the corresponding data
+cells acorss the whole table never exceeds the lenght of the column headr name.  In this case the widths of the symobls
+"⇅", "▲" and "▼", which are always present for sorting purposes in the column header cell, also need to be taken into
+account when calculating the length for rendering purposes when pressing the "Auto-Resize" button
 
+** TODO Bug
 *** bug
 
-For example on this URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c when "Visible
-Columns" has been used to filter out columns from display and after the "Auto-Resize" button is pressed, the rendering
-of the table is somehow messed up. Specifically the header columns for "Country/Date" and Label" shrink to a minimum,
-only the "⇅" symbol and one character + half of the next character are visible.
+For example on this URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c when "Visible Columns"
+has been used to filter out columns from display and after the "Auto-Resize" button is pressed, the rendering of the
+table is somehow messed up. Specifically the header columns for "Country/Date" and Label" shrink to a minimum, only the
+"⇅" symbol and one character + half of the next character are visible.
 
-The following glitches show up:
+The following addiktional glitches show up:
 
- - The data cells of the "Country/Date" column only show the country flag, the abbreviated country name like US and the date part spread over three columns "Country/Date", "Lable", "Catalog#"
+ - The data cells of the "Country/Date" column show the country flag, the abbreviated country name like US and the date part SPREAD over THREE columns "Country/Date" itself but alos the next two columns "Label" and "Catalog#"
  - The "Label" cells show the complete label text but wrapped after a couple of chars again and again, so they actually use multiple rows for display
- - The cells for the "Catalog#" column actually show up below the "Label" column, together with the contents of the "Label" column
+ - The cells for the "Catalog#" column actually shows up below the "Label" column, together/intervined with the contents of the "Label" column
 
 It looks like if columns with special icons or such are involved, these glitches can happen.
 
-Pressing "Restore Width" afterwards actually works and the rendering isses are gone again.
+By the way, rressing "Restore Width" afterwards actually works and the rendering issuees are gone again.
+
+As a hint for implementing a general fix:
+
+
 
 *** works
 
