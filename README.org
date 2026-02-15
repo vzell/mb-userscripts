@@ -35875,9 +35875,11 @@ The following addiktional glitches show up:
 
 It looks like if columns with special icons or such are involved, these glitches can happen.
 
-By the way, rressing "Restore Width" afterwards actually works and the rendering issuees are gone again.
+By the way, pressing "Restore Width" afterwards actually works and the rendering issuees are gone again.
 
-As a hint for implementing a general fix:
+So the whole interaction between "auto-resize" and "visible columns" functionality needs to be checked, please fix
+
+*** still buggy
 
 
 
@@ -35887,7 +35889,6 @@ column filters
 global filter
 sort column
 visible columns - remove 
-
 
 * DONE add descriptions to every function call
 
@@ -38017,4 +38018,6 @@ correspond to the text heigth of the corresponding h2 and h3 headers
 
 
 * Bug
+
+Number of columns is arifically hig, sometimes 16, in the status are
 

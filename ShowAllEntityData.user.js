@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.11.0+2026-02-15
+// @version      9.12.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.12.0+2026-02-15', description: 'Fix: Auto-Resize now properly handles hidden columns from Visible Columns feature. Previously caused rendering glitches where content spread across wrong columns. Now skips hidden columns entirely during measurement and sizing.'},
     {version: '9.11.0+2026-02-15', description: 'Fix: Auto-Resize now includes sorting symbol widths (⇅, ▲, ▼) in column header measurement. Previously columns with short data could be sized too narrow, cutting off header content.'},
     {version: '9.10.0+2026-02-15', description: 'Fix: Column visibility menu now auto-sizes to content without scrollbars. Status display font sizes adjusted to better correspond with h2/h3 header text heights.'},
     {version: '9.9.0+2026-02-15', description: 'Enhancement: Column visibility menu now has a draggable header and additional separator with close instructions.'},
@@ -1775,6 +1776,15 @@ Note: Shortcuts work when not typing in input fields
 
             const columnCount = firstRow.cells.length;
             const columnWidths = new Array(columnCount).fill(0);
+            const columnVisible = new Array(columnCount).fill(false);
+
+            // Determine which columns are visible by checking the first header row
+            const headers = table.querySelectorAll('thead th');
+            headers.forEach((th, colIndex) => {
+                if (colIndex >= columnCount) return;
+                // A column is visible if its header is not hidden
+                columnVisible[colIndex] = th.style.display !== 'none';
+            });
 
             // Create temporary measurement container
             const measureDiv = document.createElement('div');
@@ -1788,10 +1798,15 @@ Note: Shortcuts work when not typing in input fields
             `;
             document.body.appendChild(measureDiv);
 
-            // Measure header widths
-            const headers = table.querySelectorAll('thead th');
+            // Measure header widths (ONLY for visible columns)
             headers.forEach((th, colIndex) => {
                 if (colIndex >= columnCount) return;
+
+                // Skip hidden columns
+                if (!columnVisible[colIndex]) {
+                    Lib.debug('resize', `Header ${colIndex}: Skipped (hidden)`);
+                    return;
+                }
 
                 // Clone the entire content to preserve HTML structure (images, links, etc.)
                 const contentClone = th.cloneNode(true);
@@ -1817,7 +1832,7 @@ Note: Shortcuts work when not typing in input fields
                 Lib.debug('resize', `Header ${colIndex}: "${th.textContent.trim()}" = ${width}px`);
             });
 
-            // Measure data cell widths (sample rows for performance)
+            // Measure data cell widths (sample rows for performance, ONLY visible columns)
             const rows = table.querySelectorAll('tbody tr');
             const sampleSize = Math.min(rows.length, 100); // Sample up to 100 rows
             const sampleStep = Math.max(1, Math.floor(rows.length / sampleSize));
@@ -1830,6 +1845,9 @@ Note: Shortcuts work when not typing in input fields
 
                 Array.from(row.cells).forEach((cell, colIndex) => {
                     if (colIndex >= columnCount) return;
+
+                    // Skip hidden columns
+                    if (!columnVisible[colIndex]) return;
 
                     // Clone the entire content to preserve HTML structure (images, links, etc.)
                     const contentClone = cell.cloneNode(true);
@@ -1864,25 +1882,38 @@ Note: Shortcuts work when not typing in input fields
                 colgroup.innerHTML = ''; // Clear existing cols
             }
 
+            let visibleColumnCount = 0;
             columnWidths.forEach((width, index) => {
                 const col = document.createElement('col');
-                // Add some padding to the calculated width
-                const finalWidth = Math.ceil(width + 20); // 20px extra for comfort
-                col.style.width = `${finalWidth}px`;
-                colgroup.appendChild(col);
 
-                Lib.debug('resize', `Table ${tableIndex}, Column ${index}: ${finalWidth}px`);
+                // Only set width for VISIBLE columns
+                if (columnVisible[index]) {
+                    // Add some padding to the calculated width
+                    const finalWidth = Math.ceil(width + 20); // 20px extra for comfort
+                    col.style.width = `${finalWidth}px`;
+                    visibleColumnCount++;
+                    Lib.debug('resize', `Table ${tableIndex}, Column ${index}: ${finalWidth}px (visible)`);
+                } else {
+                    // For hidden columns, don't set a width - let them stay at their natural (hidden) size
+                    col.style.width = '0px';
+                    col.style.display = 'none';
+                    Lib.debug('resize', `Table ${tableIndex}, Column ${index}: 0px (hidden)`);
+                }
+
+                colgroup.appendChild(col);
             });
 
             // Set table to use fixed layout for consistency
             table.style.tableLayout = 'fixed';
 
-            // Calculate total table width
-            const totalWidth = columnWidths.reduce((sum, w) => sum + w + 20, 0);
+            // Calculate total table width (only from visible columns)
+            const totalWidth = columnWidths.reduce((sum, w, idx) => {
+                return columnVisible[idx] ? sum + w + 20 : sum;
+            }, 0);
             table.style.width = `${totalWidth}px`;
             table.style.minWidth = `${totalWidth}px`;
 
-            totalColumnsResized += columnCount;
+            totalColumnsResized += visibleColumnCount;
 
             // Add manual resize handles
             if (Lib.settings.sa_enable_column_resizing) {
