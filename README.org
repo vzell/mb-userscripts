@@ -36484,3 +36484,485 @@ The following warning message appears in a native browser window I think,
 #+end_example
 
 how can we change this to a userscript generated popup
+
+* discrepancy
+** initial
+
+In the uploaded userscript
+
+the following code is suspicious
+
+#+begin_example
+                            // Update displays
+                            sortTimerDisplay.textContent = `Sorted "${colName}": ${duration}s`;
+
+                            if (statusDisplay) {
+                                statusDisplay.textContent = `✓ Sorted ${rowCount} rows in ${durationMs}ms`;
+                                statusDisplay.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
+                            }
+
+                            Lib.info('sort', `Sort completed in ${duration}s for ${rowCount} rows`);
+#+end_example
+
+I actually get the output of 'sortTimerDisplay.textContent = `Sorted "${colName}": ${duration}s`;' instead of 'statusDisplay.textContent = `✓ Sorted ${rowCount} rows in ${durationMs}ms`;'
+
+** 1
+
+There are lots of lines like
+
+#+begin_example
+const statusDisplay = document.getElementById('mb-status-display');
+#+end_example
+
+but it seems there is not element by this name 'mb-status-display'. This id seems to be missing from the following block of code
+
+#+begin_example
+    const statusDisplay = document.createElement('span');
+    statusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+#+end_example
+
+Could you fix this issue, so that the message "`✓ Sorted ${rowCount} rows in ${durationMs}ms`" is displayed
+
+** problem
+
+Here is the debug log
+
+#+begin_example
+🧹 Signalling other scripts to stop... 
+📥 Starting fetch process... null
+📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+📥 determineMaxPageFromDOM: Found "Next" link. Extracted page: 42 
+📥 Total pages to fetch: 42 
+🧹 Starting clutter element removal. 
+ 🧹 Removing Sanojjonas containers... 
+📥 Page 1 is current page. Using existing document. 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 1/42 processed in 0.01s. Rows on page: 100. Total: 100 
+📥 Fetching URL for page 2: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=2 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=2 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 2 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 2/42 processed in 1.30s. Rows on page: 100. Total: 200 
+📥 Fetching URL for page 3: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=3 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=3 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 3 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 3/42 processed in 2.13s. Rows on page: 100. Total: 300 
+📥 Fetching URL for page 4: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=4 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=4 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 4 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 4/42 processed in 1.23s. Rows on page: 100. Total: 400 
+📥 Fetching URL for page 5: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=5 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=5 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 5 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 5/42 processed in 1.89s. Rows on page: 100. Total: 500 
+📥 Fetching URL for page 6: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=6 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=6 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 6 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 6/42 processed in 0.93s. Rows on page: 100. Total: 600 
+📥 Fetching URL for page 7: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=7 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=7 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 7 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 7/42 processed in 1.11s. Rows on page: 100. Total: 700 
+📥 Fetching URL for page 8: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=8 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=8 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 8 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 8/42 processed in 1.52s. Rows on page: 100. Total: 800 
+📥 Fetching URL for page 9: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=9 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=9 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 9 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 9/42 processed in 1.30s. Rows on page: 100. Total: 900 
+📥 Fetching URL for page 10: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=10 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=10 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 10 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 10/42 processed in 1.09s. Rows on page: 100. Total: 1000 
+📥 Fetching URL for page 11: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=11 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=11 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 11 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 11/42 processed in 1.18s. Rows on page: 100. Total: 1100 
+📥 Fetching URL for page 12: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=12 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=12 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 12 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 12/42 processed in 2.50s. Rows on page: 100. Total: 1200 
+📥 Fetching URL for page 13: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=13 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=13 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 13 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 13/42 processed in 2.00s. Rows on page: 100. Total: 1300 
+📥 Fetching URL for page 14: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=14 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=14 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 14 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 14/42 processed in 2.01s. Rows on page: 100. Total: 1400 
+📥 Fetching URL for page 15: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=15 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=15 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 15 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 15/42 processed in 1.99s. Rows on page: 100. Total: 1500 
+📥 Fetching URL for page 16: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=16 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=16 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 16 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 16/42 processed in 2.00s. Rows on page: 100. Total: 1600 
+📥 Fetching URL for page 17: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=17 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=17 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 17 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 17/42 processed in 3.01s. Rows on page: 100. Total: 1700 
+📥 Fetching URL for page 18: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=18 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=18 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 18 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 18/42 processed in 1.99s. Rows on page: 100. Total: 1800 
+📥 Fetching URL for page 19: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=19 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=19 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 19 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 19/42 processed in 1.00s. Rows on page: 100. Total: 1900 
+📥 Fetching URL for page 20: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=20 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=20 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 20 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 20/42 processed in 2.00s. Rows on page: 100. Total: 2000 
+📥 Fetching URL for page 21: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=21 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=21 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 21 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 21/42 processed in 2.01s. Rows on page: 100. Total: 2100 
+📥 Fetching URL for page 22: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=22 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=22 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 22 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 22/42 processed in 1.99s. Rows on page: 100. Total: 2200 
+📥 Fetching URL for page 23: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=23 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=23 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 23 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 23/42 processed in 2.00s. Rows on page: 100. Total: 2300 
+📥 Fetching URL for page 24: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=24 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=24 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 24 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 24/42 processed in 2.00s. Rows on page: 100. Total: 2400 
+📥 Fetching URL for page 25: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=25 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=25 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 25 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 25/42 processed in 2.00s. Rows on page: 100. Total: 2500 
+📥 Fetching URL for page 26: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=26 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=26 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 26 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 26/42 processed in 2.00s. Rows on page: 100. Total: 2600 
+📥 Fetching URL for page 27: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=27 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=27 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 27 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 27/42 processed in 2.00s. Rows on page: 100. Total: 2700 
+📥 Fetching URL for page 28: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=28 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=28 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 28 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 28/42 processed in 2.00s. Rows on page: 100. Total: 2800 
+📥 Fetching URL for page 29: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=29 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=29 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 29 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 29/42 processed in 2.00s. Rows on page: 100. Total: 2900 
+📥 Fetching URL for page 30: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=30 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=30 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 30 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 30/42 processed in 2.00s. Rows on page: 100. Total: 3000 
+📥 Fetching URL for page 31: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=31 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=31 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 31 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 31/42 processed in 2.00s. Rows on page: 100. Total: 3100 
+📥 Fetching URL for page 32: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=32 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=32 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 32 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 32/42 processed in 1.09s. Rows on page: 100. Total: 3200 
+📥 Fetching URL for page 33: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=33 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=33 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 33 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 33/42 processed in 1.07s. Rows on page: 100. Total: 3300 
+📥 Fetching URL for page 34: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=34 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=34 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 34 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 34/42 processed in 1.53s. Rows on page: 100. Total: 3400 
+📥 Fetching URL for page 35: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=35 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=35 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 35 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 35/42 processed in 1.13s. Rows on page: 100. Total: 3500 
+📥 Fetching URL for page 36: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=36 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=36 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 36 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 36/42 processed in 1.79s. Rows on page: 100. Total: 3600 
+📥 Fetching URL for page 37: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=37 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=37 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 37 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 37/42 processed in 2.05s. Rows on page: 100. Total: 3700 
+📥 Fetching URL for page 38: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=38 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=38 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 38 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 38/42 processed in 1.59s. Rows on page: 100. Total: 3800 
+📥 Fetching URL for page 39: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=39 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=39 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 39 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 39/42 processed in 0.92s. Rows on page: 100. Total: 3900 
+📥 Fetching URL for page 40: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=40 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=40 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 40 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 40/42 processed in 0.83s. Rows on page: 100. Total: 4000 
+📥 Fetching URL for page 41: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=41 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=41 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 41 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 100 
+📥 Page 41/42 processed in 1.65s. Rows on page: 100. Total: 4100 
+📥 Fetching URL for page 42: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=42 
+📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events?page=42 
+📝 No targetHeader provided; returning all tables found in container. 
+📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+📥 Found matching table "[object HTMLTableElement]" on page 42 to process. 
+📝 Detected indices → mainColIdx=1 (Event), countryDateIdx=-1 (N/A), areaIdx=-1 (N/A), locationIdx=4 (Location), excluded=[] for pageType: events 
+📝 Table body found. Processing child nodes. Total nodes: 30 
+📥 Page 42/42 processed in 0.87s. Rows on page: 30. Total: 4130 
+🎨 DOM rendering starting... 
+🎨 Starting updateH2Count: filtered=4130, total=4130 
+🎨 Searching for target H2. Current pageType: events 
+🎨 Target H2 not found by specific type, falling back to document position logic. 
+🎨 Stopping H2 search at index 1: table no longer follows this header. 
+🎨 Target element identified: "Events..." 
+🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+🎨 Appending filterContainer to targetH2. 
+🎨 Updated header/target Events count: (4130) 
+🎨 Starting renderFinalTable with 4130 rows. 
+🎨 Final table structure → headers=8, rowCells=13 
+🎨 Chunked render: 4130 rows in 9 chunks of 500 
+🎨 Chunked render complete: 4130 rows rendered in 9 chunks. 
+🧹 cleanupHeaders() called → existing headers=[ | Event | Type | Role | Location | Date | Time | Rating] 
+🧹 Skipping removal of column 7 ("Rating"). Setting "sa_remove_rating" is disabled. 
+🧹 No columns were matched for removal based on current settings. 
+🧹 Injecting synthetic header: Place 
+🧹 Injecting synthetic header: Area 
+🧹 Injecting synthetic header: Country 
+🧹 Injecting synthetic header: MB-Name 
+🧹 Injecting synthetic header: Comment 
+🧹 Running final cleanup... 
+🧹 No Sanojjonas elements found during final cleanup. 
+🧹 Found consecutive <br> tags: removed 9 tags at instance 1. 
+🧹 Final cleanup complete: Removed a total of 9 consecutive <br> tags across 1 locations. 
+🎨 Initializing collapsible H2 headers... 
+🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+🖥️ Column visibility toggle added to controls 
+🖥️ Export CSV button added to controls 
+📝 Keyboard shortcuts initialized 
+🖥️ Keyboard shortcuts help button added to controls 
+🖥️ Stats button added to controls 
+🖥️ Density control button added to controls 
+🖥️ Auto-resize button added to controls 
+📝 Made 13 columns resizable 
+🎨 DOM rendering finished in 3159.60ms 
+✅ Process complete. Final Row Count: 4130. Total Time: 71.87s 
+#+end_example
+
+even when adding the line
+
+#+begin_example
+    statusDisplay.id = 'mb-status-display';
+#+end_example
+
+to
+
+#+begin_example
+    const statusDisplay = document.createElement('span');
+    statusDisplay.id = 'mb-status-display';
+    statusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+#+end_example
+
+I still dont' get the output of all the functions which
+
+* add function descriptions
+
+Please also go through the code and add missing function descriptions with parameter descriptions
+like the following
+
+#+begin_example
+    /**
+     * Debounce utility function - delays execution until after wait milliseconds have elapsed
+     * since the last time the debounced function was invoked.
+     * @param {Function} func - The function to debounce
+     * @param {number} wait - The number of milliseconds to delay
+     * @param {boolean} immediate - If true, trigger the function on the leading edge instead of trailing
+     * @returns {Function} The debounced function
+     */
+    function debounce(func, wait, immediate) {
+#+end_example
+
+
+* new button with text "Clear all filters"
+
+Add a new button with text "Clear all filters" should be created after the "Unhighlight all" button and when pressed call the function "clearAllFilters"
+
+Additionally only the line "Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s" should go into the container
+
+#+begin_example
+<div id="mb-show-all-controls-container"
+#+end_example
+
+and stay there between the "Load from Disk" button and the "Visible Columns" button.
+
+The variable "statusDisplay" in
+
+#+begin_example
+statusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s`;
+#+end_example
+
+should be renamed to "globalStatusDisplay" instead.
+
+The current "statusDisplay" variable should be rendered after the newly introduced "Clear all filters" button
+

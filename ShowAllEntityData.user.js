@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      7.4.0+2026-02-14
+// @version      8.0.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '8.0.0+2026-02-15', description: 'Function descriptions throughout.'},
     {version: '7.4.0+2026-02-14', description: 'New configuration dialog with sections and dividers. Make all UI features opinionated.'},
     {version: '7.3.2+2026-02-14', description: 'Fix: Resize handles now persist after clicking "Restore Width" button. Previously handles were removed during restore and not re-added, preventing further manual resizing. Now handles are automatically restored so users can continue resizing columns after restoration.'},
     {version: '7.3.1+2026-02-14', description: 'Fix: Manual column resizing now works correctly on initial page load. Fixed undefined variable bug that prevented drag-to-resize from functioning when resize handles were added automatically.'},
@@ -272,6 +273,10 @@ let changelog = [
     /**
      * Apply sticky headers to tables so column headers remain visible while scrolling
      * Includes proper styling for the header row and filter row
+     */
+    /**
+     * Applies sticky positioning to table headers so they remain visible while scrolling
+     * Adds CSS styles that make both the main header row and filter row stick to the top of the viewport
      */
     function applyStickyHeaders() {
         // Check if styles already added
@@ -1578,6 +1583,11 @@ Note: Shortcuts work when not typing in input fields
      * Second click: Restore original column widths
      * Also handles manual resizing - restores to original state
      */
+    /**
+     * Toggles auto-resize mode for table columns
+     * First click: auto-resizes columns to fit content
+     * Second click: restores original column widths
+     */
     function toggleAutoResizeColumns() {
         const tables = document.querySelectorAll('table.tbl');
 
@@ -2122,6 +2132,10 @@ Note: Shortcuts work when not typing in input fields
     Lib.info('init', "Script loaded with external library!");
 
     // --- Sidebar Collapsing & Full Width Stretching Logic ---
+    /**
+     * Initializes the collapsible sidebar feature with a toggle handle
+     * Adds CSS transitions and event handlers for smooth sidebar collapse/expand animation
+     */
     function initSidebarCollapse() {
         if (!Lib.settings.sa_collabsable_sidebar) return; // Only available if true
 
@@ -3226,6 +3240,12 @@ Note: Shortcuts work when not typing in input fields
         overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
     }
 
+    /**
+     * Triggers a file selection dialog to load table data from disk with optional pre-filtering
+     * @param {string} filterQueryRaw - Pre-filter query string to apply after loading
+     * @param {boolean} isCaseSensitive - Whether the pre-filter should be case-sensitive
+     * @param {boolean} isRegExp - Whether the pre-filter should be treated as a regular expression
+     */
     function triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -3241,6 +3261,10 @@ Note: Shortcuts work when not typing in input fields
         fileInput.click();
     }
 
+    /**
+     * Normalizes alias table structure by removing invisible action columns and ensuring proper formatting
+     * @param {HTMLTableElement} table - The alias table element to normalize
+     */
     function normalizeAliasTable(table) {
         if (!table) return;
 
@@ -3269,7 +3293,10 @@ Note: Shortcuts work when not typing in input fields
     }
 
     /**
-     * Filters tables from a document/container based on a preceding header text.
+     * Filters tables from a document/container based on a preceding header text
+     * @param {Document|HTMLElement} doc - The document or container element to search in
+     * @param {string} targetHeader - The header text to look for (case-insensitive partial match)
+     * @returns {Array<HTMLTableElement>} Array of table elements found after the target header
      */
     function parseDocumentForTables(doc, targetHeader) {
         let tablesToProcess = [];
@@ -3357,6 +3384,12 @@ Note: Shortcuts work when not typing in input fields
         }
     }
 
+    /**
+     * Fetches the maximum page number by making a request to a URL and parsing its pagination
+     * @param {string} targetPath - The path to fetch (relative to site origin)
+     * @param {Object} queryParams - Query parameters to include in the URL
+     * @returns {Promise<number>} The maximum page number found, defaults to 1 on error
+     */
     async function fetchMaxPageGeneric(targetPath, queryParams = {}) {
         const url = new URL(window.location.origin + targetPath);
         Object.keys(queryParams).forEach(k => url.searchParams.set(k, queryParams[k]));
@@ -3392,6 +3425,10 @@ Note: Shortcuts work when not typing in input fields
         }
     }
 
+    /**
+     * Removes specific DOM elements created by other MusicBrainz userscripts (Sanojjonas containers)
+     * to prevent conflicts and clean up the page
+     */
     function removeSanojjonasContainers() {
         Lib.debug('cleanup', 'Removing Sanojjonas containers...');
         const idsToRemove = ['load', 'load2', 'load3', 'load4', 'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'];
@@ -3411,6 +3448,11 @@ Note: Shortcuts work when not typing in input fields
         window.dispatchEvent(new CustomEvent('mb-stop-all-scripts'));
     }
 
+    /**
+     * Updates the H2 header row count display to show filtered vs total rows
+     * @param {number} filteredCount - Number of rows currently visible after filtering
+     * @param {number} totalCount - Total number of rows in the table
+     */
     function updateH2Count(filteredCount, totalCount) {
         Lib.debug('render', `Starting updateH2Count: filtered=${filteredCount}, total=${totalCount}`);
 
@@ -3515,7 +3557,9 @@ Note: Shortcuts work when not typing in input fields
     }
 
     /**
-     * Helper to get visible text only, explicitly ignoring script/style tags.
+     * Helper to get visible text only, explicitly ignoring script/style tags
+     * @param {HTMLElement} element - The element to extract text from
+     * @returns {string} The visible text content with whitespace joined
      */
     function getCleanVisibleText(element) {
         let textParts = [];
@@ -3588,6 +3632,15 @@ Note: Shortcuts work when not typing in input fields
         return decorativeChars.includes(text);
     }
 
+    /**
+     * Highlights matching text in table rows based on filter query
+     * @param {HTMLTableRowElement} row - The table row to highlight text in
+     * @param {string} query - The search query to highlight
+     * @param {boolean} isCaseSensitive - Whether the search should be case-sensitive
+     * @param {number} targetColIndex - Specific column index to highlight (-1 for all columns)
+     * @param {boolean} isRegExp - Whether to treat the query as a regular expression
+     * @param {string} highlightType - Type of highlight: 'auto', 'prefilter', 'global', or 'column'
+     */
     function highlightText(row, query, isCaseSensitive, targetColIndex = -1, isRegExp = false, highlightType = 'auto') {
         if (!query) return;
         let regex;
@@ -3654,6 +3707,10 @@ Note: Shortcuts work when not typing in input fields
         });
     }
 
+    /**
+     * Adds a filter row beneath the table header with input fields for per-column filtering
+     * @param {HTMLTableElement} table - The table to add column filters to
+     */
     function addColumnFilterRow(table) {
         const thead = table.tHead;
         if (!thead || thead.querySelector('.mb-col-filter-row')) return;
@@ -3721,6 +3778,10 @@ Note: Shortcuts work when not typing in input fields
         thead.appendChild(filterRow);
     }
 
+    /**
+     * Executes the filtering logic across all table rows based on global and column-specific filters
+     * Handles both single-table and multi-table page modes, applies highlighting, and updates row visibility
+     */
     function runFilter() {
         const filterStartTime = performance.now();
 
@@ -3973,7 +4034,8 @@ Note: Shortcuts work when not typing in input fields
     });
 
     /**
-     * Cleans up the table headers based on user settings and logs the process.
+     * Cleans up table headers by removing columns based on user settings
+     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement - The thead element or header row to clean up
      */
     function cleanupHeaders(headerElement) {
         if (!headerElement) return;
@@ -4096,6 +4158,10 @@ Note: Shortcuts work when not typing in input fields
         }
     }
 
+    /**
+     * Determines the maximum page number by parsing the pagination UI on the current page
+     * @returns {number} The maximum page number found, defaults to 1 if no pagination is present
+     */
     function determineMaxPageFromDOM() {
         let maxPage = 1;
 
@@ -4241,9 +4307,10 @@ Note: Shortcuts work when not typing in input fields
     }
 
     /**
-     * Generalized fetching process
-     * @param {Event} e - The click event
-     * @param {Object} overrideParams - Specific query parameters for artist-releasegroups and artist-releases buttons
+     * Generalized fetching process that handles data retrieval and rendering for all page types
+     * @param {Event} e - The click event from the button
+     * @param {Object} buttonConfig - Button-specific configuration including params and features
+     * @param {Object} baseDef - Base page definition from PAGE_DEFINITIONS
      */
     async function startFetchingProcess(e, buttonConfig, baseDef) {
         // MERGE LOGIC: Combine base definition with button-specific overrides
@@ -5172,6 +5239,7 @@ Note: Shortcuts work when not typing in input fields
     /**
      * High-performance batch renderer for large datasets
      * Uses DocumentFragment, chunked rendering, and progress updates
+     * @param {Array<HTMLTableRowElement>} rows - Array of table row elements to render
      */
     async function renderFinalTable(rows) {
         const rowCount = Array.isArray(rows) ? rows.length : 0;
@@ -5220,6 +5288,9 @@ Note: Shortcuts work when not typing in input fields
     /**
      * Chunked async renderer with progress updates
      * Renders rows in batches to avoid blocking the UI thread
+     * @param {HTMLTableSectionElement} tbody - The table body element to render into
+     * @param {Array<HTMLTableRowElement>} rows - Array of table row elements to render
+     * @param {string} mode - Rendering mode: 'single' for single table or 'multi' for grouped tables
      */
     async function renderRowsChunked(tbody, rows, mode = 'single') {
         const totalRows = rows.length;
@@ -5277,6 +5348,13 @@ Note: Shortcuts work when not typing in input fields
         Lib.info('render', `Chunked render complete: ${totalRows} rows rendered in ${chunks} chunks.`);
     }
 
+    /**
+     * Renders multiple tables grouped by category (e.g., Official, Various Artists) with H3 headers
+     * @param {Array} dataArray - Array of grouped data objects, each containing a label and rows
+     * @param {boolean} isArtistMain - Whether this is the main artist page (affects rendering logic)
+     * @param {string} query - Optional pre-filter query to apply during rendering
+     * @returns {Promise<void>}
+     */
     async function renderGroupedTable(dataArray, isArtistMain, query = '') {
         Lib.info('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}"`);
 
@@ -5889,6 +5967,12 @@ Note: Shortcuts work when not typing in input fields
         // }
     }
 
+    /**
+     * Gets a table cell by its logical column index, accounting for cells with colspan attributes
+     * @param {HTMLTableRowElement} row - The table row to search in
+     * @param {number} logicalIdx - The logical column index (0-based)
+     * @returns {HTMLTableCellElement|null} The cell at the logical index, or null if not found
+     */
     function getCellByLogicalIndex(row, logicalIdx) {
         let col = 0;
         for (const cell of row.cells) {
@@ -5899,6 +5983,11 @@ Note: Shortcuts work when not typing in input fields
         return null;
     }
 
+    /**
+     * Fetches HTML content from a URL using GM_xmlhttpRequest
+     * @param {string} url - The URL to fetch
+     * @returns {Promise<string>} Promise that resolves with the HTML response text
+     */
     function fetchHtml(url) {
         Lib.debug('fetch', `Initiating fetch for URL: ${url}`);
         return new Promise((resolve, reject) => {
@@ -6019,7 +6108,9 @@ Note: Shortcuts work when not typing in input fields
     }
 
     /**
-     * Standard download fallback using an anchor element
+     * Standard download fallback using an anchor element with user notification
+     * @param {string} url - The blob URL to download from
+     * @param {string} filename - The filename to save as
      */
     function triggerStandardDownload(url, filename) {
         const a = document.createElement('a');
@@ -6093,6 +6184,10 @@ Note: Shortcuts work when not typing in input fields
 
     /**
      * Loads table data from a JSON file and re-hydrates the page
+     * @param {File} file - The JSON file containing saved table data
+     * @param {string} filterQueryRaw - Pre-filter query string to apply during load
+     * @param {boolean} isCaseSensitive - Whether the pre-filter should be case-sensitive
+     * @param {boolean} isRegExp - Whether the pre-filter should be treated as a regular expression
      */
     function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
         if (!file) {
