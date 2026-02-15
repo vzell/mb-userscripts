@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.8.0+2026-02-15
+// @version      9.9.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.9.0+2026-02-15', description: 'Enhancement: Column visibility menu now has a draggable header and additional separator with close instructions.'},
     {version: '9.8.0+2026-02-15', description: 'Enhancement: Separate sorting and filtering status displays with different fonts for clarity. Applied to both single-table and multi-table pages.'},
     {version: '9.7.0+2026-02-15', description: 'Add: Sub-table specific status displays and clear filter buttons in h3 headers on multi-table pages.'},
     {version: '9.6.0+2026-02-15', description: 'Fix: Add toggle column visibility to ALL tables on multitable pages.'},
@@ -403,13 +404,68 @@ let changelog = [
             background: white;
             border: 1px solid #ccc;
             border-radius: 4px;
-            padding: 10px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             z-index: 10000;
             max-height: 400px;
             overflow-y: auto;
             min-width: 200px;
         `;
+
+        // Create draggable header
+        const header = document.createElement('div');
+        header.style.cssText = `
+            background: #f5f5f5;
+            padding: 8px 10px;
+            margin: -10px -10px 10px -10px;
+            border-bottom: 1px solid #ccc;
+            cursor: move;
+            user-select: none;
+            font-weight: 600;
+            border-radius: 4px 4px 0 0;
+        `;
+        header.textContent = 'Column Visibility';
+
+        // Add dragging functionality
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        header.addEventListener('mousedown', (e) => {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+            isDragging = true;
+            header.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && menu.style.display === 'block') {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                xOffset = currentX;
+                yOffset = currentY;
+                menu.style.left = `${e.clientX - initialX}px`;
+                menu.style.top = `${e.clientY - initialY}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                header.style.cursor = 'move';
+            }
+        });
+
+        // Create scrollable content wrapper
+        const contentWrapper = document.createElement('div');
+        contentWrapper.style.cssText = 'padding: 0 10px 10px 10px;';
+
+        menu.appendChild(header);
+        menu.appendChild(contentWrapper);
 
         // Get headers from the first row (skip filter row)
         const headerRow = table.querySelector('thead tr:first-child');
@@ -455,13 +511,13 @@ let changelog = [
 
             wrapper.appendChild(checkbox);
             wrapper.appendChild(label);
-            menu.appendChild(wrapper);
+            contentWrapper.appendChild(wrapper);
         });
 
         // Add separator
         const separator = document.createElement('div');
         separator.style.cssText = 'margin: 10px 0; padding-top: 10px; border-top: 1px solid #ddd;';
-        menu.appendChild(separator);
+        contentWrapper.appendChild(separator);
 
         // Add "Select All" / "Deselect All" buttons
         const buttonRow = document.createElement('div');
@@ -497,7 +553,18 @@ let changelog = [
 
         buttonRow.appendChild(selectAllBtn);
         buttonRow.appendChild(deselectAllBtn);
-        menu.appendChild(buttonRow);
+        contentWrapper.appendChild(buttonRow);
+
+        // Add second separator
+        const separator2 = document.createElement('div');
+        separator2.style.cssText = 'margin: 10px 0; padding-top: 10px; border-top: 1px solid #ddd;';
+        contentWrapper.appendChild(separator2);
+
+        // Add close instruction text
+        const closeText = document.createElement('div');
+        closeText.textContent = 'Click outside or press Escape to close';
+        closeText.style.cssText = 'font-size: 0.9em; color: #666; text-align: center; font-style: italic;';
+        contentWrapper.appendChild(closeText);
 
         // Toggle menu visibility
         toggleBtn.onclick = (e) => {
@@ -509,10 +576,16 @@ let changelog = [
             } else {
                 menu.style.display = 'block';
 
-                // Position menu below button
-                const rect = toggleBtn.getBoundingClientRect();
-                menu.style.top = `${rect.bottom + 5}px`;
-                menu.style.left = `${rect.left}px`;
+                // Position menu below button (only on first open or when not manually moved)
+                if (xOffset === 0 && yOffset === 0) {
+                    const rect = toggleBtn.getBoundingClientRect();
+                    menu.style.top = `${rect.bottom + 5}px`;
+                    menu.style.left = `${rect.left}px`;
+                    xOffset = rect.left;
+                    yOffset = rect.bottom + 5;
+                    initialX = 0;
+                    initialY = 0;
+                }
             }
         };
 

@@ -37941,3 +37941,39 @@ In the following code the '✗ ' is ONLY prepended to the text 'Clear ALL filter
     };
     filterContainer.appendChild(clearAllFiltersBtn);
 #+end_example
+
+
+* draggable "Visible Columns" pull down list container
+** initial
+
+In the uploaded userscript
+
+After pressing the "Visible Columns" button and executing the "addColumnVisibilityToggle" function
+currently a pull-down menu with checkboxes for the columns to toggle for display appears.
+
+This whole container should get a header and be made draggable by clicking the header with the mouse and dragging the
+wohle container to somwhere else on the page where it doesn't maybe hide relevant table information.
+
+Also add an additional separator after the two '"Select All" / "Deselect All"' buttons in the container and render the text "Click outside or press Escape to close"
+in the same font as in the "Stats" button functionality below the separator
+
+#+begin_example
+        // Add separator
+        const separator = document.createElement('div');
+        separator.style.cssText = 'margin: 10px 0; padding-top: 10px; border-top: 1px solid #ddd;';
+        menu.appendChild(separator);
+
+        // Add "Select All" / "Deselect All" buttons
+        const buttonRow = document.createElement('div');
+        buttonRow.style.cssText = 'display: flex; gap: 5px;';
+#+end_example
+
+** fix
+
+Fix the container dimensions to hold all the header, buttons, button and hint text information. Currently two scrollbars
+are produced vertical and horizontal to display all content. Basically the whole container shold adapt to the dynamic
+number of columns (and column name length) + the addional space for the header, the two buttons and the hint text at the
+bottom.
+
+Also adjust the font text height for all the status displays "global" and sub-table specific for multe table pages to
+correspond to the text heigth of the corresponding h2 and h3 headers
