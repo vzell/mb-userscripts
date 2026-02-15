@@ -373,7 +373,7 @@ let changelog = [
         const toggleBtn = document.createElement('button');
         toggleBtn.textContent = '👁️ Visible Columns';
         toggleBtn.title = 'Show/hide table columns';
-        toggleBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        toggleBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         toggleBtn.type = 'button';
 
         // Create dropdown menu container
@@ -635,9 +635,9 @@ let changelog = [
      */
     function addExportButton() {
         const exportBtn = document.createElement('button');
-        exportBtn.textContent = 'Export 💾';
+        exportBtn.textContent = 'Export to CSV 💾';
         exportBtn.title = 'Export visible rows and columns to CSV file';
-        exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         exportBtn.type = 'button';
         exportBtn.onclick = exportTableToCSV;
 
@@ -883,7 +883,7 @@ Note: Shortcuts work when not typing in input fields
         const helpBtn = document.createElement('button');
         helpBtn.textContent = '⌨️ Shortcuts';
         helpBtn.title = 'Show keyboard shortcuts (or press ?)';
-        helpBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        helpBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         helpBtn.type = 'button';
         helpBtn.onclick = showShortcutsHelp;
 
@@ -1044,7 +1044,7 @@ Note: Shortcuts work when not typing in input fields
         const statsBtn = document.createElement('button');
         statsBtn.textContent = '📊 Stats';
         statsBtn.title = 'Show table statistics';
-        statsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        statsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         statsBtn.type = 'button';
         statsBtn.onclick = showStatsPanel;
 
@@ -1135,7 +1135,7 @@ Note: Shortcuts work when not typing in input fields
         const densityBtn = document.createElement('button');
         densityBtn.textContent = '📏 Density';
         densityBtn.title = 'Change table density (spacing)';
-        densityBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        densityBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         densityBtn.type = 'button';
 
         // Create menu
@@ -1745,7 +1745,7 @@ Note: Shortcuts work when not typing in input fields
         const resizeBtn = document.createElement('button');
         resizeBtn.textContent = '↔️ Auto-Resize';
         resizeBtn.title = 'Auto-resize columns to optimal width (enables horizontal scrolling)';
-        resizeBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s;';
+        resizeBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         resizeBtn.type = 'button';
         resizeBtn.onclick = toggleAutoResizeColumns;
 
