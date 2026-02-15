@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      8.0.0+2026-02-15
+// @version      9.0.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.0.0+2026-02-15', description: 'New status display handling, global and sorting/filtering related.'},
     {version: '8.0.0+2026-02-15', description: 'Function descriptions throughout.'},
     {version: '7.4.0+2026-02-14', description: 'New configuration dialog with sections and dividers. Make all UI features opinionated.'},
     {version: '7.3.2+2026-02-14', description: 'Fix: Resize handles now persist after clicking "Restore Width" button. Previously handles were removed during restore and not re-added, preventing further manual resizing. Now handles are automatically restored so users can continue resizing columns after restoration.'},
@@ -2885,9 +2886,9 @@ Note: Shortcuts work when not typing in input fields
     stopBtn.textContent = 'Stop';
     stopBtn.style.cssText = 'display:none; font-size:0.8em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box; border-radius:6px;';
 
-    const statusDisplay = document.createElement('span');
-    statusDisplay.id = 'mb-status-display';
-    statusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+    const globalStatusDisplay = document.createElement('span');
+    globalStatusDisplay.id = 'mb-global-status-display';
+    globalStatusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 
     const progressContainer = document.createElement('div');
     progressContainer.id = 'mb-fetch-progress-container';
@@ -2970,6 +2971,17 @@ Note: Shortcuts work when not typing in input fields
     };
     filterContainer.appendChild(unhighlightAllBtn);
 
+    const clearAllFiltersBtn = document.createElement('button');
+    clearAllFiltersBtn.textContent = 'Clear all filters';
+    clearAllFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    clearAllFiltersBtn.onclick = clearAllFilters;
+    filterContainer.appendChild(clearAllFiltersBtn);
+
+    const statusDisplay = document.createElement('span');
+    statusDisplay.id = 'mb-status-display';
+    statusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+    filterContainer.appendChild(statusDisplay);
+
     const timerDisplay = document.createElement('span');
     timerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
 
@@ -2977,7 +2989,7 @@ Note: Shortcuts work when not typing in input fields
     sortTimerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
 
     controlsContainer.appendChild(stopBtn);
-    controlsContainer.appendChild(statusDisplay);
+    controlsContainer.appendChild(globalStatusDisplay);
     controlsContainer.appendChild(progressContainer);
     // Filter container is NOT appended here anymore; moved to H2 later
     controlsContainer.appendChild(timerDisplay);
@@ -4433,7 +4445,7 @@ Note: Shortcuts work when not typing in input fields
 
         // Removed isLoaded block to allow re-fetching
         Lib.info('fetch', 'Starting fetch process...', overrideParams);
-        statusDisplay.textContent = 'Getting number of pages to fetch...';
+        globalStatusDisplay.textContent = 'Getting number of pages to fetch...';
         let maxPage = 1;
 
         // Determine maxPage based on context
@@ -4521,7 +4533,7 @@ Note: Shortcuts work when not typing in input fields
                         activeBtn.style.backgroundColor = '';
                         activeBtn.style.color = '';
                         activeBtn.disabled = false;
-                        statusDisplay.textContent = '';
+                        globalStatusDisplay.textContent = '';
                     }
                     resolve(confirmed); // returns true if Proceed clicked
                 }
@@ -4548,7 +4560,7 @@ Note: Shortcuts work when not typing in input fields
 
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
-        statusDisplay.textContent = 'Initializing...';
+        globalStatusDisplay.textContent = 'Initializing...';
         progressContainer.style.display = 'inline-block';
         progressBar.style.width = '0%';
         progressBar.style.backgroundColor = '#ffcccc';
@@ -5033,7 +5045,7 @@ Note: Shortcuts work when not typing in input fields
                 const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
 
                 // Update status text (page count only)
-                statusDisplay.textContent = `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)`;
+                globalStatusDisplay.textContent = `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)`;
 
                 // Update progress bar
                 const progress = p / maxPage;
@@ -5075,7 +5087,7 @@ Note: Shortcuts work when not typing in input fields
                 if (userChoice === 'save') {
                     // User chose to save directly without rendering
                     Lib.info('cache', 'User chose to save data directly without rendering.');
-                    statusDisplay.textContent = `Fetched ${totalRows} rows. Saving to disk...`;
+                    globalStatusDisplay.textContent = `Fetched ${totalRows} rows. Saving to disk...`;
 
                     // Mark as loaded so saveTableDataToDisk can proceed
                     isLoaded = true;
@@ -5090,8 +5102,8 @@ Note: Shortcuts work when not typing in input fields
 
                     const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
                     const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
-                    statusDisplay.textContent = `Fetched ${pagesProcessed} ${pageLabel} (${totalRows} rows) in ${fetchSeconds}s - Saved to disk without rendering`;
-                    statusDisplay.style.color = 'green';
+                    globalStatusDisplay.textContent = `Fetched ${pagesProcessed} ${pageLabel} (${totalRows} rows) in ${fetchSeconds}s - Saved to disk without rendering`;
+                    globalStatusDisplay.style.color = 'green';
 
                     Lib.info('success', `Process complete. Data saved without rendering. Row Count: ${totalRows}. Fetch Time: ${fetchSeconds}s`);
                     return; // Exit without rendering
@@ -5103,7 +5115,7 @@ Note: Shortcuts work when not typing in input fields
                     allActionButtons.forEach(b => b.disabled = false);
                     stopBtn.style.display = 'none';
                     progressContainer.style.display = 'none';
-                    statusDisplay.textContent = 'Operation cancelled';
+                    globalStatusDisplay.textContent = 'Operation cancelled';
                     return;
                 }
                 // If userChoice === 'render', continue with normal rendering below
@@ -5220,14 +5232,14 @@ Note: Shortcuts work when not typing in input fields
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
 
             const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
-            statusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s`;
-            //statusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
+            globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s`;
+            //globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s, Initial rendering: ${renderSeconds}s`;
             timerDisplay.textContent = ''; // Explicitly clear any temp text
 
             Lib.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
             Lib.error('fetch', 'Critical Error during fetch:', err);
-            statusDisplay.textContent = 'Error during load... (repress the "Show all" button)';
+            globalStatusDisplay.textContent = 'Error during load... (repress the "Show all" button)';
             progressContainer.style.display = 'none';
             activeBtn.disabled = false;
             allActionButtons.forEach(b => b.disabled = false);
@@ -5850,10 +5862,10 @@ Note: Shortcuts work when not typing in input fields
                             const durationMs = (performance.now() - startSort).toFixed(0);
 
                             // Update displays
-                            sortTimerDisplay.textContent = `Sorted "${colName}": ${duration}s`;
+                            //sortTimerDisplay.textContent = `Sorted "${colName}": ${duration}s`;
 
                             if (statusDisplay) {
-                                statusDisplay.textContent = `✓ Sorted ${rowCount} rows in ${durationMs}ms`;
+                                statusDisplay.textContent = `✓ Sorted on column "${colName}": ${rowCount} rows in ${durationMs}ms`;
                                 statusDisplay.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
                             }
 
