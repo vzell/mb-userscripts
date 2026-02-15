@@ -35852,6 +35852,33 @@ anymore.
 
 ** TODO When calculating the minimum width of a column take the sort symbols into account e.g.the "Date" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=869
 
+** TODO Bug
+
+*** bug
+
+For example on this URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c when "Visible
+Columns" has been used to filter out columns from display and after the "Auto-Resize" button is pressed, the rendering
+of the table is somehow messed up. Specifically the header columns for "Country/Date" and Label" shrink to a minimum,
+only the "⇅" symbol and one character + half of the next character are visible.
+
+The following glitches show up:
+
+ - The data cells of the "Country/Date" column only show the country flag, the abbreviated country name like US and the date part spread over three columns "Country/Date", "Lable", "Catalog#"
+ - The "Label" cells show the complete label text but wrapped after a couple of chars again and again, so they actually use multiple rows for display
+ - The cells for the "Catalog#" column actually show up below the "Label" column, together with the contents of the "Label" column
+
+It looks like if columns with special icons or such are involved, these glitches can happen.
+
+Pressing "Restore Width" afterwards actually works and the rendering isses are gone again.
+
+*** works
+
+column filters
+global filter
+sort column
+visible columns - remove 
+
+
 * DONE add descriptions to every function call
 
 * DONE make the changelog window scrollable
@@ -37975,5 +38002,9 @@ are produced vertical and horizontal to display all content. Basically the whole
 number of columns (and column name length) + the addional space for the header, the two buttons and the hint text at the
 bottom.
 
-Also adjust the font text height for all the status displays "global" and sub-table specific for multe table pages to
+Also adjust the font text height for all the status displays "global" and sub-table specific for multi table pages to
 correspond to the text heigth of the corresponding h2 and h3 headers
+
+
+* Bug
+

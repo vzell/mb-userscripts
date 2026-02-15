@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.9.0+2026-02-15
+// @version      9.10.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.10.0+2026-02-15', description: 'Fix: Column visibility menu now auto-sizes to content without scrollbars. Status display font sizes adjusted to better correspond with h2/h3 header text heights.'},
     {version: '9.9.0+2026-02-15', description: 'Enhancement: Column visibility menu now has a draggable header and additional separator with close instructions.'},
     {version: '9.8.0+2026-02-15', description: 'Enhancement: Separate sorting and filtering status displays with different fonts for clarity. Applied to both single-table and multi-table pages.'},
     {version: '9.7.0+2026-02-15', description: 'Add: Sub-table specific status displays and clear filter buttons in h3 headers on multi-table pages.'},
@@ -406,9 +407,9 @@ let changelog = [
             border-radius: 4px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             z-index: 10000;
-            max-height: 400px;
-            overflow-y: auto;
-            min-width: 200px;
+            min-width: 250px;
+            max-width: 500px;
+            width: auto;
         `;
 
         // Create draggable header
@@ -462,7 +463,7 @@ let changelog = [
 
         // Create scrollable content wrapper
         const contentWrapper = document.createElement('div');
-        contentWrapper.style.cssText = 'padding: 0 10px 10px 10px;';
+        contentWrapper.style.cssText = 'padding: 0 10px 10px 10px; max-height: 60vh; overflow-y: auto;';
 
         menu.appendChild(header);
         menu.appendChild(contentWrapper);
@@ -3031,7 +3032,7 @@ Note: Shortcuts work when not typing in input fields
 
     const globalStatusDisplay = document.createElement('span');
     globalStatusDisplay.id = 'mb-global-status-display';
-    globalStatusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+    globalStatusDisplay.style.cssText = 'font-size:1.0em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 
     const progressContainer = document.createElement('div');
     progressContainer.id = 'mb-fetch-progress-container';
@@ -3163,7 +3164,7 @@ Note: Shortcuts work when not typing in input fields
 
     const statusDisplay = document.createElement('span');
     statusDisplay.id = 'mb-status-display';
-    statusDisplay.style.cssText = 'font-size:0.8em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; gap:4px;';
+    statusDisplay.style.cssText = 'font-size:1.0em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; gap:4px;';
 
     // Create separate filter and sort status displays
     const filterStatusDisplay = document.createElement('span');
@@ -3244,9 +3245,9 @@ Note: Shortcuts work when not typing in input fields
         .mb-subtable-controls { display: inline-flex; align-items: center; gap: 8px; margin-left: 12px; }
         .mb-subtable-clear-btn { font-size: 0.7em; padding: 2px 6px; cursor: pointer; vertical-align: middle; border-radius: 4px; background: #f0f0f0; border: 1px solid #ccc; }
         .mb-subtable-clear-btn:hover { background: #e0e0e0; }
-        .mb-subtable-status-display { font-size: 0.6em; color: #333; font-weight: bold; vertical-align: middle; }
-        .mb-filter-status { font-family: 'Courier New', monospace; font-size: 0.75em; margin-right: 8px; }
-        .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 0.75em; font-style: italic; }
+        .mb-subtable-status-display { font-size: 0.85em; color: #333; font-weight: bold; vertical-align: middle; }
+        .mb-filter-status { font-family: 'Courier New', monospace; font-size: 0.85em; margin-right: 8px; }
+        .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 0.85em; font-style: italic; }
         .mb-toggle-h2 { cursor: pointer; user-select: none; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; cursor: pointer; }
         .mb-master-toggle { color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; cursor: default; }
