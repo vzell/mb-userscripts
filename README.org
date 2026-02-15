@@ -35545,6 +35545,127 @@ go with "Sticky Headers - See columns while scrolling", but include the filter r
 ** remove "▶" and others before exporting
 ** add more formats, JSON, ORG ,pde, etc
 
+** create info popup
+
+In the following function, after the line
+
+#+begin_example
+        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
+#+end_example
+
+include code that pops up an info box which says that the enduser should monitor the browser downloading the file.
+Include a "Close" button and also "Escape" key closing of the popup.
+
+
+#+begin_example
+    function exportTableToCSV() {
+        const table = document.querySelector('table.tbl');
+        if (!table) {
+            alert('No table found to export');
+            Lib.error('export', 'No table found for CSV export');
+            return;
+        }
+
+        Lib.info('export', 'Starting CSV export...');
+
+        const rows = [];
+        let totalCells = 0;
+
+        // Get headers from first row
+        const headerRow = table.querySelector('thead tr:first-child');
+        if (headerRow) {
+            const headers = [];
+            Array.from(headerRow.cells).forEach(cell => {
+                // Skip hidden columns
+                if (cell.style.display === 'none') return;
+
+                // Clean header text (remove sort icons)
+                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
+                // Remove extra whitespace
+                headerText = headerText.replace(/\s+/g, ' ');
+                headers.push(headerText);
+            });
+            rows.push(headers);
+            totalCells += headers.length;
+            Lib.debug('export', `Exported ${headers.length} headers: ${headers.join(', ')}`);
+        }
+
+        // Get data rows (only visible ones)
+        const dataRows = table.querySelectorAll('tbody tr');
+        let rowsExported = 0;
+        let rowsSkipped = 0;
+
+        dataRows.forEach(row => {
+            // Skip hidden rows (filtered out)
+            if (row.style.display === 'none') {
+                rowsSkipped++;
+                return;
+            }
+
+            const cells = [];
+            Array.from(row.cells).forEach((cell, index) => {
+                // Skip hidden columns
+                if (cell.style.display === 'none') return;
+
+                // Get text content and clean it up
+                let text = cell.textContent.trim();
+
+                // Remove extra whitespace
+                text = text.replace(/\s+/g, ' ');
+
+                // Escape quotes (CSV standard: " becomes "")
+                text = text.replace(/"/g, '""');
+
+                // Wrap in quotes if contains comma, newline, or quote
+                if (text.includes(',') || text.includes('\n') || text.includes('"')) {
+                    text = `"${text}"`;
+                }
+
+                cells.push(text);
+            });
+
+            if (cells.length > 0) {
+                rows.push(cells);
+                totalCells += cells.length;
+                rowsExported++;
+            }
+        });
+
+        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
+
+        // Create CSV string
+        const csv = rows.map(row => row.join(',')).join('\n');
+
+        // Create Blob and download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName = pageType || 'table';
+        const filename = `musicbrainz-${pageName}-${timestamp}.csv`;
+        link.download = filename;
+
+        // Trigger download
+        link.click();
+
+        // Cleanup
+        URL.revokeObjectURL(url);
+
+        // Update status
+        const statusDisplay = document.getElementById('mb-status-display');
+        if (statusDisplay) {
+            statusDisplay.textContent = `✓ Exported ${rowsExported} rows to ${filename}`;
+            statusDisplay.style.color = 'green';
+        }
+
+        Lib.info('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
+    }
+#+end_example
+
+
 * keyboard shortcuts
 ** make the keyboard shortcuts configurable
 
@@ -35560,164 +35681,11 @@ Ctrl-f
 
 * table density
 
-* Column Visibility Toggle
+* DONE Column Visibility Toggle
 ** "Escape" key should make the dialog vanish, or clicking outside somewhere
 
 In the following code, right now the pull-down menu with the checkbox list only closes when clicking somewhere outsode of the list.
 The "Escape" key should also make the dialog vanish.
-
-#+begin_example
-    function addColumnVisibilityToggle(table) {
-        // Create toggle button
-        const toggleBtn = document.createElement('button');
-        toggleBtn.textContent = '👁️ Visible Columns';
-        toggleBtn.title = 'Show/hide table columns';
-        toggleBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
-        toggleBtn.type = 'button';
-
-        // Create dropdown menu container
-        const menu = document.createElement('div');
-        menu.className = 'mb-column-visibility-menu';
-        menu.style.cssText = `
-            display: none;
-            position: fixed;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            z-index: 10000;
-            max-height: 400px;
-            overflow-y: auto;
-            min-width: 200px;
-        `;
-
-        // Get headers from the first row (skip filter row)
-        const headerRow = table.querySelector('thead tr:first-child');
-        if (!headerRow) {
-            Lib.warn('ui', 'No header row found for column visibility toggle');
-            return;
-        }
-
-        const headers = Array.from(headerRow.cells);
-
-        // Store checkbox states
-        const checkboxes = [];
-
-        // Create checkbox for each column
-        headers.forEach((th, index) => {
-            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
-            if (!colName) return; // Skip empty headers
-
-            const wrapper = document.createElement('div');
-            wrapper.style.cssText = 'margin: 5px 0; white-space: nowrap; display: flex; align-items: center;';
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = true;
-            checkbox.id = `mb-col-vis-${index}`;
-            checkbox.style.cssText = 'margin-right: 8px; cursor: pointer;';
-            checkbox.dataset.columnIndex = index;
-
-            const label = document.createElement('label');
-            label.htmlFor = checkbox.id;
-            label.textContent = colName;
-            label.style.cssText = 'cursor: pointer; user-select: none; flex: 1;';
-
-            checkbox.addEventListener('change', () => {
-                toggleColumn(table, index, checkbox.checked);
-
-                // Count visible columns
-                const visibleCount = checkboxes.filter(cb => cb.checked).length;
-                Lib.info('ui', `Column "${colName}" ${checkbox.checked ? 'shown' : 'hidden'}. ${visibleCount}/${checkboxes.length} columns visible`);
-            });
-
-            checkboxes.push(checkbox);
-
-            wrapper.appendChild(checkbox);
-            wrapper.appendChild(label);
-            menu.appendChild(wrapper);
-        });
-
-        // Add separator
-        const separator = document.createElement('div');
-        separator.style.cssText = 'margin: 10px 0; padding-top: 10px; border-top: 1px solid #ddd;';
-        menu.appendChild(separator);
-
-        // Add "Select All" / "Deselect All" buttons
-        const buttonRow = document.createElement('div');
-        buttonRow.style.cssText = 'display: flex; gap: 5px;';
-
-        const selectAllBtn = document.createElement('button');
-        selectAllBtn.textContent = 'Select All';
-        selectAllBtn.style.cssText = 'font-size: 0.8em; padding: 4px 8px; cursor: pointer; flex: 1; border-radius: 3px;';
-        selectAllBtn.type = 'button';
-        selectAllBtn.onclick = (e) => {
-            e.stopPropagation();
-            checkboxes.forEach(cb => {
-                if (!cb.checked) {
-                    cb.checked = true;
-                    cb.dispatchEvent(new Event('change'));
-                }
-            });
-        };
-
-        const deselectAllBtn = document.createElement('button');
-        deselectAllBtn.textContent = 'Deselect All';
-        deselectAllBtn.style.cssText = 'font-size: 0.8em; padding: 4px 8px; cursor: pointer; flex: 1; border-radius: 3px;';
-        deselectAllBtn.type = 'button';
-        deselectAllBtn.onclick = (e) => {
-            e.stopPropagation();
-            checkboxes.forEach(cb => {
-                if (cb.checked) {
-                    cb.checked = false;
-                    cb.dispatchEvent(new Event('change'));
-                }
-            });
-        };
-
-        buttonRow.appendChild(selectAllBtn);
-        buttonRow.appendChild(deselectAllBtn);
-        menu.appendChild(buttonRow);
-
-        // Toggle menu visibility
-        toggleBtn.onclick = (e) => {
-            e.stopPropagation();
-            const isVisible = menu.style.display === 'block';
-
-            if (isVisible) {
-                menu.style.display = 'none';
-            } else {
-                menu.style.display = 'block';
-
-                // Position menu below button
-                const rect = toggleBtn.getBoundingClientRect();
-                menu.style.top = `${rect.bottom + 5}px`;
-                menu.style.left = `${rect.left}px`;
-            }
-        };
-
-        // Close menu when clicking outside
-        const closeMenu = (e) => {
-            if (!menu.contains(e.target) && e.target !== toggleBtn) {
-                menu.style.display = 'none';
-            }
-        };
-        document.addEventListener('click', closeMenu);
-
-        // Append to controls container
-        const controlsContainer = document.getElementById('mb-show-all-controls-container');
-        if (controlsContainer) {
-            controlsContainer.appendChild(toggleBtn);
-            Lib.info('ui', 'Column visibility toggle added to controls');
-        } else {
-            Lib.warn('ui', 'Controls container not found, cannot add column visibility toggle');
-        }
-
-        // Append menu to body
-        document.body.appendChild(menu);
-    }
-#+end_example
 
 * autoresize columns
 ** DONE initial
@@ -35907,7 +35875,7 @@ structure
 * make the buggy button implementations optional, actually make ALL the buttons optional (configurable), initial only the NON buggy ones
 
 
-* overhoule the configuration GUI
+* DONE overhoule the configuration GUI
 ** DONE initial
 
 In the uploaded userscript "ShowAllEntityData.user.js" and library "VZ_MBLibrary-1.1.0.user.js"
@@ -36348,6 +36316,7 @@ Please apply the same look-and-feel to the changelog "show: function ()"
 
 - make the version column smaller, actually it should only occupy as much space (maybe a little more than a typical date entry "11.4.0+2026-02-01")
 - make the description column initially wider
+
 
 * put the "sorted <time> in some other place to not produce eye flicker
 

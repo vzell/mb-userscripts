@@ -636,6 +636,64 @@ let changelog = [
         }
 
         Lib.info('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
+
+        // --- INFO POPUP TO ALERT USER (WITH FADE OUT) ---
+        const infoPopup = document.createElement('div');
+        infoPopup.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 1px solid #888;
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 400px;
+            text-align: center;
+            font-family: sans-serif;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        `;
+
+        const msg = document.createElement('div');
+        msg.textContent = 'CSV export complete. Please monitor your browser for the file download.';
+        msg.style.marginBottom = '15px';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Close';
+        closeBtn.style.cssText = `
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background-color: #f0f0f0;
+        `;
+        closeBtn.type = 'button';
+
+        // Close function with fade out
+        const closePopup = () => {
+            infoPopup.style.opacity = '0';
+            // Remove from DOM after transition
+            setTimeout(() => {
+                if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
+                document.removeEventListener('keydown', onEscape);
+            }, 300); // match the CSS transition duration
+        };
+
+        // Button click closes popup
+        closeBtn.addEventListener('click', closePopup);
+
+        // Escape key closes popup
+        const onEscape = (e) => {
+            if (e.key === 'Escape') closePopup();
+        };
+        document.addEventListener('keydown', onEscape);
+
+        infoPopup.appendChild(msg);
+        infoPopup.appendChild(closeBtn);
+        document.body.appendChild(infoPopup);
     }
 
     /**
@@ -1259,6 +1317,14 @@ Note: Shortcuts work when not typing in input fields
             }
         };
         document.addEventListener('click', closeMenu);
+
+        // Close menu on Escape key
+        const closeMenuOnEscape = (e) => {
+            if (e.key === 'Escape' && menu.style.display === 'block') {
+                menu.style.display = 'none';
+            }
+        };
+        document.addEventListener('keydown', closeMenuOnEscape);
 
         // Append to controls container
         const controlsContainer = document.getElementById('mb-show-all-controls-container');
