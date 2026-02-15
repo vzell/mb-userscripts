@@ -35905,6 +35905,15 @@ For example in https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfe
 
 Render the "Visible Columns" button in red, when not all columns are displayed/selected.
 
+*** RGs-R
+
+In the somewhat special case of "type: 'releasegroup-releases'", URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+the sub-table status display does NOT show in the table specific h3 header rows. Also the filter condition in the global
+filter field is NOT shown in the status display of the h2 "Album" header.
+
+Compare this to the case of URLs of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f for example, where this works
+
 *** works
 
 column filters
@@ -38003,7 +38012,7 @@ In the following code the '✗ ' is ONLY prepended to the text 'Clear ALL filter
 #+end_example
 
 
-* draggable "Visible Columns" pull down list container
+* DONE draggable "Visible Columns" pull down list container
 ** initial
 
 In the uploaded userscript
@@ -38039,7 +38048,11 @@ Also adjust the font text height for all the status displays "global" and sub-ta
 correspond to the text heigth of the corresponding h2 and h3 headers
 
 
-* Bug
+* DONE Bug
 
 Number of columns is arifically hig, sometimes 16, in the status are
+
+* add global config button
+
+add global config button to the very right side in the h2 header of the initial enterd page but alos in the renderd final page
 

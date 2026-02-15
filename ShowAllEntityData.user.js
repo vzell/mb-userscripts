@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.14.0+2026-02-15
+// @version      9.15.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.15.0+2026-02-15', description: 'Fix: Sub-table status displays (filter/sort) now properly appear in h3 headers on multi-table pages (like release-group pages). Previously only showed on initial render, not when filtering. Global filter status now displays correctly in h2 header for all multi-table page types.'},
     {version: '9.14.0+2026-02-15', description: 'Enhancement: "Visible Columns" button now displays in red when not all columns are visible, providing visual feedback about hidden columns.'},
     {version: '9.13.0+2026-02-15', description: 'Fix: Hiding/showing columns after Auto-Resize now properly updates column widths and table layout. Previously caused text wrapping and misalignment. Hidden columns now properly removed from width calculation, shown columns re-measured. Status message now shows correct visible column count (not summed across tables).'},
     {version: '9.12.0+2026-02-15', description: 'Fix: Auto-Resize now properly handles hidden columns from Visible Columns feature. Previously caused rendering glitches where content spread across wrong columns. Now skips hidden columns entirely during measurement and sizing.'},
@@ -5887,11 +5888,48 @@ Note: Shortcuts work when not typing in input fields
                 h3 = table.previousElementSibling;
                 tbody = table.querySelector('tbody');
                 tbody.innerHTML = '';
+
+                // Ensure sub-table controls exist even when reusing h3
+                if (h3 && !h3.querySelector('.mb-subtable-controls')) {
+                    Lib.info('render', `Adding missing sub-table controls to existing h3 for "${categoryName}"`);
+                    const subTableControls = document.createElement('span');
+                    subTableControls.className = 'mb-subtable-controls';
+
+                    const clearSubBtn = document.createElement('button');
+                    clearSubBtn.className = 'mb-subtable-clear-btn';
+                    clearSubBtn.textContent = '✕ Clear all COLUMN filters';
+                    clearSubBtn.title = 'Clear all column filters for this table';
+                    clearSubBtn.type = 'button';
+                    clearSubBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        clearSubTableColumnFilters(table, categoryName);
+                    };
+
+                    const subFilterStatus = document.createElement('span');
+                    subFilterStatus.className = 'mb-filter-status';
+                    subFilterStatus.dataset.tableName = categoryName;
+                    subFilterStatus.dataset.tableIndex = index.toString();
+
+                    const subSortStatus = document.createElement('span');
+                    subSortStatus.className = 'mb-sort-status';
+                    subSortStatus.dataset.tableName = categoryName;
+                    subSortStatus.dataset.tableIndex = index.toString();
+
+                    subTableControls.appendChild(clearSubBtn);
+                    subTableControls.appendChild(subFilterStatus);
+                    subTableControls.appendChild(subSortStatus);
+                    h3.appendChild(subTableControls);
+                }
             } else {
                 Lib.info('render', `Creating new table and H3 for group "${categoryName}".`);
                 h3 = document.createElement('h3');
                 h3.className = 'mb-toggle-h3';
                 h3.title = 'Collapse/Uncollapse table section';
+
+                // Note: Sub-table controls will be added later in the if (!query) block
+                // when h3.innerHTML is set, to avoid being wiped out
+
                 table = document.createElement('table');
                 table.className = 'tbl';
                 // Apply indentation to the table to match the sub-header
@@ -6018,6 +6056,39 @@ Note: Shortcuts work when not typing in input fields
                 const totalInGroup = groupedRows.find(g => (g.category || g.key || 'Unknown') === categoryName)?.rows.length || 0;
                 if (countStat) {
                     countStat.textContent = (group.rows.length === totalInGroup) ? `(${totalInGroup})` : `(${group.rows.length} of ${totalInGroup})`;
+                }
+
+                // Ensure sub-table controls exist (they may be missing if table was created during initial filter)
+                if (!h3.querySelector('.mb-subtable-controls')) {
+                    Lib.info('render', `Adding missing sub-table controls during filtering for "${categoryName}"`);
+                    const subTableControls = document.createElement('span');
+                    subTableControls.className = 'mb-subtable-controls';
+
+                    const clearSubBtn = document.createElement('button');
+                    clearSubBtn.className = 'mb-subtable-clear-btn';
+                    clearSubBtn.textContent = '✕ Clear all COLUMN filters';
+                    clearSubBtn.title = 'Clear all column filters for this table';
+                    clearSubBtn.type = 'button';
+                    clearSubBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        clearSubTableColumnFilters(table, categoryName);
+                    };
+
+                    const subFilterStatus = document.createElement('span');
+                    subFilterStatus.className = 'mb-filter-status';
+                    subFilterStatus.dataset.tableName = categoryName;
+                    subFilterStatus.dataset.tableIndex = index.toString();
+
+                    const subSortStatus = document.createElement('span');
+                    subSortStatus.className = 'mb-sort-status';
+                    subSortStatus.dataset.tableName = categoryName;
+                    subSortStatus.dataset.tableIndex = index.toString();
+
+                    subTableControls.appendChild(clearSubBtn);
+                    subTableControls.appendChild(subFilterStatus);
+                    subTableControls.appendChild(subSortStatus);
+                    h3.appendChild(subTableControls);
                 }
             }
         });
