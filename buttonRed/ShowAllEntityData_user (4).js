@@ -446,7 +446,7 @@ let changelog = [
                         const finalWidth = Math.ceil(maxWidth + 20);
                         col.style.width = `${finalWidth}px`;
                         col.style.display = '';
-                        
+
                         Lib.debug('ui', `Column ${columnIndex} shown and re-measured: ${finalWidth}px`);
                     } else {
                         // Hide column in colgroup
@@ -467,7 +467,7 @@ let changelog = [
                             const col = colgroup.children[i];
                             const th = headers[0]?.cells[i];
                             const isVisible = th && th.style.display !== 'none';
-                            
+
                             if (col && isVisible) {
                                 const width = parseInt(col.style.width) || 0;
                                 columnWidths.push(width);
@@ -628,7 +628,7 @@ let changelog = [
                 // Count visible columns
                 const visibleCount = checkboxes.filter(cb => cb.checked).length;
                 Lib.info('ui', `Column "${colName}" ${checkbox.checked ? 'shown' : 'hidden'}. ${visibleCount}/${checkboxes.length} columns visible`);
-                
+
                 // Update button color
                 updateButtonColor();
             });
@@ -1929,7 +1929,7 @@ Note: Shortcuts work when not typing in input fields
             // Measure header widths (ONLY for visible columns)
             headers.forEach((th, colIndex) => {
                 if (colIndex >= columnCount) return;
-                
+
                 // Skip hidden columns
                 if (!columnVisible[colIndex]) {
                     Lib.debug('resize', `Header ${colIndex}: Skipped (hidden)`);
@@ -1973,7 +1973,7 @@ Note: Shortcuts work when not typing in input fields
 
                 Array.from(row.cells).forEach((cell, colIndex) => {
                     if (colIndex >= columnCount) return;
-                    
+
                     // Skip hidden columns
                     if (!columnVisible[colIndex]) return;
 
@@ -2013,7 +2013,7 @@ Note: Shortcuts work when not typing in input fields
             let visibleColumnCount = 0;
             columnWidths.forEach((width, index) => {
                 const col = document.createElement('col');
-                
+
                 // Only set width for VISIBLE columns
                 if (columnVisible[index]) {
                     // Add some padding to the calculated width
@@ -2027,7 +2027,7 @@ Note: Shortcuts work when not typing in input fields
                     col.style.display = 'none';
                     Lib.debug('resize', `Table ${tableIndex}, Column ${index}: 0px (hidden)`);
                 }
-                
+
                 colgroup.appendChild(col);
             });
 
