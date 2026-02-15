@@ -28905,7 +28905,7 @@ automatically again. What pattern could be used ?
 I actually would want this for the uploaded userscript to happen, as it has the button logic, and I would refire after rendering the final page, the other scripts which already run, when the button was rendered
 
 
-* make the whole sidebar vanish to the right side of the browser window
+* TODO make the whole sidebar vanish to the right side of the browser window
 ** DONE sidebar
 
 In the uploaded userscript,
@@ -29023,6 +29023,18 @@ functionality onyl available if true.
 Also call the initSidebarCollapse(); function only on the final rendered page, after pressing the action button
 
 
+** sidebar
+
+In the uploaded userscript,
+
+there is a problem when on the final rendered page the sidebar container '<div id="sidebar">' is collapsed
+("initSidebarCollapse()" function) to the right side, the container '<div id="content">' does not occupy the complete
+real estate which gets freed up by the now more or less vanished sidebar container.
+
+Please implement this, so that we get the complete real estate when the sidebar container IS collapsed, but take into
+account that in the non-collapsed state the sidebar container usually has it's own scrollbar because it has lots of
+content. Make sure that an eventual scrollbar on the "content container does not collide with the sidebar container.
+
 
 * generalize special column handling (e.g. Tagger, jesus2099 image handling, collapsing RGs, Advance Relationship icons ==> discogs, SL, MB
 ** remove or fix "Tagger" column
@@ -29049,7 +29061,7 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 *** clicking the tagger link should not create a new page but instead just execute the action in the background
 
 
-* DOM rendering
+* TODO DOM rendering
 ** DONE timings and logging
 
 where in the code does the actual DOM rendering begin, and end. Pleas place logging statement in there, and add timing info to the log
@@ -29747,7 +29759,6 @@ Userscript-safe CSS → no site collisions
     };
 })();
 #+end_example
-
 
 ** Fetching in info line and console log NOT in sync
 
@@ -30465,7 +30476,7 @@ https://musicbrainz.org/release-group/c8e768c9-448b-4ebd-8e5e-4ae95609dd0b
 See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
 
 
-* Release page enhancer / MB page enhancer
+* TODO Release page enhancer / MB page enhancer
 ** DONE create a userscript which shows coverart on the mainpage in miniature form
 *** DONE initial
 
@@ -30863,12 +30874,12 @@ https://musicbrainz.org/release/add
 #+end_example
 
 
-* exclude standalone recordings
+* TODO exclude standalone recordings
 
 https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72
 
 Check for "No releases found which feature this recording." under the h2 header "Appears on releases".
-In that case don't even render the additional action buttons when entering such a pahe, but still log it to the console
+In that case don't even render the additional action buttons when entering such a page, but still log it to the console
 
 
 * TODO new columns e.g. for labels
@@ -30900,7 +30911,7 @@ extract comment from the following columns
 ** DONE case sensitive (global, column specific clickable)
 
 
-* add option to specify filter condition for the initial display already
+* DONE add option to specify filter condition for the initial display already
 
 
 * TODO add fetching to local db storage and reading from it
@@ -31969,7 +31980,7 @@ Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': await is only v
 Otherwise the the script woudn't even load
 
 
-* "Esc" handling in filter field
+* TODO "Esc" handling in filter field
 ** initial
 
 In the uploaded script,
@@ -32008,7 +32019,7 @@ Field is already empty: The user wants to leave the field (release focus/blur).
 OK, so the behaviour for the global filter is OK now, but the column specific filters (remember they also exist in each
 table for a rendered page with multi tables) the first "Esc" clears the filter but it doesn't stay focused, so that I can start typing again 
 
-** midifier escape
+** TODO midifier escape
 
 If you want, next step could be:
 
@@ -32027,7 +32038,7 @@ allow Esc to clear all column filters in table with modifier
 visual feedback (“cleared”) animation
 
 
-* add divider in config menu + scrollbars
+* DONE add divider in config menu + scrollbars
 
 
 * refactor column splitting in different functions and take them out of the main flow
@@ -35159,7 +35170,7 @@ introduce a new boolean variable for debug logging in "const configSchema"
 and wrap all existing debug log statements in an if then block if the bollean is true. Or maybe there is some more clever and recommended way to achieve this.
 
 
-* MB-Library
+-Library
 ** test statements
 
 #+begin_example
@@ -35329,7 +35340,7 @@ In the following code block
 could the "else if" structure somehow be refactored, it looks error prone
 
 
-* Cosmetic
+* Cosmetic - rows and elapsed time
 ** elapsed time
 
 what need to be changed to change the text from
@@ -35533,14 +35544,13 @@ or a country flag in front of the country name
 So please fix also the column filtering for regexps to only take real text into account
 
 
-* Sticky headers
+* TODO Sticky headers
 ** DONE works for single table views
 
 go with "Sticky Headers - See columns while scrolling", but include the filter row with the other stiky headers
 
 ** multi table mode
 ** make the whole MB page header up to the filter row sticky
-
 
 * Export CSV
 ** remove "▶" and others before exporting
@@ -35688,6 +35698,7 @@ Ctrl-f
 
 In the following code, right now the pull-down menu with the checkbox list only closes when clicking somewhere outsode of the list.
 The "Escape" key should also make the dialog vanish.
+
 
 * autoresize columns
 ** DONE initial
@@ -35838,11 +35849,11 @@ anymore.
 ** TODO fix "Release" column changes width when actually manually dragging the "Artist" column
 
 
-* add descriptions to every function call
+* DONE add descriptions to every function call
 
-* make the changelog window scrollable
+* DONE make the changelog window scrollable
 
-* make a nice pre-filter UI
+* DONE make a nice pre-filter UI
 ** initial
 
 In the uploaded userscript
@@ -35873,8 +35884,10 @@ make the following popup window visually more appealing, with a modern design wh
 Also account for remembering the last <n> filterload expressions (use browser persisten storage) and add a configuration directive to the
 structure
 
+
 * ALL new buttons can potentially be doubled in the UI
-* make the buggy button implementations optional, actually make ALL the buttons optional (configurable), initial only the NON buggy ones
+
+* DONE make the buggy button implementations optional, actually make ALL the buttons optional (configurable), initial only the NON buggy ones
 
 
 * DONE overhoule the configuration GUI
@@ -36320,9 +36333,9 @@ Please apply the same look-and-feel to the changelog "show: function ()"
 - make the description column initially wider
 
 
-* put the "sorted <time> in some other place to not produce eye flicker
+* DONE put the "sorted <time> in some other place to not produce eye flicker
 
-* remove "Initial rendering" or replace with real values
+* DONE remove "Initial rendering" or replace with real values
 
 * during initial rendering, the "Load from Disk" button when pressed, should tell the user, that the feature is ONLY avialable after pressing the action button first
 ** fix it
@@ -36359,15 +36372,15 @@ After loading from JSON, remove artefacts like
 
 * Ctrl-clicking an h2 header row looses focus
 
-* Replace the "Warning: This .." to the same nice dialog like after the loading of lots of pages
+* DONE Replace the "Warning: This .." to the same nice dialog like after the loading of lots of pages
 
 * add global exclude filter
 
-* Place the 'Sorted "<column name>": <elapsed>s'
+* DONE Place the 'Sorted "<column name>": <elapsed>s'
 
 Place the 'Sorted "<column name>": <elapsed>s' after the "Unhighlight all" button
 
-*     statusDisplay.id = 'mb-status-display';
+#     statusDisplay.id = 'mb-status-display';
 
 #+begin_example
     const statusDisplay = document.createElement('span');
@@ -36375,7 +36388,8 @@ Place the 'Sorted "<column name>": <elapsed>s' after the "Unhighlight all" butto
     statusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 #+end_example
 
-* ❌ Error during sort: ReferenceError: filteredArray is not defined
+
+* DONE ❌ Error during sort: ReferenceError: filteredArray is not defined
 
 #+begin_example
 [VZ-ShowAllEntities: releasegroup-releases] 🎨 Toggling table for "Official". New state: visible 
@@ -36406,8 +36420,8 @@ Place the 'Sorted "<column name>": <elapsed>s' after the "Unhighlight all" butto
         }
 #+end_example
 
-* remove config menu when called from MusicBrainz "Editing" menu, when pressing Esc
 
+* DONE remove config menu when called from MusicBrainz "Editing" menu, when pressing Esc
 
 * DONE adjust dialog width when "Search expression..." would grow larger than initila dialog size, but constrain the dialog to not get wieder that the browser window
 
@@ -36485,7 +36499,8 @@ The following warning message appears in a native browser window I think,
 
 how can we change this to a userscript generated popup
 
-* discrepancy
+
+* DONE discrepancy
 ** initial
 
 In the uploaded userscript
@@ -36926,7 +36941,8 @@ to
 
 I still dont' get the output of all the functions which
 
-* add function descriptions
+
+* DONE add function descriptions
 
 Please also go through the code and add missing function descriptions with parameter descriptions
 like the following
@@ -36944,7 +36960,7 @@ like the following
 #+end_example
 
 
-* new button with text "Clear all filters"
+* DONE new button with text "Clear all column filters"
 
 Add a new button with text "Clear all filters" should be created after the "Unhighlight all" button and when pressed call the function "clearAllFilters"
 
@@ -36966,12 +36982,12 @@ should be renamed to "globalStatusDisplay" instead.
 
 The current "statusDisplay" variable should be rendered after the newly introduced "Clear all filters" button
 
-* new button with text "Clear all filters"
+* DONE new button with text "Clear all filters"
 
 Add a new button with text "Clear all filters" should be created after the "Clear all column filters" button and when
 pressed call the function "clearAllFilters" and additionally clear the global filter.
 
-* multi tables sorting and filtering status display errors
+* DONE multi tables sorting and filtering status display errors
 
 When sorting and filtering on multitable pages like https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.2.0+2026-02-15
+// @version      9.3.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.3.0+2026-02-15', description: 'Fix: Better sidebar toggling to get more real estate for data container when sidebar is collapsed'},
     {version: '9.2.0+2026-02-15', description: 'Fix: Status display now correctly shows sorting/filtering results with table name and column info. Fixed ReferenceError that caused "Sort failed" and "Filtering..." to persist incorrectly.'},
     {version: '9.1.0+2026-02-15', description: 'Add new clear all filter button, global AND column level.'},
     {version: '9.0.0+2026-02-15', description: 'New status display handling, global and sorting/filtering related.'},
@@ -2136,7 +2137,12 @@ Note: Shortcuts work when not typing in input fields
 
     // --- Sidebar Collapsing & Full Width Stretching Logic ---
     /**
-     * Initializes the collapsible sidebar feature with a toggle handle
+     * Initializes the sidebar collapse/expand functionality with smooth transitions
+     *
+     * Creates a toggle handle on the right edge of the sidebar that allows collapsing
+     * the sidebar to free up horizontal space for content. When collapsed, content
+     * containers expand to full width for better visibility of wide tables.
+     *
      * Adds CSS transitions and event handlers for smooth sidebar collapse/expand animation
      */
     function initSidebarCollapse() {
@@ -2154,12 +2160,27 @@ Note: Shortcuts work when not typing in input fields
 
         const style = document.createElement('style');
         style.textContent = `
+            /* Sidebar with proper overflow handling */
             #sidebar {
                 transition: transform 0.3s ease, width 0.3s ease, opacity 0.3s ease, margin-right 0.3s ease;
+                overflow-y: auto;
+                overflow-x: hidden;
+                box-sizing: border-box;
             }
+
+            /* Content containers with proper width transitions and overflow handling */
             #page, #content {
                 transition: margin-right 0.3s ease, padding-right 0.3s ease, width 0.3s ease, max-width 0.3s ease, margin-left 0.3s ease;
+                box-sizing: border-box;
             }
+
+            /* Ensure content can scroll when needed without overlapping sidebar */
+            #content {
+                overflow-x: auto;
+                overflow-y: auto;
+            }
+
+            /* Collapsed sidebar state */
             .sidebar-collapsed {
                 transform: translateX(100%);
                 width: 0 !important;
@@ -2167,18 +2188,33 @@ Note: Shortcuts work when not typing in input fields
                 opacity: 0 !important;
                 margin-right: -${sidebarWidth} !important;
                 pointer-events: none;
+                overflow: hidden !important;
             }
+
             /* Force 100% width and remove any MB centering/max-width constraints */
+            /* This ensures content uses all available space when sidebar is collapsed */
             .mb-full-width-stretching {
                 margin-right: 0 !important;
                 margin-left: 0 !important;
                 padding-right: 10px !important;
                 padding-left: 10px !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                min-width: 100% !important;
+                width: calc(100vw - 20px) !important;
+                max-width: calc(100vw - 20px) !important;
+                min-width: calc(100vw - 20px) !important;
                 box-sizing: border-box !important;
             }
+
+            /* When sidebar is visible, leave room for it */
+            body:not(.sidebar-is-collapsed) #page {
+                margin-right: ${sidebarWidth};
+            }
+
+            body:not(.sidebar-is-collapsed) #content {
+                /* Ensure content doesn't overlap with sidebar scrollbar */
+                padding-right: 10px;
+            }
+
+            /* Toggle handle */
             #sidebar-toggle-handle {
                 position: fixed;
                 right: ${sidebarWidth};
@@ -2192,20 +2228,31 @@ Note: Shortcuts work when not typing in input fields
                 border-radius: 8px 0 0 8px;
                 cursor: pointer;
                 z-index: 10000;
-                display: flex; align-items: center; justify-content: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 transition: right 0.3s ease;
                 box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             }
+
             #sidebar-toggle-handle::after {
                 content: '▶';
                 font-size: 9px;
                 color: #555;
             }
+
             .handle-collapsed {
                 right: 0 !important;
             }
+
             .handle-collapsed::after {
                 content: '◀' !important;
+            }
+
+            /* Body class to track sidebar state */
+            body.sidebar-is-collapsed #page,
+            body.sidebar-is-collapsed #content {
+                margin-right: 0 !important;
             }
         `;
         document.head.appendChild(style);
@@ -2216,10 +2263,21 @@ Note: Shortcuts work when not typing in input fields
 
         const applyStretching = (isCollapsed) => {
             const containers = [document.getElementById("page"), document.getElementById("content")];
+
+            // Add/remove body class to track sidebar state
+            if (isCollapsed) {
+                document.body.classList.add('sidebar-is-collapsed');
+            } else {
+                document.body.classList.remove('sidebar-is-collapsed');
+            }
+
             containers.forEach(el => {
                 if (el) {
-                    if (isCollapsed) el.classList.add('mb-full-width-stretching');
-                    else el.classList.remove('mb-full-width-stretching');
+                    if (isCollapsed) {
+                        el.classList.add('mb-full-width-stretching');
+                    } else {
+                        el.classList.remove('mb-full-width-stretching');
+                    }
                 }
             });
         };
@@ -2242,6 +2300,7 @@ Note: Shortcuts work when not typing in input fields
         });
         observer.observe(document.body, { childList: true, subtree: true });
     }
+
 
     // Check if we just reloaded to fix the filter issue
     const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
