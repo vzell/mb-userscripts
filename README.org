@@ -35676,7 +35676,6 @@ Include a "Close" button and also "Escape" key closing of the popup.
     }
 #+end_example
 
-
 * keyboard shortcuts
 ** make the keyboard shortcuts configurable
 
@@ -35684,12 +35683,10 @@ Ctrl-f
 
 ** problem with browser defined keyboard shortcust, e.g. Ctrl++ ==> increase font instead of "Settings" dialog
 
-
 * statistics panel
 ** wrong stats
 ** make it multitable aware
 ** create keyboard shorcut
-
 
 * DONE table density
 
@@ -35699,6 +35696,11 @@ Ctrl-f
 In the following code, right now the pull-down menu with the checkbox list only closes when clicking somewhere outsode of the list.
 The "Escape" key should also make the dialog vanish.
 ** TODO on mutitable view toggling a column ONLY toggles the first table, should toggle all
+
+In the uploaded userscript
+
+toggling column visibility with the function "addColumnVisibilityToggle" ONLY toggles the first table on mutitable pages
+e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships but it should toggle them on all tables in the current page
 
 * TODO autoresize columns
 ** DONE initial
@@ -35849,7 +35851,6 @@ anymore.
 ** TODO fix "Release" column changes width when actually manually dragging the "Artist" column
 
 ** TODO When calculating the minimum width of a column take the sort symbols into account e.g.the "Date" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=869
-
 
 * DONE add descriptions to every function call
 
@@ -37830,7 +37831,7 @@ What to show: Show the sidebar in its "Collapsed" state to demonstrate how the t
 #+end_example
 
 
-* unicode symbol "✗" in red
+* DONE unicode symbol "✗" in red
 ** initial
 
 Show me this unicode symbol "✗" in red, I want to use in front of the button text "Clear all column filters"

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.5.0+2026-02-15
+// @version      9.6.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.6.0+2026-02-15', description: 'Fix: Add toggle column visibility to ALL tables on multitable pages.'},
     {version: '9.5.0+2026-02-15', description: 'Reintroduce browser native "confirm" instead of modal dialog, otherwise execution hangs.'},
     {version: '9.4.0+2026-02-15', description: 'Reorderd action buttons in a more logic workflow.'},
     {version: '9.3.0+2026-02-15', description: 'Fix: Better sidebar toggling to get more real estate for data container when sidebar is collapsed.'},
@@ -355,23 +356,27 @@ let changelog = [
     function toggleColumn(table, columnIndex, show) {
         const display = show ? '' : 'none';
 
-        // Toggle header cells in all header rows (main header + filter row)
-        const headers = table.querySelectorAll('thead tr');
-        headers.forEach(row => {
-            if (row.cells[columnIndex]) {
-                row.cells[columnIndex].style.display = display;
-            }
+        // Toggle column in ALL tables on the page (for multi-table pages)
+        const allTables = document.querySelectorAll('table.tbl');
+        allTables.forEach(currentTable => {
+            // Toggle header cells in all header rows (main header + filter row)
+            const headers = currentTable.querySelectorAll('thead tr');
+            headers.forEach(row => {
+                if (row.cells[columnIndex]) {
+                    row.cells[columnIndex].style.display = display;
+                }
+            });
+
+            // Toggle all cells in the column for all body rows
+            const rows = currentTable.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                if (row.cells[columnIndex]) {
+                    row.cells[columnIndex].style.display = display;
+                }
+            });
         });
 
-        // Toggle all cells in the column for all body rows
-        const rows = table.querySelectorAll('tbody tr');
-        rows.forEach(row => {
-            if (row.cells[columnIndex]) {
-                row.cells[columnIndex].style.display = display;
-            }
-        });
-
-        Lib.debug('ui', `Column ${columnIndex} ${show ? 'shown' : 'hidden'}`);
+        Lib.debug('ui', `Column ${columnIndex} ${show ? 'shown' : 'hidden'} in ${allTables.length} table(s)`);
     }
 
     /**
