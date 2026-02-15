@@ -2872,6 +2872,7 @@ Note: Shortcuts work when not typing in input fields
     stopBtn.style.cssText = 'display:none; font-size:0.8em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box; border-radius:6px;';
 
     const statusDisplay = document.createElement('span');
+    statusDisplay.id = 'mb-status-display';
     statusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 
     const progressContainer = document.createElement('div');
