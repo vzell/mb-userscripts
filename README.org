@@ -37438,7 +37438,7 @@ add new
 - filterStatusDisplay
 - sortStatusDisplay
 
-and render them with different fonts behind each other. Do this for all status display (per table, on multi table pages and also for singel table pges)
+and render them with different fonts behind each other. Do this for all status displays (per table, on multi table pages and also for single table pages)
 
 
 * shortcuts

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.7.0+2026-02-15
+// @version      9.8.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.8.0+2026-02-15', description: 'Enhancement: Separate sorting and filtering status displays with different fonts for clarity. Applied to both single-table and multi-table pages.'},
     {version: '9.7.0+2026-02-15', description: 'Add: Sub-table specific status displays and clear filter buttons in h3 headers on multi-table pages.'},
     {version: '9.6.0+2026-02-15', description: 'Fix: Add toggle column visibility to ALL tables on multitable pages.'},
     {version: '9.5.0+2026-02-15', description: 'Reintroduce browser native "confirm" instead of modal dialog, otherwise execution hangs.'},
@@ -755,11 +756,11 @@ let changelog = [
 
         Lib.info('shortcuts', 'All filters cleared');
 
-        // Show feedback in status
-        const statusDisplay = document.getElementById('mb-status-display');
-        if (statusDisplay) {
-            statusDisplay.textContent = '✓ All filters cleared';
-            statusDisplay.style.color = 'green';
+        // Show feedback in filter status
+        const filterStatusDisplay = document.getElementById('mb-filter-status-display');
+        if (filterStatusDisplay) {
+            filterStatusDisplay.textContent = '✓ All filters cleared';
+            filterStatusDisplay.style.color = 'green';
         }
     }
 
@@ -3063,11 +3064,11 @@ Note: Shortcuts work when not typing in input fields
 
         Lib.info('filter', 'All column filters cleared');
 
-        // Show feedback in status
-        const statusDisplay = document.getElementById('mb-status-display');
-        if (statusDisplay) {
-            statusDisplay.textContent = '✓ All column filters cleared';
-            statusDisplay.style.color = 'green';
+        // Show feedback in filter status
+        const filterStatusDisplay = document.getElementById('mb-filter-status-display');
+        if (filterStatusDisplay) {
+            filterStatusDisplay.textContent = '✓ All column filters cleared';
+            filterStatusDisplay.style.color = 'green';
         }
     };
     filterContainer.appendChild(clearColumnFiltersBtn);
@@ -3089,7 +3090,20 @@ Note: Shortcuts work when not typing in input fields
 
     const statusDisplay = document.createElement('span');
     statusDisplay.id = 'mb-status-display';
-    statusDisplay.style.cssText = 'font-size:0.8em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+    statusDisplay.style.cssText = 'font-size:0.8em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; gap:4px;';
+
+    // Create separate filter and sort status displays
+    const filterStatusDisplay = document.createElement('span');
+    filterStatusDisplay.id = 'mb-filter-status-display';
+    filterStatusDisplay.className = 'mb-filter-status';
+
+    const sortStatusDisplay = document.createElement('span');
+    sortStatusDisplay.id = 'mb-sort-status-display';
+    sortStatusDisplay.className = 'mb-sort-status';
+
+    statusDisplay.appendChild(filterStatusDisplay);
+    statusDisplay.appendChild(sortStatusDisplay);
+
     filterContainer.appendChild(statusDisplay);
 
     const timerDisplay = document.createElement('span');
@@ -3114,16 +3128,16 @@ Note: Shortcuts work when not typing in input fields
 
         Lib.info('filter', `Column filters cleared for table: ${tableName}`);
 
-        // Show feedback in the sub-table specific status display
+        // Show feedback in the sub-table specific filter status display
         const h3 = table.previousElementSibling;
         if (h3 && h3.classList.contains('mb-toggle-h3')) {
-            const statusDisplay = h3.querySelector('.mb-subtable-status-display');
-            if (statusDisplay) {
-                statusDisplay.textContent = `✓ Filters cleared`;
-                statusDisplay.style.color = 'green';
+            const filterStatusDisplay = h3.querySelector('.mb-filter-status');
+            if (filterStatusDisplay) {
+                filterStatusDisplay.textContent = `✓ Filters cleared`;
+                filterStatusDisplay.style.color = 'green';
                 // Auto-clear the message after 2 seconds
                 setTimeout(() => {
-                    statusDisplay.textContent = '';
+                    filterStatusDisplay.textContent = '';
                 }, 2000);
             }
         }
@@ -3158,6 +3172,8 @@ Note: Shortcuts work when not typing in input fields
         .mb-subtable-clear-btn { font-size: 0.7em; padding: 2px 6px; cursor: pointer; vertical-align: middle; border-radius: 4px; background: #f0f0f0; border: 1px solid #ccc; }
         .mb-subtable-clear-btn:hover { background: #e0e0e0; }
         .mb-subtable-status-display { font-size: 0.6em; color: #333; font-weight: bold; vertical-align: middle; }
+        .mb-filter-status { font-family: 'Courier New', monospace; font-size: 0.75em; margin-right: 8px; }
+        .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 0.75em; font-style: italic; }
         .mb-toggle-h2 { cursor: pointer; user-select: none; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; cursor: pointer; }
         .mb-master-toggle { color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; cursor: default; }
@@ -3942,11 +3958,11 @@ Note: Shortcuts work when not typing in input fields
     function runFilter() {
         const filterStartTime = performance.now();
 
-        // Show filtering indicator in status display
-        const statusDisplay = document.getElementById('mb-status-display');
-        if (statusDisplay) {
-            statusDisplay.textContent = '⏳ Filtering...';
-            statusDisplay.style.color = 'orange';
+        // Show filtering indicator in filter status display
+        const filterStatusDisplay = document.getElementById('mb-filter-status-display');
+        if (filterStatusDisplay) {
+            filterStatusDisplay.textContent = '⏳ Filtering...';
+            filterStatusDisplay.style.color = 'orange';
         }
 
         const isCaseSensitive = caseCheckbox.checked;
@@ -4145,7 +4161,7 @@ Note: Shortcuts work when not typing in input fields
         const filterEndTime = performance.now();
         const filterDuration = (filterEndTime - filterStartTime).toFixed(0);
 
-        if (statusDisplay) {
+        if (filterStatusDisplay) {
             const rowCount = activeDefinition.tableMode === 'multi' ?
                 filteredArray.reduce((sum, g) => sum + g.rows.length, 0) :
                 document.querySelectorAll('table.tbl tbody tr').length;
@@ -4169,18 +4185,18 @@ Note: Shortcuts work when not typing in input fields
             // On single-table pages: show all filter info
             if (activeDefinition.tableMode === 'multi') {
                 const globalFilterInfo = globalQuery ? ` [global:"${globalQuery}"]` : '';
-                statusDisplay.textContent = `✓ Global filter${globalFilterInfo}`;
-                statusDisplay.style.color = 'green';
+                filterStatusDisplay.textContent = `✓ Global filter${globalFilterInfo}`;
+                filterStatusDisplay.style.color = 'green';
 
-                // Update each sub-table status display with its specific info
+                // Update each sub-table filter status display with its specific info
                 const tables = Array.from(document.querySelectorAll('table.tbl'))
                     .filter(t => t.querySelector('.mb-col-filter-row'));
 
                 tables.forEach((table, tableIdx) => {
                     const h3 = table.previousElementSibling;
                     if (h3 && h3.classList.contains('mb-toggle-h3')) {
-                        const subStatusDisplay = h3.querySelector('.mb-subtable-status-display');
-                        if (subStatusDisplay) {
+                        const subFilterStatus = h3.querySelector('.mb-filter-status');
+                        if (subFilterStatus) {
                             // Count active column filters in this specific table
                             const tableColFilters = Array.from(table.querySelectorAll('.mb-col-filter-input'))
                                 .filter(inp => inp.value);
@@ -4195,18 +4211,18 @@ Note: Shortcuts work when not typing in input fields
                                     const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼]/g, '').trim() : `Col ${colIdx}`;
                                     return `${colName}:"${inp.value}"`;
                                 }).join(', ');
-                                subStatusDisplay.textContent = `✓ ${rowsInTable} rows [${colFilterInfo}]`;
-                                subStatusDisplay.style.color = 'green';
+                                subFilterStatus.textContent = `✓ ${rowsInTable} rows [${colFilterInfo}]`;
+                                subFilterStatus.style.color = 'green';
                             } else {
-                                subStatusDisplay.textContent = '';
+                                subFilterStatus.textContent = '';
                             }
                         }
                     }
                 });
             } else {
-                // Single table mode: show all filter info as before
-                statusDisplay.textContent = `✓ Filtered ${rowCount} rows in ${filterDuration}ms${filterInfo}`;
-                statusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
+                // Single table mode: show all filter info
+                filterStatusDisplay.textContent = `✓ Filtered ${rowCount} rows in ${filterDuration}ms${filterInfo}`;
+                filterStatusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
             }
         }
 
@@ -5676,14 +5692,14 @@ Note: Shortcuts work when not typing in input fields
 
                 h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${h3DisplayName} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
 
-                // Add sub-table controls: Clear button and status display
+                // Add sub-table controls: Clear button and separate status displays
                 const subTableControls = document.createElement('span');
                 subTableControls.className = 'mb-subtable-controls';
 
                 // Create clear column filters button for this sub-table
                 const clearSubBtn = document.createElement('button');
                 clearSubBtn.className = 'mb-subtable-clear-btn';
-                clearSubBtn.textContent = '✕ Clear filters';
+                clearSubBtn.textContent = '✕ Clear all COLUMN filters';
                 clearSubBtn.title = 'Clear all column filters for this table';
                 clearSubBtn.type = 'button';
                 clearSubBtn.onclick = (e) => {
@@ -5692,14 +5708,20 @@ Note: Shortcuts work when not typing in input fields
                     clearSubTableColumnFilters(table, categoryName);
                 };
 
-                // Create status display for this sub-table
-                const subStatusDisplay = document.createElement('span');
-                subStatusDisplay.className = 'mb-subtable-status-display';
-                subStatusDisplay.dataset.tableName = categoryName;
-                subStatusDisplay.dataset.tableIndex = index.toString();
+                // Create separate filter and sort status displays for this sub-table
+                const subFilterStatus = document.createElement('span');
+                subFilterStatus.className = 'mb-filter-status';
+                subFilterStatus.dataset.tableName = categoryName;
+                subFilterStatus.dataset.tableIndex = index.toString();
+
+                const subSortStatus = document.createElement('span');
+                subSortStatus.className = 'mb-sort-status';
+                subSortStatus.dataset.tableName = categoryName;
+                subSortStatus.dataset.tableIndex = index.toString();
 
                 subTableControls.appendChild(clearSubBtn);
-                subTableControls.appendChild(subStatusDisplay);
+                subTableControls.appendChild(subFilterStatus);
+                subTableControls.appendChild(subSortStatus);
                 h3.appendChild(subTableControls);
 
                 // Placement Logic: If targetHeader exists, insert after it/previous element. Otherwise, append to container.
@@ -5944,11 +5966,11 @@ Note: Shortcuts work when not typing in input fields
 
                     Lib.debug('sort', `Sorting table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}. Row count: ${rowCount}`);
 
-                    // Update status display
-                    const statusDisplay = document.getElementById('mb-status-display');
-                    if (statusDisplay) {
-                        statusDisplay.textContent = '⏳ Sorting...';
-                        statusDisplay.style.color = 'orange';
+                    // Update sort status display
+                    const sortStatusDisplay = document.getElementById('mb-sort-status-display');
+                    if (sortStatusDisplay) {
+                        sortStatusDisplay.textContent = '⏳ Sorting...';
+                        sortStatusDisplay.style.color = 'orange';
                     }
 
                     if (showWaitCursor) document.body.classList.add('mb-sorting-active');
@@ -6016,27 +6038,27 @@ Note: Shortcuts work when not typing in input fields
                             const duration = ((performance.now() - startSort) / 1000).toFixed(2);
                             const durationMs = (performance.now() - startSort).toFixed(0);
 
-                            if (statusDisplay) {
+                            if (sortStatusDisplay) {
                                 const tableName = isMultiTable && targetGroup ? (targetGroup.category || targetGroup.key || sortKey) : 'table';
 
                                 if (isMultiTable) {
-                                    // On multi-table pages: update only the sub-table status
-                                    // Find the corresponding h3 and update its status display
+                                    // On multi-table pages: update only the sub-table sort status
+                                    // Find the corresponding h3 and update its sort status display
                                     const h3 = table.previousElementSibling;
                                     if (h3 && h3.classList.contains('mb-toggle-h3')) {
-                                        const subStatusDisplay = h3.querySelector('.mb-subtable-status-display');
-                                        if (subStatusDisplay) {
+                                        const subSortStatus = h3.querySelector('.mb-sort-status');
+                                        if (subSortStatus) {
                                             const sortIcon = state.sortState === 0 ? '⇅' : (state.sortState === 1 ? '▲' : '▼');
-                                            subStatusDisplay.textContent = `✓ Sorted "${colName}" ${sortIcon} in ${durationMs}ms`;
-                                            subStatusDisplay.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
+                                            subSortStatus.textContent = `✓ Sorted "${colName}" ${sortIcon} in ${durationMs}ms`;
+                                            subSortStatus.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
                                         }
                                     }
-                                    // Clear main status display on multi-table pages
-                                    statusDisplay.textContent = '';
+                                    // Clear main sort status display on multi-table pages
+                                    sortStatusDisplay.textContent = '';
                                 } else {
-                                    // On single-table pages: show in main status display as before
-                                    statusDisplay.textContent = `✓ Sorted [${tableName}] column "${colName}": ${rowCount} rows in ${durationMs}ms`;
-                                    statusDisplay.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
+                                    // On single-table pages: show in main sort status display
+                                    sortStatusDisplay.textContent = `✓ Sorted [${tableName}] column "${colName}": ${rowCount} rows in ${durationMs}ms`;
+                                    sortStatusDisplay.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
                                 }
                             }
 
@@ -6044,9 +6066,9 @@ Note: Shortcuts work when not typing in input fields
 
                         } catch (error) {
                             Lib.error('sort', 'Error during sort:', error);
-                            if (statusDisplay) {
-                                statusDisplay.textContent = '✗ Sort failed';
-                                statusDisplay.style.color = 'red';
+                            if (sortStatusDisplay) {
+                                sortStatusDisplay.textContent = '✗ Sort failed';
+                                sortStatusDisplay.style.color = 'red';
                             }
                         } finally {
                             // Cleanup UI
