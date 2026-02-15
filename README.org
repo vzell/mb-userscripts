@@ -36179,6 +36179,14 @@ Remove
 
 • Make row hover highlight
 
+** changelog
+
+Please apply the same look-and-feel to the changelog "show: function ()"
+
+- Resize + drag
+- Changelog lines should be displayed in alternating row striping, but the font used in each line should stay the same:
+  - dates in italic
+  - the actual changelog entry in the curretn font
 
 * put the "sorted <time> in some other place to not produce eye flicker
 
