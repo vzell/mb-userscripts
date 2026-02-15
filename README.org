@@ -37427,3 +37427,475 @@ ee5406e * better info message
 35eca40 * info popup for download complete
 cb7a31f * Close menu on Escape key
   8f751f5 * button texts inline-flex, centered
+
+
+Rendering this many rows may take a considerable amount of time and could impact your browser performance
+or even make your browser completely unusable. You can instead SAVE the data directly to disk and LOAD it
+with a PRE-FILTER condition LATER (to decrease the number of rows to make the rendering feasible) or proceed with rendering now.
+
+
+* Forum
+** ChatGPT
+
+#+begin_example
+Here’s a forum-ready description you can post in the MusicBrainz community, followed by concrete screenshot suggestions to showcase the script effectively.
+
+🎛️ VZ: Show All Entity Data In A Consolidated View
+
+A power-user userscript for MusicBrainz that consolidates paginated and multi-table entity pages into a single, filterable, sortable, exportable data view.
+
+Works on:
+
+Artist pages (recordings, releases, works, relationships, etc.)
+
+Release groups
+
+Releases
+
+Recordings
+
+Works
+
+Labels
+
+Areas
+
+Events
+
+Series
+
+Places
+
+Instruments
+
+Search results
+
+🚀 What It Does
+1️⃣ Consolidates All Pages Into One View
+
+No more clicking through 40+ pages.
+
+The script:
+
+Fetches all paginated results
+
+Merges them into one single table
+
+Keeps everything sortable and filterable
+
+Handles multi-table pages (like subheadings or relationship sections)
+
+Perfect for large artists, labels, or search result sets.
+
+2️⃣ Real-Time Filtering (Global + Per Column)
+
+Global filter across all visible columns
+
+Individual column filters
+
+RegExp support (with Rx toggle)
+
+Debounced filtering for performance
+
+ESC clears the focused filter
+
+“Clear All Filters” button
+
+Filtering performance timing is shown in the status bar.
+
+3️⃣ High-Performance Sorting for Large Datasets
+
+Stable sorting
+
+Async chunked sorting for >5000 rows
+
+Progress indicator for very large datasets
+
+Numeric auto-detection
+
+Visual sort indicators
+
+Even 10k+ rows remain responsive.
+
+4️⃣ Column Management
+
+👁️ Show/Hide columns
+
+Select All / Deselect All
+
+Sticky headers (headers and filter row remain visible)
+
+Ctrl+Click header to toggle all headers within the same container
+
+Manual column resizing (drag like Excel)
+
+Auto-resize columns (fit to content)
+
+Restore original widths
+
+5️⃣ Table Density Control
+
+Choose between:
+
+Compact
+
+Normal
+
+Comfortable
+
+Great when working with massive datasets.
+
+6️⃣ CSV Export
+
+Export:
+
+Only visible rows
+
+Only visible columns
+
+Filtered results
+
+Filename automatically includes:
+
+Page type
+
+Timestamp
+
+Perfect for analysis in Excel / LibreOffice / Sheets.
+
+7️⃣ Offline Storage / Caching
+
+Save full dataset to disk (JSON)
+
+Load from disk later
+
+Avoid re-fetching large datasets
+
+Very useful for artists with 8000+ recordings.
+
+8️⃣ Quick Stats Panel
+
+Displays:
+
+Total rows
+
+Visible rows
+
+Column counts
+
+Filter status
+
+Estimated memory usage
+
+Hidden row/column counts
+
+Great for understanding what you’re actually looking at.
+
+9️⃣ Keyboard Shortcuts (Power-User Mode)
+
+Ctrl+F → Focus filter
+
+Ctrl+Shift+F → Clear filters
+
+Ctrl+E → Export CSV
+
+Ctrl+S → Save
+
+Ctrl+L → Load
+
+Ctrl+, → Settings
+
+? → Show shortcuts help
+
+ESC → Clear focused filter
+
+🔧 Additional Highlights
+
+Sidebar collapsing for more horizontal space
+
+Alternating row striping
+
+Chunked rendering for very large tables
+
+Pre-filter on load
+
+Visual progress indicators
+
+Schema-driven settings dialog
+
+Configurable performance thresholds
+
+Status display with timing feedback
+
+Works with other userscripts (e.g., additional columns)
+
+📸 Best Screenshot Suggestions
+
+If you want to show the full power of the script, use 6–8 carefully chosen screenshots:
+
+1️⃣ Before vs After (Most Important)
+
+Use a large artist like:
+
+Bruce Springsteen
+
+Show:
+
+Default multi-page recordings view
+
+Then the single consolidated view with thousands of rows
+
+This immediately demonstrates the core value.
+
+2️⃣ Filtering + Column Filters + RegExp
+
+Show:
+
+Global filter active
+
+At least one column filter active
+
+“Rx” enabled
+
+Status line showing filtering results + timing
+
+This shows depth, not just “a big table”.
+
+3️⃣ Column Visibility Menu Open
+
+Capture:
+
+👁️ Visible Columns dropdown open
+
+Some columns hidden
+
+Table visibly adapted
+
+This shows customization power.
+
+4️⃣ Manual Column Resize + Auto-Resize Toggle
+
+Show:
+
+A very wide table
+
+Auto-resize enabled
+
+Horizontal scroll active
+
+Manual drag handle visible
+
+This makes it look “professional” and Excel-like.
+
+5️⃣ Stats Panel Open
+
+Have:
+
+Stats panel visible
+
+Filters applied
+
+Hidden rows count visible
+
+This visually communicates performance awareness.
+
+6️⃣ CSV Export Feedback Popup
+
+After exporting:
+
+Show status bar update
+
+Export completion popup
+
+Demonstrates practical usefulness.
+
+7️⃣ Density Comparison (Optional but Nice)
+
+Two screenshots:
+
+Compact mode
+
+Comfortable mode
+
+Shows polish and user preference control.
+
+8️⃣ Keyboard Shortcut Overlay
+
+Press ? and capture the shortcuts help overlay.
+
+This reinforces “power tool” positioning.
+
+💡 How To Present It On The Forum
+
+Structure your post like:
+
+Short 3-line summary (what + why)
+
+4–6 screenshots
+
+Bullet list of features
+
+GitHub link
+
+Installation note (tested with Tampermonkey 5.4.1+)
+
+Suggested Short Intro Paragraph
+
+This userscript turns paginated MusicBrainz entity pages into a single consolidated, sortable, filterable data table — optimized for large datasets (thousands of rows), with column management, CSV export, offline caching, keyboard shortcuts, and performance-aware rendering.
+
+If you'd like, I can also generate:
+
+A shorter “teaser-style” forum post
+
+A technical deep-dive version
+
+Or a polished README.md version for GitHub
+#+end_example
+
+** Gemini
+
+#+begin_example
+This userscript is designed to significantly improve the browsing and data-management experience on MusicBrainz by consolidating fragmented, paginated tables into a single, powerful, and highly interactive view.
+
+Below is a highlight-oriented description suitable for the MusicBrainz forum, followed by suggestions for effective screenshots.
+
+Forum Post Draft: [UNOFFICIAL] VZ: MusicBrainz - Show All Entity Data In A Consolidated View
+Tired of clicking through pages of recordings, releases, or events?
+
+The Show All Entity Data userscript transforms the way you interact with MusicBrainz tables. It accumulates paginated and sub-headed lists (Events, Recordings, Releases, Works, Labels, etc.) into one consolidated view, giving you a powerful, spreadsheet-like interface directly in your browser.
+
+Key Highlights:
+🚀 One-Click Consolidation: Instantly fetch all pages of a list (e.g., an artist's 5,000+ recordings) into a single, seamless table.
+
+🔍 Advanced Real-time Filtering:
+
+Global Search: Filter the entire dataset instantly as you type.
+
+Per-Column Filtering: Narrow down results by specific columns (e.g., only show "Live" recordings or specific "Dates").
+
+Regex Support: Power users can use Regular Expressions for complex filtering.
+
+📊 Spreadsheet-style Interaction:
+
+Fast Sorting: High-performance sorting (even for datasets over 10,000 rows) with numeric and date awareness.
+
+Resizable Columns: Drag column edges to adjust widths, just like Excel.
+
+Sticky Headers: Keep your orientation with table headers that stay at the top while you scroll.
+
+Column Visibility: Toggle specific columns on or off to focus on the data that matters.
+
+💾 Data Portability & Persistence:
+
+Export to CSV: Save your filtered view directly to a CSV file for use in Excel or Google Sheets.
+
+Save/Load to Disk: Save the entire fetched dataset to a JSON file and reload it later—perfect for avoiding re-fetching large artist discographies.
+
+📏 Customization & UI:
+
+Table Density: Choose between Compact, Normal, or Comfortable views.
+
+Collapsible Sidebar: Reclaim screen real estate by collapsing the MusicBrainz sidebar into a thin handle.
+
+Quick Stats: View a live summary of row counts, hidden items, and filter status.
+
+🎹 Power User Shortcuts: Use Ctrl+F to search, Ctrl+E to export, and ? to view the full shortcut menu.
+
+Screenshot Recommendations
+To showcase the script effectively, I recommend the following four screenshots:
+
+The "Consolidated Table" View:
+
+Subject: An Artist's Recordings page (with thousands of rows).
+
+What to show: The active "Global Filter" bar at the top, the "Sticky Header" visible while scrolled down, and the consolidated H3/H2 headers showing total counts.
+
+Column Filtering & Highlighting:
+
+Subject: Any entity table with active filters.
+
+What to show: Demonstrate a specific column filter (e.g., filtering the "Format" column for "CD") and show the real-time text highlighting in the result rows.
+
+UI Controls & Density:
+
+Subject: The top control bar.
+
+What to show: The "Visible Columns" dropdown menu, the "Density" toggle, and the "Stats" panel visible on the side.
+
+The Sidebar & Layout:
+
+Subject: Full-page view.
+
+What to show: Show the sidebar in its "Collapsed" state to demonstrate how the table stretches to fill the full screen width, providing a much clearer view for wide tables.
+#+end_example
+
+
+* unicode symbol "✗" in red
+** initial
+
+Show me this unicode symbol "✗" in red, I want to use in front of the button text "Clear all column filters"
+
+See code below
+
+#+begin_example
+    const clearColumnFiltersBtn = document.createElement('button');
+    clearColumnFiltersBtn.textContent = '✗ Clear all column filters';
+#+end_example
+
+** why
+
+In the following code the '✗ ' is ONLY prepended to the text 'Clear ALL filters' but NOT to 'Clear all column filters'
+
+#+begin_example
+    const xSymbol = document.createElement('span');
+    xSymbol.textContent = '✗ ';
+    xSymbol.style.color = 'red';
+    xSymbol.style.fontSize = '1.0em';
+    xSymbol.style.fontWeight = 'bold';
+
+    const clearColumnFiltersBtn = document.createElement('button');
+
+    clearColumnFiltersBtn.appendChild(xSymbol);
+    clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all column filters'));
+    //clearColumnFiltersBtn.textContent = '✗ Clear all column filters';
+
+    clearColumnFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    clearColumnFiltersBtn.onclick = () => {
+        // Clear all column filters only
+        document.querySelectorAll('.mb-col-filter-input').forEach(input => {
+            input.value = '';
+        });
+
+        // Re-run filter to update display
+        if (typeof runFilter === 'function') {
+            runFilter();
+        }
+
+        Lib.info('filter', 'All column filters cleared');
+
+        // Show feedback in status
+        const statusDisplay = document.getElementById('mb-status-display');
+        if (statusDisplay) {
+            statusDisplay.textContent = '✓ All column filters cleared';
+            statusDisplay.style.color = 'green';
+        }
+    };
+    filterContainer.appendChild(clearColumnFiltersBtn);
+
+    const clearAllFiltersBtn = document.createElement('button');
+
+    clearAllFiltersBtn.appendChild(xSymbol);
+    clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
+    //clearAllFiltersBtn.textContent = '✗ Clear ALL filters';
+
+    clearAllFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    clearAllFiltersBtn.onclick = () => {
+        // Clear global filter
+        filterInput.value = '';
+        filterClear.click(); // This will trigger the clear handler
+
+        // Also call the main clearAllFilters function
+        clearAllFilters();
+    };
+    filterContainer.appendChild(clearAllFiltersBtn);
+#+end_example

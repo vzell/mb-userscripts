@@ -3034,8 +3034,15 @@ Note: Shortcuts work when not typing in input fields
     };
     filterContainer.appendChild(unhighlightAllBtn);
 
+    const xSymbol = document.createElement('span');
+    xSymbol.textContent = '✗ ';
+    xSymbol.style.color = 'red';
+    xSymbol.style.fontSize = '1.0em';
+    xSymbol.style.fontWeight = 'bold';
+
     const clearColumnFiltersBtn = document.createElement('button');
-    clearColumnFiltersBtn.textContent = '✗ Clear all column filters';
+    clearColumnFiltersBtn.appendChild(xSymbol);
+    clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
     clearColumnFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
@@ -3060,7 +3067,9 @@ Note: Shortcuts work when not typing in input fields
     filterContainer.appendChild(clearColumnFiltersBtn);
 
     const clearAllFiltersBtn = document.createElement('button');
-    clearAllFiltersBtn.textContent = '✗ Clear ALL filters';
+    // Attach a CLONE of the symbol to the second button
+    clearAllFiltersBtn.appendChild(xSymbol.cloneNode(true));
+    clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
     clearAllFiltersBtn.onclick = () => {
         // Clear global filter
