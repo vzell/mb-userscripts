@@ -3099,6 +3099,45 @@ Note: Shortcuts work when not typing in input fields
         overlay.appendChild(dialog);
 
         const input = dialog.querySelector('#sa-load-filter-input');
+        if (input) {
+            const MIN_DIALOG_WIDTH = 380;            // initial/default width
+            const MAX_DIALOG_MARGIN = 40;            // space from window edges
+
+            // Function to measure text width using a hidden span
+            const measureTextWidth = (text) => {
+                const span = document.createElement('span');
+                span.style.cssText = `
+                    visibility:hidden;
+                    position:absolute;
+                    white-space:pre;
+                    font-size:${getComputedStyle(input).fontSize};
+                    font-family:${getComputedStyle(input).fontFamily};
+                    font-weight:${getComputedStyle(input).fontWeight};
+                `;
+                span.textContent = text;
+                document.body.appendChild(span);
+                const width = span.offsetWidth + 40; // add input padding/margin
+                document.body.removeChild(span);
+                return width;
+            };
+
+            // Function to resize dialog
+            const resizeDialog = () => {
+                const requiredWidth = measureTextWidth(input.value || input.placeholder);
+                const maxWidth = window.innerWidth - MAX_DIALOG_MARGIN;
+                dialog.style.width = `${Math.min(Math.max(MIN_DIALOG_WIDTH, requiredWidth), maxWidth)}px`;
+            };
+
+            // Initial adjustment
+            resizeDialog();
+
+            // Adjust dynamically as user types
+            input.addEventListener('input', resizeDialog);
+
+            // Optional: adjust on window resize to respect viewport
+            window.addEventListener('resize', resizeDialog);
+        }
+
         const historyToggle = dialog.querySelector('#sa-load-history-toggle');
         const historyDropdown = dialog.querySelector('#sa-load-history-dropdown');
 
