@@ -506,6 +506,14 @@ let changelog = [
         };
         document.addEventListener('click', closeMenu);
 
+        // Close menu on Escape key
+        const closeMenuOnEscape = (e) => {
+            if (e.key === 'Escape' && menu.style.display === 'block') {
+                menu.style.display = 'none';
+            }
+        };
+        document.addEventListener('keydown', closeMenuOnEscape);
+
         // Append to controls container
         const controlsContainer = document.getElementById('mb-show-all-controls-container');
         if (controlsContainer) {
