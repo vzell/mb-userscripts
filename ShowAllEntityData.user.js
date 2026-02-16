@@ -1239,8 +1239,8 @@ let changelog = [
 🎹 Keyboard Shortcuts:
 
 Filter & Search:
-  Ctrl/Cmd + F         Focus global filter
-  Ctrl/Cmd + Shift + F Clear all filters
+  Ctrl/Cmd + G         Focus global filter
+  Ctrl/Cmd + Shift + G Clear all filters
   Escape               Clear focused filter
 
 Data Export & Management:
@@ -1366,8 +1366,8 @@ Note: Shortcuts work when not typing in input fields
                 }
             }
 
-            // Ctrl/Cmd + Shift + F: Clear all filters
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'F') {
+            // Ctrl/Cmd + Shift + G: Clear all filters
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'G') {
                 e.preventDefault();
                 clearAllFilters();
             }
