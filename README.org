@@ -38129,8 +38129,6 @@ the dividing row between the header line and the tabledata should be "|---|"
 is nowadays recommended (especially for large datasets). Please also tell me the performance improvements whith this
 change.
 
-
-
 * Library
 
 #+begin_example
@@ -38141,3 +38139,15 @@ return {
     // ... rest of the return object
 };
 #+end_example
+
+* Add new notesDisplay area fro stuff like
+
+- Auto-resized xx visible columns
+- Restored original col
+- Loaded: 124 rows  <-- from filesystem
+- Table density: Compact
+- Exported 119 rows to ...
+
+
+* Bug when loading data from the filesyste, all the buttons are doubled: 'Auto-Resize' up to 'Export'
+
