@@ -3504,7 +3504,7 @@ Note: Shortcuts work when not typing in input fields
 
     const globalStatusDisplay = document.createElement('span');
     globalStatusDisplay.id = 'mb-global-status-display';
-    globalStatusDisplay.style.cssText = 'font-size:0.85em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+    globalStatusDisplay.style.cssText = 'font-size:0.70em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 
     const progressContainer = document.createElement('div');
     progressContainer.id = 'mb-fetch-progress-container';
