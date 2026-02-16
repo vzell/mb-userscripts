@@ -3706,7 +3706,7 @@ Note: Shortcuts work when not typing in input fields
         if (h3 && h3.classList.contains('mb-toggle-h3')) {
             const filterStatusDisplay = h3.querySelector('.mb-filter-status');
             if (filterStatusDisplay) {
-                filterStatusDisplay.textContent = `✓ Filters cleared`;
+                filterStatusDisplay.textContent = `✓ All column filters cleared`;
                 filterStatusDisplay.style.color = 'green';
                 // Auto-clear the message after 2 seconds
                 setTimeout(() => {
@@ -3742,11 +3742,11 @@ Note: Shortcuts work when not typing in input fields
         }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; }
         .mb-subtable-controls { display: inline-flex; align-items: center; gap: 8px; margin-left: 12px; }
-        .mb-subtable-clear-btn { font-size: 0.7em; padding: 2px 6px; cursor: pointer; vertical-align: middle; border-radius: 4px; background: #f0f0f0; border: 1px solid #ccc; }
+        .mb-subtable-clear-btn { font-size: 0.8em; padding: 2px 6px; cursor: pointer; vertical-align: middle; border-radius: 4px; background: #f0f0f0; border: 1px solid #ccc; }
         .mb-subtable-clear-btn:hover { background: #e0e0e0; }
         .mb-subtable-status-display { font-size: 0.85em; color: #333; font-weight: bold; vertical-align: middle; }
-        .mb-filter-status { font-family: 'Courier New', monospace; font-size: 0.85em; margin-right: 8px; }
-        .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 0.85em; font-style: italic; }
+        .mb-filter-status { font-family: 'Courier New', monospace; font-size: 1.0em; margin-right: 8px; }
+        .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 1.0em; font-style: italic; }
         .mb-toggle-h2 { cursor: pointer; user-select: none; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; cursor: pointer; }
         .mb-master-toggle { color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; cursor: default; }
@@ -4786,7 +4786,7 @@ Note: Shortcuts work when not typing in input fields
                                     const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼]/g, '').trim() : `Col ${colIdx}`;
                                     return `${colName}:"${inp.value}"`;
                                 }).join(', ');
-                                subFilterStatus.textContent = `✓ ${rowsInTable} rows [${colFilterInfo}]`;
+                                subFilterStatus.textContent = `✓ Filtered ${rowsInTable} rows [${colFilterInfo}]`;
                                 subFilterStatus.style.color = 'green';
                             } else {
                                 subFilterStatus.textContent = '';
@@ -6225,7 +6225,7 @@ Note: Shortcuts work when not typing in input fields
 
                     const clearSubBtn = document.createElement('button');
                     clearSubBtn.className = 'mb-subtable-clear-btn';
-                    clearSubBtn.textContent = '✕ Clear all COLUMN filters';
+                    clearSubBtn.textContent = '✗ Clear all COLUMN filters';
                     clearSubBtn.title = 'Clear all column filters for this table';
                     clearSubBtn.type = 'button';
                     clearSubBtn.onclick = (e) => {
@@ -6311,7 +6311,7 @@ Note: Shortcuts work when not typing in input fields
                 // Create clear column filters button for this sub-table
                 const clearSubBtn = document.createElement('button');
                 clearSubBtn.className = 'mb-subtable-clear-btn';
-                clearSubBtn.textContent = '✕ Clear all COLUMN filters';
+                clearSubBtn.textContent = '✗ Clear all COLUMN filters';
                 clearSubBtn.title = 'Clear all column filters for this table';
                 clearSubBtn.type = 'button';
                 clearSubBtn.onclick = (e) => {
@@ -6394,7 +6394,7 @@ Note: Shortcuts work when not typing in input fields
 
                     const clearSubBtn = document.createElement('button');
                     clearSubBtn.className = 'mb-subtable-clear-btn';
-                    clearSubBtn.textContent = '✕ Clear all COLUMN filters';
+                    clearSubBtn.textContent = '✗ Clear all COLUMN filters';
                     clearSubBtn.title = 'Clear all column filters for this table';
                     clearSubBtn.type = 'button';
                     clearSubBtn.onclick = (e) => {
@@ -6694,7 +6694,7 @@ Note: Shortcuts work when not typing in input fields
                                         const subSortStatus = h3.querySelector('.mb-sort-status');
                                         if (subSortStatus) {
                                             const sortIcon = state.sortState === 0 ? '⇅' : (state.sortState === 1 ? '▲' : '▼');
-                                            subSortStatus.textContent = `✓ Sorted "${colName}" ${sortIcon} in ${durationMs}ms`;
+                                            subSortStatus.textContent = `✓ Sorted column "${colName}" ${sortIcon}: ${rowCount} rows in ${durationMs}ms`;
                                             subSortStatus.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
                                         }
                                     }
@@ -6702,7 +6702,8 @@ Note: Shortcuts work when not typing in input fields
                                     sortStatusDisplay.textContent = '';
                                 } else {
                                     // On single-table pages: show in main sort status display
-                                    sortStatusDisplay.textContent = `✓ Sorted [${tableName}] column "${colName}": ${rowCount} rows in ${durationMs}ms`;
+				    const sortIcon = state.sortState === 0 ? '⇅' : (state.sortState === 1 ? '▲' : '▼');
+                                    sortStatusDisplay.textContent = `✓ Sorted [${tableName}] column "${colName}" ${sortIcon}: ${rowCount} rows in ${durationMs}ms`;
                                     sortStatusDisplay.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
                                 }
                             }
