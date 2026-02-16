@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.24.2+2026-02-16
+// @version      9.26.1+2026-02-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,9 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.26.1+2026-02-16', description: 'Fix & Enhancement: (1) Removed redundant "Unhighlight prefilter" button (functionality now in dynamic prefilter toggle button). (2) Fixed "Toggle highlighting" button restore functionality - now correctly restores filter highlights by re-running runFilter() instead of manual highlight re-application. (3) Added 🎨 emoji to dynamic prefilter button text (e.g., "🎨 2 rows prefiltered: \'Westfalenhalle\'").'},
+    {version: '9.26.0+2026-02-16', description: 'Major Enhancement - Split Toggle Functionality: (1) Created separate prefilter toggle button that only appears when data is loaded from disk with a prefilter. Shows dynamic text like "2 rows prefiltered: \'Westfalenhalle\'" and only toggles prefilter highlighting. (2) "Toggle highlighting" button now only toggles global filter and column filter highlighting, not prefilter. (3) Separate tracking for prefilter and filter highlight states with independent save/restore functions. (4) Both buttons change background color to their respective highlight colors when highlighting is disabled.'},
+    {version: '9.25.0+2026-02-16', description: 'Major Enhancement: (1) "Unhighlight all" button renamed to "Toggle highlighting" with toggle functionality - click once to remove all highlights, click again to restore them. (2) Prefilter information now displayed in button text instead of separate span (e.g., "2 rows prefiltered: \'Westfalenhalle\'"). (3) Button changes background color to highlight color when highlighting is disabled, providing visual feedback. (4) Improved highlight save/restore using re-application of highlighting parameters rather than DOM manipulation.'},
     {version: '9.24.2+2026-02-16', description: 'Fix: Prefiltering when loading from disk now works correctly. Updated fileInput.onchange handler to read filter parameters (query, case sensitivity, regex) from UI elements before calling loadTableDataFromDisk().'},
     {version: '9.24.1+2026-02-16', description: 'Fix: Resolved "Cannot access settingsBtn before initialization" error by moving settingsBtn declaration before its first usage in controlsContainer.'},
     {version: '9.24.0+2026-02-16', description: 'UI Enhancement: (1) Clear column filter buttons now render ✗ symbol in red for better visibility - refactored into createClearColumnFiltersButton() helper function to avoid code duplication. (2) Settings button (⚙️) relocated: initially appears after Load from Disk button, then always as last button after data is loaded. (3) Added dividers " | " between button groups: initially between action buttons and Save to Disk; after data load between Load from Disk and Auto-Resize.'},
@@ -3897,7 +3900,7 @@ let changelog = [
 
     const preFilterMsg = document.createElement('span');
     preFilterMsg.id = 'mb-preload-filter-msg';
-    preFilterMsg.style.cssText = 'font-size:0.8em; color:red; margin-left:4px; font-weight:bold; white-space:nowrap;';
+    preFilterMsg.style.cssText = 'font-size:0.8em; color:red; margin-left:4px; font-weight:bold; white-space:nowrap; display:none;';
 
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
@@ -3972,27 +3975,116 @@ let changelog = [
     filterContainer.appendChild(regexpLabel);
     filterContainer.appendChild(preFilterMsg);
 
-    const unhighlightFilterBtn = document.createElement('button');
-    unhighlightFilterBtn.textContent = '🎨 Unhighlight prefilter';
-    unhighlightFilterBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
-    unhighlightFilterBtn.title = 'Remove all prefilter highlighting from the table';
-    unhighlightFilterBtn.onclick = () => {
-        document.querySelectorAll('.mb-pre-filter-highlight')
-            .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+    // Create prefilter toggle button (only visible when data loaded from disk with prefilter)
+    const prefilterToggleBtn = document.createElement('button');
+    prefilterToggleBtn.id = 'mb-toggle-prefilter-btn';
+    prefilterToggleBtn.textContent = 'Prefilter'; // Will be updated dynamically
+    prefilterToggleBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; transition: background-color 0.3s; display:none;';
+    prefilterToggleBtn.title = 'Toggle prefilter highlighting on/off';
 
-        Lib.info('filter', 'Prefilter highlights removed.');
+    /**
+     * Update the prefilter toggle button text and appearance
+     * @param {number} count - Number of prefiltered rows
+     * @param {string} query - The prefilter query string
+     * @param {boolean} show - Whether to show the button
+     */
+    function updatePrefilterToggleButton(count = 0, query = '', show = false) {
+        prefilterInfo = { count, query };
+
+        if (show && count > 0 && query) {
+            // Show prefilter info in button text with emoji
+            prefilterToggleBtn.textContent = `🎨 ${count} row${count === 1 ? '' : 's'} prefiltered: "${query}"`;
+            prefilterToggleBtn.style.display = 'inline-block';
+            prefilterToggleBtn.title = 'Toggle prefilter highlighting on/off';
+        } else {
+            // Hide button when no prefilter
+            prefilterToggleBtn.style.display = 'none';
+        }
+
+        // Update button appearance based on prefilter highlighting state
+        updatePrefilterButtonAppearance();
+    }
+
+    /**
+     * Update prefilter button background color based on highlighting state
+     */
+    function updatePrefilterButtonAppearance() {
+        if (prefilterHighlightEnabled) {
+            // Highlighting is ON - use default button style
+            prefilterToggleBtn.style.backgroundColor = '';
+            prefilterToggleBtn.style.color = '';
+            prefilterToggleBtn.style.border = '';
+        } else {
+            // Highlighting is OFF - use highlight background color to indicate it will restore highlighting
+            const highlightBg = Lib.settings.sa_pre_filter_highlight_bg || '#ffeb3b';
+            prefilterToggleBtn.style.backgroundColor = highlightBg;
+            prefilterToggleBtn.style.color = '#000';
+            prefilterToggleBtn.style.border = '1px solid #ccc';
+        }
+    }
+
+    prefilterToggleBtn.onclick = () => {
+        if (prefilterHighlightEnabled) {
+            // Currently highlighted - save state and remove prefilter highlights only
+            savePrefilterHighlightState();
+            document.querySelectorAll('.mb-pre-filter-highlight')
+                .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+
+            prefilterHighlightEnabled = false;
+            updatePrefilterButtonAppearance();
+            Lib.info('highlight', 'Prefilter highlights removed (saved state for restoration)');
+        } else {
+            // Currently not highlighted - restore prefilter highlights
+            restorePrefilterHighlightState();
+            prefilterHighlightEnabled = true;
+            updatePrefilterButtonAppearance();
+            Lib.info('highlight', 'Prefilter highlights restored');
+        }
     };
-    filterContainer.appendChild(unhighlightFilterBtn);
+    filterContainer.appendChild(prefilterToggleBtn);
 
+    // Create filter toggle button (for global and column filter highlighting)
     const unhighlightAllBtn = document.createElement('button');
-    unhighlightAllBtn.textContent = '🎨 Unhighlight all';
-    unhighlightAllBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
-    unhighlightAllBtn.title = 'Remove all highlighting (prefilter, global filter, and column filters) from the table';
-    unhighlightAllBtn.onclick = () => {
-        document.querySelectorAll('.mb-pre-filter-highlight, .mb-global-filter-highlight, .mb-column-filter-highlight')
-            .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+    unhighlightAllBtn.id = 'mb-toggle-filter-highlight-btn';
+    unhighlightAllBtn.textContent = '🎨 Toggle highlighting';
+    unhighlightAllBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; transition: background-color 0.3s;';
+    unhighlightAllBtn.title = 'Toggle filter highlighting on/off (global filter and column filters)';
 
-        Lib.info('filter', 'All highlights removed.');
+    /**
+     * Update filter highlight button background color based on highlighting state
+     */
+    function updateFilterHighlightButtonAppearance() {
+        if (filterHighlightEnabled) {
+            // Highlighting is ON - use default button style
+            unhighlightAllBtn.style.backgroundColor = '';
+            unhighlightAllBtn.style.color = '';
+            unhighlightAllBtn.style.border = '';
+        } else {
+            // Highlighting is OFF - use highlight background color to indicate it will restore highlighting
+            const highlightBg = Lib.settings.sa_global_filter_highlight_bg || Lib.settings.sa_column_filter_highlight_bg || '#90caf9';
+            unhighlightAllBtn.style.backgroundColor = highlightBg;
+            unhighlightAllBtn.style.color = '#000';
+            unhighlightAllBtn.style.border = '1px solid #ccc';
+        }
+    }
+
+    unhighlightAllBtn.onclick = () => {
+        if (filterHighlightEnabled) {
+            // Currently highlighted - save state and remove filter highlights only
+            saveFilterHighlightState();
+            document.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
+                .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+
+            filterHighlightEnabled = false;
+            updateFilterHighlightButtonAppearance();
+            Lib.info('highlight', 'Filter highlights removed (saved state for restoration)');
+        } else {
+            // Currently not highlighted - restore filter highlights
+            restoreFilterHighlightState();
+            filterHighlightEnabled = true;
+            updateFilterHighlightButtonAppearance();
+            Lib.info('highlight', 'Filter highlights restored');
+        }
     };
     filterContainer.appendChild(unhighlightAllBtn);
 
@@ -4246,6 +4338,13 @@ let changelog = [
     let isLoaded = false;
     let stopRequested = false;
     let multiTableSortStates = new Map();
+
+    // Track highlight toggle states separately
+    let prefilterHighlightEnabled = true;
+    let filterHighlightEnabled = true;
+    let savedPrefilterHighlights = { hasContent: false };
+    let savedFilterHighlights = { hasContent: false };
+    let prefilterInfo = { count: 0, query: '' };
 
     /**
      * Shows a modernized dialog to enter pre-filter criteria before loading data from disk.
@@ -4816,6 +4915,106 @@ let changelog = [
         // Common decorative characters used in the UI
         const decorativeChars = ['▶', '▼', '►', '◄', '▲', '▾', '⏵', '⏷', '⏴', '⏶', '●', '○', '■', '□'];
         return decorativeChars.includes(text);
+    }
+
+    /**
+     * Save the current prefilter highlight state before removing highlights
+     * Captures prefilter highlighting parameters to enable accurate restoration
+     */
+    function savePrefilterHighlightState() {
+        // Save prefilter highlighting parameters
+        savedPrefilterHighlights = {
+            prefilter: prefilterInfo.query ? {
+                query: prefilterInfo.query,
+                count: prefilterInfo.count,
+                caseSensitive: preFilterCaseCheckbox.checked,
+                isRegex: preFilterRxCheckbox.checked
+            } : null,
+            hasContent: !!prefilterInfo.query
+        };
+
+        Lib.debug('highlight', `Saved prefilter highlight state: ${savedPrefilterHighlights.hasContent ? 'has prefilter' : 'no prefilter'}`);
+    }
+
+    /**
+     * Restore previously saved prefilter highlights by re-applying highlighting
+     */
+    function restorePrefilterHighlightState() {
+        if (!savedPrefilterHighlights.hasContent) {
+            Lib.info('highlight', 'No saved prefilter highlight state to restore');
+            return;
+        }
+
+        // Restore prefilter highlighting
+        if (savedPrefilterHighlights.prefilter) {
+            const { query, caseSensitive, isRegex } = savedPrefilterHighlights.prefilter;
+            Lib.debug('highlight', `Restoring prefilter highlight for: "${query}"`);
+
+            const tables = document.querySelectorAll('table.tbl');
+            tables.forEach(table => {
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    highlightText(row, query, caseSensitive, -1, isRegex, 'prefilter');
+                });
+            });
+        }
+
+        Lib.info('highlight', 'Prefilter highlights restored');
+    }
+
+    /**
+     * Save the current filter highlight state before removing highlights
+     * Captures global and column filter highlighting parameters
+     */
+    function saveFilterHighlightState() {
+        // Save global filter parameters
+        const globalFilterInput = document.querySelector('#mb-show-all-controls-container input[placeholder*="Global Filter"]');
+        const globalQuery = globalFilterInput ? globalFilterInput.value.trim() : '';
+
+        // Save column filter parameters
+        const columnFilters = [];
+        document.querySelectorAll('.mb-col-filter-input').forEach((input, index) => {
+            if (input.value.trim()) {
+                columnFilters.push({
+                    index: index,
+                    query: input.value.trim(),
+                    caseSensitive: false, // Column filters don't have case sensitivity toggle
+                    isRegex: false
+                });
+            }
+        });
+
+        savedFilterHighlights = {
+            globalFilter: globalQuery ? { query: globalQuery } : null,
+            columnFilters: columnFilters,
+            hasContent: !!(globalQuery || columnFilters.length > 0)
+        };
+
+        Lib.debug('highlight', `Saved filter highlight state: global=${!!globalQuery}, columns=${columnFilters.length}`);
+    }
+
+    /**
+     * Restore previously saved filter highlights by re-applying highlighting
+     */
+    /**
+     * Restore previously saved filter highlights by re-running the current filters
+     * This automatically re-applies both filtering and highlighting
+     */
+    function restoreFilterHighlightState() {
+        if (!savedFilterHighlights.hasContent) {
+            Lib.info('highlight', 'No saved filter highlight state to restore');
+            return;
+        }
+
+        // Simply re-run the filter which will automatically re-apply highlighting
+        // The filter inputs still have their values, so this will restore everything
+        Lib.debug('highlight', 'Restoring filter highlights by re-running filters');
+
+        if (typeof runFilter === 'function') {
+            runFilter();
+            Lib.info('highlight', 'Filter highlights restored via runFilter()');
+        } else {
+            Lib.warn('highlight', 'runFilter function not available');
+        }
     }
 
     /**
@@ -7681,10 +7880,21 @@ let changelog = [
 
                 // --- Update UI Feedback for Pre-Filter ---
                 if (filterQueryRaw) {
-                    // Update the red text span
-                    preFilterMsg.textContent = `${loadedRowCount} rows prefiltered: "${filterQueryRaw}"`;
+                    // Update the prefilter toggle button with prefilter info and show it
+                    updatePrefilterToggleButton(loadedRowCount, filterQueryRaw, true);
+                    // Hide the old prefilter message span (no longer needed)
+                    preFilterMsg.style.display = 'none';
                     // Reset the input field
                     preFilterInput.value = '';
+                    // Reset highlighting states
+                    prefilterHighlightEnabled = true;
+                    filterHighlightEnabled = true;
+                    savedPrefilterHighlights = { hasContent: false };
+                    savedFilterHighlights = { hasContent: false };
+                } else {
+                    // No prefilter, hide prefilter button
+                    updatePrefilterToggleButton(0, '', false);
+                    preFilterMsg.style.display = 'none';
                 }
 
                 const rowLabel = loadedRowCount === 1 ? 'row' : 'rows';

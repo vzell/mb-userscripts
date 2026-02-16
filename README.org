@@ -38559,7 +38559,7 @@ here the console log
 [VZ-ShowAllEntities: series-releases] 📝 Updated load filter history. Current count: 5 
 [VZ-ShowAllEntities: series-releases] 📝 Load confirmed. Triggering file selector... 
 [VZ-ShowAllEntities: series-releases] 📝 Loading data from file: mb-series-releases-2026-02-16T19-36-22.json.gz. Prefilter active: false 
-[VZ-ShowAllEntities: series-releases] 📝 Decompressed 42,406 bytes → 1,149,781 bytes in 9.80ms 
+[VZ-ShowAllEntities: series-releases] 📝 Decompressed 42,406 bytes → 1,149,781 bytges in 9.80ms 
 [VZ-ShowAllEntities: series-releases] 📝 Loaded data version 1.0 from 2026-02-16T19:36:21.969Z (File total: 354 rows) 
 [VZ-ShowAllEntities: series-releases] 🧹 Starting clutter element removal. 
 [VZ-ShowAllEntities: series-releases] 🧹 Running cleanup after initial data load from disk... 
@@ -38590,3 +38590,68 @@ here the console log
 [VZ-ShowAllEntities: series-releases] 🎨 Updated header/target ▼Releases(354)✕CcRx🎨 Unhighli count: (354) 
 [VZ-ShowAllEntities: series-releases] 📝 Successfully loaded 354 rows from disk! 
 #+end_example
+
+
+* toggle highlight
+
+Please implement the following:
+
+** Toggle highlightning
+
+The current "Unhighlight all" button should be renamed to "Toggle highlightning" and the action when pressed should initially be
+
+- clear all highlighning in all tables
+
+when pressed again, the action should be switching on the highlighning again and so force, basically toggling between
+these two states. Probably the initial highlight state needs to be saved somewhere for the toggle funtionality to work.
+Also adjust the tooltip text appropriately.
+
+** Move prefilter information to button text
+
+Currently when loading data from disk, the following information is written into the '<span id="mb-preload-filter-msg"'
+
+#+begin_example
+<span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap;">2 rows prefiltered: "Westfalenhalle"</span>
+#+end_example
+
+Please, instead of rendering this information into the above span, instead use the span text, e.g. '2 rows prefiltered: "Westfalenhalle"'
+
+as the button text for the button currently named "Unhighlight" (so the button should get a dynamic text based on the
+number of filtered rows). The action of that button should also be a toggle action, like what we did before.  Initially
+clearing all highlighning in all tables, and when pressing agina restoring the hightlight state. So the initial
+pre-filter state needs to be saved somewhere for the toggle funtionality to work probably. The button should also change
+it's background color from the standard grey, when highlightning is on, to the actual highlight backgound color when it
+has been toggled off (so that the user gets a hint, when pressing the button, it will toggle to the highlightning state
+again). Also adjust the tooltip text appropriately.
+
+** almost
+
+Actually there really should be TWO buttons which do the toggle work:
+
+- One button, the one which get its title dynamically from the number of filtered rows when loading from disk. This one
+  is responsible for toggling ONLY the prefilter string highlighning. Actually the button should ONLY be visible on the
+  final rendered page, IF the dats which is renderd is coming from a filesystem data load. Please add this functionality
+  also, it's missing currently. By the way, the toggle behaviour of this button works right now.
+  
+- The other button which should be called "Toggle highlightning" should only be responsible for toggling the current
+  highlightning coming from entered filter expressions on the final rendered page itself. Either in the global filter
+  field, or in one or many of the column filter fields.
+
+Also adjust the tooltip text appropriately.  
+
+** almost
+
+Actually the button called "Unhighlight prefilter" can completely be removed, because it's functionality has been taken
+over by the WORKING button implementation with the dynamic title, so please don't touch that code (only if really
+necessary)
+
+BUT, the "Toggle hightlightning" button doens't work as it should:
+- it actually clears all the highlightning coming from the global filter and the column filters, it also changes color,
+  but it DOESN'T restore the highlightning coming from the global filter and the column filters at all. Please
+  fix. Probably the easiest fix would be to just rerun the currently effective filters, as normally they would normale
+  filter AND hightlight autoamtically. Please rethink and fix..
+
+Please also add the "🎨 " in front of the dynamic button text e.g. '🎨 2 rows prefiltered: "Westfalenhalle"'
+
+** TODO check for unused 'preFilterMsg'
+
