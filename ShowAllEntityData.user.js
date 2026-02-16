@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.21.1+2026-02-16
+// @version      9.22.0+2026-02-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -49,6 +49,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.22.0+2026-02-16', description: 'Enhancement: Added dedicated infoDisplay area for general status messages (Auto-resize, Density, Export, Load operations) separate from filtering/sorting status. These messages no longer overwrite filter/sort status and appear in their own display area after the global status display.'},
     {version: '9.21.1+2026-02-16', description: 'Fix: Escape key two-press behavior in filter fields now works correctly. Removed conflicting old Escape handlers that were immediately clearing and blurring the field. First press now properly clears and keeps focus, second press blurs as intended.'},
     {version: '9.21.0+2026-02-16', description: 'UI Enhancements: (1) Escape key in filter fields: first press clears field but keeps focus, second press removes focus. (2) Shortcuts help dialog redesigned with modern white background, organized sections, and better readability - no more dark overlay. (3) Added "Click outside or press Escape to close" text to Shortcuts, Density, and Export menus for consistency.'},
     {version: '9.20.2+2026-02-16', description: 'Enhancement: (1) Ctrl-C now intelligently skips checkbox columns and number columns (#), focusing on the first actual data column filter. (2) All Ctrl/Cmd keyboard shortcuts now work even when typing in input fields, enabling seamless cycling between filter fields without losing focus. Only ? and / shortcuts require not typing in input fields.'},
@@ -870,10 +871,10 @@ let changelog = [
         URL.revokeObjectURL(url);
 
         // Update status
-        const statusDisplay = document.getElementById('mb-status-display');
-        if (statusDisplay) {
-            statusDisplay.textContent = `✓ Exported ${rowsExported} rows to ${filename}`;
-            statusDisplay.style.color = 'green';
+        const infoDisplay = document.getElementById('mb-info-display');
+        if (infoDisplay) {
+            infoDisplay.textContent = `✓ Exported ${rowsExported} rows to ${filename}`;
+            infoDisplay.style.color = 'green';
         }
 
         Lib.info('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
@@ -1079,10 +1080,10 @@ let changelog = [
      * Show export notification popup
      */
     function showExportNotification(format, filename, rowCount) {
-        const statusDisplay = document.getElementById('mb-status-display');
-        if (statusDisplay) {
-            statusDisplay.textContent = `✓ Exported ${rowCount} rows to ${filename}`;
-            statusDisplay.style.color = 'green';
+        const infoDisplay = document.getElementById('mb-info-display');
+        if (infoDisplay) {
+            infoDisplay.textContent = `✓ Exported ${rowCount} rows to ${filename}`;
+            infoDisplay.style.color = 'green';
         }
 
         const infoPopup = document.createElement('div');
@@ -1918,10 +1919,10 @@ let changelog = [
         currentDensity = densityKey;
 
         // Update status display
-        const statusDisplay = document.getElementById('mb-status-display');
-        if (statusDisplay) {
-            statusDisplay.textContent = `✓ Table density: ${config.label}`;
-            statusDisplay.style.color = 'green';
+        const infoDisplay = document.getElementById('mb-info-display');
+        if (infoDisplay) {
+            infoDisplay.textContent = `✓ Table density: ${config.label}`;
+            infoDisplay.style.color = 'green';
         }
 
         Lib.info('density', `Applied ${config.label} density to ${tables.length} table(s)`);
@@ -2191,10 +2192,10 @@ let changelog = [
                 Lib.info('resize', `Finished resizing column ${colIndex} to ${finalWidth}px`);
 
                 // Update status
-                const statusDisplay = document.getElementById('mb-status-display');
-                if (statusDisplay) {
-                    statusDisplay.textContent = `✓ Column ${colIndex + 1} resized to ${finalWidth}px`;
-                    statusDisplay.style.color = 'green';
+                const infoDisplay = document.getElementById('mb-info-display');
+                if (infoDisplay) {
+                    infoDisplay.textContent = `✓ Column ${colIndex + 1} resized to ${finalWidth}px`;
+                    infoDisplay.style.color = 'green';
                 }
             }
 
@@ -2380,10 +2381,10 @@ let changelog = [
             updateResizeButtonState(false);
 
             // Update status display
-            const statusDisplay = document.getElementById('mb-status-display');
-            if (statusDisplay) {
-                statusDisplay.textContent = '✓ Restored original column widths';
-                statusDisplay.style.color = 'green';
+            const infoDisplay = document.getElementById('mb-info-display');
+            if (infoDisplay) {
+                infoDisplay.textContent = '✓ Restored original column widths';
+                infoDisplay.style.color = 'green';
             }
 
             Lib.info('resize', 'Original column widths restored');
@@ -2598,15 +2599,15 @@ let changelog = [
         updateResizeButtonState(true);
 
         // Update status display
-        const statusDisplay = document.getElementById('mb-status-display');
-        if (statusDisplay) {
+        const infoDisplay = document.getElementById('mb-info-display');
+        if (infoDisplay) {
             let message = `✓ Auto-resized ${totalColumnsResized} visible column${totalColumnsResized !== 1 ? 's' : ''}`;
             if (tableCount > 1) {
                 message += ` across ${tableCount} tables`;
             }
             message += ` in ${duration}ms (drag column edges to adjust)`;
-            statusDisplay.textContent = message;
-            statusDisplay.style.color = 'green';
+            infoDisplay.textContent = message;
+            infoDisplay.style.color = 'green';
         }
 
         Lib.info('resize', `Auto-resize complete: ${totalColumnsResized} visible columns across ${tableCount} table(s) in ${duration}ms`);
@@ -3764,6 +3765,11 @@ let changelog = [
     globalStatusDisplay.id = 'mb-global-status-display';
     globalStatusDisplay.style.cssText = 'font-size:0.70em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 
+    const infoDisplay = document.createElement('span');
+    infoDisplay.id = 'mb-info-display';
+    infoDisplay.style.cssText = 'font-size:0.70em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; margin-left:10px;';
+
+
     const progressContainer = document.createElement('div');
     progressContainer.id = 'mb-fetch-progress-container';
     progressContainer.style.cssText = 'display:none; width:300px; height:26px; background-color:#eee; border:1px solid #ccc; border-radius:3px; overflow:hidden; position:relative; vertical-align:middle;';
@@ -3999,6 +4005,7 @@ let changelog = [
 
     controlsContainer.appendChild(stopBtn);
     controlsContainer.appendChild(globalStatusDisplay);
+    controlsContainer.appendChild(infoDisplay);
     controlsContainer.appendChild(progressContainer);
     // Filter container is NOT appended here anymore; moved to H2 later
     controlsContainer.appendChild(timerDisplay);
@@ -5527,7 +5534,7 @@ let changelog = [
             activeBtn.style.backgroundColor = '';
             activeBtn.style.color = '';
             activeBtn.disabled = false;
-            statusDisplay.textContent = '';
+            infoDisplay.textContent = '';
         }
 
         stopRequested = false;
@@ -7572,8 +7579,8 @@ let changelog = [
 
                 const rowLabel = loadedRowCount === 1 ? 'row' : 'rows';
                 Lib.info('cache', `Successfully loaded ${loadedRowCount} ${rowLabel} from disk!`);
-                statusDisplay.textContent = `✓ Loaded: ${loadedRowCount} ${rowLabel}`;
-                statusDisplay.style.color = 'green';
+                infoDisplay.textContent = `✓ Loaded: ${loadedRowCount} ${rowLabel}`;
+                infoDisplay.style.color = 'green';
 
                 // Reset file input
                 fileInput.value = '';

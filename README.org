@@ -38186,30 +38186,11 @@ please fix the following issues:
   up to 'Export' in the h1 header line are doubled after the data load finishes
 
 
-* UI cosmetics
+* DONE UI cosmetics
 
 In the uploaded userscript library "VZ_MBLibrary.user.js"
 
 please add the icon "⚙️" in front of the "a.textContent = scriptName;" 
-
-
-* Add a new infoDisplay area for stuff like
-
-In the uploaded userscript "ShowAllEntityData.user.js"
-
-- Add a new "infoDisplay" area/span along the lines of "globalStatusDisplay", "filterStatusDisplay" and
-  "sortStatusDisplay" for all messages which are NOT filtering or sorting related, e.g. messages like
-
-#+begin_example
-- Auto-resized <n> visible columns across ...
-- Restored original column widths
-- Loaded: <n> rows  <-- from filesystem
-- Table density: Compact
-- Exported <n> rows to ...
-#+end_example
-
-The placement should be right after the '<span id="mb-global-status-display"'. Right now these messages just overwrite
-sorting or filtering related messages.
 
 
 * DONE Add Ctrl-c for focus first column filter
@@ -38345,3 +38326,87 @@ And here the code block
   "showShortcutsHelp" to follow the same design as for the "Density" button implementation, or at least make it more modern and don't use that black background
   
   
+* Add a new infoDisplay area for stuff like
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+- Add a new "infoDisplay" area/span along the lines of "globalStatusDisplay", "filterStatusDisplay" and
+  "sortStatusDisplay" for all messages which are NOT filtering or sorting related, e.g. messages like
+
+#+begin_example
+- Auto-resized <n> visible columns across ...
+- Restored original column widths
+- Loaded: <n> rows  <-- from filesystem
+- Table density: Compact
+- Exported <n> rows to ...
+#+end_example
+
+The placement should be right after the '<span id="mb-global-status-display"'. Right now these messages just overwrite
+sorting or filtering related messages.
+
+
+* ✗ Clear all COLUMN filters
+
+in all occurences of
+
+#+begin_example
+clearSubBtn.textContent = '✗ Clear all COLUMN filters';
+#+end_example
+
+render the "✗" char in red, like in the code
+
+#+begin_example
+    const xSymbol = document.createElement('span');
+    xSymbol.textContent = '✗ ';
+    xSymbol.style.color = 'red';
+    xSymbol.style.fontSize = '1.0em';
+    xSymbol.style.fontWeight = 'bold';
+
+    const clearColumnFiltersBtn = document.createElement('button');
+    clearColumnFiltersBtn.appendChild(xSymbol);
+    clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
+#+end_example
+
+** answer
+
+#+begin_example
+Cleaner & Reusable Version (Recommended)
+
+If you want to reuse this pattern elsewhere (since you’re using it multiple times in your project), create a small helper inside your library:
+
+function createRedXLabel(text) {
+    const fragment = document.createDocumentFragment();
+
+    const x = document.createElement('span');
+    x.textContent = '✗ ';
+    x.style.color = 'red';
+    x.style.fontWeight = 'bold';
+
+    fragment.appendChild(x);
+    fragment.appendChild(document.createTextNode(text));
+
+    return fragment;
+}
+
+
+Then simply use:
+
+clearSubBtn.textContent = '';
+clearSubBtn.appendChild(createRedXLabel('Clear all COLUMN filters'));
+
+
+Much cleaner and future-proof.
+#+end_example
+
+
+* Add keyboard navigation in the pull-down menues
+
+Add keyboard navigation in the following pull-down menues. When clicked, they should have the keyboard focus:
+
+- "Visible Columns": up/down/shift for select-deselect
+- "Density": up/down, immediately render the new table layout (user feedback), when using the up/down keys, as if the user clicked on the menu entry. Return should use the currently selected and close the dialog
+- "Export": Up/down/Return should use the currently selected and close the dialog
+
+
+* Add keyboard handling for the complete application
+
