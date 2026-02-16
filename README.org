@@ -38176,7 +38176,7 @@ but the "Configuration" button which calls
 still doesn't work I still gt the 'Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager' message
 
 
-* Add new infoDisplay area for stuff like
+* Add a new infoDisplay area for stuff like
 
 - Auto-resized xx visible columns
 - Restored original col
@@ -38187,11 +38187,47 @@ still doesn't work I still gt the 'Settings interface not available. Please use 
 
 * Bug when loading data from the filesystem, all buttons 'Auto-Resize' up to 'Export' are doubled
 
-In the uploaded userscript
+In the uploaded userscript "ShowAllEntityData.user.js"
 
-There is a bug when loading data from the filesystem via clickin on "Load from Disk", all buttons from 'Auto-Resize' up
-to 'Export' in the h1 header line are doubled after the data load finishes
+please fix the following issues:
 
+- there is a bug when loading data from the filesystem via clicking on "Load from Disk", all buttons from 'Auto-Resize'
+  up to 'Export' in the h1 header line are doubled after the data load finishes
+
+* UI cosmetics
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+please fix the following issues:
+
+- Add the icon "⚙️" in front of the "a.textContent = scriptName;" inside the uploaded userscript Library "VZ_MBLibrary.user.js"
+
+- Change the look and feel of the entries in the pull-down menu when pressing the "Export" button in the function
+  "addExportButton()" to be the same as for the "Density" button implementation
+
+- Change the look and feel of the entries in the pull-down menu when pressing the "Shortcuts" button in the function
+  "showShortcutsHelp" to follow the same design as for the "Density" button implementation, or at least make it more modern and don't use that black background
+  
+  
+- Add a new "infoDisplay" area/span along the lines of "globalStatusDisplay", "filterStatusDisplay" and
+  "sortStatusDisplay" for all messages which are NOT filtering or sorting related, e.g. messages like
+
+#+begin_example
+- Auto-resized <n> visible columns across ...
+- Restored original column widths
+- Loaded: <n> rows  <-- from filesystem
+- Table density: Compact
+- Exported <n> rows to ...
+#+end_example
+
+The placement should be right after the '<span id="mb-global-status-display"'. Right now these messages just overwrite
+sorting or filtering related messages.
 
 * Add Ctrl-c for focus first column filter
 
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+- add support for keyboard shortcut "Ctrl-c" to focus the first column filter field, along the line of the current
+  "Ctrl-G" implmentation in the "initKeyboardShortcuts" function For the case of pages with multiple tables, focus first
+  the first filter column in the first table, and then by repeatedly pressing "Ctrl-C" cycle through all available
+  tables thereby focusing always the first filter field of each table

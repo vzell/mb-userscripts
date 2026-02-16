@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.18.0+2026-02-15
+// @version      9.19.0+2026-02-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -49,6 +49,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.19.0+2026-02-16', description: 'Fix: Fixed button duplication bug when loading data from disk. Buttons from Auto-Resize to Export in the h1 header line are no longer doubled after data load finishes. All button-adding functions now check for existing buttons before creating new ones.'},
     {version: '9.18.0+2026-02-15', description: 'Major enhancements: (1) Settings button now works by triggering menu link. (2) Export button renamed to "Export" with dropdown menu offering CSV, JSON, and Emacs Org-Mode formats. (3) Save to Disk now uses gzip compression (.json.gz) for ~60-80% file size reduction with minimal performance cost. Load from Disk automatically detects and decompresses .gz files. Added pako library for compression.'},
     {version: '9.17.1+2026-02-15', description: 'Fix: Moved ⚙️ Settings button to h1 header (entity name header) instead of h2 header as originally intended. Button floats right and remains at far right edge when window resizes.'},
     {version: '9.17.0+2026-02-15', description: 'Fix: ⚙️ Settings button now properly positioned at far right of h2 header with float:right (responsive to window size). Fixed Ctrl-F shortcut to properly focus global filter. Fixed Stats panel to show correct statistics across all tables (Total/Visible/Hidden Columns, Filtered Out rows, Global Filter value).'},
@@ -501,6 +502,19 @@ let changelog = [
      * @param {HTMLTableElement} table - The table to add controls for
      */
     function addColumnVisibilityToggle(table) {
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (!controlsContainer) {
+            Lib.warn('ui', 'Controls container not found, cannot add column visibility toggle');
+            return;
+        }
+
+        // Check if button already exists
+        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible Columns'));
+        if (existingBtn) {
+            Lib.info('ui', 'Column visibility toggle already exists, skipping');
+            return;
+        }
+
         // Create toggle button
         const toggleBtn = document.createElement('button');
         toggleBtn.textContent = '👁️ Visible Columns';
@@ -742,13 +756,8 @@ let changelog = [
         document.addEventListener('keydown', closeMenuOnEscape);
 
         // Append to controls container
-        const controlsContainer = document.getElementById('mb-show-all-controls-container');
-        if (controlsContainer) {
-            controlsContainer.appendChild(toggleBtn);
-            Lib.info('ui', 'Column visibility toggle added to controls');
-        } else {
-            Lib.warn('ui', 'Controls container not found, cannot add column visibility toggle');
-        }
+        controlsContainer.appendChild(toggleBtn);
+        Lib.info('ui', 'Column visibility toggle added to controls');
 
         // Append menu to body
         document.body.appendChild(menu);
@@ -1130,6 +1139,19 @@ let changelog = [
      * Add export button with dropdown menu to the controls
      */
     function addExportButton() {
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (!controlsContainer) {
+            Lib.warn('ui', 'Controls container not found, cannot add export button');
+            return;
+        }
+
+        // Check if button already exists
+        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
+        if (existingBtn) {
+            Lib.info('ui', 'Export button already exists, skipping');
+            return;
+        }
+
         const exportContainer = document.createElement('span');
         exportContainer.style.cssText = 'position:relative; display:inline-block; margin-left:5px;';
 
@@ -1192,13 +1214,8 @@ let changelog = [
         exportContainer.appendChild(exportBtn);
         exportContainer.appendChild(exportMenu);
 
-        const controlsContainer = document.getElementById('mb-show-all-controls-container');
-        if (controlsContainer) {
-            controlsContainer.appendChild(exportContainer);
-            Lib.info('ui', 'Export button with dropdown menu added to controls');
-        } else {
-            Lib.warn('ui', 'Controls container not found, cannot add export button');
-        }
+        controlsContainer.appendChild(exportContainer);
+        Lib.info('ui', 'Export button with dropdown menu added to controls');
     }
 
     /**
@@ -1436,6 +1453,19 @@ Note: Shortcuts work when not typing in input fields
      * Add keyboard shortcuts help button to UI
      */
     function addShortcutsHelpButton() {
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (!controlsContainer) {
+            Lib.warn('ui', 'Controls container not found, cannot add shortcuts help button');
+            return;
+        }
+
+        // Check if button already exists
+        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Shortcuts'));
+        if (existingBtn) {
+            Lib.info('ui', 'Shortcuts help button already exists, skipping');
+            return;
+        }
+
         const helpBtn = document.createElement('button');
         helpBtn.textContent = '⌨️ Shortcuts';
         helpBtn.title = 'Show keyboard shortcuts (or press ?)';
@@ -1443,13 +1473,8 @@ Note: Shortcuts work when not typing in input fields
         helpBtn.type = 'button';
         helpBtn.onclick = showShortcutsHelp;
 
-        const controlsContainer = document.getElementById('mb-show-all-controls-container');
-        if (controlsContainer) {
-            controlsContainer.appendChild(helpBtn);
-            Lib.info('ui', 'Keyboard shortcuts help button added to controls');
-        } else {
-            Lib.warn('ui', 'Controls container not found, cannot add shortcuts help button');
-        }
+        controlsContainer.appendChild(helpBtn);
+        Lib.info('ui', 'Keyboard shortcuts help button added to controls');
     }
 
     /**
@@ -1609,6 +1634,19 @@ Note: Shortcuts work when not typing in input fields
      * Add statistics panel button to UI
      */
     function addStatsButton() {
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (!controlsContainer) {
+            Lib.warn('ui', 'Controls container not found, cannot add stats button');
+            return;
+        }
+
+        // Check if button already exists
+        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Stats'));
+        if (existingBtn) {
+            Lib.info('ui', 'Stats button already exists, skipping');
+            return;
+        }
+
         const statsBtn = document.createElement('button');
         statsBtn.textContent = '📊 Stats';
         statsBtn.title = 'Show table statistics';
@@ -1616,13 +1654,8 @@ Note: Shortcuts work when not typing in input fields
         statsBtn.type = 'button';
         statsBtn.onclick = showStatsPanel;
 
-        const controlsContainer = document.getElementById('mb-show-all-controls-container');
-        if (controlsContainer) {
-            controlsContainer.appendChild(statsBtn);
-            Lib.info('ui', 'Stats button added to controls');
-        } else {
-            Lib.warn('ui', 'Controls container not found, cannot add stats button');
-        }
+        controlsContainer.appendChild(statsBtn);
+        Lib.info('ui', 'Stats button added to controls');
     }
 
     /**
@@ -1699,6 +1732,19 @@ Note: Shortcuts work when not typing in input fields
      * Show table density menu and add density control button
      */
     function addDensityControl() {
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (!controlsContainer) {
+            Lib.warn('ui', 'Controls container not found, cannot add density button');
+            return;
+        }
+
+        // Check if button already exists
+        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Density'));
+        if (existingBtn) {
+            Lib.info('ui', 'Density control button already exists, skipping');
+            return;
+        }
+
         // Create button
         const densityBtn = document.createElement('button');
         densityBtn.textContent = '📏 Density';
@@ -1829,13 +1875,8 @@ Note: Shortcuts work when not typing in input fields
         document.addEventListener('keydown', closeMenuOnEscape);
 
         // Append to controls container
-        const controlsContainer = document.getElementById('mb-show-all-controls-container');
-        if (controlsContainer) {
-            controlsContainer.appendChild(densityBtn);
-            Lib.info('ui', 'Density control button added to controls');
-        } else {
-            Lib.warn('ui', 'Controls container not found, cannot add density button');
-        }
+        controlsContainer.appendChild(densityBtn);
+        Lib.info('ui', 'Density control button added to controls');
 
         // Append menu to body
         document.body.appendChild(menu);
@@ -2366,6 +2407,19 @@ Note: Shortcuts work when not typing in input fields
      * Add auto-resize columns button to UI
      */
     function addAutoResizeButton() {
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (!controlsContainer) {
+            Lib.warn('ui', 'Controls container not found, cannot add auto-resize button');
+            return;
+        }
+
+        // Check if button already exists
+        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Auto-Resize'));
+        if (existingBtn) {
+            Lib.info('ui', 'Auto-resize button already exists, skipping');
+            return;
+        }
+
         const resizeBtn = document.createElement('button');
         resizeBtn.textContent = '↔️ Auto-Resize';
         resizeBtn.title = 'Auto-resize columns to optimal width (enables horizontal scrolling)';
@@ -2373,13 +2427,8 @@ Note: Shortcuts work when not typing in input fields
         resizeBtn.type = 'button';
         resizeBtn.onclick = toggleAutoResizeColumns;
 
-        const controlsContainer = document.getElementById('mb-show-all-controls-container');
-        if (controlsContainer) {
-            controlsContainer.appendChild(resizeBtn);
-            Lib.info('ui', 'Auto-resize button added to controls');
-        } else {
-            Lib.warn('ui', 'Controls container not found, cannot add auto-resize button');
-        }
+        controlsContainer.appendChild(resizeBtn);
+        Lib.info('ui', 'Auto-resize button added to controls');
     }
 
     const SCRIPT_ID = "vzell-mb-show-all-entities";
