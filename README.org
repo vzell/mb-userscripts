@@ -37456,7 +37456,7 @@ Please reorder the following buttons in the order supplied (instead of current o
 Export to CSV 💾
 
 
-* sorting / filtering (clear all column filters) status on multi table views for each sub table, separate sorting AND filtering in two sections
+* DONE sorting / filtering (clear all column filters) status on multi table views for each sub table, separate sorting AND filtering in two sections
 ** initial
 
 In the uploaded userscript
@@ -37510,12 +37510,12 @@ add new
 and render them with different fonts behind each other. Do this for all status displays (per table, on multi table pages and also for single table pages)
 
 
-* shortcuts
+* DONE shortcuts
 
 Ctr-f/g ==> change
 
 
-* stats
+* DONE stats
 
 completely bullshit
 
@@ -38054,7 +38054,7 @@ correspond to the text heigth of the corresponding h2 and h3 headers
 Number of columns is arifically hig, sometimes 16, in the status are
 
 
-* add missing tooltip for some buttons
+* DONE add missing tooltip for some buttons
 ** initial
 
 Please add some UI polishes:
@@ -38104,7 +38104,7 @@ Global Filter: none             - there actually was one when called
 Oops I made instruction error,  the "Configuration" button should be floating at the very right of the h1 header not h2
 
 
-* add more exports
+* DONE add more exports
 
 The "Configuration" button is now where it is expected, but gives when pressed in a browser native dialog:
 
@@ -38143,7 +38143,7 @@ return {
 #+end_example
 
 
-* Add new notesDisplay area fro stuff like
+* Add new infoDisplay area for stuff like
 
 - Auto-resized xx visible columns
 - Restored original col
