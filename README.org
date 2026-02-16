@@ -38299,6 +38299,47 @@ and staying focused inside the filter field Here is the log
 [VZ-ShowAllEntities: releasegroup-releases] 📝 Column filter blurred via Escape (second press) 
 #+end_example
 
+** bug
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+the following behaviour is still NOT working:
+
+The focusing of the filter field works, but the "Escape" key handling ist still wrong, when pressing the first time it
+acutally says "Column filter blurred via Escape (second press)" and looses focus immediately instead of just clearing
+and staying focused inside the filter field, here is the log
+
+#+begin_example
+11:01:01.302 [VZ-ShowAllEntities: releasegroup-releases] 📝 Column filter cleared via Escape (first press, focus kept) 
+#+end_example
+
+And here the code block
+
+#+begin_example
+            // Escape: Clear focused filter (first press) or blur (second press)
+            if (e.key === 'Escape' && isTyping) {
+                if (e.target.classList.contains('mb-col-filter-input') || 
+                    (e.target.placeholder && e.target.placeholder.includes('Global Filter'))) {
+                    e.preventDefault();
+                    
+                    // Check if field is empty (second press)
+                    if (e.target.value === '') {
+                        e.target.blur();
+                        const filterType = e.target.classList.contains('mb-col-filter-input') ? 'Column' : 'Global';
+                        Lib.debug('shortcuts', `${filterType} filter blurred via Escape (second press)`);
+                    } else {
+                        // First press: clear and keep focus
+                        e.target.value = '';
+                        runFilter();
+                        // Move cursor to beginning
+                        e.target.setSelectionRange(0, 0);
+                        const filterType = e.target.classList.contains('mb-col-filter-input') ? 'Column' : 'Global';
+                        Lib.debug('shortcuts', `${filterType} filter cleared via Escape (first press, focus kept)`);
+                    }
+                }
+            }
+#+end_example
+
 
 * look and feel of the entries in the pull-down menu when pressing the "Shortcuts" button
 

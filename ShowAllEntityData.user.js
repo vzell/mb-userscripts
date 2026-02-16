@@ -1535,23 +1535,23 @@ let changelog = [
                 if (filterRow) {
                     const headerRow = currentTable.querySelector('thead tr:first-child');
                     const allFilterInputs = filterRow.querySelectorAll('input.mb-col-filter-input');
-                    
+
                     // Find first filter input that doesn't correspond to checkbox-cell or number-column
                     let targetInput = null;
                     for (let i = 0; i < allFilterInputs.length; i++) {
                         const input = allFilterInputs[i];
                         const colIdx = parseInt(input.dataset.colIdx);
                         const headerCell = headerRow.cells[colIdx];
-                        
+
                         // Skip if header is checkbox-cell or number-column
-                        if (headerCell && 
-                            !headerCell.classList.contains('checkbox-cell') && 
+                        if (headerCell &&
+                            !headerCell.classList.contains('checkbox-cell') &&
                             !headerCell.classList.contains('number-column')) {
                             targetInput = input;
                             break;
                         }
                     }
-                    
+
                     if (targetInput) {
                         targetInput.focus();
                         targetInput.select();
@@ -1607,25 +1607,33 @@ let changelog = [
             }
 
             // Escape: Clear focused filter (first press) or blur (second press)
-            if (e.key === 'Escape' && isTyping) {
-                if (e.target.classList.contains('mb-col-filter-input') || 
-                    (e.target.placeholder && e.target.placeholder.includes('Global Filter'))) {
+            if (e.key === 'Escape' &&
+                (e.target.matches('.mb-col-filter-input') ||
+                 e.target.matches('input[placeholder*="Global Filter"]'))) {
+                if (
+                    e.target.classList.contains('mb-col-filter-input') ||
+                    (e.target.placeholder && e.target.placeholder.includes('Global Filter'))
+                ) {
                     e.preventDefault();
-                    
-                    // Check if field is empty (second press)
-                    if (e.target.value === '') {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();   // ← IMPORTANT
+
+                    const isColumn = e.target.classList.contains('mb-col-filter-input');
+                    const filterType = isColumn ? 'Column' : 'Global';
+
+                    if (e.target.value.trim() === '') {
+                        // Second press → blur
                         e.target.blur();
-                        const filterType = e.target.classList.contains('mb-col-filter-input') ? 'Column' : 'Global';
                         Lib.debug('shortcuts', `${filterType} filter blurred via Escape (second press)`);
                     } else {
-                        // First press: clear and keep focus
+                        // First press → clear and keep focus
                         e.target.value = '';
                         runFilter();
-                        // Move cursor to beginning
                         e.target.setSelectionRange(0, 0);
-                        const filterType = e.target.classList.contains('mb-col-filter-input') ? 'Column' : 'Global';
                         Lib.debug('shortcuts', `${filterType} filter cleared via Escape (first press, focus kept)`);
                     }
+
+                    return; // ← prevent any further Escape handling
                 }
             }
 
