@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.21.0+2026-02-16
+// @version      9.21.1+2026-02-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -49,6 +49,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.21.1+2026-02-16', description: 'Fix: Escape key two-press behavior in filter fields now works correctly. Removed conflicting old Escape handlers that were immediately clearing and blurring the field. First press now properly clears and keeps focus, second press blurs as intended.'},
     {version: '9.21.0+2026-02-16', description: 'UI Enhancements: (1) Escape key in filter fields: first press clears field but keeps focus, second press removes focus. (2) Shortcuts help dialog redesigned with modern white background, organized sections, and better readability - no more dark overlay. (3) Added "Click outside or press Escape to close" text to Shortcuts, Density, and Export menus for consistency.'},
     {version: '9.20.2+2026-02-16', description: 'Enhancement: (1) Ctrl-C now intelligently skips checkbox columns and number columns (#), focusing on the first actual data column filter. (2) All Ctrl/Cmd keyboard shortcuts now work even when typing in input fields, enabling seamless cycling between filter fields without losing focus. Only ? and / shortcuts require not typing in input fields.'},
     {version: '9.20.1+2026-02-16', description: 'Fix: Ctrl-C keyboard shortcut now works correctly - fixed incorrect CSS class selector (was mb-filter-row, should be mb-col-filter-row). Automatically skips checkbox columns and focuses on first actual filter input field.'},
@@ -4780,15 +4781,6 @@ let changelog = [
                 debouncedColumnFilter();
             });
 
-            // Handle Escape key to clear column filter (immediate)
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    e.preventDefault();
-                    input.value = '';
-                    runFilter();
-                }
-            });
-
             wrapper.appendChild(input);
             wrapper.appendChild(clear);
             th.appendChild(wrapper);
@@ -5086,14 +5078,6 @@ let changelog = [
 
     // Create debounced version of runFilter based on user configuration
     const debouncedRunFilter = debounce(runFilter, Lib.settings.sa_filter_debounce_delay || 300);
-
-    // Handle Escape key to clear global filter
-    filterInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            filterInput.value = '';
-            runFilter(); // Use immediate version for clearing
-        }
-    });
 
     // Use debounced version for input events
     filterInput.addEventListener('input', debouncedRunFilter);
