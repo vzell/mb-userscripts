@@ -38326,7 +38326,8 @@ And here the code block
   "showShortcutsHelp" to follow the same design as for the "Density" button implementation, or at least make it more modern and don't use that black background
   
   
-* Add a new infoDisplay area for stuff like
+* DONE Add a new infoDisplay area for stuff like
+** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
@@ -38343,6 +38344,21 @@ In the uploaded userscript "ShowAllEntityData.user.js"
 
 The placement should be right after the '<span id="mb-global-status-display"'. Right now these messages just overwrite
 sorting or filtering related messages.
+
+** place the infoDisplay after "~  ... entity" but aligned with the "Show all button"
+
+Actuall remove the "mb-global-status-display" and "mb-info-display" container from the h1 header and render them one
+line below the h1 header right inside the '<p class="subheader">' after the '<bdi><a href' structure.
+
+Here is an example form the URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+#+begin_example
+<p class="subheader"><span class="prefix">~</span> <!-- -->Release group by <bdi><a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen</a></bdi></p>
+#+end_example
+
+Do this for all pageTypes except pageType="search" where the placement should be just one line below the h1 header.
+
+In all cases the alignment should be with the '<div id="mb-show-all-controls-container"'
 
 
 * ✗ Clear all COLUMN filters
@@ -38367,7 +38383,7 @@ render the "✗" char in red, like in the code
     clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
 #+end_example
 
-** answer
+implement something like this
 
 #+begin_example
 Cleaner & Reusable Version (Recommended)

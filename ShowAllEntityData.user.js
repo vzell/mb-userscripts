@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.22.0+2026-02-16
+// @version      9.23.0+2026-02-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -49,6 +49,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.23.0+2026-02-16', description: 'UI Restructuring: Moved global status display and info display from h1 header to subheader area. Now appears one line below h1 header inside <p class="subheader"> after entity link (for all page types except search). For search pages, displays immediately below h1. Aligns with controls container for consistent layout.'},
     {version: '9.22.0+2026-02-16', description: 'Enhancement: Added dedicated infoDisplay area for general status messages (Auto-resize, Density, Export, Load operations) separate from filtering/sorting status. These messages no longer overwrite filter/sort status and appear in their own display area after the global status display.'},
     {version: '9.21.1+2026-02-16', description: 'Fix: Escape key two-press behavior in filter fields now works correctly. Removed conflicting old Escape handlers that were immediately clearing and blurring the field. First press now properly clears and keeps focus, second press blurs as intended.'},
     {version: '9.21.0+2026-02-16', description: 'UI Enhancements: (1) Escape key in filter fields: first press clears field but keeps focus, second press removes focus. (2) Shortcuts help dialog redesigned with modern white background, organized sections, and better readability - no more dark overlay. (3) Added "Click outside or press Escape to close" text to Shortcuts, Density, and Export menus for consistency.'},
@@ -4004,8 +4005,6 @@ let changelog = [
     timerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
 
     controlsContainer.appendChild(stopBtn);
-    controlsContainer.appendChild(globalStatusDisplay);
-    controlsContainer.appendChild(infoDisplay);
     controlsContainer.appendChild(progressContainer);
     // Filter container is NOT appended here anymore; moved to H2 later
     controlsContainer.appendChild(timerDisplay);
@@ -4087,6 +4086,63 @@ let changelog = [
     } else {
         headerContainer.appendChild(controlsContainer);
         headerContainer.appendChild(settingsBtn);
+    }
+
+    // Create a separate container for status displays (globalStatusDisplay and infoDisplay)
+    const statusDisplaysContainer = document.createElement('div');
+    statusDisplaysContainer.id = 'mb-status-displays-container';
+    statusDisplaysContainer.style.cssText = 'display:inline-flex; align-items:center; gap:8px; margin-left:10px; line-height:1;';
+    statusDisplaysContainer.appendChild(globalStatusDisplay);
+    statusDisplaysContainer.appendChild(infoDisplay);
+
+    // Position status displays based on pageType
+    if (pageType === 'search') {
+        // For search pages, place immediately below h1 header
+        const h1 = headerContainer.tagName === 'H1' ? headerContainer : headerContainer.closest('h1');
+        if (h1) {
+            const statusWrapper = document.createElement('div');
+            statusWrapper.style.cssText = 'margin-top:5px; margin-left:0px;';
+            statusWrapper.appendChild(statusDisplaysContainer);
+            h1.parentNode.insertBefore(statusWrapper, h1.nextSibling);
+        }
+    } else {
+        // For all other page types, place inside <p class="subheader"> after the <bdi><a href structure
+        const subheader = document.querySelector('p.subheader');
+        if (subheader) {
+            // Find the last <bdi><a> element in the subheader
+            const bdiLinks = subheader.querySelectorAll('bdi a');
+            const lastBdiLink = bdiLinks[bdiLinks.length - 1];
+
+            if (lastBdiLink) {
+                // Insert after the last bdi link's parent bdi
+                const bdi = lastBdiLink.closest('bdi');
+                if (bdi) {
+                    // Create a wrapper to maintain spacing
+                    const statusWrapper = document.createElement('span');
+                    statusWrapper.style.cssText = 'margin-left:10px;';
+                    statusWrapper.appendChild(statusDisplaysContainer);
+
+                    // Insert after the bdi element
+                    if (bdi.nextSibling) {
+                        bdi.parentNode.insertBefore(statusWrapper, bdi.nextSibling);
+                    } else {
+                        bdi.parentNode.appendChild(statusWrapper);
+                    }
+                }
+            } else {
+                // Fallback: append to end of subheader
+                subheader.appendChild(statusDisplaysContainer);
+            }
+        } else {
+            // Fallback: place below h1 if no subheader found
+            const h1 = headerContainer.tagName === 'H1' ? headerContainer : headerContainer.closest('h1');
+            if (h1) {
+                const statusWrapper = document.createElement('div');
+                statusWrapper.style.cssText = 'margin-top:5px; margin-left:0px;';
+                statusWrapper.appendChild(statusDisplaysContainer);
+                h1.parentNode.insertBefore(statusWrapper, h1.nextSibling);
+            }
+        }
     }
 
     let allRows = [];
