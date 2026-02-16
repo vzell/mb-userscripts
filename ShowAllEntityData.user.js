@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.15.0+2026-02-15
+// @version      9.16.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.16.0+2026-02-15', description: 'UI Polish: Added tooltips to unhighlight buttons, clear filter buttons, and all Show all/RG/release buttons. Added global ⚙️ Settings button in h2 header (right-aligned) to open settings manager dialog.'},
     {version: '9.15.0+2026-02-15', description: 'Fix: Sub-table status displays (filter/sort) now properly appear in h3 headers on multi-table pages (like release-group pages). Previously only showed on initial render, not when filtering. Global filter status now displays correctly in h2 header for all multi-table page types.'},
     {version: '9.14.0+2026-02-15', description: 'Enhancement: "Visible Columns" button now displays in red when not all columns are visible, providing visual feedback about hidden columns.'},
     {version: '9.13.0+2026-02-15', description: 'Fix: Hiding/showing columns after Auto-Resize now properly updates column widths and table layout. Previously caused text wrapping and misalignment. Hidden columns now properly removed from width calculation, shown columns re-measured. Status message now shows correct visible column count (not summed across tables).'},
@@ -3128,6 +3129,25 @@ Note: Shortcuts work when not typing in input fields
         eb.textContent = conf.label.startsWith('Show all') ? '🧮 ' + conf.label : conf.label;
         eb.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; display: inline-flex; align-items: center; justify-content: center;';
         eb.type = 'button';
+
+        // Add tooltip based on button label
+        if (conf.label.includes('Show all')) {
+            // Extract entity types from label (e.g., "Show all Releases for ReleaseGroup")
+            eb.title = `Fetch all the table data from the MusicBrainz backend database`;
+        } else if (conf.label.includes('Official artist RGs')) {
+            eb.title = 'Fetch all official artist release groups from the MusicBrainz backend database';
+        } else if (conf.label.includes('Non-official artist RGs')) {
+            eb.title = 'Fetch all non-official artist release groups from the MusicBrainz backend database';
+        } else if (conf.label.includes('Official various artists RGs')) {
+            eb.title = 'Fetch all official various artists release groups from the MusicBrainz backend database';
+        } else if (conf.label.includes('Non-official various artists RGs')) {
+            eb.title = 'Fetch all non-official various artists release groups from the MusicBrainz backend database';
+        } else if (conf.label.includes('Official artist releases')) {
+            eb.title = 'Fetch all official artist releases from the MusicBrainz backend database';
+        } else if (conf.label.includes('Various artist releases')) {
+            eb.title = 'Fetch all various artist releases from the MusicBrainz backend database';
+        }
+
         // Pass the entire config object
         eb.onclick = (e) => startFetchingProcess(e, conf, activeDefinition);
         controlsContainer.appendChild(eb);
@@ -3222,6 +3242,24 @@ Note: Shortcuts work when not typing in input fields
     progressContainer.appendChild(progressBar);
     progressContainer.appendChild(progressText);
 
+    // Add spacer to push settings button to the right
+    const settingsSpacer = document.createElement('span');
+    settingsSpacer.style.cssText = 'flex-grow: 1; min-width: 20px;';
+
+    // Add global settings/configuration button
+    const settingsBtn = document.createElement('button');
+    settingsBtn.textContent = '⚙️ Settings';
+    settingsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; display: inline-flex; align-items: center; justify-content: center; transition:transform 0.1s, box-shadow 0.1s;';
+    settingsBtn.type = 'button';
+    settingsBtn.title = 'Open settings manager to configure script behavior';
+    settingsBtn.onclick = () => {
+        if (Lib && Lib.settingsInterface && typeof Lib.settingsInterface.showModal === 'function') {
+            Lib.settingsInterface.showModal();
+        } else {
+            alert('Settings interface not available');
+        }
+    };
+
     const filterContainer = document.createElement('span');
     // Initially hidden; will be displayed when appended to H2
     filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px;';
@@ -3269,6 +3307,7 @@ Note: Shortcuts work when not typing in input fields
     const unhighlightFilterBtn = document.createElement('button');
     unhighlightFilterBtn.textContent = '🎨 Unhighlight prefilter';
     unhighlightFilterBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    unhighlightFilterBtn.title = 'Remove all prefilter highlighting from the table';
     unhighlightFilterBtn.onclick = () => {
         document.querySelectorAll('.mb-pre-filter-highlight')
             .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
@@ -3280,6 +3319,7 @@ Note: Shortcuts work when not typing in input fields
     const unhighlightAllBtn = document.createElement('button');
     unhighlightAllBtn.textContent = '🎨 Unhighlight all';
     unhighlightAllBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    unhighlightAllBtn.title = 'Remove all highlighting (prefilter, global filter, and column filters) from the table';
     unhighlightAllBtn.onclick = () => {
         document.querySelectorAll('.mb-pre-filter-highlight, .mb-global-filter-highlight, .mb-column-filter-highlight')
             .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
@@ -3298,6 +3338,7 @@ Note: Shortcuts work when not typing in input fields
     clearColumnFiltersBtn.appendChild(xSymbol);
     clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
     clearColumnFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
         document.querySelectorAll('.mb-col-filter-input').forEach(input => {
@@ -3325,6 +3366,7 @@ Note: Shortcuts work when not typing in input fields
     clearAllFiltersBtn.appendChild(xSymbol.cloneNode(true));
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    clearAllFiltersBtn.title = 'Clear both global filter and all column filters';
     clearAllFiltersBtn.onclick = () => {
         // Clear global filter
         filterInput.value = '';
@@ -3396,6 +3438,8 @@ Note: Shortcuts work when not typing in input fields
     controlsContainer.appendChild(progressContainer);
     // Filter container is NOT appended here anymore; moved to H2 later
     controlsContainer.appendChild(timerDisplay);
+    controlsContainer.appendChild(settingsSpacer);
+    controlsContainer.appendChild(settingsBtn);
 
     const style = document.createElement('style');
     style.textContent = `

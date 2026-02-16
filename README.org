@@ -37514,6 +37514,7 @@ and render them with different fonts behind each other. Do this for all status d
 
 Ctr-f/g ==> change
 
+
 * stats
 
 completely bullshit
@@ -38052,7 +38053,62 @@ correspond to the text heigth of the corresponding h2 and h3 headers
 
 Number of columns is arifically hig, sometimes 16, in the status are
 
-* add global config button
 
-add global config button to the very right side in the h2 header of the initial enterd page but alos in the renderd final page
+* add missing tooltip for some buttons
+** initial
+
+Please add some UI polishes:
+
+- Add missing tooltips (deduce the wording from the context) for some buttons: '🎨 Unhighlight prefilter', '🎨 Unhighlight all', 'Clear all COLUMN filters', 'Clear ALL filters' (these are all located in the H2 header line with
+  the global filter field) + a generic tooltip to all the 'Show all <Entity-1> for <Entity-2>' like "Fetch all the <Entity-1> for <Entity-2> table data from the MusicBrainz backend database".
+  Add this tooltip also to the special named buttons
+  '🧮 Official artist RGs'
+  '🧮 Non-official artist RGs'
+  '🧮 Official various artists RGs'
+  '🧮 Non-official various artists RGs'
+  '🧮 Official artist releases'
+  '🧮 Various artist releases'
+
+
+Also add a global configuration button to the very right side in the h2 header of every initial entered page but also in
+the corresponding rendered final page of each pageType, which when pressed should call the '("⚙️ Settings Manager", () =>
+settingsInterface.showModal()' dialog defined in the uploaded library file.
+
+** 1
+
+Pressing the "Settings" button gives me (in a browser native dialog)
+
+#+begin_example
+Settings interface not available
+#+end_example
+
+although I can call the configuration dialog either from the pull-down menu entry below "Editing" or from the Tampermonkey Menu entry for the userscript
+
+Also the button placement is wrong, it should be at the very right end of the h2 header where it's now positioned (I
+think its called floating, so it should flow to the very right end of the browser window in the h2 table, even if the
+browser window is increased/decreased in size )
+
+Two other bugs:
+
+- the the shortcut for Ctrl-F doesn't focus the global filter
+- the "Table Statistics", when pressing the "Stats" button is partially wrong, the following statistics are wrong:
+
+filtered Out: 0                 - wrong
+Total Columns: 28               - totally wrong
+Visible Columns: 24 (86%)       - 12 columns when called
+Hidden Columns: 4               - hidden columns were 2 when called
+Global Filter: none             - there actually was one when called 
+
+* add more exports
+
+Please rename the "Export to CSV" button to "Export" and when clicked a pull-down menu should allow to choose what kind of export format should be save to the filesystem:
+
+- "Export to CSV" - this is already available
+
+Please add "JSON" and "Emacs Org-Mode" ot the pull-down list.
+The implementation for "JSON" should be obvious.
+The implementation for "Emacs Org-Mode" is trivial, more or less like CVS (even easier),
+the column values should be separated by " | ", every row should start with a "| " and additionally end with a " |"
+the dividing row between the header line and the tabledata should be "|---|"
+
 
