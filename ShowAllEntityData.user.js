@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.20.2+2026-02-16
+// @version      9.21.0+2026-02-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -49,6 +49,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.21.0+2026-02-16', description: 'UI Enhancements: (1) Escape key in filter fields: first press clears field but keeps focus, second press removes focus. (2) Shortcuts help dialog redesigned with modern white background, organized sections, and better readability - no more dark overlay. (3) Added "Click outside or press Escape to close" text to Shortcuts, Density, and Export menus for consistency.'},
     {version: '9.20.2+2026-02-16', description: 'Enhancement: (1) Ctrl-C now intelligently skips checkbox columns and number columns (#), focusing on the first actual data column filter. (2) All Ctrl/Cmd keyboard shortcuts now work even when typing in input fields, enabling seamless cycling between filter fields without losing focus. Only ? and / shortcuts require not typing in input fields.'},
     {version: '9.20.1+2026-02-16', description: 'Fix: Ctrl-C keyboard shortcut now works correctly - fixed incorrect CSS class selector (was mb-filter-row, should be mb-col-filter-row). Automatically skips checkbox columns and focuses on first actual filter input field.'},
     {version: '9.20.0+2026-02-16', description: 'Enhancement: (1) Added Ctrl-C keyboard shortcut to focus first column filter field. On multi-table pages, repeatedly pressing Ctrl-C cycles through all tables. (2) Export button dropdown menu now uses same styling as Density button for consistency - includes header and descriptive text for each format.'},
@@ -1233,6 +1234,16 @@ let changelog = [
             exportMenu.appendChild(menuItem);
         });
 
+        // Add separator and close instruction text
+        const separator = document.createElement('div');
+        separator.style.cssText = 'border-top: 1px solid #ddd; margin: 8px 0 8px 0;';
+        exportMenu.appendChild(separator);
+
+        const closeText = document.createElement('div');
+        closeText.textContent = 'Click outside or press Escape to close';
+        closeText.style.cssText = 'font-size: 0.85em; color: #999; text-align: center; font-style: italic; padding: 4px 0;';
+        exportMenu.appendChild(closeText);
+
         // Toggle menu visibility
         exportBtn.onclick = (e) => {
             e.stopPropagation();
@@ -1307,30 +1318,6 @@ let changelog = [
      * Show keyboard shortcuts help dialog
      */
     function showShortcutsHelp() {
-        const helpText = `
-🎹 Keyboard Shortcuts:
-
-Filter & Search:
-  Ctrl/Cmd + G         Focus global filter
-  Ctrl/Cmd + C         Focus first column filter (cycle through tables)
-  Ctrl/Cmd + Shift + G Clear all filters
-  Escape               Clear focused filter
-
-Data Export & Management:
-  Ctrl/Cmd + E         Open export menu (CSV, JSON, Org-Mode)
-  Ctrl/Cmd + S         Save to disk (JSON)
-  Ctrl/Cmd + L         Load from disk
-
-Settings:
-  Ctrl/Cmd + ,         Open settings dialog
-
-Help:
-  ? or /               Show this help
-
-Note: Ctrl shortcuts work everywhere, even in input fields
-      ? and / only work when not typing in input fields
-        `.trim();
-
         const existing = document.getElementById('mb-shortcuts-help');
         if (existing) {
             existing.remove();
@@ -1344,36 +1331,122 @@ Note: Ctrl shortcuts work everywhere, even in input fields
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.92);
-            color: white;
-            padding: 25px 35px;
-            border-radius: 10px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
             z-index: 10000;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            white-space: pre-line;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            max-width: 500px;
-            line-height: 1.6;
+            min-width: 450px;
+            max-width: 550px;
         `;
-        helpDiv.textContent = helpText;
+
+        // Create header
+        const header = document.createElement('div');
+        header.style.cssText = 'font-weight: 600; font-size: 1.2em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ddd; color: #333;';
+        header.textContent = '🎹 Keyboard Shortcuts';
+        helpDiv.appendChild(header);
+
+        // Create shortcuts sections
+        const sections = [
+            {
+                title: 'Filter & Search',
+                shortcuts: [
+                    { keys: 'Ctrl/Cmd + G', desc: 'Focus global filter' },
+                    { keys: 'Ctrl/Cmd + C', desc: 'Focus first column filter (cycle through tables)' },
+                    { keys: 'Ctrl/Cmd + Shift + G', desc: 'Clear all filters' },
+                    { keys: 'Escape', desc: 'Clear focused filter (press twice to blur)' }
+                ]
+            },
+            {
+                title: 'Data Export & Management',
+                shortcuts: [
+                    { keys: 'Ctrl/Cmd + E', desc: 'Open export menu (CSV, JSON, Org-Mode)' },
+                    { keys: 'Ctrl/Cmd + S', desc: 'Save to disk (JSON)' },
+                    { keys: 'Ctrl/Cmd + L', desc: 'Load from disk' }
+                ]
+            },
+            {
+                title: 'Settings',
+                shortcuts: [
+                    { keys: 'Ctrl/Cmd + ,', desc: 'Open settings dialog' }
+                ]
+            },
+            {
+                title: 'Help',
+                shortcuts: [
+                    { keys: '? or /', desc: 'Show this help' }
+                ]
+            }
+        ];
+
+        sections.forEach(section => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.style.cssText = 'margin-bottom: 15px;';
+
+            const sectionTitle = document.createElement('div');
+            sectionTitle.style.cssText = 'font-weight: 600; color: #555; margin-bottom: 8px; font-size: 0.95em;';
+            sectionTitle.textContent = section.title;
+            sectionDiv.appendChild(sectionTitle);
+
+            section.shortcuts.forEach(shortcut => {
+                const shortcutDiv = document.createElement('div');
+                shortcutDiv.style.cssText = 'display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.9em;';
+
+                const keysSpan = document.createElement('span');
+                keysSpan.style.cssText = 'font-family: monospace; background: #f5f5f5; padding: 2px 6px; border-radius: 3px; color: #333;';
+                keysSpan.textContent = shortcut.keys;
+
+                const descSpan = document.createElement('span');
+                descSpan.style.cssText = 'color: #666; margin-left: 15px;';
+                descSpan.textContent = shortcut.desc;
+
+                shortcutDiv.appendChild(keysSpan);
+                shortcutDiv.appendChild(descSpan);
+                sectionDiv.appendChild(shortcutDiv);
+            });
+
+            helpDiv.appendChild(sectionDiv);
+        });
+
+        // Add note
+        const note = document.createElement('div');
+        note.style.cssText = 'margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.85em; color: #666; font-style: italic;';
+        note.innerHTML = '<strong>Note:</strong> Ctrl shortcuts work everywhere, even in input fields.<br>? and / only work when not typing in input fields.';
+        helpDiv.appendChild(note);
+
+        // Add close instruction text
+        const closeText = document.createElement('div');
+        closeText.textContent = 'Click outside or press Escape to close';
+        closeText.style.cssText = 'font-size: 0.85em; color: #999; text-align: center; font-style: italic; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;';
+        helpDiv.appendChild(closeText);
 
         const closeBtn = document.createElement('button');
-        closeBtn.textContent = '✕ Close';
+        closeBtn.textContent = '✕';
+        closeBtn.title = 'Close';
         closeBtn.style.cssText = `
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 4px 12px;
+            background: transparent;
+            border: none;
+            color: #999;
+            padding: 4px 8px;
             cursor: pointer;
             border-radius: 4px;
-            font-size: 0.9em;
-            transition: background 0.2s;
+            font-size: 1.2em;
+            transition: all 0.2s;
+            line-height: 1;
         `;
-        closeBtn.onmouseover = () => closeBtn.style.background = 'rgba(255, 255, 255, 0.2)';
-        closeBtn.onmouseout = () => closeBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+        closeBtn.onmouseover = () => {
+            closeBtn.style.background = '#f5f5f5';
+            closeBtn.style.color = '#333';
+        };
+        closeBtn.onmouseout = () => {
+            closeBtn.style.background = 'transparent';
+            closeBtn.style.color = '#999';
+        };
         closeBtn.onclick = () => helpDiv.remove();
 
         helpDiv.appendChild(closeBtn);
@@ -1532,16 +1605,26 @@ Note: Ctrl shortcuts work everywhere, even in input fields
                 }
             }
 
-            // Escape: Clear focused filter
+            // Escape: Clear focused filter (first press) or blur (second press)
             if (e.key === 'Escape' && isTyping) {
-                if (e.target.classList.contains('mb-col-filter-input')) {
-                    e.target.value = '';
-                    runFilter();
-                    Lib.debug('shortcuts', 'Column filter cleared via Escape');
-                } else if (e.target.placeholder && e.target.placeholder.includes('Global Filter')) {
-                    e.target.value = '';
-                    runFilter();
-                    Lib.debug('shortcuts', 'Global filter cleared via Escape');
+                if (e.target.classList.contains('mb-col-filter-input') || 
+                    (e.target.placeholder && e.target.placeholder.includes('Global Filter'))) {
+                    e.preventDefault();
+                    
+                    // Check if field is empty (second press)
+                    if (e.target.value === '') {
+                        e.target.blur();
+                        const filterType = e.target.classList.contains('mb-col-filter-input') ? 'Column' : 'Global';
+                        Lib.debug('shortcuts', `${filterType} filter blurred via Escape (second press)`);
+                    } else {
+                        // First press: clear and keep focus
+                        e.target.value = '';
+                        runFilter();
+                        // Move cursor to beginning
+                        e.target.setSelectionRange(0, 0);
+                        const filterType = e.target.classList.contains('mb-col-filter-input') ? 'Column' : 'Global';
+                        Lib.debug('shortcuts', `${filterType} filter cleared via Escape (first press, focus kept)`);
+                    }
                 }
             }
 
@@ -1947,6 +2030,16 @@ Note: Ctrl shortcuts work everywhere, even in input fields
 
             menu.appendChild(option);
         });
+
+        // Add separator and close instruction text
+        const separator = document.createElement('div');
+        separator.style.cssText = 'border-top: 1px solid #ddd; margin: 8px 0 8px 0;';
+        menu.appendChild(separator);
+
+        const closeText = document.createElement('div');
+        closeText.textContent = 'Click outside or press Escape to close';
+        closeText.style.cssText = 'font-size: 0.85em; color: #999; text-align: center; font-style: italic; padding: 4px 0;';
+        menu.appendChild(closeText);
 
         // Toggle menu visibility
         densityBtn.onclick = (e) => {

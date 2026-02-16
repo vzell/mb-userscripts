@@ -38255,14 +38255,54 @@ Please also ignore columns of type '<th colspan="1" class="number-column"', in t
 
 Also make all the shortcuts work even when typing in input fields, (so also the Ctrl-G shortcut), otherwise the cycling will not work
 
+** last
+
+- When inside a filter field (global or clumn specific) change the behaviour of the "Escape" key in the following way:
+  - when first pressed, the current filter field should be emptied, but the curser should still be focused inside the filter field at the beginning
+  - onyl the second press should leave focus from the filter field
+
+- Change the look and feel of the entries in the pull-down menu when pressing the "Shortcuts" button in the function
+  "showShortcutsHelp" to follow the same design as for the "Density" button implementation, or at least make it more modern and don't use that black background
+
+- Add the text 'Click outside or press Escape to close' at the bottum of the pull-down-menu, also do this for the "Density" and "Export" menu (like in the "Stats" or "Visible Columns" menu)
+
+** still bug
+
+The focusing of the filter field works, but the "Escape" key handling ist still wrong, when pressing the first time it
+acutally says "Column filter blurred via Escape (second press)" and looses focus immediately instead of just clearing
+and staying focused inside the filter field Here is the log
+
+#+begin_example
+[VZ-ShowAllEntities: releasegroup-releases] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Searching for target H2. Current pageType: releasegroup-releases 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Stopping H2 search at index 2: table no longer follows this header. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Filtering: Cleaning up overflow tables beyond data length (3). 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Processing group: "Official" with 119 rows. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Reusing existing table at index 0 for group "Official". 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Processing group: "Promotion" with 4 rows. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Reusing existing table at index 1 for group "Promotion". 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Processing group: "Bootleg" with 1 rows. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Reusing existing table at index 2 for group "Bootleg". 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Finished renderGroupedTable. 
+[VZ-ShowAllEntities: releasegroup-releases] 🔍 Attempting focus restore: tableIdx=0, colIdx=1 
+[VZ-ShowAllEntities: releasegroup-releases] 🔍 Restored focus to column filter input 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Starting updateH2Count: filtered=124, total=124 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Searching for target H2. Current pageType: releasegroup-releases 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Stopping H2 search at index 2: table no longer follows this header. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Target element identified: "▼Album(7 of 124)[ Show | Hide ..." 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Removing existing row count stat span. 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Inserting count span before referenceNode: mb-master-toggle 
+[VZ-ShowAllEntities: releasegroup-releases] 🎨 Updated header/target ▼Album(7 of 124)[ Show | Hide  count: (124) 
+[VZ-ShowAllEntities: releasegroup-releases] 🔍 Filter completed in 10ms 
+[VZ-ShowAllEntities: releasegroup-releases] 📝 Column filter blurred via Escape (second press) 
+#+end_example
+
+
 * look and feel of the entries in the pull-down menu when pressing the "Shortcuts" button
 
 - Change the look and feel of the entries in the pull-down menu when pressing the "Shortcuts" button in the function
   "showShortcutsHelp" to follow the same design as for the "Density" button implementation, or at least make it more modern and don't use that black background
   
-- Add the text
-
-#+begin_example
-        closeText.textContent = 'Click outside or press Escape to close';
-#+end_example
   
