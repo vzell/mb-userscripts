@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.17.1+2026-02-15
+// @version      9.18.0+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -12,6 +12,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
 // @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZ_MBLibrary.user.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js
 // @match        *://*.musicbrainz.org/artist/*
 // @match        *://*.musicbrainz.org/release-group/*
 // @match        *://*.musicbrainz.org/release/*
@@ -48,6 +49,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.18.0+2026-02-15', description: 'Major enhancements: (1) Settings button now works by triggering menu link. (2) Export button renamed to "Export" with dropdown menu offering CSV, JSON, and Emacs Org-Mode formats. (3) Save to Disk now uses gzip compression (.json.gz) for ~60-80% file size reduction with minimal performance cost. Load from Disk automatically detects and decompresses .gz files. Added pako library for compression.'},
     {version: '9.17.1+2026-02-15', description: 'Fix: Moved ⚙️ Settings button to h1 header (entity name header) instead of h2 header as originally intended. Button floats right and remains at far right edge when window resizes.'},
     {version: '9.17.0+2026-02-15', description: 'Fix: ⚙️ Settings button now properly positioned at far right of h2 header with float:right (responsive to window size). Fixed Ctrl-F shortcut to properly focus global filter. Fixed Stats panel to show correct statistics across all tables (Total/Visible/Hidden Columns, Filtered Out rows, Global Filter value).'},
     {version: '9.16.0+2026-02-15', description: 'UI Polish: Added tooltips to unhighlight buttons, clear filter buttons, and all Show all/RG/release buttons. Added global ⚙️ Settings button in h2 header (right-aligned) to open settings manager dialog.'},
@@ -922,20 +924,278 @@ let changelog = [
     }
 
     /**
-     * Add export to CSV button to the controls
+     * Export table to JSON format
+     */
+    function exportTableToJSON() {
+        const table = document.querySelector('table.tbl');
+        if (!table) {
+            alert('No table found to export');
+            Lib.error('export', 'No table found for JSON export');
+            return;
+        }
+
+        Lib.info('export', 'Starting JSON export...');
+
+        const data = { headers: [], rows: [] };
+
+        // Get headers from first row
+        const headerRow = table.querySelector('thead tr:first-child');
+        if (headerRow) {
+            Array.from(headerRow.cells).forEach(cell => {
+                if (cell.style.display === 'none') return;
+                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+                data.headers.push(headerText);
+            });
+        }
+
+        // Get data rows (only visible ones)
+        const dataRows = table.querySelectorAll('tbody tr');
+        let rowsExported = 0;
+
+        dataRows.forEach(row => {
+            if (row.style.display === 'none') return;
+
+            const rowData = {};
+            Array.from(row.cells).forEach((cell, index) => {
+                if (cell.style.display === 'none') return;
+                const headerIndex = Array.from(row.cells).filter((c, i) => i <= index && c.style.display !== 'none').length - 1;
+                const headerName = data.headers[headerIndex] || `Column${index}`;
+                rowData[headerName] = cell.textContent.trim().replace(/\s+/g, ' ');
+            });
+
+            if (Object.keys(rowData).length > 0) {
+                data.rows.push(rowData);
+                rowsExported++;
+            }
+        });
+
+        // Create JSON string
+        const json = JSON.stringify(data, null, 2);
+
+        // Create Blob and download
+        const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName = pageType || 'table';
+        const filename = `musicbrainz-${pageName}-${timestamp}.json`;
+        link.download = filename;
+
+        link.click();
+        URL.revokeObjectURL(url);
+
+        Lib.info('export', `JSON export complete: ${filename} (${rowsExported} rows)`);
+        showExportNotification('JSON', filename, rowsExported);
+    }
+
+    /**
+     * Export table to Emacs Org-Mode format
+     */
+    function exportTableToOrgMode() {
+        const table = document.querySelector('table.tbl');
+        if (!table) {
+            alert('No table found to export');
+            Lib.error('export', 'No table found for Org-Mode export');
+            return;
+        }
+
+        Lib.info('export', 'Starting Org-Mode export...');
+
+        const rows = [];
+
+        // Get headers from first row
+        const headerRow = table.querySelector('thead tr:first-child');
+        if (headerRow) {
+            const headers = [];
+            Array.from(headerRow.cells).forEach(cell => {
+                if (cell.style.display === 'none') return;
+                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+                headers.push(headerText);
+            });
+            rows.push('| ' + headers.join(' | ') + ' |');
+            rows.push('|' + headers.map(() => '---').join('|') + '|');
+        }
+
+        // Get data rows (only visible ones)
+        const dataRows = table.querySelectorAll('tbody tr');
+        let rowsExported = 0;
+
+        dataRows.forEach(row => {
+            if (row.style.display === 'none') return;
+
+            const cells = [];
+            Array.from(row.cells).forEach(cell => {
+                if (cell.style.display === 'none') return;
+                let text = cell.textContent.trim().replace(/\s+/g, ' ');
+                // Escape pipe characters in org-mode
+                text = text.replace(/\|/g, '\\vert');
+                cells.push(text);
+            });
+
+            if (cells.length > 0) {
+                rows.push('| ' + cells.join(' | ') + ' |');
+                rowsExported++;
+            }
+        });
+
+        // Create org-mode string
+        const orgMode = rows.join('\n');
+
+        // Create Blob and download
+        const blob = new Blob([orgMode], { type: 'text/plain;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName = pageType || 'table';
+        const filename = `musicbrainz-${pageName}-${timestamp}.org`;
+        link.download = filename;
+
+        link.click();
+        URL.revokeObjectURL(url);
+
+        Lib.info('export', `Org-Mode export complete: ${filename} (${rowsExported} rows)`);
+        showExportNotification('Org-Mode', filename, rowsExported);
+    }
+
+    /**
+     * Show export notification popup
+     */
+    function showExportNotification(format, filename, rowCount) {
+        const statusDisplay = document.getElementById('mb-status-display');
+        if (statusDisplay) {
+            statusDisplay.textContent = `✓ Exported ${rowCount} rows to ${filename}`;
+            statusDisplay.style.color = 'green';
+        }
+
+        const infoPopup = document.createElement('div');
+        infoPopup.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 1px solid #888;
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 400px;
+            text-align: center;
+            font-family: sans-serif;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        `;
+
+        const msg = document.createElement('div');
+        msg.textContent = `${format} export complete. Please monitor your browser for the file download.`;
+        msg.style.marginBottom = '15px';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Close';
+        closeBtn.style.cssText = `
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            font-size: 0.9em;
+        `;
+
+        const closePopup = () => {
+            infoPopup.style.opacity = '0';
+            setTimeout(() => {
+                if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
+                document.removeEventListener('keydown', onEscape);
+            }, 300);
+        };
+
+        closeBtn.addEventListener('click', closePopup);
+
+        const onEscape = (e) => {
+            if (e.key === 'Escape') closePopup();
+        };
+        document.addEventListener('keydown', onEscape);
+
+        infoPopup.appendChild(msg);
+        infoPopup.appendChild(closeBtn);
+        document.body.appendChild(infoPopup);
+    }
+
+    /**
+     * Add export button with dropdown menu to the controls
      */
     function addExportButton() {
+        const exportContainer = document.createElement('span');
+        exportContainer.style.cssText = 'position:relative; display:inline-block; margin-left:5px;';
+
         const exportBtn = document.createElement('button');
-        exportBtn.textContent = 'Export to CSV 💾';
-        exportBtn.title = 'Export visible rows and columns to CSV file';
-        exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
+        exportBtn.textContent = 'Export 💾';
+        exportBtn.title = 'Export visible rows and columns to various formats';
+        exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         exportBtn.type = 'button';
-        exportBtn.onclick = exportTableToCSV;
+
+        // Create dropdown menu
+        const exportMenu = document.createElement('div');
+        exportMenu.style.cssText = `
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10000;
+            min-width: 150px;
+            margin-top: 2px;
+        `;
+
+        const exportFormats = [
+            { label: 'Export to CSV', handler: exportTableToCSV },
+            { label: 'Export to JSON', handler: exportTableToJSON },
+            { label: 'Export to Org-Mode', handler: exportTableToOrgMode }
+        ];
+
+        exportFormats.forEach(format => {
+            const menuItem = document.createElement('div');
+            menuItem.textContent = format.label;
+            menuItem.style.cssText = 'padding: 8px 12px; cursor: pointer; font-size: 0.9em; border-bottom: 1px solid #eee; transition: background 0.2s;';
+            menuItem.onmouseover = () => menuItem.style.background = '#f0f0f0';
+            menuItem.onmouseout = () => menuItem.style.background = 'white';
+            menuItem.onclick = () => {
+                format.handler();
+                exportMenu.style.display = 'none';
+            };
+            exportMenu.appendChild(menuItem);
+        });
+
+        // Remove border from last item
+        exportMenu.lastChild.style.borderBottom = 'none';
+
+        exportBtn.onclick = (e) => {
+            e.stopPropagation();
+            exportMenu.style.display = exportMenu.style.display === 'block' ? 'none' : 'block';
+        };
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!exportContainer.contains(e.target)) {
+                exportMenu.style.display = 'none';
+            }
+        });
+
+        exportContainer.appendChild(exportBtn);
+        exportContainer.appendChild(exportMenu);
 
         const controlsContainer = document.getElementById('mb-show-all-controls-container');
         if (controlsContainer) {
-            controlsContainer.appendChild(exportBtn);
-            Lib.info('ui', 'Export CSV button added to controls');
+            controlsContainer.appendChild(exportContainer);
+            Lib.info('ui', 'Export button with dropdown menu added to controls');
         } else {
             Lib.warn('ui', 'Controls container not found, cannot add export button');
         }
@@ -984,7 +1244,7 @@ Filter & Search:
   Escape               Clear focused filter
 
 Data Export & Management:
-  Ctrl/Cmd + E         Export to CSV
+  Ctrl/Cmd + E         Open export menu (CSV, JSON, Org-Mode)
   Ctrl/Cmd + S         Save to disk (JSON)
   Ctrl/Cmd + L         Load from disk
 
@@ -1112,11 +1372,16 @@ Note: Shortcuts work when not typing in input fields
                 clearAllFilters();
             }
 
-            // Ctrl/Cmd + E: Export to CSV
+            // Ctrl/Cmd + E: Export menu
             if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
                 e.preventDefault();
-                exportTableToCSV();
-                Lib.debug('shortcuts', 'CSV export triggered via Ctrl+E');
+                const exportBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
+                if (exportBtn) {
+                    exportBtn.click();
+                    Lib.debug('shortcuts', 'Export menu triggered via Ctrl+E');
+                } else {
+                    Lib.warn('shortcuts', 'Export button not found');
+                }
             }
 
             // Ctrl/Cmd + S: Save to disk (JSON)
@@ -3263,10 +3528,19 @@ Note: Shortcuts work when not typing in input fields
     settingsBtn.type = 'button';
     settingsBtn.title = 'Open settings manager to configure script behavior';
     settingsBtn.onclick = () => {
-        if (Lib && Lib.settingsInterface && typeof Lib.settingsInterface.showModal === 'function') {
-            Lib.settingsInterface.showModal();
+        // Try to find and click the settings menu link added by the library
+        const links = document.querySelectorAll('a[href="#"]');
+        let settingsLink = null;
+        for (const link of links) {
+            if (link.textContent.includes('Settings Manager') || link.textContent.includes('⚙️')) {
+                settingsLink = link;
+                break;
+            }
+        }
+        if (settingsLink) {
+            settingsLink.click();
         } else {
-            alert('Settings interface not available');
+            alert('Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager');
         }
     };
 
@@ -6649,12 +6923,24 @@ Note: Shortcuts work when not typing in input fields
 
             // Create JSON blob and trigger download
             const jsonStr = JSON.stringify(dataToSave, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
+
+            // Compress with gzip using pako library
+            const startTime = performance.now();
+            const compressedData = pako.gzip(jsonStr);
+            const compressionTime = performance.now() - startTime;
+
+            const originalSize = new Blob([jsonStr]).size;
+            const compressedSize = compressedData.length;
+            const compressionRatio = ((1 - compressedSize / originalSize) * 100).toFixed(1);
+
+            Lib.info('cache', `Compression: ${originalSize.toLocaleString()} bytes → ${compressedSize.toLocaleString()} bytes (${compressionRatio}% smaller) in ${compressionTime.toFixed(2)}ms`);
+
+            const blob = new Blob([compressedData], { type: 'application/gzip' });
             const url = URL.createObjectURL(blob);
 
             // Generate filename based on page type and timestamp
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-            const filename = `mb-${pageType}-${timestamp}.json`;
+            const filename = `mb-${pageType}-${timestamp}.json.gz`;
 
             // Use GM_download if available, otherwise fallback to standard download
             // if (typeof GM_download !== 'undefined') {
@@ -6791,9 +7077,29 @@ Note: Shortcuts work when not typing in input fields
         Lib.info('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}`);
 
         const reader = new FileReader();
+
+        // Determine if file is compressed based on extension
+        const isCompressed = file.name.endsWith('.gz');
+
         reader.onload = async (e) => {
             try {
-                const data = JSON.parse(e.target.result);
+                let jsonString;
+
+                if (isCompressed) {
+                    // Decompress gzipped file
+                    const startTime = performance.now();
+                    const compressedData = new Uint8Array(e.target.result);
+                    const decompressedData = pako.ungzip(compressedData, { to: 'string' });
+                    const decompressionTime = performance.now() - startTime;
+
+                    Lib.info('cache', `Decompressed ${compressedData.length.toLocaleString()} bytes → ${decompressedData.length.toLocaleString()} bytes in ${decompressionTime.toFixed(2)}ms`);
+                    jsonString = decompressedData;
+                } else {
+                    // Plain JSON file
+                    jsonString = e.target.result;
+                }
+
+                const data = JSON.parse(jsonString);
 
                 // Validation: Check if the file matches the current page type
                 if (data.pageType !== pageType) {
@@ -7021,6 +7327,11 @@ Note: Shortcuts work when not typing in input fields
             fileInput.value = '';
         };
 
-        reader.readAsText(file);
+        // Read as ArrayBuffer for compressed files, as text for plain JSON
+        if (isCompressed) {
+            reader.readAsArrayBuffer(file);
+        } else {
+            reader.readAsText(file);
+        }
     }
 })();
