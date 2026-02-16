@@ -3528,7 +3528,27 @@ Note: Shortcuts work when not typing in input fields
     settingsBtn.type = 'button';
     settingsBtn.title = 'Open settings manager to configure script behavior';
     settingsBtn.onclick = () => {
-        // Try to find and click the settings menu link added by the library
+        console.log('Settings button clicked');
+        console.log('Lib object:', Lib);
+        console.log('Lib.showSettings type:', typeof Lib?.showSettings);
+        console.log('Lib.settingsInterface:', Lib?.settingsInterface);
+
+        // Try method 1: Direct showSettings() call
+        if (Lib && typeof Lib.showSettings === 'function') {
+            console.log('Using Lib.showSettings()');
+            Lib.showSettings();
+            return;
+        }
+
+        // Try method 2: settingsInterface.showModal()
+        if (Lib && Lib.settingsInterface && typeof Lib.settingsInterface.showModal === 'function') {
+            console.log('Using Lib.settingsInterface.showModal()');
+            Lib.settingsInterface.showModal();
+            return;
+        }
+
+        // Try method 3: Find and click menu link (fallback)
+        console.log('Trying fallback: finding menu link');
         const links = document.querySelectorAll('a[href="#"]');
         let settingsLink = null;
         for (const link of links) {
@@ -3538,8 +3558,10 @@ Note: Shortcuts work when not typing in input fields
             }
         }
         if (settingsLink) {
+            console.log('Found menu link, clicking it');
             settingsLink.click();
         } else {
+            console.error('No settings access method available');
             alert('Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager');
         }
     };
@@ -6702,7 +6724,7 @@ Note: Shortcuts work when not typing in input fields
                                     sortStatusDisplay.textContent = '';
                                 } else {
                                     // On single-table pages: show in main sort status display
-				    const sortIcon = state.sortState === 0 ? '⇅' : (state.sortState === 1 ? '▲' : '▼');
+                                    const sortIcon = state.sortState === 0 ? '⇅' : (state.sortState === 1 ? '▲' : '▼');
                                     sortStatusDisplay.textContent = `✓ Sorted [${tableName}] column "${colName}" ${sortIcon}: ${rowCount} rows in ${durationMs}ms`;
                                     sortStatusDisplay.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
                                 }
