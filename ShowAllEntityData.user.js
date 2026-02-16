@@ -1355,14 +1355,14 @@ Note: Shortcuts work when not typing in input fields
                 Lib.debug('shortcuts', 'Settings dialog opened via Ctrl+,');
             }
 
-            // Ctrl/Cmd + F: Focus global filter
-            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+            // Ctrl/Cmd + G: Focus global filter
+            if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
                 e.preventDefault();
                 const filterInput = document.querySelector('input[placeholder*="Global Filter"]');
                 if (filterInput) {
                     filterInput.focus();
                     filterInput.select();
-                    Lib.debug('shortcuts', 'Global filter focused via Ctrl+F');
+                    Lib.debug('shortcuts', 'Global filter focused via Ctrl+G');
                 }
             }
 

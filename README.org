@@ -38151,3 +38151,5 @@ return {
 
 * Bug when loading data from the filesyste, all the buttons are doubled: 'Auto-Resize' up to 'Export'
 
+* Add Ctrl-c for focus first column filter
+
