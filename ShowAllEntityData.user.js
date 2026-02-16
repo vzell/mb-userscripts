@@ -5120,6 +5120,8 @@ let changelog = [
 
         Array.from(originalHeader.cells).forEach((cell, idx) => {
             const th = document.createElement('th');
+            // Ensure the filter cell starts with the same visibility as the header cell
+            th.style.display = cell.style.display;
             // Maintain alignment by matching the display logic of header
             th.style.width = cell.style.width;
 
