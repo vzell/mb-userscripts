@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.19.0+2026-02-16
+// @version      9.20.2+2026-02-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -49,6 +49,9 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.20.2+2026-02-16', description: 'Enhancement: (1) Ctrl-C now intelligently skips checkbox columns and number columns (#), focusing on the first actual data column filter. (2) All Ctrl/Cmd keyboard shortcuts now work even when typing in input fields, enabling seamless cycling between filter fields without losing focus. Only ? and / shortcuts require not typing in input fields.'},
+    {version: '9.20.1+2026-02-16', description: 'Fix: Ctrl-C keyboard shortcut now works correctly - fixed incorrect CSS class selector (was mb-filter-row, should be mb-col-filter-row). Automatically skips checkbox columns and focuses on first actual filter input field.'},
+    {version: '9.20.0+2026-02-16', description: 'Enhancement: (1) Added Ctrl-C keyboard shortcut to focus first column filter field. On multi-table pages, repeatedly pressing Ctrl-C cycles through all tables. (2) Export button dropdown menu now uses same styling as Density button for consistency - includes header and descriptive text for each format.'},
     {version: '9.19.0+2026-02-16', description: 'Fix: Fixed button duplication bug when loading data from disk. Buttons from Auto-Resize to Export in the h1 header line are no longer doubled after data load finishes. All button-adding functions now check for existing buttons before creating new ones.'},
     {version: '9.18.0+2026-02-15', description: 'Major enhancements: (1) Settings button now works by triggering menu link. (2) Export button renamed to "Export" with dropdown menu offering CSV, JSON, and Emacs Org-Mode formats. (3) Save to Disk now uses gzip compression (.json.gz) for ~60-80% file size reduction with minimal performance cost. Load from Disk automatically detects and decompresses .gz files. Added pako library for compression.'},
     {version: '9.17.1+2026-02-15', description: 'Fix: Moved ⚙️ Settings button to h1 header (entity name header) instead of h2 header as originally intended. Button floats right and remains at far right edge when window resizes.'},
@@ -1152,70 +1155,122 @@ let changelog = [
             return;
         }
 
-        const exportContainer = document.createElement('span');
-        exportContainer.style.cssText = 'position:relative; display:inline-block; margin-left:5px;';
-
         const exportBtn = document.createElement('button');
         exportBtn.textContent = 'Export 💾';
         exportBtn.title = 'Export visible rows and columns to various formats';
-        exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
+        exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         exportBtn.type = 'button';
 
-        // Create dropdown menu
+        // Create dropdown menu with Density-style formatting
         const exportMenu = document.createElement('div');
         exportMenu.style.cssText = `
             display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
+            position: fixed;
             background: white;
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 6px;
+            padding: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             z-index: 10000;
-            min-width: 150px;
-            margin-top: 2px;
+            min-width: 220px;
         `;
 
+        // Create menu header
+        const menuHeader = document.createElement('div');
+        menuHeader.style.cssText = 'font-weight: 600; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #ddd; color: #333;';
+        menuHeader.textContent = 'Export Format';
+        exportMenu.appendChild(menuHeader);
+
         const exportFormats = [
-            { label: 'Export to CSV', handler: exportTableToCSV },
-            { label: 'Export to JSON', handler: exportTableToJSON },
-            { label: 'Export to Org-Mode', handler: exportTableToOrgMode }
+            { label: 'CSV', description: 'Comma-separated values for Excel/Sheets', handler: exportTableToCSV },
+            { label: 'JSON', description: 'JavaScript Object Notation', handler: exportTableToJSON },
+            { label: 'Org-Mode', description: 'Emacs Org-Mode table format', handler: exportTableToOrgMode }
         ];
 
         exportFormats.forEach(format => {
-            const menuItem = document.createElement('div');
-            menuItem.textContent = format.label;
-            menuItem.style.cssText = 'padding: 8px 12px; cursor: pointer; font-size: 0.9em; border-bottom: 1px solid #eee; transition: background 0.2s;';
-            menuItem.onmouseover = () => menuItem.style.background = '#f0f0f0';
-            menuItem.onmouseout = () => menuItem.style.background = 'white';
+            const menuItem = document.createElement('button');
+            menuItem.type = 'button';
+            menuItem.style.cssText = `
+                display: block;
+                width: 100%;
+                padding: 8px 12px;
+                margin: 3px 0;
+                cursor: pointer;
+                border: 1px solid #ddd;
+                background: white;
+                text-align: left;
+                border-radius: 4px;
+                transition: all 0.2s;
+            `;
+
+            // Create label
+            const labelDiv = document.createElement('div');
+            labelDiv.style.cssText = 'font-weight: 600; margin-bottom: 2px;';
+            labelDiv.textContent = format.label;
+
+            // Create description
+            const descDiv = document.createElement('div');
+            descDiv.style.cssText = 'font-size: 0.85em; color: #666;';
+            descDiv.textContent = format.description;
+
+            menuItem.appendChild(labelDiv);
+            menuItem.appendChild(descDiv);
+
+            // Hover effect
+            menuItem.onmouseover = () => {
+                menuItem.style.background = '#f5f5f5';
+            };
+            menuItem.onmouseout = () => {
+                menuItem.style.background = 'white';
+            };
+
+            // Click handler
             menuItem.onclick = () => {
                 format.handler();
                 exportMenu.style.display = 'none';
             };
+
             exportMenu.appendChild(menuItem);
         });
 
-        // Remove border from last item
-        exportMenu.lastChild.style.borderBottom = 'none';
-
+        // Toggle menu visibility
         exportBtn.onclick = (e) => {
             e.stopPropagation();
-            exportMenu.style.display = exportMenu.style.display === 'block' ? 'none' : 'block';
+            const isVisible = exportMenu.style.display === 'block';
+
+            if (isVisible) {
+                exportMenu.style.display = 'none';
+            } else {
+                exportMenu.style.display = 'block';
+
+                // Position menu below button
+                const rect = exportBtn.getBoundingClientRect();
+                exportMenu.style.top = `${rect.bottom + 5}px`;
+                exportMenu.style.left = `${rect.left}px`;
+            }
         };
 
         // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!exportContainer.contains(e.target)) {
+        const closeMenu = (e) => {
+            if (!exportMenu.contains(e.target) && e.target !== exportBtn) {
                 exportMenu.style.display = 'none';
             }
-        });
+        };
+        document.addEventListener('click', closeMenu);
 
-        exportContainer.appendChild(exportBtn);
-        exportContainer.appendChild(exportMenu);
+        // Close menu on Escape key
+        const closeMenuOnEscape = (e) => {
+            if (e.key === 'Escape' && exportMenu.style.display === 'block') {
+                exportMenu.style.display = 'none';
+            }
+        };
+        document.addEventListener('keydown', closeMenuOnEscape);
 
-        controlsContainer.appendChild(exportContainer);
+        controlsContainer.appendChild(exportBtn);
         Lib.info('ui', 'Export button with dropdown menu added to controls');
+
+        // Append menu to body
+        document.body.appendChild(exportMenu);
     }
 
     /**
@@ -1257,6 +1312,7 @@ let changelog = [
 
 Filter & Search:
   Ctrl/Cmd + G         Focus global filter
+  Ctrl/Cmd + C         Focus first column filter (cycle through tables)
   Ctrl/Cmd + Shift + G Clear all filters
   Escape               Clear focused filter
 
@@ -1271,7 +1327,8 @@ Settings:
 Help:
   ? or /               Show this help
 
-Note: Shortcuts work when not typing in input fields
+Note: Ctrl shortcuts work everywhere, even in input fields
+      ? and / only work when not typing in input fields
         `.trim();
 
         const existing = document.getElementById('mb-shortcuts-help');
@@ -1356,12 +1413,15 @@ Note: Shortcuts work when not typing in input fields
             return;
         }
 
+        // Track current table index for Ctrl-C cycling
+        let currentTableIndex = -1;
+
         document.addEventListener('keydown', (e) => {
-            // Don't intercept if user is typing in an input or textarea
+            // Check if user is typing in an input or textarea
             const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
 
-            // Exception: Escape key works even in inputs (to clear them)
-            if (e.key !== 'Escape' && isTyping) {
+            // Only ? and / shortcuts don't work when typing (for obvious reasons)
+            if ((e.key === '?' || e.key === '/') && isTyping) {
                 return;
             }
 
@@ -1380,6 +1440,53 @@ Note: Shortcuts work when not typing in input fields
                     filterInput.focus();
                     filterInput.select();
                     Lib.debug('shortcuts', 'Global filter focused via Ctrl+G');
+                }
+            }
+
+            // Ctrl/Cmd + C: Focus first column filter (cycle through tables, skip checkbox/number columns)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                e.preventDefault();
+                const tables = document.querySelectorAll('table.tbl');
+                if (tables.length === 0) {
+                    Lib.warn('shortcuts', 'No tables found for column filter focus');
+                    return;
+                }
+
+                // Cycle to next table
+                currentTableIndex = (currentTableIndex + 1) % tables.length;
+                const currentTable = tables[currentTableIndex];
+
+                // Find the first column filter input in this table (skip checkbox/number columns)
+                const filterRow = currentTable.querySelector('thead tr.mb-col-filter-row');
+                if (filterRow) {
+                    const headerRow = currentTable.querySelector('thead tr:first-child');
+                    const allFilterInputs = filterRow.querySelectorAll('input.mb-col-filter-input');
+                    
+                    // Find first filter input that doesn't correspond to checkbox-cell or number-column
+                    let targetInput = null;
+                    for (let i = 0; i < allFilterInputs.length; i++) {
+                        const input = allFilterInputs[i];
+                        const colIdx = parseInt(input.dataset.colIdx);
+                        const headerCell = headerRow.cells[colIdx];
+                        
+                        // Skip if header is checkbox-cell or number-column
+                        if (headerCell && 
+                            !headerCell.classList.contains('checkbox-cell') && 
+                            !headerCell.classList.contains('number-column')) {
+                            targetInput = input;
+                            break;
+                        }
+                    }
+                    
+                    if (targetInput) {
+                        targetInput.focus();
+                        targetInput.select();
+                        Lib.debug('shortcuts', `First column filter focused via Ctrl+C (table ${currentTableIndex + 1}/${tables.length})`);
+                    } else {
+                        Lib.warn('shortcuts', `No suitable column filter input found in table ${currentTableIndex + 1}`);
+                    }
+                } else {
+                    Lib.warn('shortcuts', `No filter row found in table ${currentTableIndex + 1}`);
                 }
             }
 

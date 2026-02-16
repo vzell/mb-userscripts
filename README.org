@@ -38176,15 +38176,6 @@ but the "Configuration" button which calls
 still doesn't work I still gt the 'Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager' message
 
 
-* Add a new infoDisplay area for stuff like
-
-- Auto-resized xx visible columns
-- Restored original col
-- Loaded: 124 rows  <-- from filesystem
-- Table density: Compact
-- Exported 119 rows to ...
-
-
 * Bug when loading data from the filesystem, all buttons 'Auto-Resize' up to 'Export' are doubled
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -38205,10 +38196,10 @@ please fix the following issues:
 - Change the look and feel of the entries in the pull-down menu when pressing the "Export" button in the function
   "addExportButton()" to be the same as for the "Density" button implementation
 
-- Change the look and feel of the entries in the pull-down menu when pressing the "Shortcuts" button in the function
-  "showShortcutsHelp" to follow the same design as for the "Density" button implementation, or at least make it more modern and don't use that black background
-  
-  
+* Add a new infoDisplay area for stuff like
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
 - Add a new "infoDisplay" area/span along the lines of "globalStatusDisplay", "filterStatusDisplay" and
   "sortStatusDisplay" for all messages which are NOT filtering or sorting related, e.g. messages like
 
@@ -38224,6 +38215,7 @@ The placement should be right after the '<span id="mb-global-status-display"'. R
 sorting or filtering related messages.
 
 * Add Ctrl-c for focus first column filter
+** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
@@ -38231,3 +38223,46 @@ In the uploaded userscript "ShowAllEntityData.user.js"
   "Ctrl-G" implmentation in the "initKeyboardShortcuts" function For the case of pages with multiple tables, focus first
   the first filter column in the first table, and then by repeatedly pressing "Ctrl-C" cycle through all available
   tables thereby focusing always the first filter field of each table
+
+- Change the look and feel of the entries in the pull-down menu when pressing the "Export" button in the function
+  "addExportButton()" to be the same as for the "Density" button implementation
+  
+** Ctl-c
+
+It doesn't work
+
+I get the following console log
+
+#+begin_example
+[VZ-ShowAllEntities: releasegroup-releases] 📝 No filter row found in table 1 
+[VZ-ShowAllEntities: releasegroup-releases] 📝 No filter row found in table 2 
+[VZ-ShowAllEntities: releasegroup-releases] 📝 No filter row found in table 3 
+#+end_example
+
+Please also ignore columns of type '<th class="checkbox-cell"', in that case focus to the second column
+
+#+begin_example
+<th class="checkbox-cell" style="position: relative;"><input type="checkbox"><div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;"></div></th>
+#+end_example
+
+** again
+
+Please also ignore columns of type '<th colspan="1" class="number-column"', in that case focus to the second column
+
+#+begin_example
+<th colspan="1" class="number-column" style="cursor: default; position: relative;">#<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;"></div></th>
+#+end_example
+
+Also make all the shortcuts work even when typing in input fields, (so also the Ctrl-G shortcut), otherwise the cycling will not work
+
+* look and feel of the entries in the pull-down menu when pressing the "Shortcuts" button
+
+- Change the look and feel of the entries in the pull-down menu when pressing the "Shortcuts" button in the function
+  "showShortcutsHelp" to follow the same design as for the "Density" button implementation, or at least make it more modern and don't use that black background
+  
+- Add the text
+
+#+begin_example
+        closeText.textContent = 'Click outside or press Escape to close';
+#+end_example
+  
