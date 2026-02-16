@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.26.1+2026-02-16
+// @version      9.30.0+2026-02-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,7 +48,8 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '9.26.1+2026-02-16', description: 'Fix & Enhancement: (1) Removed redundant "Unhighlight prefilter" button (functionality now in dynamic prefilter toggle button). (2) Fixed "Toggle highlighting" button restore functionality - now correctly restores filter highlights by re-running runFilter() instead of manual highlight re-application. (3) Added 🎨 emoji to dynamic prefilter button text (e.g., "🎨 2 rows prefiltered: \'Westfalenhalle\'").'},
+    {version: '9.30.0+2026-02-17', description: 'Fix: "Collapsable Sidebar" and "Auto-Resize Columns" feature break "Stick Table Headers" feature.'},
+    {version: '9.26+2026-02-16', description: 'Fix & Enhancement: (1) Removed redundant "Unhighlight prefilter" button (functionality now in dynamic prefilter toggle button). (2) Fixed "Toggle highlighting" button restore functionality - now correctly restores filter highlights by re-running runFilter() instead of manual highlight re-application. (3) Added 🎨 emoji to dynamic prefilter button text (e.g., "🎨 2 rows prefiltered: \'Westfalenhalle\'").'},
     {version: '9.26.0+2026-02-16', description: 'Major Enhancement - Split Toggle Functionality: (1) Created separate prefilter toggle button that only appears when data is loaded from disk with a prefilter. Shows dynamic text like "2 rows prefiltered: \'Westfalenhalle\'" and only toggles prefilter highlighting. (2) "Toggle highlighting" button now only toggles global filter and column filter highlighting, not prefilter. (3) Separate tracking for prefilter and filter highlight states with independent save/restore functions. (4) Both buttons change background color to their respective highlight colors when highlighting is disabled.'},
     {version: '9.25.0+2026-02-16', description: 'Major Enhancement: (1) "Unhighlight all" button renamed to "Toggle highlighting" with toggle functionality - click once to remove all highlights, click again to restore them. (2) Prefilter information now displayed in button text instead of separate span (e.g., "2 rows prefiltered: \'Westfalenhalle\'"). (3) Button changes background color to highlight color when highlighting is disabled, providing visual feedback. (4) Improved highlight save/restore using re-application of highlighting parameters rather than DOM manipulation.'},
     {version: '9.24.2+2026-02-16', description: 'Fix: Prefiltering when loading from disk now works correctly. Updated fileInput.onchange handler to read filter parameters (query, case sensitivity, regex) from UI elements before calling loadTableDataFromDisk().'},
@@ -2386,11 +2387,13 @@ let changelog = [
     }
 
     /**
+     *
      * Restore original content/sidebar state
      */
     function restoreOriginalScrollState() {
         const content = document.getElementById('content');
         const sidebar = document.getElementById('sidebar');
+        const page = document.getElementById('page');
 
         if (content) {
             content.style.overflowX = '';
@@ -2399,8 +2402,17 @@ let changelog = [
 
         if (sidebar) {
             sidebar.style.position = '';
+            sidebar.style.left = '';
             sidebar.style.top = '';
             sidebar.style.alignSelf = '';
+            sidebar.style.zIndex = '';
+            sidebar.style.backgroundColor = '';
+            sidebar.style.boxShadow = '';
+        }
+
+        if (page) {
+            page.style.minWidth = '';
+            page.style.width = '';
         }
     }
 
@@ -2485,20 +2497,31 @@ let changelog = [
         // Enable horizontal scrolling in content area
         const content = document.getElementById('content');
         const sidebar = document.getElementById('sidebar');
+        const page = document.getElementById('page');
 
         if (content) {
-            // Make content scrollable horizontally
-            content.style.overflowX = 'auto';
+            // Make content expand to fit wide tables without breaking vertical sticky headers
+            content.style.overflowX = 'visible';
             content.style.overflowY = 'visible';
 
-            // Prevent sidebar from scrolling with content
+            // Prevent sidebar from scrolling out of view horizontally and vertically
             if (sidebar) {
                 sidebar.style.position = 'sticky';
+                sidebar.style.left = '0';
                 sidebar.style.top = '0';
                 sidebar.style.alignSelf = 'flex-start';
+                sidebar.style.zIndex = '105'; // Must be above sticky table headers (z-index: 100)
+                sidebar.style.backgroundColor = window.getComputedStyle(document.body).backgroundColor || '#ffffff';
+                sidebar.style.boxShadow = '2px 0 5px rgba(0,0,0,0.1)';
             }
 
-            Lib.debug('resize', 'Enabled horizontal scrolling in content area');
+            // Allow the page container to expand beyond viewport width
+            if (page) {
+                page.style.minWidth = '100%';
+                page.style.width = 'fit-content';
+            }
+
+            Lib.debug('resize', 'Enabled horizontal scrolling at window level to preserve sticky headers');
         }
 
         tables.forEach((table, tableIndex) => {
@@ -3051,8 +3074,8 @@ let changelog = [
 
             /* Ensure content can scroll when needed without overlapping sidebar */
             #content {
-                overflow-x: auto;
-                overflow-y: auto;
+                /* overflow-x: auto; REMOVED: Breaks vertical sticky headers */
+                /* overflow-y: auto; REMOVED: Breaks vertical sticky headers */
             }
 
             /* Collapsed sidebar state */
@@ -3073,8 +3096,9 @@ let changelog = [
                 margin-left: 0 !important;
                 padding-right: 10px !important;
                 padding-left: 10px !important;
-                width: calc(100vw - 20px) !important;
-                max-width: calc(100vw - 20px) !important;
+                /* width: calc(100vw - 20px) !important; REMOVED to allow horizontal stretch */
+                /* max-width: calc(100vw - 20px) !important; REMOVED to allow horizontal stretch */
+                width: fit-content !important;
                 min-width: calc(100vw - 20px) !important;
                 box-sizing: border-box !important;
             }

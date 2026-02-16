@@ -35554,7 +35554,11 @@ go with "Sticky Headers - See columns while scrolling", but include the filter r
 
 * Export CSV
 ** remove "▶" and others before exporting
-** add more formats, JSON, ORG ,pde, etc
+** add more formats, JSON, ORG
+*** JSON
+*** ORG-Mode
+*** XML
+*** Excel
 
 ** DONE create info popup
 
@@ -35848,8 +35852,7 @@ This actually works now after initial rendering of the page, also after pressing
 pressing the "Restore Width" button and returning to the original state. In that case the resize handle is not visible
 anymore.
 
-** TODO fix "Release" column changes width when actually manually dragging the "Artist" column
-
+** DONE fix "Release" column changes width when actually manually dragging the "Artist" column
 ** DONE When calculating the minimum width of a column take the sort symbols into account e.g.the "Date" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?page=1&direction=1&link_type_id=869
 
 In the uploaded userscript
@@ -35859,7 +35862,7 @@ cells acorss the whole table never exceeds the lenght of the column headr name. 
 "⇅", "▲" and "▼", which are always present for sorting purposes in the column header cell, also need to be taken into
 account when calculating the length for rendering purposes when pressing the "Auto-Resize" button
 
-** TODO Bug
+** DONE Bug
 *** bug
 
 For example on this URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c when "Visible Columns"
@@ -38715,4 +38718,18 @@ Add keyboard navigation in the following pull-down menues. When clicked, they sh
 - "Density": up/down, immediately render the new table layout (user feedback), when using the up/down keys, as if the user clicked on the menu entry. Return should use the currently selected and close the dialog
 - "Export": Up/down/Return should use the currently selected and close the dialog
 
+
+* multi-column sort
+
+* sensible defaults for configuration options
+
+* overwhoule of the logging statements... make lots of stuff debug stements
+
+* TODO collapsable sidebar breaks sticky headers
+
+* TODO Auto-Resize breaks sticky headers
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+The "Auto-Resize" (function toggleAutoResizeColumns()) feature breaks the "sticky headers" "function applyStickyHeaders()" feature, please investigate and fix
 
