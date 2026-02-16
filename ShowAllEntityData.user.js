@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.24.1+2026-02-16
+// @version      9.24.2+2026-02-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.24.2+2026-02-16', description: 'Fix: Prefiltering when loading from disk now works correctly. Updated fileInput.onchange handler to read filter parameters (query, case sensitivity, regex) from UI elements before calling loadTableDataFromDisk().'},
     {version: '9.24.1+2026-02-16', description: 'Fix: Resolved "Cannot access settingsBtn before initialization" error by moving settingsBtn declaration before its first usage in controlsContainer.'},
     {version: '9.24.0+2026-02-16', description: 'UI Enhancement: (1) Clear column filter buttons now render ✗ symbol in red for better visibility - refactored into createClearColumnFiltersButton() helper function to avoid code duplication. (2) Settings button (⚙️) relocated: initially appears after Load from Disk button, then always as last button after data is loaded. (3) Added dividers " | " between button groups: initially between action buttons and Save to Disk; after data load between Load from Disk and Auto-Resize.'},
     {version: '9.23.0+2026-02-16', description: 'UI Restructuring: Moved global status display and info display from h1 header to subheader area. Now appears one line below h1 header inside <p class="subheader"> after entity link (for all page types except search). For search pages, displays immediately below h1. Aligns with controls container for consistent layout.'},
@@ -3799,7 +3800,17 @@ let changelog = [
     fileInput.type = 'file';
     fileInput.accept = '.json';
     fileInput.style.display = 'none';
-    fileInput.onchange = (e) => loadTableDataFromDisk(e.target.files[0]);
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Read filter parameters from UI elements
+        const filterQueryRaw = preFilterInput.value.trim();
+        const isCaseSensitive = preFilterCaseCheckbox.checked;
+        const isRegExp = preFilterRxCheckbox.checked;
+
+        loadTableDataFromDisk(file, filterQueryRaw, isCaseSensitive, isRegExp);
+    };
 
     loadFromDiskBtn.onclick = () => showLoadFilterDialog();
 

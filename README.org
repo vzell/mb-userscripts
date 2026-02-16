@@ -38533,10 +38533,27 @@ Add keyboard navigation in the following pull-down menues. When clicked, they sh
 * Add keyboard handling for the complete application
 
 
-*
+* logic for prefiltering rows
 
 The logic for prefiltering rows when loading from disk, somehow doesn't work anymore
 
+#+begin_example
+let globalRegex = null;
+        if (filterQueryRaw && isRegExp) {
+            try {
+                globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
+            } catch (e) {
+                alert('Invalid Regular Expression in load filter field. Load aborted.');
+                // Reset file input so change event fires again if they pick same file
+                fileInput.value = '';
+                return;
+            }
+        }
+
+        Lib.info('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}`);
+#+end_example
+
+here the console log
 
 #+begin_example
 [VZ-ShowAllEntities: series-releases] 📝 Updated load filter history. Current count: 5 
