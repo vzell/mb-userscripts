@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.16.0+2026-02-15
+// @version      9.17.1+2026-02-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,8 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.17.1+2026-02-15', description: 'Fix: Moved ⚙️ Settings button to h1 header (entity name header) instead of h2 header as originally intended. Button floats right and remains at far right edge when window resizes.'},
+    {version: '9.17.0+2026-02-15', description: 'Fix: ⚙️ Settings button now properly positioned at far right of h2 header with float:right (responsive to window size). Fixed Ctrl-F shortcut to properly focus global filter. Fixed Stats panel to show correct statistics across all tables (Total/Visible/Hidden Columns, Filtered Out rows, Global Filter value).'},
     {version: '9.16.0+2026-02-15', description: 'UI Polish: Added tooltips to unhighlight buttons, clear filter buttons, and all Show all/RG/release buttons. Added global ⚙️ Settings button in h2 header (right-aligned) to open settings manager dialog.'},
     {version: '9.15.0+2026-02-15', description: 'Fix: Sub-table status displays (filter/sort) now properly appear in h3 headers on multi-table pages (like release-group pages). Previously only showed on initial render, not when filtering. Global filter status now displays correctly in h2 header for all multi-table page types.'},
     {version: '9.14.0+2026-02-15', description: 'Enhancement: "Visible Columns" button now displays in red when not all columns are visible, providing visual feedback about hidden columns.'},
@@ -1096,7 +1098,7 @@ Note: Shortcuts work when not typing in input fields
             // Ctrl/Cmd + F: Focus global filter
             if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
                 e.preventDefault();
-                const filterInput = document.querySelector('#mb-show-all-controls-container input[placeholder*="Global Filter"]');
+                const filterInput = document.querySelector('input[placeholder*="Global Filter"]');
                 if (filterInput) {
                     filterInput.focus();
                     filterInput.select();
@@ -1197,44 +1199,56 @@ Note: Shortcuts work when not typing in input fields
             return;
         }
 
-        const table = document.querySelector('table.tbl');
-        if (!table) {
+        const tables = document.querySelectorAll('table.tbl');
+        if (tables.length === 0) {
             alert('No table found to show statistics');
             Lib.warn('stats', 'No table found for statistics panel');
             return;
         }
 
-        // Collect statistics
-        const allRows = table.querySelectorAll('tbody tr');
-        const visibleRows = Array.from(allRows).filter(r => r.style.display !== 'none');
-        const headers = table.querySelectorAll('thead th');
+        // Collect statistics across ALL tables
+        let totalRowCount = 0;
+        let visibleRowCount = 0;
+        let totalColumnCount = 0;
+        let visibleColumnCount = 0;
 
-        // Count visible columns
-        const visibleColumns = Array.from(headers).filter(h => h.style.display !== 'none').length;
-        const totalColumns = headers.length;
+        tables.forEach(table => {
+            const rows = table.querySelectorAll('tbody tr');
+            totalRowCount += rows.length;
+            visibleRowCount += Array.from(rows).filter(r => r.style.display !== 'none').length;
+        });
+
+        // Get column count from first table's header row (not filter row)
+        const firstTable = tables[0];
+        const headerRow = firstTable.querySelector('thead tr:first-child');
+        if (headerRow) {
+            const headers = Array.from(headerRow.cells);
+            totalColumnCount = headers.length;
+            visibleColumnCount = headers.filter(h => h.style.display !== 'none').length;
+        }
 
         // Calculate memory estimate (rough)
         const avgRowSize = 100; // bytes per row (rough estimate)
-        const memoryKB = Math.round(allRows.length * avgRowSize / 1024);
+        const memoryKB = Math.round(totalRowCount * avgRowSize / 1024);
 
         // Get filter status
-        const globalFilterInput = document.querySelector('#mb-show-all-controls-container input[placeholder*="Global Filter"]');
+        const globalFilterInput = document.querySelector('input[placeholder*="Global Filter"]');
         const globalFilter = globalFilterInput?.value || '';
         const columnFilters = Array.from(document.querySelectorAll('.mb-col-filter-input'))
             .filter(inp => inp.value)
             .length;
 
         // Calculate percentages
-        const rowPercentage = allRows.length > 0
-            ? Math.round((visibleRows.length / allRows.length) * 100)
+        const rowPercentage = totalRowCount > 0
+            ? Math.round((visibleRowCount / totalRowCount) * 100)
             : 100;
-        const colPercentage = totalColumns > 0
-            ? Math.round((visibleColumns / totalColumns) * 100)
+        const colPercentage = totalColumnCount > 0
+            ? Math.round((visibleColumnCount / totalColumnCount) * 100)
             : 100;
 
         // Count hidden items
-        const hiddenRows = allRows.length - visibleRows.length;
-        const hiddenColumns = totalColumns - visibleColumns;
+        const hiddenRows = totalRowCount - visibleRowCount;
+        const hiddenColumns = totalColumnCount - visibleColumnCount;
 
         // Create panel
         const statsPanel = document.createElement('div');
@@ -1262,19 +1276,19 @@ Note: Shortcuts work when not typing in input fields
             </div>
             <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px 15px; line-height: 1.8;">
                 <div style="font-weight: 600;">Total Rows:</div>
-                <div>${allRows.length.toLocaleString()}</div>
+                <div>${totalRowCount.toLocaleString()}</div>
 
                 <div style="font-weight: 600;">Visible Rows:</div>
-                <div>${visibleRows.length.toLocaleString()} <span style="color: #666; font-size: 0.9em;">(${rowPercentage}%)</span></div>
+                <div>${visibleRowCount.toLocaleString()} <span style="color: #666; font-size: 0.9em;">(${rowPercentage}%)</span></div>
 
                 <div style="font-weight: 600;">Filtered Out:</div>
                 <div style="color: ${hiddenRows > 0 ? '#f44336' : '#666'};">${hiddenRows.toLocaleString()}</div>
 
                 <div style="font-weight: 600;">Total Columns:</div>
-                <div>${totalColumns}</div>
+                <div>${totalColumnCount}</div>
 
                 <div style="font-weight: 600;">Visible Columns:</div>
-                <div>${visibleColumns} <span style="color: #666; font-size: 0.9em;">(${colPercentage}%)</span></div>
+                <div>${visibleColumnCount} <span style="color: #666; font-size: 0.9em;">(${colPercentage}%)</span></div>
 
                 <div style="font-weight: 600;">Hidden Columns:</div>
                 <div style="color: ${hiddenColumns > 0 ? '#f44336' : '#666'};">${hiddenColumns}</div>
@@ -3242,14 +3256,10 @@ Note: Shortcuts work when not typing in input fields
     progressContainer.appendChild(progressBar);
     progressContainer.appendChild(progressText);
 
-    // Add spacer to push settings button to the right
-    const settingsSpacer = document.createElement('span');
-    settingsSpacer.style.cssText = 'flex-grow: 1; min-width: 20px;';
-
-    // Add global settings/configuration button
+    // Add global settings/configuration button (will be added to h1 header with float:right)
     const settingsBtn = document.createElement('button');
-    settingsBtn.textContent = '⚙️ Settings';
-    settingsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; display: inline-flex; align-items: center; justify-content: center; transition:transform 0.1s, box-shadow 0.1s;';
+    settingsBtn.textContent = '⚙️';
+    settingsBtn.style.cssText = 'font-size:1em; padding:4px 8px; cursor:pointer; height:auto; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; float:right; margin-left:10px; transition:transform 0.1s, box-shadow 0.1s;';
     settingsBtn.type = 'button';
     settingsBtn.title = 'Open settings manager to configure script behavior';
     settingsBtn.onclick = () => {
@@ -3438,8 +3448,6 @@ Note: Shortcuts work when not typing in input fields
     controlsContainer.appendChild(progressContainer);
     // Filter container is NOT appended here anymore; moved to H2 later
     controlsContainer.appendChild(timerDisplay);
-    controlsContainer.appendChild(settingsSpacer);
-    controlsContainer.appendChild(settingsBtn);
 
     const style = document.createElement('style');
     style.textContent = `
@@ -3514,8 +3522,10 @@ Note: Shortcuts work when not typing in input fields
 
     if (headerContainer.tagName === 'A') {
         headerContainer.after(controlsContainer);
+        headerContainer.after(settingsBtn);
     } else {
         headerContainer.appendChild(controlsContainer);
+        headerContainer.appendChild(settingsBtn);
     }
 
     let allRows = [];

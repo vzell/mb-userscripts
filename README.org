@@ -38099,7 +38099,21 @@ Visible Columns: 24 (86%)       - 12 columns when called
 Hidden Columns: 4               - hidden columns were 2 when called
 Global Filter: none             - there actually was one when called 
 
+** 2
+
+Oops I made instruction error,  the "Configuration" button should be floating at the very right of the h1 header not h2
+
 * add more exports
+
+The "Configuration" button is now where it is expected, but gives when pressed in a browser native dialog:
+
+#+begin_example
+Settings interface not available
+#+end_example
+
+although I can call the configuration dialog either from the pull-down menu entry below "Editing" or from the Tampermonkey Menu entry for the userscript. Please fix
+
+Additionally:
 
 Please rename the "Export to CSV" button to "Export" and when clicked a pull-down menu should allow to choose what kind of export format should be save to the filesystem:
 
@@ -38111,4 +38125,19 @@ The implementation for "Emacs Org-Mode" is trivial, more or less like CVS (even 
 the column values should be separated by " | ", every row should start with a "| " and additionally end with a " |"
 the dividing row between the header line and the tabledata should be "|---|"
 
+- Please also store the data when pressing the "Save to Disk" button on the filesystem in gzip format or whatever format
+is nowadays recommended (especially for large datasets). Please also tell me the performance improvements whith this
+change.
 
+
+
+* Library
+
+#+begin_example
+return {
+    settings: settingsInterface.values,
+    settingsInterface: settingsInterface,  // ADD THIS LINE
+    showSettings: () => settingsInterface.showModal(),  // ADD THIS LINE
+    // ... rest of the return object
+};
+#+end_example
