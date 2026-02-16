@@ -38326,7 +38326,7 @@ And here the code block
   "showShortcutsHelp" to follow the same design as for the "Density" button implementation, or at least make it more modern and don't use that black background
   
   
-* DONE Add a new infoDisplay area for stuff like
+* TODO Add a new infoDisplay area for stuff like
 ** DONE initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -38344,6 +38344,64 @@ In the uploaded userscript "ShowAllEntityData.user.js"
 
 The placement should be right after the '<span id="mb-global-status-display"'. Right now these messages just overwrite
 sorting or filtering related messages.
+** TODO
+
+for pages of type https://musicbrainz.org/release/7840e80b-f42b-4ade-99df-dd722210485a/discids
+for pages of type https://musicbrainz.org/release/7840e80b-f42b-4ade-99df-dd722210485a/aliases
+
+place the infoDisplay after the "(see all versions of this release, <number of releases> available)"
+
+#+begin_example
+    // Position status displays based on pageType
+    if (pageType === 'search') {
+        // For search pages, place immediately below h1 header
+        const h1 = headerContainer.tagName === 'H1' ? headerContainer : headerContainer.closest('h1');
+        if (h1) {
+            const statusWrapper = document.createElement('div');
+            statusWrapper.style.cssText = 'margin-top:5px; margin-left:0px;';
+            statusWrapper.appendChild(statusDisplaysContainer);
+            h1.parentNode.insertBefore(statusWrapper, h1.nextSibling);
+        }
+    } else {
+        // For all other page types, place inside <p class="subheader"> after the <bdi><a href structure
+        const subheader = document.querySelector('p.subheader');
+        if (subheader) {
+            // Find the last <bdi><a> element in the subheader
+            const bdiLinks = subheader.querySelectorAll('bdi a');
+            const lastBdiLink = bdiLinks[bdiLinks.length - 1];
+
+            if (lastBdiLink) {
+                // Insert after the last bdi link's parent bdi
+                const bdi = lastBdiLink.closest('bdi');
+                if (bdi) {
+                    // Create a wrapper to maintain spacing
+                    const statusWrapper = document.createElement('span');
+                    statusWrapper.style.cssText = 'margin-left:10px;';
+                    statusWrapper.appendChild(statusDisplaysContainer);
+
+                    // Insert after the bdi element
+                    if (bdi.nextSibling) {
+                        bdi.parentNode.insertBefore(statusWrapper, bdi.nextSibling);
+                    } else {
+                        bdi.parentNode.appendChild(statusWrapper);
+                    }
+                }
+            } else {
+                // Fallback: append to end of subheader
+                subheader.appendChild(statusDisplaysContainer);
+            }
+        } else {
+            // Fallback: place below h1 if no subheader found
+            const h1 = headerContainer.tagName === 'H1' ? headerContainer : headerContainer.closest('h1');
+            if (h1) {
+                const statusWrapper = document.createElement('div');
+                statusWrapper.style.cssText = 'margin-top:5px; margin-left:0px;';
+                statusWrapper.appendChild(statusDisplaysContainer);
+                h1.parentNode.insertBefore(statusWrapper, h1.nextSibling);
+            }
+        }
+    }
+#+end_example
 
 ** DONE place the infoDisplay after "~  ... entity" but aligned with the "Show all button"
 
@@ -38360,7 +38418,7 @@ Do this for all pageTypes except pageType="search" where the placement should be
 
 In all cases the alignment should be with the '<div id="mb-show-all-controls-container"'
 
-** reorg
+** DONE reorg
 *** 1
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -38393,10 +38451,14 @@ Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s
 
 It should break at the "\n" in the above exmaple
 
+
 * ✗ Clear all COLUMN filters
 
+In the uploaded userscript "ShowAllEntityData.user.js"
 
-Also in all occurences of
+do the following:
+
+** In all occurences of
 
 #+begin_example
 clearSubBtn.textContent = '✗ Clear all COLUMN filters';
@@ -38416,13 +38478,27 @@ render the "✗" char in red, like in the code
     clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
 #+end_example
 
-implement something like this
+Check if possible refactoring is needed, as this is used in lots of places.
+
+** The current rendering location of the button with title "Open settings manager to configure script behavior"
 
 #+begin_example
-Cleaner & Reusable Version (Recommended)
+<button type="button" title="Open settings manager to configure script behavior" style="font-size: 1em; padding: 4px 8px; cursor: pointer; height: auto; box-sizing: border-box; border-radius: 6px; background-color: rgb(96, 125, 139); color: white; border: 1px solid rgb(84, 110, 122); float: right; margin-left: 10px; transition: transform 0.1s, box-shadow 0.1s;">⚙️</button>
+#+end_example
+
+should be
+
+1.) right after the "Load from Disk" button inside the '<div id="mb-show-all-controls-container"' when the initial page is rendered
+2.) after an action button is pressed, right after the last button again in '<div id="mb-show-all-controls-container"' (there are some more now), on the finla rendered page; so it should always be that last button
+
+** Place a divider symbol " | " between the initial action button(s) and the "Save to Disk" button, and after the final page is rendered also between the "Load from Disk" and the "Auto-Resize" button
+
+ 
+** Cleaner & Reusable Version (Recommended)
 
 If you want to reuse this pattern elsewhere (since you’re using it multiple times in your project), create a small helper inside your library:
 
+#+begin_example
 function createRedXLabel(text) {
     const fragment = document.createDocumentFragment();
 
@@ -38436,6 +38512,7 @@ function createRedXLabel(text) {
 
     return fragment;
 }
+#+end_example
 
 
 Then simply use:
@@ -38443,9 +38520,6 @@ Then simply use:
 clearSubBtn.textContent = '';
 clearSubBtn.appendChild(createRedXLabel('Clear all COLUMN filters'));
 
-
-Much cleaner and future-proof.
-#+end_example
 
 * Add keyboard navigation in the pull-down menues
 
@@ -38458,3 +38532,44 @@ Add keyboard navigation in the following pull-down menues. When clicked, they sh
 
 * Add keyboard handling for the complete application
 
+
+*
+
+The logic for prefiltering rows when loading from disk, somehow doesn't work anymore
+
+
+#+begin_example
+[VZ-ShowAllEntities: series-releases] 📝 Updated load filter history. Current count: 5 
+[VZ-ShowAllEntities: series-releases] 📝 Load confirmed. Triggering file selector... 
+[VZ-ShowAllEntities: series-releases] 📝 Loading data from file: mb-series-releases-2026-02-16T19-36-22.json.gz. Prefilter active: false 
+[VZ-ShowAllEntities: series-releases] 📝 Decompressed 42,406 bytes → 1,149,781 bytes in 9.80ms 
+[VZ-ShowAllEntities: series-releases] 📝 Loaded data version 1.0 from 2026-02-16T19:36:21.969Z (File total: 354 rows) 
+[VZ-ShowAllEntities: series-releases] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntities: series-releases] 🧹 Running cleanup after initial data load from disk... 
+[VZ-ShowAllEntities: series-releases] 🎨 Starting renderFinalTable with 354 rows. 
+[VZ-ShowAllEntities: series-releases] 🎨 Final table structure → headers=14, rowCells=14 
+[VZ-ShowAllEntities: series-releases] 🎨 Fast render: Injected 354 rows into DOM. 
+[VZ-ShowAllEntities: series-releases] 🧹 cleanupHeaders() called → existing headers=[# | ⇅ Release ▲▼ | ⇅ Artist ▲▼ | ⇅ Format ▲▼ | ⇅ Tracks ▲▼ | ⇅ Country/Date ▲▼ | ⇅ Label ▲▼ | ⇅ Catalog# ▲▼ | ⇅ Barcode ▲▼ | ⇅ Tagger ▲▼ | ⇅ Country ▲▼ | ⇅ Date ▲▼ | ⇅ MB-Name ▲▼ | ⇅ Comment ▲▼] 
+[VZ-ShowAllEntities: series-releases] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntities: series-releases] 🧹 Running final cleanup... 
+[VZ-ShowAllEntities: series-releases] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ-ShowAllEntities: series-releases] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntities: series-releases] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntities: series-releases] 🖥️ Sticky headers styles already applied 
+[VZ-ShowAllEntities: series-releases] 🖥️ Auto-resize button already exists, skipping 
+[VZ-ShowAllEntities: series-releases] 🖥️ Column visibility toggle already exists, skipping 
+[VZ-ShowAllEntities: series-releases] 🖥️ Density control button already exists, skipping 
+[VZ-ShowAllEntities: series-releases] 🖥️ Stats button already exists, skipping 
+[VZ-ShowAllEntities: series-releases] 🖥️ Shortcuts help button already exists, skipping 
+[VZ-ShowAllEntities: series-releases] 🖥️ Export button already exists, skipping 
+[VZ-ShowAllEntities: series-releases] 🎨 Starting updateH2Count: filtered=354, total=354 
+[VZ-ShowAllEntities: series-releases] 🎨 Searching for target H2. Current pageType: series-releases 
+[VZ-ShowAllEntities: series-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: series-releases] 🎨 Stopping H2 search at index 2: table no longer follows this header. 
+[VZ-ShowAllEntities: series-releases] 🎨 Target element identified: "▼Releases(354)✕CcRx🎨 Unhighli..." 
+[VZ-ShowAllEntities: series-releases] 🎨 Removing existing row count stat span. 
+[VZ-ShowAllEntities: series-releases] 🎨 Inserting count span before referenceNode: SPAN 
+[VZ-ShowAllEntities: series-releases] 🎨 filterContainer is already attached to targetH2. 
+[VZ-ShowAllEntities: series-releases] 🎨 Updated header/target ▼Releases(354)✕CcRx🎨 Unhighli count: (354) 
+[VZ-ShowAllEntities: series-releases] 📝 Successfully loaded 354 rows from disk! 
+#+end_example

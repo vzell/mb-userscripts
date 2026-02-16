@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.23.0+2026-02-16
+// @version      9.24.1+2026-02-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,8 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.24.1+2026-02-16', description: 'Fix: Resolved "Cannot access settingsBtn before initialization" error by moving settingsBtn declaration before its first usage in controlsContainer.'},
+    {version: '9.24.0+2026-02-16', description: 'UI Enhancement: (1) Clear column filter buttons now render ✗ symbol in red for better visibility - refactored into createClearColumnFiltersButton() helper function to avoid code duplication. (2) Settings button (⚙️) relocated: initially appears after Load from Disk button, then always as last button after data is loaded. (3) Added dividers " | " between button groups: initially between action buttons and Save to Disk; after data load between Load from Disk and Auto-Resize.'},
     {version: '9.23.0+2026-02-16', description: 'UI Restructuring: Moved global status display and info display from h1 header to subheader area. Now appears one line below h1 header inside <p class="subheader"> after entity link (for all page types except search). For search pages, displays immediately below h1. Aligns with controls container for consistent layout.'},
     {version: '9.22.0+2026-02-16', description: 'Enhancement: Added dedicated infoDisplay area for general status messages (Auto-resize, Density, Export, Load operations) separate from filtering/sorting status. These messages no longer overwrite filter/sort status and appear in their own display area after the global status display.'},
     {version: '9.21.1+2026-02-16', description: 'Fix: Escape key two-press behavior in filter fields now works correctly. Removed conflicting old Escape handlers that were immediately clearing and blurring the field. First press now properly clears and keeps focus, second press blurs as intended.'},
@@ -503,6 +505,74 @@ let changelog = [
     }
 
     /**
+     * Create a clear column filters button with a red ✗ symbol
+     * This is a helper function to avoid code duplication across multiple locations
+     * @param {HTMLTableElement} table - The table this button will clear filters for
+     * @param {string} categoryName - The name of the table category for logging
+     * @returns {HTMLButtonElement} The created button element
+     */
+    function createClearColumnFiltersButton(table, categoryName) {
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'mb-subtable-clear-btn';
+        clearBtn.type = 'button';
+        clearBtn.title = 'Clear all column filters for this table';
+
+        // Create red ✗ symbol
+        const xSymbol = document.createElement('span');
+        xSymbol.textContent = '✗ ';
+        xSymbol.style.color = 'red';
+        xSymbol.style.fontSize = '1.0em';
+        xSymbol.style.fontWeight = 'bold';
+
+        clearBtn.appendChild(xSymbol);
+        clearBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
+
+        clearBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            clearSubTableColumnFilters(table, categoryName);
+        };
+
+        return clearBtn;
+    }
+
+    /**
+     * Ensure settings button is always the last button in controls container
+     * Also adds a divider before the Auto-Resize button after data is loaded
+     */
+    function ensureSettingsButtonIsLast() {
+        const controlsContainer = document.getElementById('mb-show-all-controls-container');
+        if (!controlsContainer) return;
+
+        const settingsBtn = controlsContainer.querySelector('button[title*="Open settings manager"]');
+        if (!settingsBtn) return;
+
+        // Move settings button to the end if it's not already
+        if (settingsBtn.nextSibling) {
+            controlsContainer.appendChild(settingsBtn);
+        }
+
+        // Add divider between Load from Disk and Auto-Resize if not already present
+        const loadBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Load from Disk'));
+        const resizeBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Auto-Resize') || btn.textContent.includes('Restore Width'));
+
+        if (loadBtn && resizeBtn && !controlsContainer.querySelector('.mb-button-divider-after-load')) {
+            // Remove initial divider if present
+            const initialDivider = controlsContainer.querySelector('.mb-button-divider-initial');
+            if (initialDivider) {
+                initialDivider.remove();
+            }
+
+            // Add divider after Load from Disk button
+            const divider = document.createElement('span');
+            divider.textContent = ' | ';
+            divider.className = 'mb-button-divider-after-load';
+            divider.style.cssText = 'color:#999; margin:0 4px;';
+            loadBtn.after(divider);
+        }
+    }
+
+    /**
      * Add a column visibility toggle button and menu to the controls
      * Allows users to show/hide columns in the table
      * @param {HTMLTableElement} table - The table to add controls for
@@ -764,6 +834,7 @@ let changelog = [
         // Append to controls container
         controlsContainer.appendChild(toggleBtn);
         Lib.info('ui', 'Column visibility toggle added to controls');
+        ensureSettingsButtonIsLast();
 
         // Append menu to body
         document.body.appendChild(menu);
@@ -1281,6 +1352,7 @@ let changelog = [
 
         controlsContainer.appendChild(exportBtn);
         Lib.info('ui', 'Export button with dropdown menu added to controls');
+        ensureSettingsButtonIsLast();
 
         // Append menu to body
         document.body.appendChild(exportMenu);
@@ -1675,6 +1747,7 @@ let changelog = [
 
         controlsContainer.appendChild(helpBtn);
         Lib.info('ui', 'Keyboard shortcuts help button added to controls');
+        ensureSettingsButtonIsLast();
     }
 
     /**
@@ -1856,6 +1929,7 @@ let changelog = [
 
         controlsContainer.appendChild(statsBtn);
         Lib.info('ui', 'Stats button added to controls');
+        ensureSettingsButtonIsLast();
     }
 
     /**
@@ -2087,6 +2161,7 @@ let changelog = [
         // Append to controls container
         controlsContainer.appendChild(densityBtn);
         Lib.info('ui', 'Density control button added to controls');
+        ensureSettingsButtonIsLast();
 
         // Append menu to body
         document.body.appendChild(menu);
@@ -2639,6 +2714,7 @@ let changelog = [
 
         controlsContainer.appendChild(resizeBtn);
         Lib.info('ui', 'Auto-resize button added to controls');
+        ensureSettingsButtonIsLast();
     }
 
     const SCRIPT_ID = "vzell-mb-show-all-entities";
@@ -3692,6 +3768,13 @@ let changelog = [
         allActionButtons.push(eb);
     });
 
+    // Add divider between action buttons and Save to Disk button
+    const initialDivider = document.createElement('span');
+    initialDivider.textContent = ' | ';
+    initialDivider.className = 'mb-button-divider-initial';
+    initialDivider.style.cssText = 'color:#999; margin:0 4px;';
+    controlsContainer.appendChild(initialDivider);
+
     // Add Save to Disk button
     const saveToDiskBtn = document.createElement('button');
     saveToDiskBtn.textContent = '💾 Save to Disk';
@@ -3725,71 +3808,9 @@ let changelog = [
         controlsContainer.appendChild(fileInput);
     }
 
-    // --- Pre-load Filter UI elements ---
-    const preFilterContainer = document.createElement('span');
-    preFilterContainer.style.cssText = 'display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding-left:6px; border-left:1px solid #ccc; vertical-align:middle; height:24px;';
-
-    const preFilterInput = document.createElement('input');
-    preFilterInput.type = 'text';
-    preFilterInput.placeholder = 'Filter data load...';
-    preFilterInput.title = 'Filter rows while loading from disk';
-    preFilterInput.style.cssText = 'font-size:0.8em; padding:2px 4px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box;';
-
-    const preFilterCaseLabel = document.createElement('label');
-    preFilterCaseLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
-    const preFilterCaseCheckbox = document.createElement('input');
-    preFilterCaseCheckbox.type = 'checkbox';
-    preFilterCaseCheckbox.style.marginRight = '2px';
-    preFilterCaseLabel.appendChild(preFilterCaseCheckbox);
-    preFilterCaseLabel.appendChild(document.createTextNode('Cc'));
-    preFilterCaseLabel.title = 'Case Sensitive (Load)';
-
-    const preFilterRxLabel = document.createElement('label');
-    preFilterRxLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
-    const preFilterRxCheckbox = document.createElement('input');
-    preFilterRxCheckbox.type = 'checkbox';
-    preFilterRxCheckbox.style.marginRight = '2px';
-    preFilterRxLabel.appendChild(preFilterRxCheckbox);
-    preFilterRxLabel.appendChild(document.createTextNode('Rx'));
-    preFilterRxLabel.title = 'RegExp (Load)';
-
-    const preFilterMsg = document.createElement('span');
-    preFilterMsg.id = 'mb-preload-filter-msg';
-    preFilterMsg.style.cssText = 'font-size:0.8em; color:red; margin-left:4px; font-weight:bold; white-space:nowrap;';
-
-    const stopBtn = document.createElement('button');
-    stopBtn.textContent = 'Stop';
-    stopBtn.style.cssText = 'display:none; font-size:0.8em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box; border-radius:6px;';
-
-    const globalStatusDisplay = document.createElement('span');
-    globalStatusDisplay.id = 'mb-global-status-display';
-    globalStatusDisplay.style.cssText = 'font-size:0.70em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
-
-    const infoDisplay = document.createElement('span');
-    infoDisplay.id = 'mb-info-display';
-    infoDisplay.style.cssText = 'font-size:0.70em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; margin-left:10px;';
-
-
-    const progressContainer = document.createElement('div');
-    progressContainer.id = 'mb-fetch-progress-container';
-    progressContainer.style.cssText = 'display:none; width:300px; height:26px; background-color:#eee; border:1px solid #ccc; border-radius:3px; overflow:hidden; position:relative; vertical-align:middle;';
-
-    const progressBar = document.createElement('div');
-    progressBar.id = 'mb-fetch-progress-bar';
-    progressBar.style.cssText = 'width:0%; height:100%; transition: width 0.3s, background-color 0.3s; position:absolute; left:0; top:0;';
-
-    const progressText = document.createElement('div');
-    progressText.id = 'mb-fetch-progress-text';
-    progressText.style.cssText = 'position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:black; z-index:1; pointer-events:none; padding: 0 10px; box-sizing: border-box;';
-    progressText.style.whiteSpace = 'pre-line';
-
-    progressContainer.appendChild(progressBar);
-    progressContainer.appendChild(progressText);
-
-    // Add global settings/configuration button (will be added to h1 header with float:right)
+    // Add global settings/configuration button
     const settingsBtn = document.createElement('button');
     settingsBtn.textContent = '⚙️';
-    settingsBtn.style.cssText = 'font-size:1em; padding:4px 8px; cursor:pointer; height:auto; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; float:right; margin-left:10px; transition:transform 0.1s, box-shadow 0.1s;';
     settingsBtn.type = 'button';
     settingsBtn.title = 'Open settings manager to configure script behavior';
     settingsBtn.onclick = () => {
@@ -3830,6 +3851,71 @@ let changelog = [
             alert('Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager');
         }
     };
+
+    // Add settings button to controls container (always last on initial render)
+    settingsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; display: inline-flex; align-items: center; justify-content: center;';
+    controlsContainer.appendChild(settingsBtn);
+
+    // --- Pre-load Filter UI elements ---
+    const preFilterContainer = document.createElement('span');
+    preFilterContainer.style.cssText = 'display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding-left:6px; border-left:1px solid #ccc; vertical-align:middle; height:24px;';
+
+    const preFilterInput = document.createElement('input');
+    preFilterInput.type = 'text';
+    preFilterInput.placeholder = 'Filter data load...';
+    preFilterInput.title = 'Filter rows while loading from disk';
+    preFilterInput.style.cssText = 'font-size:0.8em; padding:2px 4px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box;';
+
+    const preFilterCaseLabel = document.createElement('label');
+    preFilterCaseLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
+    const preFilterCaseCheckbox = document.createElement('input');
+    preFilterCaseCheckbox.type = 'checkbox';
+    preFilterCaseCheckbox.style.marginRight = '2px';
+    preFilterCaseLabel.appendChild(preFilterCaseCheckbox);
+    preFilterCaseLabel.appendChild(document.createTextNode('Cc'));
+    preFilterCaseLabel.title = 'Case Sensitive (Load)';
+
+    const preFilterRxLabel = document.createElement('label');
+    preFilterRxLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
+    const preFilterRxCheckbox = document.createElement('input');
+    preFilterRxCheckbox.type = 'checkbox';
+    preFilterRxCheckbox.style.marginRight = '2px';
+    preFilterRxLabel.appendChild(preFilterRxCheckbox);
+    preFilterRxLabel.appendChild(document.createTextNode('Rx'));
+    preFilterRxLabel.title = 'RegExp (Load)';
+
+    const preFilterMsg = document.createElement('span');
+    preFilterMsg.id = 'mb-preload-filter-msg';
+    preFilterMsg.style.cssText = 'font-size:0.8em; color:red; margin-left:4px; font-weight:bold; white-space:nowrap;';
+
+    const stopBtn = document.createElement('button');
+    stopBtn.textContent = 'Stop';
+    stopBtn.style.cssText = 'display:none; font-size:0.8em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box; border-radius:6px;';
+
+    const globalStatusDisplay = document.createElement('span');
+    globalStatusDisplay.id = 'mb-global-status-display';
+    globalStatusDisplay.style.cssText = 'font-size:0.80em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+
+    const infoDisplay = document.createElement('span');
+    infoDisplay.id = 'mb-info-display';
+    infoDisplay.style.cssText = 'font-size:0.70em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; margin-left:10px;';
+
+
+    const progressContainer = document.createElement('div');
+    progressContainer.id = 'mb-fetch-progress-container';
+    progressContainer.style.cssText = 'display:none; width:300px; height:26px; background-color:#eee; border:1px solid #ccc; border-radius:3px; overflow:hidden; position:relative; vertical-align:middle;';
+
+    const progressBar = document.createElement('div');
+    progressBar.id = 'mb-fetch-progress-bar';
+    progressBar.style.cssText = 'width:0%; height:100%; transition: width 0.3s, background-color 0.3s; position:absolute; left:0; top:0;';
+
+    const progressText = document.createElement('div');
+    progressText.id = 'mb-fetch-progress-text';
+    progressText.style.cssText = 'position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:black; z-index:1; pointer-events:none; padding: 0 10px; box-sizing: border-box;';
+    progressText.style.whiteSpace = 'pre-line';
+
+    progressContainer.appendChild(progressBar);
+    progressContainer.appendChild(progressText);
 
     const filterContainer = document.createElement('span');
     // Initially hidden; will be displayed when appended to H2
@@ -4082,10 +4168,8 @@ let changelog = [
 
     if (headerContainer.tagName === 'A') {
         headerContainer.after(controlsContainer);
-        headerContainer.after(settingsBtn);
     } else {
         headerContainer.appendChild(controlsContainer);
-        headerContainer.appendChild(settingsBtn);
     }
 
     // Create a separate container for status displays (globalStatusDisplay and infoDisplay)
@@ -5613,7 +5697,6 @@ let changelog = [
 
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
-        //globalStatusDisplay.textContent = 'Initializing...';
         progressContainer.style.display = 'inline-block';
         progressBar.style.width = '0%';
         progressBar.style.backgroundColor = '#ffcccc';
@@ -6097,15 +6180,12 @@ let changelog = [
                 const avgPageTime = cumulativeFetchTime / pagesProcessed;
                 const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
 
-                // Update status text (page count only)
-                //globalStatusDisplay.textContent = `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)`;
-
                 // Update progress bar
                 const progress = p / maxPage;
                 progressBar.style.width = `${progress * 100}%`;
-		progressText.textContent =
-		    `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)\n` +
-		    `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
+                progressText.textContent =
+                    `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)\n` +
+                    `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
                 //progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
 
                 // Update color based on progress (red -> orange -> green)
@@ -6555,16 +6635,7 @@ let changelog = [
                     const subTableControls = document.createElement('span');
                     subTableControls.className = 'mb-subtable-controls';
 
-                    const clearSubBtn = document.createElement('button');
-                    clearSubBtn.className = 'mb-subtable-clear-btn';
-                    clearSubBtn.textContent = '✗ Clear all COLUMN filters';
-                    clearSubBtn.title = 'Clear all column filters for this table';
-                    clearSubBtn.type = 'button';
-                    clearSubBtn.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        clearSubTableColumnFilters(table, categoryName);
-                    };
+                    const clearSubBtn = createClearColumnFiltersButton(table, categoryName);
 
                     const subFilterStatus = document.createElement('span');
                     subFilterStatus.className = 'mb-filter-status';
@@ -6641,16 +6712,7 @@ let changelog = [
                 subTableControls.className = 'mb-subtable-controls';
 
                 // Create clear column filters button for this sub-table
-                const clearSubBtn = document.createElement('button');
-                clearSubBtn.className = 'mb-subtable-clear-btn';
-                clearSubBtn.textContent = '✗ Clear all COLUMN filters';
-                clearSubBtn.title = 'Clear all column filters for this table';
-                clearSubBtn.type = 'button';
-                clearSubBtn.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    clearSubTableColumnFilters(table, categoryName);
-                };
+                const clearSubBtn = createClearColumnFiltersButton(table, categoryName);
 
                 // Create separate filter and sort status displays for this sub-table
                 const subFilterStatus = document.createElement('span');
@@ -6724,16 +6786,7 @@ let changelog = [
                     const subTableControls = document.createElement('span');
                     subTableControls.className = 'mb-subtable-controls';
 
-                    const clearSubBtn = document.createElement('button');
-                    clearSubBtn.className = 'mb-subtable-clear-btn';
-                    clearSubBtn.textContent = '✗ Clear all COLUMN filters';
-                    clearSubBtn.title = 'Clear all column filters for this table';
-                    clearSubBtn.type = 'button';
-                    clearSubBtn.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        clearSubTableColumnFilters(table, categoryName);
-                    };
+                    const clearSubBtn = createClearColumnFiltersButton(table, categoryName);
 
                     const subFilterStatus = document.createElement('span');
                     subFilterStatus.className = 'mb-filter-status';
