@@ -306,10 +306,6 @@ let changelog = [
     }
 
     /**
-     * Apply sticky headers to tables so column headers remain visible while scrolling
-     * Includes proper styling for the header row and filter row
-     */
-    /**
      * Applies sticky positioning to table headers so they remain visible while scrolling
      * Adds CSS styles that make both the main header row and filter row stick to the top of the viewport
      */
@@ -323,51 +319,44 @@ let changelog = [
         const style = document.createElement('style');
         style.id = 'mb-sticky-headers-style';
         style.textContent = `
-            /* Sticky headers for main table */
+            /* Ensure the table borders play nicely with sticky elements */
             table.tbl {
-                position: relative;
+                border-collapse: separate;
+                border-spacing: 0;
             }
 
+            /* Make the entire thead sticky as a single solid block */
             table.tbl thead {
                 position: sticky;
                 top: 0;
+                /* z-index 100 keeps it below the sidebar (105) but above table content */
                 z-index: 100;
-                background: white;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
 
+            /* Ensure headers have a solid background so scrolling content doesn't bleed through */
             table.tbl thead th {
-                background: white;
-                border-bottom: 2px solid #ddd;
-                /* Ensure proper layering for sort icons */
+                background-color: #f2f2f2; /* Default MusicBrainz header color */
+                border-bottom: 1px solid #ddd;
+                border-top: 1px solid #ddd;
+                background-clip: padding-box;
                 position: relative;
             }
 
-            /* Ensure filter row also sticks, positioned below the header row */
-            table.tbl thead tr.mb-col-filter-row {
-                position: sticky;
-                /* Adjust this value based on your header row height */
-                /* Default MusicBrainz header is about 30px */
-                top: 30px;
-                background: #f5f5f5;
-                z-index: 99;
+            /* Filter row specific styling */
+            table.tbl thead tr.mb-col-filter-row th {
+                background-color: #f9f9f9;
+                border-bottom: 2px solid #ccc;
+                border-top: none;
             }
 
-            table.tbl thead tr.mb-col-filter-row th {
-                background: #f5f5f5;
-                border-top: 1px solid #ddd;
+            /* Ensure resizer handles stay above the header background but below dropdowns */
+            .column-resizer {
+                z-index: 101 !important;
             }
 
-            /* Ensure proper display during scrolling */
-            table.tbl thead th,
-            table.tbl thead tr.mb-col-filter-row th {
-                /* Prevent visual glitches during scroll */
+            /* Prevent visual glitches during scroll */
+            table.tbl thead th {
                 will-change: transform;
-            }
-
-            /* Optional: Add a subtle shadow to filter row as well */
-            table.tbl thead tr.mb-col-filter-row {
-                box-shadow: 0 2px 3px rgba(0,0,0,0.05);
             }
         `;
 
