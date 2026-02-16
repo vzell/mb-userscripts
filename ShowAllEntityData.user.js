@@ -2712,7 +2712,7 @@ let changelog = [
         const resizeBtn = document.createElement('button');
         resizeBtn.textContent = '↔️ Auto-Resize';
         resizeBtn.title = 'Auto-resize columns to optimal width (enables horizontal scrolling)';
-        resizeBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
+        resizeBtn.style.cssText = 'font-size:0.9em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         resizeBtn.type = 'button';
         resizeBtn.onclick = toggleAutoResizeColumns;
 
@@ -3877,8 +3877,8 @@ let changelog = [
     const preFilterInput = document.createElement('input');
     preFilterInput.type = 'text';
     preFilterInput.placeholder = 'Filter data load...';
-    preFilterInput.title = 'Filter rows while loading from disk';
-    preFilterInput.style.cssText = 'font-size:0.8em; padding:2px 4px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box;';
+    preFilterInput.title = 'Filter rows while loading from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)';
+    preFilterInput.style.cssText = 'font-size:1.oem; padding:2px 4px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box;';
 
     const preFilterCaseLabel = document.createElement('label');
     preFilterCaseLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
@@ -3905,10 +3905,11 @@ let changelog = [
     const stopBtn = document.createElement('button');
     stopBtn.textContent = 'Stop';
     stopBtn.style.cssText = 'display:none; font-size:0.8em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box; border-radius:6px;';
+    stopBtn.title = 'Stop the current data fetching process from the MusicBrainz backend database';
 
     const globalStatusDisplay = document.createElement('span');
     globalStatusDisplay.id = 'mb-global-status-display';
-    globalStatusDisplay.style.cssText = 'font-size:0.80em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+    globalStatusDisplay.style.cssText = 'font-size:0.9em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 
     const infoDisplay = document.createElement('span');
     infoDisplay.id = 'mb-info-display';
@@ -4097,7 +4098,7 @@ let changelog = [
     const clearColumnFiltersBtn = document.createElement('button');
     clearColumnFiltersBtn.appendChild(xSymbol);
     clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
-    clearColumnFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    clearColumnFiltersBtn.style.cssText = 'font-size:0.9em; padding:2px 6px; cursor:pointer;';
     clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
@@ -4139,7 +4140,7 @@ let changelog = [
 
     const statusDisplay = document.createElement('span');
     statusDisplay.id = 'mb-status-display';
-    statusDisplay.style.cssText = 'font-size:0.85em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; gap:4px;';
+    statusDisplay.style.cssText = 'font-size:0.9em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; gap:4px;';
 
     // Create separate filter and sort status displays
     const filterStatusDisplay = document.createElement('span');
@@ -4220,7 +4221,7 @@ let changelog = [
         .mb-subtable-clear-btn { font-size: 0.8em; padding: 2px 6px; cursor: pointer; vertical-align: middle; border-radius: 4px; background: #f0f0f0; border: 1px solid #ccc; }
         .mb-subtable-clear-btn:hover { background: #e0e0e0; }
         .mb-subtable-status-display { font-size: 0.85em; color: #333; font-weight: bold; vertical-align: middle; }
-        .mb-filter-status { font-family: 'Courier New', monospace; font-size: 1.0em; margin-right: 8px; }
+        .mb-filter-status { font-family: 'Courier New', monospace; font-size: 1.1em; margin-right: 8px; }
         .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 1.0em; font-style: italic; }
         .mb-toggle-h2 { cursor: pointer; user-select: none; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; cursor: pointer; }
@@ -4278,7 +4279,7 @@ let changelog = [
     // Create a separate container for status displays (globalStatusDisplay and infoDisplay)
     const statusDisplaysContainer = document.createElement('div');
     statusDisplaysContainer.id = 'mb-status-displays-container';
-    statusDisplaysContainer.style.cssText = 'display:inline-flex; align-items:center; gap:8px; margin-left:10px; line-height:1;';
+    statusDisplaysContainer.style.cssText = 'display:inline-flex; align-items:center; gap:8px; margin-left:10px; line-height:1; vertical-align:middle;';
     statusDisplaysContainer.appendChild(globalStatusDisplay);
     statusDisplaysContainer.appendChild(infoDisplay);
 
@@ -4364,7 +4365,7 @@ let changelog = [
         dialog.innerHTML = `
             <div style="margin-bottom:18px; border-bottom:1px solid #eee; padding-bottom:12px;">
                 <h3 style="margin:0; color:#222; font-size:1.2em;">📂 Load Table Data</h3>
-                <p style="margin:5px 0 0; color:#666; font-size:0.85em;">Filter rows while loading from disk</p>
+                <p style="margin:5px 0 0; color:#666; font-size:0.95em;">Filter rows while loading from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
             </div>
 
             <div style="margin-bottom:15px; position:relative;">
@@ -4372,7 +4373,7 @@ let changelog = [
                     <input id="sa-load-filter-input" type="text" placeholder="Search expression..."
                         style="flex:1; padding:8px 12px; border:1px solid #ccc; border-radius:6px; font-size:1em; outline:none;">
                     ${history.length > 0 ? `
-                    <button id="sa-load-history-toggle" title="Show history" style="padding:0 8px; background:#f0f0f0; border:1px solid #ccc; border-radius:6px; cursor:pointer;">▾</button>
+                    <button id="sa-load-history-toggle" title="Show history" style="padding:0 8px; background:#f0f0f0; border:1px solid #ccc; border-radius:6px; cursor:pointer;">▼</button>
                     ` : ''}
                 </div>
                 <div id="sa-load-history-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:20001; max-height:150px; overflow-y:auto; margin-top:4px;">
@@ -7289,7 +7290,7 @@ let changelog = [
                                         const subSortStatus = h3.querySelector('.mb-sort-status');
                                         if (subSortStatus) {
                                             const sortIcon = state.sortState === 0 ? '⇅' : (state.sortState === 1 ? '▲' : '▼');
-                                            subSortStatus.textContent = `✓ Sorted column "${colName}" ${sortIcon}: ${rowCount} rows in ${durationMs}ms`;
+                                            subSortStatus.textContent = `✓ Sorted by column "${colName}" ${sortIcon}: ${rowCount} rows in ${durationMs}ms`;
                                             subSortStatus.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
                                         }
                                     }
@@ -7298,7 +7299,7 @@ let changelog = [
                                 } else {
                                     // On single-table pages: show in main sort status display
                                     const sortIcon = state.sortState === 0 ? '⇅' : (state.sortState === 1 ? '▲' : '▼');
-                                    sortStatusDisplay.textContent = `✓ Sorted [${tableName}] column "${colName}" ${sortIcon}: ${rowCount} rows in ${durationMs}ms`;
+                                    sortStatusDisplay.textContent = `✓ Sorted by column "${colName}" ${sortIcon}: ${rowCount} rows in ${durationMs}ms`;
                                     sortStatusDisplay.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
                                 }
                             }
@@ -7899,7 +7900,7 @@ let changelog = [
 
                 const rowLabel = loadedRowCount === 1 ? 'row' : 'rows';
                 Lib.info('cache', `Successfully loaded ${loadedRowCount} ${rowLabel} from disk!`);
-                infoDisplay.textContent = `✓ Loaded ${loadedRowCount} ${rowLabel} from file ${file.name}, data version ${data.version} from ${data.timestampReadable} | Active Pre-Filter: ${!!filterQueryRaw}`;
+                infoDisplay.textContent = `✓ Loaded ${loadedRowCount} ${rowLabel} from file ${file.name} | Active Pre-Filter: ${!!filterQueryRaw}`;
                 infoDisplay.style.color = 'green';
 
                 // Reset file input
