@@ -38327,7 +38327,7 @@ And here the code block
   
   
 * DONE Add a new infoDisplay area for stuff like
-** initial
+** DONE initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
@@ -38345,7 +38345,7 @@ In the uploaded userscript "ShowAllEntityData.user.js"
 The placement should be right after the '<span id="mb-global-status-display"'. Right now these messages just overwrite
 sorting or filtering related messages.
 
-** place the infoDisplay after "~  ... entity" but aligned with the "Show all button"
+** DONE place the infoDisplay after "~  ... entity" but aligned with the "Show all button"
 
 Actuall remove the "mb-global-status-display" and "mb-info-display" container from the h1 header and render them one
 line below the h1 header right inside the '<p class="subheader">' after the '<bdi><a href' structure.
@@ -38360,10 +38360,43 @@ Do this for all pageTypes except pageType="search" where the placement should be
 
 In all cases the alignment should be with the '<div id="mb-show-all-controls-container"'
 
+** reorg
+*** 1
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+please place the text "Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)" from the following definition
+
+#+begin_example
+globalStatusDisplay.textContent = `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)`;
+#+end_example
+
+inside the progress bar by concatenating "Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)", " | " and "Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s"
+
+from
+
+#+begin_example
+progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
+#+end_example
+
+to yield the complete progressbar text of "Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) | Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s"
+
+*** 2
+
+I saw by chance that the text broke after the word "Estimated" to the next line inside the button itself.
+Actually I directly want that two row display inside the button from the beginning, so that text should be
+
+#+begin_example
+Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)\n
+Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s
+#+end_example
+
+It should break at the "\n" in the above exmaple
 
 * ✗ Clear all COLUMN filters
 
-in all occurences of
+
+Also in all occurences of
 
 #+begin_example
 clearSubBtn.textContent = '✗ Clear all COLUMN filters';
@@ -38413,7 +38446,6 @@ clearSubBtn.appendChild(createRedXLabel('Clear all COLUMN filters'));
 
 Much cleaner and future-proof.
 #+end_example
-
 
 * Add keyboard navigation in the pull-down menues
 

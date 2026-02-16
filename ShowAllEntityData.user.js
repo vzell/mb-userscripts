@@ -31,7 +31,6 @@
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
 // @grant        GM_unregisterMenuCommand
-// @grant        GM_download
 // @license      MIT
 // ==/UserScript==
 
@@ -3782,6 +3781,7 @@ let changelog = [
     const progressText = document.createElement('div');
     progressText.id = 'mb-fetch-progress-text';
     progressText.style.cssText = 'position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:black; z-index:1; pointer-events:none; padding: 0 10px; box-sizing: border-box;';
+    progressText.style.whiteSpace = 'pre-line';
 
     progressContainer.appendChild(progressBar);
     progressContainer.appendChild(progressText);
@@ -5572,12 +5572,15 @@ let changelog = [
             // For non-paginated types, initially assume maxPage is 1
             Lib.info('fetch', 'Context: Non-paginated page definition. Initially assuming maxPage = 1.');
             maxPage = 1;
+            globalStatusDisplay.textContent = 'Getting number of pages to fetch... Non-paginated page definition. Initially assuming 1';
         } else if (overrideParams) {
             Lib.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
             maxPage = await fetchMaxPageGeneric(path, overrideParams);
+            globalStatusDisplay.textContent = `Getting number of pages to fetch... Paginated page definition extracted from URL with queryParameters: ${maxPage}`;
         } else {
             Lib.info('fetch', 'Context: Paginated page definition. Fetching maxPage from DOM.');
             maxPage = determineMaxPageFromDOM();
+            globalStatusDisplay.textContent = `Getting number of pages to fetch... Paginated page definition. Fetching maxPage from DOM: ${maxPage}`;
         }
 
         // --- USERSCRIPT WARNING POPUP ---
@@ -5610,7 +5613,7 @@ let changelog = [
 
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
-        globalStatusDisplay.textContent = 'Initializing...';
+        //globalStatusDisplay.textContent = 'Initializing...';
         progressContainer.style.display = 'inline-block';
         progressBar.style.width = '0%';
         progressBar.style.backgroundColor = '#ffcccc';
@@ -6095,12 +6098,15 @@ let changelog = [
                 const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
 
                 // Update status text (page count only)
-                globalStatusDisplay.textContent = `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)`;
+                //globalStatusDisplay.textContent = `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)`;
 
                 // Update progress bar
                 const progress = p / maxPage;
                 progressBar.style.width = `${progress * 100}%`;
-                progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
+		progressText.textContent =
+		    `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)\n` +
+		    `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
+                //progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
 
                 // Update color based on progress (red -> orange -> green)
                 let bgColor = '#ffcccc'; // light red
@@ -6282,7 +6288,7 @@ let changelog = [
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
 
             const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
-            globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows), Fetching: ${fetchSeconds}s`;
+            globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows) from MusicBrainz backend database, Fetching time: ${fetchSeconds}s`;
 
             Lib.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
@@ -7269,26 +7275,10 @@ let changelog = [
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
             const filename = `mb-${pageType}-${timestamp}.json.gz`;
 
-            // Use GM_download if available, otherwise fallback to standard download
-            // if (typeof GM_download !== 'undefined') {
-            //     GM_download({
-            //         url: url,
-            //         name: filename,
-            //         saveAs: true,
-            //         onload: () => {
-            //             Lib.info('cache', `Data saved to ${filename}`);
-            //             URL.revokeObjectURL(url);
-            //         },
-            //         onerror: (err) => {
-            //             Lib.error('cache', 'Download failed:', err);
-            //             URL.revokeObjectURL(url);
-            //             // Fallback to standard download
-            //             triggerStandardDownload(url, filename);
-            //         }
-            //     });
-            // } else {
             triggerStandardDownload(url, filename);
-            // }
+            infoDisplay.textContent = `✓ Saved: Serialized ${dataToSave.rowCount} rows to ${filename}`;
+            infoDisplay.style.color = 'green';
+
 
         } catch (err) {
             Lib.error('cache', 'Failed to serialize table data:', err);
@@ -7635,7 +7625,7 @@ let changelog = [
 
                 const rowLabel = loadedRowCount === 1 ? 'row' : 'rows';
                 Lib.info('cache', `Successfully loaded ${loadedRowCount} ${rowLabel} from disk!`);
-                infoDisplay.textContent = `✓ Loaded: ${loadedRowCount} ${rowLabel}`;
+                infoDisplay.textContent = `✓ Loaded ${loadedRowCount} ${rowLabel} from file ${file.name}, data version ${data.version} from ${data.timestampReadable} | Active Pre-Filter: ${!!filterQueryRaw}`;
                 infoDisplay.style.color = 'green';
 
                 // Reset file input
