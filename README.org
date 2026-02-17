@@ -38763,6 +38763,21 @@ Finally make the "Toggle hightlightning", "Clear all COLUMN filters" and "Clear 
 (or in the case of single table pages) visible ONLY when actually corresponding filter conditions have been entered, the
 same holds true for the "Clear all COLUMN filters" button in the multi table case
 
+** add Ctrl-Click on h3 headers
+
+- add one more shortcut "Ctrl-M" which emulates pressing the page specific "Show all ..." action button. If there are
+  multiple action buttons, like on the https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a
+  or https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases pages, choose the first button
+
+- please also add besides the current "Click" functionality on a h3 header which collapses/un-collapses just this
+  specific header, also the "Ctrl+Click" equivalent which will collapse/un-collapse ALL the h3 headers
+  simultaneously. Basically like the functionality we already have on the h2 headers. Please also adjust the tooltip
+  text accordingly.
+
+** matrix
+
+📋 Complete Feature Matrix
+ActionKeyboardMouseToggle all h2 headersCtrl+2Ctrl+Click h2Toggle all h3 headersCtrl+3Ctrl+Click h3 ✨Toggle single h2-Click h2Toggle single h3-Click h3Start data loadCtrl+M ✨Click button
 
 * multi-column sort
 ** initial

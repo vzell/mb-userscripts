@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.32.0+2026-02-17
+// @version      9.33.0+2026-02-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.33.0+2026-02-17', description: 'Major Enhancement: Extended keyboard shortcuts and smart button visibility. (1) "Visible Columns": Added "Choose <u>c</u>urrent configuration" button with Alt-C shortcut. (2) Collapse shortcuts: Ctrl-2 toggles all h2 headers, Ctrl-3 toggles all h3 headers (types) - mimics existing Ctrl-click and Show/Hide all functionality. (3) Smart button visibility: "Toggle highlighting", "Clear all COLUMN filters", and "Clear ALL filters" buttons now only appear when filters are actually active. (4) Updated Shortcuts help with comprehensive sections for all menu-specific and global shortcuts including new View & Layout section.'},
     {version: '9.32.0+2026-02-17', description: 'Enhancement: Extended keyboard navigation for menus. (1) "Visible Columns": Added Ctrl+V to open menu, Tab cycles through checkboxes and buttons, Alt-S triggers "Select All", Alt-D triggers "Deselect All" (only when menu open). Buttons now show underlined letters (<u>S</u>elect All, <u>D</u>eselect All). (2) "Density": Added Ctrl+D to open menu. (3) "Export": Close button in export complete popup now auto-focused for quick dismissal with Enter or Space.'},
     {version: '9.31.0+2026-02-17', description: 'Enhancement: Added keyboard navigation to pull-down menus. (1) "Visible Columns": Up/Down to navigate checkboxes, Space/Shift to toggle selection, Enter to close. Auto-focus first checkbox on open. (2) "Density": Up/Down to navigate options with immediate table preview, Enter to apply and close. Auto-focus current density on open. (3) "Export": Up/Down to navigate formats, Enter to execute and close. Auto-focus first option on open. All menus now have visual focus indicators and support keyboard-only operation.'},
     {version: '9.30.0+2026-02-17', description: 'Fix: "Collapsable Sidebar" and "Auto-Resize Columns" feature break "Stick Table Headers" feature.'},
@@ -512,6 +513,7 @@ let changelog = [
         clearBtn.className = 'mb-subtable-clear-btn';
         clearBtn.type = 'button';
         clearBtn.title = 'Clear all column filters for this table';
+        clearBtn.style.display = 'none'; // Initially hidden
 
         // Create red ✗ symbol
         const xSymbol = document.createElement('span');
@@ -779,6 +781,20 @@ let changelog = [
         buttonRow.appendChild(deselectAllBtn);
         contentWrapper.appendChild(buttonRow);
 
+        // Add "Choose current configuration" button
+        const chooseConfigBtn = document.createElement('button');
+        chooseConfigBtn.innerHTML = 'Choose <u>c</u>urrent configuration';
+        chooseConfigBtn.style.cssText = 'font-size: 0.8em; padding: 4px 8px; cursor: pointer; width: 100%; margin-top: 5px; border-radius: 3px;';
+        chooseConfigBtn.type = 'button';
+        chooseConfigBtn.tabIndex = 0;
+        chooseConfigBtn.onclick = (e) => {
+            e.stopPropagation();
+            // Just close the menu - current configuration is already applied
+            menu.style.display = 'none';
+            Lib.info('ui', 'Chose current column configuration');
+        };
+        contentWrapper.appendChild(chooseConfigBtn);
+
         // Add second separator
         const separator2 = document.createElement('div');
         separator2.style.cssText = 'margin: 10px 0; padding-top: 10px; border-top: 1px solid #ddd;';
@@ -849,6 +865,14 @@ let changelog = [
                     if (e.altKey) {
                         e.preventDefault();
                         deselectAllBtn.click();
+                    }
+                    break;
+
+                case 'c':
+                case 'C':
+                    if (e.altKey) {
+                        e.preventDefault();
+                        chooseConfigBtn.click();
                     }
                     break;
 
@@ -1564,6 +1588,43 @@ let changelog = [
                 ]
             },
             {
+                title: 'View & Layout',
+                shortcuts: [
+                    { keys: 'Ctrl/Cmd + V', desc: 'Open "Visible Columns" menu' },
+                    { keys: 'Ctrl/Cmd + D', desc: 'Open "Density" menu' },
+                    { keys: 'Ctrl/Cmd + 2', desc: 'Toggle collapse all h2 headers' },
+                    { keys: 'Ctrl/Cmd + 3', desc: 'Toggle collapse all h3 headers (types)' }
+                ]
+            },
+            {
+                title: 'Visible Columns Menu (when open)',
+                shortcuts: [
+                    { keys: 'Up/Down', desc: 'Navigate checkboxes' },
+                    { keys: 'Space/Shift', desc: 'Toggle checkbox' },
+                    { keys: 'Tab', desc: 'Cycle to buttons' },
+                    { keys: 'Alt + S', desc: 'Select All' },
+                    { keys: 'Alt + D', desc: 'Deselect All' },
+                    { keys: 'Alt + C', desc: 'Choose current configuration' },
+                    { keys: 'Enter/Escape', desc: 'Close menu' }
+                ]
+            },
+            {
+                title: 'Density Menu (when open)',
+                shortcuts: [
+                    { keys: 'Up/Down', desc: 'Navigate options (live preview)' },
+                    { keys: 'Enter', desc: 'Apply and close' },
+                    { keys: 'Escape', desc: 'Close menu' }
+                ]
+            },
+            {
+                title: 'Export Menu (when open)',
+                shortcuts: [
+                    { keys: 'Up/Down', desc: 'Navigate formats' },
+                    { keys: 'Enter', desc: 'Execute and close' },
+                    { keys: 'Escape', desc: 'Close menu' }
+                ]
+            },
+            {
                 title: 'Data Export & Management',
                 shortcuts: [
                     { keys: 'Ctrl/Cmd + E', desc: 'Open export menu (CSV, JSON, Org-Mode)' },
@@ -1830,6 +1891,59 @@ let changelog = [
                     Lib.debug('shortcuts', 'Density menu opened via Ctrl+D');
                 } else {
                     Lib.warn('shortcuts', 'Density button not found');
+                }
+            }
+
+            // Ctrl/Cmd + 2: Toggle collapse all h2 headers
+            if ((e.ctrlKey || e.metaKey) && e.key === '2') {
+                e.preventDefault();
+                const h2s = document.querySelectorAll('h2.mb-toggle-h2');
+                if (h2s.length > 0) {
+                    // Determine if we should expand or collapse based on the first h2's state
+                    const firstIcon = h2s[0].querySelector('.mb-toggle-icon');
+                    const isExpanding = firstIcon && firstIcon.textContent === '▲';
+
+                    h2s.forEach(h2 => {
+                        if (typeof h2._mbToggle === 'function') {
+                            h2._mbToggle(isExpanding);
+                        }
+                    });
+                    Lib.debug('shortcuts', `All h2 headers ${isExpanding ? 'expanded' : 'collapsed'} via Ctrl+2`);
+                } else {
+                    Lib.warn('shortcuts', 'No collapsible h2 headers found');
+                }
+            }
+
+            // Ctrl/Cmd + 3: Toggle collapse all h3 headers
+            if ((e.ctrlKey || e.metaKey) && e.key === '3') {
+                e.preventDefault();
+                const h3s = document.querySelectorAll('.mb-toggle-h3');
+                if (h3s.length > 0) {
+                    // Determine if we should expand or collapse based on the first h3's state
+                    const firstIcon = h3s[0].querySelector('.mb-toggle-icon');
+                    const isExpanding = firstIcon && firstIcon.textContent === '▲';
+
+                    // Trigger show or hide all functionality
+                    const tables = document.querySelectorAll('table.tbl');
+                    if (isExpanding) {
+                        // Show all
+                        tables.forEach(t => t.style.display = '');
+                        h3s.forEach(h => {
+                            const icon = h.querySelector('.mb-toggle-icon');
+                            if (icon) icon.textContent = '▼';
+                        });
+                        Lib.debug('shortcuts', 'All h3 headers (types) shown via Ctrl+3');
+                    } else {
+                        // Hide all
+                        tables.forEach(t => t.style.display = 'none');
+                        h3s.forEach(h => {
+                            const icon = h.querySelector('.mb-toggle-icon');
+                            if (icon) icon.textContent = '▲';
+                        });
+                        Lib.debug('shortcuts', 'All h3 headers (types) hidden via Ctrl+3');
+                    }
+                } else {
+                    Lib.warn('shortcuts', 'No collapsible h3 headers found');
                 }
             }
 
@@ -4287,7 +4401,7 @@ let changelog = [
     const unhighlightAllBtn = document.createElement('button');
     unhighlightAllBtn.id = 'mb-toggle-filter-highlight-btn';
     unhighlightAllBtn.textContent = '🎨 Toggle highlighting';
-    unhighlightAllBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; transition: background-color 0.3s;';
+    unhighlightAllBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; transition: background-color 0.3s; display: none;';
     unhighlightAllBtn.title = 'Toggle filter highlighting on/off (global filter and column filters)';
 
     /**
@@ -4337,7 +4451,7 @@ let changelog = [
     const clearColumnFiltersBtn = document.createElement('button');
     clearColumnFiltersBtn.appendChild(xSymbol);
     clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
-    clearColumnFiltersBtn.style.cssText = 'font-size:0.9em; padding:2px 6px; cursor:pointer;';
+    clearColumnFiltersBtn.style.cssText = 'font-size:0.9em; padding:2px 6px; cursor:pointer; display: none;';
     clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
@@ -4365,7 +4479,7 @@ let changelog = [
     // Attach a CLONE of the symbol to the second button
     clearAllFiltersBtn.appendChild(xSymbol.cloneNode(true));
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
-    clearAllFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer;';
+    clearAllFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; display: none;';
     clearAllFiltersBtn.title = 'Clear both global filter and all column filters';
     clearAllFiltersBtn.onclick = () => {
         // Clear global filter
@@ -4376,6 +4490,48 @@ let changelog = [
         clearAllFilters();
     };
     filterContainer.appendChild(clearAllFiltersBtn);
+
+    /**
+     * Update visibility of filter-related buttons based on whether filters are active
+     */
+    function updateFilterButtonsVisibility() {
+        // Check if global filter has value
+        const globalFilterActive = filterInput.value.trim() !== '';
+
+        // Check if any column filters have values
+        const columnFilters = document.querySelectorAll('.mb-col-filter-input');
+        const columnFiltersActive = Array.from(columnFilters).some(input => input.value.trim() !== '');
+
+        // Check if there are any highlights present
+        const highlightsPresent = document.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight').length > 0;
+
+        // Show/hide Toggle highlighting button
+        unhighlightAllBtn.style.display = highlightsPresent ? 'inline-block' : 'none';
+
+        // Show/hide Clear all COLUMN filters button
+        clearColumnFiltersBtn.style.display = columnFiltersActive ? 'inline-block' : 'none';
+
+        // Show/hide Clear ALL filters button
+        clearAllFiltersBtn.style.display = (globalFilterActive || columnFiltersActive) ? 'inline-block' : 'none';
+
+        // Update visibility for sub-table clear buttons
+        document.querySelectorAll('.mb-subtable-clear-btn').forEach(btn => {
+            // Find the associated table
+            const h3 = btn.closest('.mb-subtable-controls')?.parentElement;
+            if (h3) {
+                const table = h3.nextElementSibling;
+                if (table && table.tagName === 'TABLE') {
+                    // Check if this table has any active column filters
+                    const tableColFilters = table.querySelectorAll('.mb-col-filter-input');
+                    const tableHasFilters = Array.from(tableColFilters).some(input => input.value.trim() !== '');
+                    btn.style.display = tableHasFilters ? 'inline-block' : 'none';
+                }
+            }
+        });
+    }
+
+    // Make this function globally accessible so runFilter can call it
+    window.updateFilterButtonsVisibility = updateFilterButtonsVisibility;
 
     const statusDisplay = document.createElement('span');
     statusDisplay.id = 'mb-status-display';
@@ -5672,6 +5828,11 @@ let changelog = [
         }
 
         Lib.debug('filter', `Filter completed in ${filterDuration}ms`);
+
+        // Update filter button visibility based on active filters
+        if (typeof window.updateFilterButtonsVisibility === 'function') {
+            window.updateFilterButtonsVisibility();
+        }
     }
 
     stopBtn.addEventListener('click', (e) => {
