@@ -38746,6 +38746,24 @@ Add the following additional functionality
 
 - "Density": Add "Ctrl-D" as a generic shortcut for opening the "Density pull-down menu
 
+** one more
+
+- "Visible Columns": Add one more button titled "Choose current configuration" (keybord shortcut "Alt-C", render the "c"
+  from "current" with underscore) below the two already available, when clicked the current select should be choosen and
+  the menu should close
+
+- Add a new keyboard shortcut of "Ctrl-2" und "Ctrl-3" which should toggle the collapse functionality for the h2 and h3
+  headers respectively. The h2 headers can already be collapsed/un-collapsed by "Ctrl" clicking on one of the h2 header
+  lines, and the h3 headers cann all be collapsed/un-collapsed by clicking on the '"Show" | "Hide" all Types'
+  hyperlinks. These functionalities should be called for the new keyboard shortcuts.
+  
+- Add all the new key combinations also under the "Shortcuts" menu
+
+Finally make the "Toggle hightlightning", "Clear all COLUMN filters" and "Clear ALL filters" buttons on the global level
+(or in the case of single table pages) visible ONLY when actually corresponding filter conditions have been entered, the
+same holds true for the "Clear all COLUMN filters" button in the multi table case
+
+
 * multi-column sort
 ** initial
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.31.0+2026-02-17
+// @version      9.32.0+2026-02-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.32.0+2026-02-17', description: 'Enhancement: Extended keyboard navigation for menus. (1) "Visible Columns": Added Ctrl+V to open menu, Tab cycles through checkboxes and buttons, Alt-S triggers "Select All", Alt-D triggers "Deselect All" (only when menu open). Buttons now show underlined letters (<u>S</u>elect All, <u>D</u>eselect All). (2) "Density": Added Ctrl+D to open menu. (3) "Export": Close button in export complete popup now auto-focused for quick dismissal with Enter or Space.'},
     {version: '9.31.0+2026-02-17', description: 'Enhancement: Added keyboard navigation to pull-down menus. (1) "Visible Columns": Up/Down to navigate checkboxes, Space/Shift to toggle selection, Enter to close. Auto-focus first checkbox on open. (2) "Density": Up/Down to navigate options with immediate table preview, Enter to apply and close. Auto-focus current density on open. (3) "Export": Up/Down to navigate formats, Enter to execute and close. Auto-focus first option on open. All menus now have visual focus indicators and support keyboard-only operation.'},
     {version: '9.30.0+2026-02-17', description: 'Fix: "Collapsable Sidebar" and "Auto-Resize Columns" feature break "Stick Table Headers" feature.'},
     {version: '9.26+2026-02-16', description: 'Fix & Enhancement: (1) Removed redundant "Unhighlight prefilter" button (functionality now in dynamic prefilter toggle button). (2) Fixed "Toggle highlighting" button restore functionality - now correctly restores filter highlights by re-running runFilter() instead of manual highlight re-application. (3) Added 🎨 emoji to dynamic prefilter button text (e.g., "🎨 2 rows prefiltered: \'Westfalenhalle\'").'},
@@ -741,9 +742,10 @@ let changelog = [
         buttonRow.style.cssText = 'display: flex; gap: 5px;';
 
         const selectAllBtn = document.createElement('button');
-        selectAllBtn.textContent = 'Select All';
+        selectAllBtn.innerHTML = '<u>S</u>elect All';
         selectAllBtn.style.cssText = 'font-size: 0.8em; padding: 4px 8px; cursor: pointer; flex: 1; border-radius: 3px;';
         selectAllBtn.type = 'button';
+        selectAllBtn.tabIndex = 0;
         selectAllBtn.onclick = (e) => {
             e.stopPropagation();
             checkboxes.forEach(cb => {
@@ -757,9 +759,10 @@ let changelog = [
         };
 
         const deselectAllBtn = document.createElement('button');
-        deselectAllBtn.textContent = 'Deselect All';
+        deselectAllBtn.innerHTML = '<u>D</u>eselect All';
         deselectAllBtn.style.cssText = 'font-size: 0.8em; padding: 4px 8px; cursor: pointer; flex: 1; border-radius: 3px;';
         deselectAllBtn.type = 'button';
+        deselectAllBtn.tabIndex = 0;
         deselectAllBtn.onclick = (e) => {
             e.stopPropagation();
             checkboxes.forEach(cb => {
@@ -827,6 +830,26 @@ let changelog = [
                     const cb = checkboxes[selectedCheckboxIndex];
                     cb.checked = !cb.checked;
                     cb.dispatchEvent(new Event('change'));
+                    break;
+
+                case 'Tab':
+                    // Allow natural Tab navigation to buttons
+                    break;
+
+                case 's':
+                case 'S':
+                    if (e.altKey) {
+                        e.preventDefault();
+                        selectAllBtn.click();
+                    }
+                    break;
+
+                case 'd':
+                case 'D':
+                    if (e.altKey) {
+                        e.preventDefault();
+                        deselectAllBtn.click();
+                    }
                     break;
 
                 case 'Enter':
@@ -1056,6 +1079,9 @@ let changelog = [
         infoPopup.appendChild(msg);
         infoPopup.appendChild(closeBtn);
         document.body.appendChild(infoPopup);
+
+        // Focus the Close button
+        setTimeout(() => closeBtn.focus(), 50);
     }
 
     /**
@@ -1259,6 +1285,9 @@ let changelog = [
         infoPopup.appendChild(msg);
         infoPopup.appendChild(closeBtn);
         document.body.appendChild(infoPopup);
+
+        // Focus the Close button
+        setTimeout(() => closeBtn.focus(), 50);
     }
 
     /**
@@ -1777,6 +1806,30 @@ let changelog = [
                     Lib.debug('shortcuts', 'Load from disk triggered via Ctrl+L');
                 } else {
                     Lib.warn('shortcuts', 'Load button not found');
+                }
+            }
+
+            // Ctrl/Cmd + V: Open Visible Columns menu
+            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                e.preventDefault();
+                const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible Columns'));
+                if (visibleColumnsBtn) {
+                    visibleColumnsBtn.click();
+                    Lib.debug('shortcuts', 'Visible Columns menu opened via Ctrl+V');
+                } else {
+                    Lib.warn('shortcuts', 'Visible Columns button not found');
+                }
+            }
+
+            // Ctrl/Cmd + D: Open Density menu
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                const densityBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Density'));
+                if (densityBtn) {
+                    densityBtn.click();
+                    Lib.debug('shortcuts', 'Density menu opened via Ctrl+D');
+                } else {
+                    Lib.warn('shortcuts', 'Density button not found');
                 }
             }
 
