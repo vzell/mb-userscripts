@@ -38720,14 +38720,342 @@ Add keyboard navigation in the following pull-down menues. When clicked, they sh
 
 
 * multi-column sort
+** initial
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+Please implement multi-column sort (first for the "single table in a page" case). Make it visually clear which columns
+have been used for sorting in which order
+
+** gemini - thinking
+
+#+begin_example
+Considering Multi-Column Sorting
+
+I'm now focusing on implementing multi-column sorting within the single-table context of the user script. I'm prioritizing the single-table use case, and I'm aiming to add visual indicators for the sorting columns and their order. I'm exploring various visual cues for clarity, seeking the most intuitive solution. I'm considering multiple UI elements to clarify the sorting parameters, and their relationship to each other.
+
+Analyzing Sorting Implementation
+
+I've been examining the file's content, focusing on the sorting aspects. Specifically, I've identified sortLargeArray, an optimized stable merge sort variant. I've also noted the presence of createSortComparator, which is used to generate the necessary comparison functions for table sorting.
+
+Investigating Function Definitions
+
+I'm now hunting down the definitions for sortSingleTable and makeTableSortable. My initial assumption is confirmed: makeTableSortable likely attaches click listeners to table headers. I'll also be looking for the current storage location for the sort state in the existing implementation. I've noted the current visual indicators: ⇅, ▲, ▼.
+
+Analyzing Sorting Logic
+
+I've been examining the makeTableSortableUnified function within the script. It appears to be the primary engine for enabling sort functionality on the displayed data tables. I'm focusing on how it attaches the sort listeners to the table headers. The function is critical.
+
+Refining Sorting Criteria
+
+I'm now zeroing in on the architecture for multi-column sorting. The current single-column system stores state as lastSortIndex and sortState. I'm going to revise this to use an array within multiTableSortStates, storing sortColumns: [{ index, direction, priority }]. This will directly inform modifications to createSortComparator and makeTableSortable. My goal is to support multiple sort columns and track their priority visually. I'll tackle the simpler "single table" scenario first.
+
+Implementing Multi-Column Sorting
+
+I'm now implementing the multi-column sort, based on click-and-Shift key combinations. I'm updating UI rendering to handle the sort criteria. The UI will show an indicator of the sort priority. I'm focusing now on refactoring the createSortComparator function. I'll pass in an array of sort criteria, instead of just a single column index, to enable proper multi-column sorting. The logic will iterate through the sort columns and use each column as a tie-breaker. I'm refactoring the comparator.
+
+Investigating Sort Execution
+
+I'm now diving into the execution flow. I need to see exactly how the sorting happens within makeTableSortableUnified, specifically the part after the UI setup. The current snippet cut off the sort execution, so I'm trying to find the sortSingleTable and sortMultiTable functions, if they exist. I need to fully understand how the sort criteria and execution interact. I'm focusing on the click handler and how it triggers the sort after UI updates.
+
+Implementing Multi-Column Sort
+
+I've got the multi-column sort implementation in a good place. Right now, multiTableSortStates uses a Map that has a { lastSortIndex, sortState } key-value structure.
+
+Refining UI Interaction
+
+I'm now focusing on the UI/UX for multi-column sorting. My key idea is using Shift + Click to add columns to the sort stack, while a regular click resets the sort to a single column. I am structuring the sort criteria using an array, where each object defines the sort column index and direction.
+
+Visualizing Sort Order
+
+I'm working on visualizing the sort order. My idea is to add a superscript or subscript number next to the active sort icon, like ▲¹ or ▼², to clearly indicate the column's position in the sort order. I'm building logic to ensure a clear UI for both single and multi-column scenarios.
+
+Updating Sort Functionality
+
+I'm now implementing the updateSortUI function within makeTableSortableUnified. I'm working on logic to find all sort icon buttons. Then, I need to iterate through the sort criteria array, updating CSS classes and appending the order number to the sort icon. I'm focusing on ensuring this function efficiently reflects the sort state in the UI.
+
+Refining Icon Behavior
+
+I'm now integrating logic for the sort icon behaviors. I've got the conditional rendering working for ▲ or ▼ depending on the direction. Also, I'm making sure to remove the badge if the sort changes. Finally, I'm working through the logic to display the default sort icon, ⇅, when there is no current sort order.
+
+Coding Multi-Table Sort
+
+I'm now diving into the code, starting with ensuring the "reset" behavior with a single click clears the entire multi-sort stack, which seems logical. I'm focusing on preserving the multi-table functionality, using sortKey to ensure each table remains distinct. My current work involves updating CSS to enhance the appearance of active icons and sort order numbers. Also, I need to make the isNumeric test is not broken.
+
+Defining Sort Criterion Logic
+
+I'm now establishing the criteria for sort selection. I am focusing on shift-click behavior to modify the sorting criteria array. Regular clicks will clear the array. The logic: A state === 0 removes the column; if state is 1 or 2, I will find and update the direction of an existing index.
+
+Implementing Multi-Sort Logic
+
+I am now implementing the multi-column sort, addressing the visualization of sort order using subscript numbers. I've confirmed allRows is accessible and plan to update sortLargeArray to use createMultiSortComparator. I'm starting by adjusting the multiTableSortStates data structure for this implementation. I have to work through the initialization of this part. I need to make sure the right logic is used to compare each row.
+
+Refining Data Structure
+
+I've decided to incorporate sortCriteria directly into the object, for both compatibility and ease. I'm modifying makeTableSortableUnified to initialize the sortCriteria array within the multiTableSortStates object if it doesn't already exist for a given sortKey. I am now working through the behavior of the new targetState, which is passed from the icon click.
+
+Defining Sort Logic
+
+I'm now clarifying the sorting logic for single and multi-column scenarios within the unified function. If no shift key is pressed, I set sortCriteria to a single-element array. If shift is pressed, I update an existing entry or push a new one. I'm focusing on the isNumeric check to make sure it's consistent. I'll move this logic to a helper function. I'll provide the updated code, including makeTableSortableUnified and helper functions. I am now proceeding with updates, considering the unified function can handle both requirements.
+
+Refining Numeric Detection
+
+I'm now integrating more robust numeric detection using a list-based approach. I've updated the isNumeric check to include 'length' in addition to the existing criteria. I also plan to fine-tune the UI updates, focusing on the sort icon badge, which is already working well for styling with sort-icon-active, so I can use it.
+
+Visualizing Sort Order
+
+I'm now iterating through the design ideas for visually indicating sort order. I'm leaning toward a numbered badge next to the sort icons, like ▲¹ or ▼², which is standard. I'm also planning to refine the sort status messages to reflect multi-sort, so instead of just one column, the update will list multiple columns used. I also checked renderFinalTable and renderGroupedTable calls after sorting, and the function is called inside the final render.
+
+Gemini said
+This is a significant enhancement to the table's analytical capabilities. I will implement a Shift + Click workflow for multi-column sorting:
+
+Regular Click: Clears the sort stack and performs a single-column sort (the default behavior).
+
+Shift + Click: Adds the clicked column to the end of the sort priority list or toggles its direction if already present.
+
+Visual Feedback: Active columns will show their direction (▲/▼) and a small order badge (e.g., ▲¹, ▼²) to indicate the sort priority.
+
+Here are the changes to implement this logic within your ShowAllEntityData.user.js script.
+
+1. CSS Updates for Sort Order Badges
+First, add these styles to your global CSS block (inside applyStickyHeaders or a similar UI setup function) to render the sort priority numbers clearly:
+
+JavaScript
+        const style = document.createElement('style');
+        style.id = 'mb-multi-sort-style';
+        style.textContent = `
+            .sort-icon-btn {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                padding: 0 4px;
+            }
+            .sort-order-badge {
+                background: #666;
+                color: white;
+                border-radius: 50%;
+                width: 14px;
+                height: 14px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                position: absolute;
+                top: -8px;
+                right: -6px;
+                font-weight: bold;
+                border: 1px solid white;
+                pointer-events: none;
+                z-index: 5;
+            }
+            .sort-icon-active .sort-order-badge {
+                background: #4caf50; /* Green badge for active sorts */
+            }
+        `;
+        document.head.appendChild(style);
+2. Multi-Column Comparator Logic
+Replace your createSortComparator with this more flexible version that handles multiple criteria sequentially:
+
+JavaScript
+    /**
+     * Create a comparison function for multi-column table sorting
+     * @param {Array} sortCriteria - Array of { index, direction, isNumeric }
+     * @returns {Function} Comparison function
+     */
+    function createMultiSortComparator(sortCriteria) {
+        return (a, b) => {
+            for (const { index, direction, isNumeric } of sortCriteria) {
+                const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
+                const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
+
+                let result = 0;
+                if (isNumeric) {
+                    const numA = parseFloat(valA.replace(/[^0-9.-]/g, '')) || 0;
+                    const numB = parseFloat(valB.replace(/[^0-9.-]/g, '')) || 0;
+                    result = numA - numB;
+                } else {
+                    // Stable natural sort
+                    result = valA.localeCompare(valB, undefined, {numeric: true, sensitivity: 'base'});
+                }
+
+                if (result !== 0) {
+                    return direction === 1 ? result : -result;
+                }
+            }
+            return 0;
+        };
+    }
+3. Updated makeTableSortableUnified
+Update the core sorting function to handle the new state management and UI rendering.
+
+JavaScript
+    function makeTableSortableUnified(table, sortKey) {
+        const isMultiTable = activeDefinition && activeDefinition.tableMode === 'multi';
+        const headers = table.querySelectorAll('thead tr:first-child th');
+
+        // Initialize state for this table if not exists
+        if (!multiTableSortStates.has(sortKey)) {
+            multiTableSortStates.set(sortKey, { 
+                sortCriteria: [] // Array of { index, direction, isNumeric, colName }
+            });
+        }
+        const state = multiTableSortStates.get(sortKey);
+
+        /**
+         * Refreshes the visual state of all sort icons in the table
+         */
+        const updateSortUI = () => {
+            table.querySelectorAll('.sort-icon-btn').forEach(btn => {
+                btn.classList.remove('sort-icon-active');
+                const badge = btn.querySelector('.sort-order-badge');
+                if (badge) badge.remove();
+            });
+
+            state.sortCriteria.forEach((criteria, order) => {
+                const th = headers[criteria.index];
+                if (!th) return;
+                
+                // Target the specific ▲ or ▼ span
+                const targetChar = criteria.direction === 1 ? '▲' : '▼';
+                th.querySelectorAll('.sort-icon-btn').forEach(span => {
+                    if (span.textContent === targetChar) {
+                        span.classList.add('sort-icon-active');
+                        // Add priority badge if there's more than one column being sorted
+                        if (state.sortCriteria.length > 1) {
+                            const badge = document.createElement('span');
+                            badge.className = 'sort-order-badge';
+                            badge.textContent = order + 1;
+                            span.appendChild(badge);
+                        }
+                    }
+                });
+            });
+        };
+
+        headers.forEach((th, index) => {
+            if (th.querySelector('input[type="checkbox"]')) return;
+            
+            const colName = th.textContent.replace(/[⇅▲▼0-9]/g, '').trim();
+            const isNumeric = colName.includes('#') || colName.toLowerCase().includes('date') || 
+                             colName.toLowerCase().includes('time') || colName.toLowerCase().includes('count');
+            
+            th.innerHTML = '';
+            const iconGroup = document.createElement('div');
+            iconGroup.style.display = 'inline-flex';
+
+            const createIcon = (char, targetState) => {
+                const span = document.createElement('span');
+                span.className = 'sort-icon-btn';
+                span.textContent = char;
+                span.title = targetState === 0 ? 'Reset Sort' : (targetState === 1 ? 'Sort Ascending' : 'Sort Descending');
+
+                span.onclick = async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const isShift = e.shiftKey;
+
+                    // 1. Update Sort Criteria Stack
+                    if (!isShift) {
+                        // Regular click: reset to single column sort
+                        state.sortCriteria = (targetState === 0) ? [] : [{ index, direction: targetState, isNumeric, colName }];
+                    } else {
+                        // Shift click: modify stack
+                        if (targetState === 0) {
+                            // Remove column from stack
+                            state.sortCriteria = state.sortCriteria.filter(c => c.index !== index);
+                        } else {
+                            const existingIdx = state.sortCriteria.findIndex(c => c.index === index);
+                            if (existingIdx > -1) {
+                                // Update existing entry
+                                state.sortCriteria[existingIdx].direction = targetState;
+                            } else {
+                                // Add new entry to end
+                                state.sortCriteria.push({ index, direction: targetState, isNumeric, colName });
+                            }
+                        }
+                    }
+
+                    // 2. Prepare Data
+                    let targetRows = isMultiTable ? groupedRows[parseInt(sortKey.split('_').pop(), 10)].rows : allRows;
+                    let originalRows = isMultiTable ? groupedRows[parseInt(sortKey.split('_').pop(), 10)].originalRows : originalAllRows;
+
+                    // 3. UI Feedback
+                    updateSortUI();
+                    const sortStatusDisplay = document.getElementById('mb-sort-status-display');
+                    if (sortStatusDisplay) {
+                        const colNames = state.sortCriteria.map(c => c.colName).join(' ➔ ');
+                        sortStatusDisplay.textContent = state.sortCriteria.length ? `⏳ Sorting by: ${colNames}...` : '⏳ Resetting order...';
+                        sortStatusDisplay.style.color = 'orange';
+                    }
+
+                    // 4. Perform Sort
+                    document.body.classList.add('mb-sorting-active');
+                    setTimeout(async () => {
+                        try {
+                            const startSort = performance.now();
+                            let sortedData;
+
+                            if (state.sortCriteria.length === 0) {
+                                sortedData = [...originalRows];
+                            } else {
+                                sortedData = await sortLargeArray(
+                                    [...targetRows], 
+                                    createMultiSortComparator(state.sortCriteria),
+                                    progress => { /* update progress bar if needed */ }
+                                );
+                            }
+
+                            // 5. Render Results
+                            if (isMultiTable) {
+                                const groupIndex = parseInt(sortKey.split('_').pop(), 10);
+                                groupedRows[groupIndex].rows = sortedData;
+                                await renderGroupedTable(groupedRows);
+                            } else {
+                                allRows = sortedData;
+                                await renderFinalTable(allRows);
+                            }
+
+                            // 6. Cleanup
+                            const duration = (performance.now() - startSort).toFixed(0);
+                            if (sortStatusDisplay) {
+                                sortStatusDisplay.textContent = `✓ Sorted in ${duration}ms`;
+                                sortStatusDisplay.style.color = 'green';
+                            }
+                        } catch (err) {
+                            Lib.error('sort', 'Multi-sort failed:', err);
+                        } finally {
+                            document.body.classList.remove('mb-sorting-active');
+                        }
+                    }, 10);
+                };
+                return span;
+            };
+
+            iconGroup.appendChild(createIcon('⇅', 0));
+            iconGroup.appendChild(createIcon('▲', 1));
+            iconGroup.appendChild(createIcon('▼', 2));
+            th.appendChild(iconGroup);
+        });
+
+        // Initial UI sync
+        updateSortUI();
+    }
+Why this implementation is robust:
+Sequential Logic: The createMultiSortComparator loops through your criteria. If Column 1 results in a tie (result === 0), it automatically moves to Column 2, and so on.
+
+Visual Priority: The order + 1 badge ensures users know exactly which column is the primary sort and which are secondary.
+
+Unified Functionality: Because this is applied in makeTableSortableUnified, it works immediately for both the single-table and multi-table pages (like Release Groups) without duplicate code.
+#+end_example
 
 * sensible defaults for configuration options
 
 * overwhoule of the logging statements... make lots of stuff debug stements
 
-* TODO collapsable sidebar breaks sticky headers
+* DONE collapsable sidebar breaks sticky headers
 
-* TODO Auto-Resize breaks sticky headers
+* DONE Auto-Resize breaks sticky headers
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
