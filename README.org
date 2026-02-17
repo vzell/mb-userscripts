@@ -39123,3 +39123,8 @@ In the uploaded userscript "ShowAllEntityData.user.js"
 
 The "Auto-Resize" (function toggleAutoResizeColumns()) feature breaks the "sticky headers" "function applyStickyHeaders()" feature, please investigate and fix
 
+
+* Add Ctrl-M handling also on page entry, not only on renderd page
+
+* Implement Emacs-style keybinding
+
