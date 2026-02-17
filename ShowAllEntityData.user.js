@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.33.0+2026-02-17
+// @version      9.34.0+2026-02-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.34.0+2026-02-17', description: 'Enhancement: Added action shortcuts and h3 Ctrl+Click functionality. (1) Ctrl+M: Triggers the first "Show all" action button on the page - useful for pages with multiple action buttons (chooses first one). (2) h3 Headers: Added Ctrl+Click support to toggle ALL h3 headers (types) simultaneously, matching h2 functionality. Regular click still toggles individual h3. Updated tooltip: "Click to Collapse/Uncollapse table section (Ctrl+Click to toggle all types)". (3) Added Ctrl+M to shortcuts help dialog.'},
     {version: '9.33.0+2026-02-17', description: 'Major Enhancement: Extended keyboard shortcuts and smart button visibility. (1) "Visible Columns": Added "Choose <u>c</u>urrent configuration" button with Alt-C shortcut. (2) Collapse shortcuts: Ctrl-2 toggles all h2 headers, Ctrl-3 toggles all h3 headers (types) - mimics existing Ctrl-click and Show/Hide all functionality. (3) Smart button visibility: "Toggle highlighting", "Clear all COLUMN filters", and "Clear ALL filters" buttons now only appear when filters are actually active. (4) Updated Shortcuts help with comprehensive sections for all menu-specific and global shortcuts including new View & Layout section.'},
     {version: '9.32.0+2026-02-17', description: 'Enhancement: Extended keyboard navigation for menus. (1) "Visible Columns": Added Ctrl+V to open menu, Tab cycles through checkboxes and buttons, Alt-S triggers "Select All", Alt-D triggers "Deselect All" (only when menu open). Buttons now show underlined letters (<u>S</u>elect All, <u>D</u>eselect All). (2) "Density": Added Ctrl+D to open menu. (3) "Export": Close button in export complete popup now auto-focused for quick dismissal with Enter or Space.'},
     {version: '9.31.0+2026-02-17', description: 'Enhancement: Added keyboard navigation to pull-down menus. (1) "Visible Columns": Up/Down to navigate checkboxes, Space/Shift to toggle selection, Enter to close. Auto-focus first checkbox on open. (2) "Density": Up/Down to navigate options with immediate table preview, Enter to apply and close. Auto-focus current density on open. (3) "Export": Up/Down to navigate formats, Enter to execute and close. Auto-focus first option on open. All menus now have visual focus indicators and support keyboard-only operation.'},
@@ -1593,7 +1594,8 @@ let changelog = [
                     { keys: 'Ctrl/Cmd + V', desc: 'Open "Visible Columns" menu' },
                     { keys: 'Ctrl/Cmd + D', desc: 'Open "Density" menu' },
                     { keys: 'Ctrl/Cmd + 2', desc: 'Toggle collapse all h2 headers' },
-                    { keys: 'Ctrl/Cmd + 3', desc: 'Toggle collapse all h3 headers (types)' }
+                    { keys: 'Ctrl/Cmd + 3', desc: 'Toggle collapse all h3 headers (types)' },
+                    { keys: 'Ctrl/Cmd + M', desc: 'Trigger first "Show all" button' }
                 ]
             },
             {
@@ -1944,6 +1946,21 @@ let changelog = [
                     }
                 } else {
                     Lib.warn('shortcuts', 'No collapsible h3 headers found');
+                }
+            }
+
+            // Ctrl/Cmd + M: Click first "Show all" action button
+            if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+                e.preventDefault();
+                // Find the first action button (buttons that start with "Show all" or have the 🧮 emoji)
+                const actionButton = Array.from(document.querySelectorAll('button'))
+                    .find(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
+
+                if (actionButton) {
+                    actionButton.click();
+                    Lib.debug('shortcuts', `First action button clicked via Ctrl+M: "${actionButton.textContent}"`);
+                } else {
+                    Lib.warn('shortcuts', 'No action button found');
                 }
             }
 
@@ -7269,7 +7286,9 @@ let changelog = [
                 Lib.info('render', `Creating new table and H3 for group "${categoryName}".`);
                 h3 = document.createElement('h3');
                 h3.className = 'mb-toggle-h3';
-                h3.title = 'Collapse/Uncollapse table section';
+                h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle all types)';
+                h3.style.cursor = 'pointer';
+                h3.style.userSelect = 'none';
 
                 // Note: Sub-table controls will be added later in the if (!query) block
                 // when h3.innerHTML is set, to avoid being wiped out
@@ -7378,11 +7397,46 @@ let changelog = [
                     h3.appendChild(showAllBtn);
                 }
 
-                h3.addEventListener('click', () => {
-                    const isHidden = table.style.display === 'none';
-                    Lib.info('render', `Toggling table for "${categoryName}". New state: ${isHidden ? 'visible' : 'hidden'}`);
-                    table.style.display = isHidden ? '' : 'none';
-                    h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
+                h3.addEventListener('click', (e) => {
+                    // Prevent triggering if clicking on interactive elements (buttons)
+                    if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
+                        e.target.closest('.mb-subtable-controls')) {
+                        return;
+                    }
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    if (e.ctrlKey || e.metaKey) {
+                        // Ctrl+Click: Toggle ALL h3 headers
+                        const isExpanding = table.style.display === 'none';
+                        const allH3s = document.querySelectorAll('.mb-toggle-h3');
+                        const allTables = document.querySelectorAll('table.tbl');
+
+                        if (isExpanding) {
+                            // Show all
+                            allTables.forEach(t => t.style.display = '');
+                            allH3s.forEach(h => {
+                                const icon = h.querySelector('.mb-toggle-icon');
+                                if (icon) icon.textContent = '▼';
+                            });
+                            Lib.debug('render', 'All h3 headers (types) shown via Ctrl+Click');
+                        } else {
+                            // Hide all
+                            allTables.forEach(t => t.style.display = 'none');
+                            allH3s.forEach(h => {
+                                const icon = h.querySelector('.mb-toggle-icon');
+                                if (icon) icon.textContent = '▲';
+                            });
+                            Lib.debug('render', 'All h3 headers (types) hidden via Ctrl+Click');
+                        }
+                    } else {
+                        // Normal click: Toggle just this h3
+                        const isHidden = table.style.display === 'none';
+                        Lib.info('render', `Toggling table for "${categoryName}". New state: ${isHidden ? 'visible' : 'hidden'}`);
+                        table.style.display = isHidden ? '' : 'none';
+                        h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
+                    }
                 });
                 makeTableSortableUnified(table, `${categoryName}_${index}`);
             } else if (h3 && h3.classList.contains('mb-toggle-h3')) {

@@ -38784,8 +38784,8 @@ ActionKeyboardMouseToggle all h2 headersCtrl+2Ctrl+Click h2Toggle all h3 headers
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
-Please implement multi-column sort (first for the "single table in a page" case). Make it visually clear which columns
-have been used for sorting in which order
+Please implement multi-column sort (first for the "single table in a page" case, prevent it to run on pages with mutiple
+tables). Make it visually clear which columns have been used for sorting in which order, eg. use "▲¹" or "▼²"
 
 ** gemini - thinking
 
