@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.30.0+2026-02-17
+// @version      9.31.0+2026-02-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.31.0+2026-02-17', description: 'Enhancement: Added keyboard navigation to pull-down menus. (1) "Visible Columns": Up/Down to navigate checkboxes, Space/Shift to toggle selection, Enter to close. Auto-focus first checkbox on open. (2) "Density": Up/Down to navigate options with immediate table preview, Enter to apply and close. Auto-focus current density on open. (3) "Export": Up/Down to navigate formats, Enter to execute and close. Auto-focus first option on open. All menus now have visual focus indicators and support keyboard-only operation.'},
     {version: '9.30.0+2026-02-17', description: 'Fix: "Collapsable Sidebar" and "Auto-Resize Columns" feature break "Stick Table Headers" feature.'},
     {version: '9.26+2026-02-16', description: 'Fix & Enhancement: (1) Removed redundant "Unhighlight prefilter" button (functionality now in dynamic prefilter toggle button). (2) Fixed "Toggle highlighting" button restore functionality - now correctly restores filter highlights by re-running runFilter() instead of manual highlight re-application. (3) Added 🎨 emoji to dynamic prefilter button text (e.g., "🎨 2 rows prefiltered: \'Westfalenhalle\'").'},
     {version: '9.26.0+2026-02-16', description: 'Major Enhancement - Split Toggle Functionality: (1) Created separate prefilter toggle button that only appears when data is loaded from disk with a prefilter. Shows dynamic text like "2 rows prefiltered: \'Westfalenhalle\'" and only toggles prefilter highlighting. (2) "Toggle highlighting" button now only toggles global filter and column filter highlighting, not prefilter. (3) Separate tracking for prefilter and filter highlight states with independent save/restore functions. (4) Both buttons change background color to their respective highlight colors when highlighting is disabled.'},
@@ -786,6 +787,56 @@ let changelog = [
         closeText.style.cssText = 'font-size: 0.9em; color: #666; text-align: center; font-style: italic;';
         contentWrapper.appendChild(closeText);
 
+        // Keyboard navigation state
+        let selectedCheckboxIndex = 0;
+
+        // Function to update checkbox focus styling
+        const updateCheckboxFocus = (index) => {
+            checkboxes.forEach((cb, i) => {
+                const wrapper = cb.parentElement;
+                if (i === index) {
+                    wrapper.style.background = '#e3f2fd';
+                    wrapper.style.borderRadius = '3px';
+                    cb.focus();
+                } else {
+                    wrapper.style.background = '';
+                }
+            });
+        };
+
+        // Keyboard handler for menu
+        const menuKeyHandler = (e) => {
+            if (menu.style.display !== 'block') return;
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    selectedCheckboxIndex = (selectedCheckboxIndex + 1) % checkboxes.length;
+                    updateCheckboxFocus(selectedCheckboxIndex);
+                    break;
+
+                case 'ArrowUp':
+                    e.preventDefault();
+                    selectedCheckboxIndex = (selectedCheckboxIndex - 1 + checkboxes.length) % checkboxes.length;
+                    updateCheckboxFocus(selectedCheckboxIndex);
+                    break;
+
+                case ' ':
+                case 'Shift':
+                    e.preventDefault();
+                    const cb = checkboxes[selectedCheckboxIndex];
+                    cb.checked = !cb.checked;
+                    cb.dispatchEvent(new Event('change'));
+                    break;
+
+                case 'Enter':
+                    e.preventDefault();
+                    menu.style.display = 'none';
+                    break;
+            }
+        };
+        document.addEventListener('keydown', menuKeyHandler);
+
         // Toggle menu visibility
         toggleBtn.onclick = (e) => {
             e.stopPropagation();
@@ -806,6 +857,10 @@ let changelog = [
                     initialX = 0;
                     initialY = 0;
                 }
+
+                // Reset selection and set focus to first checkbox
+                selectedCheckboxIndex = 0;
+                setTimeout(() => updateCheckboxFocus(0), 10);
             }
         };
 
@@ -1255,9 +1310,13 @@ let changelog = [
             { label: 'Org-Mode', description: 'Emacs Org-Mode table format', handler: exportTableToOrgMode }
         ];
 
+        // Store menu items for keyboard navigation
+        const exportMenuItems = [];
+
         exportFormats.forEach(format => {
             const menuItem = document.createElement('button');
             menuItem.type = 'button';
+            menuItem.dataset.formatLabel = format.label;
             menuItem.style.cssText = `
                 display: block;
                 width: 100%;
@@ -1298,8 +1357,52 @@ let changelog = [
                 exportMenu.style.display = 'none';
             };
 
+            exportMenuItems.push({ element: menuItem, handler: format.handler });
             exportMenu.appendChild(menuItem);
         });
+
+        // Keyboard navigation state
+        let selectedExportIndex = 0;
+
+        // Function to update export menu focus
+        const updateExportFocus = (index) => {
+            exportMenuItems.forEach((item, i) => {
+                if (i === index) {
+                    item.element.style.background = '#e3f2fd';
+                    item.element.style.borderColor = '#2196F3';
+                    item.element.focus();
+                } else {
+                    item.element.style.background = 'white';
+                    item.element.style.borderColor = '#ddd';
+                }
+            });
+        };
+
+        // Keyboard handler for export menu
+        const exportMenuKeyHandler = (e) => {
+            if (exportMenu.style.display !== 'block') return;
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    selectedExportIndex = (selectedExportIndex + 1) % exportMenuItems.length;
+                    updateExportFocus(selectedExportIndex);
+                    break;
+
+                case 'ArrowUp':
+                    e.preventDefault();
+                    selectedExportIndex = (selectedExportIndex - 1 + exportMenuItems.length) % exportMenuItems.length;
+                    updateExportFocus(selectedExportIndex);
+                    break;
+
+                case 'Enter':
+                    e.preventDefault();
+                    exportMenuItems[selectedExportIndex].handler();
+                    exportMenu.style.display = 'none';
+                    break;
+            }
+        };
+        document.addEventListener('keydown', exportMenuKeyHandler);
 
         // Add separator and close instruction text
         const separator = document.createElement('div');
@@ -1325,6 +1428,10 @@ let changelog = [
                 const rect = exportBtn.getBoundingClientRect();
                 exportMenu.style.top = `${rect.bottom + 5}px`;
                 exportMenu.style.left = `${rect.left}px`;
+
+                // Reset selection and set focus to first option
+                selectedExportIndex = 0;
+                setTimeout(() => updateExportFocus(0), 10);
             }
         };
 
@@ -2041,10 +2148,14 @@ let changelog = [
         menuHeader.textContent = 'Table Density';
         menu.appendChild(menuHeader);
 
+        // Store menu options for keyboard navigation
+        const menuOptions = [];
+
         // Create option for each density
         Object.entries(densityOptions).forEach(([key, config]) => {
             const option = document.createElement('button');
             option.type = 'button';
+            option.dataset.densityKey = key;
             option.style.cssText = `
                 display: block;
                 width: 100%;
@@ -2106,8 +2217,66 @@ let changelog = [
                 option.style.fontWeight = '600';
             };
 
+            menuOptions.push(option);
             menu.appendChild(option);
         });
+
+        // Keyboard navigation state
+        let selectedOptionIndex = Object.keys(densityOptions).indexOf(currentDensity);
+
+        // Function to update option focus and preview
+        const updateOptionFocus = (index, applyImmediately = false) => {
+            menuOptions.forEach((opt, i) => {
+                if (i === index) {
+                    opt.style.background = '#e3f2fd';
+                    opt.style.borderColor = '#2196F3';
+                    opt.focus();
+                    if (applyImmediately) {
+                        // Immediately apply the density for preview
+                        applyTableDensity(opt.dataset.densityKey);
+                    }
+                } else {
+                    // Reset to default or current selection styling
+                    const isCurrentDensity = opt.dataset.densityKey === currentDensity;
+                    opt.style.background = isCurrentDensity ? '#e8f5e9' : 'white';
+                    opt.style.borderColor = isCurrentDensity ? '#4CAF50' : '#ddd';
+                }
+            });
+        };
+
+        // Keyboard handler for density menu
+        const densityMenuKeyHandler = (e) => {
+            if (menu.style.display !== 'block') return;
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    selectedOptionIndex = (selectedOptionIndex + 1) % menuOptions.length;
+                    updateOptionFocus(selectedOptionIndex, true);
+                    break;
+
+                case 'ArrowUp':
+                    e.preventDefault();
+                    selectedOptionIndex = (selectedOptionIndex - 1 + menuOptions.length) % menuOptions.length;
+                    updateOptionFocus(selectedOptionIndex, true);
+                    break;
+
+                case 'Enter':
+                    e.preventDefault();
+                    const selectedOption = menuOptions[selectedOptionIndex];
+                    applyTableDensity(selectedOption.dataset.densityKey);
+                    menu.style.display = 'none';
+                    // Update visual state of selected option
+                    menuOptions.forEach(opt => {
+                        const isSelected = opt === selectedOption;
+                        opt.style.background = isSelected ? '#e8f5e9' : 'white';
+                        opt.style.borderColor = isSelected ? '#4CAF50' : '#ddd';
+                        opt.style.fontWeight = isSelected ? '600' : 'normal';
+                    });
+                    break;
+            }
+        };
+        document.addEventListener('keydown', densityMenuKeyHandler);
 
         // Add separator and close instruction text
         const separator = document.createElement('div');
@@ -2133,6 +2302,10 @@ let changelog = [
                 const rect = densityBtn.getBoundingClientRect();
                 menu.style.top = `${rect.bottom + 5}px`;
                 menu.style.left = `${rect.left}px`;
+
+                // Reset selection to current density and set focus
+                selectedOptionIndex = Object.keys(densityOptions).indexOf(currentDensity);
+                setTimeout(() => updateOptionFocus(selectedOptionIndex, false), 10);
             }
         };
 

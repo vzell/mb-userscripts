@@ -38524,6 +38524,17 @@ clearSubBtn.appendChild(createRedXLabel('Clear all COLUMN filters'));
 
 
 * Add keyboard handling for the complete application
+** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
+** Ctrl-Shift-- ==> un-collapse all tables (maybe make it toggle)
+
+
+or
+
+** Ctrl-Shift-- ==> collapse all h2
+
+** Ctrl-Alt-1 ==> collapse all h1
+** Ctrl-Alt-2 ==> collapse all h2
+** Ctrl-Alt-3 ==> collapse all h3
 
 
 * DONE logic for prefiltering rows
@@ -38705,12 +38716,17 @@ give you some insights... please try to fix.
 
 * button visibility
 
+In the uploaded userscript "ShowAllEntityData.user.js"
+
 Only make the "Toggle hightlightning", "Clear all COLUMN filters" and "Clear ALL filters" buttons on the global level
 (or in the single table case) visible when actual corresponding filter conditions have been entered, the same holds true
 for the "Clear all COLUMN filters" button in the muti table case,
 
 
 * Add keyboard navigation in the pull-down menues
+** initial
+
+In the uploaded userscript "ShowAllEntityData.user.js"
 
 Add keyboard navigation in the following pull-down menues. When clicked, they should have the keyboard focus:
 
@@ -38718,6 +38734,17 @@ Add keyboard navigation in the following pull-down menues. When clicked, they sh
 - "Density": up/down, immediately render the new table layout (user feedback), when using the up/down keys, as if the user clicked on the menu entry. Return should use the currently selected and close the dialog
 - "Export": Up/down/Return should use the currently selected and close the dialog
 
+** addional
+
+Add the following additional functionality
+
+- "Visible Columns": Add "Ctrl+V" for opening the "Visible Columns" menu. "Tab" should also cycle to the two buttons "Select All", "Deselect All" ==> Additionally render them with an
+  underscore below the "S", and and underscore below the "D" for keyboard shortcut selection with "Alt-S" meaning pressing the "Select All" button and "Alt-D"
+  meaning pressing the "Deselect All" button. The "Alt-S" and "Alt-D" keyboard combinations should only be active when the "Visible Columns" pull-down menu is open
+
+- "Export": Focus the "Close" button on the popup "<format> export complete. ..."
+
+- "Density": Add "Ctrl-D" as a generic shortcut for opening the "Density pull-down menu
 
 * multi-column sort
 ** initial
@@ -39049,9 +39076,11 @@ Visual Priority: The order + 1 badge ensures users know exactly which column is 
 Unified Functionality: Because this is applied in makeTableSortableUnified, it works immediately for both the single-table and multi-table pages (like Release Groups) without duplicate code.
 #+end_example
 
+
 * sensible defaults for configuration options
 
 * overwhoule of the logging statements... make lots of stuff debug stements
+
 
 * DONE collapsable sidebar breaks sticky headers
 
