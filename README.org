@@ -39326,6 +39326,10 @@ The "Auto-Resize" (function toggleAutoResizeColumns()) feature breaks the "stick
 
 * Add Ctrl-M handling also on page entry, not only on rendered page
 
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+Add Ctrl-M handling also on page entry, not only on rendered page
+
 * Implement Emacs-style keybinding
 
 * alignment h1 button with status line below
