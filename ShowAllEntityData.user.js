@@ -3195,7 +3195,7 @@ let changelog = [
             label: 'Enable Export',
             type: 'checkbox',
             default: true,
-            description: 'Show/hide the "Export 💾" button for exporting data to CSV/JSON'
+            description: 'Show/hide the "Export 💾" button for exporting data to different formats (CSV/JSON/Org-Mode)'
         },
 
         sa_enable_keyboard_shortcuts: {
@@ -4154,7 +4154,7 @@ let changelog = [
     saveToDiskBtn.textContent = '💾 Save to Disk';
     saveToDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#4CAF50; color:white; border:1px solid #45a049; display:none; display: inline-flex; align-items: center; justify-content: center;';
     saveToDiskBtn.type = 'button';
-    saveToDiskBtn.title = 'Save current table data to disk as JSON';
+    saveToDiskBtn.title = 'Save current table data to disk as Gzipd JSON';
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
     saveToDiskBtn.style.display = 'none'; // - Changed from 'inline-flex' or similar to 'none'
 
