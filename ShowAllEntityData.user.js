@@ -7286,7 +7286,7 @@ let changelog = [
                 Lib.info('render', `Creating new table and H3 for group "${categoryName}".`);
                 h3 = document.createElement('h3');
                 h3.className = 'mb-toggle-h3';
-                h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle all types)';
+                h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)';
                 h3.style.cursor = 'pointer';
                 h3.style.userSelect = 'none';
 
@@ -7491,7 +7491,7 @@ let changelog = [
         allH2s.forEach(h2 => {
             if (h2.classList.contains('mb-h2-processed')) return;
             h2.classList.add('mb-h2-processed', 'mb-toggle-h2');
-            h2.title = 'Click to Collapse/Uncollapse section (Ctrl+Click to toggle all in this column)';
+            h2.title = 'Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)';
             h2.style.cursor = 'pointer'; // Make entire H2 header indicate clickability
             h2.style.userSelect = 'none'; // Prevent text selection when clicking
 
