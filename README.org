@@ -38652,8 +38652,8 @@ necessary)
 BUT, the "Toggle hightlightning" button doens't work as it should:
 - it actually clears all the highlightning coming from the global filter and the column filters, it also changes color,
   but it DOESN'T restore the highlightning coming from the global filter and the column filters at all. Please
-  fix. Probably the easiest fix would be to just rerun the currently effective filters, as normally they would normale
-  filter AND hightlight autoamtically. Please rethink and fix..
+  fix. Probably the easiest fix would be to just rerun the currently effective filters, as they would normaly filter AND
+  hightlight automatically. Please rethink and fix..
 
 Please also add the "🎨 " in front of the dynamic button text e.g. '🎨 2 rows prefiltered: "Westfalenhalle"'
 
@@ -38704,17 +38704,216 @@ In that case the text is rendered after the text e.g. "Loaded 4 pages (400 rows)
 
 ** TODO still
 
-NO, the problem still persists. It seems the global filter will only ever be cleared but NEVER restored through
-toggling. The problem is already present when loading data directly from the backend database and NOT pre-filtered from
-the filesystem.
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+the "Toggle hightlightning" button doens't work as it should:
+
+- it actually clears all the highlightning coming from the global filter and the column filters (if there are filter
+  expressions added) when pressed first, it also changes color, but it DOESN'T restore the highlightning coming from the
+  global filter and the column filters at all when pressed the second time. Please fix. Probably the easiest fix would
+  be to just rerun the currently effective filters, as they would normaly filter AND hightlight automatically. Please
+  rethink and fix..
+
+It seems the global filter will only ever be cleared but NEVER restored through toggling. The problem is already present
+when loading data directly from the backend database and NOT pre-filtered from the filesystem.
 
 By the way if a global filter is in effect, and a column filter too and both are highlighted and then when I toggle
 everything works.  Now when I press the "Clear all COLUMN filters" button the highlightning of the column filter is
 removed, BUT the highlightning because of the still effective global filter is shown again. Maybe this behaviour can
 give you some insights... please try to fix.
 
+** answer: gemini- pro
 
-* button visibility
+#+begin_example
+You are completely right—your insight into the issue is spot on. The current toggle logic is manipulating the DOM directly to remove the highlights, but it gets immediately out of sync because runFilter() creates clones from the original row arrays (allRows or group.rows) and blindly re-applies the highlights without checking if the toggle is actually enabled.
+
+Because runFilter() inherently handles the complete DOM reconstruction and filtering, relying on it to toggle the visual highlights is definitely the easiest, cleanest, and most predictable fix. By making runFilter() respect the filterHighlightEnabled and prefilterHighlightEnabled states, we can strip away the clunky state-saving functions entirely.
+
+Here are the precise code replacements to fix the toggling logic and the button visibility issues.
+
+1. Remove the old Save/Restore State Functions
+Since runFilter() will now handle the rendering correctly, we no longer need the manual DOM-saving logic.
+
+Delete these four functions entirely (around lines 2002 to 2068):
+
+function savePrefilterHighlightState() { ... }
+
+function restorePrefilterHighlightState() { ... }
+
+function saveFilterHighlightState() { ... }
+
+function restoreFilterHighlightState() { ... }
+
+2. Simplify the Toggle Button Handlers
+Update the click handlers so they simply flip the boolean flag, update their color, and call runFilter().
+
+Replace the prefilterToggleBtn.onclick block (around line 1601) with:
+
+JavaScript
+    prefilterToggleBtn.onclick = () => {
+        prefilterHighlightEnabled = !prefilterHighlightEnabled;
+        updatePrefilterButtonAppearance();
+        if (typeof runFilter === 'function') {
+            runFilter();
+        }
+        Lib.info('highlight', `Prefilter highlights ${prefilterHighlightEnabled ? 'restored' : 'removed'}`);
+    };
+Replace the unhighlightAllBtn.onclick block (around line 1639) with:
+
+JavaScript
+    unhighlightAllBtn.onclick = () => {
+        filterHighlightEnabled = !filterHighlightEnabled;
+        updateFilterHighlightButtonAppearance();
+        if (typeof runFilter === 'function') {
+            runFilter();
+        }
+        Lib.info('highlight', `Filter highlights ${filterHighlightEnabled ? 'restored' : 'removed'}`);
+    };
+3. Fix the Button Visibility Logic
+To prevent the toggle button from disappearing when highlights are toggled off (which was causing the button to vanish unexpectedly), we need to base its visibility on the active filter inputs, rather than scanning the DOM for highlight spans.
+
+Replace the top half of updateFilterButtonsVisibility() (around line 1699) with:
+
+JavaScript
+    function updateFilterButtonsVisibility() {
+        // Check if global filter has value
+        const globalFilterActive = filterInput.value.trim() !== '';
+
+        // Check if any column filters have values
+        const columnFilters = document.querySelectorAll('.mb-col-filter-input');
+        const columnFiltersActive = Array.from(columnFilters).some(input => input.value.trim() !== '');
+
+        // Show/hide Toggle highlighting button (visible if ANY filter is active, regardless of highlight state)
+        unhighlightAllBtn.style.display = (globalFilterActive || columnFiltersActive) ? 'inline-block' : 'none';
+
+        // Show/hide Clear all COLUMN filters button
+        clearColumnFiltersBtn.style.display = columnFiltersActive ? 'inline-block' : 'none';
+
+        // Show/hide Clear ALL filters button
+        clearAllFiltersBtn.style.display = (globalFilterActive || columnFiltersActive) ? 'inline-block' : 'none';
+4. Update runFilter() Logic
+Finally, update the two filtering loops inside runFilter() so they strip out disabled pre-filters from the clones, and only apply new highlights if the filter toggle is enabled.
+
+For the multi-table block (around line 2167), update the .filter() loop:
+
+JavaScript
+                const matches = group.rows.map(r => r.cloneNode(true)).filter(r => {
+                    // Reset previous highlights (critical for correct filtering)
+                    r.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
+                        .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+
+                    if (!prefilterHighlightEnabled) {
+                        r.querySelectorAll('.mb-pre-filter-highlight')
+                            .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+                    }
+
+                    // Global match
+                    let globalHit = !globalQuery;
+                    if (!globalHit) {
+                        if (isRegExp && globalRegex) {
+                            // For regex patterns, test against each cell individually
+                            // This allows anchored patterns like ^Thunder Road to work correctly
+                            globalHit = Array.from(r.cells).some(cell => {
+                                const cellText = getCleanColumnText(cell);
+                                return globalRegex.test(cellText);
+                            });
+                        } else {
+                            // For non-regex, test against concatenated row text
+                            const text = getCleanVisibleText(r);
+                            globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
+                        }
+                    }
+
+                    // Column matches
+                    let colHit = true;
+                    for (const f of colFilters) {
+                        const cellText = getCleanColumnText(r.cells[f.idx]);
+                        let match = false;
+                        if (isRegExp) {
+                            try {
+                                match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
+                            } catch (e) {
+                                match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+                            }
+                        } else {
+                            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+                        }
+                        if (!match) {
+                            colHit = false;
+                            break;
+                        }
+                    }
+
+                    const finalHit = globalHit && colHit;
+                    if (finalHit) {
+                        if (filterHighlightEnabled) {
+                            if (globalQuery) highlightText(r, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+                            colFilters.forEach(f => highlightText(r, f.val, isCaseSensitive, f.idx, isRegExp));
+                        }
+                    }
+                    return finalHit;
+                });
+For the single-table block (around line 2217), update the .filter() loop:
+
+JavaScript
+            const filteredRows = allRows.map(row => row.cloneNode(true)).filter(row => {
+                // Reset previous highlights
+                row.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
+                    .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+
+                if (!prefilterHighlightEnabled) {
+                    row.querySelectorAll('.mb-pre-filter-highlight')
+                        .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+                }
+
+                let globalHit = !globalQuery;
+                if (!globalHit) {
+                    if (isRegExp && globalRegex) {
+                        // For regex patterns, test against each cell individually
+                        // This allows anchored patterns like ^Thunder Road to work correctly
+                        globalHit = Array.from(row.cells).some(cell => {
+                            const cellText = getCleanColumnText(cell);
+                            return globalRegex.test(cellText);
+                        });
+                    } else {
+                        // For non-regex, test against concatenated row text
+                        const text = getCleanVisibleText(row);
+                        globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
+                    }
+                }
+
+                let colHit = true;
+                for (const f of colFilters) {
+                    const cellText = getCleanColumnText(row.cells[f.idx]);
+                    let match = false;
+                    if (isRegExp) {
+                        try {
+                            match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
+                        } catch (e) {
+                            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+                        }
+                    } else {
+                        match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+                    }
+                    if (!match) {
+                        colHit = false;
+                        break;
+                    }
+                }
+
+                const finalHit = globalHit && colHit;
+                if (finalHit) {
+                    if (filterHighlightEnabled) {
+                        if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+                        colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
+                    }
+                }
+                return finalHit;
+            });
+Would you like me to review the loadTableDataFromDisk() function to see if we can streamline the pre-filter injection logic next, or is there another part of the script you'd like to dive into?
+#+end_example
+
+* DONE button visibility
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
@@ -38723,7 +38922,7 @@ Only make the "Toggle hightlightning", "Clear all COLUMN filters" and "Clear ALL
 for the "Clear all COLUMN filters" button in the muti table case,
 
 
-* Add keyboard navigation in the pull-down menues
+* DONE Add keyboard navigation in the pull-down menues
 ** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -38778,6 +38977,7 @@ same holds true for the "Clear all COLUMN filters" button in the multi table cas
 
 📋 Complete Feature Matrix
 ActionKeyboardMouseToggle all h2 headersCtrl+2Ctrl+Click h2Toggle all h3 headersCtrl+3Ctrl+Click h3 ✨Toggle single h2-Click h2Toggle single h3-Click h3Start data loadCtrl+M ✨Click button
+
 
 * multi-column sort
 ** initial
@@ -39124,7 +39324,170 @@ In the uploaded userscript "ShowAllEntityData.user.js"
 The "Auto-Resize" (function toggleAutoResizeColumns()) feature breaks the "sticky headers" "function applyStickyHeaders()" feature, please investigate and fix
 
 
-* Add Ctrl-M handling also on page entry, not only on renderd page
+* Add Ctrl-M handling also on page entry, not only on rendered page
 
 * Implement Emacs-style keybinding
 
+* alignment h1 button with status line below
+
+#+begin_example
+To align the status text perfectly with the "Show all..." action buttons, we can use a dynamic JavaScript calculation. Because the entity names in the h1 header are of varying lengths (e.g., "The Beatles" vs. "Area 51"), a fixed margin won't work universally.
+
+By measuring the exact pixel position of the first action button and computing the difference, we can dynamically apply a margin-left to the status display container. This ensures it aligns perfectly every time, even if the window is resized.
+
+Here is the replacement code.
+
+Find this exact block of code (around line 1748):
+
+JavaScript
+    // Create a separate container for status displays (globalStatusDisplay and infoDisplay)
+    const statusDisplaysContainer = document.createElement('div');
+    statusDisplaysContainer.id = 'mb-status-displays-container';
+    statusDisplaysContainer.style.cssText = 'display:inline-flex; align-items:center; gap:8px; margin-left:10px; line-height:1; vertical-align:middle;';
+    statusDisplaysContainer.appendChild(globalStatusDisplay);
+    statusDisplaysContainer.appendChild(infoDisplay);
+
+    // Position status displays based on pageType
+    if (pageType === 'search') {
+        // For search pages, place immediately below h1 header
+        const h1 = headerContainer.tagName === 'H1' ? headerContainer : headerContainer.closest('h1');
+        if (h1) {
+            const statusWrapper = document.createElement('div');
+            statusWrapper.style.cssText = 'margin-top:5px; margin-left:0px;';
+            statusWrapper.appendChild(statusDisplaysContainer);
+            h1.parentNode.insertBefore(statusWrapper, h1.nextSibling);
+        }
+    } else {
+        // For all other page types, place inside <p class="subheader"> after the <bdi><a href structure
+        const subheader = document.querySelector('p.subheader');
+        if (subheader) {
+            // Find the last <bdi><a> element in the subheader
+            const bdiLinks = subheader.querySelectorAll('bdi a');
+            const lastBdiLink = bdiLinks[bdiLinks.length - 1];
+
+            if (lastBdiLink) {
+                // Insert after the last bdi link's parent bdi
+                const bdi = lastBdiLink.closest('bdi');
+                if (bdi) {
+                    // Create a wrapper to maintain spacing
+                    const statusWrapper = document.createElement('span');
+                    statusWrapper.style.cssText = 'margin-left:10px;';
+                    statusWrapper.appendChild(statusDisplaysContainer);
+
+                    // Insert after the bdi element
+                    if (bdi.nextSibling) {
+                        bdi.parentNode.insertBefore(statusWrapper, bdi.nextSibling);
+                    } else {
+                        bdi.parentNode.appendChild(statusWrapper);
+                    }
+                }
+            } else {
+                // Fallback: append to end of subheader
+                subheader.appendChild(statusDisplaysContainer);
+            }
+        } else {
+            // Fallback: place below h1 if no subheader found
+            const h1 = headerContainer.tagName === 'H1' ? headerContainer : headerContainer.closest('h1');
+            if (h1) {
+                const statusWrapper = document.createElement('div');
+                statusWrapper.style.cssText = 'margin-top:5px; margin-left:0px;';
+                statusWrapper.appendChild(statusDisplaysContainer);
+                h1.parentNode.insertBefore(statusWrapper, h1.nextSibling);
+            }
+        }
+    }
+Replace it entirely with this updated block:
+
+JavaScript
+    // Create a separate container for status displays (globalStatusDisplay and infoDisplay)
+    const statusDisplaysContainer = document.createElement('div');
+    statusDisplaysContainer.id = 'mb-status-displays-container';
+    statusDisplaysContainer.style.cssText = 'display:inline-flex; align-items:center; gap:8px; margin-left:10px; line-height:1; vertical-align:middle; transition:margin-left 0.1s ease-out;';
+    statusDisplaysContainer.appendChild(globalStatusDisplay);
+    statusDisplaysContainer.appendChild(infoDisplay);
+
+    // Position status displays based on pageType
+    if (pageType === 'search') {
+        // For search pages, place immediately below h1 header
+        const h1 = headerContainer.tagName === 'H1' ? headerContainer : headerContainer.closest('h1');
+        if (h1) {
+            const statusWrapper = document.createElement('div');
+            statusWrapper.style.cssText = 'margin-top:5px; margin-left:0px;';
+            statusWrapper.appendChild(statusDisplaysContainer);
+            h1.parentNode.insertBefore(statusWrapper, h1.nextSibling);
+        }
+    } else {
+        // For all other page types, place inside <p class="subheader"> after the <bdi><a href structure
+        const subheader = document.querySelector('p.subheader');
+        if (subheader) {
+            // Find the last <bdi><a> element in the subheader
+            const bdiLinks = subheader.querySelectorAll('bdi a');
+            const lastBdiLink = bdiLinks[bdiLinks.length - 1];
+
+            if (lastBdiLink) {
+                // Insert after the last bdi link's parent bdi
+                const bdi = lastBdiLink.closest('bdi');
+                if (bdi) {
+                    // Create a wrapper to maintain spacing
+                    const statusWrapper = document.createElement('span');
+                    statusWrapper.style.cssText = 'margin-left:0px; display:inline-block;';
+                    statusWrapper.appendChild(statusDisplaysContainer);
+
+                    // Insert after the bdi element
+                    if (bdi.nextSibling) {
+                        bdi.parentNode.insertBefore(statusWrapper, bdi.nextSibling);
+                    } else {
+                        bdi.parentNode.appendChild(statusWrapper);
+                    }
+                }
+            } else {
+                // Fallback: append to end of subheader
+                subheader.appendChild(statusDisplaysContainer);
+            }
+        } else {
+            // Fallback: place below h1 if no subheader found
+            const h1 = headerContainer.tagName === 'H1' ? headerContainer : headerContainer.closest('h1');
+            if (h1) {
+                const statusWrapper = document.createElement('div');
+                statusWrapper.style.cssText = 'margin-top:5px; margin-left:0px;';
+                statusWrapper.appendChild(statusDisplaysContainer);
+                h1.parentNode.insertBefore(statusWrapper, h1.nextSibling);
+            }
+        }
+    }
+
+    // Function to precisely align the status display with the first action button
+    const alignStatusDisplay = () => {
+        // Find the first visible action button (e.g., "Show all...")
+        const firstBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.offsetParent !== null);
+
+        if (firstBtn && statusDisplaysContainer) {
+            // Reset margin to natural position for calculation
+            statusDisplaysContainer.style.marginLeft = '10px';
+
+            const btnRect = firstBtn.getBoundingClientRect();
+            const statusRect = statusDisplaysContainer.getBoundingClientRect();
+
+            // Calculate the difference required to align their left edges
+            const offsetDiff = btnRect.left - statusRect.left;
+
+            if (offsetDiff > 0) {
+                // Add the difference to the base 10px margin
+                statusDisplaysContainer.style.marginLeft = `${10 + offsetDiff}px`;
+            }
+        }
+    };
+
+    // Align immediately, then after a short delay (for CSS settling), and on window resize
+    alignStatusDisplay();
+    setTimeout(alignStatusDisplay, 100);
+    window.addEventListener('resize', alignStatusDisplay);
+How this works:
+Dynamic Bounding Boxes: It uses getBoundingClientRect() to fetch the absolute X-coordinate of both your first control button and the status container.
+
+Graceful Fallback: If a subheader is extremely long (pushing the status display past the button naturally), the script detects that the difference is negative and gracefully ignores it, maintaining the original margin so it doesn't collide with the text.
+
+Responsive: Binding it to the resize event ensures the text stays perfectly snapped to the button's position if the user resizes their browser window or zooms in.
+
+Would you like me to review any other layout elements to make the UI look even sharper?
+#+end_example
