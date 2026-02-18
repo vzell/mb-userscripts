@@ -39486,6 +39486,9 @@ the "Cancel" button (if available on aspecific dialog) doesn NOT work.
 
 Additionally, the font used inside the dialogs should be much bigger/readable
 
+** TODO reposition "Load from Disk" to under the button, like the other dialogs for example the "Page Type Mismatch" and "High Page Count" which work
+
+** TODO reposition the "Page Reloaded" dialog also
 
 * Add keyboard handling for the complete application
 ** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3

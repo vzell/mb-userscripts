@@ -1811,137 +1811,175 @@ let changelog = [
     /**
      * Custom alert dialog - matches userscript styling
      */
-    function showCustomAlert(message, title = 'Notice') {
+    /**
+     * Custom alert dialog - positioned below triggering button
+     * @param {string} message - Alert message
+     * @param {string} title - Dialog title
+     * @param {HTMLElement} triggerButton - Button that triggered the alert (for positioning)
+     */
+    function showCustomAlert(message, title = 'Notice', triggerButton = null) {
         return new Promise((resolve) => {
             const dialogDiv = document.createElement('div');
             dialogDiv.style.cssText = `
                 position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
                 background: white;
                 border: 1px solid #ccc;
                 border-radius: 8px;
-                padding: 20px;
+                padding: 24px;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.2);
                 z-index: 10001;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                min-width: 350px;
-                max-width: 500px;
+                min-width: 380px;
+                max-width: 550px;
             `;
 
             // Header
             const headerDiv = document.createElement('div');
-            headerDiv.style.cssText = 'font-weight: 600; font-size: 1.1em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ddd; color: #333;';
+            headerDiv.style.cssText = 'font-weight: 600; font-size: 1.3em; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #ddd; color: #333;';
             headerDiv.textContent = title;
             dialogDiv.appendChild(headerDiv);
 
             // Message
             const msgDiv = document.createElement('div');
-            msgDiv.style.cssText = 'margin-bottom: 20px; line-height: 1.5; color: #555; font-size: 0.95em;';
+            msgDiv.style.cssText = 'margin-bottom: 24px; line-height: 1.6; color: #555; font-size: 1.05em; word-wrap: break-word;';
             msgDiv.textContent = message;
             dialogDiv.appendChild(msgDiv);
 
             // Button container
             const btnContainer = document.createElement('div');
-            btnContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 8px;';
+            btnContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px;';
 
             // OK button
             const okBtn = document.createElement('button');
             okBtn.textContent = 'OK';
             okBtn.style.cssText = `
-                padding: 8px 16px;
+                padding: 10px 20px;
                 background-color: #4CAF50;
                 color: white;
                 border: 1px solid #45a049;
                 border-radius: 4px;
                 cursor: pointer;
-                font-size: 0.95em;
+                font-size: 1.05em;
                 font-weight: 500;
                 transition: background-color 0.2s;
+                outline: none;
             `;
             okBtn.onmouseover = () => { okBtn.style.backgroundColor = '#45a049'; };
             okBtn.onmouseout = () => { okBtn.style.backgroundColor = '#4CAF50'; };
             okBtn.onclick = () => {
                 dialogDiv.remove();
+                document.removeEventListener('keydown', keyHandler);
                 resolve();
             };
-            okBtn.focus(); // Auto-focus OK button
             btnContainer.appendChild(okBtn);
-
             dialogDiv.appendChild(btnContainer);
             document.body.appendChild(dialogDiv);
 
-            // Allow Escape to close
-            const escapeHandler = (e) => {
+            // Position below trigger button or center screen
+            setTimeout(() => {
+                if (triggerButton) {
+                    const btnRect = triggerButton.getBoundingClientRect();
+                    const dialogRect = dialogDiv.getBoundingClientRect();
+                    let top = btnRect.bottom + 10;
+                    let left = btnRect.left;
+
+                    // Adjust if dialog would go off-screen
+                    if (top + dialogRect.height > window.innerHeight) {
+                        top = btnRect.top - dialogRect.height - 10;
+                    }
+                    if (left + dialogRect.width > window.innerWidth) {
+                        left = window.innerWidth - dialogRect.width - 10;
+                    }
+                    if (left < 0) {
+                        left = 10;
+                    }
+
+                    dialogDiv.style.left = left + 'px';
+                    dialogDiv.style.top = top + 'px';
+                } else {
+                    // Fallback to center
+                    dialogDiv.style.left = '50%';
+                    dialogDiv.style.top = '50%';
+                    dialogDiv.style.transform = 'translate(-50%, -50%)';
+                }
+
+                okBtn.focus(); // Focus after DOM positioning
+            }, 0);
+
+            // Keyboard handler
+            const keyHandler = (e) => {
                 if (e.key === 'Escape') {
                     e.preventDefault();
                     dialogDiv.remove();
-                    document.removeEventListener('keydown', escapeHandler);
+                    document.removeEventListener('keydown', keyHandler);
                     resolve();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    okBtn.click();
                 }
             };
-            document.addEventListener('keydown', escapeHandler);
+            document.addEventListener('keydown', keyHandler);
         });
     }
 
     /**
-     * Custom confirm dialog - matches userscript styling
+     * Custom confirm dialog - positioned below triggering button
+     * @param {string} message - Confirm message
+     * @param {string} title - Dialog title
+     * @param {HTMLElement} triggerButton - Button that triggered the confirm (for positioning)
      */
-    function showCustomConfirm(message, title = 'Confirm') {
+    function showCustomConfirm(message, title = 'Confirm', triggerButton = null) {
         return new Promise((resolve) => {
             const dialogDiv = document.createElement('div');
             dialogDiv.style.cssText = `
                 position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
                 background: white;
                 border: 1px solid #ccc;
                 border-radius: 8px;
-                padding: 20px;
+                padding: 24px;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.2);
                 z-index: 10001;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                min-width: 350px;
-                max-width: 500px;
+                min-width: 380px;
+                max-width: 550px;
             `;
 
             // Header
             const headerDiv = document.createElement('div');
-            headerDiv.style.cssText = 'font-weight: 600; font-size: 1.1em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ddd; color: #333;';
+            headerDiv.style.cssText = 'font-weight: 600; font-size: 1.3em; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #ddd; color: #333;';
             headerDiv.textContent = title;
             dialogDiv.appendChild(headerDiv);
 
             // Message
             const msgDiv = document.createElement('div');
-            msgDiv.style.cssText = 'margin-bottom: 20px; line-height: 1.5; color: #555; font-size: 0.95em; word-wrap: break-word;';
-            msgDiv.textContent = message;
+            msgDiv.style.cssText = 'margin-bottom: 24px; line-height: 1.6; color: #555; font-size: 1.05em; word-wrap: break-word;';
+            msgDiv.innerHTML = message.replace(/\n/g, '<br>');
             dialogDiv.appendChild(msgDiv);
 
             // Button container
             const btnContainer = document.createElement('div');
-            btnContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 8px;';
+            btnContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px;';
 
             // Cancel button
             const cancelBtn = document.createElement('button');
             cancelBtn.textContent = 'Cancel';
             cancelBtn.style.cssText = `
-                padding: 8px 16px;
+                padding: 10px 20px;
                 background-color: #f0f0f0;
                 color: #333;
                 border: 1px solid #ccc;
                 border-radius: 4px;
                 cursor: pointer;
-                font-size: 0.95em;
+                font-size: 1.05em;
                 font-weight: 500;
                 transition: background-color 0.2s;
+                outline: none;
             `;
             cancelBtn.onmouseover = () => { cancelBtn.style.backgroundColor = '#e0e0e0'; };
             cancelBtn.onmouseout = () => { cancelBtn.style.backgroundColor = '#f0f0f0'; };
             cancelBtn.onclick = () => {
                 dialogDiv.remove();
-                document.removeEventListener('keydown', escapeHandler);
+                document.removeEventListener('keydown', keyHandler);
                 resolve(false);
             };
             btnContainer.appendChild(cancelBtn);
@@ -1950,44 +1988,78 @@ let changelog = [
             const okBtn = document.createElement('button');
             okBtn.textContent = 'OK';
             okBtn.style.cssText = `
-                padding: 8px 16px;
+                padding: 10px 20px;
                 background-color: #4CAF50;
                 color: white;
                 border: 1px solid #45a049;
                 border-radius: 4px;
                 cursor: pointer;
-                font-size: 0.95em;
+                font-size: 1.05em;
                 font-weight: 500;
                 transition: background-color 0.2s;
+                outline: none;
             `;
             okBtn.onmouseover = () => { okBtn.style.backgroundColor = '#45a049'; };
             okBtn.onmouseout = () => { okBtn.style.backgroundColor = '#4CAF50'; };
             okBtn.onclick = () => {
                 dialogDiv.remove();
-                document.removeEventListener('keydown', escapeHandler);
+                document.removeEventListener('keydown', keyHandler);
                 resolve(true);
             };
-            okBtn.focus(); // Auto-focus OK button
             btnContainer.appendChild(okBtn);
-
             dialogDiv.appendChild(btnContainer);
             document.body.appendChild(dialogDiv);
 
-            // Allow Escape to cancel and Enter to confirm
-            const escapeHandler = (e) => {
+            // Position below trigger button or center screen
+            setTimeout(() => {
+                if (triggerButton) {
+                    const btnRect = triggerButton.getBoundingClientRect();
+                    const dialogRect = dialogDiv.getBoundingClientRect();
+                    let top = btnRect.bottom + 10;
+                    let left = btnRect.left;
+
+                    // Adjust if dialog would go off-screen
+                    if (top + dialogRect.height > window.innerHeight) {
+                        top = btnRect.top - dialogRect.height - 10;
+                    }
+                    if (left + dialogRect.width > window.innerWidth) {
+                        left = window.innerWidth - dialogRect.width - 10;
+                    }
+                    if (left < 0) {
+                        left = 10;
+                    }
+
+                    dialogDiv.style.left = left + 'px';
+                    dialogDiv.style.top = top + 'px';
+                } else {
+                    // Fallback to center
+                    dialogDiv.style.left = '50%';
+                    dialogDiv.style.top = '50%';
+                    dialogDiv.style.transform = 'translate(-50%, -50%)';
+                }
+
+                okBtn.focus(); // Focus after DOM positioning
+            }, 0);
+
+            // Keyboard handler with Tab support
+            const keyHandler = (e) => {
                 if (e.key === 'Escape') {
                     e.preventDefault();
-                    dialogDiv.remove();
-                    document.removeEventListener('keydown', escapeHandler);
-                    resolve(false);
+                    cancelBtn.click();
                 } else if (e.key === 'Enter') {
                     e.preventDefault();
-                    dialogDiv.remove();
-                    document.removeEventListener('keydown', escapeHandler);
-                    resolve(true);
+                    okBtn.click();
+                } else if (e.key === 'Tab') {
+                    e.preventDefault();
+                    // Toggle focus between Cancel and OK buttons
+                    if (document.activeElement === cancelBtn) {
+                        okBtn.focus();
+                    } else {
+                        cancelBtn.focus();
+                    }
                 }
             };
-            document.addEventListener('keydown', escapeHandler);
+            document.addEventListener('keydown', keyHandler);
         });
     }
 
@@ -3991,9 +4063,11 @@ let changelog = [
     const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
     if (reloadFlag) {
         sessionStorage.removeItem('mb_show_all_reload_pending');
+        const firstShowAllBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
         showCustomAlert(
             'The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.',
-            '⚠️ Page Reloaded'
+            '⚠️ Page Reloaded',
+            firstShowAllBtn || null
         );
     }
 
@@ -6748,7 +6822,8 @@ let changelog = [
         if (maxPage > maxThreshold) {
             const proceedConfirmed = await showCustomConfirm(
                 `Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.\n\nProceed?`,
-                '⚠️ High Page Count'
+                '⚠️ High Page Count',
+                activeBtn
             );
             if (!proceedConfirmed) {
                 Lib.warn('warn', `High page count detected (${maxPage}). User canceled fetch.`);
@@ -8556,7 +8631,8 @@ let changelog = [
             } catch (e) {
                 await showCustomAlert(
                     'Invalid Regular Expression in load filter field. Load aborted.',
-                    '❌ Invalid Regex'
+                    '❌ Invalid Regex',
+                    loadFromDiskBtn
                 );
                 // Reset file input so change event fires again if they pick same file
                 fileInput.value = '';
@@ -8595,7 +8671,8 @@ let changelog = [
                 if (data.pageType !== pageType) {
                     const loadAnywayConfirmed = await showCustomConfirm(
                         `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
-                        '⚠️ Page Type Mismatch'
+                        '⚠️ Page Type Mismatch',
+                        loadFromDiskBtn
                     );
                     if (!loadAnywayConfirmed) {
                         fileInput.value = '';
