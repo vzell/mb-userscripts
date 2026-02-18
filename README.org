@@ -39300,7 +39300,6 @@ Unified Functionality: Because this is applied in makeTableSortableUnified, it w
 
 * overwhoule of the logging statements... make lots of stuff debug stements
 
-
 * DONE collapsable sidebar breaks sticky headers
 
 * DONE Auto-Resize breaks sticky headers
@@ -39486,27 +39485,54 @@ the "Cancel" button (if available on aspecific dialog) doesn NOT work.
 
 Additionally, the font used inside the dialogs should be much bigger/readable
 
-** TODO reposition "Load from Disk" to under the button, like the other dialogs for example the "Page Type Mismatch" and "High Page Count" which work
+** TODO reposition "Load Table Data" under the button, like the other dialogs for example the "Page Type Mismatch" and "High Page Count" which work
 
-Also underline the "L" in the "Load Data" button and create a keyboard shortcut when in the dialog, that emulate the click on that button when "Alt-L" is pressed
+- Reposition the "Page Reloaded" poup dialog under the "Show all.." button after the "Show all..." button has been
+  pressed on the final rendered page, like the other popup dialogs do, for example the "Page Type Mismatch" and "High
+  Page Count" which work perfectly
 
-** TODO reposition the "Page Reloaded" dialog also
+- Also reposition the "📂 Load Table Data" popup dialog under the "Load from Disk" button after the "Load from Disk"
+  button has been clicked. Create a keyboard shortcut when in the dialog, that emulate the click on that button when
+  "Alt-L" is pressed.
 
-* Add keyboard handling for the complete application
-** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
-** Ctrl-Shift-- ==> un-collapse all tables (maybe make it toggle)
+- Fix: When the popups appear the "OK" button IS NOT focused and keyboard navigation between the "OK" and the "Cancel"
+  button (if available on a specific dialog) does'n NOT work. Check the implementation in the "📂 Load Table Data"
+  dialog, where keyboard navigation actually works.
+
+- Rename the "⌨️ Shortcuts" button to just "🎹" and position it left to the "⚙️" button, this button should also already
+  be visible on page entry (not only when the page is finally render after an action button click)
+
+- Create a new button with text   
+  
+** TODO new buttons
+
+Create a new button with text "❓" for general help about the application. When clicked a new scrollable popup window
+(with a "Close" button and equivalent "Escape" key handling) should present the user the features and help coming from a
+new multiline variable. Please invent a variable name and place a short description of the features of this app (you can
+also use the unicode symbols used for buttons or in text in the current user script implementation) as the value of this
+variable in the current code.
+
+** TODO Underline "S" in "Stop" button and add keyboard shortcut
 
 
-or
+* TODO - The first input field on a page is usually auto-focused - How to stop it (if you want)
 
-** Ctrl-Shift-- ==> collapse all h2
+#+begin_example
+Option A — Userscript fix
 
-** Ctrl-Alt-1 ==> collapse all h1
-** Ctrl-Alt-2 ==> collapse all h2
-** Ctrl-Alt-3 ==> collapse all h3
+You can blur autofocus elements after load:
 
+window.addEventListener("load", () => {
+  const el = document.querySelector("[autofocus]");
+  if (el) el.blur();
+});
 
-* alignment h1 button with status line below
+Option B — Force focus to body
+window.addEventListener("load", () => {
+  document.body.focus();
+});
+#+end_example
+* TODO alignment h1 button with status line below
 
 #+begin_example
 To align the status text perfectly with the "Show all..." action buttons, we can use a dynamic JavaScript calculation. Because the entity names in the h1 header are of varying lengths (e.g., "The Beatles" vs. "Area 51"), a fixed margin won't work universally.
@@ -39671,8 +39697,16 @@ Would you like me to review any other layout elements to make the UI look even s
 #+end_example
 
 
-*
+* Add keyboard handling for the complete application
+** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
+** Ctrl-Shift-- ==> un-collapse all tables (maybe make it toggle)
 
-#+begin_example
+or
 
-#+end_example
+** Ctrl-Shift-- ==> collapse all h2
+
+** Ctrl-Alt-1 ==> collapse all h1
+** Ctrl-Alt-2 ==> collapse all h2
+** Ctrl-Alt-3 ==> collapse all h3
+
+
