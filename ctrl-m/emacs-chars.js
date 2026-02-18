@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.34.2+2026-02-17
+// @version      9.34.1+2026-02-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,8 +48,7 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '9.34.2+2026-02-17', description: 'Enhancement: Replaced three native browser dialogs with custom styled implementations. (1) Page reload alert: custom dialog when MusicBrainz page is reloaded for filter stability. (2) High page count warning: custom confirm dialog instead of native when entity has more pages than configured threshold - user can proceed or cancel with keyboard support (Enter=proceed, Escape=cancel). (3) Page type mismatch: custom confirm dialog when loading file from different page type with clear warning and user choice. (4) Invalid regex alert: custom alert for invalid regex pattern in load filter. All custom dialogs match userscript styling (white background, button styling, centered, shadow, z-index 10001), support keyboard shortcuts (Enter=OK, Escape=Cancel), and auto-focus OK button for accessibility.'},
-    {version: '9.34.1+2026-02-17', description: 'Enhancement: Comprehensive Ctrl-M Emacs-style keybinding system with tooltip. (1) Press Ctrl-M and release to enter mode, then press key: 1-9 select action buttons, a-z select additional buttons (up to 35). (2) Function shortcuts: r=Auto-Resize, t=Stats Panel, s=Save to Disk, d=Density, v=Visible Columns, e=Export, l=Load from Disk, ?=Show Help. (3) Configurable tooltip (default enabled) displays all available shortcuts when Ctrl-M is pressed, positioned in upper right of content div without overlapping sidebar. (4) Underlined keyboard shortcuts in button text for visual reference. (5) Tooltip auto-hides when mode exits (Escape, timeout, or selection). (6) Extended key support (1-9, a-z, A-Z, ,;.:-_+*<>#\'?!%&/()=) for future extensions.'},
+    {version: '9.34.1+2026-02-17', description: 'Enhancement: Major Ctrl-M Emacs-style keybinding expansion. (1) Press Ctrl-M and release, then press any single key (1-9, a-z, A-Z, ,;.:-_+*<>#\'?!%&/()=) to select button or call function. (2) Numeric keys 1-9 select action buttons; letters map to additional buttons up to 35. (3) Function shortcuts: r=Auto-Resize, p=Stats, t=Save, l=Load. (4) Helpful debug output lists all available action buttons and functions. (5) Underlined shortcut keys in button text: Auto-<u>R</u>esize, S<u>t</u>ats, <u>S</u>ave to Disk, <u>L</u>oad from Disk. (6) Mode auto-exits after 5 seconds or when Escape pressed. Available immediately on page entry.'},
     {version: '9.34.0+2026-02-17', description: 'Enhancement: Added action shortcuts and h3 Ctrl+Click functionality. (1) Ctrl+M: Triggers the first "Show all" action button on the page - useful for pages with multiple action buttons (chooses first one). (2) h3 Headers: Added Ctrl+Click support to toggle ALL h3 headers (types) simultaneously, matching h2 functionality. Regular click still toggles individual h3. Updated tooltip: "Click to Collapse/Uncollapse table section (Ctrl+Click to toggle all types)". (3) Added Ctrl+M to shortcuts help dialog.'},
     {version: '9.33.0+2026-02-17', description: 'Major Enhancement: Extended keyboard shortcuts and smart button visibility. (1) "Visible Columns": Added "Choose <u>c</u>urrent configuration" button with Alt-C shortcut. (2) Collapse shortcuts: Ctrl-2 toggles all h2 headers, Ctrl-3 toggles all h3 headers (types) - mimics existing Ctrl-click and Show/Hide all functionality. (3) Smart button visibility: "Toggle highlighting", "Clear all COLUMN filters", and "Clear ALL filters" buttons now only appear when filters are actually active. (4) Updated Shortcuts help with comprehensive sections for all menu-specific and global shortcuts including new View & Layout section.'},
     {version: '9.32.0+2026-02-17', description: 'Enhancement: Extended keyboard navigation for menus. (1) "Visible Columns": Added Ctrl+V to open menu, Tab cycles through checkboxes and buttons, Alt-S triggers "Select All", Alt-D triggers "Deselect All" (only when menu open). Buttons now show underlined letters (<u>S</u>elect All, <u>D</u>eselect All). (2) "Density": Added Ctrl+D to open menu. (3) "Export": Close button in export complete popup now auto-focused for quick dismissal with Enter or Space.'},
@@ -153,911 +152,11 @@ let changelog = [
 (function() {
     'use strict';
 
-    //--------------------------------------------------------------------------------
-
-    const SCRIPT_ID = "vzell-mb-show-all-entities";
-    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
-
-    // CONFIG SCHEMA
-    const configSchema = {
-        // ============================================================
-        // GENERIC SECTION
-        // ============================================================
-        divider_: {
-            type: 'divider',
-            label: '🛠️ Generic settings'
-        },
-
-        sa_enable_debug_logging: {
-            label: "Enable debug logging",
-            type: "checkbox",
-            default: false,
-            description: "Enable debug logging in the browser developer console"
-        },
-
-        sa_load_history_limit: {
-            label: 'Load Filter History Limit',
-            type: 'number',
-            default: 10,
-            min: 0,
-            max: 50,
-            description: 'Number of previous filter expressions to remember in the load dialog.'
-        },
-
-        // ============================================================
-        // EXPERIMENTAL FEATURES SECTION
-        // ============================================================
-        divider_experimental: {
-            type: 'divider',
-            label: '🔬 EXPERIMENTAL FEATURES'
-        },
-
-        sa_collabsable_sidebar: {
-            label: "Collabsable sidebar (experimental)",
-            type: "checkbox",
-            default: false,
-            description: "Render sidebar collabsable"
-        },
-        // ============================================================
-        // OPTIONAL COLUMN REMOVAL FROM FINAL RENDERED PAGE SECTION
-        // ============================================================
-        divider_column_removal: {
-            type: 'divider',
-            label: '🧮 OPTIONAL COLUMN REMOVAL FROM FINAL RENDERED PAGE'
-        },
-
-        sa_remove_tagger: {
-            label: "Remove Tagger column",
-            type: "checkbox",
-            default: false,
-            description: "Remove the Tagger column from the final rendered tables"
-        },
-
-        sa_remove_release_events: {
-            label: 'Remove "Release events" column from "Place-Performances" pages',
-            type: "checkbox",
-            default: true,
-            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
-        },
-
-        sa_remove_rating: {
-            label: "Remove Rating column",
-            type: "checkbox",
-            default: false,
-            description: "Remove the Rating column from the final rendered tables"
-        },
-
-        sa_remove_rel: {
-            label: "Remove Relationships column",
-            type: "checkbox",
-            default: true,
-            description: "Remove the Relationships column from the final rendered tables"
-        },
-
-        sa_remove_perf: {
-            label: "Remove Performance column",
-            type: "checkbox",
-            default: true,
-            description: "Remove the Performance column from the final rendered tables"
-        },
-
-        // ============================================================
-        // UI FEATURES SECTION
-        // ============================================================
-        divider_ui_features: {
-            type: 'divider',
-            label: '🎨 UI FEATURES'
-        },
-
-        sa_enable_column_visibility: {
-            label: 'Enable Column Visibility Toggle',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "👁️ Visible Columns" button for toggling column visibility'
-        },
-
-        sa_enable_export: {
-            label: 'Enable Export',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "Export 💾" button for exporting data to different formats (CSV/JSON/Org-Mode)'
-        },
-
-        sa_enable_keyboard_shortcuts: {
-            label: 'Enable Keyboard Shortcuts',
-            type: 'checkbox',
-            default: true,
-            description: 'Enable keyboard shortcuts and show the "⌨️ Shortcuts" help button'
-        },
-
-        sa_enable_keyboard_shortcut_tooltip: {
-            label: 'Enable Keyboard Shortcut Tooltip',
-            type: 'checkbox',
-            default: true,
-            description: 'Enable keyboard shortcut tooltip for Ctrl-M prefix map'
-        },
-
-        sa_enable_stats_panel: {
-            label: 'Enable Quick Stats Panel',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "📊 Stats" button for displaying table statistics'
-        },
-
-        sa_enable_density_control: {
-            label: 'Enable Table Density Control',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "📏 Density" button for adjusting table spacing'
-        },
-
-        sa_enable_column_resizing: {
-            label: 'Enable Column Resizing',
-            type: 'checkbox',
-            default: true,
-            description: 'Enable manual column resizing with mouse drag and "↔️ Auto-Resize" button'
-        },
-
-        sa_enable_save_load: {
-            label: 'Enable Save/Load to Disk',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
-        },
-
-        sa_enable_sticky_headers: {
-            label: 'Enable Sticky Headers',
-            type: 'checkbox',
-            default: true,
-            description: 'Keep table headers visible when scrolling'
-        },
-
-        // ============================================================
-        // FILTER HIGHLIGHT COLORS SECTION
-        // ============================================================
-        divider_filter_colors: {
-            type: 'divider',
-            label: '🎨 FILTER HIGHLIGHT COLORS'
-        },
-
-        sa_pre_filter_highlight_color: {
-            label: "Global Prefilter Highlight Color",
-            type: "color_picker",
-            default: "green",
-            description: "Text color for global prefilter matches"
-        },
-
-        sa_pre_filter_highlight_bg: {
-            label: "Global Prefilter Highlight Background",
-            type: "color_picker",
-            default: "#FFFFE0",
-            description: "Background color for global prefilter matches"
-        },
-
-        sa_global_filter_highlight_color: {
-            label: "Global Filter Highlight Color",
-            type: "color_picker",
-            default: "red",
-            description: "Text color for global filter matches"
-        },
-
-        sa_global_filter_highlight_bg: {
-            label: "Global Filter Highlight Background",
-            type: "color_picker",
-            default: "#FFD700",
-            description: "Background color for global filter matches"
-        },
-
-        sa_column_filter_highlight_color: {
-            label: "Column Filter Highlight Color",
-            type: "color_picker",
-            default: "red",
-            description: "Text color for column filter matches"
-        },
-
-        sa_column_filter_highlight_bg: {
-            label: "Column Filter Highlight Background",
-            type: "color_picker",
-            default: "#add8e6",
-            description: "Background color for column filter matches"
-        },
-
-        // ============================================================
-        // PERFORMANCE SETTINGS SECTION
-        // ============================================================
-        divider_performance: {
-            type: 'divider',
-            label: '⚡ PERFORMANCE SETTINGS'
-        },
-
-        sa_filter_debounce_delay: {
-            label: "Filter debounce delay (ms)",
-            type: "number",
-            default: 300,
-            min: 0,
-            max: 2000,
-            description: "Delay before applying filter after typing stops"
-        },
-
-        sa_sort_chunk_size: {
-            label: "Sort chunk size",
-            type: "number",
-            default: 5000,
-            min: 1000,
-            max: 50000,
-            description: "Rows to process at once when sorting large tables"
-        },
-
-        sa_render_threshold: {
-            label: "Large Dataset Threshold",
-            type: "number",
-            default: 5000,
-            description: "Row count threshold to prompt save-or-render dialog (0 to disable)"
-        },
-
-        sa_chunked_render_threshold: {
-            label: "Chunked Rendering Threshold",
-            type: "number",
-            default: 1000,
-            description: "Row count to trigger progressive chunked rendering (0 to always use simple render)"
-        },
-
-        sa_sort_progress_threshold: {
-            label: "Show sort progress above (rows)",
-            type: "number",
-            default: 10000,
-            min: 1000,
-            max: 100000,
-            description: "Show progress indicator when sorting tables with more than this many rows"
-        },
-
-        sa_render_overflow_tables_in_new_tab: {
-            label: "Render overflow tables in a new tab",
-            type: "checkbox",
-            default: true,
-            description: "Render overflow tables in a new tab"
-        },
-
-        sa_max_page: {
-            label: "Max Page Warning",
-            type: "number",
-            default: 50,
-            description: "Warning threshold for page fetching"
-        },
-        sa_auto_expand: {
-            label: "Auto-Expand Rows",
-            type: "number",
-            default: 50,
-            description: "Row count threshold to auto-expand tables"
-        }
-
-    };
-
-    //--------------------------------------------------------------------------------
-
-    // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
-    // Use a ref object to avoid circular dependency during initialization
-    const settings = {};
-    const Lib = (typeof VZ_MBLibrary !== 'undefined')
-          ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, () => {
-              // Dynamic check: returns current value of debug setting
-              return settings.sa_enable_debug_logging ?? true;
-          })
-          : {
-              settings: {},
-              info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
-          };
-
-    // Copy settings reference so the callback can access them
-    Object.assign(settings, Lib.settings);
-    Lib.info('init', "Script loaded with external library!");
-
-    //--------------------------------------------------------------------------------
-
-    // Check if we just reloaded to fix the filter issue
-    const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
-    if (reloadFlag) {
-        sessionStorage.removeItem('mb_show_all_reload_pending');
-        const firstShowAllBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
-        showCustomAlert(
-            'The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.',
-            '⚠️ Page Reloaded',
-            firstShowAllBtn || null
-        );
-    }
-
-    const currentUrl = new URL(window.location.href);
-    const basePath = currentUrl.origin + currentUrl.pathname;
-    const path = currentUrl.pathname;
-    const params = currentUrl.searchParams;
-    const isFilteredRelationshipPage = params.has('link_type_id');
-
-    Lib.debug('init', `URL: ${currentUrl}`);
-    Lib.debug('init', `URL basepath: ${basePath}`);
-    Lib.debug('init', `URL path: ${path}`);
-    Lib.debug('init', `Query parameters: ${params}`);
-    Lib.debug('init', `Has "link_type_id": ${isFilteredRelationshipPage}`);
-
-    // --- Configuration: Page Definitions ---
-
-    // There are different types of MusicBrainz pages
-    // | Page type               | multiple tables           | paginated | table header                         |
-    // |-------------------------+---------------------------+-----------+--------------------------------------|
-    // | Artist-Releasegroups    | native                    | x         | h2, not repeating on paginated pages |
-    // | Releasegroup-Releases   | single table, subgrouping | x         | h2, repeating on paginated pages     |
-    // | Place-Performances, ... | single table, subgrouping |           | h2, repeating on single page         |
-    // | Events                  | single table              | x         | h3,                                  |
-    // | Search                  | single table              | x         | p.pageselector-results               |
-
-    // Define all supported page types, their detection logic, and specific UI configurations here.
-    const pageDefinitions = [
-        // Search pages
-        {
-            type: 'search',
-            match: (path) => path.includes('/search'),
-            buttons: [ { label: 'Show all Search results' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Name', // Specific header
-                transformToH2: true        // New flag to trigger <h2> transformation
-            },
-            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
-        },
-        // Instrument pages
-        {
-            type: 'instrument-artists',
-            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/artists/),
-            buttons: [ { label: 'Show all Artists for Instrument' } ],
-            features: {
-                splitArea: true,
-                extractMainColumn: 'Artist' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'instrument-releases',
-            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/releases/),
-            buttons: [ { label: 'Show all Releases for Instrument' } ],
-            features: {
-                splitCD: true,
-                extractMainColumn: 'Release' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'instrument-recordings',
-            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/recordings/),
-            buttons: [ { label: 'Show all Recordings for Instrument' } ],
-            features: {
-                extractMainColumn: 'Name' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'instrument-aliases',
-            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Instrument' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
-            tableMode: 'single'
-        },
-        // Area pages
-        {
-            type: 'area-artists',
-            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
-            buttons: [ { label: 'Show all Artists for Area' } ],
-            features: {
-                splitArea: true,
-                extractMainColumn: 'Artist' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'area-events',
-            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
-            buttons: [ { label: 'Show all Events for Area' } ],
-            features: {
-                splitLocation: true,
-                extractMainColumn: 'Event'
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'area-labels',
-            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/labels/),
-            buttons: [ { label: 'Show all Labels for Area' } ],
-            features: {
-                splitArea: true,
-                extractMainColumn: 'Label' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'area-releases-filtered',
-            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/) && params.has('link_type_id'),
-            buttons: [
-                {
-                    label: 'Show all Release Relationships for Area (filtered)',
-                    targetHeader: 'Relationships',
-                    tableMode: 'single',
-                    non_paginated: false,
-                    extractMainColumn: 'Title'
-                }
-            ]
-        },
-        {
-            type: 'area-releases',
-            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/) && !params.has('link_type_id'),
-            buttons: [
-                {
-                    label: 'Show all Releases for Area',
-                    targetHeader: 'Releases',
-                    tableMode: 'single',
-                    extractMainColumn: 'Release',
-                    features: {
-                        splitCD: true
-                    }
-                },
-                {
-                    label: 'Show all Release Relationships for Area',
-                    targetHeader: 'Relationships',
-                    tableMode: 'multi',
-                    non_paginated: true,
-                    extractMainColumn: 'Title'
-                }
-            ]
-        },
-        {
-            type: 'area-places',
-            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/places/),
-            buttons: [ { label: 'Show all Places for Area' } ],
-            features: {
-                splitArea: true,
-                extractMainColumn: 'Place'
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'area-aliases',
-            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Area' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'area-recordings-filtered',
-            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Area (filtered)' } ],
-            features: {
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'area-recordings',
-            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Area' } ],
-            features: {
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-        {
-            type: 'area-works-filtered',
-            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Works for Area (filtered)' } ],
-            features: {
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'area-works',
-            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Works for Area' } ],
-            tableMode: 'multi',
-            features: {
-                extractMainColumn: 'Title'
-            },
-            non_paginated: true
-        },
-        // Place pages
-        {
-            type: 'place-aliases',
-            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Place' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'place-events',
-            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
-            buttons: [ { label: 'Show all Events for Place' } ],
-            features: {
-                extractMainColumn: 'Event'
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'place-performances-filtered',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (filtered)' } ],
-            features: {
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-        // Series pages
-        {
-            type: 'series-aliases',
-            match: (path) => path.match(/\/series\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Series' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'series-releases',
-            match: (path) => path.includes('/series'),
-            buttons: [ { label: 'Show all Releases for Series' } ],
-            features: {
-                splitCD: true,
-                extractMainColumn: 'Release'
-            },
-            tableMode: 'single'
-        },
-        // Label pages
-        {
-            type: 'label-aliases',
-            match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Label' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'label-relationships-filtered',
-            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Label (filtered)' } ],
-            features: {
-                extractMainColumn: 'Title' // Specific header
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-        {
-            type: 'label-relationships',
-            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Label' } ],
-            features: {
-                extractMainColumn: 'Title' // Specific header
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-        {
-            type: 'label-releases',
-            match: (path) => path.includes('/label'),
-            buttons: [ { label: 'Show all Releases for Label' } ],
-            features: {
-                splitCD: true,
-                extractMainColumn: 'Release'
-            },
-            tableMode: 'single'
-        },
-        // Work pages
-        {
-            type: 'work-aliases',
-            match: (path) => path.match(/\/work\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Work' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'work-recordings-filtered',
-            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Work (filtered)' } ],
-            features: {
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'work-recordings',
-            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Work' } ],
-            features: {
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-        // Artist pages
-        {
-            type: 'artist-relationships-filtered',
-            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist (filtered)' } ],
-            features: {
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'artist-relationships',
-            // Only match if NO link_type_id is present (the overview page)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist' } ],
-            features: {
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-        // TODO: Needs to be handled separately - actually multi table native, but each table has it's own h2 header
-        {
-            type: 'artist-aliases',
-            match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/aliases/),
-            buttons: [
-                {
-                    label: 'Show all Aliases for Artist',
-                    targetHeader: 'Aliases',
-                    tableMode: 'single',
-                    extractMainColumn: 'Locale'
-                },
-                {
-                    label: 'Show all Artist Credits for Artist',
-                    targetHeader: 'Artist credits',
-                    tableMode: 'single'
-                }
-            ],
-        },
-        {
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Official artist RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official artist RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official various artists RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official various artists RGs', params: { all: '1', va: '1' } }
-            ],
-            tableMode: 'multi' // native tables, h3 headers
-        },
-        {
-            type: 'artist-releases',
-            // Artist Releases page (Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
-            buttons: [
-                { label: '🧮 Official artist releases', params: { va: '0' } },
-                { label: '🧮 Various artist releases', params: { va: '1' } }
-            ],
-            features: {
-                splitCD: true,
-                extractMainColumn: 'Release'
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'artist-recordings',
-            match: (path) => path.includes('/recordings'),
-            buttons: [ { label: 'Show all Recordings for Artist' } ],
-            features: {
-                splitCD: false, // Explicitly false (default), but shown for clarity
-                extractMainColumn: 'Name'
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'artist-works',
-            match: (path) => path.includes('/works'),
-            buttons: [ { label: 'Show all Works for Artist' } ],
-            features: {
-                extractMainColumn: 'Work'
-            },
-            tableMode: 'single'
-        },
-        // ReleaseGroups pages
-        {
-            type: 'releasegroup-aliases',
-            match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Releasegroup' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'releasegroup-releases',
-            match: (path) => path.includes('/release-group/'),
-            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
-            features: {
-                splitCD: true,
-                extractMainColumn: 'Release'
-            },
-            tableMode: 'multi',
-            non_paginated: false
-        },
-        // Release pages
-        {
-            type: 'release-aliases',
-            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Release' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'release-discids',
-            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/discids/),
-            buttons: [ { label: 'Show all Disc IDs for Release' } ],
-            tableMode: 'multi',
-            non_paginated: false
-        },
-        // Recording pages
-        {
-            type: 'recording-aliases',
-            match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Recording' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'recording-fingerprints',
-            match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/fingerprints/),
-            buttons: [ { label: 'Show all Fingerprints for Recording' } ],
-            tableMode: 'single'
-            //rowTargetSelector: '.acoustid-fingerprints table.tbl'
-        },
-        {
-            type: 'recording-releases',
-            match: (path) => path.includes('/recording'),
-            buttons: [ { label: 'Show all Releases for Recording' } ],
-            features: {
-                splitCD: true,
-                extractMainColumn: 'Release title'
-            },
-            tableMode: 'multi',
-            non_paginated: false
-        },
-        // Event pages
-        {
-            type: 'event-aliases',
-            match: (path) => path.match(/\/event\/[a-f0-9-]{36}\/aliases/),
-            buttons: [ { label: 'Show all Aliases for Event' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'events',
-            match: (path) => path.includes('/events'),
-            buttons: [ { label: 'Show all Events for Artist' } ],
-            features: {
-                splitLocation: true,
-                extractMainColumn: 'Event'
-            },
-            tableMode: 'single'
-        }
-    ];
-
-    //--------------------------------------------------------------------------------
-
     // Initialize Ctrl-M Emacs-style handler for action button selection and function shortcuts
     // Press Ctrl-M, release, then press 1-9/a-z/A-Z/special chars to select button or call function
     let ctrlMModeActive = false;
     let ctrlMModeTimeout;
     let ctrlMFunctionMap = {}; // Will be populated after functions are defined
-    let ctrlMTooltipElement = null;
-
-    function showCtrlMTooltip(actionButtons, buttonKeys) {
-        if (typeof Lib === 'undefined' || !Lib.settings.sa_enable_keyboard_shortcut_tooltip) {
-            return; // Tooltip disabled in settings or Lib not available
-        }
-
-        // Remove existing tooltip if any
-        hideCtrlMTooltip();
-
-        const contentDiv = document.getElementById('content');
-        const sidebarDiv = document.getElementById('sidebar');
-        if (!contentDiv) return;
-
-        // Create tooltip element
-        ctrlMTooltipElement = document.createElement('div');
-        ctrlMTooltipElement.id = 'mb-ctrl-m-tooltip';
-        ctrlMTooltipElement.style.cssText = `
-            position: fixed;
-            background-color: #f0f0f0;
-            border: 1px solid #999;
-            border-radius: 4px;
-            padding: 8px 12px;
-            font-size: 0.75em;
-            max-width: 250px;
-            z-index: 10000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            line-height: 1.4;
-        `;
-
-        // Build tooltip content
-        let tooltipHTML = '<strong>Ctrl-M Shortcuts:</strong><br/>';
-
-        // Action buttons
-        if (actionButtons.length > 0) {
-            tooltipHTML += '<strong>Buttons:</strong><br/>';
-            for (let i = 0; i < Math.min(actionButtons.length, 9); i++) {
-                const key = buttonKeys[i];
-                const text = actionButtons[i].textContent.trim().substring(0, 20);
-                tooltipHTML += `<div style="margin-left: 4px;"><strong>${key}</strong>: ${text}${actionButtons[i].textContent.trim().length > 20 ? '...' : ''}</div>`;
-            }
-            if (actionButtons.length > 9) {
-                tooltipHTML += `<div style="margin-left: 4px; font-size: 0.9em; color: #666;">+ ${actionButtons.length - 9} more (a-${String.fromCharCode(97 + Math.min(actionButtons.length - 10, 25))})</div>`;
-            }
-            tooltipHTML += '<br/>';
-        }
-
-        // Function shortcuts
-        tooltipHTML += '<strong>Functions:</strong><br/>';
-        const sortedFunctions = Object.entries(ctrlMFunctionMap)
-            .sort((a, b) => a[0].localeCompare(b[0]));
-        for (const [key, entry] of sortedFunctions) {
-            tooltipHTML += `<div style="margin-left: 4px;"><strong>${key}</strong>: ${entry.description}</div>`;
-        }
-
-        ctrlMTooltipElement.innerHTML = tooltipHTML;
-        document.body.appendChild(ctrlMTooltipElement);
-
-        // Position in upper right of content div, not overlapping sidebar
-        setTimeout(() => {
-            if (contentDiv && sidebarDiv) {
-                const contentRect = contentDiv.getBoundingClientRect();
-                const sidebarRect = sidebarDiv.getBoundingClientRect();
-                const tooltipRect = ctrlMTooltipElement.getBoundingClientRect();
-
-                // Position in upper right, respecting sidebar
-                let left = Math.min(contentRect.right - tooltipRect.width - 10, window.innerWidth - tooltipRect.width - 10);
-                left = Math.max(left, contentRect.left + 10); // Don't go too far left
-
-                if (sidebarDiv) {
-                    // Ensure doesn't overlap sidebar
-                    left = Math.min(left, sidebarRect.left - tooltipRect.width - 10);
-                }
-
-                ctrlMTooltipElement.style.left = left + 'px';
-                ctrlMTooltipElement.style.top = (contentRect.top + 10) + 'px';
-            }
-        }, 0);
-    }
-
-    function hideCtrlMTooltip() {
-        if (ctrlMTooltipElement) {
-            ctrlMTooltipElement.remove();
-            ctrlMTooltipElement = null;
-        }
-    }
 
     document.addEventListener('keydown', (e) => {
         // Ctrl/Cmd + M: Enter Ctrl-M mode for button selection by key
@@ -1068,7 +167,6 @@ let changelog = [
             if (ctrlMModeActive) {
                 ctrlMModeActive = false;
                 clearTimeout(ctrlMModeTimeout);
-                hideCtrlMTooltip();
                 if (typeof Lib !== 'undefined' && Lib.debug) {
                     Lib.debug('shortcuts', 'Exited Ctrl-M mode');
                 } else {
@@ -1095,11 +193,6 @@ let changelog = [
                 }
             }
 
-            // Show tooltip if enabled
-            if (typeof Lib !== 'undefined' && Lib.settings.sa_enable_keyboard_shortcut_tooltip) {
-                showCtrlMTooltip(actionButtons, buttonKeys);
-            }
-
             // Log helpful message with available buttons
             if (typeof Lib !== 'undefined' && Lib.debug) {
                 if (buttonKeys.length > 0) {
@@ -1109,7 +202,7 @@ let changelog = [
                         Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Help');
+                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, p=Stats, t=Save, l=Load');
                 Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
                 if (buttonKeys.length > 0) {
@@ -1119,14 +212,13 @@ let changelog = [
                         console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Help');
+                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, p=Stats, t=Save, l=Load');
             }
 
             // Auto-exit after 5 seconds
             clearTimeout(ctrlMModeTimeout);
             ctrlMModeTimeout = setTimeout(() => {
                 ctrlMModeActive = false;
-                hideCtrlMTooltip();
                 if (typeof Lib !== 'undefined' && Lib.debug) {
                     Lib.debug('shortcuts', 'Exited Ctrl-M mode (timeout)');
                 }
@@ -1169,7 +261,6 @@ let changelog = [
                 }
                 ctrlMModeActive = false;
                 clearTimeout(ctrlMModeTimeout);
-                hideCtrlMTooltip();
                 return;
             }
 
@@ -1204,7 +295,6 @@ let changelog = [
 
             ctrlMModeActive = false;
             clearTimeout(ctrlMModeTimeout);
-            hideCtrlMTooltip();
             return;
         }
 
@@ -1213,7 +303,6 @@ let changelog = [
             e.preventDefault();
             ctrlMModeActive = false;
             clearTimeout(ctrlMModeTimeout);
-            hideCtrlMTooltip();
             if (typeof Lib !== 'undefined' && Lib.debug) {
                 Lib.debug('shortcuts', 'Exited Ctrl-M mode (Escape pressed)');
             } else {
@@ -1226,7 +315,6 @@ let changelog = [
         if (ctrlMModeActive && (e.ctrlKey || e.metaKey || e.altKey) && e.key !== 'Escape') {
             ctrlMModeActive = false;
             clearTimeout(ctrlMModeTimeout);
-            hideCtrlMTooltip();
         }
     });
 
@@ -1671,8 +759,8 @@ let changelog = [
 
         // Create toggle button
         const toggleBtn = document.createElement('button');
-        toggleBtn.innerHTML = '👁️ <u>V</u>isible Columns';
-        toggleBtn.title = 'Show/hide table columns (Ctrl-M, then v)';
+        toggleBtn.textContent = '👁️ Visible Columns';
+        toggleBtn.title = 'Show/hide table columns';
         toggleBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         toggleBtn.type = 'button';
 
@@ -2412,8 +1500,8 @@ let changelog = [
         }
 
         const exportBtn = document.createElement('button');
-        exportBtn.innerHTML = '<u>E</u>xport 💾';
-        exportBtn.title = 'Export visible rows and columns to various formats (Ctrl-M, then e)';
+        exportBtn.textContent = 'Export 💾';
+        exportBtn.title = 'Export visible rows and columns to various formats';
         exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         exportBtn.type = 'button';
 
@@ -2620,261 +1708,6 @@ let changelog = [
             filterStatusDisplay.textContent = '✓ All filters cleared';
             filterStatusDisplay.style.color = 'green';
         }
-    }
-
-    /**
-     * Custom alert dialog - matches userscript styling
-     */
-    /**
-     * Custom alert dialog - positioned below triggering button
-     * @param {string} message - Alert message
-     * @param {string} title - Dialog title
-     * @param {HTMLElement} triggerButton - Button that triggered the alert (for positioning)
-     */
-    function showCustomAlert(message, title = 'Notice', triggerButton = null) {
-        return new Promise((resolve) => {
-            const dialogDiv = document.createElement('div');
-            dialogDiv.style.cssText = `
-                position: fixed;
-                background: white;
-                border: 1px solid #ccc;
-                border-radius: 8px;
-                padding: 24px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-                z-index: 10001;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                min-width: 380px;
-                max-width: 550px;
-            `;
-
-            // Header
-            const headerDiv = document.createElement('div');
-            headerDiv.style.cssText = 'font-weight: 600; font-size: 1.3em; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #ddd; color: #333;';
-            headerDiv.textContent = title;
-            dialogDiv.appendChild(headerDiv);
-
-            // Message
-            const msgDiv = document.createElement('div');
-            msgDiv.style.cssText = 'margin-bottom: 24px; line-height: 1.6; color: #555; font-size: 1.05em; word-wrap: break-word;';
-            msgDiv.textContent = message;
-            dialogDiv.appendChild(msgDiv);
-
-            // Button container
-            const btnContainer = document.createElement('div');
-            btnContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px;';
-
-            // OK button
-            const okBtn = document.createElement('button');
-            okBtn.textContent = 'OK';
-            okBtn.style.cssText = `
-                padding: 10px 20px;
-                background-color: #4CAF50;
-                color: white;
-                border: 1px solid #45a049;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 1.05em;
-                font-weight: 500;
-                transition: background-color 0.2s;
-                outline: none;
-            `;
-            okBtn.onmouseover = () => { okBtn.style.backgroundColor = '#45a049'; };
-            okBtn.onmouseout = () => { okBtn.style.backgroundColor = '#4CAF50'; };
-            okBtn.onclick = () => {
-                dialogDiv.remove();
-                document.removeEventListener('keydown', keyHandler);
-                resolve();
-            };
-            btnContainer.appendChild(okBtn);
-            dialogDiv.appendChild(btnContainer);
-            document.body.appendChild(dialogDiv);
-
-            // Position below trigger button or center screen
-            setTimeout(() => {
-                if (triggerButton) {
-                    const btnRect = triggerButton.getBoundingClientRect();
-                    const dialogRect = dialogDiv.getBoundingClientRect();
-                    let top = btnRect.bottom + 10;
-                    let left = btnRect.left;
-
-                    // Adjust if dialog would go off-screen
-                    if (top + dialogRect.height > window.innerHeight) {
-                        top = btnRect.top - dialogRect.height - 10;
-                    }
-                    if (left + dialogRect.width > window.innerWidth) {
-                        left = window.innerWidth - dialogRect.width - 10;
-                    }
-                    if (left < 0) {
-                        left = 10;
-                    }
-
-                    dialogDiv.style.left = left + 'px';
-                    dialogDiv.style.top = top + 'px';
-                } else {
-                    // Fallback to center
-                    dialogDiv.style.left = '50%';
-                    dialogDiv.style.top = '50%';
-                    dialogDiv.style.transform = 'translate(-50%, -50%)';
-                }
-
-                okBtn.focus(); // Focus after DOM positioning
-            }, 0);
-
-            // Keyboard handler
-            const keyHandler = (e) => {
-                if (e.key === 'Escape') {
-                    e.preventDefault();
-                    dialogDiv.remove();
-                    document.removeEventListener('keydown', keyHandler);
-                    resolve();
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    okBtn.click();
-                }
-            };
-            document.addEventListener('keydown', keyHandler);
-        });
-    }
-
-    /**
-     * Custom confirm dialog - positioned below triggering button
-     * @param {string} message - Confirm message
-     * @param {string} title - Dialog title
-     * @param {HTMLElement} triggerButton - Button that triggered the confirm (for positioning)
-     */
-    function showCustomConfirm(message, title = 'Confirm', triggerButton = null) {
-        return new Promise((resolve) => {
-            const dialogDiv = document.createElement('div');
-            dialogDiv.style.cssText = `
-                position: fixed;
-                background: white;
-                border: 1px solid #ccc;
-                border-radius: 8px;
-                padding: 24px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-                z-index: 10001;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                min-width: 380px;
-                max-width: 550px;
-            `;
-
-            // Header
-            const headerDiv = document.createElement('div');
-            headerDiv.style.cssText = 'font-weight: 600; font-size: 1.3em; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #ddd; color: #333;';
-            headerDiv.textContent = title;
-            dialogDiv.appendChild(headerDiv);
-
-            // Message
-            const msgDiv = document.createElement('div');
-            msgDiv.style.cssText = 'margin-bottom: 24px; line-height: 1.6; color: #555; font-size: 1.05em; word-wrap: break-word;';
-            msgDiv.innerHTML = message.replace(/\n/g, '<br>');
-            dialogDiv.appendChild(msgDiv);
-
-            // Button container
-            const btnContainer = document.createElement('div');
-            btnContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px;';
-
-            // Cancel button
-            const cancelBtn = document.createElement('button');
-            cancelBtn.textContent = 'Cancel';
-            cancelBtn.style.cssText = `
-                padding: 10px 20px;
-                background-color: #f0f0f0;
-                color: #333;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 1.05em;
-                font-weight: 500;
-                transition: background-color 0.2s;
-                outline: none;
-            `;
-            cancelBtn.onmouseover = () => { cancelBtn.style.backgroundColor = '#e0e0e0'; };
-            cancelBtn.onmouseout = () => { cancelBtn.style.backgroundColor = '#f0f0f0'; };
-            cancelBtn.onclick = () => {
-                dialogDiv.remove();
-                document.removeEventListener('keydown', keyHandler);
-                resolve(false);
-            };
-            btnContainer.appendChild(cancelBtn);
-
-            // OK button
-            const okBtn = document.createElement('button');
-            okBtn.textContent = 'OK';
-            okBtn.style.cssText = `
-                padding: 10px 20px;
-                background-color: #4CAF50;
-                color: white;
-                border: 1px solid #45a049;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 1.05em;
-                font-weight: 500;
-                transition: background-color 0.2s;
-                outline: none;
-            `;
-            okBtn.onmouseover = () => { okBtn.style.backgroundColor = '#45a049'; };
-            okBtn.onmouseout = () => { okBtn.style.backgroundColor = '#4CAF50'; };
-            okBtn.onclick = () => {
-                dialogDiv.remove();
-                document.removeEventListener('keydown', keyHandler);
-                resolve(true);
-            };
-            btnContainer.appendChild(okBtn);
-            dialogDiv.appendChild(btnContainer);
-            document.body.appendChild(dialogDiv);
-
-            // Position below trigger button or center screen
-            setTimeout(() => {
-                if (triggerButton) {
-                    const btnRect = triggerButton.getBoundingClientRect();
-                    const dialogRect = dialogDiv.getBoundingClientRect();
-                    let top = btnRect.bottom + 10;
-                    let left = btnRect.left;
-
-                    // Adjust if dialog would go off-screen
-                    if (top + dialogRect.height > window.innerHeight) {
-                        top = btnRect.top - dialogRect.height - 10;
-                    }
-                    if (left + dialogRect.width > window.innerWidth) {
-                        left = window.innerWidth - dialogRect.width - 10;
-                    }
-                    if (left < 0) {
-                        left = 10;
-                    }
-
-                    dialogDiv.style.left = left + 'px';
-                    dialogDiv.style.top = top + 'px';
-                } else {
-                    // Fallback to center
-                    dialogDiv.style.left = '50%';
-                    dialogDiv.style.top = '50%';
-                    dialogDiv.style.transform = 'translate(-50%, -50%)';
-                }
-
-                okBtn.focus(); // Focus after DOM positioning
-            }, 0);
-
-            // Keyboard handler with Tab support
-            const keyHandler = (e) => {
-                if (e.key === 'Escape') {
-                    e.preventDefault();
-                    cancelBtn.click();
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    okBtn.click();
-                } else if (e.key === 'Tab') {
-                    e.preventDefault();
-                    // Toggle focus between Cancel and OK buttons
-                    if (document.activeElement === cancelBtn) {
-                        okBtn.focus();
-                    } else {
-                        cancelBtn.focus();
-                    }
-                }
-            };
-            document.addEventListener('keydown', keyHandler);
-        });
     }
 
     /**
@@ -3625,8 +2458,8 @@ let changelog = [
 
         // Create button
         const densityBtn = document.createElement('button');
-        densityBtn.innerHTML = '📏 <u>D</u>ensity';
-        densityBtn.title = 'Change table density (spacing) (Ctrl-M, then d)';
+        densityBtn.textContent = '📏 Density';
+        densityBtn.title = 'Change table density (spacing)';
         densityBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         densityBtn.type = 'button';
 
@@ -4409,6 +3242,295 @@ let changelog = [
         ensureSettingsButtonIsLast();
     }
 
+    const SCRIPT_ID = "vzell-mb-show-all-entities";
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
+
+    // CONFIG SCHEMA
+    const configSchema = {
+        // ============================================================
+        // GENERIC SECTION
+        // ============================================================
+        divider_: {
+            type: 'divider',
+            label: '🛠️ Generic settings'
+        },
+
+        sa_enable_debug_logging: {
+            label: "Enable debug logging",
+            type: "checkbox",
+            default: false,
+            description: "Enable debug logging in the browser developer console"
+        },
+
+        sa_load_history_limit: {
+            label: 'Load Filter History Limit',
+            type: 'number',
+            default: 10,
+            min: 0,
+            max: 50,
+            description: 'Number of previous filter expressions to remember in the load dialog.'
+        },
+
+        // ============================================================
+        // EXPERIMENTAL FEATURES SECTION
+        // ============================================================
+        divider_experimental: {
+            type: 'divider',
+            label: '🔬 EXPERIMENTAL FEATURES'
+        },
+
+        sa_collabsable_sidebar: {
+            label: "Collabsable sidebar (experimental)",
+            type: "checkbox",
+            default: false,
+            description: "Render sidebar collabsable"
+        },
+        // ============================================================
+        // OPTIONAL COLUMN REMOVAL FROM FINAL RENDERED PAGE SECTION
+        // ============================================================
+        divider_column_removal: {
+            type: 'divider',
+            label: '🧮 OPTIONAL COLUMN REMOVAL FROM FINAL RENDERED PAGE'
+        },
+
+        sa_remove_tagger: {
+            label: "Remove Tagger column",
+            type: "checkbox",
+            default: false,
+            description: "Remove the Tagger column from the final rendered tables"
+        },
+
+        sa_remove_release_events: {
+            label: 'Remove "Release events" column from "Place-Performances" pages',
+            type: "checkbox",
+            default: true,
+            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
+        },
+
+        sa_remove_rating: {
+            label: "Remove Rating column",
+            type: "checkbox",
+            default: false,
+            description: "Remove the Rating column from the final rendered tables"
+        },
+
+        sa_remove_rel: {
+            label: "Remove Relationships column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Relationships column from the final rendered tables"
+        },
+
+        sa_remove_perf: {
+            label: "Remove Performance column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Performance column from the final rendered tables"
+        },
+
+        // ============================================================
+        // UI FEATURES SECTION
+        // ============================================================
+        divider_ui_features: {
+            type: 'divider',
+            label: '🎨 UI FEATURES'
+        },
+
+        sa_enable_column_visibility: {
+            label: 'Enable Column Visibility Toggle',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "👁️ Visible Columns" button for toggling column visibility'
+        },
+
+        sa_enable_export: {
+            label: 'Enable Export',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "Export 💾" button for exporting data to different formats (CSV/JSON/Org-Mode)'
+        },
+
+        sa_enable_keyboard_shortcuts: {
+            label: 'Enable Keyboard Shortcuts',
+            type: 'checkbox',
+            default: true,
+            description: 'Enable keyboard shortcuts and show the "⌨️ Shortcuts" help button'
+        },
+
+        sa_enable_stats_panel: {
+            label: 'Enable Quick Stats Panel',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "📊 Stats" button for displaying table statistics'
+        },
+
+        sa_enable_density_control: {
+            label: 'Enable Table Density Control',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "📏 Density" button for adjusting table spacing'
+        },
+
+        sa_enable_column_resizing: {
+            label: 'Enable Column Resizing',
+            type: 'checkbox',
+            default: true,
+            description: 'Enable manual column resizing with mouse drag and "↔️ Auto-Resize" button'
+        },
+
+        sa_enable_save_load: {
+            label: 'Enable Save/Load to Disk',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
+        },
+
+        sa_enable_sticky_headers: {
+            label: 'Enable Sticky Headers',
+            type: 'checkbox',
+            default: true,
+            description: 'Keep table headers visible when scrolling'
+        },
+
+        // ============================================================
+        // FILTER HIGHLIGHT COLORS SECTION
+        // ============================================================
+        divider_filter_colors: {
+            type: 'divider',
+            label: '🎨 FILTER HIGHLIGHT COLORS'
+        },
+
+        sa_pre_filter_highlight_color: {
+            label: "Global Prefilter Highlight Color",
+            type: "color_picker",
+            default: "green",
+            description: "Text color for global prefilter matches"
+        },
+
+        sa_pre_filter_highlight_bg: {
+            label: "Global Prefilter Highlight Background",
+            type: "color_picker",
+            default: "#FFFFE0",
+            description: "Background color for global prefilter matches"
+        },
+
+        sa_global_filter_highlight_color: {
+            label: "Global Filter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for global filter matches"
+        },
+
+        sa_global_filter_highlight_bg: {
+            label: "Global Filter Highlight Background",
+            type: "color_picker",
+            default: "#FFD700",
+            description: "Background color for global filter matches"
+        },
+
+        sa_column_filter_highlight_color: {
+            label: "Column Filter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for column filter matches"
+        },
+
+        sa_column_filter_highlight_bg: {
+            label: "Column Filter Highlight Background",
+            type: "color_picker",
+            default: "#add8e6",
+            description: "Background color for column filter matches"
+        },
+
+        // ============================================================
+        // PERFORMANCE SETTINGS SECTION
+        // ============================================================
+        divider_performance: {
+            type: 'divider',
+            label: '⚡ PERFORMANCE SETTINGS'
+        },
+
+        sa_filter_debounce_delay: {
+            label: "Filter debounce delay (ms)",
+            type: "number",
+            default: 300,
+            min: 0,
+            max: 2000,
+            description: "Delay before applying filter after typing stops"
+        },
+
+        sa_sort_chunk_size: {
+            label: "Sort chunk size",
+            type: "number",
+            default: 5000,
+            min: 1000,
+            max: 50000,
+            description: "Rows to process at once when sorting large tables"
+        },
+
+        sa_render_threshold: {
+            label: "Large Dataset Threshold",
+            type: "number",
+            default: 5000,
+            description: "Row count threshold to prompt save-or-render dialog (0 to disable)"
+        },
+
+        sa_chunked_render_threshold: {
+            label: "Chunked Rendering Threshold",
+            type: "number",
+            default: 1000,
+            description: "Row count to trigger progressive chunked rendering (0 to always use simple render)"
+        },
+
+        sa_sort_progress_threshold: {
+            label: "Show sort progress above (rows)",
+            type: "number",
+            default: 10000,
+            min: 1000,
+            max: 100000,
+            description: "Show progress indicator when sorting tables with more than this many rows"
+        },
+
+        sa_render_overflow_tables_in_new_tab: {
+            label: "Render overflow tables in a new tab",
+            type: "checkbox",
+            default: true,
+            description: "Render overflow tables in a new tab"
+        },
+
+        sa_max_page: {
+            label: "Max Page Warning",
+            type: "number",
+            default: 50,
+            description: "Warning threshold for page fetching"
+        },
+        sa_auto_expand: {
+            label: "Auto-Expand Rows",
+            type: "number",
+            default: 50,
+            description: "Row count threshold to auto-expand tables"
+        }
+
+    };
+
+    // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
+    // Use a ref object to avoid circular dependency during initialization
+    const settings = {};
+    const Lib = (typeof VZ_MBLibrary !== 'undefined')
+          ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, () => {
+              // Dynamic check: returns current value of debug setting
+              return settings.sa_enable_debug_logging ?? true;
+          })
+          : {
+              settings: {},
+              info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
+          };
+
+    // Copy settings reference so the callback can access them
+    Object.assign(settings, Lib.settings);
+
+    Lib.info('init', "Script loaded with external library!");
+
     // --- Sidebar Collapsing & Full Width Stretching Logic ---
     /**
      * Initializes the sidebar collapse/expand functionality with smooth transitions
@@ -4575,6 +3697,513 @@ let changelog = [
         });
         observer.observe(document.body, { childList: true, subtree: true });
     }
+
+
+    // Check if we just reloaded to fix the filter issue
+    const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
+    if (reloadFlag) {
+        sessionStorage.removeItem('mb_show_all_reload_pending');
+        alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
+    }
+
+    const currentUrl = new URL(window.location.href);
+    const basePath = currentUrl.origin + currentUrl.pathname;
+    const path = currentUrl.pathname;
+    const params = currentUrl.searchParams;
+    const isFilteredRelationshipPage = params.has('link_type_id');
+
+    Lib.debug('init', `URL: ${currentUrl}`);
+    Lib.debug('init', `URL basepath: ${basePath}`);
+    Lib.debug('init', `URL path: ${path}`);
+    Lib.debug('init', `Query parameters: ${params}`);
+    Lib.debug('init', `Has "link_type_id": ${isFilteredRelationshipPage}`);
+
+    // --- Configuration: Page Definitions ---
+
+    // There are different types of MusicBrainz pages
+    // | Page type               | multiple tables           | paginated | table header                         |
+    // |-------------------------+---------------------------+-----------+--------------------------------------|
+    // | Artist-Releasegroups    | native                    | x         | h2, not repeating on paginated pages |
+    // | Releasegroup-Releases   | single table, subgrouping | x         | h2, repeating on paginated pages     |
+    // | Place-Performances, ... | single table, subgrouping |           | h2, repeating on single page         |
+    // | Events                  | single table              | x         | h3,                                  |
+    // | Search                  | single table              | x         | p.pageselector-results               |
+
+    // Define all supported page types, their detection logic, and specific UI configurations here.
+    const pageDefinitions = [
+        // Search pages
+        {
+            type: 'search',
+            match: (path) => path.includes('/search'),
+            buttons: [ { label: 'Show all Search results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name', // Specific header
+                transformToH2: true        // New flag to trigger <h2> transformation
+            },
+            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
+        },
+        // Instrument pages
+        {
+            type: 'instrument-artists',
+            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/artists/),
+            buttons: [ { label: 'Show all Artists for Instrument' } ],
+            features: {
+                splitArea: true,
+                extractMainColumn: 'Artist' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'instrument-releases',
+            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/releases/),
+            buttons: [ { label: 'Show all Releases for Instrument' } ],
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'instrument-recordings',
+            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/recordings/),
+            buttons: [ { label: 'Show all Recordings for Instrument' } ],
+            features: {
+                extractMainColumn: 'Name' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'instrument-aliases',
+            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Instrument' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
+        // Area pages
+        {
+            type: 'area-artists',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
+            buttons: [ { label: 'Show all Artists for Area' } ],
+            features: {
+                splitArea: true,
+                extractMainColumn: 'Artist' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'area-events',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Area' } ],
+            features: {
+                splitLocation: true,
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'area-labels',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/labels/),
+            buttons: [ { label: 'Show all Labels for Area' } ],
+            features: {
+                splitArea: true,
+                extractMainColumn: 'Label' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'area-releases-filtered',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/) && params.has('link_type_id'),
+            buttons: [
+                {
+                    label: 'Show all Release Relationships for Area (filtered)',
+                    targetHeader: 'Relationships',
+                    tableMode: 'single',
+                    non_paginated: false,
+                    extractMainColumn: 'Title'
+                }
+            ]
+        },
+        {
+            type: 'area-releases',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/) && !params.has('link_type_id'),
+            buttons: [
+                {
+                    label: 'Show all Releases for Area',
+                    targetHeader: 'Releases',
+                    tableMode: 'single',
+                    extractMainColumn: 'Release',
+                    features: {
+                        splitCD: true
+                    }
+                },
+                {
+                    label: 'Show all Release Relationships for Area',
+                    targetHeader: 'Relationships',
+                    tableMode: 'multi',
+                    non_paginated: true,
+                    extractMainColumn: 'Title'
+                }
+            ]
+        },
+        {
+            type: 'area-places',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/places/),
+            buttons: [ { label: 'Show all Places for Area' } ],
+            features: {
+                splitArea: true,
+                extractMainColumn: 'Place'
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'area-aliases',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Area' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'area-recordings-filtered',
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Area (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'area-recordings',
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Area' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'area-works-filtered',
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Works for Area (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'area-works',
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Works for Area' } ],
+            tableMode: 'multi',
+            features: {
+                extractMainColumn: 'Title'
+            },
+            non_paginated: true
+        },
+        // Place pages
+        {
+            type: 'place-aliases',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Place' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'place-events',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Place' } ],
+            features: {
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        // Series pages
+        {
+            type: 'series-aliases',
+            match: (path) => path.match(/\/series\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Series' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'series-releases',
+            match: (path) => path.includes('/series'),
+            buttons: [ { label: 'Show all Releases for Series' } ],
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'single'
+        },
+        // Label pages
+        {
+            type: 'label-aliases',
+            match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Label' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'label-relationships-filtered',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title' // Specific header
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                extractMainColumn: 'Title' // Specific header
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-releases',
+            match: (path) => path.includes('/label'),
+            buttons: [ { label: 'Show all Releases for Label' } ],
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'single'
+        },
+        // Work pages
+        {
+            type: 'work-aliases',
+            match: (path) => path.match(/\/work\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Work' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'work-recordings-filtered',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'work-recordings',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        // Artist pages
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (filtered)' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'artist-relationships',
+            // Only match if NO link_type_id is present (the overview page)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        // TODO: Needs to be handled separately - actually multi table native, but each table has it's own h2 header
+        {
+            type: 'artist-aliases',
+            match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/aliases/),
+            buttons: [
+                {
+                    label: 'Show all Aliases for Artist',
+                    targetHeader: 'Aliases',
+                    tableMode: 'single',
+                    extractMainColumn: 'Locale'
+                },
+                {
+                    label: 'Show all Artist Credits for Artist',
+                    targetHeader: 'Artist credits',
+                    tableMode: 'single'
+                }
+            ],
+        },
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official artist RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official artist RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official various artists RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official various artists RGs', params: { all: '1', va: '1' } }
+            ],
+            tableMode: 'multi' // native tables, h3 headers
+        },
+        {
+            type: 'artist-releases',
+            // Artist Releases page (Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
+            buttons: [
+                { label: '🧮 Official artist releases', params: { va: '0' } },
+                { label: '🧮 Various artist releases', params: { va: '1' } }
+            ],
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                splitCD: false, // Explicitly false (default), but shown for clarity
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'artist-works',
+            match: (path) => path.includes('/works'),
+            buttons: [ { label: 'Show all Works for Artist' } ],
+            features: {
+                extractMainColumn: 'Work'
+            },
+            tableMode: 'single'
+        },
+        // ReleaseGroups pages
+        {
+            type: 'releasegroup-aliases',
+            match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Releasegroup' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'releasegroup-releases',
+            match: (path) => path.includes('/release-group/'),
+            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+        // Release pages
+        {
+            type: 'release-aliases',
+            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Release' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'release-discids',
+            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/discids/),
+            buttons: [ { label: 'Show all Disc IDs for Release' } ],
+            tableMode: 'multi',
+            non_paginated: false
+        },
+        // Recording pages
+        {
+            type: 'recording-aliases',
+            match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Recording' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'recording-fingerprints',
+            match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/fingerprints/),
+            buttons: [ { label: 'Show all Fingerprints for Recording' } ],
+            tableMode: 'single'
+            //rowTargetSelector: '.acoustid-fingerprints table.tbl'
+        },
+        {
+            type: 'recording-releases',
+            match: (path) => path.includes('/recording'),
+            buttons: [ { label: 'Show all Releases for Recording' } ],
+            features: {
+                splitCD: true,
+                extractMainColumn: 'Release title'
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+        // Event pages
+        {
+            type: 'event-aliases',
+            match: (path) => path.match(/\/event\/[a-f0-9-]{36}\/aliases/),
+            buttons: [ { label: 'Show all Aliases for Event' } ],
+            features: {
+                extractMainColumn: 'Locale' // Specific header
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'events',
+            match: (path) => path.includes('/events'),
+            buttons: [ { label: 'Show all Events for Artist' } ],
+            features: {
+                splitLocation: true,
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        }
+    ];
 
     // --- Initialization Logic ---
 
@@ -4806,7 +4435,7 @@ let changelog = [
 
     const infoDisplay = document.createElement('span');
     infoDisplay.id = 'mb-info-display';
-    infoDisplay.style.cssText = 'font-size:0.8em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; margin-left:10px;';
+    infoDisplay.style.cssText = 'font-size:0.70em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; margin-left:10px;';
 
 
     const progressContainer = document.createElement('div');
@@ -5326,7 +4955,7 @@ let changelog = [
             </div>
 
             <div style="display:flex; gap:12px;">
-                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><u>L</u>oad Data</button>
+                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Load Data</button>
                 <button id="sa-load-cancel" style="flex:1; padding:10px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancel</button>
             </div>
         `;
@@ -6825,20 +6454,12 @@ let changelog = [
         Lib.debug('fetch', `Total pages to fetch: ${maxPage}`);
 
         // If page count is above threshold, show modal
-        if (maxPage > maxThreshold) {
-            const proceedConfirmed = await showCustomConfirm(
-                `Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.\n\nProceed?`,
-                '⚠️ High Page Count',
-                activeBtn
-            );
-            if (!proceedConfirmed) {
-                Lib.warn('warn', `High page count detected (${maxPage}). User canceled fetch.`);
-                activeBtn.style.backgroundColor = '';
-                activeBtn.style.color = '';
-                activeBtn.disabled = false;
-                infoDisplay.textContent = '';
-                return;
-            }
+        if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
+            Lib.warn('warn', `High page count detected (${maxPage}). This may take a while and could trigger rate limiting.`);
+            activeBtn.style.backgroundColor = '';
+            activeBtn.style.color = '';
+            activeBtn.disabled = false;
+            infoDisplay.textContent = '';
         }
 
         stopRequested = false;
@@ -8527,7 +8148,7 @@ let changelog = [
             const filename = `mb-${pageType}-${timestamp}.json.gz`;
 
             triggerStandardDownload(url, filename);
-            infoDisplay.textContent = `✓ Serialized ${dataToSave.rowCount} rows to ${filename}`;
+            infoDisplay.textContent = `✓ Saved: Serialized ${dataToSave.rowCount} rows to ${filename}`;
             infoDisplay.style.color = 'green';
 
 
@@ -8619,7 +8240,7 @@ let changelog = [
      * @param {boolean} isCaseSensitive - Whether the pre-filter should be case-sensitive
      * @param {boolean} isRegExp - Whether the pre-filter should be treated as a regular expression
      */
-    async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
+    function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
         if (!file) {
             Lib.warn('cache', 'No file selected.');
             return;
@@ -8635,11 +8256,7 @@ let changelog = [
             try {
                 globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
             } catch (e) {
-                await showCustomAlert(
-                    'Invalid Regular Expression in load filter field. Load aborted.',
-                    '❌ Invalid Regex',
-                    loadFromDiskBtn
-                );
+                alert('Invalid Regular Expression in load filter field. Load aborted.');
                 // Reset file input so change event fires again if they pick same file
                 fileInput.value = '';
                 return;
@@ -8675,12 +8292,7 @@ let changelog = [
 
                 // Validation: Check if the file matches the current page type
                 if (data.pageType !== pageType) {
-                    const loadAnywayConfirmed = await showCustomConfirm(
-                        `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
-                        '⚠️ Page Type Mismatch',
-                        loadFromDiskBtn
-                    );
-                    if (!loadAnywayConfirmed) {
+                    if (!confirm(`Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page. Try loading anyway?`)) {
                         fileInput.value = '';
                         return;
                     }
@@ -8923,37 +8535,11 @@ let changelog = [
         }
     }
 
-    // Wrapper functions for Ctrl-M menu shortcuts
-    function openExportMenu() {
-        const exportBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
-        if (exportBtn) {
-            exportBtn.click();
-        }
-    }
-
-    function openVisibleColumnsMenu() {
-        const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible Columns'));
-        if (visibleColumnsBtn) {
-            visibleColumnsBtn.click();
-        }
-    }
-
-    function openDensityMenu() {
-        const densityBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Density'));
-        if (densityBtn) {
-            densityBtn.click();
-        }
-    }
-
     // Populate Ctrl-M function mapping after all functions are defined
     ctrlMFunctionMap = {
         'r': { fn: toggleAutoResizeColumns, description: 'Auto-Resize Columns' },
-        't': { fn: showStatsPanel, description: 'Show Stats Panel' },
-        's': { fn: saveTableDataToDisk, description: 'Save to Disk' },
-        'd': { fn: openDensityMenu, description: 'Open Density Menu' },
-        'v': { fn: openVisibleColumnsMenu, description: 'Open Visible Columns Menu' },
-        'e': { fn: openExportMenu, description: 'Open Export Menu' },
-        'l': { fn: showLoadFilterDialog, description: 'Load from Disk' },
-        '?': { fn: showShortcutsHelp, description: 'Show Shortcuts Help' }
+        'p': { fn: showStatsPanel, description: 'Show Stats Panel' },
+        't': { fn: saveTableDataToDisk, description: 'Save to Disk' },
+        'l': { fn: showLoadFilterDialog, description: 'Load from Disk' }
     };
 })();

@@ -39502,15 +39502,14 @@ Additionally, the font used inside the dialogs should be much bigger/readable
 - Rename the "⌨️ Shortcuts" button to just "🎹" and position it left to the "⚙️" button, this button should also already
   be visible on page entry (not only when the page is finally render after an action button click)
 
-- Create a new button with text   
-  
 ** TODO new buttons
 
 Create a new button with text "❓" for general help about the application. When clicked a new scrollable popup window
 (with a "Close" button and equivalent "Escape" key handling) should present the user the features and help coming from a
 new multiline variable. Please invent a variable name and place a short description of the features of this app (you can
 also use the unicode symbols used for buttons or in text in the current user script implementation) as the value of this
-variable in the current code.
+variable in the current code. Position it right to the "⚙️" button This button should also already be visible on page
+entry (not only when the page is finally render after an action button click).
 
 ** TODO Underline "S" in "Stop" button and add keyboard shortcut
 
@@ -39532,6 +39531,7 @@ window.addEventListener("load", () => {
   document.body.focus();
 });
 #+end_example
+
 * TODO alignment h1 button with status line below
 
 #+begin_example
@@ -39708,5 +39708,40 @@ or
 ** Ctrl-Alt-1 ==> collapse all h1
 ** Ctrl-Alt-2 ==> collapse all h2
 ** Ctrl-Alt-3 ==> collapse all h3
+
+* In the file open dialog - All files (*.*)
+
+How can I configure what the "Open file dialog" in a browser shows as filemask. In vivaldi I only get the "JSON FILE
+(*.json)" as default and the "All files (*.*)": At least I want that "*.*" is the default
+
+#+begin_example
+Override the website (advanced workaround)
+
+Since you already work with userscripts (MusicBrainz etc.), you could inject JS to remove or modify the accept attribute.
+
+Example userscript snippet:
+
+document.addEventListener("click", function (e) {
+    if (e.target.type === "file") {
+        e.target.removeAttribute("accept");
+    }
+}, true);
+
+
+This removes the restriction before the dialog opens.
+
+Or force all files:
+
+document.querySelectorAll('input[type="file"]').forEach(el => {
+    el.setAttribute("accept", "*/*");
+});
+
+
+This works if:
+
+The site does not dynamically recreate the element
+
+The file picker is a real <input type="file">
+#+end_example
 
 
