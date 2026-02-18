@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.34.1+2026-02-17
+// @version      9.34.2+2026-02-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.34.2+2026-02-17', description: 'Enhancement: Replaced three native browser dialogs with custom styled implementations. (1) Page reload alert: custom dialog when MusicBrainz page is reloaded for filter stability. (2) High page count warning: custom confirm dialog instead of native when entity has more pages than configured threshold - user can proceed or cancel with keyboard support (Enter=proceed, Escape=cancel). (3) Page type mismatch: custom confirm dialog when loading file from different page type with clear warning and user choice. (4) Invalid regex alert: custom alert for invalid regex pattern in load filter. All custom dialogs match userscript styling (white background, button styling, centered, shadow, z-index 10001), support keyboard shortcuts (Enter=OK, Escape=Cancel), and auto-focus OK button for accessibility.'},
     {version: '9.34.1+2026-02-17', description: 'Enhancement: Comprehensive Ctrl-M Emacs-style keybinding system with tooltip. (1) Press Ctrl-M and release to enter mode, then press key: 1-9 select action buttons, a-z select additional buttons (up to 35). (2) Function shortcuts: r=Auto-Resize, t=Stats Panel, s=Save to Disk, d=Density, v=Visible Columns, e=Export, l=Load from Disk, ?=Show Help. (3) Configurable tooltip (default enabled) displays all available shortcuts when Ctrl-M is pressed, positioned in upper right of content div without overlapping sidebar. (4) Underlined keyboard shortcuts in button text for visual reference. (5) Tooltip auto-hides when mode exits (Escape, timeout, or selection). (6) Extended key support (1-9, a-z, A-Z, ,;.:-_+*<>#\'?!%&/()=) for future extensions.'},
     {version: '9.34.0+2026-02-17', description: 'Enhancement: Added action shortcuts and h3 Ctrl+Click functionality. (1) Ctrl+M: Triggers the first "Show all" action button on the page - useful for pages with multiple action buttons (chooses first one). (2) h3 Headers: Added Ctrl+Click support to toggle ALL h3 headers (types) simultaneously, matching h2 functionality. Regular click still toggles individual h3. Updated tooltip: "Click to Collapse/Uncollapse table section (Ctrl+Click to toggle all types)". (3) Added Ctrl+M to shortcuts help dialog.'},
     {version: '9.33.0+2026-02-17', description: 'Major Enhancement: Extended keyboard shortcuts and smart button visibility. (1) "Visible Columns": Added "Choose <u>c</u>urrent configuration" button with Alt-C shortcut. (2) Collapse shortcuts: Ctrl-2 toggles all h2 headers, Ctrl-3 toggles all h3 headers (types) - mimics existing Ctrl-click and Show/Hide all functionality. (3) Smart button visibility: "Toggle highlighting", "Clear all COLUMN filters", and "Clear ALL filters" buttons now only appear when filters are actually active. (4) Updated Shortcuts help with comprehensive sections for all menu-specific and global shortcuts including new View & Layout section.'},
@@ -1805,6 +1806,189 @@ let changelog = [
             filterStatusDisplay.textContent = '✓ All filters cleared';
             filterStatusDisplay.style.color = 'green';
         }
+    }
+
+    /**
+     * Custom alert dialog - matches userscript styling
+     */
+    function showCustomAlert(message, title = 'Notice') {
+        return new Promise((resolve) => {
+            const dialogDiv = document.createElement('div');
+            dialogDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+                z-index: 10001;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                min-width: 350px;
+                max-width: 500px;
+            `;
+
+            // Header
+            const headerDiv = document.createElement('div');
+            headerDiv.style.cssText = 'font-weight: 600; font-size: 1.1em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ddd; color: #333;';
+            headerDiv.textContent = title;
+            dialogDiv.appendChild(headerDiv);
+
+            // Message
+            const msgDiv = document.createElement('div');
+            msgDiv.style.cssText = 'margin-bottom: 20px; line-height: 1.5; color: #555; font-size: 0.95em;';
+            msgDiv.textContent = message;
+            dialogDiv.appendChild(msgDiv);
+
+            // Button container
+            const btnContainer = document.createElement('div');
+            btnContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 8px;';
+
+            // OK button
+            const okBtn = document.createElement('button');
+            okBtn.textContent = 'OK';
+            okBtn.style.cssText = `
+                padding: 8px 16px;
+                background-color: #4CAF50;
+                color: white;
+                border: 1px solid #45a049;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.95em;
+                font-weight: 500;
+                transition: background-color 0.2s;
+            `;
+            okBtn.onmouseover = () => { okBtn.style.backgroundColor = '#45a049'; };
+            okBtn.onmouseout = () => { okBtn.style.backgroundColor = '#4CAF50'; };
+            okBtn.onclick = () => {
+                dialogDiv.remove();
+                resolve();
+            };
+            okBtn.focus(); // Auto-focus OK button
+            btnContainer.appendChild(okBtn);
+
+            dialogDiv.appendChild(btnContainer);
+            document.body.appendChild(dialogDiv);
+
+            // Allow Escape to close
+            const escapeHandler = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    dialogDiv.remove();
+                    document.removeEventListener('keydown', escapeHandler);
+                    resolve();
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        });
+    }
+
+    /**
+     * Custom confirm dialog - matches userscript styling
+     */
+    function showCustomConfirm(message, title = 'Confirm') {
+        return new Promise((resolve) => {
+            const dialogDiv = document.createElement('div');
+            dialogDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+                z-index: 10001;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                min-width: 350px;
+                max-width: 500px;
+            `;
+
+            // Header
+            const headerDiv = document.createElement('div');
+            headerDiv.style.cssText = 'font-weight: 600; font-size: 1.1em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ddd; color: #333;';
+            headerDiv.textContent = title;
+            dialogDiv.appendChild(headerDiv);
+
+            // Message
+            const msgDiv = document.createElement('div');
+            msgDiv.style.cssText = 'margin-bottom: 20px; line-height: 1.5; color: #555; font-size: 0.95em; word-wrap: break-word;';
+            msgDiv.textContent = message;
+            dialogDiv.appendChild(msgDiv);
+
+            // Button container
+            const btnContainer = document.createElement('div');
+            btnContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 8px;';
+
+            // Cancel button
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.style.cssText = `
+                padding: 8px 16px;
+                background-color: #f0f0f0;
+                color: #333;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.95em;
+                font-weight: 500;
+                transition: background-color 0.2s;
+            `;
+            cancelBtn.onmouseover = () => { cancelBtn.style.backgroundColor = '#e0e0e0'; };
+            cancelBtn.onmouseout = () => { cancelBtn.style.backgroundColor = '#f0f0f0'; };
+            cancelBtn.onclick = () => {
+                dialogDiv.remove();
+                document.removeEventListener('keydown', escapeHandler);
+                resolve(false);
+            };
+            btnContainer.appendChild(cancelBtn);
+
+            // OK button
+            const okBtn = document.createElement('button');
+            okBtn.textContent = 'OK';
+            okBtn.style.cssText = `
+                padding: 8px 16px;
+                background-color: #4CAF50;
+                color: white;
+                border: 1px solid #45a049;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.95em;
+                font-weight: 500;
+                transition: background-color 0.2s;
+            `;
+            okBtn.onmouseover = () => { okBtn.style.backgroundColor = '#45a049'; };
+            okBtn.onmouseout = () => { okBtn.style.backgroundColor = '#4CAF50'; };
+            okBtn.onclick = () => {
+                dialogDiv.remove();
+                document.removeEventListener('keydown', escapeHandler);
+                resolve(true);
+            };
+            okBtn.focus(); // Auto-focus OK button
+            btnContainer.appendChild(okBtn);
+
+            dialogDiv.appendChild(btnContainer);
+            document.body.appendChild(dialogDiv);
+
+            // Allow Escape to cancel and Enter to confirm
+            const escapeHandler = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    dialogDiv.remove();
+                    document.removeEventListener('keydown', escapeHandler);
+                    resolve(false);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    dialogDiv.remove();
+                    document.removeEventListener('keydown', escapeHandler);
+                    resolve(true);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        });
     }
 
     /**
@@ -3807,8 +3991,10 @@ let changelog = [
     const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
     if (reloadFlag) {
         sessionStorage.removeItem('mb_show_all_reload_pending');
-        // Note: Native browser dialogs auto-focus the OK button by default
-        alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
+        showCustomAlert(
+            'The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.',
+            '⚠️ Page Reloaded'
+        );
     }
 
     const currentUrl = new URL(window.location.href);
@@ -6559,13 +6745,19 @@ let changelog = [
         Lib.debug('fetch', `Total pages to fetch: ${maxPage}`);
 
         // If page count is above threshold, show modal
-        // Note: Native browser dialogs auto-focus the OK button by default
-        if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
-            Lib.warn('warn', `High page count detected (${maxPage}). This may take a while and could trigger rate limiting.`);
-            activeBtn.style.backgroundColor = '';
-            activeBtn.style.color = '';
-            activeBtn.disabled = false;
-            infoDisplay.textContent = '';
+        if (maxPage > maxThreshold) {
+            const proceedConfirmed = await showCustomConfirm(
+                `Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.\n\nProceed?`,
+                '⚠️ High Page Count'
+            );
+            if (!proceedConfirmed) {
+                Lib.warn('warn', `High page count detected (${maxPage}). User canceled fetch.`);
+                activeBtn.style.backgroundColor = '';
+                activeBtn.style.color = '';
+                activeBtn.disabled = false;
+                infoDisplay.textContent = '';
+                return;
+            }
         }
 
         stopRequested = false;
@@ -8346,7 +8538,7 @@ let changelog = [
      * @param {boolean} isCaseSensitive - Whether the pre-filter should be case-sensitive
      * @param {boolean} isRegExp - Whether the pre-filter should be treated as a regular expression
      */
-    function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
+    async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
         if (!file) {
             Lib.warn('cache', 'No file selected.');
             return;
@@ -8362,7 +8554,10 @@ let changelog = [
             try {
                 globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
             } catch (e) {
-                alert('Invalid Regular Expression in load filter field. Load aborted.');
+                await showCustomAlert(
+                    'Invalid Regular Expression in load filter field. Load aborted.',
+                    '❌ Invalid Regex'
+                );
                 // Reset file input so change event fires again if they pick same file
                 fileInput.value = '';
                 return;
@@ -8398,7 +8593,11 @@ let changelog = [
 
                 // Validation: Check if the file matches the current page type
                 if (data.pageType !== pageType) {
-                    if (!confirm(`Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page. Try loading anyway?`)) {
+                    const loadAnywayConfirmed = await showCustomConfirm(
+                        `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
+                        '⚠️ Page Type Mismatch'
+                    );
+                    if (!loadAnywayConfirmed) {
                         fileInput.value = '';
                         return;
                     }

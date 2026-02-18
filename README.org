@@ -39448,6 +39448,44 @@ combination is pressed and automatically vanish if the combination is not in eff
 grey background, the the text should be in a small font) and should be rendered in the upper right corner of the '<div id="content"' container,
 but it should not overflow the '<div id="sidebar"' container.
 
+** convert browser native dialog
+
+Please convert the current browser native dialog popups in the following locations
+
+#+begin_example
+// If page count is above threshold, show modal
+if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
+#+end_example
+
+#+begin_example
+    if (reloadFlag) {
+        sessionStorage.removeItem('mb_show_all_reload_pending');
+        alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
+    }
+#+end_example
+
+#+begin_example
+                // Validation: Check if the file matches the current page type
+                if (data.pageType !== pageType) {
+                    if (!confirm(`Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page. Try loading anyway?`)) {
+                        fileInput.value = '';
+                        return;
+                    }
+                }
+#+end_example
+
+into custom dialog implementations, with the same look and feel like other popups in this userscript, but which replaces the native browser dialog functionalities in exactly the same way 
+
+** reposition the popup dialogs
+
+Please do not render the custom alert and confirmation popup dialogs centered on screen but instead below the "Show all..." action button and "Load from Disk" button,
+because that would be near the location where the user would trigger this popups when he clicked the corresponding buttons.
+
+Also there is a bug: when the popups appear the "OK" button IS NOT focused and keyboard navigation between the "OK" and
+the "Cancel" button (if available on aspecific dialog) doesn NOT work.
+
+Additionally, the font used inside the dialogs should be much bigger/readable
+
 
 * Add keyboard handling for the complete application
 ** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
