@@ -48,7 +48,7 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '9.34.1+2026-02-17', description: 'Enhancement: Comprehensive Ctrl-M Emacs-style keybinding system. (1) Press Ctrl-M and release, then press key: 1-9 select action buttons 1-9, a-z select additional buttons (10-35). (2) Function shortcuts: t=Stats Panel, s=Save to Disk, d=Density menu, v=Visible Columns menu, e=Export menu, ?=Show Shortcuts Help. (3) Underlined shortcut indicators in button text: S<u>t</u>ats (t), <u>S</u>ave to Disk (s), <u>D</u>ensity (d), <u>V</u>isible Columns (v), <u>E</u>xport (e). (4) Extended key support (1-9, a-z, A-Z, ,;.:-_+*<>#\'?!%&/()=) for future function mapping. (5) Auto-focus on native dialogs (confirm/alert) for page load warnings. (6) Helpful debug output with all available shortcuts. Available immediately on page entry.'},
+    {version: '9.34.1+2026-02-17', description: 'Enhancement: Comprehensive Ctrl-M Emacs-style keybinding system with tooltip. (1) Press Ctrl-M and release to enter mode, then press key: 1-9 select action buttons, a-z select additional buttons (up to 35). (2) Function shortcuts: r=Auto-Resize, t=Stats Panel, s=Save to Disk, d=Density, v=Visible Columns, e=Export, l=Load from Disk, ?=Show Help. (3) Configurable tooltip (default enabled) displays all available shortcuts when Ctrl-M is pressed, positioned in upper right of content div without overlapping sidebar. (4) Underlined keyboard shortcuts in button text for visual reference. (5) Tooltip auto-hides when mode exits (Escape, timeout, or selection). (6) Extended key support (1-9, a-z, A-Z, ,;.:-_+*<>#\'?!%&/()=) for future extensions.'},
     {version: '9.34.0+2026-02-17', description: 'Enhancement: Added action shortcuts and h3 Ctrl+Click functionality. (1) Ctrl+M: Triggers the first "Show all" action button on the page - useful for pages with multiple action buttons (chooses first one). (2) h3 Headers: Added Ctrl+Click support to toggle ALL h3 headers (types) simultaneously, matching h2 functionality. Regular click still toggles individual h3. Updated tooltip: "Click to Collapse/Uncollapse table section (Ctrl+Click to toggle all types)". (3) Added Ctrl+M to shortcuts help dialog.'},
     {version: '9.33.0+2026-02-17', description: 'Major Enhancement: Extended keyboard shortcuts and smart button visibility. (1) "Visible Columns": Added "Choose <u>c</u>urrent configuration" button with Alt-C shortcut. (2) Collapse shortcuts: Ctrl-2 toggles all h2 headers, Ctrl-3 toggles all h3 headers (types) - mimics existing Ctrl-click and Show/Hide all functionality. (3) Smart button visibility: "Toggle highlighting", "Clear all COLUMN filters", and "Clear ALL filters" buttons now only appear when filters are actually active. (4) Updated Shortcuts help with comprehensive sections for all menu-specific and global shortcuts including new View & Layout section.'},
     {version: '9.32.0+2026-02-17', description: 'Enhancement: Extended keyboard navigation for menus. (1) "Visible Columns": Added Ctrl+V to open menu, Tab cycles through checkboxes and buttons, Alt-S triggers "Select All", Alt-D triggers "Deselect All" (only when menu open). Buttons now show underlined letters (<u>S</u>elect All, <u>D</u>eselect All). (2) "Density": Added Ctrl+D to open menu. (3) "Export": Close button in export complete popup now auto-focused for quick dismissal with Enter or Space.'},
@@ -157,6 +157,92 @@ let changelog = [
     let ctrlMModeActive = false;
     let ctrlMModeTimeout;
     let ctrlMFunctionMap = {}; // Will be populated after functions are defined
+    let ctrlMTooltipElement = null;
+
+    function showCtrlMTooltip(actionButtons, buttonKeys) {
+        if (typeof Lib === 'undefined' || !Lib.settings.sa_enable_keyboard_shortcut_tooltip) {
+            return; // Tooltip disabled in settings or Lib not available
+        }
+
+        // Remove existing tooltip if any
+        hideCtrlMTooltip();
+
+        const contentDiv = document.getElementById('content');
+        const sidebarDiv = document.getElementById('sidebar');
+        if (!contentDiv) return;
+
+        // Create tooltip element
+        ctrlMTooltipElement = document.createElement('div');
+        ctrlMTooltipElement.id = 'mb-ctrl-m-tooltip';
+        ctrlMTooltipElement.style.cssText = `
+            position: fixed;
+            background-color: #f0f0f0;
+            border: 1px solid #999;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 0.75em;
+            max-width: 250px;
+            z-index: 10000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            line-height: 1.4;
+        `;
+
+        // Build tooltip content
+        let tooltipHTML = '<strong>Ctrl-M Shortcuts:</strong><br/>';
+
+        // Action buttons
+        if (actionButtons.length > 0) {
+            tooltipHTML += '<strong>Buttons:</strong><br/>';
+            for (let i = 0; i < Math.min(actionButtons.length, 9); i++) {
+                const key = buttonKeys[i];
+                const text = actionButtons[i].textContent.trim().substring(0, 20);
+                tooltipHTML += `<div style="margin-left: 4px;"><strong>${key}</strong>: ${text}${actionButtons[i].textContent.trim().length > 20 ? '...' : ''}</div>`;
+            }
+            if (actionButtons.length > 9) {
+                tooltipHTML += `<div style="margin-left: 4px; font-size: 0.9em; color: #666;">+ ${actionButtons.length - 9} more (a-${String.fromCharCode(97 + Math.min(actionButtons.length - 10, 25))})</div>`;
+            }
+            tooltipHTML += '<br/>';
+        }
+
+        // Function shortcuts
+        tooltipHTML += '<strong>Functions:</strong><br/>';
+        const sortedFunctions = Object.entries(ctrlMFunctionMap)
+            .sort((a, b) => a[0].localeCompare(b[0]));
+        for (const [key, entry] of sortedFunctions) {
+            tooltipHTML += `<div style="margin-left: 4px;"><strong>${key}</strong>: ${entry.description}</div>`;
+        }
+
+        ctrlMTooltipElement.innerHTML = tooltipHTML;
+        document.body.appendChild(ctrlMTooltipElement);
+
+        // Position in upper right of content div, not overlapping sidebar
+        setTimeout(() => {
+            if (contentDiv && sidebarDiv) {
+                const contentRect = contentDiv.getBoundingClientRect();
+                const sidebarRect = sidebarDiv.getBoundingClientRect();
+                const tooltipRect = ctrlMTooltipElement.getBoundingClientRect();
+
+                // Position in upper right, respecting sidebar
+                let left = Math.min(contentRect.right - tooltipRect.width - 10, window.innerWidth - tooltipRect.width - 10);
+                left = Math.max(left, contentRect.left + 10); // Don't go too far left
+
+                if (sidebarDiv) {
+                    // Ensure doesn't overlap sidebar
+                    left = Math.min(left, sidebarRect.left - tooltipRect.width - 10);
+                }
+
+                ctrlMTooltipElement.style.left = left + 'px';
+                ctrlMTooltipElement.style.top = (contentRect.top + 10) + 'px';
+            }
+        }, 0);
+    }
+
+    function hideCtrlMTooltip() {
+        if (ctrlMTooltipElement) {
+            ctrlMTooltipElement.remove();
+            ctrlMTooltipElement = null;
+        }
+    }
 
     document.addEventListener('keydown', (e) => {
         // Ctrl/Cmd + M: Enter Ctrl-M mode for button selection by key
@@ -167,6 +253,7 @@ let changelog = [
             if (ctrlMModeActive) {
                 ctrlMModeActive = false;
                 clearTimeout(ctrlMModeTimeout);
+                hideCtrlMTooltip();
                 if (typeof Lib !== 'undefined' && Lib.debug) {
                     Lib.debug('shortcuts', 'Exited Ctrl-M mode');
                 } else {
@@ -193,6 +280,11 @@ let changelog = [
                 }
             }
 
+            // Show tooltip if enabled
+            if (typeof Lib !== 'undefined' && Lib.settings.sa_enable_keyboard_shortcut_tooltip) {
+                showCtrlMTooltip(actionButtons, buttonKeys);
+            }
+
             // Log helpful message with available buttons
             if (typeof Lib !== 'undefined' && Lib.debug) {
                 if (buttonKeys.length > 0) {
@@ -202,7 +294,7 @@ let changelog = [
                         Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, p=Stats, t=Save, l=Load');
+                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Help');
                 Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
                 if (buttonKeys.length > 0) {
@@ -212,13 +304,14 @@ let changelog = [
                         console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, p=Stats, t=Save, l=Load');
+                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Help');
             }
 
             // Auto-exit after 5 seconds
             clearTimeout(ctrlMModeTimeout);
             ctrlMModeTimeout = setTimeout(() => {
                 ctrlMModeActive = false;
+                hideCtrlMTooltip();
                 if (typeof Lib !== 'undefined' && Lib.debug) {
                     Lib.debug('shortcuts', 'Exited Ctrl-M mode (timeout)');
                 }
@@ -261,6 +354,7 @@ let changelog = [
                 }
                 ctrlMModeActive = false;
                 clearTimeout(ctrlMModeTimeout);
+                hideCtrlMTooltip();
                 return;
             }
 
@@ -295,6 +389,7 @@ let changelog = [
 
             ctrlMModeActive = false;
             clearTimeout(ctrlMModeTimeout);
+            hideCtrlMTooltip();
             return;
         }
 
@@ -303,6 +398,7 @@ let changelog = [
             e.preventDefault();
             ctrlMModeActive = false;
             clearTimeout(ctrlMModeTimeout);
+            hideCtrlMTooltip();
             if (typeof Lib !== 'undefined' && Lib.debug) {
                 Lib.debug('shortcuts', 'Exited Ctrl-M mode (Escape pressed)');
             } else {
@@ -315,6 +411,7 @@ let changelog = [
         if (ctrlMModeActive && (e.ctrlKey || e.metaKey || e.altKey) && e.key !== 'Escape') {
             ctrlMModeActive = false;
             clearTimeout(ctrlMModeTimeout);
+            hideCtrlMTooltip();
         }
     });
 
@@ -3355,6 +3452,13 @@ let changelog = [
             type: 'checkbox',
             default: true,
             description: 'Enable keyboard shortcuts and show the "⌨️ Shortcuts" help button'
+        },
+
+        sa_enable_keyboard_shortcut_tooltip: {
+            label: 'Enable keyboard shortcut tooltip',
+            type: 'checkbox',
+            default: true,
+            description: 'Enable keyboard shortcut tooltip for Ctrl-M prefix map'
         },
 
         sa_enable_stats_panel: {
@@ -8561,11 +8665,13 @@ let changelog = [
 
     // Populate Ctrl-M function mapping after all functions are defined
     ctrlMFunctionMap = {
+        'r': { fn: toggleAutoResizeColumns, description: 'Auto-Resize Columns' },
         't': { fn: showStatsPanel, description: 'Show Stats Panel' },
         's': { fn: saveTableDataToDisk, description: 'Save to Disk' },
         'd': { fn: openDensityMenu, description: 'Open Density Menu' },
         'v': { fn: openVisibleColumnsMenu, description: 'Open Visible Columns Menu' },
         'e': { fn: openExportMenu, description: 'Open Export Menu' },
+        'l': { fn: showLoadFilterDialog, description: 'Load from Disk' },
         '?': { fn: showShortcutsHelp, description: 'Show Shortcuts Help' }
     };
 })();
