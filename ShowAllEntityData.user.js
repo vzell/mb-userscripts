@@ -8521,7 +8521,7 @@ let changelog = [
             const filename = `mb-${pageType}-${timestamp}.json.gz`;
 
             triggerStandardDownload(url, filename);
-            infoDisplay.textContent = `✓ Saved: Serialized ${dataToSave.rowCount} rows to ${filename}`;
+            infoDisplay.textContent = `✓ Serialized ${dataToSave.rowCount} rows to ${filename}`;
             infoDisplay.style.color = 'green';
 
 
