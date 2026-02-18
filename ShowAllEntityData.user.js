@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.34.0+2026-02-17
+// @version      9.34.1+2026-02-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.34.1+2026-02-17', description: 'Enhancement: Implemented true Emacs-style keybindings for Ctrl-M action button selection. (1) Press Ctrl-M and release. (2) Then press any single key (no modifiers): 1-9 for first 9 buttons, a-z for additional buttons. (3) Mode auto-exits after 5 seconds or when Escape pressed. (4) Helpful debug output lists available buttons and their assigned keys. Available immediately on page entry before rendering, supports up to 35 buttons (1-9, a-z).'},
     {version: '9.34.0+2026-02-17', description: 'Enhancement: Added action shortcuts and h3 Ctrl+Click functionality. (1) Ctrl+M: Triggers the first "Show all" action button on the page - useful for pages with multiple action buttons (chooses first one). (2) h3 Headers: Added Ctrl+Click support to toggle ALL h3 headers (types) simultaneously, matching h2 functionality. Regular click still toggles individual h3. Updated tooltip: "Click to Collapse/Uncollapse table section (Ctrl+Click to toggle all types)". (3) Added Ctrl+M to shortcuts help dialog.'},
     {version: '9.33.0+2026-02-17', description: 'Major Enhancement: Extended keyboard shortcuts and smart button visibility. (1) "Visible Columns": Added "Choose <u>c</u>urrent configuration" button with Alt-C shortcut. (2) Collapse shortcuts: Ctrl-2 toggles all h2 headers, Ctrl-3 toggles all h3 headers (types) - mimics existing Ctrl-click and Show/Hide all functionality. (3) Smart button visibility: "Toggle highlighting", "Clear all COLUMN filters", and "Clear ALL filters" buttons now only appear when filters are actually active. (4) Updated Shortcuts help with comprehensive sections for all menu-specific and global shortcuts including new View & Layout section.'},
     {version: '9.32.0+2026-02-17', description: 'Enhancement: Extended keyboard navigation for menus. (1) "Visible Columns": Added Ctrl+V to open menu, Tab cycles through checkboxes and buttons, Alt-S triggers "Select All", Alt-D triggers "Deselect All" (only when menu open). Buttons now show underlined letters (<u>S</u>elect All, <u>D</u>eselect All). (2) "Density": Added Ctrl+D to open menu. (3) "Export": Close button in export complete popup now auto-focused for quick dismissal with Enter or Space.'},
@@ -150,6 +151,134 @@ let changelog = [
 
 (function() {
     'use strict';
+
+    // Initialize Ctrl-M Emacs-style handler for action button selection
+    // Press Ctrl-M, release, then press 1/2/3/etc or a/b/c/etc to select button
+    let ctrlMModeActive = false;
+    let ctrlMModeTimeout;
+
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + M: Enter Ctrl-M mode for button selection by key
+        if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+            e.preventDefault();
+
+            // If already in mode, exit
+            if (ctrlMModeActive) {
+                ctrlMModeActive = false;
+                clearTimeout(ctrlMModeTimeout);
+                if (typeof Lib !== 'undefined' && Lib.debug) {
+                    Lib.debug('shortcuts', 'Exited Ctrl-M mode');
+                } else {
+                    console.log('[ShowAllEntityData] Exited Ctrl-M mode');
+                }
+                return;
+            }
+
+            // Get available action buttons
+            const actionButtons = Array.from(document.querySelectorAll('button'))
+                .filter(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
+
+            // Enter Ctrl-M mode
+            ctrlMModeActive = true;
+
+            // Build list of available keys (1-9 for first 9 buttons, then a-z for more)
+            let availableKeys = [];
+            if (actionButtons.length > 0) {
+                for (let i = 0; i < actionButtons.length && i < 9; i++) {
+                    availableKeys.push((i + 1).toString());
+                }
+                for (let i = 9; i < actionButtons.length && i < 35; i++) {
+                    availableKeys.push(String.fromCharCode(97 + (i - 9))); // a-z
+                }
+            }
+
+            // Log helpful message with available buttons
+            if (typeof Lib !== 'undefined' && Lib.debug) {
+                Lib.debug('shortcuts', `Entered Ctrl-M mode. ${actionButtons.length} button(s) available. Press: ${availableKeys.join(', ')} then release, or Escape to cancel`);
+                actionButtons.forEach((btn, idx) => {
+                    const key = availableKeys[idx] || '?';
+                    Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
+                });
+            } else {
+                console.log(`[ShowAllEntityData] Entered Ctrl-M mode. ${actionButtons.length} button(s) available.`);
+                console.log(`[ShowAllEntityData] Press: ${availableKeys.join(', ')} to select, or Escape to cancel`);
+                actionButtons.forEach((btn, idx) => {
+                    const key = availableKeys[idx] || '?';
+                    console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
+                });
+            }
+
+            // Auto-exit after 5 seconds
+            clearTimeout(ctrlMModeTimeout);
+            ctrlMModeTimeout = setTimeout(() => {
+                ctrlMModeActive = false;
+                if (typeof Lib !== 'undefined' && Lib.debug) {
+                    Lib.debug('shortcuts', 'Exited Ctrl-M mode (timeout)');
+                }
+            }, 5000);
+            return;
+        }
+
+        // If in Ctrl-M mode and a single character key is pressed (no modifiers)
+        if (ctrlMModeActive && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+            const key = e.key.toLowerCase();
+
+            // Check if key is numeric (1-9) or alphabetic (a-z)
+            let buttonIndex = -1;
+            if (key >= '1' && key <= '9') {
+                buttonIndex = parseInt(key) - 1;
+            } else if (key >= 'a' && key <= 'z') {
+                buttonIndex = 9 + (key.charCodeAt(0) - 97); // a=9, b=10, etc.
+            }
+
+            // Only proceed if valid key was pressed
+            if (buttonIndex >= 0) {
+                e.preventDefault();
+
+                const actionButtons = Array.from(document.querySelectorAll('button'))
+                    .filter(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
+
+                if (buttonIndex < actionButtons.length) {
+                    const selectedButton = actionButtons[buttonIndex];
+                    selectedButton.click();
+                    if (typeof Lib !== 'undefined' && Lib.debug) {
+                        Lib.debug('shortcuts', `Action button ${buttonIndex + 1} selected via Ctrl-M then '${e.key}': "${selectedButton.textContent.trim()}"`);
+                    } else {
+                        console.log(`[ShowAllEntityData] Action button ${buttonIndex + 1} clicked: "${selectedButton.textContent.trim()}"`);
+                    }
+                } else {
+                    if (typeof Lib !== 'undefined' && Lib.warn) {
+                        Lib.warn('shortcuts', `No action button at position ${buttonIndex + 1} (${actionButtons.length} available)`);
+                    } else {
+                        console.warn(`[ShowAllEntityData] No action button at position ${buttonIndex + 1} (${actionButtons.length} available)`);
+                    }
+                }
+
+                ctrlMModeActive = false;
+                clearTimeout(ctrlMModeTimeout);
+                return;
+            }
+        }
+
+        // Escape key exits Ctrl-M mode without selecting
+        if (e.key === 'Escape' && ctrlMModeActive) {
+            e.preventDefault();
+            ctrlMModeActive = false;
+            clearTimeout(ctrlMModeTimeout);
+            if (typeof Lib !== 'undefined' && Lib.debug) {
+                Lib.debug('shortcuts', 'Exited Ctrl-M mode (Escape pressed)');
+            } else {
+                console.log('[ShowAllEntityData] Exited Ctrl-M mode');
+            }
+            return;
+        }
+
+        // Any other key with modifiers (like Ctrl+A) exits Ctrl-M mode
+        if (ctrlMModeActive && (e.ctrlKey || e.metaKey || e.altKey) && e.key !== 'Escape') {
+            ctrlMModeActive = false;
+            clearTimeout(ctrlMModeTimeout);
+        }
+    });
 
     /**
      * Debounce utility function - delays execution until after wait milliseconds have elapsed
@@ -1946,21 +2075,6 @@ let changelog = [
                     }
                 } else {
                     Lib.warn('shortcuts', 'No collapsible h3 headers found');
-                }
-            }
-
-            // Ctrl/Cmd + M: Click first "Show all" action button
-            if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
-                e.preventDefault();
-                // Find the first action button (buttons that start with "Show all" or have the 🧮 emoji)
-                const actionButton = Array.from(document.querySelectorAll('button'))
-                    .find(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
-
-                if (actionButton) {
-                    actionButton.click();
-                    Lib.debug('shortcuts', `First action button clicked via Ctrl+M: "${actionButton.textContent}"`);
-                } else {
-                    Lib.warn('shortcuts', 'No action button found');
                 }
             }
 

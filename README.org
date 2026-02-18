@@ -39325,12 +39325,62 @@ The "Auto-Resize" (function toggleAutoResizeColumns()) feature breaks the "stick
 
 
 * Add Ctrl-M handling also on page entry, not only on rendered page
+** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
 Add Ctrl-M handling also on page entry, not only on rendered page
 
-* Implement Emacs-style keybinding
+** no
+
+It's acually NOT working
+
+There is no debug output from the following code
+
+#+begin_example
+        const handleCtrlM = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+                e.preventDefault();
+                // Find the first action button (buttons that start with "Show all" or have the 🧮 emoji)
+                const actionButton = Array.from(document.querySelectorAll('button'))
+                    .find(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
+
+                if (actionButton) {
+                    actionButton.click();
+                    Lib.debug('shortcuts', `First action button clicked via Ctrl+M: "${actionButton.textContent}"`);
+                } else {
+                    Lib.warn('shortcuts', 'No action button found');
+                }
+            }
+        };
+#+end_example
+
+** Implement Emacs-style keybinding
+
+You can actually switch back to Library debugging, it works, I confirmed it (even with the new placement of the code)
+
+#+begin_example
+            if (actionButton) {
+                actionButton.click();
+		Lib.debug('shortcuts', `First action button clicked via Ctrl+M: "${actionButton.textContent}"`);
+            } else {
+                Lib.warn('shortcuts', 'No action button found');
+            }
+#+end_example
+
+Please implement Emacs-style keybindings, like pressing the "Ctrl-M" key combination and then (by still pressing
+"Ctrl-M") pressing another key like "1" to initiate/emulate the "First action" button click".  Enhance that
+functionality to when pressing '"Ctrl-M"+2' the second action button should be activated (on pages like
+e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336 or
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases)
+and so on, so '"Ctrl-M"+3' / '"Ctrl-M"+4' activate the third/fourth action button (this is needed on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336)
+
+** again
+
+It works, but what I actually meant, was FIRST pressing the "Ctrl-M" key combination, then release both, and THEN pressing JUST the single key "1" or "2" ans so fourth.
+Actually please implement that for not only pressing one of the numeric keys after afterwards, but also the key range [a-z] or when possible an arbitrary key.
+
+PLease reimplement
 
 * alignment h1 button with status line below
 
