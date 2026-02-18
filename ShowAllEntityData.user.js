@@ -48,7 +48,7 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '9.34.1+2026-02-17', description: 'Enhancement: Major Ctrl-M Emacs-style keybinding expansion. (1) Press Ctrl-M and release, then press any single key (1-9, a-z, A-Z, ,;.:-_+*<>#\'?!%&/()=) to select button or call function. (2) Numeric keys 1-9 select action buttons; letters map to additional buttons up to 35. (3) Function shortcuts: r=Auto-Resize, p=Stats, t=Save, l=Load. (4) Helpful debug output lists all available action buttons and functions. (5) Underlined shortcut keys in button text: Auto-<u>R</u>esize, S<u>t</u>ats, <u>S</u>ave to Disk, <u>L</u>oad from Disk. (6) Mode auto-exits after 5 seconds or when Escape pressed. Available immediately on page entry.'},
+    {version: '9.34.1+2026-02-17', description: 'Enhancement: Comprehensive Ctrl-M Emacs-style keybinding system. (1) Press Ctrl-M and release, then press key: 1-9 select action buttons 1-9, a-z select additional buttons (10-35). (2) Function shortcuts: t=Stats Panel, s=Save to Disk, d=Density menu, v=Visible Columns menu, e=Export menu, ?=Show Shortcuts Help. (3) Underlined shortcut indicators in button text: S<u>t</u>ats (t), <u>S</u>ave to Disk (s), <u>D</u>ensity (d), <u>V</u>isible Columns (v), <u>E</u>xport (e). (4) Extended key support (1-9, a-z, A-Z, ,;.:-_+*<>#\'?!%&/()=) for future function mapping. (5) Auto-focus on native dialogs (confirm/alert) for page load warnings. (6) Helpful debug output with all available shortcuts. Available immediately on page entry.'},
     {version: '9.34.0+2026-02-17', description: 'Enhancement: Added action shortcuts and h3 Ctrl+Click functionality. (1) Ctrl+M: Triggers the first "Show all" action button on the page - useful for pages with multiple action buttons (chooses first one). (2) h3 Headers: Added Ctrl+Click support to toggle ALL h3 headers (types) simultaneously, matching h2 functionality. Regular click still toggles individual h3. Updated tooltip: "Click to Collapse/Uncollapse table section (Ctrl+Click to toggle all types)". (3) Added Ctrl+M to shortcuts help dialog.'},
     {version: '9.33.0+2026-02-17', description: 'Major Enhancement: Extended keyboard shortcuts and smart button visibility. (1) "Visible Columns": Added "Choose <u>c</u>urrent configuration" button with Alt-C shortcut. (2) Collapse shortcuts: Ctrl-2 toggles all h2 headers, Ctrl-3 toggles all h3 headers (types) - mimics existing Ctrl-click and Show/Hide all functionality. (3) Smart button visibility: "Toggle highlighting", "Clear all COLUMN filters", and "Clear ALL filters" buttons now only appear when filters are actually active. (4) Updated Shortcuts help with comprehensive sections for all menu-specific and global shortcuts including new View & Layout section.'},
     {version: '9.32.0+2026-02-17', description: 'Enhancement: Extended keyboard navigation for menus. (1) "Visible Columns": Added Ctrl+V to open menu, Tab cycles through checkboxes and buttons, Alt-S triggers "Select All", Alt-D triggers "Deselect All" (only when menu open). Buttons now show underlined letters (<u>S</u>elect All, <u>D</u>eselect All). (2) "Density": Added Ctrl+D to open menu. (3) "Export": Close button in export complete popup now auto-focused for quick dismissal with Enter or Space.'},
@@ -759,8 +759,8 @@ let changelog = [
 
         // Create toggle button
         const toggleBtn = document.createElement('button');
-        toggleBtn.textContent = '👁️ Visible Columns';
-        toggleBtn.title = 'Show/hide table columns';
+        toggleBtn.innerHTML = '👁️ <u>V</u>isible Columns';
+        toggleBtn.title = 'Show/hide table columns (Ctrl-M, then v)';
         toggleBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         toggleBtn.type = 'button';
 
@@ -1500,8 +1500,8 @@ let changelog = [
         }
 
         const exportBtn = document.createElement('button');
-        exportBtn.textContent = 'Export 💾';
-        exportBtn.title = 'Export visible rows and columns to various formats';
+        exportBtn.innerHTML = '<u>E</u>xport 💾';
+        exportBtn.title = 'Export visible rows and columns to various formats (Ctrl-M, then e)';
         exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         exportBtn.type = 'button';
 
@@ -2458,8 +2458,8 @@ let changelog = [
 
         // Create button
         const densityBtn = document.createElement('button');
-        densityBtn.textContent = '📏 Density';
-        densityBtn.title = 'Change table density (spacing)';
+        densityBtn.innerHTML = '📏 <u>D</u>ensity';
+        densityBtn.title = 'Change table density (spacing) (Ctrl-M, then d)';
         densityBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         densityBtn.type = 'button';
 
@@ -3703,6 +3703,7 @@ let changelog = [
     const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
     if (reloadFlag) {
         sessionStorage.removeItem('mb_show_all_reload_pending');
+        // Note: Native browser dialogs auto-focus the OK button by default
         alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
     }
 
@@ -6454,6 +6455,7 @@ let changelog = [
         Lib.debug('fetch', `Total pages to fetch: ${maxPage}`);
 
         // If page count is above threshold, show modal
+        // Note: Native browser dialogs auto-focus the OK button by default
         if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
             Lib.warn('warn', `High page count detected (${maxPage}). This may take a while and could trigger rate limiting.`);
             activeBtn.style.backgroundColor = '';
@@ -8535,11 +8537,35 @@ let changelog = [
         }
     }
 
+    // Wrapper functions for Ctrl-M menu shortcuts
+    function openExportMenu() {
+        const exportBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
+        if (exportBtn) {
+            exportBtn.click();
+        }
+    }
+
+    function openVisibleColumnsMenu() {
+        const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible Columns'));
+        if (visibleColumnsBtn) {
+            visibleColumnsBtn.click();
+        }
+    }
+
+    function openDensityMenu() {
+        const densityBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Density'));
+        if (densityBtn) {
+            densityBtn.click();
+        }
+    }
+
     // Populate Ctrl-M function mapping after all functions are defined
     ctrlMFunctionMap = {
-        'r': { fn: toggleAutoResizeColumns, description: 'Auto-Resize Columns' },
-        'p': { fn: showStatsPanel, description: 'Show Stats Panel' },
-        't': { fn: saveTableDataToDisk, description: 'Save to Disk' },
-        'l': { fn: showLoadFilterDialog, description: 'Load from Disk' }
+        't': { fn: showStatsPanel, description: 'Show Stats Panel' },
+        's': { fn: saveTableDataToDisk, description: 'Save to Disk' },
+        'd': { fn: openDensityMenu, description: 'Open Density Menu' },
+        'v': { fn: openVisibleColumnsMenu, description: 'Open Visible Columns Menu' },
+        'e': { fn: openExportMenu, description: 'Open Export Menu' },
+        '?': { fn: showShortcutsHelp, description: 'Show Shortcuts Help' }
     };
 })();

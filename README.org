@@ -39391,9 +39391,19 @@ function showStatsPanel()                - button text "Stats" ==> render the "t
 function saveTableDataToDisk()           - button text "Save to Disk" ==> render the "S" underlined
 async function showLoadFilterDialog()    - button text "Load from Disk" ==> render the "L" underlined
 
-** 
+** typos
 
-** focus
+Yes it works, but I messed up some instructions please fix according to the following mapping information:
+
+"Ctrl-M"-t - function showStatsPanel()
+"Ctrl-M"-s - function saveTableDataToDisk()
+
+Additionally pressing:
+
+"Ctrl-M"-d, the same functionality as pressing the current "Ctrl-d" should be called - button text "Density" ==> render the "D" underlined
+"Ctrl-M"-v, the same functionality as pressing the current "Ctrl-v" should be called - button text "Visible Columns" ==> render the "V" underlined
+"Ctrl-M"-e, the same functionality as pressing the current "Ctrl-e" should be called - button text "Export" ==> render the "E" underlined
+"Ctrl-M"-?, the same functionality as pressing the current "?" should be called - no button text here, there is just a configuration icon
 
 Please also implement, if the following condition is true
 
@@ -39402,9 +39412,9 @@ Please also implement, if the following condition is true
 if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
 #+end_example
 
-that the browser nativ popup opens, the button with the text "OK" should be focused.
+that the browser native popup opens, the button with the text "OK" should be focused.
 
-The same should hold true when the browser nativ popup opens if the following condition is true
+The same should hold true when the browser native popup opens if the following condition is true
 
 #+begin_example
     if (reloadFlag) {
@@ -39412,6 +39422,31 @@ The same should hold true when the browser nativ popup opens if the following co
         alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
     }
 #+end_example
+
+** reinclude
+
+Please reinclude the following mapping in the "ctrlMFunctionMap" function map
+
+#+begin_example
+        'r': { fn: toggleAutoResizeColumns, description: 'Auto-Resize Columns' },
+        'l': { fn: showLoadFilterDialog, description: 'Load from Disk' }
+#+end_example
+
+Also generate a configurable popup tooltip box (default value should be true)
+
+#+begin_example
+        sa_enable_keyboard_shortcut_tooltip: {
+            label: 'Enable keyboard shortcut tooltip',
+            type: 'checkbox',
+            default: true,
+            description: 'Enable keyboard shortcut tooltip for Ctrl-m prefix map'
+        },
+#+end_example
+
+with all the configured "Ctrl-M" keyboard shortcuts and their meaning. It should popup when the "Ctrl-M" keyboard
+combination is pressed and automatically vanish if the combination is not in effect anymore. The tooltip should have a
+grey background, the the text should be in a small font) and should be rendered in the upper right corner of the '<div id="content"' container,
+but it should not overflow the '<div id="sidebar"' container.
 
 
 * Add keyboard handling for the complete application
