@@ -38523,20 +38523,6 @@ clearSubBtn.textContent = '';
 clearSubBtn.appendChild(createRedXLabel('Clear all COLUMN filters'));
 
 
-* Add keyboard handling for the complete application
-** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
-** Ctrl-Shift-- ==> un-collapse all tables (maybe make it toggle)
-
-
-or
-
-** Ctrl-Shift-- ==> collapse all h2
-
-** Ctrl-Alt-1 ==> collapse all h1
-** Ctrl-Alt-2 ==> collapse all h2
-** Ctrl-Alt-3 ==> collapse all h3
-
-
 * DONE logic for prefiltering rows
 
 The logic for prefiltering rows when loading from disk, somehow doesn't work anymore
@@ -39380,7 +39366,67 @@ and so on, so '"Ctrl-M"+3' / '"Ctrl-M"+4' activate the third/fourth action butto
 It works, but what I actually meant, was FIRST pressing the "Ctrl-M" key combination, then release both, and THEN pressing JUST the single key "1" or "2" ans so fourth.
 Actually please implement that for not only pressing one of the numeric keys after afterwards, but also the key range [a-z] or when possible an arbitrary key.
 
-PLease reimplement
+Please reimplement
+
+** add more keys and arbitrary function calls, add underline to chars as shortcuts for other buttons
+
+Please increase the key range after the "Ctrl-M" key combination to support, besides [a-z] also the upper case variants [A-Z] and the following keys ",;.:-_+*<>#'?!%&/()=
+
+Additionally, if after the "Ctrl-M" key combination, one of the non numeric characters is pressed, an arbitrary
+configurabe function should be called (the numeric chars should still be used for emulating the "Show all ..." button
+presses, so don't touch that code).
+
+For now implement the following combinations
+
+"Ctrl-M"-r - function toggleAutoResizeColumns() 
+"Ctrl-M"-p - function showStatsPanel()
+"Ctrl-M"-t - function saveTableDataToDisk()
+"Ctrl-M"-l - async function showLoadFilterDialog()
+
+As these function calls can also be triggered by clicking the following buttons, render one of the characters in the
+button text with an underline
+
+function toggleAutoResizeColumns()       - button text "Auto-resize" ==> render the "r" underlined
+function showStatsPanel()                - button text "Stats" ==> render the "t" underlined
+function saveTableDataToDisk()           - button text "Save to Disk" ==> render the "S" underlined
+async function showLoadFilterDialog()    - button text "Load from Disk" ==> render the "L" underlined
+
+** 
+
+** focus
+
+Please also implement, if the following condition is true
+
+#+begin_example
+// If page count is above threshold, show modal
+if (maxPage > maxThreshold && !confirm(`Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.... Proceed?`)) {
+#+end_example
+
+that the browser nativ popup opens, the button with the text "OK" should be focused.
+
+The same should hold true when the browser nativ popup opens if the following condition is true
+
+#+begin_example
+    if (reloadFlag) {
+        sessionStorage.removeItem('mb_show_all_reload_pending');
+        alert('The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.');
+    }
+#+end_example
+
+
+* Add keyboard handling for the complete application
+** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
+** Ctrl-Shift-- ==> un-collapse all tables (maybe make it toggle)
+
+
+or
+
+** Ctrl-Shift-- ==> collapse all h2
+
+** Ctrl-Alt-1 ==> collapse all h1
+** Ctrl-Alt-2 ==> collapse all h2
+** Ctrl-Alt-3 ==> collapse all h3
+
 
 * alignment h1 button with status line below
 

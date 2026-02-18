@@ -48,7 +48,7 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '9.34.1+2026-02-17', description: 'Enhancement: Implemented true Emacs-style keybindings for Ctrl-M action button selection. (1) Press Ctrl-M and release. (2) Then press any single key (no modifiers): 1-9 for first 9 buttons, a-z for additional buttons. (3) Mode auto-exits after 5 seconds or when Escape pressed. (4) Helpful debug output lists available buttons and their assigned keys. Available immediately on page entry before rendering, supports up to 35 buttons (1-9, a-z).'},
+    {version: '9.34.1+2026-02-17', description: 'Enhancement: Major Ctrl-M Emacs-style keybinding expansion. (1) Press Ctrl-M and release, then press any single key (1-9, a-z, A-Z, ,;.:-_+*<>#\'?!%&/()=) to select button or call function. (2) Numeric keys 1-9 select action buttons; letters map to additional buttons up to 35. (3) Function shortcuts: r=Auto-Resize, p=Stats, t=Save, l=Load. (4) Helpful debug output lists all available action buttons and functions. (5) Underlined shortcut keys in button text: Auto-<u>R</u>esize, S<u>t</u>ats, <u>S</u>ave to Disk, <u>L</u>oad from Disk. (6) Mode auto-exits after 5 seconds or when Escape pressed. Available immediately on page entry.'},
     {version: '9.34.0+2026-02-17', description: 'Enhancement: Added action shortcuts and h3 Ctrl+Click functionality. (1) Ctrl+M: Triggers the first "Show all" action button on the page - useful for pages with multiple action buttons (chooses first one). (2) h3 Headers: Added Ctrl+Click support to toggle ALL h3 headers (types) simultaneously, matching h2 functionality. Regular click still toggles individual h3. Updated tooltip: "Click to Collapse/Uncollapse table section (Ctrl+Click to toggle all types)". (3) Added Ctrl+M to shortcuts help dialog.'},
     {version: '9.33.0+2026-02-17', description: 'Major Enhancement: Extended keyboard shortcuts and smart button visibility. (1) "Visible Columns": Added "Choose <u>c</u>urrent configuration" button with Alt-C shortcut. (2) Collapse shortcuts: Ctrl-2 toggles all h2 headers, Ctrl-3 toggles all h3 headers (types) - mimics existing Ctrl-click and Show/Hide all functionality. (3) Smart button visibility: "Toggle highlighting", "Clear all COLUMN filters", and "Clear ALL filters" buttons now only appear when filters are actually active. (4) Updated Shortcuts help with comprehensive sections for all menu-specific and global shortcuts including new View & Layout section.'},
     {version: '9.32.0+2026-02-17', description: 'Enhancement: Extended keyboard navigation for menus. (1) "Visible Columns": Added Ctrl+V to open menu, Tab cycles through checkboxes and buttons, Alt-S triggers "Select All", Alt-D triggers "Deselect All" (only when menu open). Buttons now show underlined letters (<u>S</u>elect All, <u>D</u>eselect All). (2) "Density": Added Ctrl+D to open menu. (3) "Export": Close button in export complete popup now auto-focused for quick dismissal with Enter or Space.'},
@@ -152,10 +152,11 @@ let changelog = [
 (function() {
     'use strict';
 
-    // Initialize Ctrl-M Emacs-style handler for action button selection
-    // Press Ctrl-M, release, then press 1/2/3/etc or a/b/c/etc to select button
+    // Initialize Ctrl-M Emacs-style handler for action button selection and function shortcuts
+    // Press Ctrl-M, release, then press 1-9/a-z/A-Z/special chars to select button or call function
     let ctrlMModeActive = false;
     let ctrlMModeTimeout;
+    let ctrlMFunctionMap = {}; // Will be populated after functions are defined
 
     document.addEventListener('keydown', (e) => {
         // Ctrl/Cmd + M: Enter Ctrl-M mode for button selection by key
@@ -181,31 +182,37 @@ let changelog = [
             // Enter Ctrl-M mode
             ctrlMModeActive = true;
 
-            // Build list of available keys (1-9 for first 9 buttons, then a-z for more)
-            let availableKeys = [];
+            // Build list of available keys for action buttons (1-9, a-z, A-Z, special)
+            let buttonKeys = [];
             if (actionButtons.length > 0) {
                 for (let i = 0; i < actionButtons.length && i < 9; i++) {
-                    availableKeys.push((i + 1).toString());
+                    buttonKeys.push((i + 1).toString());
                 }
                 for (let i = 9; i < actionButtons.length && i < 35; i++) {
-                    availableKeys.push(String.fromCharCode(97 + (i - 9))); // a-z
+                    buttonKeys.push(String.fromCharCode(97 + (i - 9))); // a-z
                 }
             }
 
             // Log helpful message with available buttons
             if (typeof Lib !== 'undefined' && Lib.debug) {
-                Lib.debug('shortcuts', `Entered Ctrl-M mode. ${actionButtons.length} button(s) available. Press: ${availableKeys.join(', ')} then release, or Escape to cancel`);
-                actionButtons.forEach((btn, idx) => {
-                    const key = availableKeys[idx] || '?';
-                    Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
-                });
+                if (buttonKeys.length > 0) {
+                    Lib.debug('shortcuts', `Entered Ctrl-M mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
+                    actionButtons.forEach((btn, idx) => {
+                        const key = buttonKeys[idx] || '?';
+                        Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
+                    });
+                }
+                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, p=Stats, t=Save, l=Load');
+                Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
-                console.log(`[ShowAllEntityData] Entered Ctrl-M mode. ${actionButtons.length} button(s) available.`);
-                console.log(`[ShowAllEntityData] Press: ${availableKeys.join(', ')} to select, or Escape to cancel`);
-                actionButtons.forEach((btn, idx) => {
-                    const key = availableKeys[idx] || '?';
-                    console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
-                });
+                if (buttonKeys.length > 0) {
+                    console.log(`[ShowAllEntityData] Entered Ctrl-M mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
+                    actionButtons.forEach((btn, idx) => {
+                        const key = buttonKeys[idx] || '?';
+                        console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
+                    });
+                }
+                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, p=Stats, t=Save, l=Load');
             }
 
             // Auto-exit after 5 seconds
@@ -222,19 +229,50 @@ let changelog = [
         // If in Ctrl-M mode and a single character key is pressed (no modifiers)
         if (ctrlMModeActive && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
             const key = e.key.toLowerCase();
+            const keyOriginal = e.key;
 
-            // Check if key is numeric (1-9) or alphabetic (a-z)
+            // Extended valid key range: 1-9, a-z, A-Z, and special characters
+            const validCharacters = '123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,;.:-_+*<>#\'?!%&/()=';
+            const isValidKey = validCharacters.includes(keyOriginal);
+
+            if (!isValidKey) {
+                return; // Not a recognized key
+            }
+
+            e.preventDefault();
+
+            // Check if it's a function shortcut (non-numeric)
+            if (ctrlMFunctionMap[key]) {
+                const funcEntry = ctrlMFunctionMap[key];
+                // Call the function if it exists
+                if (typeof funcEntry.fn === 'function') {
+                    funcEntry.fn();
+                    if (typeof Lib !== 'undefined' && Lib.debug) {
+                        Lib.debug('shortcuts', `Function "${funcEntry.description}" triggered via Ctrl-M then '${keyOriginal}'`);
+                    } else {
+                        console.log(`[ShowAllEntityData] Function "${funcEntry.description}" triggered`);
+                    }
+                } else {
+                    if (typeof Lib !== 'undefined' && Lib.warn) {
+                        Lib.warn('shortcuts', `Function "${funcEntry.description}" not available`);
+                    } else {
+                        console.warn(`[ShowAllEntityData] Function not available`);
+                    }
+                }
+                ctrlMModeActive = false;
+                clearTimeout(ctrlMModeTimeout);
+                return;
+            }
+
+            // Check if it's a numeric action button shortcut
             let buttonIndex = -1;
-            if (key >= '1' && key <= '9') {
-                buttonIndex = parseInt(key) - 1;
+            if (keyOriginal >= '1' && keyOriginal <= '9') {
+                buttonIndex = parseInt(keyOriginal) - 1;
             } else if (key >= 'a' && key <= 'z') {
                 buttonIndex = 9 + (key.charCodeAt(0) - 97); // a=9, b=10, etc.
             }
 
-            // Only proceed if valid key was pressed
             if (buttonIndex >= 0) {
-                e.preventDefault();
-
                 const actionButtons = Array.from(document.querySelectorAll('button'))
                     .filter(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
 
@@ -242,7 +280,7 @@ let changelog = [
                     const selectedButton = actionButtons[buttonIndex];
                     selectedButton.click();
                     if (typeof Lib !== 'undefined' && Lib.debug) {
-                        Lib.debug('shortcuts', `Action button ${buttonIndex + 1} selected via Ctrl-M then '${e.key}': "${selectedButton.textContent.trim()}"`);
+                        Lib.debug('shortcuts', `Action button ${buttonIndex + 1} selected via Ctrl-M then '${keyOriginal}': "${selectedButton.textContent.trim()}"`);
                     } else {
                         console.log(`[ShowAllEntityData] Action button ${buttonIndex + 1} clicked: "${selectedButton.textContent.trim()}"`);
                     }
@@ -250,14 +288,14 @@ let changelog = [
                     if (typeof Lib !== 'undefined' && Lib.warn) {
                         Lib.warn('shortcuts', `No action button at position ${buttonIndex + 1} (${actionButtons.length} available)`);
                     } else {
-                        console.warn(`[ShowAllEntityData] No action button at position ${buttonIndex + 1} (${actionButtons.length} available)`);
+                        console.warn(`[ShowAllEntityData] No action button at position ${buttonIndex + 1}`);
                     }
                 }
-
-                ctrlMModeActive = false;
-                clearTimeout(ctrlMModeTimeout);
-                return;
             }
+
+            ctrlMModeActive = false;
+            clearTimeout(ctrlMModeTimeout);
+            return;
         }
 
         // Escape key exits Ctrl-M mode without selecting
@@ -2320,8 +2358,8 @@ let changelog = [
         }
 
         const statsBtn = document.createElement('button');
-        statsBtn.textContent = '📊 Stats';
-        statsBtn.title = 'Show table statistics';
+        statsBtn.innerHTML = '📊 S<u>t</u>ats';
+        statsBtn.title = 'Show table statistics (Ctrl-M, then p)';
         statsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         statsBtn.type = 'button';
         statsBtn.onclick = showStatsPanel;
@@ -3193,8 +3231,8 @@ let changelog = [
         }
 
         const resizeBtn = document.createElement('button');
-        resizeBtn.textContent = '↔️ Auto-Resize';
-        resizeBtn.title = 'Auto-resize columns to optimal width (enables horizontal scrolling)';
+        resizeBtn.innerHTML = '↔️ Auto-<u>R</u>esize';
+        resizeBtn.title = 'Auto-resize columns to optimal width (Ctrl-M, then r)';
         resizeBtn.style.cssText = 'font-size:0.9em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         resizeBtn.type = 'button';
         resizeBtn.onclick = toggleAutoResizeColumns;
@@ -4265,10 +4303,10 @@ let changelog = [
 
     // Add Save to Disk button
     const saveToDiskBtn = document.createElement('button');
-    saveToDiskBtn.textContent = '💾 Save to Disk';
+    saveToDiskBtn.innerHTML = '💾 <u>S</u>ave to Disk';
     saveToDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#4CAF50; color:white; border:1px solid #45a049; display:none; display: inline-flex; align-items: center; justify-content: center;';
     saveToDiskBtn.type = 'button';
-    saveToDiskBtn.title = 'Save current table data to disk as Gzipd JSON';
+    saveToDiskBtn.title = 'Save current table data to disk as Gzipped JSON (Ctrl-M, then t)';
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
     saveToDiskBtn.style.display = 'none'; // - Changed from 'inline-flex' or similar to 'none'
 
@@ -4278,10 +4316,10 @@ let changelog = [
 
     // Add Load from Disk button with hidden file input
     const loadFromDiskBtn = document.createElement('button');
-    loadFromDiskBtn.textContent = '📂 Load from Disk';
+    loadFromDiskBtn.innerHTML = '📂 <u>L</u>oad from Disk';
     loadFromDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#2196F3; color:white; border:1px solid #0b7dda; display: inline-flex; align-items: center; justify-content: center;';
     loadFromDiskBtn.type = 'button';
-    loadFromDiskBtn.title = 'Load table data from disk (JSON file)';
+    loadFromDiskBtn.title = 'Load table data from disk (JSON file) (Ctrl-M, then l)';
 
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -8496,4 +8534,12 @@ let changelog = [
             reader.readAsText(file);
         }
     }
+
+    // Populate Ctrl-M function mapping after all functions are defined
+    ctrlMFunctionMap = {
+        'r': { fn: toggleAutoResizeColumns, description: 'Auto-Resize Columns' },
+        'p': { fn: showStatsPanel, description: 'Show Stats Panel' },
+        't': { fn: saveTableDataToDisk, description: 'Save to Disk' },
+        'l': { fn: showLoadFilterDialog, description: 'Load from Disk' }
+    };
 })();
