@@ -3711,7 +3711,7 @@ let changelog = [
         },
 
         sa_enable_keyboard_shortcut_tooltip: {
-            label: 'Enable keyboard shortcut tooltip',
+            label: 'Enable Keyboard Shortcut Tooltip',
             type: 'checkbox',
             default: true,
             description: 'Enable keyboard shortcut tooltip for Ctrl-M prefix map'
@@ -4800,7 +4800,7 @@ let changelog = [
 
     const infoDisplay = document.createElement('span');
     infoDisplay.id = 'mb-info-display';
-    infoDisplay.style.cssText = 'font-size:0.70em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; margin-left:10px;';
+    infoDisplay.style.cssText = 'font-size:0.8em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; margin-left:10px;';
 
 
     const progressContainer = document.createElement('div');
@@ -5320,7 +5320,7 @@ let changelog = [
             </div>
 
             <div style="display:flex; gap:12px;">
-                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Load Data</button>
+                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><u>L</u>oad Data</button>
                 <button id="sa-load-cancel" style="flex:1; padding:10px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancel</button>
             </div>
         `;

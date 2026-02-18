@@ -39488,7 +39488,7 @@ Additionally, the font used inside the dialogs should be much bigger/readable
 
 ** TODO reposition "Load from Disk" to under the button, like the other dialogs for example the "Page Type Mismatch" and "High Page Count" which work
 
-Alos underline the "L" in the "Load Data" button and create a keyboard shortcut when in the dialog, that emulate the click on that button when "Alt-L" is pressed
+Also underline the "L" in the "Load Data" button and create a keyboard shortcut when in the dialog, that emulate the click on that button when "Alt-L" is pressed
 
 ** TODO reposition the "Page Reloaded" dialog also
 
@@ -39668,4 +39668,11 @@ Graceful Fallback: If a subheader is extremely long (pushing the status display 
 Responsive: Binding it to the resize event ensures the text stays perfectly snapped to the button's position if the user resizes their browser window or zooms in.
 
 Would you like me to review any other layout elements to make the UI look even sharper?
+#+end_example
+
+
+*
+
+#+begin_example
+
 #+end_example
