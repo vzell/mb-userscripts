@@ -39488,6 +39488,8 @@ Additionally, the font used inside the dialogs should be much bigger/readable
 
 ** TODO reposition "Load from Disk" to under the button, like the other dialogs for example the "Page Type Mismatch" and "High Page Count" which work
 
+Alos underline the "L" in the "Load Data" button and create a keyboard shortcut when in the dialog, that emulate the click on that button when "Alt-L" is pressed
+
 ** TODO reposition the "Page Reloaded" dialog also
 
 * Add keyboard handling for the complete application
