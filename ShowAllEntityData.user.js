@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.39.0+2026-02-19
+// @version      9.40.0+2026-02-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.40.0+2026-02-19', description: 'Enhancement: Configurable keyboard shortcut prefix. (1) New configSchema section "🎹 KEYBOARD SHORTCUTS" with sa_keyboard_shortcut_prefix setting (default: "Ctrl+M", type: keyboard_shortcut). Accepts any combination like "Ctrl+.", "Alt+X", "Ctrl+Shift+,". (2) Added helper functions parsePrefixShortcut(), getPrefixDisplay(), isPrefixKeyEvent() to centralise prefix parsing and matching. "Ctrl" in the config always matches both Ctrl and Meta/Cmd for cross-platform compatibility. (3) Refactored keydown handler: hardcoded (e.ctrlKey||e.metaKey)&&e.key===\'m\' replaced by isPrefixKeyEvent(e). (4) All button tooltips, tooltip overlay header, shortcuts-help dialog entry, debug log messages, and APP_HELP_TEXT now reflect the configured prefix dynamically via getPrefixDisplay().' },
     {version: '9.39.0+2026-02-19', description: 'Added ❓ application help button (always visible, right of ⚙️): opens a scrollable popup dialog presenting a full feature overview of the script, closeable via "Close" button or Escape key.' },
     {version: '9.38.0+2026-02-19', description: 'Fix & Enhancement: (1) "Page Reloaded" popup now positioned below the triggering "Show all" action button after final page render, consistent with other dialogs. (2) "📂 Load Table Data" dialog repositioned below the "📂 Load from Disk" button; added Alt-L shortcut to confirm/load from within the dialog. (3) Fixed OK button focus and Tab keyboard navigation in all custom popup dialogs: removed outline:none from buttons so focus outline is visible, ensuring keyboard navigation between OK and Cancel works. (4) Renamed "⌨️ Shortcuts" button to "🎹"; button is now visible immediately on page entry (before action button click), positioned left of the ⚙️ settings button.' },
     {version: '9.37.0+2026-02-19', description: 'The "Load from Disk" option now defaults to Gzipped files (*.gz).' },
@@ -243,9 +244,11 @@ KEYBOARD SHORTCUTS (global)
   Ctrl-3          Toggle all h3 type headers
   Escape          Clear focused filter / close open menus
 
-CTRL-M PREFIX SHORTCUTS
------------------------
-  Press Ctrl-M, release, then press:
+CTRL-M PREFIX SHORTCUTS  (configurable via ⚙️ → "Keyboard Shortcut Prefix")
+---------------------------------------------------------------------------
+  The prefix key (default: Ctrl+M) can be changed in ⚙️ Settings to any
+  combination such as "Ctrl+.", "Alt+X", "Ctrl+Shift+,".
+  Press the prefix key, release, then press:
     r  Auto-Resize Columns
     t  Show Stats Panel
     s  Save to Disk
@@ -438,7 +441,22 @@ Press Escape on that notice to cancel the auto-action.
             label: 'Enable Keyboard Shortcut Tooltip',
             type: 'checkbox',
             default: true,
-            description: 'Enable keyboard shortcut tooltip for Ctrl-M prefix map'
+            description: 'Enable keyboard shortcut tooltip for the prefix shortcut map'
+        },
+
+        // ============================================================
+        // KEYBOARD SHORTCUTS SECTION
+        // ============================================================
+        divider_keyboard_shortcuts: {
+            type: 'divider',
+            label: '🎹 KEYBOARD SHORTCUTS'
+        },
+
+        sa_keyboard_shortcut_prefix: {
+            label: "Keyboard Shortcut Prefix",
+            type: "keyboard_shortcut",
+            default: "Ctrl+M",
+            description: "Keyboard shortcut prefix key combination (expects a second key press to be complete, e.g. Ctrl+M, Ctrl+., Alt+X, Ctrl+Shift+,)"
         },
 
         sa_enable_stats_panel: {
@@ -1125,12 +1143,62 @@ Press Escape on that notice to cancel the auto-action.
 
     //--------------------------------------------------------------------------------
 
-    // Initialize Ctrl-M Emacs-style handler for action button selection and function shortcuts
-    // Press Ctrl-M, release, then press 1-9/a-z/A-Z/special chars to select button or call function
+    // Initialize prefix-shortcut Emacs-style handler for action button selection and function shortcuts
+    // Press prefix key, release, then press 1-9/a-z/A-Z/special chars to select button or call function
     let ctrlMModeActive = false;
     let ctrlMModeTimeout;
     let ctrlMFunctionMap = {}; // Will be populated after functions are defined
     let ctrlMTooltipElement = null;
+
+    /**
+     * Parse a shortcut prefix string such as "Ctrl+M", "Ctrl+.", "Alt+Shift+X"
+     * into its component parts.
+     * @param {string} str - The shortcut string to parse
+     * @returns {{ ctrl: boolean, meta: boolean, alt: boolean, shift: boolean, key: string }}
+     */
+    function parsePrefixShortcut(str) {
+        const parts = (str || 'Ctrl+M').trim().split('+');
+        let key = parts.pop().trim();
+        // A trailing '+' (e.g. "Ctrl++") means the actual key character is '+'
+        if (key === '') key = '+';
+        const mods = parts.map(p => p.trim().toLowerCase());
+        return {
+            ctrl:  mods.includes('ctrl'),
+            meta:  mods.includes('meta') || mods.includes('cmd') || mods.includes('super'),
+            alt:   mods.includes('alt'),
+            shift: mods.includes('shift'),
+            key:   key
+        };
+    }
+
+    /**
+     * Returns the display string for the configured prefix shortcut (e.g. "Ctrl+M").
+     * Falls back to "Ctrl+M" when the setting is not yet available.
+     * @returns {string}
+     */
+    function getPrefixDisplay() {
+        if (typeof Lib !== 'undefined' && Lib.settings && Lib.settings.sa_keyboard_shortcut_prefix) {
+            return Lib.settings.sa_keyboard_shortcut_prefix;
+        }
+        return 'Ctrl+M';
+    }
+
+    /**
+     * Returns true when a keyboard event matches the configured prefix shortcut.
+     * When "Ctrl" appears in the prefix it matches BOTH Ctrl and Meta/Cmd keys,
+     * preserving cross-platform (Mac/Windows/Linux) compatibility.
+     * @param {KeyboardEvent} e
+     * @returns {boolean}
+     */
+    function isPrefixKeyEvent(e) {
+        const p = parsePrefixShortcut(getPrefixDisplay());
+        // Ctrl in the config: match either Ctrl or Meta/Cmd (Mac)
+        const ctrlMatch  = p.ctrl  ? (e.ctrlKey || e.metaKey) : (!e.ctrlKey && !e.metaKey);
+        const altMatch   = p.alt   ? e.altKey                 : !e.altKey;
+        const shiftMatch = p.shift ? e.shiftKey               : !e.shiftKey;
+        const keyMatch   = e.key.toLowerCase() === p.key.toLowerCase();
+        return ctrlMatch && altMatch && shiftMatch && keyMatch;
+    }
 
     function showCtrlMTooltip(actionButtons, buttonKeys) {
         if (typeof Lib === 'undefined' || !Lib.settings.sa_enable_keyboard_shortcut_tooltip) {
@@ -1161,7 +1229,7 @@ Press Escape on that notice to cancel the auto-action.
         `;
 
         // Build tooltip content
-        let tooltipHTML = '<strong>Ctrl-M Shortcuts:</strong><br/>';
+        let tooltipHTML = '<strong>' + getPrefixDisplay() + ' Shortcuts:</strong><br/>';
 
         // Action buttons
         if (actionButtons.length > 0) {
@@ -1218,8 +1286,8 @@ Press Escape on that notice to cancel the auto-action.
     }
 
     document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + M: Enter Ctrl-M mode for button selection by key
-        if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+        // Prefix key: enter prefix mode for button selection and function shortcuts
+        if (isPrefixKeyEvent(e)) {
             e.preventDefault();
 
             // If already in mode, exit
@@ -1228,9 +1296,9 @@ Press Escape on that notice to cancel the auto-action.
                 clearTimeout(ctrlMModeTimeout);
                 hideCtrlMTooltip();
                 if (typeof Lib !== 'undefined' && Lib.debug) {
-                    Lib.debug('shortcuts', 'Exited Ctrl-M mode');
+                    Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode`);
                 } else {
-                    console.log('[ShowAllEntityData] Exited Ctrl-M mode');
+                    console.log(`[ShowAllEntityData] Exited ${getPrefixDisplay()} mode`);
                 }
                 return;
             }
@@ -1239,7 +1307,7 @@ Press Escape on that notice to cancel the auto-action.
             const actionButtons = Array.from(document.querySelectorAll('button'))
                 .filter(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
 
-            // Enter Ctrl-M mode
+            // Enter prefix mode
             ctrlMModeActive = true;
 
             // Build list of available keys for action buttons (1-9, a-z, A-Z, special)
@@ -1261,7 +1329,7 @@ Press Escape on that notice to cancel the auto-action.
             // Log helpful message with available buttons
             if (typeof Lib !== 'undefined' && Lib.debug) {
                 if (buttonKeys.length > 0) {
-                    Lib.debug('shortcuts', `Entered Ctrl-M mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
+                    Lib.debug('shortcuts', `Entered ${getPrefixDisplay()} mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
                     actionButtons.forEach((btn, idx) => {
                         const key = buttonKeys[idx] || '?';
                         Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
@@ -1271,7 +1339,7 @@ Press Escape on that notice to cancel the auto-action.
                 Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
                 if (buttonKeys.length > 0) {
-                    console.log(`[ShowAllEntityData] Entered Ctrl-M mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
+                    console.log(`[ShowAllEntityData] Entered ${getPrefixDisplay()} mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
                     actionButtons.forEach((btn, idx) => {
                         const key = buttonKeys[idx] || '?';
                         console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
@@ -1286,13 +1354,13 @@ Press Escape on that notice to cancel the auto-action.
                 ctrlMModeActive = false;
                 hideCtrlMTooltip();
                 if (typeof Lib !== 'undefined' && Lib.debug) {
-                    Lib.debug('shortcuts', 'Exited Ctrl-M mode (timeout)');
+                    Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode (timeout)`);
                 }
             }, 5000);
             return;
         }
 
-        // If in Ctrl-M mode and a single character key is pressed (no modifiers)
+        // If in prefix mode and a single character key is pressed (no modifiers)
         if (ctrlMModeActive && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
             const key = e.key.toLowerCase();
             const keyOriginal = e.key;
@@ -1314,7 +1382,7 @@ Press Escape on that notice to cancel the auto-action.
                 if (typeof funcEntry.fn === 'function') {
                     funcEntry.fn();
                     if (typeof Lib !== 'undefined' && Lib.debug) {
-                        Lib.debug('shortcuts', `Function "${funcEntry.description}" triggered via Ctrl-M then '${keyOriginal}'`);
+                        Lib.debug('shortcuts', `Function "${funcEntry.description}" triggered via ${getPrefixDisplay()} then '${keyOriginal}'`);
                     } else {
                         console.log(`[ShowAllEntityData] Function "${funcEntry.description}" triggered`);
                     }
@@ -1347,7 +1415,7 @@ Press Escape on that notice to cancel the auto-action.
                     const selectedButton = actionButtons[buttonIndex];
                     selectedButton.click();
                     if (typeof Lib !== 'undefined' && Lib.debug) {
-                        Lib.debug('shortcuts', `Action button ${buttonIndex + 1} selected via Ctrl-M then '${keyOriginal}': "${selectedButton.textContent.trim()}"`);
+                        Lib.debug('shortcuts', `Action button ${buttonIndex + 1} selected via ${getPrefixDisplay()} then '${keyOriginal}': "${selectedButton.textContent.trim()}"`);
                     } else {
                         console.log(`[ShowAllEntityData] Action button ${buttonIndex + 1} clicked: "${selectedButton.textContent.trim()}"`);
                     }
@@ -1366,21 +1434,21 @@ Press Escape on that notice to cancel the auto-action.
             return;
         }
 
-        // Escape key exits Ctrl-M mode without selecting
+        // Escape key exits prefix mode without selecting
         if (e.key === 'Escape' && ctrlMModeActive) {
             e.preventDefault();
             ctrlMModeActive = false;
             clearTimeout(ctrlMModeTimeout);
             hideCtrlMTooltip();
             if (typeof Lib !== 'undefined' && Lib.debug) {
-                Lib.debug('shortcuts', 'Exited Ctrl-M mode (Escape pressed)');
+                Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode (Escape pressed)`);
             } else {
-                console.log('[ShowAllEntityData] Exited Ctrl-M mode');
+                console.log(`[ShowAllEntityData] Exited ${getPrefixDisplay()} mode`);
             }
             return;
         }
 
-        // Any other key with modifiers (like Ctrl+A) exits Ctrl-M mode
+        // Any other key with modifiers exits prefix mode
         if (ctrlMModeActive && (e.ctrlKey || e.metaKey || e.altKey) && e.key !== 'Escape') {
             ctrlMModeActive = false;
             clearTimeout(ctrlMModeTimeout);
@@ -1842,7 +1910,7 @@ Press Escape on that notice to cancel the auto-action.
         // Create toggle button
         const toggleBtn = document.createElement('button');
         toggleBtn.innerHTML = '👁️ <u>V</u>isible Columns';
-        toggleBtn.title = 'Show/hide table columns (Ctrl-M, then v)';
+        toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then v)`;
         toggleBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         toggleBtn.type = 'button';
 
@@ -2583,7 +2651,7 @@ Press Escape on that notice to cancel the auto-action.
 
         const exportBtn = document.createElement('button');
         exportBtn.innerHTML = '<u>E</u>xport 💾';
-        exportBtn.title = 'Export visible rows and columns to various formats (Ctrl-M, then e)';
+        exportBtn.title = `Export visible rows and columns to various formats (${getPrefixDisplay()}, then e)`;
         exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         exportBtn.type = 'button';
 
@@ -3096,7 +3164,7 @@ Press Escape on that notice to cancel the auto-action.
                     { keys: 'Ctrl/Cmd + D', desc: 'Open "Density" menu' },
                     { keys: 'Ctrl/Cmd + 2', desc: 'Toggle collapse all h2 headers' },
                     { keys: 'Ctrl/Cmd + 3', desc: 'Toggle collapse all h3 headers (types)' },
-                    { keys: 'Ctrl/Cmd + M', desc: 'Trigger first "Show all" button' }
+                    { keys: getPrefixDisplay(), desc: 'Enter prefix mode (then a second key selects action / function)' }
                 ]
             },
             {
@@ -3864,7 +3932,7 @@ Press Escape on that notice to cancel the auto-action.
 
         const statsBtn = document.createElement('button');
         statsBtn.innerHTML = '📊 S<u>t</u>ats';
-        statsBtn.title = 'Show table statistics (Ctrl-M, then p)';
+        statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then t)`;
         statsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         statsBtn.type = 'button';
         statsBtn.onclick = showStatsPanel;
@@ -3964,7 +4032,7 @@ Press Escape on that notice to cancel the auto-action.
         // Create button
         const densityBtn = document.createElement('button');
         densityBtn.innerHTML = '📏 <u>D</u>ensity';
-        densityBtn.title = 'Change table density (spacing) (Ctrl-M, then d)';
+        densityBtn.title = `Change table density (spacing) (${getPrefixDisplay()}, then d)`;
         densityBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         densityBtn.type = 'button';
 
@@ -4333,12 +4401,12 @@ Press Escape on that notice to cancel the auto-action.
 
         if (isResized) {
             resizeBtn.innerHTML = '↔️ <u>R</u>estore Width';
-            resizeBtn.title = 'Restore original column widths (click to toggle / Ctrl-M, then r)';
+            resizeBtn.title = `Restore original column widths (click to toggle / ${getPrefixDisplay()}, then r)`;
             resizeBtn.style.background = '#e8f5e9';
             resizeBtn.style.borderColor = '#4CAF50';
         } else {
             resizeBtn.innerHTML = '↔️ Auto-<u>R</u>esize';
-            resizeBtn.title = 'Auto-resize columns to optimal width (click to toggle / Ctrl-M, then r)';
+            resizeBtn.title = `Auto-resize columns to optimal width (click to toggle / ${getPrefixDisplay()}, then r)`;
             resizeBtn.style.background = '';
             resizeBtn.style.borderColor = '';
         }
@@ -4737,7 +4805,7 @@ Press Escape on that notice to cancel the auto-action.
 
         const resizeBtn = document.createElement('button');
         resizeBtn.innerHTML = '↔️ Auto-<u>R</u>esize';
-        resizeBtn.title = 'Auto-resize columns to optimal width (Ctrl-M, then r)';
+        resizeBtn.title = `Auto-resize columns to optimal width (${getPrefixDisplay()}, then r)`;
         resizeBtn.style.cssText = 'font-size:0.9em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         resizeBtn.type = 'button';
         resizeBtn.onclick = toggleAutoResizeColumns;
@@ -5015,7 +5083,7 @@ Press Escape on that notice to cancel the auto-action.
     saveToDiskBtn.innerHTML = '💾 <u>S</u>ave to Disk';
     saveToDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#4CAF50; color:white; border:1px solid #45a049; display:none; display: inline-flex; align-items: center; justify-content: center;';
     saveToDiskBtn.type = 'button';
-    saveToDiskBtn.title = 'Save current table data to disk as Gzipped JSON (Ctrl-M, then t)';
+    saveToDiskBtn.title = `Save current table data to disk as Gzipped JSON (${getPrefixDisplay()}, then s)`;
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
     saveToDiskBtn.style.display = 'none'; // - Changed from 'inline-flex' or similar to 'none'
 
@@ -5028,7 +5096,7 @@ Press Escape on that notice to cancel the auto-action.
     loadFromDiskBtn.innerHTML = '📂 <u>L</u>oad from Disk';
     loadFromDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#2196F3; color:white; border:1px solid #0b7dda; display: inline-flex; align-items: center; justify-content: center;';
     loadFromDiskBtn.type = 'button';
-    loadFromDiskBtn.title = 'Load table data from disk (JSON file) (Ctrl-M, then l)';
+    loadFromDiskBtn.title = `Load table data from disk (JSON file) (${getPrefixDisplay()}, then l)`;
 
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -9311,7 +9379,7 @@ Press Escape on that notice to cancel the auto-action.
         }
     }
 
-    // Wrapper functions for Ctrl-M menu shortcuts
+    // Wrapper functions for prefix-mode menu shortcuts
     function openExportMenu() {
         const exportBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
         if (exportBtn) {
@@ -9333,7 +9401,7 @@ Press Escape on that notice to cancel the auto-action.
         }
     }
 
-    // Populate Ctrl-M function mapping after all functions are defined
+    // Populate prefix-mode function mapping after all functions are defined
     ctrlMFunctionMap = {
         'r': { fn: toggleAutoResizeColumns, description: 'Auto-Resize Columns' },
         't': { fn: showStatsPanel, description: 'Show Stats Panel' },

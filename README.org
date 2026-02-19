@@ -39278,6 +39278,13 @@ Visual Priority: The order + 1 badge ensures users know exactly which column is 
 Unified Functionality: Because this is applied in makeTableSortableUnified, it works immediately for both the single-table and multi-table pages (like Release Groups) without duplicate code.
 #+end_example
 
+** new behaviour
+
+#+begin_example
+function createMultiColumnComparator(sortColumns, headers)
+function makeTableSortableUnified(table, sortKey)
+#+end_example
+
 
 * TODO sensible defaults for configuration options
 
@@ -39695,6 +39702,42 @@ Would you like me to review any other layout elements to make the UI look even s
 
 
 * TODO Make the keyboard shortcuts configurable itself
+** initial
+
+Introduce a new configuration parameter "sa_keyboard_shortcut_prefix" with a default value of ""Ctrl+M"" in the variable
+'const configSchema'
+
+#+begin_example
+        // ============================================================
+        // KEYBOARD SHORTCUTS SECTION
+        // ============================================================
+        divider_experimental: {
+            type: 'keyboard',
+            label: '🎹 KEYBOARD SHORTCUTS'
+        },
+
+        sa_keyboard_shortcut_prefix: {
+            label: "Keyboard Shortcut Prefix",
+            type: "keyboard_shortcut",
+            default: "Ctrl+M",
+            description: "Keyboard Shortcut Prefix (expects another key press to be complete)"
+        },
+#+end_example
+
+So basically make the current keyboard shortcut prefix "Ctrl+M" configurable, maybe a user wants to use "Ctrl+." instead.
+Please refactor/rewrite the prefix handling
+
+** library
+
+In the uploaded library "VZ_MBLibrary.user.js" please add support for 
+
+#+begin_example
+cfg.type === "keyboard_shortcut"
+#+end_example
+
+The user should be able to press the desired keyboard prefix in the configuration dialog. So probably for this cfg.type
+create a text input field, where the user can focus and press the desired key combination to use as a prefix. After
+pressing the key combination, the String value should be stored in the text field.
 
 * Add keyboard handling for the complete application
 ** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
@@ -39781,3 +39824,7 @@ How can I force the open file dialog, triggered from my own user script to show 
 #+end_example
 
 * DONE Restore-Width tooltip text needs the keyboard combination to show to the user
+
+* Replace "|" with native one between buttons
+
+* Scrollable "Shortcuts menu"
