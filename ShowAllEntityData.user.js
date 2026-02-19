@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.42.0+2026-02-19
+// @version      9.44.0+2026-02-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,8 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.44.0+2026-02-19', description: 'UI Fix: statusDisplaysContainer is now injected inline into the existing <p class="subheader"> line (present on all non-search pages) so it sits on the same line as the subheader text (e.g. "~Country"). Its left edge is dynamically aligned to the first action button via getBoundingClientRect(); if the subheader text already reaches or passes that point a fixed 10px gap is used instead. On search pages (no subheader) it falls back to a dedicated block line below the h1. A resize listener keeps alignment correct in both modes.'},
+    {version: '9.43.0+2026-02-19', description: 'UI Enhancement: statusDisplaysContainer is now always rendered as a block div directly below the h1 header row. Its left edge is dynamically aligned with the first "Show all" action button using getBoundingClientRect() so it tracks any entity-name length. A resize listener keeps alignment correct when the viewport changes. Removed the three separate per-page-type placement branches (search / subheader / fallback) in favour of a single universal strategy.'},
     {version: '9.42.0+2026-02-19', description: 'Refactor: Extract getColFilters() and testRowMatch() helpers to eliminate duplicated row-matching logic shared between multi-table and single-table branches of runFilter().'},
     {version: '9.41.0+2026-02-19', description: 'Add new global filter exclusion checkbox.'},
     {version: '9.40.0+2026-02-19', description: 'Enhancement: Configurable keyboard shortcut prefix. (1) New configSchema section "🎹 KEYBOARD SHORTCUTS" with sa_keyboard_shortcut_prefix setting (default: "Ctrl+M", type: keyboard_shortcut). Accepts any combination like "Ctrl+.", "Alt+X", "Ctrl+Shift+,". (2) Added helper functions parsePrefixShortcut(), getPrefixDisplay(), isPrefixKeyEvent() to centralise prefix parsing and matching. "Ctrl" in the config always matches both Ctrl and Meta/Cmd for cross-platform compatibility. (3) Refactored keydown handler: hardcoded (e.ctrlKey||e.metaKey)&&e.key===\'m\' replaced by isPrefixKeyEvent(e). (4) All button tooltips, tooltip overlay header, shortcuts-help dialog entry, debug log messages, and APP_HELP_TEXT now reflect the configured prefix dynamically via getPrefixDisplay().' },
@@ -5661,62 +5663,75 @@ Press Escape on that notice to cancel the auto-action.
         );
     }
 
-    // Create a separate container for status displays (globalStatusDisplay and infoDisplay)
+    // Create a separate container for status displays (globalStatusDisplay and infoDisplay).
+    // display is inline-flex so it flows naturally inside a <p> or a standalone block line.
     const statusDisplaysContainer = document.createElement('div');
     statusDisplaysContainer.id = 'mb-status-displays-container';
-    statusDisplaysContainer.style.cssText = 'display:inline-flex; align-items:center; gap:8px; margin-left:10px; line-height:1; vertical-align:middle;';
+    statusDisplaysContainer.style.cssText = 'display:inline-flex; align-items:center; gap:8px; line-height:1; vertical-align:middle;';
     statusDisplaysContainer.appendChild(globalStatusDisplay);
     statusDisplaysContainer.appendChild(infoDisplay);
 
-    // Position status displays based on pageType
-    if (pageType === 'search') {
-        // For search pages, place immediately below h1 header
-        const h1 = headerContainer.tagName === 'H1' ? headerContainer : headerContainer.closest('h1');
-        if (h1) {
-            const statusWrapper = document.createElement('div');
-            statusWrapper.style.cssText = 'margin-top:5px; margin-left:0px;';
-            statusWrapper.appendChild(statusDisplaysContainer);
-            h1.parentNode.insertBefore(statusWrapper, h1.nextSibling);
-        }
+    // A zero-width sentinel span is injected immediately before statusDisplaysContainer in the
+    // same parent so getBoundingClientRect() on it gives us the exact pixel position where the
+    // preceding text ends. This works for both the subheader and the standalone-block cases.
+    const _statusSentinel = document.createElement('span');
+    _statusSentinel.id = 'mb-status-sentinel';
+    _statusSentinel.style.cssText = 'display:inline-block; width:0; height:0; overflow:hidden; vertical-align:middle;';
+
+    // Minimum gap (px) between the end of existing subheader text and statusDisplaysContainer
+    // when the subheader text already reaches or overshoots the button column.
+    const STATUS_MIN_GAP = 10;
+
+    const _subheader = document.querySelector('p.subheader');
+
+    if (_subheader) {
+        // Non-search pages: inject inline at the end of the existing subheader paragraph.
+        // The subheader already occupies the line below h1 (e.g. "~Country"), so no extra
+        // block wrapper is needed — statusDisplaysContainer simply continues that line.
+        _subheader.appendChild(_statusSentinel);
+        _subheader.appendChild(statusDisplaysContainer);
     } else {
-        // For all other page types, place inside <p class="subheader"> after the <bdi><a href structure
-        const subheader = document.querySelector('p.subheader');
-        if (subheader) {
-            // Find the last <bdi><a> element in the subheader
-            const bdiLinks = subheader.querySelectorAll('bdi a');
-            const lastBdiLink = bdiLinks[bdiLinks.length - 1];
+        // Search pages (and any other page without a subheader): create a dedicated block
+        // line directly below the h1 so statusDisplaysContainer gets its own row.
+        const statusWrapper = document.createElement('div');
+        statusWrapper.id = 'mb-status-displays-wrapper';
+        statusWrapper.style.cssText = 'margin-top:2px;';
+        statusWrapper.appendChild(_statusSentinel);
+        statusWrapper.appendChild(statusDisplaysContainer);
 
-            if (lastBdiLink) {
-                // Insert after the last bdi link's parent bdi
-                const bdi = lastBdiLink.closest('bdi');
-                if (bdi) {
-                    // Create a wrapper to maintain spacing
-                    const statusWrapper = document.createElement('span');
-                    statusWrapper.style.cssText = 'margin-left:10px;';
-                    statusWrapper.appendChild(statusDisplaysContainer);
-
-                    // Insert after the bdi element
-                    if (bdi.nextSibling) {
-                        bdi.parentNode.insertBefore(statusWrapper, bdi.nextSibling);
-                    } else {
-                        bdi.parentNode.appendChild(statusWrapper);
-                    }
-                }
-            } else {
-                // Fallback: append to end of subheader
-                subheader.appendChild(statusDisplaysContainer);
-            }
+        const _h1ForStatus = headerContainer.tagName === 'H1'
+            ? headerContainer
+            : headerContainer.closest('h1') || headerContainer;
+        if (_h1ForStatus.nextSibling) {
+            _h1ForStatus.parentNode.insertBefore(statusWrapper, _h1ForStatus.nextSibling);
         } else {
-            // Fallback: place below h1 if no subheader found
-            const h1 = headerContainer.tagName === 'H1' ? headerContainer : headerContainer.closest('h1');
-            if (h1) {
-                const statusWrapper = document.createElement('div');
-                statusWrapper.style.cssText = 'margin-top:5px; margin-left:0px;';
-                statusWrapper.appendChild(statusDisplaysContainer);
-                h1.parentNode.insertBefore(statusWrapper, h1.nextSibling);
-            }
+            _h1ForStatus.parentNode.appendChild(statusWrapper);
         }
     }
+
+    /**
+     * Aligns statusDisplaysContainer's left edge with the first action button by measuring
+     * the sentinel's left edge (= end of existing sibling text) and the button's left edge,
+     * both via getBoundingClientRect() so any entity-name or subheader-text length is handled.
+     *
+     * Two cases:
+     *   sentinelLeft < btnLeft  →  margin-left pushes statusDisplaysContainer to align with button
+     *   sentinelLeft >= btnLeft →  subheader text already reaches / passes the button column,
+     *                              so only the minimum gap is applied
+     *
+     * Called once after initial paint and on every resize event.
+     */
+    function alignStatusToFirstButton() {
+        if (!allActionButtons[0]) return;
+        const btnLeft = allActionButtons[0].getBoundingClientRect().left;
+        const sentinelLeft = _statusSentinel.getBoundingClientRect().left;
+        const offset = Math.max(STATUS_MIN_GAP, btnLeft - sentinelLeft);
+        statusDisplaysContainer.style.marginLeft = offset + 'px';
+    }
+
+    // Defer until after the browser has performed initial layout so rects are accurate.
+    requestAnimationFrame(alignStatusToFirstButton);
+    window.addEventListener('resize', alignStatusToFirstButton);
 
     let allRows = [];
     let originalAllRows = [];

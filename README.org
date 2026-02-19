@@ -29034,7 +29034,8 @@ Please implement this, so that we get the complete real estate when the sidebar 
 account that in the non-collapsed state the sidebar container usually has it's own scrollbar because it has lots of
 content. Make sure that an eventual scrollbar on the "content container does not collide with the sidebar container.
 
-** TODO when sidebar is toggled there is artificial empty spece reachable with the horizonatl scrollbar
+** TODO when sidebar is toggled there is artificial empty space reachable with the horizontal scrollbar
+** TODO ghost sidebar toggle sometimes stays visible inside the data aread depending on previous action  (Which ONE ??)
 
 * generalize special column handling (e.g. Tagger, jesus2099 image handling, collapsing RGs, Advance Relationship icons ==> discogs, SL, MB
 ** remove or fix "Tagger" column
@@ -30670,6 +30671,13 @@ I would like to use the nice friendly name
 *** add tooltip about configuration option like in jeses super script
 *** make the whole "Show cover art" functionality in a configurable subfunction besides other subfunctions which could separately be enabled or not
 *** add sidebar collapse handle
+** sidebar collapse
+** sorting (multi column)
+** filtering
+** h2/h3 toggle collapse data container
+** h2/h3 toggle collapse sidebar container
+** visible columns
+** auto-resize
 
 
 * filter (funnel) icon from chrome console
@@ -32041,7 +32049,7 @@ visual feedback (“cleared”) animation
 * DONE add divider in config menu + scrollbars
 
 
-* refactor column splitting in different functions and take them out of the main flow
+* TODO refactor column splitting in different functions and take them out of the main flow
 ** initial
 
 In the uploaded script,
@@ -32119,10 +32127,7 @@ Since you recently added logic to transform search results (converting p to h2),
 #+end_example
 
 
-* refactor in memory column removal to filter large pagination pages
-
-
-* TODO - last ones for now
+* TODO generalize column splitting
 ** generalize column data splitting
 *** DONE Area
 **** initial
@@ -32696,7 +32701,7 @@ so basically also include in brackets the columns names not only the index numbe
 
 *** Begin area
 *** End area
-** generate new "total tracks" column based on multiple mediums of a release
+** TODO generate new "total tracks" column based on multiple mediums of a release
 ** DONE Area-Releases has a mixture of single table paginated (Releases) and multitable with subheadings (Relationships)
 *** code flow
 
@@ -34186,7 +34191,7 @@ let h3DisplayName = group.category.charAt(0).toUpperCase() + group.category.slic
 which currently ensures the H3 text reflects the unique name established during fetching and Capitalize the first
 character, so that if the first character is already the typographic charcter “ the second characher should instead be Capitalized
 
-** Add support for extracting "Primary alias" in disambiguation "comment"
+** TODO Add support for extracting "Primary alias" in disambiguation "comment"
 
 https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
 https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91/aliases
@@ -35070,7 +35075,9 @@ In the uploaded userscript
 what would be a much shorter and more pregnant name for this userscript, given the current functionlity
 
 
-* Priority of script execution and interoperation
+* refactor in memory column removal to filter large pagination pages
+
+* TODO Priority of script execution and interoperation
 ** talk to
 *** jesus2009 - render ing of coverimages befreo table and before each row
 *** xxx -for RGs read in all releases and make collpasable
@@ -35549,10 +35556,11 @@ So please fix also the column filtering for regexps to only take real text into 
 
 go with "Sticky Headers - See columns while scrolling", but include the filter row with the other stiky headers
 
-** multi table mode
+** TODO multi table mode
 ** make the whole MB page header up to the filter row sticky
 
-* Export CSV
+
+* TODO Export
 ** remove "▶" and others before exporting
 ** add more formats, JSON, ORG
 *** JSON
@@ -35680,17 +35688,20 @@ Include a "Close" button and also "Escape" key closing of the popup.
     }
 #+end_example
 
-* keyboard shortcuts
+
+* TODO keyboard shortcuts
 ** make the keyboard shortcuts configurable
 
 Ctrl-f
 
 ** problem with browser defined keyboard shortcust, e.g. Ctrl++ ==> increase font instead of "Settings" dialog
 
-* statistics panel
+
+* TODO statistics panel
 ** wrong stats
 ** make it multitable aware
 ** create keyboard shorcut
+
 
 * DONE table density
 
@@ -35706,7 +35717,7 @@ In the uploaded userscript
 toggling column visibility with the function "addColumnVisibilityToggle" ONLY toggles the first table on mutitable pages
 e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships but it should toggle them on all tables in the current page
 
-* TODO autoresize columns
+* DONE autoresize columns
 ** DONE initial
 
 While we are at it
@@ -35729,7 +35740,7 @@ occupies artificially more space then needed. Probably takes into account the no
 abbreviated country name. Please fix, but take into account probably other columns which exhibit the same problem (and
 are only discovered later)
 
-** add individual column width adjustment with the mouse, like in all other modern UIs which have resizable table columns
+** DONE add individual column width adjustment with the mouse, like in all other modern UIs which have resizable table columns
 
 Add the following feature:
 
@@ -35737,9 +35748,8 @@ Add individual column width adjustment with the mouse, like in all other modern 
 The current toggle button should also listen to such changes and change its name to "Restore Width" and also when
 pressing the button actually restore the manual column width adjustments.
 
-** make autoresize work with "Column Visibility Toggle"
-
-** fixes and new features
+** DONE make autoresize work with "Column Visibility Toggle"
+** DONE fixes and new features
 
 The following additional features need to be implemented:
 
@@ -35959,11 +35969,7 @@ make the following popup window visually more appealing, with a modern design wh
 Also account for remembering the last <n> filterload expressions (use browser persisten storage) and add a configuration directive to the
 structure
 
-
-* ALL new buttons can potentially be doubled in the UI
-
 * DONE make the buggy button implementations optional, actually make ALL the buttons optional (configurable), initial only the NON buggy ones
-
 
 * DONE overhoule the configuration GUI
 ** DONE initial
@@ -36407,7 +36413,6 @@ Please apply the same look-and-feel to the changelog "show: function ()"
 - make the version column smaller, actually it should only occupy as much space (maybe a little more than a typical date entry "11.4.0+2026-02-01")
 - make the description column initially wider
 
-
 * DONE put the "sorted <time> in some other place to not produce eye flicker
 
 * DONE remove "Initial rendering" or replace with real values
@@ -36450,7 +36455,7 @@ After loading from JSON, remove artefacts like
 * DONE Replace the "Warning: This .." to the same nice dialog like after the loading of lots of pages
 
 
-* TODO add global exclude filter
+* DONE add global exclude filter
 ** DONE initial
 
 In the uploaded userscript
@@ -37683,36 +37688,6 @@ and render them with different fonts behind each other. Do this for all status d
 * DONE shortcuts
 
 Ctr-f/g ==> change
-
-* stats
-
-completely bullshit
-
-
-* Works
-
-d595878 * origin/master ctrl-f
-d8c6a0e * new status display functions
-abed1ca * reorder buttons
-7ac4289 * Better sidebar toggling to get more real estate for data container
-f38cb74 * add better button text with icons
-fcd29c2 * reorg
-1249f34 * Fix: Status display now correctly shows sorting/filtering results for muti table views
-4e8bfe9 * add new clear all filter button
-1c7941f * New status display handling, global and sorting/filtering related
-6d9c638 * document all functions
-cad16a2 * add missing id
-ee5406e * better info message
-->19c2bda * native browser confirm ==> warning popup + export complete popup
-  c7fd156 * adjust dialog width
-35eca40 * info popup for download complete
-cb7a31f * Close menu on Escape key
-  8f751f5 * button texts inline-flex, centered
-
-
-Rendering this many rows may take a considerable amount of time and could impact your browser performance
-or even make your browser completely unusable. You can instead SAVE the data directly to disk and LOAD it
-with a PRE-FILTER condition LATER (to decrease the number of rows to make the rendering feasible) or proceed with rendering now.
 
 
 * Forum
@@ -39708,6 +39683,18 @@ window.addEventListener("load", () => {
 
 
 * TODO alignment h1 button with status line below
+** initial
+
+Please align the
+
+#+begin_example
+statusDisplaysContainer.id = 'mb-status-displays-container';
+#+end_example
+
+when rendered dynamically directly one line below the start of the "Show all..." action button. Remember, to align the
+status text perfectly with the "Show all..." action buttons, you probably have to use a dynamic JavaScript
+calculation. Because the entity names in the h1 header are of varying lengths (e.g., "The Beatles" vs. "Area 51"), a
+fixed margin won't work universally.
 
 #+begin_example
 To align the status text perfectly with the "Show all..." action buttons, we can use a dynamic JavaScript calculation. Because the entity names in the h1 header are of varying lengths (e.g., "The Beatles" vs. "Area 51"), a fixed margin won't work universally.
@@ -39871,7 +39858,26 @@ Responsive: Binding it to the resize event ensures the text stays perfectly snap
 Would you like me to review any other layout elements to make the UI look even sharper?
 #+end_example
 
+** rethink
 
+Actually the implementation would be perfect IF the "statusDisplaysContainer" is on it's own line alone below the "Show all..." button,
+but in that line below there is already ALWAYS the follwing data structure present
+
+#+begin_example
+<p class="subheader">
+  <span class="prefix">~
+  </span>
+  <!-- -->Country
+</p>
+#+end_example
+
+except for "search" pages like https://musicbrainz.org/search?query=guit&type=instrument&method=indexed where it's NOT.
+
+So what I really want is the "statusDisplaysContainer" still be aligned below the "Show all..." button but also, with a
+little horizontal spacing, after after the renderd text from that HTML structure e.g. for the above case after the
+string "~Country". Because that string also has a different lenght for each pageType (except for seach pages where it's
+always empty), and if that lenght would already extend beyond the current position of the "Show all..." button, then
+place the "statusDisplaysContainer" (with that little horizontal spacing) right after that text.
 
 
 * TODO Make the keyboard shortcut prefix configurable itself
@@ -40001,3 +40007,5 @@ How can I force the open file dialog, triggered from my own user script to show 
 * Replace "|" with native one between buttons
 
 * Scrollable "Shortcuts menu"
+
+* TODO Is the check for invalid regexp really working
