@@ -39452,6 +39452,18 @@ column mode array. Every single click afterwards without holding down the "Ctrl"
 
 Please implement
 
+** Using background colors—often called row grouping
+
+Please implement:
+
+Using background colors—often called row grouping or semantic zebra striping—is one of the most effective ways to solve this.
+
+1. Alternating Group Colors (The "Block" Method)
+Instead of every other row changing color, the background color only toggles when the value in the Primary sort column changes.
+
+Logic: If currentRow.primaryValue !== previousRow.primaryValue, toggle the background class.
+
+Effect: This visually "chunks" the data into groups. You can immediately see where the secondary sort starts and ends for each primary category.
 
 * TODO sensible defaults for configuration options
 
