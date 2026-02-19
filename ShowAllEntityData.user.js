@@ -4332,13 +4332,13 @@ Press Escape on that notice to cancel the auto-action.
         if (!resizeBtn) return;
 
         if (isResized) {
-            resizeBtn.textContent = '↔️ Restore Width';
-            resizeBtn.title = 'Restore original column widths (click to toggle)';
+            resizeBtn.innerHTML = '↔️ <u>R</u>estore Width';
+            resizeBtn.title = 'Restore original column widths (click to toggle / Ctrl-M, then r)';
             resizeBtn.style.background = '#e8f5e9';
             resizeBtn.style.borderColor = '#4CAF50';
         } else {
-            resizeBtn.textContent = '↔️ Auto-Resize';
-            resizeBtn.title = 'Auto-resize columns to optimal width (enables horizontal scrolling)';
+            resizeBtn.innerHTML = '↔️ Auto-<u>R</u>esize';
+            resizeBtn.title = 'Auto-resize columns to optimal width (click to toggle / Ctrl-M, then r)';
             resizeBtn.style.background = '';
             resizeBtn.style.borderColor = '';
         }

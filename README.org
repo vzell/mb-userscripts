@@ -39487,14 +39487,7 @@ In the uploaded userscript "ShowAllEntityData.user.js"
 - Rename the "⌨️ Shortcuts" button to just "🎹" and position it left to the "⚙️" button, this button should also already
   be visible on page entry (not only when the page is finally render after an action button click)
 
-** TODO new button "❓"
-
-** Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
-
-Question:
-Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which
-it was triggered, by clicking the "OK" button directly (or maybe wait 2 seconds until the user has read the popop dialog
-text) ? If yes, please implement
+** DONE new button "❓"
 
 Additionally create a new button with text "❓" for general help about the application. When clicked a new scrollable
 popup window (with a "Close" button and equivalent "Escape" key handling) should present the user the features and help
@@ -39503,10 +39496,16 @@ this app (you can also use the unicode symbols used for buttons or in text in th
 the value of this variable in the current code. Position it right to the "⚙️" button This button should also already be
 visible on page entry (not only when the page is finally render after an action button click).
 
-
 ** TODO Underline "o" in "Stop" button and add keyboard shortcut "Ctrl-M"+o 
 
 Add "Ctrl-M"+o to "Stop" button
+
+* Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
+
+Question:
+Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which
+it was triggered, by clicking the "OK" button directly (or maybe wait 2 seconds until the user has read the popop dialog
+text) ? If yes, please implement
 
 
 * DONE The first input field on a page is usually auto-focused - How to stop it (if you want)
