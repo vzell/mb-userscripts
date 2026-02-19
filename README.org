@@ -39879,6 +39879,254 @@ string "~Country". Because that string also has a different lenght for each page
 always empty), and if that lenght would already extend beyond the current position of the "Show all..." button, then
 place the "statusDisplaysContainer" (with that little horizontal spacing) right after that text.
 
+** fix last glitches
+
+Almost perfect, the alignment now works. But ther is one last glitch when rendering that wholte line e.g. here an
+example what went wrong
+
+#+begin_example
+<p class="subheader">
+  <span class="prefix">~
+  </span>
+  <!-- -->Country
+  <span id="mb-status-sentinel" style="display: inline-block; width: 0px; height: 0px; overflow: hidden; vertical-align: middle;">
+  </span>
+  <div id="mb-status-displays-container" style="display: inline-flex; align-items: center; gap: 8px; line-height: 1; vertical-align: middle; margin-left: 103.475px;">
+    <span id="mb-global-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold;">Loaded 34 pages (3400 rows) from MusicBrainz backend database, Fetching time: 27.76s
+    </span>
+    <span id="mb-info-display" style="font-size: 0.8em; color: green; display: flex; align-items: center; height: 24px; font-weight: bold; margin-left: 10px;">✓ Auto-resized 12 visible columns in 123ms (drag column edges to adjust)
+    </span>
+  </div>
+</p>
+#+end_example
+
+The '<span id="mb-global-status-display" style="font-size: 0.9em' could be made 0.95em in height, but the real problem
+is the '<span id="mb-info-display"' should first have the same height (0.95em), but right now it's NOT aligned with the
+"mb-global-status-display" container, it sits a little bit higher from the baseline. Please fix and align...
+
+The other thing what could be improved is:
+
+There should be a visual separator " | " between
+
+- the "Show all..." button (or buttons on some pageType) and the "Load from Disk" Button, as it is right now (if on the intial entry page)
+or
+- between the "Show all..." Button and the "Save to Disk" button (on the final rendered page after the action button
+  is clicked)
+
+The same separator should also be between
+
+- the "Load from Disk" Button and the button '"<button id="mb-shortcuts-help-btn"' (if on the intial entry page)
+or
+- between the "Load from Disk" Button and the "Auto-Resize" button (on the final rendered page after the action button
+  is clicked), this latter case is already implemented but there is a visual glitch as can be seen in the following
+  render HTML
+
+#+begin_example
+<h1>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+  <div id="mb-show-all-controls-container" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: 10px; vertical-align: middle; line-height: 1;">
+    <button type="button" title="Fetch all the table data from the MusicBrainz backend database" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(255, 204, 204); color: black;" class="">🧮 Show all Artists for Area
+    </button>
+    <button type="button" title="Save current table data to disk as Gzipped JSON (Ctrl+M, then s)" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(76, 175, 80); color: white; border: 1px solid rgb(69, 160, 73); display: inline-block; align-items: center; justify-content: center;">💾
+      <u>S
+      </u>ave to Disk
+    </button>
+    <button type="button" title="Load table data from disk (JSON file) (Ctrl+M, then l)" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(33, 150, 243); color: white; border: 1px solid rgb(11, 125, 218); display: inline-flex; align-items: center; justify-content: center;">📂
+      <u>L
+      </u>oad from Disk
+    </button>
+    <span class="mb-button-divider-after-load" style="color: rgb(153, 153, 153); margin: 0px 4px;"> |
+    </span>
+    <input type="file" accept=".gz,application/gzip" style="display: none;">
+    <button title="Stop the current data fetching process from the MusicBrainz backend database" style="display: none; font-size: 0.8em; padding: 2px 6px; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47); height: 24px; box-sizing: border-box; border-radius: 6px;" disabled="">Stopping...
+    </button>
+    <div id="mb-fetch-progress-container" style="display: none; width: 300px; height: 26px; background-color: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204); border-radius: 3px; overflow: hidden; position: relative; vertical-align: middle;">
+      <div id="mb-fetch-progress-bar" style="width: 0.111857%; height: 100%; transition: width 0.3s, background-color 0.3s; position: absolute; left: 0px; top: 0px; background-color: rgb(255, 204, 204);">
+      </div>
+      <div id="mb-fetch-progress-text" style="position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: black; z-index: 1; pointer-events: none; padding: 0px 10px; box-sizing: border-box; white-space: pre-line;">Loading page 4 of 3576... (400 rows)
+	Estimated remaining time: 5823.1s
+      </div>
+    </div>
+    <span style="font-size: 0.5em; color: rgb(102, 102, 102); display: flex; align-items: center; height: 24px;">
+    </span>
+    <button title="Auto-resize columns to optimal width (Ctrl+M, then r)" type="button" style="font-size: 0.9em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">↔️ Auto-
+      <u>R
+      </u>esize
+    </button>
+    <button title="Show/hide table columns (Ctrl+M, then v)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">👁️
+      <u>V
+      </u>isible Columns
+    </button>
+    <button title="Change table density (spacing) (Ctrl+M, then d)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">📏
+      <u>D
+      </u>ensity
+    </button>
+    <button title="Show table statistics (Ctrl+M, then t)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">📊 S
+      <u>t
+      </u>ats
+    </button>
+    <button title="Export visible rows and columns to various formats (Ctrl+M, then e)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">
+      <u>E
+      </u>xport 💾
+    </button>
+    <button id="mb-shortcuts-help-btn" title="Show keyboard shortcuts (or press ?)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;">🎹
+    </button>
+    <button type="button" title="Open settings manager to configure script behavior" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(96, 125, 139); color: white; border: 1px solid rgb(84, 110, 122); display: inline-flex; align-items: center; justify-content: center;">⚙️
+    </button>
+    <button id="mb-app-help-btn" title="Show application help and feature overview" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(120, 144, 156); color: white; border: 1px solid rgb(96, 125, 139); display: inline-flex; align-items: center; justify-content: center;">❓
+    </button>
+  </div>
+</h1>
+#+end_example
+
+I think it's this substructure, which should NOT be present anymore on this line
+
+#+begin_example
+    <div id="mb-fetch-progress-container" style="display: none; width: 300px; height: 26px; background-color: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204); border-radius: 3px; overflow: hidden; position: relative; vertical-align: middle;">
+      <div id="mb-fetch-progress-bar" style="width: 0.111857%; height: 100%; transition: width 0.3s, background-color 0.3s; position: absolute; left: 0px; top: 0px; background-color: rgb(255, 204, 204);">
+      </div>
+      <div id="mb-fetch-progress-text" style="position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: black; z-index: 1; pointer-events: none; padding: 0px 10px; box-sizing: border-box; white-space: pre-line;">Loading page 4 of 3576... (400 rows)
+	Estimated remaining time: 5823.1s
+      </div>
+    </div>
+#+end_example
+
+as the fetching information is now rendered below the h1 header line. Please remove this stuff and all the references
+from the code if not used anywhere else.
+  
+- Finally there should be another visual separator " | " between the "Export 💾" button and the button '<button id="mb-shortcuts-help-btn"'
+
+So basically these separaters provide a nice clear distinction between the different button types
+
+* stats bug
+
+The bugs are still present:
+
+** On single table pages
+
+For example on the page single table page https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+when I sort by column "Time" the debug log gives me the following output
+
+#+begin_example
+[VZ-ShowAllEntities: events] 🧹 Final cleanup complete: Removed a total of 9 consecutive <br> tags across 1 locations. 
+[VZ-ShowAllEntities: events] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntities: events] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+[VZ-ShowAllEntities: events] 🖥️ Auto-resize button added to controls 
+[VZ-ShowAllEntities: events] 📝 Made 13 columns resizable 
+[VZ-ShowAllEntities: events] 🖥️ Column visibility toggle added to controls 
+[VZ-ShowAllEntities: events] 🖥️ Density control button added to controls 
+[VZ-ShowAllEntities: events] 🖥️ Stats button added to controls 
+[VZ-ShowAllEntities: events] 📝 Keyboard shortcuts initialized 
+[VZ-ShowAllEntities: events] 🖥️ Shortcuts help button already exists, skipping 
+[VZ-ShowAllEntities: events] 🖥️ Export button with dropdown menu added to controls 
+[VZ-ShowAllEntities: events] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ-ShowAllEntities: events] 🎨 DOM rendering finished in 5950.20ms 
+[VZ-ShowAllEntities: events] ✅ Process complete. Final Row Count: 4130. Total Time: 55.54s 
+[VZ-ShowAllEntities: events] ⚖️ Sorting table "main_table" by column: "Time" (index: 6) to state 1. Row count: 4130 
+[VZ-ShowAllEntities: events] 🔍 runFilter(): active element = mb-sorting-active
+[VZ-ShowAllEntities: events] 🎨 Starting renderFinalTable with 4130 rows. 
+[VZ-ShowAllEntities: events] 🎨 Final table structure → headers=26, rowCells=13 
+[VZ-ShowAllEntities: events] 🎨 Chunked render: 4130 rows in 9 chunks of 500 
+[VZ-ShowAllEntities: events] 🎨 Starting updateH2Count: filtered=4130, total=4130 
+[VZ-ShowAllEntities: events] 🎨 Searching for target H2. Current pageType: events 
+[VZ-ShowAllEntities: events] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntities: events] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntities: events] 🎨 Target element identified: "▼Events(4130)✕CcRxExPrefilter�..." 
+[VZ-ShowAllEntities: events] 🎨 Removing existing row count stat span. 
+[VZ-ShowAllEntities: events] 🎨 Inserting count span before referenceNode: SPAN 
+[VZ-ShowAllEntities: events] 🎨 filterContainer is already attached to targetH2. 
+[VZ-ShowAllEntities: events] 🎨 Updated header/target ▼Events(4130)✕CcRxExPrefilter� count: (4130) 
+[VZ-ShowAllEntities: events] 🔍 Filter completed in 277ms 
+[VZ-ShowAllEntities: events] ⚖️ Sort completed in 0.87s for 4130 rows 
+[VZ-ShowAllEntities: events] 🎨 Chunked render complete: 4130 rows rendered in 9 chunks. 
+[VZ-ShowAllEntities: events] 🎵 Sidebar collapsed. Full width applied.
+#+end_example
+
+- The line
+
+#+begin_example
+⚖️ Sorting table "main_table" by column: "Time" (index: 6) to state 1. Row count: 4130
+#+end_example
+
+should acutally show also the sort direction indicator
+
+#+begin_example
+⚖️ Sorting table "main_table" by column: "Time" ▲ (index: 6) to state 1. Row count: 4130
+#+end_example
+
+what the
+
+#+begin_example
+<span id="mb-sort-status-display" class="mb-sort-status" style="color: green;">✓ Sorted by column "Time" ▲: 4130 rows in 874ms</span>
+#+end_example
+
+already does.
+
+- The number of rows which are filtered for display IS WRONG. It says "Filtered 500 rows" also according to the sorting
+  info above there are "4130 rows". Maybe it's because of the performance chunking feature, PLEASE FIX.
+
+#+begin_example
+<span id="mb-filter-status-display" class="mb-filter-status" style="color: orange;">✓ Filtered 500 rows in 520ms</span>
+#+end_example
+  
+- Even worse: When additionally filtering globally by e.g. "M" I get 
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;">
+  <span class="mb-toggle-icon">▼
+  </span>Events
+  <span class="mb-row-count-stat">(1840 of 4130)
+  </span>
+  <span style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;">
+    <span class="mb-filter-wrapper" style="position: relative; display: inline-block;">
+      <input placeholder="Global Filter..." title="Enter global filter string" style="font-size: 1em; padding: 2px 20px 2px 6px; border: 2px solid rgb(204, 204, 204); border-radius: 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s; box-shadow: red 0px 0px 2px 2px;">
+      <span title="Clear global filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
+      </span>
+    </span>
+    <label title="Case Sensitive Filtering" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;">
+      <input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc
+    </label>
+    <label title="RegExp Filtering" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;">
+      <input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx
+    </label>
+    <label title="Exclude matches (Global Filter)" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;">
+      <input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex
+    </label>
+    <span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;">
+    </span>
+    <button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; transition: background-color 0.3s; display: none;">Prefilter
+    </button>
+    <button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global filter and column filters)" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; transition: background-color 0.3s; display: inline-block;">🎨 Toggle highlighting
+    </button>
+    <button title="Clear all column-specific filter inputs" style="font-size: 0.9em; padding: 2px 6px; cursor: pointer; display: none;">
+      <span style="color: red; font-size: 1em; font-weight: bold;">✗
+      </span>Clear all COLUMN filters
+    </button>
+    <button title="Clear both global filter and all column filters" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; display: inline-block;">
+      <span style="color: red; font-size: 1em; font-weight: bold;">✗
+      </span>Clear ALL filters
+    </button>
+    <span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;">
+      <span id="mb-filter-status-display" class="mb-filter-status" style="color: red;">✓ Filtered 500 rows in 1159ms [global:"M"]
+      </span>
+      <span id="mb-sort-status-display" class="mb-sort-status" style="color: green;">✓ Sorted by column "Time" ▲: 4130 rows in 874ms
+      </span>
+    </span>
+  </span>
+</h2>
+#+end_example
+
+where the number don't match at all. (1840 of 4130), ✓ Filtered 500 rows in 1159ms, Sorted by column "Time" ▲: 4130 rows
+
+
+** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
+
 
 * TODO Make the keyboard shortcut prefix configurable itself
 ** DONE initial
