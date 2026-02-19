@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.48.0+2026-02-19
+// @version      9.49.0+2026-02-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.49.0+2026-02-19', description: 'Removed "info" logging for upcoming release.'},
     {version: '9.48.0+2026-02-19', description: 'Feature: Multi-column sorting for single-table page types. (1) New createMultiColumnComparator(sortColumns, headers) function inserted alongside createSortComparator. (2) makeTableSortableUnified rewritten: state now carries a multiSortColumns:[{colIndex,direction}] array alongside lastSortIndex/sortState. Interaction model: plain click on any sort icon → single-sort mode (clears multiSortColumns, sorts by that column alone); Ctrl+Click on ▲ or ▼ → adds the column to multiSortColumns (or updates direction / removes it if already present); clicking ⇅ always restores original order and clears multiSortColumns regardless of Ctrl. Visual feedback: active icons in multi-sort mode are annotated with superscript priority numbers (¹²³…) via updateMultiSortVisuals(). Sort-status display shows "Multi-sorted by: \"Col1\"▲, \"Col2\"▼ (N rows in Xms)". Multi-table pages are unaffected (still single-column only). Tooltips updated to reflect Ctrl+Click behaviour. Removed stale progressBar/progressText/progressContainer references that were cleaned up in 9.45.0.'},
     {version: '9.47.0+2026-02-19', description: 'UI Fix: On multi-table pages the h3 sub-table control order is corrected. Previously: clearBtn → filterStatus → sortStatus → showAllBtn. Now: filterStatus → sortStatus → clearBtn → showAllBtn — status text appears immediately after the row-count, action buttons are grouped at the end. Fixed in both the new-h3 and the reuse-existing-h3 branches of renderGroupedTable.'},
     {version: '9.46.0+2026-02-19', description: 'Bug fixes: (1) Sort debug log now includes the direction icon (▲/▼/⇅) before the column index, matching the sort-status-display text. (2) Filter status display in single-table mode no longer queries tbody tr count from the DOM after an async chunked render (which only has 500 rows inserted at that point); it now uses filteredRows.length from the in-memory array, giving the correct total immediately. (3) Same fix eliminates the mismatch between the H2 row-count span (correct) and the filter-status-display (was wrong) when a global filter is active after sorting.'},
@@ -1718,7 +1719,7 @@ Press Escape on that notice to cancel the auto-action.
         `;
 
         document.head.appendChild(style);
-        Lib.info('ui', 'Sticky headers enabled - column headers will remain visible while scrolling');
+        Lib.debug('ui', 'Sticky headers enabled - column headers will remain visible while scrolling');
     }
 
     /**
@@ -1963,7 +1964,7 @@ Press Escape on that notice to cancel the auto-action.
         // Check if button already exists
         const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible Columns'));
         if (existingBtn) {
-            Lib.info('ui', 'Column visibility toggle already exists, skipping');
+            Lib.debug('ui', 'Column visibility toggle already exists, skipping');
             return;
         }
 
@@ -2099,7 +2100,7 @@ Press Escape on that notice to cancel the auto-action.
 
                 // Count visible columns
                 const visibleCount = checkboxes.filter(cb => cb.checked).length;
-                Lib.info('ui', `Column "${colName}" ${checkbox.checked ? 'shown' : 'hidden'}. ${visibleCount}/${checkboxes.length} columns visible`);
+                Lib.debug('ui', `Column "${colName}" ${checkbox.checked ? 'shown' : 'hidden'}. ${visibleCount}/${checkboxes.length} columns visible`);
 
                 // Update button color
                 updateButtonColor();
@@ -2169,7 +2170,7 @@ Press Escape on that notice to cancel the auto-action.
             e.stopPropagation();
             // Just close the menu - current configuration is already applied
             menu.style.display = 'none';
-            Lib.info('ui', 'Chose current column configuration');
+            Lib.debug('ui', 'Chose current column configuration');
         };
         contentWrapper.appendChild(chooseConfigBtn);
 
@@ -2307,7 +2308,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // Append to controls container
         controlsContainer.appendChild(toggleBtn);
-        Lib.info('ui', 'Column visibility toggle added to controls');
+        Lib.debug('ui', 'Column visibility toggle added to controls');
         ensureSettingsButtonIsLast();
 
         // Append menu to body
@@ -2327,7 +2328,7 @@ Press Escape on that notice to cancel the auto-action.
             return;
         }
 
-        Lib.info('export', 'Starting CSV export...');
+        Lib.debug('export', 'Starting CSV export...');
 
         const rows = [];
         let totalCells = 0;
@@ -2392,7 +2393,7 @@ Press Escape on that notice to cancel the auto-action.
             }
         });
 
-        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
+        Lib.debug('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
 
         // Create CSV string
         const csv = rows.map(row => row.join(',')).join('\n');
@@ -2422,7 +2423,7 @@ Press Escape on that notice to cancel the auto-action.
             infoDisplay.style.color = 'green';
         }
 
-        Lib.info('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
+        Lib.debug('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
 
         // --- INFO POPUP TO ALERT USER (WITH FADE OUT) ---
         const infoPopup = document.createElement('div');
@@ -2497,7 +2498,7 @@ Press Escape on that notice to cancel the auto-action.
             return;
         }
 
-        Lib.info('export', 'Starting JSON export...');
+        Lib.debug('export', 'Starting JSON export...');
 
         const data = { headers: [], rows: [] };
 
@@ -2549,7 +2550,7 @@ Press Escape on that notice to cancel the auto-action.
         link.click();
         URL.revokeObjectURL(url);
 
-        Lib.info('export', `JSON export complete: ${filename} (${rowsExported} rows)`);
+        Lib.debug('export', `JSON export complete: ${filename} (${rowsExported} rows)`);
         showExportNotification('JSON', filename, rowsExported);
     }
 
@@ -2564,7 +2565,7 @@ Press Escape on that notice to cancel the auto-action.
             return;
         }
 
-        Lib.info('export', 'Starting Org-Mode export...');
+        Lib.debug('export', 'Starting Org-Mode export...');
 
         const rows = [];
 
@@ -2620,7 +2621,7 @@ Press Escape on that notice to cancel the auto-action.
         link.click();
         URL.revokeObjectURL(url);
 
-        Lib.info('export', `Org-Mode export complete: ${filename} (${rowsExported} rows)`);
+        Lib.debug('export', `Org-Mode export complete: ${filename} (${rowsExported} rows)`);
         showExportNotification('Org-Mode', filename, rowsExported);
     }
 
@@ -2705,7 +2706,7 @@ Press Escape on that notice to cancel the auto-action.
         // Check if button already exists
         const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
         if (existingBtn) {
-            Lib.info('ui', 'Export button already exists, skipping');
+            Lib.debug('ui', 'Export button already exists, skipping');
             return;
         }
 
@@ -2883,7 +2884,7 @@ Press Escape on that notice to cancel the auto-action.
         document.addEventListener('keydown', closeMenuOnEscape);
 
         controlsContainer.appendChild(exportBtn);
-        Lib.info('ui', 'Export button with dropdown menu added to controls');
+        Lib.debug('ui', 'Export button with dropdown menu added to controls');
         ensureSettingsButtonIsLast();
 
         // Append menu to body
@@ -2910,7 +2911,7 @@ Press Escape on that notice to cancel the auto-action.
             runFilter();
         }
 
-        Lib.info('shortcuts', 'All filters cleared');
+        Lib.debug('shortcuts', 'All filters cleared');
 
         // Show feedback in filter status
         const filterStatusDisplay = document.getElementById('mb-filter-status-display');
@@ -3368,7 +3369,7 @@ Press Escape on that notice to cancel the auto-action.
             document.addEventListener('click', closeOnClickOutside);
         }, 100);
 
-        Lib.info('shortcuts', 'Keyboard shortcuts help displayed');
+        Lib.debug('shortcuts', 'Keyboard shortcuts help displayed');
     }
 
     /**
@@ -3533,7 +3534,7 @@ Press Escape on that notice to cancel the auto-action.
         // Focus Close button for immediate keyboard access
         setTimeout(() => closeBtn.focus(), 0);
 
-        Lib.info('ui', 'Application help dialog displayed');
+        Lib.debug('ui', 'Application help dialog displayed');
     }
 
     /**
@@ -3782,7 +3783,7 @@ Press Escape on that notice to cancel the auto-action.
         });
 
         document._mbKeyboardShortcutsInitialized = true;
-        Lib.info('shortcuts', 'Keyboard shortcuts initialized');
+        Lib.debug('shortcuts', 'Keyboard shortcuts initialized');
     }
 
     /**
@@ -3797,7 +3798,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // Check if button already exists (by id set at initial render)
         if (document.getElementById('mb-shortcuts-help-btn')) {
-            Lib.info('ui', 'Shortcuts help button already exists, skipping');
+            Lib.debug('ui', 'Shortcuts help button already exists, skipping');
             return;
         }
 
@@ -3816,7 +3817,7 @@ Press Escape on that notice to cancel the auto-action.
         } else {
             controlsContainer.appendChild(helpBtn);
         }
-        Lib.info('ui', 'Keyboard shortcuts help button added to controls');
+        Lib.debug('ui', 'Keyboard shortcuts help button added to controls');
         ensureSettingsButtonIsLast();
     }
 
@@ -3970,7 +3971,7 @@ Press Escape on that notice to cancel the auto-action.
             document.addEventListener('click', closeOnClickOutside);
         }, 100);
 
-        Lib.info('stats', `Statistics panel displayed: ${visibleRows.length}/${allRows.length} rows, ${visibleColumns}/${totalColumns} columns`);
+        Lib.debug('stats', `Statistics panel displayed: ${visibleRows.length}/${allRows.length} rows, ${visibleColumns}/${totalColumns} columns`);
     }
 
     /**
@@ -3986,7 +3987,7 @@ Press Escape on that notice to cancel the auto-action.
         // Check if button already exists
         const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Stats'));
         if (existingBtn) {
-            Lib.info('ui', 'Stats button already exists, skipping');
+            Lib.debug('ui', 'Stats button already exists, skipping');
             return;
         }
 
@@ -3998,7 +3999,7 @@ Press Escape on that notice to cancel the auto-action.
         statsBtn.onclick = showStatsPanel;
 
         controlsContainer.appendChild(statsBtn);
-        Lib.info('ui', 'Stats button added to controls');
+        Lib.debug('ui', 'Stats button added to controls');
         ensureSettingsButtonIsLast();
     }
 
@@ -4069,7 +4070,7 @@ Press Escape on that notice to cancel the auto-action.
             infoDisplay.style.color = 'green';
         }
 
-        Lib.info('density', `Applied ${config.label} density to ${tables.length} table(s)`);
+        Lib.debug('density', `Applied ${config.label} density to ${tables.length} table(s)`);
     }
 
     /**
@@ -4085,7 +4086,7 @@ Press Escape on that notice to cancel the auto-action.
         // Check if button already exists
         const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Density'));
         if (existingBtn) {
-            Lib.info('ui', 'Density control button already exists, skipping');
+            Lib.debug('ui', 'Density control button already exists, skipping');
             return;
         }
 
@@ -4296,7 +4297,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // Append to controls container
         controlsContainer.appendChild(densityBtn);
-        Lib.info('ui', 'Density control button added to controls');
+        Lib.debug('ui', 'Density control button added to controls');
         ensureSettingsButtonIsLast();
 
         // Append menu to body
@@ -4400,7 +4401,7 @@ Press Escape on that notice to cancel the auto-action.
                 document.body.style.userSelect = '';
 
                 const finalWidth = th.offsetWidth;
-                Lib.info('resize', `Finished resizing column ${colIndex} to ${finalWidth}px`);
+                Lib.debug('resize', `Finished resizing column ${colIndex} to ${finalWidth}px`);
 
                 // Update status
                 const infoDisplay = document.getElementById('mb-info-display');
@@ -4415,7 +4416,7 @@ Press Escape on that notice to cancel the auto-action.
             th.appendChild(resizer);
         });
 
-        Lib.info('resize', `Made ${headers.length} columns resizable`);
+        Lib.debug('resize', `Made ${headers.length} columns resizable`);
     }
 
     /**
@@ -4571,7 +4572,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // Toggle: If already resized (auto or manual), restore original state
         if (isAutoResized || isManuallyResized) {
-            Lib.info('resize', 'Restoring original column widths...');
+            Lib.debug('resize', 'Restoring original column widths...');
 
             tables.forEach((table, tableIndex) => {
                 const state = originalTableStates.get(table);
@@ -4609,12 +4610,12 @@ Press Escape on that notice to cancel the auto-action.
                 infoDisplay.style.color = 'green';
             }
 
-            Lib.info('resize', 'Original column widths restored');
+            Lib.debug('resize', 'Original column widths restored');
             return;
         }
 
         // First click: Auto-resize columns
-        Lib.info('resize', `Auto-resizing ${tables.length} table(s)...`);
+        Lib.debug('resize', `Auto-resizing ${tables.length} table(s)...`);
 
         const startTime = performance.now();
         let totalColumnsResized = 0;
@@ -4820,7 +4821,7 @@ Press Escape on that notice to cancel the auto-action.
                 makeColumnsResizable(table);
             }
 
-            Lib.info('resize', `Table ${tableIndex}: Resized ${columnCount} columns, total width: ${totalWidth}px`);
+            Lib.debug('resize', `Table ${tableIndex}: Resized ${columnCount} columns, total width: ${totalWidth}px`);
         });
 
         const duration = (performance.now() - startTime).toFixed(0);
@@ -4843,7 +4844,7 @@ Press Escape on that notice to cancel the auto-action.
             infoDisplay.style.color = 'green';
         }
 
-        Lib.info('resize', `Auto-resize complete: ${totalColumnsResized} visible columns across ${tableCount} table(s) in ${duration}ms`);
+        Lib.debug('resize', `Auto-resize complete: ${totalColumnsResized} visible columns across ${tableCount} table(s) in ${duration}ms`);
     }
 
     /**
@@ -4859,7 +4860,7 @@ Press Escape on that notice to cancel the auto-action.
         // Check if button already exists
         const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Auto-Resize'));
         if (existingBtn) {
-            Lib.info('ui', 'Auto-resize button already exists, skipping');
+            Lib.debug('ui', 'Auto-resize button already exists, skipping');
             return;
         }
 
@@ -4871,7 +4872,7 @@ Press Escape on that notice to cancel the auto-action.
         resizeBtn.onclick = toggleAutoResizeColumns;
 
         controlsContainer.appendChild(resizeBtn);
-        Lib.info('ui', 'Auto-resize button added to controls');
+        Lib.debug('ui', 'Auto-resize button added to controls');
         ensureSettingsButtonIsLast();
     }
 
@@ -5075,7 +5076,7 @@ Press Escape on that notice to cancel the auto-action.
                           document.querySelector('h1');
 
     if (pageType) Lib.prefix = `[VZ-ShowAllEntities: ${pageType}]`;
-    Lib.info('init', 'Initializing script for path:', path);
+    Lib.debug('init', 'Initializing script for path:', path);
 
     if (!pageType || !headerContainer) {
         Lib.error('init', 'Required elements not found. Terminating.', { pageType, hasHeader: !!headerContainer });
@@ -5416,13 +5417,13 @@ Press Escape on that notice to cancel the auto-action.
 
             prefilterHighlightEnabled = false;
             updatePrefilterButtonAppearance();
-            Lib.info('highlight', 'Prefilter highlights removed (saved state for restoration)');
+            Lib.debug('highlight', 'Prefilter highlights removed (saved state for restoration)');
         } else {
             // Currently not highlighted - restore prefilter highlights
             restorePrefilterHighlightState();
             prefilterHighlightEnabled = true;
             updatePrefilterButtonAppearance();
-            Lib.info('highlight', 'Prefilter highlights restored');
+            Lib.debug('highlight', 'Prefilter highlights restored');
         }
     };
     filterContainer.appendChild(prefilterToggleBtn);
@@ -5461,13 +5462,13 @@ Press Escape on that notice to cancel the auto-action.
 
             filterHighlightEnabled = false;
             updateFilterHighlightButtonAppearance();
-            Lib.info('highlight', 'Filter highlights removed (saved state for restoration)');
+            Lib.debug('highlight', 'Filter highlights removed (saved state for restoration)');
         } else {
             // Currently not highlighted - restore filter highlights
             restoreFilterHighlightState();
             filterHighlightEnabled = true;
             updateFilterHighlightButtonAppearance();
-            Lib.info('highlight', 'Filter highlights restored');
+            Lib.debug('highlight', 'Filter highlights restored');
         }
     };
     filterContainer.appendChild(unhighlightAllBtn);
@@ -5494,7 +5495,7 @@ Press Escape on that notice to cancel the auto-action.
             runFilter();
         }
 
-        Lib.info('filter', 'All column filters cleared');
+        Lib.debug('filter', 'All column filters cleared');
 
         // Show feedback in filter status
         const filterStatusDisplay = document.getElementById('mb-filter-status-display');
@@ -5599,7 +5600,7 @@ Press Escape on that notice to cancel the auto-action.
             runFilter();
         }
 
-        Lib.info('filter', `Column filters cleared for table: ${tableName}`);
+        Lib.debug('filter', `Column filters cleared for table: ${tableName}`);
 
         // Show feedback in the sub-table specific filter status display
         const h3 = table.previousElementSibling;
@@ -5948,7 +5949,7 @@ Press Escape on that notice to cancel the auto-action.
             }
 
             closeDialog();
-            Lib.info('cache', 'Load confirmed. Triggering file selector...');
+            Lib.debug('cache', 'Load confirmed. Triggering file selector...');
             fileInput.click();
         };
 
@@ -6079,7 +6080,7 @@ Press Escape on that notice to cancel the auto-action.
      * Removes various clutter elements from the MusicBrainz page to prepare for consolidated view.
      */
     function performClutterCleanup() {
-        Lib.info('cleanup', 'Starting clutter element removal.');
+        Lib.debug('cleanup', 'Starting clutter element removal.');
 
         // Remove Jesus2099 bigbox elements
         const bigBoxCount = document.querySelectorAll('div.jesus2099userjs154481bigbox').length;
@@ -6124,7 +6125,7 @@ Press Escape on that notice to cancel the auto-action.
                 Lib.debug('cleanup', `Removed <details> block containing ${imgCount} images.`);
             }
         });
-        if (removedDetailsCount > 0) Lib.info('cleanup', `Removed ${removedDetailsCount} gallery/details blocks.`);
+        if (removedDetailsCount > 0) Lib.debug('cleanup', `Removed ${removedDetailsCount} gallery/details blocks.`);
 
         if (pageType === 'events' || pageType === 'artist-releasegroups') {
             removeSanojjonasContainers();
@@ -6141,7 +6142,7 @@ Press Escape on that notice to cancel the auto-action.
         const url = new URL(window.location.origin + targetPath);
         Object.keys(queryParams).forEach(k => url.searchParams.set(k, queryParams[k]));
         url.searchParams.set('page', '1');
-        Lib.info('fetch', `Fetching maxPage from: ${url.toString()}`);
+        Lib.debug('fetch', `Fetching maxPage from: ${url.toString()}`);
         try {
             const html = await fetchHtml(url.toString());
             const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -6164,7 +6165,7 @@ Press Escape on that notice to cancel the auto-action.
                     if (pageNumbers.length > 0) maxPage = Math.max(...pageNumbers);
                 }
             }
-            Lib.info('success', `Determined maxPage: ${maxPage}`);
+            Lib.debug('success', `Determined maxPage: ${maxPage}`);
             return maxPage;
         } catch (err) {
             Lib.error('fetch', 'Error fetching maxPage:', err);
@@ -6189,7 +6190,7 @@ Press Escape on that notice to cancel the auto-action.
      * Signals other scripts (like FUNKEY ILLUSTRATED RECORDS) to stop their loops.
      */
     function stopOtherScripts() {
-        Lib.info('cleanup', 'Signalling other scripts to stop...');
+        Lib.debug('cleanup', 'Signalling other scripts to stop...');
         window.stopAllUserScripts = true;
         // Dispatch custom event for scripts listening for inter-script signals
         window.dispatchEvent(new CustomEvent('mb-stop-all-scripts'));
@@ -6403,7 +6404,7 @@ Press Escape on that notice to cancel the auto-action.
      */
     function restorePrefilterHighlightState() {
         if (!savedPrefilterHighlights.hasContent) {
-            Lib.info('highlight', 'No saved prefilter highlight state to restore');
+            Lib.debug('highlight', 'No saved prefilter highlight state to restore');
             return;
         }
 
@@ -6420,7 +6421,7 @@ Press Escape on that notice to cancel the auto-action.
             });
         }
 
-        Lib.info('highlight', 'Prefilter highlights restored');
+        Lib.debug('highlight', 'Prefilter highlights restored');
     }
 
     /**
@@ -6463,7 +6464,7 @@ Press Escape on that notice to cancel the auto-action.
      */
     function restoreFilterHighlightState() {
         if (!savedFilterHighlights.hasContent) {
-            Lib.info('highlight', 'No saved filter highlight state to restore');
+            Lib.debug('highlight', 'No saved filter highlight state to restore');
             return;
         }
 
@@ -6473,7 +6474,7 @@ Press Escape on that notice to cancel the auto-action.
 
         if (typeof runFilter === 'function') {
             runFilter();
-            Lib.info('highlight', 'Filter highlights restored via runFilter()');
+            Lib.debug('highlight', 'Filter highlights restored via runFilter()');
         } else {
             Lib.warn('highlight', 'runFilter function not available');
         }
@@ -6887,7 +6888,7 @@ Press Escape on that notice to cancel the auto-action.
     stopBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        Lib.info('cleanup', 'Stop requested by user.');
+        Lib.debug('cleanup', 'Stop requested by user.');
         stopRequested = true;
         stopBtn.disabled = true;
         stopBtn.textContent = 'Stopping...';
@@ -6954,7 +6955,7 @@ Press Escape on that notice to cancel the auto-action.
         });
 
         if (indicesToRemove.length > 0) {
-            Lib.info('cleanup', `Removing ${indicesToRemove.length} columns from table.`);
+            Lib.debug('cleanup', `Removing ${indicesToRemove.length} columns from table.`);
             // Sort descending to ensure index stability during deletion
             indicesToRemove.sort((a, b) => b - a).forEach(idx => {
                 const colName = theadRow.cells[idx]?.textContent.trim() || `index ${idx}`;
@@ -7276,7 +7277,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // Reload the page if a fetch process has already run to fix column-level filter unresponsiveness
         if (isLoaded) {
-            Lib.info('meta', 'Second fetch attempt detected. Setting reload flag and reloading page to ensure filter stability.');
+            Lib.debug('meta', 'Second fetch attempt detected. Setting reload flag and reloading page to ensure filter stability.');
             sessionStorage.setItem('mb_show_all_reload_pending', 'true');
             window.location.reload();
             return;
@@ -7311,22 +7312,22 @@ Press Escape on that notice to cancel the auto-action.
         activeBtn.style.color = 'black';
 
         // Removed isLoaded block to allow re-fetching
-        Lib.info('fetch', 'Starting fetch process...', overrideParams);
+        Lib.debug('fetch', 'Starting fetch process...', overrideParams);
         globalStatusDisplay.textContent = 'Getting number of pages to fetch...';
         let maxPage = 1;
 
         // Determine maxPage based on context
         if (activeDefinition && activeDefinition.non_paginated) {
             // For non-paginated types, initially assume maxPage is 1
-            Lib.info('fetch', 'Context: Non-paginated page definition. Initially assuming maxPage = 1.');
+            Lib.debug('fetch', 'Context: Non-paginated page definition. Initially assuming maxPage = 1.');
             maxPage = 1;
             globalStatusDisplay.textContent = 'Getting number of pages to fetch... Non-paginated page definition. Initially assuming 1';
         } else if (overrideParams) {
-            Lib.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
+            Lib.debug('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
             maxPage = await fetchMaxPageGeneric(path, overrideParams);
             globalStatusDisplay.textContent = `Getting number of pages to fetch... Paginated page definition extracted from URL with queryParameters: ${maxPage}`;
         } else {
-            Lib.info('fetch', 'Context: Paginated page definition. Fetching maxPage from DOM.');
+            Lib.debug('fetch', 'Context: Paginated page definition. Fetching maxPage from DOM.');
             maxPage = determineMaxPageFromDOM();
             globalStatusDisplay.textContent = `Getting number of pages to fetch... Paginated page definition. Fetching maxPage from DOM: ${maxPage}`;
         }
@@ -7389,7 +7390,7 @@ Press Escape on that notice to cancel the auto-action.
         try {
             for (let p = 1; p <= maxPage; p++) {
                 if (stopRequested) {
-                    Lib.info('cleanup', 'Fetch loop stopped at page ' + p);
+                    Lib.debug('cleanup', 'Fetch loop stopped at page ' + p);
                     break;
                 }
                 pagesProcessed++;
@@ -7409,10 +7410,10 @@ Press Escape on that notice to cancel the auto-action.
                     // If this page matches the current browser page and no specific overrides are requested, use the
                     // existing document instead of a redundant network fetch.
                     if (p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
-                        Lib.info('fetch', `Page ${p} is current page. Using existing document.`);
+                        Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
                         doc = document;
                    } else {
-                        Lib.info('fetch', `Fetching URL for page ${p}: ${fetchUrl.toString()}`);
+                        Lib.debug('fetch', `Fetching URL for page ${p}: ${fetchUrl.toString()}`);
                         const html = await fetchHtml(fetchUrl.toString());
                         doc = new DOMParser().parseFromString(html, "text/html");
                     }
@@ -7864,7 +7865,7 @@ Press Escape on that notice to cancel the auto-action.
                 globalStatusDisplay.style.color = progress >= 1.0 ? 'green' : (progress >= 0.5 ? 'orange' : '#c00');
 
                 // Detailed statistics per page fetch
-                Lib.info('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
+                Lib.debug('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
 
                 if (activeDefinition.tableMode === 'multi') {
                     const summaryParts = groupedRows.map(g => {
@@ -7889,7 +7890,7 @@ Press Escape on that notice to cancel the auto-action.
 
                 if (userChoice === 'save') {
                     // User chose to save directly without rendering
-                    Lib.info('cache', 'User chose to save data directly without rendering.');
+                    Lib.debug('cache', 'User chose to save data directly without rendering.');
                     globalStatusDisplay.textContent = `Fetched ${totalRows} rows. Saving to disk...`;
 
                     // Mark as loaded so saveTableDataToDisk can proceed
@@ -7907,11 +7908,11 @@ Press Escape on that notice to cancel the auto-action.
                     globalStatusDisplay.textContent = `Fetched ${pagesProcessed} ${pageLabel} (${totalRows} rows) in ${fetchSeconds}s - Saved to disk without rendering`;
                     globalStatusDisplay.style.color = 'green';
 
-                    Lib.info('success', `Process complete. Data saved without rendering. Row Count: ${totalRows}. Fetch Time: ${fetchSeconds}s`);
+                    Lib.debug('success', `Process complete. Data saved without rendering. Row Count: ${totalRows}. Fetch Time: ${fetchSeconds}s`);
                     return; // Exit without rendering
                 } else if (userChoice === 'cancel') {
                     // User cancelled
-                    Lib.info('cache', 'User cancelled the operation.');
+                    Lib.debug('cache', 'User cancelled the operation.');
                     activeBtn.disabled = false;
                     activeBtn.classList.remove('mb-show-all-btn-loading');
                     allActionButtons.forEach(b => b.disabled = false);
@@ -8034,7 +8035,7 @@ Press Escape on that notice to cancel the auto-action.
             const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
             globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows) from MusicBrainz backend database, Fetching time: ${fetchSeconds}s`;
 
-            Lib.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
+            Lib.debug('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
             Lib.error('fetch', 'Critical Error during fetch:', err);
             globalStatusDisplay.textContent = 'Error during load… (repress the "Show all" button)';
@@ -8052,7 +8053,7 @@ Press Escape on that notice to cancel the auto-action.
      */
     async function renderFinalTable(rows) {
         const rowCount = Array.isArray(rows) ? rows.length : 0;
-        Lib.info('render', `Starting renderFinalTable with ${rowCount} rows.`);
+        Lib.debug('render', `Starting renderFinalTable with ${rowCount} rows.`);
 
         const tbody = document.querySelector('table.tbl tbody');
         if (!tbody) {
@@ -8082,7 +8083,7 @@ Press Escape on that notice to cancel the auto-action.
         // For small datasets, use fast simple append
         if (chunkThreshold === 0 || rowCount < chunkThreshold) {
             rows.forEach(r => tbody.appendChild(r));
-            Lib.info('render', `Fast render: Injected ${rowCount} rows into DOM.`);
+            Lib.debug('render', `Fast render: Injected ${rowCount} rows into DOM.`);
         } else {
             // For large datasets, use chunked async rendering with progress
             await renderRowsChunked(tbody, rows, 'single');
@@ -8106,7 +8107,7 @@ Press Escape on that notice to cancel the auto-action.
         const chunkSize = 500; // Render 500 rows at a time
         const chunks = Math.ceil(totalRows / chunkSize);
 
-        Lib.info('render', `Chunked render: ${totalRows} rows in ${chunks} chunks of ${chunkSize}`);
+        Lib.debug('render', `Chunked render: ${totalRows} rows in ${chunks} chunks of ${chunkSize}`);
 
         // Show progress indicator
         const progressMsg = document.createElement('div');
@@ -8154,7 +8155,7 @@ Press Escape on that notice to cancel the auto-action.
         // Remove progress indicator
         document.body.removeChild(progressMsg);
 
-        Lib.info('render', `Chunked render complete: ${totalRows} rows rendered in ${chunks} chunks.`);
+        Lib.debug('render', `Chunked render complete: ${totalRows} rows rendered in ${chunks} chunks.`);
     }
 
     /**
@@ -8165,7 +8166,7 @@ Press Escape on that notice to cancel the auto-action.
      * @returns {Promise<void>}
      */
     async function renderGroupedTable(dataArray, isArtistMain, query = '') {
-        Lib.info('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}"`);
+        Lib.debug('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}"`);
 
         const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
         if (!container) {
@@ -8176,7 +8177,7 @@ Press Escape on that notice to cancel the auto-action.
         let templateHead = null;
         const firstTable = document.querySelector('table.tbl');
         if (firstTable && firstTable.tHead) {
-            Lib.info('render', 'Cloning table head for template.');
+            Lib.debug('render', 'Cloning table head for template.');
             templateHead = firstTable.tHead.cloneNode(true);
             cleanupHeaders(templateHead);
         } else {
@@ -8203,18 +8204,18 @@ Press Escape on that notice to cancel the auto-action.
         let targetH2Name = targetHeader ? targetHeader.textContent.trim().substring(0, 30) : 'Unknown';
 
         if (!query) {
-            Lib.info('render', 'No query provided; performing initial cleanup of existing elements.');
+            Lib.debug('render', 'No query provided; performing initial cleanup of existing elements.');
             // Updated cleanup: remove H3s and tables, but NEVER remove H3s containing 'span.worklink'
             container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => {
                 if (el.tagName === 'H3' && el.querySelector('span.worklink')) {
-                    Lib.info('render', 'Skipping removal of H3 containing worklink.');
+                    Lib.debug('render', 'Skipping removal of H3 containing worklink.');
                     return;
                 }
                 el.remove();
             });
 
             if (targetHeader) {
-                Lib.info('render', ` Injecting master toggle and filter container after target header ${targetH2Name}.`);
+                Lib.debug('render', ` Injecting master toggle and filter container after target header ${targetH2Name}.`);
                 const masterToggle = document.createElement('span');
                 masterToggle.className = 'mb-master-toggle';
 
@@ -8224,7 +8225,7 @@ Press Escape on that notice to cancel the auto-action.
                 showSpan.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    Lib.info('render', 'Master toggle: Showing all tables.');
+                    Lib.debug('render', 'Master toggle: Showing all tables.');
                     container.querySelectorAll('table.tbl').forEach(t => t.style.display = '');
                     container.querySelectorAll('.mb-toggle-h3').forEach(h => {
                         const icon = h.querySelector('.mb-toggle-icon');
@@ -8238,7 +8239,7 @@ Press Escape on that notice to cancel the auto-action.
                 hideSpan.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    Lib.info('render', 'Master toggle: Hiding all tables.');
+                    Lib.debug('render', 'Master toggle: Hiding all tables.');
                     container.querySelectorAll('table.tbl').forEach(t => t.style.display = 'none');
                     container.querySelectorAll('.mb-toggle-h3').forEach(h => {
                         const icon = h.querySelector('.mb-toggle-icon');
@@ -8267,7 +8268,7 @@ Press Escape on that notice to cancel the auto-action.
         const existingTables = container.querySelectorAll('table.tbl');
 
         if (query) {
-            Lib.info('render', `Filtering: Cleaning up overflow tables beyond data length (${dataArray.length}).`);
+            Lib.debug('render', `Filtering: Cleaning up overflow tables beyond data length (${dataArray.length}).`);
             existingTables.forEach((table, idx) => {
                 if (idx >= dataArray.length) {
                     const h3 = table.previousElementSibling;
@@ -8283,10 +8284,10 @@ Press Escape on that notice to cancel the auto-action.
         dataArray.forEach((group, index) => {
             // Defensive check: ensure category exists
             const categoryName = group.category || group.key || 'Unknown';
-            Lib.info('render', `Processing group: "${categoryName}" with ${group.rows.length} rows.`);
+            Lib.debug('render', `Processing group: "${categoryName}" with ${group.rows.length} rows.`);
             let table, h3, tbody;
             if (query && existingTables[index]) {
-                Lib.info('render', `Reusing existing table at index ${index} for group "${categoryName}".`);
+                Lib.debug('render', `Reusing existing table at index ${index} for group "${categoryName}".`);
                 table = existingTables[index];
                 h3 = table.previousElementSibling;
                 tbody = table.querySelector('tbody');
@@ -8294,7 +8295,7 @@ Press Escape on that notice to cancel the auto-action.
 
                 // Ensure sub-table controls exist even when reusing h3
                 if (h3 && !h3.querySelector('.mb-subtable-controls')) {
-                    Lib.info('render', `Adding missing sub-table controls to existing h3 for "${categoryName}"`);
+                    Lib.debug('render', `Adding missing sub-table controls to existing h3 for "${categoryName}"`);
                     const subTableControls = document.createElement('span');
                     subTableControls.className = 'mb-subtable-controls';
 
@@ -8316,7 +8317,7 @@ Press Escape on that notice to cancel the auto-action.
                     h3.appendChild(subTableControls);
                 }
             } else {
-                Lib.info('render', `Creating new table and H3 for group "${categoryName}".`);
+                Lib.debug('render', `Creating new table and H3 for group "${categoryName}".`);
                 h3 = document.createElement('h3');
                 h3.className = 'mb-toggle-h3';
                 h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)';
@@ -8357,7 +8358,7 @@ Press Escape on that notice to cancel the auto-action.
                 const catLower = categoryName.toLowerCase();
                 const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < Lib.settings.sa_auto_expand;
                 table.style.display = shouldStayOpen ? '' : 'none';
-                Lib.info('render', `Group "${categoryName}" auto-expand status: ${shouldStayOpen}`);
+                Lib.debug('render', `Group "${categoryName}" auto-expand status: ${shouldStayOpen}`);
 
                 // Ensure the H3 text reflects the unique name established during fetching and Capitalize the first or second character
                 let h3DisplayName = categoryName;
@@ -8466,7 +8467,7 @@ Press Escape on that notice to cancel the auto-action.
                     } else {
                         // Normal click: Toggle just this h3
                         const isHidden = table.style.display === 'none';
-                        Lib.info('render', `Toggling table for "${categoryName}". New state: ${isHidden ? 'visible' : 'hidden'}`);
+                        Lib.debug('render', `Toggling table for "${categoryName}". New state: ${isHidden ? 'visible' : 'hidden'}`);
                         table.style.display = isHidden ? '' : 'none';
                         h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
                     }
@@ -8482,7 +8483,7 @@ Press Escape on that notice to cancel the auto-action.
 
                 // Ensure sub-table controls exist (they may be missing if table was created during initial filter)
                 if (!h3.querySelector('.mb-subtable-controls')) {
-                    Lib.info('render', `Adding missing sub-table controls during filtering for "${categoryName}"`);
+                    Lib.debug('render', `Adding missing sub-table controls during filtering for "${categoryName}"`);
                     const subTableControls = document.createElement('span');
                     subTableControls.className = 'mb-subtable-controls';
 
@@ -8505,7 +8506,7 @@ Press Escape on that notice to cancel the auto-action.
                 }
             }
         });
-        Lib.info('render', 'Finished renderGroupedTable.');
+        Lib.debug('render', 'Finished renderGroupedTable.');
 
         // Show the save button now that data is rendered
         if (Lib.settings.sa_enable_save_load) {
@@ -8885,7 +8886,7 @@ Press Escape on that notice to cancel the auto-action.
                                 }
                             }
 
-                            Lib.info('sort', `Sort completed in ${durationMs}ms for ${rowCount} rows`);
+                            Lib.debug('sort', `Sort completed in ${durationMs}ms for ${rowCount} rows`);
 
                         } catch (error) {
                             Lib.error('sort', 'Error during sort:', error);
@@ -8965,9 +8966,9 @@ Press Escape on that notice to cancel the auto-action.
         }
 
         if (totalRemoved > 0) {
-            Lib.info('cleanup', `Final cleanup complete: Removed a total of ${totalRemoved} consecutive <br> tags across ${instancesFound} locations.`);
+            Lib.debug('cleanup', `Final cleanup complete: Removed a total of ${totalRemoved} consecutive <br> tags across ${instancesFound} locations.`);
         } else {
-            Lib.info('cleanup', 'Final cleanup complete: No consecutive <br> tags found.');
+            Lib.debug('cleanup', 'Final cleanup complete: No consecutive <br> tags found.');
         }
     }
 
@@ -8978,7 +8979,7 @@ Press Escape on that notice to cancel the auto-action.
      * Designed to be easily expandable for future UI cleanup requirements.
      */
     function cleanupAfterInitialLoad() {
-        Lib.info('cleanup', 'Running cleanup after initial data load from disk...');
+        Lib.debug('cleanup', 'Running cleanup after initial data load from disk...');
 
         // 1. Remove pagination elements
         const paginationElements = document.querySelectorAll('ul.pagination, nav.pagination, .pageselector');
@@ -9033,7 +9034,7 @@ Press Escape on that notice to cancel the auto-action.
      * Serializes current table data (allRows or groupedRows) to JSON and triggers download
      */
     function saveTableDataToDisk() {
-        Lib.info('cache', 'Starting table data serialization...');
+        Lib.debug('cache', 'Starting table data serialization...');
 
         if (!isLoaded) {
             alert('No data loaded yet. Please fetch data first before saving.');
@@ -9084,7 +9085,7 @@ Press Escape on that notice to cancel the auto-action.
                     })
                 }));
                 dataToSave.rowCount = groupedRows.reduce((sum, g) => sum + g.rows.length, 0);
-                Lib.info('cache', `Serialized ${dataToSave.groups.length} groups with ${dataToSave.rowCount} total rows.`);
+                Lib.debug('cache', `Serialized ${dataToSave.groups.length} groups with ${dataToSave.rowCount} total rows.`);
             } else if (allRows.length > 0) {
                 // Single-table mode: serialize allRows
                 dataToSave.rows = allRows.map(row => {
@@ -9095,7 +9096,7 @@ Press Escape on that notice to cancel the auto-action.
                     }));
                 });
                 dataToSave.rowCount = allRows.length;
-                Lib.info('cache', `Serialized ${dataToSave.rowCount} rows.`);
+                Lib.debug('cache', `Serialized ${dataToSave.rowCount} rows.`);
             } else {
                 alert('No table data available to save.');
                 return;
@@ -9113,7 +9114,7 @@ Press Escape on that notice to cancel the auto-action.
             const compressedSize = compressedData.length;
             const compressionRatio = ((1 - compressedSize / originalSize) * 100).toFixed(1);
 
-            Lib.info('cache', `Compression: ${originalSize.toLocaleString()} bytes → ${compressedSize.toLocaleString()} bytes (${compressionRatio}% smaller) in ${compressionTime.toFixed(2)}ms`);
+            Lib.debug('cache', `Compression: ${originalSize.toLocaleString()} bytes → ${compressedSize.toLocaleString()} bytes (${compressionRatio}% smaller) in ${compressionTime.toFixed(2)}ms`);
 
             const blob = new Blob([compressedData], { type: 'application/gzip' });
             const url = URL.createObjectURL(blob);
@@ -9147,7 +9148,7 @@ Press Escape on that notice to cancel the auto-action.
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-        Lib.info('cache', `Data saved to ${filename}`);
+        Lib.debug('cache', `Data saved to ${filename}`);
 
         // --- INFO POPUP TO ALERT USER (WITH FADE OUT) ---
         const infoPopup = document.createElement('div');
@@ -9242,7 +9243,7 @@ Press Escape on that notice to cancel the auto-action.
             }
         }
 
-        Lib.info('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}`);
+        Lib.debug('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}`);
 
         const reader = new FileReader();
 
@@ -9260,7 +9261,7 @@ Press Escape on that notice to cancel the auto-action.
                     const decompressedData = pako.ungzip(compressedData, { to: 'string' });
                     const decompressionTime = performance.now() - startTime;
 
-                    Lib.info('cache', `Decompressed ${compressedData.length.toLocaleString()} bytes → ${decompressedData.length.toLocaleString()} bytes in ${decompressionTime.toFixed(2)}ms`);
+                    Lib.debug('cache', `Decompressed ${compressedData.length.toLocaleString()} bytes → ${decompressedData.length.toLocaleString()} bytes in ${decompressionTime.toFixed(2)}ms`);
                     jsonString = decompressedData;
                 } else {
                     // Plain JSON file
@@ -9287,7 +9288,7 @@ Press Escape on that notice to cancel the auto-action.
                     throw new Error('Invalid data file: missing required fields');
                 }
 
-                Lib.info('cache', `Loaded data version ${data.version} from ${data.timestampReadable} (File total: ${data.rowCount} rows)`);
+                Lib.debug('cache', `Loaded data version ${data.version} from ${data.timestampReadable} (File total: ${data.rowCount} rows)`);
 
                 // Prepare the page for re-hydration
                 performClutterCleanup();
@@ -9491,7 +9492,7 @@ Press Escape on that notice to cancel the auto-action.
                 }
 
                 const rowLabel = loadedRowCount === 1 ? 'row' : 'rows';
-                Lib.info('cache', `Successfully loaded ${loadedRowCount} ${rowLabel} from disk!`);
+                Lib.debug('cache', `Successfully loaded ${loadedRowCount} ${rowLabel} from disk!`);
                 infoDisplay.textContent = `✓ Loaded ${loadedRowCount} ${rowLabel} from file ${file.name} | Active Pre-Filter: ${!!filterQueryRaw}`;
                 infoDisplay.style.color = 'green';
 

@@ -38888,7 +38888,7 @@ In that case the text is rendered after the text e.g. "Loaded 4 pages (400 rows)
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
-the "Toggle hightlightning" button doens't work as it should:
+the "Toggle hightlightning" button doesn't work as it should:
 
 - it actually clears all the highlightning coming from the global filter and the column filters (if there are filter
   expressions added) when pressed first, it also changes color, but it DOESN'T restore the highlightning coming from the
@@ -38899,8 +38899,8 @@ the "Toggle hightlightning" button doens't work as it should:
 It seems the global filter will only ever be cleared but NEVER restored through toggling. The problem is already present
 when loading data directly from the backend database and NOT pre-filtered from the filesystem.
 
-By the way if a global filter is in effect, and a column filter too and both are highlighted and then when I toggle
-everything works.  Now when I press the "Clear all COLUMN filters" button the highlightning of the column filter is
+By the way if a global filter is in effect, and a column filter too, both are highligting rows. When I then toggle,
+everything works. Now when I press the "Clear all COLUMN filters" button the highlightning of the column filter is
 removed, BUT the highlightning because of the still effective global filter is shown again. Maybe this behaviour can
 give you some insights... please try to fix.
 
@@ -39464,6 +39464,20 @@ Instead of every other row changing color, the background color only toggles whe
 Logic: If currentRow.primaryValue !== previousRow.primaryValue, toggle the background class.
 
 Effect: This visually "chunks" the data into groups. You can immediately see where the secondary sort starts and ends for each primary category.
+
+** gemini
+
+fix the issue where the Stripes.js script interferes with alternating row colors during multi-column sorting, the
+script's logic needs to be updated to re-apply (or trigger the re-application of) the even/odd classes after the table
+has been re-sorted and DOM nodes have moved.
+
+Since the original script likely manipulates the table structure without updating the CSS classes ev and odd (the
+standard classes used in MusicBrainz tables), the row colors remain "stuck" to the specific data rows rather than the
+visual position.
+
+Add a function to re-stripe the table and call it at the end of the sorting logic.
+
+please generate complete rewritten source code to the chat window
 
 * TODO sensible defaults for configuration options
 
