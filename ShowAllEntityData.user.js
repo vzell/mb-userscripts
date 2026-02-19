@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.45.0+2026-02-19
+// @version      9.46.0+2026-02-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.46.0+2026-02-19', description: 'Bug fixes: (1) Sort debug log now includes the direction icon (▲/▼/⇅) before the column index, matching the sort-status-display text. (2) Filter status display in single-table mode no longer queries tbody tr count from the DOM after an async chunked render (which only has 500 rows inserted at that point); it now uses filteredRows.length from the in-memory array, giving the correct total immediately. (3) Same fix eliminates the mismatch between the H2 row-count span (correct) and the filter-status-display (was wrong) when a global filter is active after sorting.'},
     {version: '9.45.0+2026-02-19', description: 'UI Polish: (1) Fixed vertical alignment of mb-global-status-display and mb-info-display — both now use display:inline/font-size:0.95em and rely on the parent inline-flex align-items:center instead of carrying their own height/flex context; margin-left on infoDisplay removed since parent gap handles spacing. (2) Removed mb-fetch-progress-container (and its bar/text children) and the never-used timerDisplay span from the h1 controls bar; live per-page fetch progress is now shown in globalStatusDisplay in the subheader instead. (3) Button-group separators: initialDivider (Show-all → Save/Load) is no longer removed by ensureSettingsButtonIsLast so it persists after load; a new mb-button-divider-before-shortcuts span is inserted before 🎹 at initial setup and kept pinned immediately before 🎹 by ensureSettingsButtonIsLast on every subsequent button addition, covering both the Load→🎹 (initial page) and Export→🎹 (after-load) cases.'},
     {version: '9.44.0+2026-02-19', description: 'UI Fix: statusDisplaysContainer is now injected inline into the existing <p class="subheader"> line (present on all non-search pages) so it sits on the same line as the subheader text (e.g. "~Country"). Its left edge is dynamically aligned to the first action button via getBoundingClientRect(); if the subheader text already reaches or passes that point a fixed 10px gap is used instead. On search pages (no subheader) it falls back to a dedicated block line below the h1. A resize listener keeps alignment correct in both modes.'},
     {version: '9.43.0+2026-02-19', description: 'UI Enhancement: statusDisplaysContainer is now always rendered as a block div directly below the h1 header row. Its left edge is dynamically aligned with the first "Show all" action button using getBoundingClientRect() so it tracks any entity-name length. A resize listener keeps alignment correct when the viewport changes. Removed the three separate per-page-type placement branches (search / subheader / fallback) in favour of a single universal strategy.'},
@@ -6712,6 +6713,7 @@ Press Escape on that notice to cancel the auto-action.
                            isCaseSensitive, isRegExp, isExclude, colFilters: [] };
 
         let filteredArray = []; // Declare outside to be accessible in status display
+        let singleTableFilteredCount = 0; // Tracks filtered row count for single-table mode
         if (activeDefinition.tableMode === 'multi') {
             let totalFiltered = 0;
             let totalAbsolute = 0;
@@ -6756,6 +6758,7 @@ Press Escape on that notice to cancel the auto-action.
             const totalAbsolute = allRows.length;
             matchCtx.colFilters = getColFilters(document.querySelector('table.tbl'), isCaseSensitive, isRegExp);
             const filteredRows = allRows.map(row => row.cloneNode(true)).filter(row => testRowMatch(row, matchCtx));
+            singleTableFilteredCount = filteredRows.length; // capture before async render
             renderFinalTable(filteredRows);
             updateH2Count(filteredRows.length, totalAbsolute);
         }
@@ -6767,9 +6770,9 @@ Press Escape on that notice to cancel the auto-action.
         const filterDuration = (filterEndTime - filterStartTime).toFixed(0);
 
         if (filterStatusDisplay) {
-            const rowCount = activeDefinition.tableMode === 'multi' ?
-                filteredArray.reduce((sum, g) => sum + g.rows.length, 0) :
-                document.querySelectorAll('table.tbl tbody tr').length;
+            const rowCount = activeDefinition.tableMode === 'multi'
+                ? filteredArray.reduce((sum, g) => sum + g.rows.length, 0)
+                : singleTableFilteredCount; // use in-memory count; DOM may still be rendering chunks
 
             // Build filter info string
             const filterParts = [];
@@ -8647,8 +8650,9 @@ Press Escape on that notice to cancel the auto-action.
                     // 2. Setup UI Feedback
                     const rowCount = targetRows.length;
                     const showWaitCursor = rowCount > 1000;
+                    const sortDirIcon = targetState === 0 ? '⇅' : (targetState === 1 ? '▲' : '▼');
 
-                    Lib.debug('sort', `Sorting table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}. Row count: ${rowCount}`);
+                    Lib.debug('sort', `Sorting table "${sortKey}" by column: "${colName}" ${sortDirIcon} (index: ${index}) to state ${targetState}. Row count: ${rowCount}`);
 
                     // Update sort status display
                     const sortStatusDisplay = document.getElementById('mb-sort-status-display');

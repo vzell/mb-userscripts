@@ -40177,13 +40177,15 @@ and the same with a filter expression on a column
 
 So we have
 
-+ unfiltered: <h3 header name> (<number of rows filtered by global filter> of <100>) "Show all <number of total rows>" button - GOOD
-+ filtered:   <h3 header name> "Clear all COLUMN filters"-button (<total number of rows filtered> of (100)) "Filtered <n> rows [MB-Name: "<column filter expression>"] "Show all <number of total rows>"-button  - BAD
+- unfiltered: '<h3 header name>' '(<number of rows filtered by global filter> of <100>)' '"Show all <number of total rows>" button' - GOOD
+- filtered:   '<h3 header name>' '(<total number of rows filtered> of (100))' '"Clear all COLUMN filters"-button'  'Filtered <n> rows [MB-Name: "<column filter expression>"]' 'Sorted by....' '"Show all <number of total rows>"-button'  - BAD
 
 I like the filtered outout to be in the following order:
 
-+ filtered:   <h3 header name> (<total number of rows filtered> of (100)) "Show all <number of total rows>"-button "Clear all COLUMN filters"-button (<total number of rows filtered> of (100)) "Filtered <n> rows [MB-Name: "<column filter expression>"] "Filtered <n> rows [MB-Name: "<column filter expression>"]  - GOOD
+- filtered:   '<h3 header name>' '(<total number of rows filtered> of (100))' 'Filtered <n> rows [MB-Name: "<column filter expression>"]' 'Sorted by....' '"Clear all COLUMN filters"-button' '"Show all <number of total rows>"-button' - GOOD
 
+  so basically the two button should come at the end of the h3 header
+  
 * TODO Make the keyboard shortcut prefix configurable itself
 ** DONE initial
 
@@ -40313,3 +40315,5 @@ How can I force the open file dialog, triggered from my own user script to show 
 * Scrollable "Shortcuts menu"
 
 * TODO Is the check for invalid regexp really working
+
+* TODO Render the initial Render time after athe "Fetching" time below h1
