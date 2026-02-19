@@ -6573,7 +6573,7 @@ Press Escape on that notice to cancel the auto-action.
             filterStatusDisplay.style.color = 'orange';
         }
 
-	const isCaseSensitive = caseCheckbox.checked;
+        const isCaseSensitive = caseCheckbox.checked;
         const isRegExp = regexpCheckbox.checked;
         const isExclude = excludeCheckbox.checked;
         const globalQueryRaw = filterInput.value;
@@ -6627,7 +6627,7 @@ Press Escape on that notice to cancel the auto-action.
                     r.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
                         .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
 
-		    // Global match
+                    // Global match
                     let globalHit = !globalQuery;
                     if (!globalHit) {
                         let matchFound = false;
@@ -6666,10 +6666,10 @@ Press Escape on that notice to cancel the auto-action.
                         }
                     }
 
-		    const finalHit = globalHit && colHit;
+                    const finalHit = globalHit && colHit;
                     if (finalHit) {
-			if (globalQuery && !isExclude) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
-			colFilters.forEach(f => highlightText(r, f.val, isCaseSensitive, f.idx, isRegExp));
+                        if (globalQuery && !isExclude) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+                        colFilters.forEach(f => highlightText(r, f.val, isCaseSensitive, f.idx, isRegExp));
                     }
                     return finalHit;
                 });
@@ -6720,7 +6720,7 @@ Press Escape on that notice to cancel the auto-action.
                 row.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
                     .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
 
-		let globalHit = !globalQuery;
+                let globalHit = !globalQuery;
                 if (!globalHit) {
                     let matchFound = false;
                     if (isRegExp && globalRegex) {
@@ -6757,7 +6757,7 @@ Press Escape on that notice to cancel the auto-action.
                     }
                 }
 
-		const finalHit = globalHit && colHit;
+                const finalHit = globalHit && colHit;
                 if (finalHit) {
                     if (globalQuery && !isExclude) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
                     colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
@@ -7253,7 +7253,7 @@ Press Escape on that notice to cancel the auto-action.
             n.replaceWith(document.createTextNode(n.textContent));
         });
 
-	// Clear existing filter conditions and UI highlights for a fresh start
+        // Clear existing filter conditions and UI highlights for a fresh start
         filterInput.value = '';
         filterInput.style.boxShadow = '';
         caseCheckbox.checked = false;
