@@ -5113,6 +5113,16 @@ Press Escape on that notice to cancel the auto-action.
     settingsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; display: inline-flex; align-items: center; justify-content: center;';
     controlsContainer.appendChild(settingsBtn);
 
+    // Add application help button (always visible, right of ⚙️ settings button)
+    const appHelpBtn = document.createElement('button');
+    appHelpBtn.id = 'mb-app-help-btn';
+    appHelpBtn.textContent = '❓';
+    appHelpBtn.title = 'Show application help and feature overview';
+    appHelpBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#78909C; color:white; border:1px solid #607D8B; display: inline-flex; align-items: center; justify-content: center;';
+    appHelpBtn.type = 'button';
+    appHelpBtn.onclick = showAppHelp;
+    controlsContainer.appendChild(appHelpBtn);
+
     // --- Pre-load Filter UI elements ---
     const preFilterContainer = document.createElement('span');
     preFilterContainer.style.cssText = 'display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding-left:6px; border-left:1px solid #ccc; vertical-align:middle; height:24px;';
