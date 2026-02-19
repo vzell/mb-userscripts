@@ -1,0 +1,127 @@
+--- ShowAllEntityData.user.js	2026-02-19 08:27:09.884461432 +0100
++++ ShowAllEntityDataExclude.user.js	2026-02-19 08:27:09.884461432 +0100
+@@ -1,7 +1,7 @@
+ // ==UserScript==
+ // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
+ // @namespace    https://github.com/vzell/mb-userscripts
+-// @version      9.40.0+2026-02-19
++// @version      9.41.0+2026-02-19
+ // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
+ // @author       Gemini (directed by vzell)
+ // @tag          AI generated
+@@ -48,6 +48,7 @@
+ 
+ // CHANGELOG
+ let changelog = [
++    {version: '9.41.0+2026-02-19', description: 'Add new global filter exclusion checkbox.'},
+     {version: '9.40.0+2026-02-19', description: 'Enhancement: Configurable keyboard shortcut prefix. (1) New configSchema section "🎹 KEYBOARD SHORTCUTS" with sa_keyboard_shortcut_prefix setting (default: "Ctrl+M", type: keyboard_shortcut). Accepts any combination like "Ctrl+.", "Alt+X", "Ctrl+Shift+,". (2) Added helper functions parsePrefixShortcut(), getPrefixDisplay(), isPrefixKeyEvent() to centralise prefix parsing and matching. "Ctrl" in the config always matches both Ctrl and Meta/Cmd for cross-platform compatibility. (3) Refactored keydown handler: hardcoded (e.ctrlKey||e.metaKey)&&e.key===\'m\' replaced by isPrefixKeyEvent(e). (4) All button tooltips, tooltip overlay header, shortcuts-help dialog entry, debug log messages, and APP_HELP_TEXT now reflect the configured prefix dynamically via getPrefixDisplay().' },
+     {version: '9.39.0+2026-02-19', description: 'Added ❓ application help button (always visible, right of ⚙️): opens a scrollable popup dialog presenting a full feature overview of the script, closeable via "Close" button or Escape key.' },
+     {version: '9.38.0+2026-02-19', description: 'Fix & Enhancement: (1) "Page Reloaded" popup now positioned below the triggering "Show all" action button after final page render, consistent with other dialogs. (2) "📂 Load Table Data" dialog repositioned below the "📂 Load from Disk" button; added Alt-L shortcut to confirm/load from within the dialog. (3) Fixed OK button focus and Tab keyboard navigation in all custom popup dialogs: removed outline:none from buttons so focus outline is visible, ensuring keyboard navigation between OK and Cancel works. (4) Renamed "⌨️ Shortcuts" button to "🎹"; button is now visible immediately on page entry (before action button click), positioned left of the ⚙️ settings button.' },
+@@ -5292,9 +5293,19 @@
+     regexpLabel.appendChild(document.createTextNode('Rx'));
+     regexpLabel.title = 'RegExp Filtering';
+ 
++    const excludeLabel = document.createElement('label');
++    excludeLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;';
++    const excludeCheckbox = document.createElement('input');
++    excludeCheckbox.type = 'checkbox';
++    excludeCheckbox.style.cssText = 'margin-right: 2px; vertical-align: middle;';
++    excludeLabel.appendChild(excludeCheckbox);
++    excludeLabel.appendChild(document.createTextNode('Ex'));
++    excludeLabel.title = 'Exclude matches (Global Filter)';
++
+     filterContainer.appendChild(filterWrapper);
+     filterContainer.appendChild(caseLabel);
+     filterContainer.appendChild(regexpLabel);
++    filterContainer.appendChild(excludeLabel);
+     filterContainer.appendChild(preFilterMsg);
+ 
+     // Create prefilter toggle button (only visible when data loaded from disk with prefilter)
+@@ -6564,6 +6575,7 @@
+ 
+         const isCaseSensitive = caseCheckbox.checked;
+         const isRegExp = regexpCheckbox.checked;
++        const isExclude = excludeCheckbox.checked;
+         const globalQueryRaw = filterInput.value;
+         const globalQuery = (isCaseSensitive || isRegExp) ? globalQueryRaw : globalQueryRaw.toLowerCase();
+ 
+@@ -6618,18 +6630,20 @@
+                     // Global match
+                     let globalHit = !globalQuery;
+                     if (!globalHit) {
++                        let matchFound = false;
+                         if (isRegExp && globalRegex) {
+                             // For regex patterns, test against each cell individually
+                             // This allows anchored patterns like ^Thunder Road to work correctly
+-                            globalHit = Array.from(r.cells).some(cell => {
++                            matchFound = Array.from(r.cells).some(cell => {
+                                 const cellText = getCleanColumnText(cell);
+                                 return globalRegex.test(cellText);
+                             });
+                         } else {
+                             // For non-regex, test against concatenated row text
+                             const text = getCleanVisibleText(r);
+-                            globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
++                            matchFound = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
+                         }
++                        globalHit = isExclude ? !matchFound : matchFound;
+                     }
+ 
+                     // Column matches
+@@ -6654,7 +6668,7 @@
+ 
+                     const finalHit = globalHit && colHit;
+                     if (finalHit) {
+-                        if (globalQuery) highlightText(r, globalQueryRaw, isCaseSensitive, -1, isRegExp);
++                        if (globalQuery && !isExclude) highlightText(r, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+                         colFilters.forEach(f => highlightText(r, f.val, isCaseSensitive, f.idx, isRegExp));
+                     }
+                     return finalHit;
+@@ -6708,18 +6722,20 @@
+ 
+                 let globalHit = !globalQuery;
+                 if (!globalHit) {
++                    let matchFound = false;
+                     if (isRegExp && globalRegex) {
+                         // For regex patterns, test against each cell individually
+                         // This allows anchored patterns like ^Thunder Road to work correctly
+-                        globalHit = Array.from(row.cells).some(cell => {
++                        matchFound = Array.from(row.cells).some(cell => {
+                             const cellText = getCleanColumnText(cell);
+                             return globalRegex.test(cellText);
+                         });
+                     } else {
+                         // For non-regex, test against concatenated row text
+                         const text = getCleanVisibleText(row);
+-                        globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
++                        matchFound = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
+                     }
++                    globalHit = isExclude ? !matchFound : matchFound;
+                 }
+ 
+                 let colHit = true;
+@@ -6743,7 +6759,7 @@
+ 
+                 const finalHit = globalHit && colHit;
+                 if (finalHit) {
+-                    if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
++                    if (globalQuery && !isExclude) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+                     colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
+                 }
+                 return finalHit;
+@@ -6849,6 +6865,7 @@
+     // Use immediate version for checkbox changes (no typing involved)
+     caseCheckbox.addEventListener('change', runFilter);
+     regexpCheckbox.addEventListener('change', runFilter);
++    excludeCheckbox.addEventListener('change', runFilter);
+ 
+     // Use immediate version for clear button (explicit user action)
+     filterClear.addEventListener('click', () => {
+@@ -7240,6 +7257,7 @@
+         filterInput.value = '';
+         filterInput.style.boxShadow = '';
+         caseCheckbox.checked = false;
++        excludeCheckbox.checked = false;
+         document.querySelectorAll('.mb-col-filter-input').forEach(inp => {
+             inp.value = '';
+             inp.style.boxShadow = '';
