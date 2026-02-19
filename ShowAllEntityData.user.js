@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.41.0+2026-02-19
+// @version      9.42.0+2026-02-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.42.0+2026-02-19', description: 'Refactor: Extract getColFilters() and testRowMatch() helpers to eliminate duplicated row-matching logic shared between multi-table and single-table branches of runFilter().'},
     {version: '9.41.0+2026-02-19', description: 'Add new global filter exclusion checkbox.'},
     {version: '9.40.0+2026-02-19', description: 'Enhancement: Configurable keyboard shortcut prefix. (1) New configSchema section "🎹 KEYBOARD SHORTCUTS" with sa_keyboard_shortcut_prefix setting (default: "Ctrl+M", type: keyboard_shortcut). Accepts any combination like "Ctrl+.", "Alt+X", "Ctrl+Shift+,". (2) Added helper functions parsePrefixShortcut(), getPrefixDisplay(), isPrefixKeyEvent() to centralise prefix parsing and matching. "Ctrl" in the config always matches both Ctrl and Meta/Cmd for cross-platform compatibility. (3) Refactored keydown handler: hardcoded (e.ctrlKey||e.metaKey)&&e.key===\'m\' replaced by isPrefixKeyEvent(e). (4) All button tooltips, tooltip overlay header, shortcuts-help dialog entry, debug log messages, and APP_HELP_TEXT now reflect the configured prefix dynamically via getPrefixDisplay().' },
     {version: '9.39.0+2026-02-19', description: 'Added ❓ application help button (always visible, right of ⚙️): opens a scrollable popup dialog presenting a full feature overview of the script, closeable via "Close" button or Escape key.' },
@@ -6560,6 +6561,98 @@ Press Escape on that notice to cancel the auto-action.
     }
 
     /**
+     * Reads column filter inputs from a table, applies the active boxShadow indicator,
+     * and returns a ready-to-use colFilters array (empty array when table is null).
+     *
+     * @param {HTMLElement|null} table         - The <table> element containing .mb-col-filter-input elements.
+     * @param {boolean}          isCaseSensitive
+     * @param {boolean}          isRegExp
+     * @returns {{ val: string, idx: number }[]}
+     */
+    function getColFilters(table, isCaseSensitive, isRegExp) {
+        if (!table) return [];
+        return Array.from(table.querySelectorAll('.mb-col-filter-input'))
+            .map(inp => {
+                inp.style.boxShadow = inp.value ? '0 0 2px 2px green' : '';
+                return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
+            })
+            .map(f => ({ val: (isCaseSensitive || isRegExp) ? f.raw : f.raw.toLowerCase(), idx: f.idx }))
+            .filter(f => f.val);
+    }
+
+    /**
+     * Tests whether a single (already-cloned) row passes the current global + column filters.
+     * Resets previous highlight markup, applies fresh highlights on a hit, and returns the result.
+     *
+     * @param {HTMLTableRowElement} row
+     * @param {{
+     *   globalQuery:    string,
+     *   globalQueryRaw: string,
+     *   globalRegex:    RegExp|null,
+     *   isCaseSensitive: boolean,
+     *   isRegExp:       boolean,
+     *   isExclude:      boolean,
+     *   colFilters:     { val: string, idx: number }[]
+     * }} ctx
+     * @returns {boolean}
+     */
+    function testRowMatch(row, ctx) {
+        const { globalQuery, globalQueryRaw, globalRegex,
+                isCaseSensitive, isRegExp, isExclude, colFilters } = ctx;
+
+        // Reset previous highlights (critical for correct re-filtering)
+        row.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
+            .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+
+        // --- Global filter ---
+        let globalHit = !globalQuery;
+        if (!globalHit) {
+            let matchFound = false;
+            if (isRegExp && globalRegex) {
+                // Test each cell individually so anchored patterns like ^Thunder Road work correctly
+                matchFound = Array.from(row.cells).some(cell =>
+                    globalRegex.test(getCleanColumnText(cell))
+                );
+            } else {
+                const text = getCleanVisibleText(row);
+                matchFound = isCaseSensitive
+                    ? text.includes(globalQuery)
+                    : text.toLowerCase().includes(globalQuery);
+            }
+            globalHit = isExclude ? !matchFound : matchFound;
+        }
+
+        // --- Column filters ---
+        let colHit = true;
+        for (const f of colFilters) {
+            const cellText = getCleanColumnText(row.cells[f.idx]);
+            let match = false;
+            if (isRegExp) {
+                try {
+                    match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
+                } catch (e) {
+                    match = isCaseSensitive
+                        ? cellText.includes(f.val)
+                        : cellText.toLowerCase().includes(f.val);
+                }
+            } else {
+                match = isCaseSensitive
+                    ? cellText.includes(f.val)
+                    : cellText.toLowerCase().includes(f.val);
+            }
+            if (!match) { colHit = false; break; }
+        }
+
+        const finalHit = globalHit && colHit;
+        if (finalHit) {
+            // Highlighting on excluded matches would be misleading, so skip it
+            if (globalQuery && !isExclude) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+            colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
+        }
+        return finalHit;
+    }
+
+    /**
      * Executes the filtering logic across all table rows based on global and column-specific filters
      * Handles both single-table and multi-table page modes, applies highlighting, and updates row visibility
      */
@@ -6599,6 +6692,10 @@ Press Escape on that notice to cancel the auto-action.
 
         Lib.debug('filter', 'runFilter(): active element =', __activeEl?.className || '(none)');
 
+        // Shared context object passed to testRowMatch()
+        const matchCtx = { globalQuery, globalQueryRaw, globalRegex,
+                           isCaseSensitive, isRegExp, isExclude, colFilters: [] };
+
         let filteredArray = []; // Declare outside to be accessible in status display
         if (activeDefinition.tableMode === 'multi') {
             let totalFiltered = 0;
@@ -6610,69 +6707,8 @@ Press Escape on that notice to cancel the auto-action.
 
             groupedRows.forEach((group, groupIdx) => {
                 totalAbsolute += group.rows.length;
-                const table = tables[groupIdx];
-                const colFiltersRaw = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
-                    .map(inp => {
-                        // Apply colored box to column filter if active
-                        inp.style.boxShadow = inp.value ? '0 0 2px 2px green' : '';
-                        return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
-                    }) : [];
-
-                const colFilters = colFiltersRaw
-                    .map(f => ({ val: (isCaseSensitive || isRegExp) ? f.raw : f.raw.toLowerCase(), idx: f.idx }))
-                    .filter(f => f.val);
-
-                const matches = group.rows.map(r => r.cloneNode(true)).filter(r => {
-                    // Reset previous highlights (critical for correct filtering)
-                    r.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
-                        .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
-
-                    // Global match
-                    let globalHit = !globalQuery;
-                    if (!globalHit) {
-                        let matchFound = false;
-                        if (isRegExp && globalRegex) {
-                            // For regex patterns, test against each cell individually
-                            // This allows anchored patterns like ^Thunder Road to work correctly
-                            matchFound = Array.from(r.cells).some(cell => {
-                                const cellText = getCleanColumnText(cell);
-                                return globalRegex.test(cellText);
-                            });
-                        } else {
-                            // For non-regex, test against concatenated row text
-                            const text = getCleanVisibleText(r);
-                            matchFound = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
-                        }
-                        globalHit = isExclude ? !matchFound : matchFound;
-                    }
-
-                    // Column matches
-                    let colHit = true;
-                    for (const f of colFilters) {
-                        const cellText = getCleanColumnText(r.cells[f.idx]);
-                        let match = false;
-                        if (isRegExp) {
-                            try {
-                                match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
-                            } catch (e) {
-                                match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
-                            }
-                        } else {
-                            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
-                        }
-                        if (!match) {
-                            colHit = false;
-                            break;
-                        }
-                    }
-
-                    const finalHit = globalHit && colHit;
-                    if (finalHit) {
-                        if (globalQuery && !isExclude) highlightText(r, globalQueryRaw, isCaseSensitive, -1, isRegExp);
-                        colFilters.forEach(f => highlightText(r, f.val, isCaseSensitive, f.idx, isRegExp));
-                    }
-                    return finalHit;
-                });
+                matchCtx.colFilters = getColFilters(tables[groupIdx], isCaseSensitive, isRegExp);
+                const matches = group.rows.map(r => r.cloneNode(true)).filter(r => testRowMatch(r, matchCtx));
 
                 // Always push to filteredArray, even if matches.length is 0, to maintain the table count and restoration capability
                 filteredArray.push({ category: group.category || group.key || 'Unknown', rows: matches });
@@ -6703,67 +6739,8 @@ Press Escape on that notice to cancel the auto-action.
             updateH2Count(totalFiltered, totalAbsolute);
         } else {
             const totalAbsolute = allRows.length;
-            const table = document.querySelector('table.tbl');
-            const colFiltersRaw = table ? Array.from(table.querySelectorAll('.mb-col-filter-input'))
-                .map(inp => {
-                    // Apply green box to column filter if active
-                    inp.style.boxShadow = inp.value ? '0 0 2px 2px green' : '';
-                    return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
-                }) : [];
-
-            const colFilters = colFiltersRaw
-                .map(f => ({ val: (isCaseSensitive || isRegExp) ? f.raw : f.raw.toLowerCase(), idx: f.idx }))
-                .filter(f => f.val);
-
-            const filteredRows = allRows.map(row => row.cloneNode(true)).filter(row => {
-                // Reset previous highlights
-                row.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
-                    .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
-
-                let globalHit = !globalQuery;
-                if (!globalHit) {
-                    let matchFound = false;
-                    if (isRegExp && globalRegex) {
-                        // For regex patterns, test against each cell individually
-                        // This allows anchored patterns like ^Thunder Road to work correctly
-                        matchFound = Array.from(row.cells).some(cell => {
-                            const cellText = getCleanColumnText(cell);
-                            return globalRegex.test(cellText);
-                        });
-                    } else {
-                        // For non-regex, test against concatenated row text
-                        const text = getCleanVisibleText(row);
-                        matchFound = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
-                    }
-                    globalHit = isExclude ? !matchFound : matchFound;
-                }
-
-                let colHit = true;
-                for (const f of colFilters) {
-                    const cellText = getCleanColumnText(row.cells[f.idx]);
-                    let match = false;
-                    if (isRegExp) {
-                        try {
-                            match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
-                        } catch (e) {
-                            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
-                        }
-                    } else {
-                        match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
-                    }
-                    if (!match) {
-                        colHit = false;
-                        break;
-                    }
-                }
-
-                const finalHit = globalHit && colHit;
-                if (finalHit) {
-                    if (globalQuery && !isExclude) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
-                    colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
-                }
-                return finalHit;
-            });
+            matchCtx.colFilters = getColFilters(document.querySelector('table.tbl'), isCaseSensitive, isRegExp);
+            const filteredRows = allRows.map(row => row.cloneNode(true)).filter(row => testRowMatch(row, matchCtx));
             renderFinalTable(filteredRows);
             updateH2Count(filteredRows.length, totalAbsolute);
         }
