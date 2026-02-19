@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.36.0+2026-02-19
+// @version      9.38.0+2026-02-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,7 +48,7 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '9.37.0+2026-02-19', description: 'The "Load from Disk" option now defaults to Gzipped files (*.gz).' },
+    {version: '9.38.0+2026-02-19', description: 'Fix & Enhancement: (1) "Page Reloaded" popup now positioned below the triggering "Show all" action button after final page render, consistent with other dialogs. (2) "📂 Load Table Data" dialog repositioned below the "📂 Load from Disk" button; added Alt-L shortcut to confirm/load from within the dialog. (3) Fixed OK button focus and Tab keyboard navigation in all custom popup dialogs: removed outline:none from buttons so focus outline is visible, ensuring keyboard navigation between OK and Cancel works. (4) Renamed "⌨️ Shortcuts" button to "🎹"; button is now visible immediately on page entry (before action button click), positioned left of the ⚙️ settings button.' },
     {version: '9.36.0+2026-02-19', description: 'Reordered source code: configuration and pageType definitions at the beginning of the file.' },
     {version: '9.35.0+2026-02-18', description: 'Enhancement: Replaced three native browser dialogs with custom styled implementations. (1) Page reload alert: custom dialog when MusicBrainz page is reloaded for filter stability. (2) High page count warning: custom confirm dialog instead of native when entity has more pages than configured threshold - user can proceed or cancel with keyboard support (Enter=proceed, Escape=cancel). (3) Page type mismatch: custom confirm dialog when loading file from different page type with clear warning and user choice. (4) Invalid regex alert: custom alert for invalid regex pattern in load filter. All custom dialogs match userscript styling (white background, button styling, centered, shadow, z-index 10001), support keyboard shortcuts (Enter=OK, Escape=Cancel), and auto-focus OK button for accessibility.'},
     {version: '9.34.0+2026-02-18', description: 'Enhancement: Comprehensive Ctrl-M Emacs-style keybinding system with tooltip. (1) Press Ctrl-M and release to enter mode, then press key: 1-9 select action buttons, a-z select additional buttons (up to 35). (2) Function shortcuts: r=Auto-Resize, t=Stats Panel, s=Save to Disk, d=Density, v=Visible Columns, e=Export, l=Load from Disk, ?=Show Help. (3) Configurable tooltip (default enabled) displays all available shortcuts when Ctrl-M is pressed, positioned in upper right of content div without overlapping sidebar. (4) Underlined keyboard shortcuts in button text for visual reference. (5) Tooltip auto-hides when mode exits (Escape, timeout, or selection). (6) Extended key support (1-9, a-z, A-Z, ,;.:-_+*<>#\'?!%&/()=) for future extensions.'},
@@ -456,16 +456,10 @@ let changelog = [
 
     //--------------------------------------------------------------------------------
 
-    // Check if we just reloaded to fix the filter issue
+    // Check if we just reloaded to fix the filter issue — dialog shown later, after buttons are in DOM
     const reloadFlag = sessionStorage.getItem('mb_show_all_reload_pending');
     if (reloadFlag) {
         sessionStorage.removeItem('mb_show_all_reload_pending');
-        const firstShowAllBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
-        showCustomAlert(
-            'The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.',
-            '⚠️ Page Reloaded',
-            firstShowAllBtn || null
-        );
     }
 
     const currentUrl = new URL(window.location.href);
@@ -1632,6 +1626,12 @@ let changelog = [
             controlsContainer.appendChild(settingsBtn);
         }
 
+        // Ensure 🎹 shortcuts button is immediately before ⚙️ settings button
+        const shortcutsBtn = document.getElementById('mb-shortcuts-help-btn');
+        if (shortcutsBtn && shortcutsBtn.nextSibling !== settingsBtn) {
+            controlsContainer.insertBefore(shortcutsBtn, settingsBtn);
+        }
+
         // Add divider between Load from Disk and Auto-Resize if not already present
         const loadBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Load from Disk'));
         const resizeBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Auto-Resize') || btn.textContent.includes('Restore Width'));
@@ -2678,7 +2678,6 @@ let changelog = [
                 font-size: 1.05em;
                 font-weight: 500;
                 transition: background-color 0.2s;
-                outline: none;
             `;
             okBtn.onmouseover = () => { okBtn.style.backgroundColor = '#45a049'; };
             okBtn.onmouseout = () => { okBtn.style.backgroundColor = '#4CAF50'; };
@@ -2789,7 +2788,6 @@ let changelog = [
                 font-size: 1.05em;
                 font-weight: 500;
                 transition: background-color 0.2s;
-                outline: none;
             `;
             cancelBtn.onmouseover = () => { cancelBtn.style.backgroundColor = '#e0e0e0'; };
             cancelBtn.onmouseout = () => { cancelBtn.style.backgroundColor = '#f0f0f0'; };
@@ -2813,7 +2811,6 @@ let changelog = [
                 font-size: 1.05em;
                 font-weight: 500;
                 transition: background-color 0.2s;
-                outline: none;
             `;
             okBtn.onmouseover = () => { okBtn.style.backgroundColor = '#45a049'; };
             okBtn.onmouseout = () => { okBtn.style.backgroundColor = '#4CAF50'; };
@@ -3337,21 +3334,27 @@ let changelog = [
             return;
         }
 
-        // Check if button already exists
-        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Shortcuts'));
-        if (existingBtn) {
+        // Check if button already exists (by id set at initial render)
+        if (document.getElementById('mb-shortcuts-help-btn')) {
             Lib.info('ui', 'Shortcuts help button already exists, skipping');
             return;
         }
 
         const helpBtn = document.createElement('button');
-        helpBtn.textContent = '⌨️ Shortcuts';
+        helpBtn.id = 'mb-shortcuts-help-btn';
+        helpBtn.textContent = '🎹';
         helpBtn.title = 'Show keyboard shortcuts (or press ?)';
-        helpBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
+        helpBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
         helpBtn.type = 'button';
         helpBtn.onclick = showShortcutsHelp;
 
-        controlsContainer.appendChild(helpBtn);
+        // Insert before the settings button so 🎹 stays to its left
+        const settingsBtn = controlsContainer.querySelector('button[title*="Open settings manager"]');
+        if (settingsBtn) {
+            controlsContainer.insertBefore(helpBtn, settingsBtn);
+        } else {
+            controlsContainer.appendChild(helpBtn);
+        }
         Lib.info('ui', 'Keyboard shortcuts help button added to controls');
         ensureSettingsButtonIsLast();
     }
@@ -4710,7 +4713,7 @@ let changelog = [
         loadTableDataFromDisk(file, filterQueryRaw, isCaseSensitive, isRegExp);
     };
 
-    loadFromDiskBtn.onclick = () => showLoadFilterDialog();
+    loadFromDiskBtn.onclick = () => showLoadFilterDialog(loadFromDiskBtn);
 
     if (Lib.settings.sa_enable_save_load) {
         controlsContainer.appendChild(loadFromDiskBtn);
@@ -4760,6 +4763,18 @@ let changelog = [
             alert('Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager');
         }
     };
+
+    // Add shortcuts button (always visible, left of settings button)
+    if (Lib.settings.sa_enable_keyboard_shortcuts !== false) {
+        const shortcutsBtn = document.createElement('button');
+        shortcutsBtn.id = 'mb-shortcuts-help-btn';
+        shortcutsBtn.textContent = '🎹';
+        shortcutsBtn.title = 'Show keyboard shortcuts (or press ?)';
+        shortcutsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; display: inline-flex; align-items: center; justify-content: center;';
+        shortcutsBtn.type = 'button';
+        shortcutsBtn.onclick = showShortcutsHelp;
+        controlsContainer.appendChild(shortcutsBtn);
+    }
 
     // Add settings button to controls container (always last on initial render)
     settingsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; display: inline-flex; align-items: center; justify-content: center;';
@@ -5213,6 +5228,16 @@ let changelog = [
         headerContainer.appendChild(controlsContainer);
     }
 
+    // Show deferred "Page Reloaded" dialog now that action buttons are in the DOM
+    if (reloadFlag) {
+        const firstActionBtn = allActionButtons.length > 0 ? allActionButtons[0] : null;
+        showCustomAlert(
+            'The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.',
+            '⚠️ Page Reloaded',
+            firstActionBtn
+        );
+    }
+
     // Create a separate container for status displays (globalStatusDisplay and infoDisplay)
     const statusDisplaysContainer = document.createElement('div');
     statusDisplaysContainer.id = 'mb-status-displays-container';
@@ -5288,16 +5313,20 @@ let changelog = [
      * Shows a modernized dialog to enter pre-filter criteria before loading data from disk.
      * Includes history of previous filter expressions and triggers the file loading process.
      */
-    async function showLoadFilterDialog() {
+    async function showLoadFilterDialog(triggerButton = null) {
         const historyLimit = Lib.settings.sa_load_history_limit || 10;
         let history = GM_getValue('sa_load_filter_history', []);
 
-        const overlay = document.createElement('div');
-        overlay.id = 'sa-load-dialog-overlay';
-        overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:20000; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(2px);';
+        // Remove any existing dialog
+        const existingOverlay = document.getElementById('sa-load-dialog-overlay');
+        if (existingOverlay) {
+            existingOverlay.remove();
+            return;
+        }
 
         const dialog = document.createElement('div');
-        dialog.style.cssText = 'background:#fff; padding:24px; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.3); width:380px; font-family:sans-serif; border:1px solid #ccc; position:relative;';
+        dialog.id = 'sa-load-dialog-overlay';
+        dialog.style.cssText = 'position:fixed; background:#fff; padding:24px; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.3); width:380px; font-family:sans-serif; border:1px solid #ccc; z-index:20000;';
 
         dialog.innerHTML = `
             <div style="margin-bottom:18px; border-bottom:1px solid #eee; padding-bottom:12px;">
@@ -5333,15 +5362,38 @@ let changelog = [
             </div>
         `;
 
-        document.body.appendChild(overlay);
-        overlay.appendChild(dialog);
+        document.body.appendChild(dialog);
+
+        // Position below trigger button or center screen
+        setTimeout(() => {
+            if (triggerButton) {
+                const btnRect = triggerButton.getBoundingClientRect();
+                const dlgRect = dialog.getBoundingClientRect();
+                let top = btnRect.bottom + 10;
+                let left = btnRect.left;
+
+                if (top + dlgRect.height > window.innerHeight) {
+                    top = btnRect.top - dlgRect.height - 10;
+                }
+                if (left + dlgRect.width > window.innerWidth) {
+                    left = window.innerWidth - dlgRect.width - 10;
+                }
+                if (left < 0) left = 10;
+
+                dialog.style.left = left + 'px';
+                dialog.style.top = top + 'px';
+            } else {
+                dialog.style.left = '50%';
+                dialog.style.top = '50%';
+                dialog.style.transform = 'translate(-50%, -50%)';
+            }
+        }, 0);
 
         const input = dialog.querySelector('#sa-load-filter-input');
         if (input) {
-            const MIN_DIALOG_WIDTH = 380;            // initial/default width
-            const MAX_DIALOG_MARGIN = 40;            // space from window edges
+            const MIN_DIALOG_WIDTH = 380;
+            const MAX_DIALOG_MARGIN = 40;
 
-            // Function to measure text width using a hidden span
             const measureTextWidth = (text) => {
                 const span = document.createElement('span');
                 span.style.cssText = `
@@ -5354,25 +5406,19 @@ let changelog = [
                 `;
                 span.textContent = text;
                 document.body.appendChild(span);
-                const width = span.offsetWidth + 40; // add input padding/margin
+                const width = span.offsetWidth + 40;
                 document.body.removeChild(span);
                 return width;
             };
 
-            // Function to resize dialog
             const resizeDialog = () => {
                 const requiredWidth = measureTextWidth(input.value || input.placeholder);
                 const maxWidth = window.innerWidth - MAX_DIALOG_MARGIN;
                 dialog.style.width = `${Math.min(Math.max(MIN_DIALOG_WIDTH, requiredWidth), maxWidth)}px`;
             };
 
-            // Initial adjustment
             resizeDialog();
-
-            // Adjust dynamically as user types
             input.addEventListener('input', resizeDialog);
-
-            // Optional: adjust on window resize to respect viewport
             window.addEventListener('resize', resizeDialog);
         }
 
@@ -5395,18 +5441,59 @@ let changelog = [
         }
 
         const closeDialog = () => {
-            overlay.remove();
-            document.removeEventListener('keydown', handleEsc);
+            dialog.remove();
+            document.removeEventListener('keydown', handleKey);
         };
 
-        const handleEsc = (e) => {
+        const confirmLoad = () => {
+            const query = input.value.trim();
+            const useCase = dialog.querySelector('#sa-load-case').checked;
+            const useRegex = dialog.querySelector('#sa-load-regex').checked;
+
+            if (query && historyLimit > 0) {
+                let updatedHistory = [query, ...history.filter(h => h !== query)].slice(0, historyLimit);
+                GM_setValue('sa_load_filter_history', updatedHistory);
+                Lib.debug('cache', `Updated load filter history. Current count: ${updatedHistory.length}`);
+            }
+
+            if (typeof preFilterInput !== 'undefined') {
+                preFilterInput.value = query;
+                if (typeof preFilterCaseLabel !== 'undefined') {
+                    preFilterCaseLabel.querySelector('input').checked = useCase;
+                }
+                if (typeof preFilterRegexLabel !== 'undefined') {
+                    preFilterRegexLabel.querySelector('input').checked = useRegex;
+                }
+            }
+
+            closeDialog();
+            Lib.info('cache', 'Load confirmed. Triggering file selector...');
+            fileInput.click();
+        };
+
+        const handleKey = (e) => {
             if (e.key === 'Escape') {
                 Lib.debug('ui', 'Load dialog closed via Escape key');
                 closeDialog();
+            } else if (e.altKey && e.key === 'l') {
+                // Alt-L: confirm load (mirrors the underlined L in "Load Data" button)
+                e.preventDefault();
+                confirmLoad();
+            } else if (e.key === 'Tab') {
+                // Tab cycles between the two action buttons when they have focus
+                const confirmBtn = dialog.querySelector('#sa-load-confirm');
+                const cancelBtn = dialog.querySelector('#sa-load-cancel');
+                if (document.activeElement === confirmBtn) {
+                    e.preventDefault();
+                    cancelBtn.focus();
+                } else if (document.activeElement === cancelBtn) {
+                    e.preventDefault();
+                    confirmBtn.focus();
+                }
             }
         };
 
-        document.addEventListener('keydown', handleEsc);
+        document.addEventListener('keydown', handleKey);
 
         // History Logic
         if (historyToggle) {
@@ -5429,38 +5516,15 @@ let changelog = [
             }
         };
 
-        dialog.querySelector('#sa-load-confirm').onclick = () => {
-            const query = input.value.trim();
-            const useCase = dialog.querySelector('#sa-load-case').checked;
-            const useRegex = dialog.querySelector('#sa-load-regex').checked;
-
-            // Update persistent history
-            if (query && historyLimit > 0) {
-                let updatedHistory = [query, ...history.filter(h => h !== query)].slice(0, historyLimit);
-                GM_setValue('sa_load_filter_history', updatedHistory);
-                Lib.debug('cache', `Updated load filter history. Current count: ${updatedHistory.length}`);
+        // Close dialog when clicking outside it
+        document.addEventListener('mousedown', (e) => {
+            if (!dialog.contains(e.target)) {
+                closeDialog();
             }
+        }, { once: true });
 
-            // Sync with existing UI variables (assuming global references like preFilterInput)
-            if (typeof preFilterInput !== 'undefined') {
-                preFilterInput.value = query;
-                if (typeof preFilterCaseLabel !== 'undefined') {
-                    preFilterCaseLabel.querySelector('input').checked = useCase;
-                }
-                if (typeof preFilterRegexLabel !== 'undefined') {
-                    preFilterRegexLabel.querySelector('input').checked = useRegex;
-                }
-            }
-
-            closeDialog();
-
-            // Trigger the actual file input click
-            Lib.info('cache', 'Load confirmed. Triggering file selector...');
-            fileInput.click();
-        };
-
+        dialog.querySelector('#sa-load-confirm').onclick = confirmLoad;
         dialog.querySelector('#sa-load-cancel').onclick = closeDialog;
-        overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
     }
 
     /**
@@ -8934,7 +8998,7 @@ let changelog = [
         'd': { fn: openDensityMenu, description: 'Open Density Menu' },
         'v': { fn: openVisibleColumnsMenu, description: 'Open Visible Columns Menu' },
         'e': { fn: openExportMenu, description: 'Open Export Menu' },
-        'l': { fn: showLoadFilterDialog, description: 'Load from Disk' },
+        'l': { fn: () => showLoadFilterDialog(document.querySelector('button[title*="Load table data from disk"]')), description: 'Load from Disk' },
         '?': { fn: showShortcutsHelp, description: 'Show Shortcuts Help' }
     };
 })();

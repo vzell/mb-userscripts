@@ -38565,6 +38565,71 @@ here the console log
 #+end_example
 
 
+* DONE button visibility
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+Only make the "Toggle hightlightning", "Clear all COLUMN filters" and "Clear ALL filters" buttons on the global level
+(or in the single table case) visible when actual corresponding filter conditions have been entered, the same holds true
+for the "Clear all COLUMN filters" button in the muti table case,
+
+* DONE Add keyboard navigation in the pull-down menues
+** initial
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+Add keyboard navigation in the following pull-down menues. When clicked, they should have the keyboard focus:
+
+- "Visible Columns": up/down/shift for select-deselect
+- "Density": up/down, immediately render the new table layout (user feedback), when using the up/down keys, as if the user clicked on the menu entry. Return should use the currently selected and close the dialog
+- "Export": Up/down/Return should use the currently selected and close the dialog
+
+** addional
+
+Add the following additional functionality
+
+- "Visible Columns": Add "Ctrl+V" for opening the "Visible Columns" menu. "Tab" should also cycle to the two buttons "Select All", "Deselect All" ==> Additionally render them with an
+  underscore below the "S", and and underscore below the "D" for keyboard shortcut selection with "Alt-S" meaning pressing the "Select All" button and "Alt-D"
+  meaning pressing the "Deselect All" button. The "Alt-S" and "Alt-D" keyboard combinations should only be active when the "Visible Columns" pull-down menu is open
+
+- "Export": Focus the "Close" button on the popup "<format> export complete. ..."
+
+- "Density": Add "Ctrl-D" as a generic shortcut for opening the "Density pull-down menu
+
+** one more
+
+- "Visible Columns": Add one more button titled "Choose current configuration" (keybord shortcut "Alt-C", render the "c"
+  from "current" with underscore) below the two already available, when clicked the current select should be choosen and
+  the menu should close
+
+- Add a new keyboard shortcut of "Ctrl-2" und "Ctrl-3" which should toggle the collapse functionality for the h2 and h3
+  headers respectively. The h2 headers can already be collapsed/un-collapsed by "Ctrl" clicking on one of the h2 header
+  lines, and the h3 headers cann all be collapsed/un-collapsed by clicking on the '"Show" | "Hide" all Types'
+  hyperlinks. These functionalities should be called for the new keyboard shortcuts.
+  
+- Add all the new key combinations also under the "Shortcuts" menu
+
+Finally make the "Toggle hightlightning", "Clear all COLUMN filters" and "Clear ALL filters" buttons on the global level
+(or in the case of single table pages) visible ONLY when actually corresponding filter conditions have been entered, the
+same holds true for the "Clear all COLUMN filters" button in the multi table case
+
+** add Ctrl-Click on h3 headers
+
+- add one more shortcut "Ctrl-M" which emulates pressing the page specific "Show all ..." action button. If there are
+  multiple action buttons, like on the https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a
+  or https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases pages, choose the first button
+
+- please also add besides the current "Click" functionality on a h3 header which collapses/un-collapses just this
+  specific header, also the "Ctrl+Click" equivalent which will collapse/un-collapse ALL the h3 headers
+  simultaneously. Basically like the functionality we already have on the h2 headers. Please also adjust the tooltip
+  text accordingly.
+
+** matrix
+
+📋 Complete Feature Matrix
+ActionKeyboardMouseToggle all h2 headersCtrl+2Ctrl+Click h2Toggle all h3 headersCtrl+3Ctrl+Click h3 ✨Toggle single h2-Click h2Toggle single h3-Click h3Start data loadCtrl+M ✨Click button
+
+
 * TODO toggle highlight
 
 Please implement the following:
@@ -38883,72 +38948,7 @@ Would you like me to review the loadTableDataFromDisk() function to see if we ca
 #+end_example
 
 
-* DONE button visibility
-
-In the uploaded userscript "ShowAllEntityData.user.js"
-
-Only make the "Toggle hightlightning", "Clear all COLUMN filters" and "Clear ALL filters" buttons on the global level
-(or in the single table case) visible when actual corresponding filter conditions have been entered, the same holds true
-for the "Clear all COLUMN filters" button in the muti table case,
-
-* DONE Add keyboard navigation in the pull-down menues
-** initial
-
-In the uploaded userscript "ShowAllEntityData.user.js"
-
-Add keyboard navigation in the following pull-down menues. When clicked, they should have the keyboard focus:
-
-- "Visible Columns": up/down/shift for select-deselect
-- "Density": up/down, immediately render the new table layout (user feedback), when using the up/down keys, as if the user clicked on the menu entry. Return should use the currently selected and close the dialog
-- "Export": Up/down/Return should use the currently selected and close the dialog
-
-** addional
-
-Add the following additional functionality
-
-- "Visible Columns": Add "Ctrl+V" for opening the "Visible Columns" menu. "Tab" should also cycle to the two buttons "Select All", "Deselect All" ==> Additionally render them with an
-  underscore below the "S", and and underscore below the "D" for keyboard shortcut selection with "Alt-S" meaning pressing the "Select All" button and "Alt-D"
-  meaning pressing the "Deselect All" button. The "Alt-S" and "Alt-D" keyboard combinations should only be active when the "Visible Columns" pull-down menu is open
-
-- "Export": Focus the "Close" button on the popup "<format> export complete. ..."
-
-- "Density": Add "Ctrl-D" as a generic shortcut for opening the "Density pull-down menu
-
-** one more
-
-- "Visible Columns": Add one more button titled "Choose current configuration" (keybord shortcut "Alt-C", render the "c"
-  from "current" with underscore) below the two already available, when clicked the current select should be choosen and
-  the menu should close
-
-- Add a new keyboard shortcut of "Ctrl-2" und "Ctrl-3" which should toggle the collapse functionality for the h2 and h3
-  headers respectively. The h2 headers can already be collapsed/un-collapsed by "Ctrl" clicking on one of the h2 header
-  lines, and the h3 headers cann all be collapsed/un-collapsed by clicking on the '"Show" | "Hide" all Types'
-  hyperlinks. These functionalities should be called for the new keyboard shortcuts.
-  
-- Add all the new key combinations also under the "Shortcuts" menu
-
-Finally make the "Toggle hightlightning", "Clear all COLUMN filters" and "Clear ALL filters" buttons on the global level
-(or in the case of single table pages) visible ONLY when actually corresponding filter conditions have been entered, the
-same holds true for the "Clear all COLUMN filters" button in the multi table case
-
-** add Ctrl-Click on h3 headers
-
-- add one more shortcut "Ctrl-M" which emulates pressing the page specific "Show all ..." action button. If there are
-  multiple action buttons, like on the https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a
-  or https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases pages, choose the first button
-
-- please also add besides the current "Click" functionality on a h3 header which collapses/un-collapses just this
-  specific header, also the "Ctrl+Click" equivalent which will collapse/un-collapse ALL the h3 headers
-  simultaneously. Basically like the functionality we already have on the h2 headers. Please also adjust the tooltip
-  text accordingly.
-
-** matrix
-
-📋 Complete Feature Matrix
-ActionKeyboardMouseToggle all h2 headersCtrl+2Ctrl+Click h2Toggle all h3 headersCtrl+3Ctrl+Click h3 ✨Toggle single h2-Click h2Toggle single h3-Click h3Start data loadCtrl+M ✨Click button
-
-
-* multi-column sort
+* TODO multi-column sort
 ** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -39279,9 +39279,9 @@ Unified Functionality: Because this is applied in makeTableSortableUnified, it w
 #+end_example
 
 
-* sensible defaults for configuration options
+* TODO sensible defaults for configuration options
 
-* overwhoule of the logging statements... make lots of stuff debug stements
+* TODO overwhoule of the logging statements... make lots of stuff debug statements
 
 * DONE collapsable sidebar breaks sticky headers
 
@@ -39470,17 +39470,19 @@ Additionally, the font used inside the dialogs should be much bigger/readable
 
 ** TODO reposition "Load Table Data" under the button, like the other dialogs for example the "Page Type Mismatch" and "High Page Count" which work
 
-- Reposition the "Page Reloaded" poup dialog under the "Show all.." button after the "Show all..." button has been
-  pressed on the final rendered page, like the other popup dialogs do, for example the "Page Type Mismatch" and "High
-  Page Count" which work perfectly
+In the uploaded userscript "ShowAllEntityData.user.js"
 
-- Also reposition the "📂 Load Table Data" popup dialog under the "Load from Disk" button after the "Load from Disk"
-  button has been clicked. Create a keyboard shortcut when in the dialog, that emulate the click on that button when
-  "Alt-L" is pressed.
+- Reposition the "Page Reloaded" popup dialog under the "Show all.." button, after that button has been pressed on the
+  final rendered page, like the other popup dialogs do, for example the "Page Type Mismatch" and "High Page Count" which
+  work perfectly
 
-- Fix: When the popups appear the "OK" button IS NOT focused and keyboard navigation between the "OK" and the "Cancel"
-  button (if available on a specific dialog) does'n NOT work. Check the implementation in the "📂 Load Table Data"
-  dialog, where keyboard navigation actually works.
+- Also reposition the "📂 Load Table Data" popup dialog under the "📂 Load from Disk" button after that button has been
+  clicked. Create a keyboard shortcut "Alt-L" when in the dialog, that emulate the click on that button when "Alt-L" is
+  pressed.
+
+- Please finally Fix: When all the popups appear the "OK" button IS NOT focused and keyboard navigation between the "OK"
+  and the "Cancel" button (if available on a specific dialog) does NOT work. Check the implementation in the "📂 Load Table Data" dialog,
+  where keyboard navigation actually works.
 
 - Rename the "⌨️ Shortcuts" button to just "🎹" and position it left to the "⚙️" button, this button should also already
   be visible on page entry (not only when the page is finally render after an action button click)
@@ -39493,6 +39495,11 @@ new multiline variable. Please invent a variable name and place a short descript
 also use the unicode symbols used for buttons or in text in the current user script implementation) as the value of this
 variable in the current code. Position it right to the "⚙️" button This button should also already be visible on page
 entry (not only when the page is finally render after an action button click).
+
+
+** Could the "Page Reloaded" popup dialog directly emulate the click on the "Show all..." button
+
+the "Page Reloaded" popup dialog
 
 ** TODO Underline "o" in "Stop" button and add keyboard shortcut "Ctrl-M"+o 
 
@@ -39696,7 +39703,7 @@ or
 ** Ctrl-Alt-3 ==> collapse all h3
 
 
-* In the file open dialog - All files (*.*)
+* TODO In the file open dialog - All files (*.*)
 ** initial
 
 How can I configure what the "Open file dialog" in a browser shows as filemask. In vivaldi I only get the "JSON FILE
@@ -39759,4 +39766,11 @@ input.accept = ".gz";
 ** question
 
 How can I force the open file dialog, triggered from my own user script to show all file with extension "Gzipped files (*.gz)" 
+
+** TODO re add changelog
+
+#+begin_example
+{version: '9.37.0+2026-02-19', description: 'The "Load from Disk" option now defaults to Gzipped files (*.gz).' },
+#+end_example
+
 
