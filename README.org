@@ -39696,7 +39696,6 @@ Would you like me to review any other layout elements to make the UI look even s
 
 * TODO Make the keyboard shortcuts configurable itself
 
- 
 * Add keyboard handling for the complete application
 ** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
 ** Ctrl-Shift-- ==> un-collapse all tables (maybe make it toggle)
@@ -39710,7 +39709,7 @@ or
 ** Ctrl-Alt-3 ==> collapse all h3
 
 
-* TODO In the file open dialog - All files (*.*)
+* DONE In the file open dialog - All files (*.*)
 ** initial
 
 How can I configure what the "Open file dialog" in a browser shows as filemask. In vivaldi I only get the "JSON FILE
@@ -39774,12 +39773,11 @@ input.accept = ".gz";
 
 How can I force the open file dialog, triggered from my own user script to show all file with extension "Gzipped files (*.gz)" 
 
-** TODO re add changelog
+* DONE re add changelog
 
 #+begin_example
 {version: '9.38.0+2026-02-19', description: 'Fix & Enhancement: (1) "Page Reloaded" popup now positioned below the triggering "Show all" action button after final page render, consistent with other dialogs. (2) "📂 Load Table Data" dialog repositioned below the "📂 Load from Disk" button; added Alt-L shortcut to confirm/load from within the dialog. (3) Fixed OK button focus and Tab keyboard navigation in all custom popup dialogs: removed outline:none from buttons so focus outline is visible, ensuring keyboard navigation between OK and Cancel works. (4) Renamed "⌨️ Shortcuts" button to "🎹"; button is now visible immediately on page entry (before action button click), positioned left of the ⚙️ settings button.' },
 {version: '9.37.0+2026-02-19', description: 'The "Load from Disk" option now defaults to Gzipped files (*.gz).' },
 #+end_example
 
-
-* TODO Restore-Width tooltip text needs the keyboard combination to show to the user
+* DONE Restore-Width tooltip text needs the keyboard combination to show to the user
