@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.38.0+2026-02-19
+// @version      9.39.0+2026-02-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.39.0+2026-02-19', description: 'Added ❓ application help button (always visible, right of ⚙️): opens a scrollable popup dialog presenting a full feature overview of the script, closeable via "Close" button or Escape key.' },
     {version: '9.38.0+2026-02-19', description: 'Fix & Enhancement: (1) "Page Reloaded" popup now positioned below the triggering "Show all" action button after final page render, consistent with other dialogs. (2) "📂 Load Table Data" dialog repositioned below the "📂 Load from Disk" button; added Alt-L shortcut to confirm/load from within the dialog. (3) Fixed OK button focus and Tab keyboard navigation in all custom popup dialogs: removed outline:none from buttons so focus outline is visible, ensuring keyboard navigation between OK and Cancel works. (4) Renamed "⌨️ Shortcuts" button to "🎹"; button is now visible immediately on page entry (before action button click), positioned left of the ⚙️ settings button.' },
     {version: '9.36.0+2026-02-19', description: 'Reordered source code: configuration and pageType definitions at the beginning of the file.' },
     {version: '9.35.0+2026-02-18', description: 'Enhancement: Replaced three native browser dialogs with custom styled implementations. (1) Page reload alert: custom dialog when MusicBrainz page is reloaded for filter stability. (2) High page count warning: custom confirm dialog instead of native when entity has more pages than configured threshold - user can proceed or cancel with keyboard support (Enter=proceed, Escape=cancel). (3) Page type mismatch: custom confirm dialog when loading file from different page type with clear warning and user choice. (4) Invalid regex alert: custom alert for invalid regex pattern in load filter. All custom dialogs match userscript styling (white background, button styling, centered, shadow, z-index 10001), support keyboard shortcuts (Enter=OK, Escape=Cancel), and auto-focus OK button for accessibility.'},
@@ -151,6 +152,166 @@ let changelog = [
     {version: '0.9.1+2026-01-29', description: 'Added "Esc" key handling for clearing the filter fields when focused; Added "ChangeLog" userscript manager menu entry.'},
     {version: '0.9.0+2026-01-28', description: '1st official release version.'}
 ];
+
+// APPLICATION HELP TEXT
+const APP_HELP_TEXT = `\
+VZ: MusicBrainz — Show All Entity Data In A Consolidated View
+=============================================================
+
+PURPOSE
+-------
+Consolidates paginated and non-paginated MusicBrainz table lists (Events,
+Recordings, Releases, Works, Artists, Labels, Release Groups, and more) into a
+single scrollable, filterable, sortable view.
+
+SUPPORTED PAGES
+---------------
+• Artist:   Release Groups, Releases, Recordings, Works, Events, Aliases,
+            Relationships (including filtered link_type_id pages)
+• Release Group, Release, Recording, Work, Label, Series, Place, Area,
+  Instrument, Event pages — all supported sub-tabs
+• Search result pages (all entity types)
+
+GETTING STARTED
+---------------
+1. Navigate to any supported MusicBrainz entity page (e.g. an Artist's
+   Recordings tab).
+2. Click the "Show all …" action button in the controls bar to start fetching
+   all pages from the MusicBrainz database.
+3. A real-time progress bar tracks the fetch; click "Stop" (or Alt-O) to abort
+   at any time.
+4. When complete, the consolidated table appears with filtering, sorting, and
+   all UI features active.
+
+ACTION BUTTONS
+--------------
+• 💾 Save to Disk    — save the current dataset as a compressed .json.gz file
+• 📂 Load from Disk  — load a previously saved dataset (with optional
+                       pre-filter); Alt-L inside the dialog to confirm
+• ↔️ Auto-Resize     — fit all columns to their content (toggle to restore)
+• 📊 Stats           — show a statistics panel (row/column counts, memory, …)
+• 📏 Density         — choose Compact / Normal / Comfortable row spacing
+• 👁️ Visible Columns — show/hide individual table columns; Alt-S / Alt-D to
+                       select/deselect all
+• Export 💾          — export visible data as CSV, JSON, or Emacs Org-Mode
+• 🎹                 — show keyboard shortcuts reference (or press ?)
+• ⚙️                 — open the Settings Manager to configure all options
+• ❓                 — show this help dialog
+
+FILTERING
+---------
+• Global Filter — type in the large input box to filter all columns at once
+• Column Filters — per-column filter row below the table header
+• Both support plain text, case-sensitive (Cc checkbox), and RegExp (Rx
+  checkbox) matching
+• Ctrl-C  — focus first column filter; repeated presses cycle through tables
+• Ctrl-F  — focus global filter field
+• Escape  — first press clears focused filter, second press removes focus
+• 🎨 Toggle highlighting — toggle highlight colours on/off for active filters
+• Pre-filter — enter a filter expression in the "Filter data load…" field
+  before loading from disk to load only matching rows
+
+SORTING
+-------
+• Click any column header (⇅) to sort ascending; click again for descending
+• Visual indicator changes to ▲ / ▼ on the active sort column
+• Large tables use an async chunked merge-sort with a progress bar
+
+COLLAPSING / EXPANDING
+-----------------------
+• Click an h2 header to collapse/expand its table section
+• Ctrl-Click an h2 to toggle all h2 headers simultaneously
+• Click an h3 header to collapse/expand its type group
+• Ctrl-Click an h3 to toggle all h3 headers simultaneously
+• Show All / Hide All links per section
+• Ctrl-2 — keyboard shortcut to toggle all h2 headers
+• Ctrl-3 — keyboard shortcut to toggle all h3 headers
+
+KEYBOARD SHORTCUTS (global)
+----------------------------
+  ?  or  /       Show keyboard shortcuts help (🎹)
+  Ctrl-F          Focus global filter
+  Ctrl-C          Focus first column filter (cycles through tables)
+  Ctrl-Shift-F    Clear all filters
+  Ctrl-S          Save to Disk
+  Ctrl-L          Load from Disk dialog
+  Ctrl-E          Open Export menu
+  Ctrl-D          Open Density menu
+  Ctrl-V          Open Visible Columns menu
+  Ctrl-2          Toggle all h2 section headers
+  Ctrl-3          Toggle all h3 type headers
+  Escape          Clear focused filter / close open menus
+
+CTRL-M PREFIX SHORTCUTS
+-----------------------
+  Press Ctrl-M, release, then press:
+    r  Auto-Resize Columns
+    t  Show Stats Panel
+    s  Save to Disk
+    d  Open Density Menu
+    v  Open Visible Columns Menu
+    e  Open Export Menu
+    l  Load from Disk
+    ?  Show Keyboard Shortcuts Help
+    1–9 / a–z  Trigger the corresponding action button by index
+
+SAVE & LOAD (Offline Cache)
+----------------------------
+• Datasets are saved as gzip-compressed JSON (.json.gz) — ~60–80% smaller
+  than plain JSON.
+• When loading, enter an optional pre-filter expression (plain text or RegExp)
+  to load only matching rows — useful for very large datasets.
+• Load filter history (last N expressions, configurable) is accessible via the
+  ▼ dropdown in the Load dialog.
+• Pre-filtered rows are highlighted with 🎨; toggle highlighting with the
+  dynamic prefilter button.
+
+COLUMN MANAGEMENT
+-----------------
+• 👁️ Visible Columns menu — check/uncheck any column; Select All (Alt-S) /
+  Deselect All (Alt-D); button turns red when columns are hidden
+• Manual resize — drag column edges with the mouse at any time
+• Auto-Resize — calculates optimal widths including images/icons/links;
+  acts as a toggle (restores original widths on second click)
+
+DENSITY CONTROL
+---------------
+  Compact     — tighter padding, smaller font, more rows visible
+  Normal      — default MusicBrainz-like spacing
+  Comfortable — larger padding for easier reading
+  Navigate with ↑/↓ in the menu; immediate live preview; Enter to apply
+
+EXPORT
+------
+  CSV          — comma-separated, compatible with Excel / Google Sheets
+  JSON         — structured JSON array of visible rows
+  Emacs Org-Mode — pipe-delimited Org table format
+
+SETTINGS (⚙️)
+--------------
+All options are configurable via the Settings Manager:
+• Enable/disable any UI feature (export, stats, density, column resize, …)
+• Configure highlight colours for pre-filter, global filter, column filters
+• Set maximum page threshold for the high-page-count warning
+• Toggle debug logging (browser console)
+• Configure load filter history limit
+• Enable experimental collapsible sidebar
+• Optional column removal (Tagger, Rating, Relationships, Performance, …)
+
+SIDEBAR
+-------
+• The page sidebar can be optionally collapsed (experimental setting) to give
+  more horizontal space to the data table.
+• Sticky table headers remain visible while scrolling through large tables.
+
+PAGE RELOAD NOTICE
+------------------
+When MusicBrainz applies a URL filter that would interfere with pagination,
+the script automatically reloads the page to strip the filter. After reload
+an ⚠️ Page Reloaded notice appears and automatically re-clicks the "Show all"
+button after 2 seconds (or immediately when you click OK / press Enter).
+Press Escape on that notice to cancel the auto-action.
+`;
 
 (function() {
     'use strict';
@@ -1626,6 +1787,12 @@ let changelog = [
             controlsContainer.appendChild(settingsBtn);
         }
 
+        // Ensure ❓ app-help button is always the very last button (right of ⚙️)
+        const appHelpBtn = document.getElementById('mb-app-help-btn');
+        if (appHelpBtn) {
+            controlsContainer.appendChild(appHelpBtn);
+        }
+
         // Ensure 🎹 shortcuts button is immediately before ⚙️ settings button
         const shortcutsBtn = document.getElementById('mb-shortcuts-help-btn');
         if (shortcutsBtn && shortcutsBtn.nextSibling !== settingsBtn) {
@@ -3073,6 +3240,171 @@ let changelog = [
         }, 100);
 
         Lib.info('shortcuts', 'Keyboard shortcuts help displayed');
+    }
+
+    /**
+     * Show application help dialog
+     * Displays the full feature overview from APP_HELP_TEXT in a scrollable popup
+     */
+    function showAppHelp() {
+        const existing = document.getElementById('mb-app-help-dialog');
+        if (existing) {
+            existing.remove();
+            return;
+        }
+
+        const dialog = document.createElement('div');
+        dialog.id = 'mb-app-help-dialog';
+        dialog.style.cssText = `
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 0;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+            z-index: 10002;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            width: min(720px, 94vw);
+            max-height: 82vh;
+            display: flex;
+            flex-direction: column;
+        `;
+
+        // Draggable title bar
+        const titleBar = document.createElement('div');
+        titleBar.style.cssText = `
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px 12px;
+            border-bottom: 2px solid #ddd;
+            cursor: move;
+            user-select: none;
+            flex-shrink: 0;
+            border-radius: 10px 10px 0 0;
+            background: #f8f8f8;
+        `;
+
+        const titleText = document.createElement('span');
+        titleText.textContent = '❓ Application Help & Feature Overview';
+        titleText.style.cssText = 'font-weight: 700; font-size: 1.15em; color: #222;';
+        titleBar.appendChild(titleText);
+
+        const closeX = document.createElement('button');
+        closeX.textContent = '✕';
+        closeX.title = 'Close (Escape)';
+        closeX.style.cssText = `
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            color: #666;
+            padding: 0 4px;
+            line-height: 1;
+        `;
+        titleBar.appendChild(closeX);
+        dialog.appendChild(titleBar);
+
+        // Scrollable content area
+        const contentArea = document.createElement('div');
+        contentArea.style.cssText = `
+            overflow-y: auto;
+            padding: 20px 24px;
+            flex: 1;
+            font-size: 0.92em;
+            line-height: 1.65;
+            color: #333;
+        `;
+
+        // Render APP_HELP_TEXT as HTML with basic formatting
+        const pre = document.createElement('pre');
+        pre.style.cssText = `
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            font-size: 0.97em;
+            line-height: 1.65;
+        `;
+        pre.textContent = typeof APP_HELP_TEXT !== 'undefined' ? APP_HELP_TEXT : '(Help text not available)';
+        contentArea.appendChild(pre);
+        dialog.appendChild(contentArea);
+
+        // Footer with Close button
+        const footer = document.createElement('div');
+        footer.style.cssText = `
+            display: flex;
+            justify-content: flex-end;
+            padding: 12px 20px;
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+            background: #f8f8f8;
+            border-radius: 0 0 10px 10px;
+        `;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Close';
+        closeBtn.style.cssText = `
+            padding: 8px 24px;
+            background-color: #607D8B;
+            color: white;
+            border: 1px solid #546E7A;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        `;
+        closeBtn.onmouseover = () => { closeBtn.style.backgroundColor = '#546E7A'; };
+        closeBtn.onmouseout = () => { closeBtn.style.backgroundColor = '#607D8B'; };
+        footer.appendChild(closeBtn);
+        dialog.appendChild(footer);
+
+        document.body.appendChild(dialog);
+
+        const closeDialog = () => {
+            dialog.remove();
+            document.removeEventListener('keydown', keyHandler);
+        };
+
+        closeBtn.onclick = closeDialog;
+        closeX.onclick = closeDialog;
+
+        const keyHandler = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closeDialog();
+            }
+        };
+        document.addEventListener('keydown', keyHandler);
+
+        // Make draggable
+        let isDragging = false;
+        let dragOffsetX = 0, dragOffsetY = 0;
+        titleBar.addEventListener('mousedown', (e) => {
+            if (e.target === closeX) return;
+            isDragging = true;
+            const rect = dialog.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+            dialog.style.transform = 'none';
+            dialog.style.left = rect.left + 'px';
+            dialog.style.top = rect.top + 'px';
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            dialog.style.left = (e.clientX - dragOffsetX) + 'px';
+            dialog.style.top = (e.clientY - dragOffsetY) + 'px';
+        });
+        document.addEventListener('mouseup', () => { isDragging = false; });
+
+        // Focus Close button for immediate keyboard access
+        setTimeout(() => closeBtn.focus(), 0);
+
+        Lib.info('ui', 'Application help dialog displayed');
     }
 
     /**

@@ -39468,7 +39468,7 @@ the "Cancel" button (if available on aspecific dialog) doesn NOT work.
 
 Additionally, the font used inside the dialogs should be much bigger/readable
 
-** TODO reposition "Load Table Data" under the button, like the other dialogs for example the "Page Type Mismatch" and "High Page Count" which work
+** DONE reposition "Load Table Data" under the button, like the other dialogs for example the "Page Type Mismatch" and "High Page Count" which work
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
@@ -39489,24 +39489,27 @@ In the uploaded userscript "ShowAllEntityData.user.js"
 
 ** TODO new button "❓"
 
-Create a new button with text "❓" for general help about the application. When clicked a new scrollable popup window
-(with a "Close" button and equivalent "Escape" key handling) should present the user the features and help coming from a
-new multiline variable. Please invent a variable name and place a short description of the features of this app (you can
-also use the unicode symbols used for buttons or in text in the current user script implementation) as the value of this
-variable in the current code. Position it right to the "⚙️" button This button should also already be visible on page
-entry (not only when the page is finally render after an action button click).
+** Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
 
+Question:
+Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which
+it was triggered, by clicking the "OK" button directly (or maybe wait 2 seconds until the user has read the popop dialog
+text) ? If yes, please implement
 
-** Could the "Page Reloaded" popup dialog directly emulate the click on the "Show all..." button
+Additionally create a new button with text "❓" for general help about the application. When clicked a new scrollable
+popup window (with a "Close" button and equivalent "Escape" key handling) should present the user the features and help
+coming from a new multiline variable. Please invent a variable name and place a short description of the features of
+this app (you can also use the unicode symbols used for buttons or in text in the current user script implementation) as
+the value of this variable in the current code. Position it right to the "⚙️" button This button should also already be
+visible on page entry (not only when the page is finally render after an action button click).
 
-the "Page Reloaded" popup dialog
 
 ** TODO Underline "o" in "Stop" button and add keyboard shortcut "Ctrl-M"+o 
 
 Add "Ctrl-M"+o to "Stop" button
 
 
-* TODO The first input field on a page is usually auto-focused - How to stop it (if you want)
+* DONE The first input field on a page is usually auto-focused - How to stop it (if you want)
 
 #+begin_example
 Option A — Userscript fix
@@ -39690,6 +39693,11 @@ Would you like me to review any other layout elements to make the UI look even s
 #+end_example
 
 
+
+
+* TODO Make the keyboard shortcuts configurable itself
+
+ 
 * Add keyboard handling for the complete application
 ** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
 ** Ctrl-Shift-- ==> un-collapse all tables (maybe make it toggle)
@@ -39770,7 +39778,9 @@ How can I force the open file dialog, triggered from my own user script to show 
 ** TODO re add changelog
 
 #+begin_example
+{version: '9.38.0+2026-02-19', description: 'Fix & Enhancement: (1) "Page Reloaded" popup now positioned below the triggering "Show all" action button after final page render, consistent with other dialogs. (2) "📂 Load Table Data" dialog repositioned below the "📂 Load from Disk" button; added Alt-L shortcut to confirm/load from within the dialog. (3) Fixed OK button focus and Tab keyboard navigation in all custom popup dialogs: removed outline:none from buttons so focus outline is visible, ensuring keyboard navigation between OK and Cancel works. (4) Renamed "⌨️ Shortcuts" button to "🎹"; button is now visible immediately on page entry (before action button click), positioned left of the ⚙️ settings button.' },
 {version: '9.37.0+2026-02-19', description: 'The "Load from Disk" option now defaults to Gzipped files (*.gz).' },
 #+end_example
 
 
+* TODO Restore-Width tooltip text needs the keyboard combination to show to the user
