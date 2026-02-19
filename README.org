@@ -39697,6 +39697,7 @@ or
 
 
 * In the file open dialog - All files (*.*)
+** initial
 
 How can I configure what the "Open file dialog" in a browser shows as filemask. In vivaldi I only get the "JSON FILE
 (*.json)" as default and the "All files (*.*)": At least I want that "*.*" is the default
@@ -39731,4 +39732,31 @@ The site does not dynamically recreate the element
 The file picker is a real <input type="file">
 #+end_example
 
+** answer
+
+#+begin_example
+const input = document.createElement("input");
+input.type = "file";
+input.accept = ".gz,application/gzip";
+input.style.display = "none";
+
+document.body.appendChild(input);
+
+input.click();
+
+input.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        console.log("Selected file:", file.name);
+    }
+});
+#+end_example
+
+#+begin_example
+input.accept = ".gz";
+#+end_example
+
+** question
+
+How can I force the open file dialog, triggered from my own user script to show all file with extension "Gzipped files (*.gz)" 
 

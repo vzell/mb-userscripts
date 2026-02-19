@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.37.0+2026-02-19', description: 'The "Load from Disk" option now defaults to Gzipped files (*.gz).' },
     {version: '9.36.0+2026-02-19', description: 'Reordered source code: configuration and pageType definitions at the beginning of the file.' },
     {version: '9.35.0+2026-02-18', description: 'Enhancement: Replaced three native browser dialogs with custom styled implementations. (1) Page reload alert: custom dialog when MusicBrainz page is reloaded for filter stability. (2) High page count warning: custom confirm dialog instead of native when entity has more pages than configured threshold - user can proceed or cancel with keyboard support (Enter=proceed, Escape=cancel). (3) Page type mismatch: custom confirm dialog when loading file from different page type with clear warning and user choice. (4) Invalid regex alert: custom alert for invalid regex pattern in load filter. All custom dialogs match userscript styling (white background, button styling, centered, shadow, z-index 10001), support keyboard shortcuts (Enter=OK, Escape=Cancel), and auto-focus OK button for accessibility.'},
     {version: '9.34.0+2026-02-18', description: 'Enhancement: Comprehensive Ctrl-M Emacs-style keybinding system with tooltip. (1) Press Ctrl-M and release to enter mode, then press key: 1-9 select action buttons, a-z select additional buttons (up to 35). (2) Function shortcuts: r=Auto-Resize, t=Stats Panel, s=Save to Disk, d=Density, v=Visible Columns, e=Export, l=Load from Disk, ?=Show Help. (3) Configurable tooltip (default enabled) displays all available shortcuts when Ctrl-M is pressed, positioned in upper right of content div without overlapping sidebar. (4) Underlined keyboard shortcuts in button text for visual reference. (5) Tooltip auto-hides when mode exits (Escape, timeout, or selection). (6) Extended key support (1-9, a-z, A-Z, ,;.:-_+*<>#\'?!%&/()=) for future extensions.'},
@@ -4695,7 +4696,7 @@ let changelog = [
 
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = '.json';
+    fileInput.accept = ".gz,application/gzip";
     fileInput.style.display = 'none';
     fileInput.onchange = (e) => {
         const file = e.target.files[0];
@@ -5288,13 +5289,6 @@ let changelog = [
      * Includes history of previous filter expressions and triggers the file loading process.
      */
     async function showLoadFilterDialog() {
-	// Configure the "Open file dialog" in the browser to show "All files (*.*)", used in "Load from Disk"
-	document.addEventListener("click", function (e) {
-            if (e.target.type === "file") {
-		e.target.removeAttribute("accept");
-            }
-	}, true);
-
         const historyLimit = Lib.settings.sa_load_history_limit || 10;
         let history = GM_getValue('sa_load_filter_history', []);
 
@@ -5467,27 +5461,6 @@ let changelog = [
 
         dialog.querySelector('#sa-load-cancel').onclick = closeDialog;
         overlay.onclick = (e) => { if (e.target === overlay) closeDialog(); };
-    }
-
-    /**
-     * Triggers a file selection dialog to load table data from disk with optional pre-filtering
-     * @param {string} filterQueryRaw - Pre-filter query string to apply after loading
-     * @param {boolean} isCaseSensitive - Whether the pre-filter should be case-sensitive
-     * @param {boolean} isRegExp - Whether the pre-filter should be treated as a regular expression
-     */
-    function triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) {
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = '.json';
-
-        fileInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                loadTableDataFromDisk(file, filterQueryRaw, isCaseSensitive, isRegExp);
-            }
-        };
-
-        fileInput.click();
     }
 
     /**
