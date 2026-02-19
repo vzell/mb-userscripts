@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.44.0+2026-02-19
+// @version      9.45.0+2026-02-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.45.0+2026-02-19', description: 'UI Polish: (1) Fixed vertical alignment of mb-global-status-display and mb-info-display — both now use display:inline/font-size:0.95em and rely on the parent inline-flex align-items:center instead of carrying their own height/flex context; margin-left on infoDisplay removed since parent gap handles spacing. (2) Removed mb-fetch-progress-container (and its bar/text children) and the never-used timerDisplay span from the h1 controls bar; live per-page fetch progress is now shown in globalStatusDisplay in the subheader instead. (3) Button-group separators: initialDivider (Show-all → Save/Load) is no longer removed by ensureSettingsButtonIsLast so it persists after load; a new mb-button-divider-before-shortcuts span is inserted before 🎹 at initial setup and kept pinned immediately before 🎹 by ensureSettingsButtonIsLast on every subsequent button addition, covering both the Load→🎹 (initial page) and Export→🎹 (after-load) cases.'},
     {version: '9.44.0+2026-02-19', description: 'UI Fix: statusDisplaysContainer is now injected inline into the existing <p class="subheader"> line (present on all non-search pages) so it sits on the same line as the subheader text (e.g. "~Country"). Its left edge is dynamically aligned to the first action button via getBoundingClientRect(); if the subheader text already reaches or passes that point a fixed 10px gap is used instead. On search pages (no subheader) it falls back to a dedicated block line below the h1. A resize listener keeps alignment correct in both modes.'},
     {version: '9.43.0+2026-02-19', description: 'UI Enhancement: statusDisplaysContainer is now always rendered as a block div directly below the h1 header row. Its left edge is dynamically aligned with the first "Show all" action button using getBoundingClientRect() so it tracks any entity-name length. A resize listener keeps alignment correct when the viewport changes. Removed the three separate per-page-type placement branches (search / subheader / fallback) in favour of a single universal strategy.'},
     {version: '9.42.0+2026-02-19', description: 'Refactor: Extract getColFilters() and testRowMatch() helpers to eliminate duplicated row-matching logic shared between multi-table and single-table branches of runFilter().'},
@@ -1872,17 +1873,29 @@ Press Escape on that notice to cancel the auto-action.
             controlsContainer.insertBefore(shortcutsBtn, settingsBtn);
         }
 
-        // Add divider between Load from Disk and Auto-Resize if not already present
+        // Keep the ' | ' divider pinned immediately before 🎹 (covers both the initial
+        // Load→🎹 gap and the post-load Export→🎹 gap without needing separate dividers).
+        if (shortcutsBtn) {
+            let beforeShortcutsDivider = controlsContainer.querySelector('.mb-button-divider-before-shortcuts');
+            if (!beforeShortcutsDivider) {
+                beforeShortcutsDivider = document.createElement('span');
+                beforeShortcutsDivider.textContent = ' | ';
+                beforeShortcutsDivider.className = 'mb-button-divider-before-shortcuts';
+                beforeShortcutsDivider.style.cssText = 'color:#999; margin:0 4px;';
+            }
+            // Re-insert (or insert for the first time) immediately before shortcutsBtn
+            if (shortcutsBtn.previousSibling !== beforeShortcutsDivider) {
+                controlsContainer.insertBefore(beforeShortcutsDivider, shortcutsBtn);
+            }
+        }
+
+        // Add divider between Load from Disk and Auto-Resize if not already present.
+        // Note: the initialDivider (between action buttons and Save/Load) is intentionally
+        // kept — it remains relevant both on the initial page and after load.
         const loadBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Load from Disk'));
         const resizeBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Auto-Resize') || btn.textContent.includes('Restore Width'));
 
         if (loadBtn && resizeBtn && !controlsContainer.querySelector('.mb-button-divider-after-load')) {
-            // Remove initial divider if present
-            const initialDivider = controlsContainer.querySelector('.mb-button-divider-initial');
-            if (initialDivider) {
-                initialDivider.remove();
-            }
-
             // Add divider after Load from Disk button
             const divider = document.createElement('span');
             divider.textContent = ' | ';
@@ -5178,6 +5191,12 @@ Press Escape on that notice to cancel the auto-action.
         shortcutsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; display: inline-flex; align-items: center; justify-content: center;';
         shortcutsBtn.type = 'button';
         shortcutsBtn.onclick = showShortcutsHelp;
+        // Separator between the functional buttons (Load from Disk) and the utility group (🎹 ⚙️ ❓)
+        const beforeShortcutsDivider = document.createElement('span');
+        beforeShortcutsDivider.textContent = ' | ';
+        beforeShortcutsDivider.className = 'mb-button-divider-before-shortcuts';
+        beforeShortcutsDivider.style.cssText = 'color:#999; margin:0 4px;';
+        controlsContainer.appendChild(beforeShortcutsDivider);
         controlsContainer.appendChild(shortcutsBtn);
     }
 
@@ -5234,28 +5253,14 @@ Press Escape on that notice to cancel the auto-action.
 
     const globalStatusDisplay = document.createElement('span');
     globalStatusDisplay.id = 'mb-global-status-display';
-    globalStatusDisplay.style.cssText = 'font-size:0.9em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
+    globalStatusDisplay.style.cssText = 'font-size:0.95em; color:#333; font-weight:bold; vertical-align:middle;';
 
     const infoDisplay = document.createElement('span');
     infoDisplay.id = 'mb-info-display';
-    infoDisplay.style.cssText = 'font-size:0.8em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold; margin-left:10px;';
+    infoDisplay.style.cssText = 'font-size:0.95em; color:#333; font-weight:bold; vertical-align:middle;';
 
 
-    const progressContainer = document.createElement('div');
-    progressContainer.id = 'mb-fetch-progress-container';
-    progressContainer.style.cssText = 'display:none; width:300px; height:26px; background-color:#eee; border:1px solid #ccc; border-radius:3px; overflow:hidden; position:relative; vertical-align:middle;';
-
-    const progressBar = document.createElement('div');
-    progressBar.id = 'mb-fetch-progress-bar';
-    progressBar.style.cssText = 'width:0%; height:100%; transition: width 0.3s, background-color 0.3s; position:absolute; left:0; top:0;';
-
-    const progressText = document.createElement('div');
-    progressText.id = 'mb-fetch-progress-text';
-    progressText.style.cssText = 'position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:black; z-index:1; pointer-events:none; padding: 0 10px; box-sizing: border-box;';
-    progressText.style.whiteSpace = 'pre-line';
-
-    progressContainer.appendChild(progressBar);
-    progressContainer.appendChild(progressText);
+    const progressContainer = null; // removed from controls bar; fetch progress shown in globalStatusDisplay
 
     const filterContainer = document.createElement('span');
     // Initially hidden; will be displayed when appended to H2
@@ -5533,8 +5538,6 @@ Press Escape on that notice to cancel the auto-action.
 
     filterContainer.appendChild(statusDisplay);
 
-    const timerDisplay = document.createElement('span');
-
     /**
      * Clear all column filters for a specific table
      * @param {HTMLElement} table - The table element whose filters should be cleared
@@ -5569,12 +5572,9 @@ Press Escape on that notice to cancel the auto-action.
             }
         }
     }
-    timerDisplay.style.cssText = 'font-size:0.5em; color:#666; display:flex; align-items:center; height:24px;';
 
     controlsContainer.appendChild(stopBtn);
-    controlsContainer.appendChild(progressContainer);
     // Filter container is NOT appended here anymore; moved to H2 later
-    controlsContainer.appendChild(timerDisplay);
 
     const style = document.createElement('style');
     style.textContent = `
@@ -7324,10 +7324,8 @@ Press Escape on that notice to cancel the auto-action.
 
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
-        progressContainer.style.display = 'inline-block';
-        progressBar.style.width = '0%';
-        progressBar.style.backgroundColor = '#ffcccc';
-        progressText.textContent = '';
+        globalStatusDisplay.textContent = 'Loading…';
+        globalStatusDisplay.style.color = '#999';
 
         const startTime = performance.now();
         let fetchingTimeStart = performance.now();
@@ -7807,21 +7805,18 @@ Press Escape on that notice to cancel the auto-action.
                 const avgPageTime = cumulativeFetchTime / pagesProcessed;
                 const estRemainingSeconds = (avgPageTime * (maxPage - p)) / 1000;
 
-                // Update progress bar
+                // Update color on action button based on progress (red -> orange -> green)
                 const progress = p / maxPage;
-                progressBar.style.width = `${progress * 100}%`;
-                progressText.textContent =
-                    `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows)\n` +
-                    `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
-                //progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
-
-                // Update color based on progress (red -> orange -> green)
                 let bgColor = '#ffcccc'; // light red
                 if (progress >= 1.0) bgColor = '#ccffcc'; // light green
                 else if (progress >= 0.5) bgColor = '#ffe0b2'; // light orange
-
-                progressBar.style.backgroundColor = bgColor;
                 activeBtn.style.backgroundColor = bgColor;
+
+                // Show live progress in the subheader status display
+                globalStatusDisplay.textContent =
+                    `Loading page ${p} of ${maxPage}… (${totalRowsAccumulated} rows) — ` +
+                    `est. ${estRemainingSeconds.toFixed(1)}s remaining`;
+                globalStatusDisplay.style.color = progress >= 1.0 ? 'green' : (progress >= 0.5 ? 'orange' : '#c00');
 
                 // Detailed statistics per page fetch
                 Lib.info('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
@@ -7861,7 +7856,6 @@ Press Escape on that notice to cancel the auto-action.
                     activeBtn.classList.remove('mb-show-all-btn-loading');
                     allActionButtons.forEach(b => b.disabled = false);
                     stopBtn.style.display = 'none';
-                    progressContainer.style.display = 'none';
 
                     const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
                     const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
@@ -7877,7 +7871,6 @@ Press Escape on that notice to cancel the auto-action.
                     activeBtn.classList.remove('mb-show-all-btn-loading');
                     allActionButtons.forEach(b => b.disabled = false);
                     stopBtn.style.display = 'none';
-                    progressContainer.style.display = 'none';
                     globalStatusDisplay.textContent = 'Operation cancelled';
                     return;
                 }
@@ -7895,7 +7888,6 @@ Press Escape on that notice to cancel the auto-action.
             activeBtn.classList.remove('mb-show-all-btn-loading');
             allActionButtons.forEach(b => b.disabled = false);
             stopBtn.style.display = 'none';
-            progressContainer.style.display = 'none';
 
             // Only show filter container if it wasn't already appended to H2 (handled in updateH2Count or renderGroupedTable)
             if (!filterContainer.parentNode) {
@@ -8000,8 +7992,7 @@ Press Escape on that notice to cancel the auto-action.
             Lib.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
             Lib.error('fetch', 'Critical Error during fetch:', err);
-            globalStatusDisplay.textContent = 'Error during load... (repress the "Show all" button)';
-            progressContainer.style.display = 'none';
+            globalStatusDisplay.textContent = 'Error during load… (repress the "Show all" button)';
             activeBtn.disabled = false;
             allActionButtons.forEach(b => b.disabled = false);
             activeBtn.style.backgroundColor = '';
@@ -8655,7 +8646,6 @@ Press Escape on that notice to cancel the auto-action.
 
                     // 2. Setup UI Feedback
                     const rowCount = targetRows.length;
-                    const showProgressBar = rowCount >= (Lib.settings.sa_sort_progress_threshold || 10000);
                     const showWaitCursor = rowCount > 1000;
 
                     Lib.debug('sort', `Sorting table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}. Row count: ${rowCount}`);
@@ -8668,16 +8658,6 @@ Press Escape on that notice to cancel the auto-action.
                     }
 
                     if (showWaitCursor) document.body.classList.add('mb-sorting-active');
-
-                    // Show progress for large sorts
-                    let progressBar, progressText;
-                    if (showProgressBar && progressContainer) {
-                        progressContainer.style.display = 'block';
-                        progressBar = progressContainer.querySelector('.mb-progress-bar');
-                        progressText = progressContainer.querySelector('.mb-progress-text');
-                        if (progressBar) progressBar.style.width = '0%';
-                        if (progressText) progressText.textContent = 'Sorting: 0%';
-                    }
 
                     // 3. Async Execution
                     (async () => {
@@ -8709,14 +8689,8 @@ Press Escape on that notice to cancel the auto-action.
                                 // Create comparator
                                 const compareFn = createSortComparator(index, isAscending, isNumeric);
 
-                                // Progress callback for large sorts
-                                const progressCallback = showProgressBar ? (percent) => {
-                                    if (progressBar) progressBar.style.width = `${percent}%`;
-                                    if (progressText) progressText.textContent = `Sorting: ${percent}%`;
-                                } : null;
-
-                                // Use optimized sort for large arrays
-                                await sortLargeArray(sortedData, compareFn, progressCallback);
+                                // Use optimized sort for large arrays (no visual progress bar)
+                                await sortLargeArray(sortedData, compareFn, null);
                             }
 
                             // Apply Sorted Data back to Source variables
@@ -8768,9 +8742,6 @@ Press Escape on that notice to cancel the auto-action.
                         } finally {
                             // Cleanup UI
                             if (showWaitCursor) document.body.classList.remove('mb-sorting-active');
-                            if (showProgressBar && progressContainer) {
-                                progressContainer.style.display = 'none';
-                            }
                         }
                     })();
                 };
