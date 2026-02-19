@@ -5288,6 +5288,13 @@ let changelog = [
      * Includes history of previous filter expressions and triggers the file loading process.
      */
     async function showLoadFilterDialog() {
+	// Configure the "Open file dialog" in the browser to show "All files (*.*)", used in "Load from Disk"
+	document.addEventListener("click", function (e) {
+            if (e.target.type === "file") {
+		e.target.removeAttribute("accept");
+            }
+	}, true);
+
         const historyLimit = Lib.settings.sa_load_history_limit || 10;
         let history = GM_getValue('sa_load_filter_history', []);
 
