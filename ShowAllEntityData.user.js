@@ -4796,7 +4796,7 @@ let changelog = [
     preFilterMsg.style.cssText = 'font-size:0.8em; color:red; margin-left:4px; font-weight:bold; white-space:nowrap; display:none;';
 
     const stopBtn = document.createElement('button');
-    stopBtn.textContent = 'Stop';
+    stopBtn.innerHTML = 'St<u>o</u>p';
     stopBtn.style.cssText = 'display:none; font-size:0.8em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box; border-radius:6px;';
     stopBtn.title = 'Stop the current data fetching process from the MusicBrainz backend database';
 

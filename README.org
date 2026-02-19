@@ -36554,8 +36554,7 @@ adjust the dialog width when "Search expression..." would grow larger than the i
         overlay.appendChild(dialog);
 #+end_example
 
-
-* confirm
+* DONE confirm
 
 The following warning message appears in a native browser window I think,
 
@@ -36573,7 +36572,6 @@ The following warning message appears in a native browser window I think,
 #+end_example
 
 how can we change this to a userscript generated popup
-
 
 * DONE discrepancy
 ** initial
@@ -37016,7 +37014,6 @@ to
 
 I still dont' get the output of all the functions which
 
-
 * DONE add function descriptions
 
 Please also go through the code and add missing function descriptions with parameter descriptions
@@ -37033,7 +37030,6 @@ like the following
      */
     function debounce(func, wait, immediate) {
 #+end_example
-
 
 * DONE new button with text "Clear all column filters"
 
@@ -37458,7 +37454,6 @@ Please reorder the following buttons in the order supplied (instead of current o
 ⌨️ Shortcuts
 Export to CSV 💾
 
-
 * DONE sorting / filtering (clear all column filters) status on multi table views for each sub table, separate sorting AND filtering in two sections
 ** initial
 
@@ -37512,11 +37507,9 @@ add new
 
 and render them with different fonts behind each other. Do this for all status displays (per table, on multi table pages and also for single table pages)
 
-
 * DONE shortcuts
 
 Ctr-f/g ==> change
-
 
 * DONE stats
 
@@ -38015,7 +38008,6 @@ In the following code the '✗ ' is ONLY prepended to the text 'Clear ALL filter
     filterContainer.appendChild(clearAllFiltersBtn);
 #+end_example
 
-
 * DONE draggable "Visible Columns" pull down list container
 ** initial
 
@@ -38051,11 +38043,9 @@ bottom.
 Also adjust the font text height for all the status displays "global" and sub-table specific for multi table pages to
 correspond to the text heigth of the corresponding h2 and h3 headers
 
-
 * DONE Bug
 
 Number of columns is arifically hig, sometimes 16, in the status are
-
 
 * DONE add missing tooltip for some buttons
 ** initial
@@ -38105,7 +38095,6 @@ Global Filter: none             - there actually was one when called
 ** 2
 
 Oops I made instruction error,  the "Configuration" button should be floating at the very right of the h1 header not h2
-
 
 * DONE add more exports
 
@@ -38188,13 +38177,11 @@ please fix the following issues:
 - there is a bug when loading data from the filesystem via clicking on "Load from Disk", all buttons from 'Auto-Resize'
   up to 'Export' in the h1 header line are doubled after the data load finishes
 
-
 * DONE UI cosmetics
 
 In the uploaded userscript library "VZ_MBLibrary.user.js"
 
 please add the icon "⚙️" in front of the "a.textContent = scriptName;" 
-
 
 * DONE Add Ctrl-c for focus first column filter
 ** initial
@@ -38322,12 +38309,10 @@ And here the code block
             }
 #+end_example
 
-
 * DONE look and feel of the entries in the pull-down menu when pressing the "Shortcuts" button
 
 - Change the look and feel of the entries in the pull-down menu when pressing the "Shortcuts" button in the function
   "showShortcutsHelp" to follow the same design as for the "Density" button implementation, or at least make it more modern and don't use that black background
-  
   
 * DONE Add a new infoDisplay area for stuff like
 ** DONE initial
@@ -38454,7 +38439,6 @@ Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s
 
 It should break at the "\n" in the above exmaple
 
-
 * DONE ✗ Clear all COLUMN filters
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -38521,7 +38505,6 @@ Then simply use:
 
 clearSubBtn.textContent = '';
 clearSubBtn.appendChild(createRedXLabel('Clear all COLUMN filters'));
-
 
 * DONE logic for prefiltering rows
 
@@ -38899,6 +38882,7 @@ JavaScript
 Would you like me to review the loadTableDataFromDisk() function to see if we can streamline the pre-filter injection logic next, or is there another part of the script you'd like to dive into?
 #+end_example
 
+
 * DONE button visibility
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -38906,7 +38890,6 @@ In the uploaded userscript "ShowAllEntityData.user.js"
 Only make the "Toggle hightlightning", "Clear all COLUMN filters" and "Clear ALL filters" buttons on the global level
 (or in the single table case) visible when actual corresponding filter conditions have been entered, the same holds true
 for the "Clear all COLUMN filters" button in the muti table case,
-
 
 * DONE Add keyboard navigation in the pull-down menues
 ** initial
@@ -39309,7 +39292,7 @@ In the uploaded userscript "ShowAllEntityData.user.js"
 The "Auto-Resize" (function toggleAutoResizeColumns()) feature breaks the "sticky headers" "function applyStickyHeaders()" feature, please investigate and fix
 
 
-* Add Ctrl-M handling also on page entry, not only on rendered page
+* TODO Add Ctrl-M handling also on page entry, not only on rendered page
 ** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -39502,7 +39485,7 @@ Additionally, the font used inside the dialogs should be much bigger/readable
 - Rename the "⌨️ Shortcuts" button to just "🎹" and position it left to the "⚙️" button, this button should also already
   be visible on page entry (not only when the page is finally render after an action button click)
 
-** TODO new buttons
+** TODO new button "❓"
 
 Create a new button with text "❓" for general help about the application. When clicked a new scrollable popup window
 (with a "Close" button and equivalent "Escape" key handling) should present the user the features and help coming from a
@@ -39511,10 +39494,12 @@ also use the unicode symbols used for buttons or in text in the current user scr
 variable in the current code. Position it right to the "⚙️" button This button should also already be visible on page
 entry (not only when the page is finally render after an action button click).
 
-** TODO Underline "S" in "Stop" button and add keyboard shortcut
+** TODO Underline "o" in "Stop" button and add keyboard shortcut "Ctrl-M"+o 
+
+Add "Ctrl-M"+o to "Stop" button
 
 
-* TODO - The first input field on a page is usually auto-focused - How to stop it (if you want)
+* TODO The first input field on a page is usually auto-focused - How to stop it (if you want)
 
 #+begin_example
 Option A — Userscript fix
@@ -39531,6 +39516,7 @@ window.addEventListener("load", () => {
   document.body.focus();
 });
 #+end_example
+
 
 * TODO alignment h1 button with status line below
 
@@ -39708,6 +39694,7 @@ or
 ** Ctrl-Alt-1 ==> collapse all h1
 ** Ctrl-Alt-2 ==> collapse all h2
 ** Ctrl-Alt-3 ==> collapse all h3
+
 
 * In the file open dialog - All files (*.*)
 
