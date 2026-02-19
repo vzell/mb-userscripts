@@ -36451,6 +36451,12 @@ After loading from JSON, remove artefacts like
 
 * add global exclude filter
 
+In the uploaded userscript
+add functionality to the current global filter in the following way:
+
+A new check box named "Ex" should be rendered after the current checkboxes "Cc" and "Rx", and when pressed the global
+filter string should be used to exlude all rows from display, instead of the current behaviour to include them
+
 * DONE Place the 'Sorted "<column name>": <elapsed>s'
 
 Place the 'Sorted "<column name>": <elapsed>s' after the "Unhighlight all" button
