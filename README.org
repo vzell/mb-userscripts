@@ -39428,10 +39428,29 @@ Unified Functionality: Because this is applied in makeTableSortableUnified, it w
 
 ** new behaviour
 
+Please add Multi-Column Sorting, first to the case of single table pageTypes.
+
+Merge the following definitions 
+
 #+begin_example
 function createMultiColumnComparator(sortColumns, headers)
 function makeTableSortableUnified(table, sortKey)
 #+end_example
+
+from the uploaded two files "multiSortComparator.js" and "makeTableSort-multi.js" to the current codebase.
+
+The function in "multiSortComparator.js" can be taken as is. The "function makeTableSortableUnified(table, sortKey)"
+from "makeTableSort-multi.js" should be checked if it still fits the current code base.
+
+The keybord handling for slecting multiple columns should be change from the current implementation. I want the following:
+
+When left clicking a sort icon of a column it's always assumed to be in single sort mode. To enter multi column mode, we
+first have to single click a specific column sort icon of the first column, THEN the second column will be used for
+multi sorting if the "Ctrl" key is hold when single clicking on the sort icon of another column. This can be repeated. SO
+as long as we hold the "Ctrl" key down when clicking with the mouse, the corresponding columns will be added to the multi
+column mode array. Every single click afterwards without holding down the "Ctrl" key  will leave the multi-sort mode.
+
+Please implement
 
 
 * TODO sensible defaults for configuration options
@@ -39682,7 +39701,7 @@ window.addEventListener("load", () => {
 #+end_example
 
 
-* TODO alignment h1 button with status line below
+* DONE alignment h1 button with status line below
 ** initial
 
 Please align the
@@ -40003,7 +40022,7 @@ from the code if not used anywhere else.
 
 So basically these separaters provide a nice clear distinction between the different button types
 
-* stats bug
+* DONE stats bug
 
 The bugs are still present:
 
@@ -40185,7 +40204,16 @@ I like the filtered outout to be in the following order:
 - filtered:   '<h3 header name>' '(<total number of rows filtered> of (100))' 'Filtered <n> rows [MB-Name: "<column filter expression>"]' 'Sorted by....' '"Clear all COLUMN filters"-button' '"Show all <number of total rows>"-button' - GOOD
 
   so basically the two button should come at the end of the h3 header
-  
+
+
+* Order of UI elements on multi table h3 headers
+
+But the desired order for filtered state is:
+
+#+begin_example
+toggle-icon | name | row-count-stat | filterStatus | sortStatus | clearBtn | showAllBtn
+#+end_example
+
 * TODO Make the keyboard shortcut prefix configurable itself
 ** DONE initial
 
@@ -40316,4 +40344,4 @@ How can I force the open file dialog, triggered from my own user script to show 
 
 * TODO Is the check for invalid regexp really working
 
-* TODO Render the initial Render time after athe "Fetching" time below h1
+* TODO Render the initial Render time after the "Fetching" time below h1

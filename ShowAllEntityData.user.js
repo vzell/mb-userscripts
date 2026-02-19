@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.47.0+2026-02-19
+// @version      9.48.0+2026-02-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.48.0+2026-02-19', description: 'Feature: Multi-column sorting for single-table page types. (1) New createMultiColumnComparator(sortColumns, headers) function inserted alongside createSortComparator. (2) makeTableSortableUnified rewritten: state now carries a multiSortColumns:[{colIndex,direction}] array alongside lastSortIndex/sortState. Interaction model: plain click on any sort icon → single-sort mode (clears multiSortColumns, sorts by that column alone); Ctrl+Click on ▲ or ▼ → adds the column to multiSortColumns (or updates direction / removes it if already present); clicking ⇅ always restores original order and clears multiSortColumns regardless of Ctrl. Visual feedback: active icons in multi-sort mode are annotated with superscript priority numbers (¹²³…) via updateMultiSortVisuals(). Sort-status display shows "Multi-sorted by: \"Col1\"▲, \"Col2\"▼ (N rows in Xms)". Multi-table pages are unaffected (still single-column only). Tooltips updated to reflect Ctrl+Click behaviour. Removed stale progressBar/progressText/progressContainer references that were cleaned up in 9.45.0.'},
     {version: '9.47.0+2026-02-19', description: 'UI Fix: On multi-table pages the h3 sub-table control order is corrected. Previously: clearBtn → filterStatus → sortStatus → showAllBtn. Now: filterStatus → sortStatus → clearBtn → showAllBtn — status text appears immediately after the row-count, action buttons are grouped at the end. Fixed in both the new-h3 and the reuse-existing-h3 branches of renderGroupedTable.'},
     {version: '9.46.0+2026-02-19', description: 'Bug fixes: (1) Sort debug log now includes the direction icon (▲/▼/⇅) before the column index, matching the sort-status-display text. (2) Filter status display in single-table mode no longer queries tbody tr count from the DOM after an async chunked render (which only has 500 rows inserted at that point); it now uses filteredRows.length from the in-memory array, giving the correct total immediately. (3) Same fix eliminates the mismatch between the H2 row-count span (correct) and the filter-status-display (was wrong) when a global filter is active after sorting.'},
     {version: '9.45.0+2026-02-19', description: 'UI Polish: (1) Fixed vertical alignment of mb-global-status-display and mb-info-display — both now use display:inline/font-size:0.95em and rely on the parent inline-flex align-items:center instead of carrying their own height/flex context; margin-left on infoDisplay removed since parent gap handles spacing. (2) Removed mb-fetch-progress-container (and its bar/text children) and the never-used timerDisplay span from the h1 controls bar; live per-page fetch progress is now shown in globalStatusDisplay in the subheader instead. (3) Button-group separators: initialDivider (Show-all → Save/Load) is no longer removed by ensureSettingsButtonIsLast so it persists after load; a new mb-button-divider-before-shortcuts span is inserted before 🎹 at initial setup and kept pinned immediately before 🎹 by ensureSettingsButtonIsLast on every subsequent button addition, covering both the Load→🎹 (initial page) and Export→🎹 (after-load) cases.'},
@@ -1618,6 +1619,46 @@ Press Escape on that notice to cancel the auto-action.
 
             const result = valA.localeCompare(valB, undefined, {numeric: true, sensitivity: 'base'});
             return isAscending ? result : -result;
+        };
+    }
+
+    /**
+     * Creates a multi-column comparator for sorting by multiple columns in priority order.
+     * Each entry in sortColumns carries { colIndex, direction } where direction 1 = asc, 2 = desc.
+     *
+     * @param {{ colIndex: number, direction: number }[]} sortColumns
+     * @param {NodeList} headers - TH elements of the table's first header row
+     * @returns {Function} Comparator suitable for Array.sort / sortLargeArray
+     */
+    function createMultiColumnComparator(sortColumns, headers) {
+        return (a, b) => {
+            for (const sortCol of sortColumns) {
+                const idx = sortCol.colIndex;
+                const isAscending = sortCol.direction === 1;
+
+                const valA = getCleanVisibleText(a.cells[idx]).trim().toLowerCase() || '';
+                const valB = getCleanVisibleText(b.cells[idx]).trim().toLowerCase() || '';
+
+                // Derive column name for numeric detection (strip sort icons and superscripts)
+                const hdrName = headers[idx]
+                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
+                    : '';
+                const isNumeric = hdrName.includes('Year') || hdrName.includes('Releases') ||
+                                  hdrName.includes('Track') || hdrName.includes('Length') ||
+                                  hdrName.includes('Rating') || hdrName.includes('#');
+
+                let result;
+                if (isNumeric) {
+                    const numA = parseFloat(valA.replace(/[^0-9.-]/g, '')) || 0;
+                    const numB = parseFloat(valB.replace(/[^0-9.-]/g, '')) || 0;
+                    result = numA - numB;
+                } else {
+                    result = valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
+                }
+
+                if (result !== 0) return isAscending ? result : -result;
+            }
+            return 0; // all compared columns are equal
         };
     }
 
@@ -8599,30 +8640,84 @@ Press Escape on that notice to cancel the auto-action.
 
         const headers = table.querySelectorAll('thead tr:first-child th');
 
-        // multiTableSortStates.get(sortKey) holds: { lastSortIndex, sortState }
-        // sortState: 0 (Original ⇅), 1 (Asc ▲), 2 (Desc ▼)
+        // State shape: { lastSortIndex, sortState, multiSortColumns }
+        // sortState: 0 = original ⇅, 1 = asc ▲, 2 = desc ▼
+        // multiSortColumns (single-table only): [{ colIndex, direction }] in priority order
         if (!multiTableSortStates.has(sortKey)) {
-            multiTableSortStates.set(sortKey, { lastSortIndex: -1, sortState: 0 });
+            multiTableSortStates.set(sortKey, {
+                lastSortIndex: -1,
+                sortState: 0,
+                multiSortColumns: []
+            });
         }
         const state = multiTableSortStates.get(sortKey);
 
+        // --- Helper: render tiny superscript priority numbers (¹²³…) -------
+        const getSuperscript = (n) => {
+            const sup = ['⁰','¹','²','³','⁴','⁵','⁶','⁷','⁸','⁹'];
+            return String(n).split('').map(d => sup[parseInt(d)]).join('');
+        };
+
+        // --- Helper: refresh all sort-icon visuals for the current multi-sort state ---
+        const updateMultiSortVisuals = () => {
+            // First clear every icon
+            table.querySelectorAll('.sort-icon-btn').forEach(btn => {
+                btn.classList.remove('sort-icon-active');
+                btn.textContent = btn.textContent.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '');
+            });
+            if (state.multiSortColumns.length === 0) return;
+            // Mark each active column with its priority superscript
+            state.multiSortColumns.forEach((sortCol, idx) => {
+                const th = headers[sortCol.colIndex];
+                if (!th) return;
+                const orderSup = getSuperscript(idx + 1);
+                th.querySelectorAll('.sort-icon-btn').forEach(icon => {
+                    const bare = icon.textContent.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '');
+                    if ((bare === '▲' && sortCol.direction === 1) ||
+                        (bare === '▼' && sortCol.direction === 2)) {
+                        icon.classList.add('sort-icon-active');
+                        icon.textContent = bare + orderSup;
+                    }
+                });
+            });
+        };
+
+        // --- Helper: derive clean column name from a th element ---------------
+        const getCleanColName = (th) =>
+            th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim() : '';
+
+        // --- Helper: is a column name numeric? ---------------------------------
+        const isNumericCol = (name) =>
+            name.includes('Year') || name.includes('Releases') || name.includes('Track') ||
+            name.includes('Length') || name.includes('Rating') || name.includes('#');
+
+        // -----------------------------------------------------------------------
         headers.forEach((th, index) => {
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'default';
 
             const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
-            th.innerHTML = ''; // Clear for new icon layout
+            th.innerHTML = ''; // clear for new icon layout
 
             const createIcon = (char, targetState) => {
                 const span = document.createElement('span');
                 span.className = 'sort-icon-btn';
-                // Set Tooltip texts
-                if (char === '⇅') span.title = 'Original sort order';
-                else if (char === '▲') span.title = 'Ascending sort order';
-                else if (char === '▼') span.title = 'Descending sort order';
 
-                // Initial highlighting: Check if this specific icon corresponds to the saved state
-                if (state.lastSortIndex === index && state.sortState === targetState) {
+                // Tooltips reflect the Ctrl+Click multi-sort model on single-table pages
+                if (!isMultiTable) {
+                    if (char === '⇅') span.title = 'Restore original order (clears multi-sort)';
+                    else if (char === '▲') span.title = 'Sort ascending — Ctrl+Click to add to multi-column sort';
+                    else if (char === '▼') span.title = 'Sort descending — Ctrl+Click to add to multi-column sort';
+                } else {
+                    if (char === '⇅') span.title = 'Restore original sort order';
+                    else if (char === '▲') span.title = 'Sort ascending';
+                    else if (char === '▼') span.title = 'Sort descending';
+                }
+
+                // Restore active indicator for single-column state after re-render
+                // (multi-sort visuals are restored by the updateMultiSortVisuals call at the end)
+                if (state.multiSortColumns.length === 0 &&
+                    state.lastSortIndex === index && state.sortState === targetState) {
                     span.classList.add('sort-icon-active');
                 }
                 span.textContent = char;
@@ -8631,11 +8726,8 @@ Press Escape on that notice to cancel the auto-action.
                     e.preventDefault();
                     e.stopPropagation();
 
-                    // 1. Identify Target Data
-                    let targetRows = [];
-                    let originalRows = [];
-                    let targetGroup = null;
-
+                    // === Identify target data ===
+                    let targetRows = [], originalRows = [], targetGroup = null;
                     if (isMultiTable) {
                         const groupIndex = parseInt(sortKey.split('_').pop(), 10);
                         targetGroup = groupedRows[groupIndex];
@@ -8648,14 +8740,51 @@ Press Escape on that notice to cancel the auto-action.
                         originalRows = originalAllRows;
                     }
 
-                    // 2. Setup UI Feedback
                     const rowCount = targetRows.length;
                     const showWaitCursor = rowCount > 1000;
-                    const sortDirIcon = targetState === 0 ? '⇅' : (targetState === 1 ? '▲' : '▼');
+                    const isCtrl = e.ctrlKey || e.metaKey;
 
-                    Lib.debug('sort', `Sorting table "${sortKey}" by column: "${colName}" ${sortDirIcon} (index: ${index}) to state ${targetState}. Row count: ${rowCount}`);
+                    // === Update sort state ===
+                    if (!isMultiTable && isCtrl && targetState !== 0) {
+                        // Ctrl+Click on ▲ or ▼: add / update / remove from multi-sort chain.
+                        // The very first Ctrl+Click on an empty chain behaves like a normal add.
+                        const existing = state.multiSortColumns.findIndex(c => c.colIndex === index);
+                        if (existing !== -1) {
+                            if (state.multiSortColumns[existing].direction === targetState) {
+                                // Same direction clicked again → remove this column
+                                state.multiSortColumns.splice(existing, 1);
+                                Lib.debug('sort', `Removed column ${index} from multi-sort (${state.multiSortColumns.length} remain)`);
+                            } else {
+                                // Different direction → update direction only
+                                state.multiSortColumns[existing].direction = targetState;
+                                Lib.debug('sort', `Updated column ${index} direction in multi-sort`);
+                            }
+                        } else {
+                            state.multiSortColumns.push({ colIndex: index, direction: targetState });
+                            Lib.debug('sort', `Added column ${index} to multi-sort (position ${state.multiSortColumns.length})`);
+                        }
+                        state.lastSortIndex = index;
+                        state.sortState = targetState;
+                    } else {
+                        // Plain click (any key), or ⇅ clicked, or multi-table page:
+                        // always single-sort mode — clear the multi-sort chain.
+                        state.multiSortColumns = [];
+                        state.lastSortIndex = targetState === 0 ? -1 : index;
+                        state.sortState = targetState;
+                    }
 
-                    // Update sort status display
+                    // === Debug log ===
+                    if (!isMultiTable && state.multiSortColumns.length > 1) {
+                        const colList = state.multiSortColumns.map(c =>
+                            `"${getCleanColName(headers[c.colIndex])}"${c.direction === 1 ? '▲' : '▼'}`
+                        ).join(', ');
+                        Lib.debug('sort', `Multi-sorting table "${sortKey}" by [${colList}]. Row count: ${rowCount}`);
+                    } else {
+                        const icon = targetState === 0 ? '⇅' : (targetState === 1 ? '▲' : '▼');
+                        Lib.debug('sort', `Sorting table "${sortKey}" by column: "${getCleanColName(headers[index])}" ${icon} (index: ${index}) to state ${targetState}. Row count: ${rowCount}`);
+                    }
+
+                    // === Status display: show "Sorting…" immediately ===
                     const sortStatusDisplay = document.getElementById('mb-sort-status-display');
                     if (sortStatusDisplay) {
                         sortStatusDisplay.textContent = '⏳ Sorting...';
@@ -8664,79 +8793,99 @@ Press Escape on that notice to cancel the auto-action.
 
                     if (showWaitCursor) document.body.classList.add('mb-sorting-active');
 
-                    // 3. Async Execution
                     (async () => {
                         try {
                             const startSort = performance.now();
 
-                            // Update State
-                            state.lastSortIndex = index;
-                            state.sortState = targetState;
+                            // === Visual update ===
+                            if (!isMultiTable && state.multiSortColumns.length > 0) {
+                                updateMultiSortVisuals();
+                            } else {
+                                // Single-column (or multi-table): one active icon
+                                table.querySelectorAll('.sort-icon-btn').forEach(btn => {
+                                    btn.classList.remove('sort-icon-active');
+                                    btn.textContent = btn.textContent.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '');
+                                });
+                                span.classList.add('sort-icon-active');
+                            }
 
-                            // Reset visual state for all header buttons in THIS table
-                            table.querySelectorAll('.sort-icon-btn').forEach(btn => btn.classList.remove('sort-icon-active'));
-                            // Highlight only this specific icon
-                            span.classList.add('sort-icon-active');
+                            // === Perform sort ===
+                            const isRestore = (isMultiTable && state.sortState === 0) ||
+                                              (!isMultiTable && state.multiSortColumns.length === 0 && state.sortState === 0) ||
+                                              (!isMultiTable && state.multiSortColumns.length === 0 && targetState === 0);
 
-                            // Perform Sort
-                            let sortedData = [];
-                            if (state.sortState === 0) {
-                                // Restore original order
+                            let sortedData;
+                            if (isRestore) {
                                 sortedData = [...originalRows];
                             } else {
-                                // Clone array for sorting
                                 sortedData = [...targetRows];
-                                const isNumeric = colName.includes('Year') || colName.includes('Releases') ||
-                                                colName.includes('Track') || colName.includes('Length') ||
-                                                colName.includes('Rating') || colName.includes('#');
-                                const isAscending = state.sortState === 1;
+                                let compareFn;
 
-                                // Create comparator
-                                const compareFn = createSortComparator(index, isAscending, isNumeric);
+                                if (!isMultiTable && state.multiSortColumns.length > 1) {
+                                    // True multi-column sort
+                                    compareFn = createMultiColumnComparator(state.multiSortColumns, headers);
+                                } else if (!isMultiTable && state.multiSortColumns.length === 1) {
+                                    // Single entry in chain (Ctrl+clicked one column)
+                                    const col = state.multiSortColumns[0];
+                                    const cn = getCleanColName(headers[col.colIndex]);
+                                    compareFn = createSortComparator(col.colIndex, col.direction === 1, isNumericCol(cn));
+                                } else {
+                                    // Plain single-column sort (multi-table or plain click)
+                                    const cn = getCleanColName(headers[index]);
+                                    compareFn = createSortComparator(index, state.sortState === 1, isNumericCol(cn));
+                                }
 
-                                // Use optimized sort for large arrays (no visual progress bar)
                                 await sortLargeArray(sortedData, compareFn, null);
                             }
 
-                            // Apply Sorted Data back to Source variables
+                            // === Apply sorted data ===
                             if (isMultiTable && targetGroup) {
                                 targetGroup.rows = sortedData;
                             } else {
                                 allRows = sortedData;
                             }
 
-                            // Re-run filter and render
                             runFilter();
 
-                            const duration = ((performance.now() - startSort) / 1000).toFixed(2);
                             const durationMs = (performance.now() - startSort).toFixed(0);
+                            const colorByDuration = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
 
+                            // === Update status display ===
                             if (sortStatusDisplay) {
-                                const tableName = isMultiTable && targetGroup ? (targetGroup.category || targetGroup.key || sortKey) : 'table';
-
                                 if (isMultiTable) {
-                                    // On multi-table pages: update only the sub-table sort status
-                                    // Find the corresponding h3 and update its sort status display
+                                    // Sub-table sort status on its h3
                                     const h3 = table.previousElementSibling;
                                     if (h3 && h3.classList.contains('mb-toggle-h3')) {
                                         const subSortStatus = h3.querySelector('.mb-sort-status');
                                         if (subSortStatus) {
                                             const sortIcon = state.sortState === 0 ? '⇅' : (state.sortState === 1 ? '▲' : '▼');
-                                            subSortStatus.textContent = `✓ Sorted by column "${colName}" ${sortIcon}: ${rowCount} rows in ${durationMs}ms`;
-                                            subSortStatus.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
+                                            subSortStatus.textContent = `✓ Sorted by column "${getCleanColName(headers[index])}" ${sortIcon}: ${rowCount} rows in ${durationMs}ms`;
+                                            subSortStatus.style.color = colorByDuration;
                                         }
                                     }
-                                    // Clear main sort status display on multi-table pages
-                                    sortStatusDisplay.textContent = '';
+                                    sortStatusDisplay.textContent = ''; // clear main display on multi-table pages
+                                } else if (isRestore) {
+                                    sortStatusDisplay.textContent = `✓ Restored to original order (${rowCount} rows)`;
+                                    sortStatusDisplay.style.color = 'green';
+                                } else if (state.multiSortColumns.length > 1) {
+                                    const colNames = state.multiSortColumns.map(c => {
+                                        const n = getCleanColName(headers[c.colIndex]);
+                                        return `"${n}"${c.direction === 1 ? '▲' : '▼'}`;
+                                    }).join(', ');
+                                    sortStatusDisplay.textContent = `✓ Multi-sorted by: ${colNames} (${rowCount} rows in ${durationMs}ms)`;
+                                    sortStatusDisplay.style.color = colorByDuration;
                                 } else {
-                                    // On single-table pages: show in main sort status display
-                                    const sortIcon = state.sortState === 0 ? '⇅' : (state.sortState === 1 ? '▲' : '▼');
-                                    sortStatusDisplay.textContent = `✓ Sorted by column "${colName}" ${sortIcon}: ${rowCount} rows in ${durationMs}ms`;
-                                    sortStatusDisplay.style.color = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
+                                    // Single-column (including the single-entry Ctrl+Click chain)
+                                    const col = state.multiSortColumns.length === 1 ? state.multiSortColumns[0] : null;
+                                    const dispIdx  = col ? col.colIndex : index;
+                                    const dispIcon = col ? (col.direction === 1 ? '▲' : '▼')
+                                                         : (state.sortState === 1 ? '▲' : '▼');
+                                    sortStatusDisplay.textContent = `✓ Sorted by column "${getCleanColName(headers[dispIdx])}" ${dispIcon}: ${rowCount} rows in ${durationMs}ms`;
+                                    sortStatusDisplay.style.color = colorByDuration;
                                 }
                             }
 
-                            Lib.info('sort', `Sort completed in ${duration}s for ${rowCount} rows`);
+                            Lib.info('sort', `Sort completed in ${durationMs}ms for ${rowCount} rows`);
 
                         } catch (error) {
                             Lib.error('sort', 'Error during sort:', error);
@@ -8745,7 +8894,6 @@ Press Escape on that notice to cancel the auto-action.
                                 sortStatusDisplay.style.color = 'red';
                             }
                         } finally {
-                            // Cleanup UI
                             if (showWaitCursor) document.body.classList.remove('mb-sorting-active');
                         }
                     })();
@@ -8758,6 +8906,12 @@ Press Escape on that notice to cancel the auto-action.
             th.appendChild(createIcon('▲', 1));
             th.appendChild(createIcon('▼', 2));
         });
+
+        // Restore multi-sort visuals if state already has columns in the chain
+        // (called on every re-render triggered by runFilter after a sort)
+        if (!isMultiTable && state.multiSortColumns.length > 0) {
+            updateMultiSortVisuals();
+        }
     }
 
     /**
