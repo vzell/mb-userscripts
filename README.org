@@ -39701,8 +39701,8 @@ Would you like me to review any other layout elements to make the UI look even s
 
 
 
-* TODO Make the keyboard shortcuts configurable itself
-** initial
+* TODO Make the keyboard shortcut prefix configurable itself
+** DONE initial
 
 Introduce a new configuration parameter "sa_keyboard_shortcut_prefix" with a default value of ""Ctrl+M"" in the variable
 'const configSchema'
@@ -39737,7 +39737,7 @@ cfg.type === "keyboard_shortcut"
 
 The user should be able to press the desired keyboard prefix in the configuration dialog. So probably for this cfg.type
 create a text input field, where the user can focus and press the desired key combination to use as a prefix. After
-pressing the key combination, the String value should be stored in the text field.
+pressing the key combination, the String value of the key combination should be stored in the text field.
 
 * Add keyboard handling for the complete application
 ** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
