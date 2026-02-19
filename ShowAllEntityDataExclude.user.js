@@ -6668,7 +6668,7 @@ Press Escape on that notice to cancel the auto-action.
 
                     const finalHit = globalHit && colHit;
                     if (finalHit) {
-                        if (globalQuery && !isExclude) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+                        if (globalQuery && !isExclude) highlightText(r, globalQueryRaw, isCaseSensitive, -1, isRegExp);
                         colFilters.forEach(f => highlightText(r, f.val, isCaseSensitive, f.idx, isRegExp));
                     }
                     return finalHit;
