@@ -40123,10 +40123,66 @@ already does.
 
 where the number don't match at all. (1840 of 4130), ✓ Filtered 500 rows in 1159ms, Sorted by column "Time" ▲: 4130 rows
 
+** On multi table pages
 
-** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 
+the rendering of the different UI elements is in the wrong order as soon as there is a column filter somewhere added:
 
+Here an exmpaple of the h3 HTML structure without filtering
+
+#+begin_example
+<h3 class="mb-toggle-h3" title="Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)" style="cursor: pointer; user-select: none;">
+  <span class="mb-toggle-icon">▲
+  </span>Vocals
+  <span class="mb-row-count-stat">(98 of 100)
+  </span>
+  <span class="mb-subtable-controls">
+    <button class="mb-subtable-clear-btn" type="button" title="Clear all column filters for this table" style="display: none;">
+      <span style="color: red; font-size: 1em; font-weight: bold;">✗
+      </span>Clear all COLUMN filters
+    </button>
+    <span class="mb-filter-status" data-table-name="vocals" data-table-index="6">
+    </span>
+    <span class="mb-sort-status" data-table-name="vocals" data-table-index="6">
+    </span>
+  </span>
+  <button type="button" style="font-size: 1em; margin-left: 10px; padding: 1px 4px; cursor: pointer; vertical-align: middle; border-radius: 4px;">Show all 65,595
+  </button>
+</h3>
+#+end_example
+
+and the same with a filter expression on a column
+
+#+begin_example
+<h3 class="mb-toggle-h3" title="Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)" style="cursor: pointer; user-select: none;">
+  <span class="mb-toggle-icon">▼
+  </span>Vocals
+  <span class="mb-row-count-stat">(3 of 100)
+  </span>
+  <span class="mb-subtable-controls">
+    <button class="mb-subtable-clear-btn" type="button" title="Clear all column filters for this table" style="display: inline-block;">
+      <span style="color: red; font-size: 1em; font-weight: bold;">✗
+      </span>Clear all COLUMN filters
+    </button>
+    <span class="mb-filter-status" data-table-name="vocals" data-table-index="6" style="color: green;">✓ Filtered 3 rows [MB-Name:"Baby"]
+    </span>
+    <span class="mb-sort-status" data-table-name="vocals" data-table-index="6">
+    </span>
+  </span>
+  <button type="button" style="font-size: 1em; margin-left: 10px; padding: 1px 4px; cursor: pointer; vertical-align: middle; border-radius: 4px;">Show all 65,595
+  </button>
+</h3>
+#+end_example
+
+So we have
+
++ unfiltered: <h3 header name> (<number of rows filtered by global filter> of <100>) "Show all <number of total rows>" button - GOOD
++ filtered:   <h3 header name> "Clear all COLUMN filters"-button (<total number of rows filtered> of (100)) "Filtered <n> rows [MB-Name: "<column filter expression>"] "Show all <number of total rows>"-button  - BAD
+
+I like the filtered outout to be in the following order:
+
++ filtered:   <h3 header name> (<total number of rows filtered> of (100)) "Show all <number of total rows>"-button "Clear all COLUMN filters"-button (<total number of rows filtered> of (100)) "Filtered <n> rows [MB-Name: "<column filter expression>"] "Filtered <n> rows [MB-Name: "<column filter expression>"]  - GOOD
 
 * TODO Make the keyboard shortcut prefix configurable itself
 ** DONE initial
