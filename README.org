@@ -36449,13 +36449,18 @@ After loading from JSON, remove artefacts like
 
 * DONE Replace the "Warning: This .." to the same nice dialog like after the loading of lots of pages
 
-* add global exclude filter
+
+* TODO add global exclude filter
+** DONE initial
 
 In the uploaded userscript
 add functionality to the current global filter in the following way:
 
 A new check box named "Ex" should be rendered after the current checkboxes "Cc" and "Rx", and when pressed the global
 filter string should be used to exlude all rows from display, instead of the current behaviour to include them
+
+** fix info text, and let claude check again
+
 
 * DONE Place the 'Sorted "<column name>": <elapsed>s'
 
@@ -37517,7 +37522,7 @@ and render them with different fonts behind each other. Do this for all status d
 
 Ctr-f/g ==> change
 
-* DONE stats
+* stats
 
 completely bullshit
 
