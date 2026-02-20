@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.53.0+2026-02-20
+// @version      9.54.0+2026-02-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.54.0+2026-02-20', description: 'Enhancement: Multi-column sort UX — auto-seed chain from existing single-sort. Previously, starting a multi-sort session required Ctrl+clicking the already-sorted column first to add it to the chain before adding further columns. Now, when the user Ctrl+clicks any sort icon on a column that is NOT the currently sorted one, the existing single-sort column is automatically promoted as priority 1 in the multi-sort chain, and the newly Ctrl+clicked column is added as priority 2. If the user Ctrl+clicks the same column that is already sorted, behaviour is unchanged (normal add/update/remove cycle). Plain clicks still clear the chain and enter single-sort mode as before.'},
     {version: '9.53.0+2026-02-20', description: 'Refactor + Enhancement (3 items): (1) showCustomAlert and showCustomConfirm merged into a single showCustomDialog(message, title, triggerButton, mode) function (mode: "alert"|"confirm"). Both original functions remain as thin wrappers so all call sites are unchanged. (2) All visual parameters of the custom popup dialog are now fully configurable via 6 new condensed pipe-separated config strings in a new "🪟 CUSTOM POPUP UI" section of configSchema: sa_popup_dialog_style, sa_popup_header_style, sa_popup_message_style, sa_popup_ok_btn_style, sa_popup_cancel_btn_style, sa_popup_btn_gap. Helper functions parseCondensedStyle / popupDialogCSS / popupHeaderCSS / popupMessageCSS / popupOkBtnCSS / popupCancelBtnCSS extract the values at render time so changes in settings take effect immediately. (3) Default values increase readability: header font-size 1.3em→1.5em, message font-size 1.05em→1.2em / line-height 1.6→1.7 / color #555→#444, border-radius 8px→10px, padding 24px→28px, max-width 550px→600px. A new stub section "🖌️ UI APPEARANCE (future)" documents the planned extension point for configuring all other UI elements (action buttons, filter inputs, subtable controls, checkboxes, etc.) via the same condensed-string pattern.'},
     {version: '9.52.0+2026-02-20', description: 'UI Fix (3 items): (1) mb-subtable-clear-btn is now always rendered to the left of span.mb-filter-status in all three subtable-controls construction sites (new-h3, reuse-existing-h3, and filter-time branches). (2) Buttons mb-toggle-prefilter-btn, mb-toggle-filter-highlight-btn, mb-clear-column-filters-btn (new ID), and mb-clear-all-filters-btn (new ID) now share the same rounded-corner visual style as mb-subtable-clear-btn (border-radius:4px, background:#f0f0f0, border:1px solid #ccc, vertical-align:middle) while preserving their individual font-size and display values. (3) Added unique IDs mb-clear-column-filters-btn and mb-clear-all-filters-btn to the two previously ID-less filter clear buttons.'},
     {version: '9.51.0+2026-02-20', description: 'UI Fix (3 items): (1) "Show all <n>" sub-table overflow button: added class mb-show-all-subtable-btn (styled like mb-subtable-clear-btn), and moved it to the beginning of span.mb-subtable-controls so it appears visually where the controls span starts. (2) Stop button repositioned in the h1 controls bar: now appears right before the first divider (mb-button-divider-initial), between the action buttons and Save/Load group. Also added type="button" and consistent inline-flex styling. (3) Ctrl-M + o keyboard shortcut: activates the Stop button, but ONLY while the Stop button is visible (i.e. during an active fetch). The shortcut is registered when the button becomes visible and deregistered when it is hidden again.'},
@@ -8816,7 +8817,21 @@ Press Escape on that notice to cancel the auto-action.
                     // === Update sort state ===
                     if (!isMultiTable && isCtrl && targetState !== 0) {
                         // Ctrl+Click on ▲ or ▼: add / update / remove from multi-sort chain.
-                        // The very first Ctrl+Click on an empty chain behaves like a normal add.
+                        //
+                        // Special case: if we are entering multi-sort from a plain single-sort
+                        // state (chain is empty but a column is already sorted), automatically
+                        // promote that existing sorted column as priority 1 in the chain, then
+                        // append the newly Ctrl+clicked column as priority 2.  This means the
+                        // user never has to re-click the first column just to seed the chain.
+                        if (state.multiSortColumns.length === 0 &&
+                            state.lastSortIndex !== -1 &&
+                            state.lastSortIndex !== index &&
+                            state.sortState !== 0) {
+                            // Seed chain with the already-sorted column
+                            state.multiSortColumns.push({ colIndex: state.lastSortIndex, direction: state.sortState });
+                            Lib.debug('sort', `Seeded multi-sort chain with already-sorted column ${state.lastSortIndex} (direction ${state.sortState})`);
+                        }
+
                         const existing = state.multiSortColumns.findIndex(c => c.colIndex === index);
                         if (existing !== -1) {
                             if (state.multiSortColumns[existing].direction === targetState) {

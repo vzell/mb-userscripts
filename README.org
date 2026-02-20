@@ -40512,7 +40512,7 @@ Also give each button a unique id when missing, e.g.
 
 
 * refactor showCustomXXX functions
-** Also refactor the two functions
+** DONE Also refactor the two functions
 
 #+begin_example
 showCustomAlert
@@ -40529,9 +40529,7 @@ appearance of all the UI elements.
 ** add code to library to support new "datatypes" with custom UI confugration
 
 
-
-
-* reintroduce progressbars
+* reintroduce progressbars on h1 (single/multi - initial downloading and loading from disk), h2 (single/multi - global filtering / single-sorting) and h3 headers (multi - filtering/sorting)
 
 #+begin_example
 const progressContainer = document.createElement('div');
@@ -40579,4 +40577,21 @@ if (showProgressBar && progressContainer) {
 }
 #+end_example
 
+
 * Ctrl-click should switch in multi column sort mode if another column has already been sorted
+** initial
+
+Please change the for the multi column sort feature, the processing of keybindings in the following way:
+
+Right now to enable multi column sort, I have to click already the first column to be considered for multi-sorting, even
+if we already have sorted that column either ascending or descending. What I want is, if we already have sorted a column
+somehow, to enable multi-sort, the next column which should be part of the multi-sort array, is the one where I click
+when holding the "Ctrl" key down and so on. I don't want to artificially click on the same column again, if it's already
+sorted on, and I want it to be the fist column in a new multi-sort session.
+
+Everything else should stay the same. Please implement
+
+** multi table
+
+Now alos lift the restrition to singel table pages and implement the whole stuff alos for muti table pages.
+Every tbale on a multi table page should be independatly be sortable with multi-column sort mode
