@@ -39731,7 +39731,8 @@ visible on page entry (not only when the page is finally render after an action 
 
 ** TODO Underline "o" in "Stop" button and add keyboard shortcut "Ctrl-M"+o 
 
-Add "Ctrl-M"+o to "Stop" button
+
+
 
 * Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
 
@@ -40403,8 +40404,7 @@ How can I force the open file dialog, triggered from my own user script to show 
 * Make status area clickable like the empty space
 
 * TODO Order of UI elements on multi table h3 headers
-
-But the desired order for filtered state is:
+** desired order for filtered state is:
 
 #+begin_example
 toggle-icon | name | row-count-stat | filterStatus | sortStatus | clearBtn | showAllBtn
@@ -40412,14 +40412,87 @@ toggle-icon | name | row-count-stat | filterStatus | sortStatus | clearBtn | sho
 
 ** give the "Show all <n rows>"-button an ID
 
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+ - Give the "Show all <n rows>"-button
+
 #+begin_example
 <button type="button" style="font-size: 1em; margin-left: 10px; padding: 1px 4px; cursor: pointer; vertical-align: middle; border-radius: 4px;">Show all 8,500</button>
 #+end_example
 
-and place it at the beginning of 'span class="mb-subtable-controls'
+a "class" attribute like the following "mb-subtable-clear-btn" button
+
+#+begin_example
+<button class="mb-subtable-clear-btn" type="button" title="Clear all column filters for this table" style="display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button>
+#+end_example
+
+and always place it at the beginning of 'span class="mb-subtable-controls'
 
 #+begin_example
 <span class="mb-subtable-controls"><span class="mb-filter-status" data-table-name="recording location for" data-table-index="2" style="color: green;">✓ Filtered 0 rows [Title:"sdsd"]</span><span class="mb-sort-status" data-table-name="recording location for" data-table-index="2" style="color: green;">✓ Sorted by column "Date" ▼: 100 rows in 40ms</span><button class="mb-subtable-clear-btn" type="button" title="Clear all column filters for this table" style="display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button></span>
+#+end_example
+
+So visually it should be rendered where it is rendered initially when the <span class="mb-subtable-controls" is not yet rendered.
+
+- Also fix the rendering of the "Stop" button
+
+#+begin_example
+<button title="Stop the current data fetching process from the MusicBrainz backend database"
+#+end_example
+
+inside the following container
+
+#+begin_example
+<div id="mb-show-all-controls-container" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: 10px; vertical-align: middle; line-height: 1;"><button type="button" title="Fetch all the table data from the MusicBrainz backend database" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(204, 255, 204); color: black;" class="">🧮 Show all Events for Artist</button><span class="mb-button-divider-initial" style="color: rgb(153, 153, 153); margin: 0px 4px;"> | </span><button type="button" title="Save current table data to disk as Gzipped JSON (Ctrl+M, then s)" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(76, 175, 80); color: white; border: 1px solid rgb(69, 160, 73); display: inline-block; align-items: center; justify-content: center;">💾 <u>S</u>ave to Disk</button><button type="button" title="Load table data from disk (JSON file) (Ctrl+M, then l)" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(33, 150, 243); color: white; border: 1px solid rgb(11, 125, 218); display: inline-flex; align-items: center; justify-content: center;">📂 <u>L</u>oad from Disk</button><span class="mb-button-divider-after-load" style="color: rgb(153, 153, 153); margin: 0px 4px;"> | </span><input type="file" accept=".gz,application/gzip" style="display: none;"><button title="Stop the current data fetching process from the MusicBrainz backend database" style="display: none; font-size: 0.8em; padding: 2px 6px; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47); height: 24px; box-sizing: border-box; border-radius: 6px;">St<u>o</u>p</button><button title="Auto-resize columns to optimal width (Ctrl+M, then r)" type="button" style="font-size: 0.9em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">↔️ Auto-<u>R</u>esize</button><button title="Show/hide table columns (Ctrl+M, then v)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">👁️ <u>V</u>isible Columns</button><button title="Change table density (spacing) (Ctrl+M, then d)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">📏 <u>D</u>ensity</button><button title="Show table statistics (Ctrl+M, then t)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">📊 S<u>t</u>ats</button><button title="Export visible rows and columns to various formats (Ctrl+M, then e)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;"><u>E</u>xport 💾</button><span class="mb-button-divider-before-shortcuts" style="color: rgb(153, 153, 153); margin: 0px 4px;"> | </span><button id="mb-shortcuts-help-btn" title="Show keyboard shortcuts (or press ?)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;">🎹</button><button type="button" title="Open settings manager to configure script behavior" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(96, 125, 139); color: white; border: 1px solid rgb(84, 110, 122); display: inline-flex; align-items: center; justify-content: center;">⚙️</button><button id="mb-app-help-btn" title="Show application help and feature overview" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(120, 144, 156); color: white; border: 1px solid rgb(96, 125, 139); display: inline-flex; align-items: center; justify-content: center;">❓</button></div>
+#+end_example
+
+to be right before the first divider
+
+#+begin_example
+<span class="mb-button-divider-initial" style="color: rgb(153, 153, 153); margin: 0px 4px;"> | </span>
+#+end_example
+
+- While you're at it, also make sure that IF the "Stop" button is rendered, add "Ctrl-M"+o handling for emulating the
+  keypress. The "o" in "Stop" is already underlined to give the user a visuell feedback. "Ctrl-M"+o should ONLY be available during the time the "Stop" button is rendered.
+
+** mb-subtable-clear-btn in front of <span class="mb-filter-status">
+
+Please also
+
+- render the
+
+#+begin_example
+<button class="mb-subtable-clear-btn" type="button" title="Clear all column filters for this table" style="display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button>
+#+end_example
+
+always to the left
+
+#+begin_example
+<span class="mb-filter-status">
+#+end_example
+
+- adjust the visual aspects of the following buttons
+
+#+begin_example
+<button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; transition: background-color 0.3s; display: none;">Prefilter
+<button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global filter and column filters)" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; transition: background-color 0.3s; display: inline-block;">🎨 Toggle highlighting
+<button title="Clear all column-specific filter inputs" style="font-size: 0.9em; padding: 2px 6px; cursor: pointer; display: none;">
+<button title="Clear both global filter and all column filters" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; display: inline-block;">
+#+end_example
+
+to look like the ones from
+
+#+begin_example
+<button class="mb-subtable-clear-btn"
+#+end_example
+
+so with rounded corners, but leave the button height intact
+
+Also give each button a unique id when missing, e.g.
+
+#+begin_example
+<button title="Clear all column-specific filter inputs" style="font-size: 0.9em; padding: 2px 6px; cursor: pointer; display: none;">
+<button title="Clear both global filter and all column filters" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; display: inline-block;">
 #+end_example
 
 * add new warning treshold for rendering > treshold rows

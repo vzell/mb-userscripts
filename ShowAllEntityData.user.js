@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.50.0+2026-02-20
+// @version      9.51.0+2026-02-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.51.0+2026-02-20', description: 'UI Fix (3 items): (1) "Show all <n>" sub-table overflow button: added class mb-show-all-subtable-btn (styled like mb-subtable-clear-btn), and moved it to the beginning of span.mb-subtable-controls so it appears visually where the controls span starts. (2) Stop button repositioned in the h1 controls bar: now appears right before the first divider (mb-button-divider-initial), between the action buttons and Save/Load group. Also added type="button" and consistent inline-flex styling. (3) Ctrl-M + o keyboard shortcut: activates the Stop button, but ONLY while the Stop button is visible (i.e. during an active fetch). The shortcut is registered when the button becomes visible and deregistered when it is hidden again.'},
     {version: '9.50.0+2026-02-20', description: 'Bug fix: Invalid CSS selector prevented to read the state of the global filter input. So the highlight toggle button and the keyboard shortcut Ctrl-Shift-G were not working.'},
     {version: '9.49.0+2026-02-19', description: 'Removed "info" logging for upcoming release.'},
     {version: '9.48.0+2026-02-19', description: 'Feature: Multi-column sorting for single-table page types. (1) New createMultiColumnComparator(sortColumns, headers) function inserted alongside createSortComparator. (2) makeTableSortableUnified rewritten: state now carries a multiSortColumns:[{colIndex,direction}] array alongside lastSortIndex/sortState. Interaction model: plain click on any sort icon → single-sort mode (clears multiSortColumns, sorts by that column alone); Ctrl+Click on ▲ or ▼ → adds the column to multiSortColumns (or updates direction / removes it if already present); clicking ⇅ always restores original order and clears multiSortColumns regardless of Ctrl. Visual feedback: active icons in multi-sort mode are annotated with superscript priority numbers (¹²³…) via updateMultiSortVisuals(). Sort-status display shows "Multi-sorted by: \"Col1\"▲, \"Col2\"▼ (N rows in Xms)". Multi-table pages are unaffected (still single-column only). Tooltips updated to reflect Ctrl+Click behaviour. Removed stale progressBar/progressText/progressContainer references that were cleaned up in 9.45.0.'},
@@ -190,7 +191,7 @@ GETTING STARTED
    Recordings tab).
 2. Click the "Show all …" action button in the controls bar to start fetching
    all pages from the MusicBrainz database.
-3. A real-time progress bar tracks the fetch; click "Stop" (or Alt-O) to abort
+3. A real-time progress bar tracks the fetch; click "Stop" (or Ctrl-M, then o) to abort
    at any time.
 4. When complete, the consolidated table appears with filtering, sorting, and
    all UI features active.
@@ -1345,7 +1346,7 @@ Press Escape on that notice to cancel the auto-action.
                         Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Help');
+                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Help' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
                 Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
                 if (buttonKeys.length > 0) {
@@ -1355,7 +1356,7 @@ Press Escape on that notice to cancel the auto-action.
                         console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Help');
+                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Help' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
             }
 
             // Auto-exit after 5 seconds
@@ -5293,7 +5294,8 @@ Press Escape on that notice to cancel the auto-action.
 
     const stopBtn = document.createElement('button');
     stopBtn.innerHTML = 'St<u>o</u>p';
-    stopBtn.style.cssText = 'display:none; font-size:0.8em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box; border-radius:6px;';
+    stopBtn.type = 'button';
+    stopBtn.style.cssText = 'display:none; font-size:0.8em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box; border-radius:6px; inline-flex; align-items:center; justify-content:center;';
     stopBtn.title = 'Stop the current data fetching process from the MusicBrainz backend database';
 
     const globalStatusDisplay = document.createElement('span');
@@ -5618,7 +5620,7 @@ Press Escape on that notice to cancel the auto-action.
         }
     }
 
-    controlsContainer.appendChild(stopBtn);
+    controlsContainer.insertBefore(stopBtn, initialDivider);
     // Filter container is NOT appended here anymore; moved to H2 later
 
     const style = document.createElement('style');
@@ -5642,6 +5644,8 @@ Press Escape on that notice to cancel the auto-action.
         .mb-subtable-controls { display: inline-flex; align-items: center; gap: 8px; margin-left: 12px; }
         .mb-subtable-clear-btn { font-size: 0.8em; padding: 2px 6px; cursor: pointer; vertical-align: middle; border-radius: 4px; background: #f0f0f0; border: 1px solid #ccc; }
         .mb-subtable-clear-btn:hover { background: #e0e0e0; }
+        .mb-show-all-subtable-btn { font-size: 0.8em; padding: 2px 6px; cursor: pointer; vertical-align: middle; border-radius: 4px; background: #f0f0f0; border: 1px solid #ccc; }
+        .mb-show-all-subtable-btn:hover { background: #e0e0e0; }
         .mb-subtable-status-display { font-size: 0.85em; color: #333; font-weight: bold; vertical-align: middle; }
         .mb-filter-status { font-family: 'Courier New', monospace; font-size: 1.1em; margin-right: 8px; }
         .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 1.0em; font-style: italic; }
@@ -7371,6 +7375,7 @@ Press Escape on that notice to cancel the auto-action.
 
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
+        ctrlMFunctionMap['o'] = { fn: () => stopBtn.click(), description: 'Stop fetching' };
         globalStatusDisplay.textContent = 'Loading…';
         globalStatusDisplay.style.color = '#999';
 
@@ -7903,6 +7908,7 @@ Press Escape on that notice to cancel the auto-action.
                     activeBtn.classList.remove('mb-show-all-btn-loading');
                     allActionButtons.forEach(b => b.disabled = false);
                     stopBtn.style.display = 'none';
+                    delete ctrlMFunctionMap['o'];
 
                     const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
                     const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
@@ -7918,6 +7924,7 @@ Press Escape on that notice to cancel the auto-action.
                     activeBtn.classList.remove('mb-show-all-btn-loading');
                     allActionButtons.forEach(b => b.disabled = false);
                     stopBtn.style.display = 'none';
+                    delete ctrlMFunctionMap['o'];
                     globalStatusDisplay.textContent = 'Operation cancelled';
                     return;
                 }
@@ -7935,6 +7942,7 @@ Press Escape on that notice to cancel the auto-action.
             activeBtn.classList.remove('mb-show-all-btn-loading');
             allActionButtons.forEach(b => b.disabled = false);
             stopBtn.style.display = 'none';
+            delete ctrlMFunctionMap['o'];
 
             // Only show filter container if it wasn't already appended to H2 (handled in updateH2Count or renderGroupedTable)
             if (!filterContainer.parentNode) {
@@ -8407,13 +8415,13 @@ Press Escape on that notice to cancel the auto-action.
                     container.appendChild(table);
                 }
 
-                // Add "Show all" button if a seeAllUrl was found
+                // Add "Show all" button if a seeAllUrl was found — inserted at the beginning of subTableControls
                 if (group.seeAllUrl) {
                     const showAllBtn = document.createElement('button');
                     // Use the stored seeAllCount to update button text
                     const countSuffix = group.seeAllCount ? ` ${group.seeAllCount}` : '';
                     showAllBtn.textContent = `Show all${countSuffix}`;
-                    showAllBtn.style.cssText = 'font-size:1em; margin-left:10px; padding:1px 4px; cursor:pointer; vertical-align:middle; border-radius:4px;';
+                    showAllBtn.className = 'mb-show-all-subtable-btn';
                     showAllBtn.type = 'button';
                     showAllBtn.onclick = (e) => {
                         e.preventDefault();
@@ -8429,7 +8437,7 @@ Press Escape on that notice to cancel the auto-action.
                             window.location.href = targetUrl;
                         }
                     };
-                    h3.appendChild(showAllBtn);
+                    subTableControls.insertBefore(showAllBtn, subTableControls.firstChild);
                 }
 
                 h3.addEventListener('click', (e) => {
