@@ -39095,6 +39095,38 @@ JavaScript
 Would you like me to review the loadTableDataFromDisk() function to see if we can streamline the pre-filter injection logic next, or is there another part of the script you'd like to dive into?
 #+end_example
 
+** bug - reproducible
+
+In the uploaded userscript
+there is a reproducible bug with the hightlight toggling triggered by specifying a global filter expression:
+
+The first time you enter a filter expression, the higlightning of the filter string in matching rows works.  When you
+now click the "Toggle highlightning"-button the first time, the button changes color as it should, and the highlightning
+is cleared. When clicking the second time, the botton again changes it's color, but the original highlightning does NOT
+reappear. From now when toggling, the button only change colcor on each click, but the rows (alos still being filtered)
+will NEVER be higlighted again. ONLY if the filter expression is changed, the now filtered rows again show the
+highlighning.
+
+When we repeat the whole scenario, and at least one of the columns also has a filter expression included, the hightlight
+toggling works NOW also for the global filter expression strings, but breaks as soon as all filter expression from the
+column level is removed.
+
+The hightlight toggle button NEVER vanishes, it's always visible, otherwise I couldn' even click on it. Don't even think
+in this direction.
+
+Please fix..
+
+After fixing, please show all the complete changed source functions for copy pasting in my original code
+
+
+** NO
+
+No, still the same problem.
+
+One more observation. When some rows are displayed because of a global filter condition but are currently NOT higlighted
+because the toggle hightlightning button has been pressed a couple of times and the highlight state (if the bug would
+NOT be present) would actually be toggled OFF, the actual highlighning immediately shows up again if I at least insert a
+filter charachter in just one column filter
 
 * TODO multi-column sort
 ** initial

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.49.0+2026-02-19
+// @version      9.50.0+2026-02-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.50.0+2026-02-20', description: 'Bug fix: Invalid CSS selector prevented to read the state of the global filter input. So the highlight toggle button and the keyboard shortcut Ctrl-Shift-G were not working.'},
     {version: '9.49.0+2026-02-19', description: 'Removed "info" logging for upcoming release.'},
     {version: '9.48.0+2026-02-19', description: 'Feature: Multi-column sorting for single-table page types. (1) New createMultiColumnComparator(sortColumns, headers) function inserted alongside createSortComparator. (2) makeTableSortableUnified rewritten: state now carries a multiSortColumns:[{colIndex,direction}] array alongside lastSortIndex/sortState. Interaction model: plain click on any sort icon → single-sort mode (clears multiSortColumns, sorts by that column alone); Ctrl+Click on ▲ or ▼ → adds the column to multiSortColumns (or updates direction / removes it if already present); clicking ⇅ always restores original order and clears multiSortColumns regardless of Ctrl. Visual feedback: active icons in multi-sort mode are annotated with superscript priority numbers (¹²³…) via updateMultiSortVisuals(). Sort-status display shows "Multi-sorted by: \"Col1\"▲, \"Col2\"▼ (N rows in Xms)". Multi-table pages are unaffected (still single-column only). Tooltips updated to reflect Ctrl+Click behaviour. Removed stale progressBar/progressText/progressContainer references that were cleaned up in 9.45.0.'},
     {version: '9.47.0+2026-02-19', description: 'UI Fix: On multi-table pages the h3 sub-table control order is corrected. Previously: clearBtn → filterStatus → sortStatus → showAllBtn. Now: filterStatus → sortStatus → clearBtn → showAllBtn — status text appears immediately after the row-count, action buttons are grouped at the end. Fixed in both the new-h3 and the reuse-existing-h3 branches of renderGroupedTable.'},
@@ -2896,7 +2897,7 @@ Press Escape on that notice to cancel the auto-action.
      */
     function clearAllFilters() {
         // Clear global filter
-        const filterInput = document.querySelector('#mb-show-all-controls-container input[placeholder*="Global Filter"]');
+        const filterInput = document.querySelector('input[placeholder*="Global Filter"]');
         if (filterInput) {
             filterInput.value = '';
         }
@@ -6430,7 +6431,7 @@ Press Escape on that notice to cancel the auto-action.
      */
     function saveFilterHighlightState() {
         // Save global filter parameters
-        const globalFilterInput = document.querySelector('#mb-show-all-controls-container input[placeholder*="Global Filter"]');
+        const globalFilterInput = document.querySelector('input[placeholder*="Global Filter"]');
         const globalQuery = globalFilterInput ? globalFilterInput.value.trim() : '';
 
         // Save column filter parameters
