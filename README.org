@@ -40404,13 +40404,13 @@ How can I force the open file dialog, triggered from my own user script to show 
 * Make status area clickable like the empty space
 
 * TODO Order of UI elements on multi table h3 headers
-** desired order for filtered state is:
+** DONE desired order for filtered state is:
 
 #+begin_example
 toggle-icon | name | row-count-stat | filterStatus | sortStatus | clearBtn | showAllBtn
 #+end_example
 
-** give the "Show all <n rows>"-button an ID
+** DONE give the "Show all <n rows>"-button an ID
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
@@ -40455,9 +40455,11 @@ to be right before the first divider
 - While you're at it, also make sure that IF the "Stop" button is rendered, add "Ctrl-M"+o handling for emulating the
   keypress. The "o" in "Stop" is already underlined to give the user a visuell feedback. "Ctrl-M"+o should ONLY be available during the time the "Stop" button is rendered.
 
-** mb-subtable-clear-btn in front of <span class="mb-filter-status">
+** DONE mb-subtable-clear-btn in front of <span class="mb-filter-status">
 
-Please also
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+please implement the following things
 
 - render the
 
@@ -40495,6 +40497,7 @@ Also give each button a unique id when missing, e.g.
 <button title="Clear both global filter and all column filters" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; display: inline-block;">
 #+end_example
 
+
 * add new warning treshold for rendering > treshold rows
 
 * split column
@@ -40507,3 +40510,73 @@ Also give each button a unique id when missing, e.g.
 <td>9 + 7 + 8 + 10 + 11 + 9 + 10 + 12</td>
 #+end_example
 
+
+* refactor showCustomXXX functions
+** Also refactor the two functions
+
+#+begin_example
+showCustomAlert
+showCustomConfirm
+#+end_example
+
+into one and make the "Alert"/"Confirm" + the corresponding message text variable. Initially the current font must be
+much bigger for the user to read it. Actually all the visual aspects should not be hardcoded but should be made
+configurable in a new UI "Custom popup" section in "const configSchema". Please use a condensed config string for all
+the popup UI parameters. Also take into account of possible future configurations of other UI elements like buttons,
+checkboxes and inputfields in the over all userscript UI. The enduser should later be able to customize the visual
+appearance of all the UI elements.
+
+** add code to library to support new "datatypes" with custom UI confugration
+
+
+
+
+* reintroduce progressbars
+
+#+begin_example
+const progressContainer = document.createElement('div');
+progressContainer.id = 'mb-fetch-progress-container';
+progressContainer.style.cssText = 'display:none; width:300px; height:26px; background-color:#eee; border:1px solid #ccc; border-radius:3px; overflow:hidden; position:relative; vertical-align:middle;';
+
+const progressBar = document.createElement('div');
+progressBar.id = 'mb-fetch-progress-bar';
+progressBar.style.cssText = 'width:0%; height:100%; transition: width 0.3s, background-color 0.3s; position:absolute; left:0; top:0;';
+
+const progressText = document.createElement('div');
+progressText.id = 'mb-fetch-progress-text';
+progressText.style.cssText = 'position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:black; z-index:1; pointer-events:none; padding: 0 10px; box-sizing: border-box;';
+progressText.style.whiteSpace = 'pre-line';
+
+progressContainer.appendChild(progressBar);
+progressContainer.appendChild(progressText);
+#+end_example
+
+#+begin_example
+// 2. Setup UI Feedback
+const rowCount = targetRows.length;
+const showProgressBar = rowCount >= (Lib.settings.sa_sort_progress_threshold || 10000);
+const showWaitCursor = rowCount > 1000;
+
+Lib.debug('sort', `Sorting table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}. Row count: ${rowCount}`);
+
+// Update sort status display
+const sortStatusDisplay = document.getElementById('mb-sort-status-display');
+if (sortStatusDisplay) {
+    sortStatusDisplay.textContent = '⏳ Sorting...';
+    sortStatusDisplay.style.color = 'orange';
+}
+
+if (showWaitCursor) document.body.classList.add('mb-sorting-active');
+
+// Show progress for large sorts
+let progressBar, progressText;
+if (showProgressBar && progressContainer) {
+    progressContainer.style.display = 'block';
+    progressBar = progressContainer.querySelector('.mb-progress-bar');
+    progressText = progressContainer.querySelector('.mb-progress-text');
+    if (progressBar) progressBar.style.width = '0%';
+    if (progressText) progressText.textContent = 'Sorting: 0%';
+}
+#+end_example
+
+* Ctrl-click should switch in multi column sort mode if another column has already been sorted

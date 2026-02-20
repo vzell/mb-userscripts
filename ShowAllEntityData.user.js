@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.51.0+2026-02-20
+// @version      9.52.0+2026-02-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.52.0+2026-02-20', description: 'UI Fix (3 items): (1) mb-subtable-clear-btn is now always rendered to the left of span.mb-filter-status in all three subtable-controls construction sites (new-h3, reuse-existing-h3, and filter-time branches). (2) Buttons mb-toggle-prefilter-btn, mb-toggle-filter-highlight-btn, mb-clear-column-filters-btn (new ID), and mb-clear-all-filters-btn (new ID) now share the same rounded-corner visual style as mb-subtable-clear-btn (border-radius:4px, background:#f0f0f0, border:1px solid #ccc, vertical-align:middle) while preserving their individual font-size and display values. (3) Added unique IDs mb-clear-column-filters-btn and mb-clear-all-filters-btn to the two previously ID-less filter clear buttons.'},
     {version: '9.51.0+2026-02-20', description: 'UI Fix (3 items): (1) "Show all <n>" sub-table overflow button: added class mb-show-all-subtable-btn (styled like mb-subtable-clear-btn), and moved it to the beginning of span.mb-subtable-controls so it appears visually where the controls span starts. (2) Stop button repositioned in the h1 controls bar: now appears right before the first divider (mb-button-divider-initial), between the action buttons and Save/Load group. Also added type="button" and consistent inline-flex styling. (3) Ctrl-M + o keyboard shortcut: activates the Stop button, but ONLY while the Stop button is visible (i.e. during an active fetch). The shortcut is registered when the button becomes visible and deregistered when it is hidden again.'},
     {version: '9.50.0+2026-02-20', description: 'Bug fix: Invalid CSS selector prevented to read the state of the global filter input. So the highlight toggle button and the keyboard shortcut Ctrl-Shift-G were not working.'},
     {version: '9.49.0+2026-02-19', description: 'Removed "info" logging for upcoming release.'},
@@ -5367,7 +5368,7 @@ Press Escape on that notice to cancel the auto-action.
     const prefilterToggleBtn = document.createElement('button');
     prefilterToggleBtn.id = 'mb-toggle-prefilter-btn';
     prefilterToggleBtn.textContent = 'Prefilter'; // Will be updated dynamically
-    prefilterToggleBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; transition: background-color 0.3s; display:none;';
+    prefilterToggleBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; transition: background-color 0.3s; display:none; border-radius:4px; background:#f0f0f0; border:1px solid #ccc; vertical-align:middle;';
     prefilterToggleBtn.title = 'Toggle prefilter highlighting on/off';
 
     /**
@@ -5435,7 +5436,7 @@ Press Escape on that notice to cancel the auto-action.
     const unhighlightAllBtn = document.createElement('button');
     unhighlightAllBtn.id = 'mb-toggle-filter-highlight-btn';
     unhighlightAllBtn.textContent = '🎨 Toggle highlighting';
-    unhighlightAllBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; transition: background-color 0.3s; display: none;';
+    unhighlightAllBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; transition: background-color 0.3s; display: none; border-radius:4px; background:#f0f0f0; border:1px solid #ccc; vertical-align:middle;';
     unhighlightAllBtn.title = 'Toggle filter highlighting on/off (global filter and column filters)';
 
     /**
@@ -5485,7 +5486,8 @@ Press Escape on that notice to cancel the auto-action.
     const clearColumnFiltersBtn = document.createElement('button');
     clearColumnFiltersBtn.appendChild(xSymbol);
     clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
-    clearColumnFiltersBtn.style.cssText = 'font-size:0.9em; padding:2px 6px; cursor:pointer; display: none;';
+    clearColumnFiltersBtn.id = 'mb-clear-column-filters-btn';
+    clearColumnFiltersBtn.style.cssText = 'font-size:0.9em; padding:2px 6px; cursor:pointer; display: none; border-radius:4px; background:#f0f0f0; border:1px solid #ccc; vertical-align:middle;';
     clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
@@ -5513,7 +5515,8 @@ Press Escape on that notice to cancel the auto-action.
     // Attach a CLONE of the symbol to the second button
     clearAllFiltersBtn.appendChild(xSymbol.cloneNode(true));
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
-    clearAllFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; display: none;';
+    clearAllFiltersBtn.id = 'mb-clear-all-filters-btn';
+    clearAllFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; display: none; border-radius:4px; background:#f0f0f0; border:1px solid #ccc; vertical-align:middle;';
     clearAllFiltersBtn.title = 'Clear both global filter and all column filters';
     clearAllFiltersBtn.onclick = () => {
         // Clear global filter
@@ -8320,9 +8323,9 @@ Press Escape on that notice to cancel the auto-action.
                     subSortStatus.dataset.tableName = categoryName;
                     subSortStatus.dataset.tableIndex = index.toString();
 
+                    subTableControls.appendChild(clearSubBtn);
                     subTableControls.appendChild(subFilterStatus);
                     subTableControls.appendChild(subSortStatus);
-                    subTableControls.appendChild(clearSubBtn);
                     h3.appendChild(subTableControls);
                 }
             } else {
@@ -8400,9 +8403,9 @@ Press Escape on that notice to cancel the auto-action.
                 subSortStatus.dataset.tableName = categoryName;
                 subSortStatus.dataset.tableIndex = index.toString();
 
+                subTableControls.appendChild(clearSubBtn);
                 subTableControls.appendChild(subFilterStatus);
                 subTableControls.appendChild(subSortStatus);
-                subTableControls.appendChild(clearSubBtn);
                 h3.appendChild(subTableControls);
 
                 // Placement Logic: If targetHeader exists, insert after it/previous element. Otherwise, append to container.
@@ -8508,9 +8511,9 @@ Press Escape on that notice to cancel the auto-action.
                     subSortStatus.dataset.tableName = categoryName;
                     subSortStatus.dataset.tableIndex = index.toString();
 
+                    subTableControls.appendChild(clearSubBtn);
                     subTableControls.appendChild(subFilterStatus);
                     subTableControls.appendChild(subSortStatus);
-                    subTableControls.appendChild(clearSubBtn);
                     h3.appendChild(subTableControls);
                 }
             }
