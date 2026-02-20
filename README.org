@@ -38777,8 +38777,7 @@ same holds true for the "Clear all COLUMN filters" button in the multi table cas
 📋 Complete Feature Matrix
 ActionKeyboardMouseToggle all h2 headersCtrl+2Ctrl+Click h2Toggle all h3 headersCtrl+3Ctrl+Click h3 ✨Toggle single h2-Click h2Toggle single h3-Click h3Start data loadCtrl+M ✨Click button
 
-
-* TODO toggle highlight
+* DONE toggle highlight
 
 Please implement the following:
 
@@ -39127,6 +39126,7 @@ One more observation. When some rows are displayed because of a global filter co
 because the toggle hightlightning button has been pressed a couple of times and the highlight state (if the bug would
 NOT be present) would actually be toggled OFF, the actual highlighning immediately shows up again if I at least insert a
 filter charachter in just one column filter
+
 
 * TODO multi-column sort
 ** initial
@@ -39497,7 +39497,7 @@ Logic: If currentRow.primaryValue !== previousRow.primaryValue, toggle the backg
 
 Effect: This visually "chunks" the data into groups. You can immediately see where the secondary sort starts and ends for each primary category.
 
-** gemini
+** TODO gemini
 
 fix the issue where the Stripes.js script interferes with alternating row colors during multi-column sorting, the
 script's logic needs to be updated to re-apply (or trigger the re-application of) the even/odd classes after the table
@@ -39511,10 +39511,11 @@ Add a function to re-stripe the table and call it at the end of the sorting logi
 
 please generate complete rewritten source code to the chat window
 
+** make it work on multi table pages
+
 * TODO sensible defaults for configuration options
 
-* TODO overwhoule of the logging statements... make lots of stuff debug statements
-
+* DONE overwhoule of the logging statements... make lots of stuff debug statements
 * DONE collapsable sidebar breaks sticky headers
 
 * DONE Auto-Resize breaks sticky headers
@@ -40264,14 +40265,6 @@ I like the filtered outout to be in the following order:
   so basically the two button should come at the end of the h3 header
 
 
-* Order of UI elements on multi table h3 headers
-
-But the desired order for filtered state is:
-
-#+begin_example
-toggle-icon | name | row-count-stat | filterStatus | sortStatus | clearBtn | showAllBtn
-#+end_example
-
 * TODO Make the keyboard shortcut prefix configurable itself
 ** DONE initial
 
@@ -40310,6 +40303,7 @@ The user should be able to press the desired keyboard prefix in the configuratio
 create a text input field, where the user can focus and press the desired key combination to use as a prefix. After
 pressing the key combination, the String value of the key combination should be stored in the text field.
 
+** is there a 
 * Add keyboard handling for the complete application
 ** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
 ** Ctrl-Shift-- ==> un-collapse all tables (maybe make it toggle)
@@ -40403,3 +40397,40 @@ How can I force the open file dialog, triggered from my own user script to show 
 * TODO Is the check for invalid regexp really working
 
 * TODO Render the initial Render time after the "Fetching" time below h1
+
+* Reapploy  2. Setup UI Feedback
+
+* Make status area clickable like the empty space
+
+* TODO Order of UI elements on multi table h3 headers
+
+But the desired order for filtered state is:
+
+#+begin_example
+toggle-icon | name | row-count-stat | filterStatus | sortStatus | clearBtn | showAllBtn
+#+end_example
+
+** give the "Show all <n rows>"-button an ID
+
+#+begin_example
+<button type="button" style="font-size: 1em; margin-left: 10px; padding: 1px 4px; cursor: pointer; vertical-align: middle; border-radius: 4px;">Show all 8,500</button>
+#+end_example
+
+and place it at the beginning of 'span class="mb-subtable-controls'
+
+#+begin_example
+<span class="mb-subtable-controls"><span class="mb-filter-status" data-table-name="recording location for" data-table-index="2" style="color: green;">✓ Filtered 0 rows [Title:"sdsd"]</span><span class="mb-sort-status" data-table-name="recording location for" data-table-index="2" style="color: green;">✓ Sorted by column "Date" ▼: 100 rows in 40ms</span><button class="mb-subtable-clear-btn" type="button" title="Clear all column filters for this table" style="display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button></span>
+#+end_example
+
+* add new warning treshold for rendering > treshold rows
+
+* split column
+
+#+begin_example
+<td>8×12" Vinyl</td>
+#+end_example
+
+#+begin_example
+<td>9 + 7 + 8 + 10 + 11 + 9 + 10 + 12</td>
+#+end_example
+
