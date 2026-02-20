@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.54.0+2026-02-20
+// @version      9.55.0+2026-02-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.55.0+2026-02-20', description: 'Enhancement: Multi-column sort lifted to all page types. Previously Ctrl+Click multi-sort was restricted to single-table pages; multi-table pages only supported single-column sort per sub-table. Now every sub-table on a multi-table page is independently multi-sortable with the same full feature set: (1) Ctrl+Click ▲/▼ adds/updates/removes a column from that sub-table\'s own multi-sort chain; (2) auto-seeding from existing single-sort state works per sub-table; (3) plain click clears the chain for that sub-table and returns to single-sort; (4) ⇅ restores original order and clears the chain; (5) superscript priority numbers (¹²³…) are rendered on the active icons; (6) the h3 .mb-sort-status span shows "Multi-sorted by: …" text matching the single-table display. All isMultiTable guards removed from: sort-state update, debug log, visual update, isRestore determination, compareFn selection, status display, and the trailing updateMultiSortVisuals call. Tooltips unified across both page types.'},
     {version: '9.54.0+2026-02-20', description: 'Enhancement: Multi-column sort UX — auto-seed chain from existing single-sort. Previously, starting a multi-sort session required Ctrl+clicking the already-sorted column first to add it to the chain before adding further columns. Now, when the user Ctrl+clicks any sort icon on a column that is NOT the currently sorted one, the existing single-sort column is automatically promoted as priority 1 in the multi-sort chain, and the newly Ctrl+clicked column is added as priority 2. If the user Ctrl+clicks the same column that is already sorted, behaviour is unchanged (normal add/update/remove cycle). Plain clicks still clear the chain and enter single-sort mode as before.'},
     {version: '9.53.0+2026-02-20', description: 'Refactor + Enhancement (3 items): (1) showCustomAlert and showCustomConfirm merged into a single showCustomDialog(message, title, triggerButton, mode) function (mode: "alert"|"confirm"). Both original functions remain as thin wrappers so all call sites are unchanged. (2) All visual parameters of the custom popup dialog are now fully configurable via 6 new condensed pipe-separated config strings in a new "🪟 CUSTOM POPUP UI" section of configSchema: sa_popup_dialog_style, sa_popup_header_style, sa_popup_message_style, sa_popup_ok_btn_style, sa_popup_cancel_btn_style, sa_popup_btn_gap. Helper functions parseCondensedStyle / popupDialogCSS / popupHeaderCSS / popupMessageCSS / popupOkBtnCSS / popupCancelBtnCSS extract the values at render time so changes in settings take effect immediately. (3) Default values increase readability: header font-size 1.3em→1.5em, message font-size 1.05em→1.2em / line-height 1.6→1.7 / color #555→#444, border-radius 8px→10px, padding 24px→28px, max-width 550px→600px. A new stub section "🖌️ UI APPEARANCE (future)" documents the planned extension point for configuring all other UI elements (action buttons, filter inputs, subtable controls, checkboxes, etc.) via the same condensed-string pattern.'},
     {version: '9.52.0+2026-02-20', description: 'UI Fix (3 items): (1) mb-subtable-clear-btn is now always rendered to the left of span.mb-filter-status in all three subtable-controls construction sites (new-h3, reuse-existing-h3, and filter-time branches). (2) Buttons mb-toggle-prefilter-btn, mb-toggle-filter-highlight-btn, mb-clear-column-filters-btn (new ID), and mb-clear-all-filters-btn (new ID) now share the same rounded-corner visual style as mb-subtable-clear-btn (border-radius:4px, background:#f0f0f0, border:1px solid #ccc, vertical-align:middle) while preserving their individual font-size and display values. (3) Added unique IDs mb-clear-column-filters-btn and mb-clear-all-filters-btn to the two previously ID-less filter clear buttons.'},
@@ -8712,7 +8713,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // State shape: { lastSortIndex, sortState, multiSortColumns }
         // sortState: 0 = original ⇅, 1 = asc ▲, 2 = desc ▼
-        // multiSortColumns (single-table only): [{ colIndex, direction }] in priority order
+        // multiSortColumns: [{ colIndex, direction }] in priority order (supported on ALL page types)
         if (!multiTableSortStates.has(sortKey)) {
             multiTableSortStates.set(sortKey, {
                 lastSortIndex: -1,
@@ -8773,16 +8774,10 @@ Press Escape on that notice to cancel the auto-action.
                 const span = document.createElement('span');
                 span.className = 'sort-icon-btn';
 
-                // Tooltips reflect the Ctrl+Click multi-sort model on single-table pages
-                if (!isMultiTable) {
-                    if (char === '⇅') span.title = 'Restore original order (clears multi-sort)';
-                    else if (char === '▲') span.title = 'Sort ascending — Ctrl+Click to add to multi-column sort';
-                    else if (char === '▼') span.title = 'Sort descending — Ctrl+Click to add to multi-column sort';
-                } else {
-                    if (char === '⇅') span.title = 'Restore original sort order';
-                    else if (char === '▲') span.title = 'Sort ascending';
-                    else if (char === '▼') span.title = 'Sort descending';
-                }
+                // Tooltips reflect the Ctrl+Click multi-sort model on all page types
+                if (char === '⇅') span.title = 'Restore original order (clears multi-sort)';
+                else if (char === '▲') span.title = 'Sort ascending — Ctrl+Click to add to multi-column sort';
+                else if (char === '▼') span.title = 'Sort descending — Ctrl+Click to add to multi-column sort';
 
                 // Restore active indicator for single-column state after re-render
                 // (multi-sort visuals are restored by the updateMultiSortVisuals call at the end)
@@ -8815,7 +8810,7 @@ Press Escape on that notice to cancel the auto-action.
                     const isCtrl = e.ctrlKey || e.metaKey;
 
                     // === Update sort state ===
-                    if (!isMultiTable && isCtrl && targetState !== 0) {
+                    if (isCtrl && targetState !== 0) {
                         // Ctrl+Click on ▲ or ▼: add / update / remove from multi-sort chain.
                         //
                         // Special case: if we are entering multi-sort from a plain single-sort
@@ -8850,7 +8845,7 @@ Press Escape on that notice to cancel the auto-action.
                         state.lastSortIndex = index;
                         state.sortState = targetState;
                     } else {
-                        // Plain click (any key), or ⇅ clicked, or multi-table page:
+                        // Plain click (no Ctrl), or ⇅ clicked:
                         // always single-sort mode — clear the multi-sort chain.
                         state.multiSortColumns = [];
                         state.lastSortIndex = targetState === 0 ? -1 : index;
@@ -8858,7 +8853,7 @@ Press Escape on that notice to cancel the auto-action.
                     }
 
                     // === Debug log ===
-                    if (!isMultiTable && state.multiSortColumns.length > 1) {
+                    if (state.multiSortColumns.length > 1) {
                         const colList = state.multiSortColumns.map(c =>
                             `"${getCleanColName(headers[c.colIndex])}"${c.direction === 1 ? '▲' : '▼'}`
                         ).join(', ');
@@ -8882,10 +8877,10 @@ Press Escape on that notice to cancel the auto-action.
                             const startSort = performance.now();
 
                             // === Visual update ===
-                            if (!isMultiTable && state.multiSortColumns.length > 0) {
+                            if (state.multiSortColumns.length > 0) {
                                 updateMultiSortVisuals();
                             } else {
-                                // Single-column (or multi-table): one active icon
+                                // Single-column: one active icon
                                 table.querySelectorAll('.sort-icon-btn').forEach(btn => {
                                     btn.classList.remove('sort-icon-active');
                                     btn.textContent = btn.textContent.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '');
@@ -8894,9 +8889,8 @@ Press Escape on that notice to cancel the auto-action.
                             }
 
                             // === Perform sort ===
-                            const isRestore = (isMultiTable && state.sortState === 0) ||
-                                              (!isMultiTable && state.multiSortColumns.length === 0 && state.sortState === 0) ||
-                                              (!isMultiTable && state.multiSortColumns.length === 0 && targetState === 0);
+                            const isRestore = state.multiSortColumns.length === 0 &&
+                                              (state.sortState === 0 || targetState === 0);
 
                             let sortedData;
                             if (isRestore) {
@@ -8905,16 +8899,16 @@ Press Escape on that notice to cancel the auto-action.
                                 sortedData = [...targetRows];
                                 let compareFn;
 
-                                if (!isMultiTable && state.multiSortColumns.length > 1) {
+                                if (state.multiSortColumns.length > 1) {
                                     // True multi-column sort
                                     compareFn = createMultiColumnComparator(state.multiSortColumns, headers);
-                                } else if (!isMultiTable && state.multiSortColumns.length === 1) {
+                                } else if (state.multiSortColumns.length === 1) {
                                     // Single entry in chain (Ctrl+clicked one column)
                                     const col = state.multiSortColumns[0];
                                     const cn = getCleanColName(headers[col.colIndex]);
                                     compareFn = createSortComparator(col.colIndex, col.direction === 1, isNumericCol(cn));
                                 } else {
-                                    // Plain single-column sort (multi-table or plain click)
+                                    // Plain single-column sort
                                     const cn = getCleanColName(headers[index]);
                                     compareFn = createSortComparator(index, state.sortState === 1, isNumericCol(cn));
                                 }
@@ -8937,14 +8931,29 @@ Press Escape on that notice to cancel the auto-action.
                             // === Update status display ===
                             if (sortStatusDisplay) {
                                 if (isMultiTable) {
-                                    // Sub-table sort status on its h3
+                                    // Sub-table sort status written into the h3's own .mb-sort-status span
                                     const h3 = table.previousElementSibling;
                                     if (h3 && h3.classList.contains('mb-toggle-h3')) {
                                         const subSortStatus = h3.querySelector('.mb-sort-status');
                                         if (subSortStatus) {
-                                            const sortIcon = state.sortState === 0 ? '⇅' : (state.sortState === 1 ? '▲' : '▼');
-                                            subSortStatus.textContent = `✓ Sorted by column "${getCleanColName(headers[index])}" ${sortIcon}: ${rowCount} rows in ${durationMs}ms`;
-                                            subSortStatus.style.color = colorByDuration;
+                                            if (isRestore) {
+                                                subSortStatus.textContent = `✓ Restored to original order (${rowCount} rows)`;
+                                                subSortStatus.style.color = 'green';
+                                            } else if (state.multiSortColumns.length > 1) {
+                                                const colNames = state.multiSortColumns.map(c => {
+                                                    const n = getCleanColName(headers[c.colIndex]);
+                                                    return `"${n}"${c.direction === 1 ? '▲' : '▼'}`;
+                                                }).join(', ');
+                                                subSortStatus.textContent = `✓ Multi-sorted by: ${colNames} (${rowCount} rows in ${durationMs}ms)`;
+                                                subSortStatus.style.color = colorByDuration;
+                                            } else {
+                                                const col = state.multiSortColumns.length === 1 ? state.multiSortColumns[0] : null;
+                                                const dispIdx  = col ? col.colIndex : index;
+                                                const dispIcon = col ? (col.direction === 1 ? '▲' : '▼')
+                                                                     : (state.sortState === 1 ? '▲' : '▼');
+                                                subSortStatus.textContent = `✓ Sorted by column "${getCleanColName(headers[dispIdx])}" ${dispIcon}: ${rowCount} rows in ${durationMs}ms`;
+                                                subSortStatus.style.color = colorByDuration;
+                                            }
                                         }
                                     }
                                     sortStatusDisplay.textContent = ''; // clear main display on multi-table pages
@@ -8993,7 +9002,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // Restore multi-sort visuals if state already has columns in the chain
         // (called on every re-render triggered by runFilter after a sort)
-        if (!isMultiTable && state.multiSortColumns.length > 0) {
+        if (state.multiSortColumns.length > 0) {
             updateMultiSortVisuals();
         }
     }

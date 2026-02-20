@@ -40593,5 +40593,26 @@ Everything else should stay the same. Please implement
 
 ** multi table
 
-Now alos lift the restrition to singel table pages and implement the whole stuff alos for muti table pages.
-Every tbale on a multi table page should be independatly be sortable with multi-column sort mode
+Now also lift the restriction to single table pages and implement the whole stuff also for multi table pages.
+Every table on a multi table page should be independantly be sortable with multi-column sort mode.
+
+
+* forum demo screen shot - RG-R sort format/lable/catalog/country
+
+Text: ever wanted to see ....
+
+now lets concentrate on just Canada --> filter "Country"="can"  ->>status line tells you excaltly that
+
+now filter globally "with just version"
+
+now toggle highlightning on/off
+
+DO the same with loading from the filesystem ---- demo of higjlightning filter column there .. just "Greetings from asbury park, n.j." --- toggle highligh of loadin filter
+
+clear all filters
+
+press anywhere on original sort
+
+
+
+
