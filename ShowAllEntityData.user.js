@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.52.0+2026-02-20
+// @version      9.53.0+2026-02-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.53.0+2026-02-20', description: 'Refactor + Enhancement (3 items): (1) showCustomAlert and showCustomConfirm merged into a single showCustomDialog(message, title, triggerButton, mode) function (mode: "alert"|"confirm"). Both original functions remain as thin wrappers so all call sites are unchanged. (2) All visual parameters of the custom popup dialog are now fully configurable via 6 new condensed pipe-separated config strings in a new "🪟 CUSTOM POPUP UI" section of configSchema: sa_popup_dialog_style, sa_popup_header_style, sa_popup_message_style, sa_popup_ok_btn_style, sa_popup_cancel_btn_style, sa_popup_btn_gap. Helper functions parseCondensedStyle / popupDialogCSS / popupHeaderCSS / popupMessageCSS / popupOkBtnCSS / popupCancelBtnCSS extract the values at render time so changes in settings take effect immediately. (3) Default values increase readability: header font-size 1.3em→1.5em, message font-size 1.05em→1.2em / line-height 1.6→1.7 / color #555→#444, border-radius 8px→10px, padding 24px→28px, max-width 550px→600px. A new stub section "🖌️ UI APPEARANCE (future)" documents the planned extension point for configuring all other UI elements (action buttons, filter inputs, subtable controls, checkboxes, etc.) via the same condensed-string pattern.'},
     {version: '9.52.0+2026-02-20', description: 'UI Fix (3 items): (1) mb-subtable-clear-btn is now always rendered to the left of span.mb-filter-status in all three subtable-controls construction sites (new-h3, reuse-existing-h3, and filter-time branches). (2) Buttons mb-toggle-prefilter-btn, mb-toggle-filter-highlight-btn, mb-clear-column-filters-btn (new ID), and mb-clear-all-filters-btn (new ID) now share the same rounded-corner visual style as mb-subtable-clear-btn (border-radius:4px, background:#f0f0f0, border:1px solid #ccc, vertical-align:middle) while preserving their individual font-size and display values. (3) Added unique IDs mb-clear-column-filters-btn and mb-clear-all-filters-btn to the two previously ID-less filter clear buttons.'},
     {version: '9.51.0+2026-02-20', description: 'UI Fix (3 items): (1) "Show all <n>" sub-table overflow button: added class mb-show-all-subtable-btn (styled like mb-subtable-clear-btn), and moved it to the beginning of span.mb-subtable-controls so it appears visually where the controls span starts. (2) Stop button repositioned in the h1 controls bar: now appears right before the first divider (mb-button-divider-initial), between the action buttons and Save/Load group. Also added type="button" and consistent inline-flex styling. (3) Ctrl-M + o keyboard shortcut: activates the Stop button, but ONLY while the Stop button is visible (i.e. during an active fetch). The shortcut is registered when the button becomes visible and deregistered when it is hidden again.'},
     {version: '9.50.0+2026-02-20', description: 'Bug fix: Invalid CSS selector prevented to read the state of the global filter input. So the highlight toggle button and the keyboard shortcut Ctrl-Shift-G were not working.'},
@@ -623,7 +624,83 @@ Press Escape on that notice to cancel the auto-action.
             type: "number",
             default: 50,
             description: "Row count threshold to auto-expand tables"
+        },
+
+        // ============================================================
+        // CUSTOM POPUP UI SECTION
+        // Condensed config string format:
+        //   dialog:   bg|border|borderRadius|padding|shadow|zIndex|fontFamily|minWidth|maxWidth
+        //   header:   fontWeight|fontSize|marginBottom|paddingBottom|borderBottom|color
+        //   message:  marginBottom|lineHeight|color|fontSize
+        //   okBtn:    padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
+        //   cancelBtn:padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
+        //   btnGap:   gap
+        // ============================================================
+        divider_popup_ui: {
+            type: 'divider',
+            label: '🪟 CUSTOM POPUP UI'
+        },
+
+        sa_popup_dialog_style: {
+            label: 'Popup dialog container style',
+            type: 'text',
+            default: 'white|1px solid #ccc|10px|28px|0 8px 32px rgba(0,0,0,0.2)|10001|-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif|380px|600px',
+            description: 'Condensed style for the popup dialog container: bg|border|borderRadius|padding|boxShadow|zIndex|fontFamily|minWidth|maxWidth'
+        },
+
+        sa_popup_header_style: {
+            label: 'Popup header style',
+            type: 'text',
+            default: '700|1.5em|18px|14px|2px solid #ddd|#222',
+            description: 'Condensed style for the popup header: fontWeight|fontSize|marginBottom|paddingBottom|borderBottom|color'
+        },
+
+        sa_popup_message_style: {
+            label: 'Popup message style',
+            type: 'text',
+            default: '24px|1.7|#444|1.2em',
+            description: 'Condensed style for the popup message: marginBottom|lineHeight|color|fontSize'
+        },
+
+        sa_popup_ok_btn_style: {
+            label: 'Popup OK button style',
+            type: 'text',
+            default: '10px 22px|#4CAF50|white|1px solid #45a049|5px|1.1em|600|#45a049',
+            description: 'Condensed style for the OK button: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover'
+        },
+
+        sa_popup_cancel_btn_style: {
+            label: 'Popup Cancel button style',
+            type: 'text',
+            default: '10px 22px|#f0f0f0|#333|1px solid #ccc|5px|1.1em|500|#e0e0e0',
+            description: 'Condensed style for the Cancel button: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover'
+        },
+
+        sa_popup_btn_gap: {
+            label: 'Popup button gap',
+            type: 'text',
+            default: '12px',
+            description: 'Gap between buttons in the popup dialog button row'
+        },
+
+        // ============================================================
+        // UI APPEARANCE SECTION
+        // Future home for configurable styles of all UI elements:
+        // buttons (action bar, filter bar, subtable controls),
+        // checkboxes, input fields, status displays, dividers, etc.
+        // Each element type will get its own condensed config string.
+        // ============================================================
+        divider_ui_appearance: {
+            type: 'divider',
+            label: '🖌️ UI APPEARANCE (future)'
         }
+
+        // Placeholder — to be expanded with entries like:
+        //   sa_ui_action_btn_style   → condensed style for h1 action buttons
+        //   sa_ui_filter_input_style → condensed style for the global filter input
+        //   sa_ui_subtable_btn_style → condensed style for mb-subtable-clear-btn / mb-show-all-subtable-btn
+        //   sa_ui_checkbox_style     → condensed style for checkboxes in the filter bar
+        //   etc.
 
     };
 
@@ -2933,60 +3010,151 @@ Press Escape on that notice to cancel the auto-action.
      * @param {string} title - Dialog title
      * @param {HTMLElement} triggerButton - Button that triggered the alert (for positioning)
      */
-    function showCustomAlert(message, title = 'Notice', triggerButton = null) {
+    /**
+     * Parse a condensed config string (pipe-separated) into an array of trimmed parts.
+     * @param {string} raw - The raw config string value from settings
+     * @param {string} defaultRaw - Fallback default string
+     * @returns {string[]}
+     */
+    function parseCondensedStyle(raw, defaultRaw) {
+        const src = (typeof raw === 'string' && raw.trim()) ? raw : defaultRaw;
+        return src.split('|').map(s => s.trim());
+    }
+
+    /**
+     * Build a CSS object for the popup dialog container from the condensed config string.
+     * Format: bg|border|borderRadius|padding|boxShadow|zIndex|fontFamily|minWidth|maxWidth
+     */
+    function popupDialogCSS() {
+        const defaults = 'white|1px solid #ccc|10px|28px|0 8px 32px rgba(0,0,0,0.2)|10001|-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif|380px|600px';
+        const [bg, border, borderRadius, padding, boxShadow, zIndex, fontFamily, minWidth, maxWidth] =
+            parseCondensedStyle(Lib.settings.sa_popup_dialog_style, defaults);
+        return `position:fixed; background:${bg}; border:${border}; border-radius:${borderRadius}; padding:${padding}; box-shadow:${boxShadow}; z-index:${zIndex}; font-family:${fontFamily}; min-width:${minWidth}; max-width:${maxWidth};`;
+    }
+
+    /**
+     * Build a CSS object for the popup header from the condensed config string.
+     * Format: fontWeight|fontSize|marginBottom|paddingBottom|borderBottom|color
+     */
+    function popupHeaderCSS() {
+        const defaults = '700|1.5em|18px|14px|2px solid #ddd|#222';
+        const [fontWeight, fontSize, marginBottom, paddingBottom, borderBottom, color] =
+            parseCondensedStyle(Lib.settings.sa_popup_header_style, defaults);
+        return `font-weight:${fontWeight}; font-size:${fontSize}; margin-bottom:${marginBottom}; padding-bottom:${paddingBottom}; border-bottom:${borderBottom}; color:${color};`;
+    }
+
+    /**
+     * Build a CSS object for the popup message from the condensed config string.
+     * Format: marginBottom|lineHeight|color|fontSize
+     */
+    function popupMessageCSS() {
+        const defaults = '24px|1.7|#444|1.2em';
+        const [marginBottom, lineHeight, color, fontSize] =
+            parseCondensedStyle(Lib.settings.sa_popup_message_style, defaults);
+        return `margin-bottom:${marginBottom}; line-height:${lineHeight}; color:${color}; font-size:${fontSize}; word-wrap:break-word;`;
+    }
+
+    /**
+     * Build CSS + hover color for the OK button from the condensed config string.
+     * Format: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
+     * @returns {{ css: string, hoverBg: string, normalBg: string }}
+     */
+    function popupOkBtnCSS() {
+        const defaults = '10px 22px|#4CAF50|white|1px solid #45a049|5px|1.1em|600|#45a049';
+        const [padding, bg, color, border, borderRadius, fontSize, fontWeight, bgHover] =
+            parseCondensedStyle(Lib.settings.sa_popup_ok_btn_style, defaults);
+        return {
+            css: `padding:${padding}; background-color:${bg}; color:${color}; border:${border}; border-radius:${borderRadius}; font-size:${fontSize}; font-weight:${fontWeight}; cursor:pointer; transition:background-color 0.2s;`,
+            normalBg: bg,
+            hoverBg: bgHover
+        };
+    }
+
+    /**
+     * Build CSS + hover color for the Cancel button from the condensed config string.
+     * Format: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
+     * @returns {{ css: string, hoverBg: string, normalBg: string }}
+     */
+    function popupCancelBtnCSS() {
+        const defaults = '10px 22px|#f0f0f0|#333|1px solid #ccc|5px|1.1em|500|#e0e0e0';
+        const [padding, bg, color, border, borderRadius, fontSize, fontWeight, bgHover] =
+            parseCondensedStyle(Lib.settings.sa_popup_cancel_btn_style, defaults);
+        return {
+            css: `padding:${padding}; background-color:${bg}; color:${color}; border:${border}; border-radius:${borderRadius}; font-size:${fontSize}; font-weight:${fontWeight}; cursor:pointer; transition:background-color 0.2s;`,
+            normalBg: bg,
+            hoverBg: bgHover
+        };
+    }
+
+    /**
+     * Unified custom dialog — replaces the old showCustomAlert and showCustomConfirm.
+     *
+     * @param {string}      message       - The body text (supports \n → <br> if isConfirm)
+     * @param {string}      [title]       - Dialog header text
+     * @param {HTMLElement} [triggerButton] - Element used to position the dialog below
+     * @param {'alert'|'confirm'} [mode]  - 'alert' shows only OK; 'confirm' shows Cancel + OK
+     * @returns {Promise<void|boolean>}   - alert: resolves undefined; confirm: resolves true/false
+     */
+    function showCustomDialog(message, title = 'Notice', triggerButton = null, mode = 'alert') {
         return new Promise((resolve) => {
+            const isConfirm = mode === 'confirm';
+
             const dialogDiv = document.createElement('div');
-            dialogDiv.style.cssText = `
-                position: fixed;
-                background: white;
-                border: 1px solid #ccc;
-                border-radius: 8px;
-                padding: 24px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-                z-index: 10001;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                min-width: 380px;
-                max-width: 550px;
-            `;
+            dialogDiv.style.cssText = popupDialogCSS();
 
             // Header
             const headerDiv = document.createElement('div');
-            headerDiv.style.cssText = 'font-weight: 600; font-size: 1.3em; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #ddd; color: #333;';
+            headerDiv.style.cssText = popupHeaderCSS();
             headerDiv.textContent = title;
             dialogDiv.appendChild(headerDiv);
 
             // Message
             const msgDiv = document.createElement('div');
-            msgDiv.style.cssText = 'margin-bottom: 24px; line-height: 1.6; color: #555; font-size: 1.05em; word-wrap: break-word;';
-            msgDiv.textContent = message;
+            msgDiv.style.cssText = popupMessageCSS();
+            if (isConfirm) {
+                msgDiv.innerHTML = message.replace(/\n/g, '<br>');
+            } else {
+                msgDiv.textContent = message;
+            }
             dialogDiv.appendChild(msgDiv);
 
             // Button container
+            const btnGap = (Lib.settings.sa_popup_btn_gap || '12px').trim();
             const btnContainer = document.createElement('div');
-            btnContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px;';
+            btnContainer.style.cssText = `display:flex; justify-content:flex-end; gap:${btnGap};`;
+
+            let cancelBtn = null;
+
+            if (isConfirm) {
+                // Cancel button
+                cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Cancel';
+                const cancelStyle = popupCancelBtnCSS();
+                cancelBtn.style.cssText = cancelStyle.css;
+                cancelBtn.onmouseover = () => { cancelBtn.style.backgroundColor = cancelStyle.hoverBg; };
+                cancelBtn.onmouseout  = () => { cancelBtn.style.backgroundColor = cancelStyle.normalBg; };
+                cancelBtn.onclick = () => {
+                    dialogDiv.remove();
+                    document.removeEventListener('keydown', keyHandler);
+                    resolve(false);
+                };
+                btnContainer.appendChild(cancelBtn);
+            }
 
             // OK button
             const okBtn = document.createElement('button');
             okBtn.textContent = 'OK';
-            okBtn.style.cssText = `
-                padding: 10px 20px;
-                background-color: #4CAF50;
-                color: white;
-                border: 1px solid #45a049;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 1.05em;
-                font-weight: 500;
-                transition: background-color 0.2s;
-            `;
-            okBtn.onmouseover = () => { okBtn.style.backgroundColor = '#45a049'; };
-            okBtn.onmouseout = () => { okBtn.style.backgroundColor = '#4CAF50'; };
+            const okStyle = popupOkBtnCSS();
+            okBtn.style.cssText = okStyle.css;
+            okBtn.onmouseover = () => { okBtn.style.backgroundColor = okStyle.hoverBg; };
+            okBtn.onmouseout  = () => { okBtn.style.backgroundColor = okStyle.normalBg; };
             okBtn.onclick = () => {
                 dialogDiv.remove();
                 document.removeEventListener('keydown', keyHandler);
-                resolve();
+                resolve(isConfirm ? true : undefined);
             };
             btnContainer.appendChild(okBtn);
+
             dialogDiv.appendChild(btnContainer);
             document.body.appendChild(dialogDiv);
 
@@ -2995,176 +3163,42 @@ Press Escape on that notice to cancel the auto-action.
                 if (triggerButton) {
                     const btnRect = triggerButton.getBoundingClientRect();
                     const dialogRect = dialogDiv.getBoundingClientRect();
-                    let top = btnRect.bottom + 10;
+                    let top  = btnRect.bottom + 10;
                     let left = btnRect.left;
 
-                    // Adjust if dialog would go off-screen
                     if (top + dialogRect.height > window.innerHeight) {
                         top = btnRect.top - dialogRect.height - 10;
                     }
                     if (left + dialogRect.width > window.innerWidth) {
                         left = window.innerWidth - dialogRect.width - 10;
                     }
-                    if (left < 0) {
-                        left = 10;
-                    }
+                    if (left < 0) left = 10;
 
                     dialogDiv.style.left = left + 'px';
-                    dialogDiv.style.top = top + 'px';
+                    dialogDiv.style.top  = top  + 'px';
                 } else {
-                    // Fallback to center
-                    dialogDiv.style.left = '50%';
-                    dialogDiv.style.top = '50%';
+                    dialogDiv.style.left      = '50%';
+                    dialogDiv.style.top       = '50%';
                     dialogDiv.style.transform = 'translate(-50%, -50%)';
                 }
 
-                okBtn.focus(); // Focus after DOM positioning
+                okBtn.focus();
             }, 0);
 
             // Keyboard handler
             const keyHandler = (e) => {
                 if (e.key === 'Escape') {
                     e.preventDefault();
-                    dialogDiv.remove();
-                    document.removeEventListener('keydown', keyHandler);
-                    resolve();
+                    if (isConfirm && cancelBtn) {
+                        cancelBtn.click();
+                    } else {
+                        okBtn.click();
+                    }
                 } else if (e.key === 'Enter') {
                     e.preventDefault();
                     okBtn.click();
-                }
-            };
-            document.addEventListener('keydown', keyHandler);
-        });
-    }
-
-    /**
-     * Custom confirm dialog - positioned below triggering button
-     * @param {string} message - Confirm message
-     * @param {string} title - Dialog title
-     * @param {HTMLElement} triggerButton - Button that triggered the confirm (for positioning)
-     */
-    function showCustomConfirm(message, title = 'Confirm', triggerButton = null) {
-        return new Promise((resolve) => {
-            const dialogDiv = document.createElement('div');
-            dialogDiv.style.cssText = `
-                position: fixed;
-                background: white;
-                border: 1px solid #ccc;
-                border-radius: 8px;
-                padding: 24px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-                z-index: 10001;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                min-width: 380px;
-                max-width: 550px;
-            `;
-
-            // Header
-            const headerDiv = document.createElement('div');
-            headerDiv.style.cssText = 'font-weight: 600; font-size: 1.3em; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #ddd; color: #333;';
-            headerDiv.textContent = title;
-            dialogDiv.appendChild(headerDiv);
-
-            // Message
-            const msgDiv = document.createElement('div');
-            msgDiv.style.cssText = 'margin-bottom: 24px; line-height: 1.6; color: #555; font-size: 1.05em; word-wrap: break-word;';
-            msgDiv.innerHTML = message.replace(/\n/g, '<br>');
-            dialogDiv.appendChild(msgDiv);
-
-            // Button container
-            const btnContainer = document.createElement('div');
-            btnContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px;';
-
-            // Cancel button
-            const cancelBtn = document.createElement('button');
-            cancelBtn.textContent = 'Cancel';
-            cancelBtn.style.cssText = `
-                padding: 10px 20px;
-                background-color: #f0f0f0;
-                color: #333;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 1.05em;
-                font-weight: 500;
-                transition: background-color 0.2s;
-            `;
-            cancelBtn.onmouseover = () => { cancelBtn.style.backgroundColor = '#e0e0e0'; };
-            cancelBtn.onmouseout = () => { cancelBtn.style.backgroundColor = '#f0f0f0'; };
-            cancelBtn.onclick = () => {
-                dialogDiv.remove();
-                document.removeEventListener('keydown', keyHandler);
-                resolve(false);
-            };
-            btnContainer.appendChild(cancelBtn);
-
-            // OK button
-            const okBtn = document.createElement('button');
-            okBtn.textContent = 'OK';
-            okBtn.style.cssText = `
-                padding: 10px 20px;
-                background-color: #4CAF50;
-                color: white;
-                border: 1px solid #45a049;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 1.05em;
-                font-weight: 500;
-                transition: background-color 0.2s;
-            `;
-            okBtn.onmouseover = () => { okBtn.style.backgroundColor = '#45a049'; };
-            okBtn.onmouseout = () => { okBtn.style.backgroundColor = '#4CAF50'; };
-            okBtn.onclick = () => {
-                dialogDiv.remove();
-                document.removeEventListener('keydown', keyHandler);
-                resolve(true);
-            };
-            btnContainer.appendChild(okBtn);
-            dialogDiv.appendChild(btnContainer);
-            document.body.appendChild(dialogDiv);
-
-            // Position below trigger button or center screen
-            setTimeout(() => {
-                if (triggerButton) {
-                    const btnRect = triggerButton.getBoundingClientRect();
-                    const dialogRect = dialogDiv.getBoundingClientRect();
-                    let top = btnRect.bottom + 10;
-                    let left = btnRect.left;
-
-                    // Adjust if dialog would go off-screen
-                    if (top + dialogRect.height > window.innerHeight) {
-                        top = btnRect.top - dialogRect.height - 10;
-                    }
-                    if (left + dialogRect.width > window.innerWidth) {
-                        left = window.innerWidth - dialogRect.width - 10;
-                    }
-                    if (left < 0) {
-                        left = 10;
-                    }
-
-                    dialogDiv.style.left = left + 'px';
-                    dialogDiv.style.top = top + 'px';
-                } else {
-                    // Fallback to center
-                    dialogDiv.style.left = '50%';
-                    dialogDiv.style.top = '50%';
-                    dialogDiv.style.transform = 'translate(-50%, -50%)';
-                }
-
-                okBtn.focus(); // Focus after DOM positioning
-            }, 0);
-
-            // Keyboard handler with Tab support
-            const keyHandler = (e) => {
-                if (e.key === 'Escape') {
+                } else if (e.key === 'Tab' && isConfirm && cancelBtn) {
                     e.preventDefault();
-                    cancelBtn.click();
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    okBtn.click();
-                } else if (e.key === 'Tab') {
-                    e.preventDefault();
-                    // Toggle focus between Cancel and OK buttons
                     if (document.activeElement === cancelBtn) {
                         okBtn.focus();
                     } else {
@@ -3174,6 +3208,28 @@ Press Escape on that notice to cancel the auto-action.
             };
             document.addEventListener('keydown', keyHandler);
         });
+    }
+
+    /**
+     * Convenience wrapper: alert-style dialog (single OK button).
+     * @param {string} message
+     * @param {string} [title]
+     * @param {HTMLElement} [triggerButton]
+     * @returns {Promise<void>}
+     */
+    function showCustomAlert(message, title = 'Notice', triggerButton = null) {
+        return showCustomDialog(message, title, triggerButton, 'alert');
+    }
+
+    /**
+     * Convenience wrapper: confirm-style dialog (Cancel + OK buttons).
+     * @param {string} message
+     * @param {string} [title]
+     * @param {HTMLElement} [triggerButton]
+     * @returns {Promise<boolean>}
+     */
+    function showCustomConfirm(message, title = 'Confirm', triggerButton = null) {
+        return showCustomDialog(message, title, triggerButton, 'confirm');
     }
 
     /**
