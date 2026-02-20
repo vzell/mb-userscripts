@@ -1,0 +1,345 @@
+Lib.debug(
+Lib.debug(
+Lib.debug(
+Lib.debug('cache', `Applying prefilter highlight for: "${filterQueryRaw}"`);
+Lib.debug('cache', `Updated load filter history. Current count: ${updatedHistory.length}`);
+Lib.debug('cleanup', 'Injecting synthetic header: Comment');
+Lib.debug('cleanup', 'Injecting synthetic header: Country');
+Lib.debug('cleanup', 'Injecting synthetic header: Date');
+Lib.debug('cleanup', 'Injecting synthetic header: MB-Name');
+Lib.debug('cleanup', 'No Sanojjonas elements found during final cleanup.');
+Lib.debug('cleanup', 'No columns were matched for removal based on current settings.');
+Lib.debug('cleanup', 'Normalized alias table structure (actions removed, colspan expanded).');
+Lib.debug('cleanup', 'Removed artist release group filter description paragraph.');
+Lib.debug('cleanup', 'Removing Sanojjonas containers...');
+Lib.debug('cleanup', 'Running final cleanup...');
+Lib.debug('cleanup', 'Sanojjonas elements found during final cleanup. Removing now...');
+Lib.debug('cleanup', `Cleaned UI to target header: "${targetHeader}"`);
+Lib.debug('cleanup', `Found consecutive <br> tags: removed ${removedInThisInstance} tags at instance ${instancesFound}.`);
+Lib.debug('cleanup', `Injecting synthetic header: ${col}`);
+Lib.debug('cleanup', `Injecting synthetic header: ${col}`);
+Lib.debug('cleanup', `Marking column ${idx} ("${txt}") for removal. Match: "${headerPrefix}", Setting: "${settingKey}"`);
+Lib.debug('cleanup', `Removed ${bigBoxCount} jesus2099 bigbox elements.`);
+Lib.debug('cleanup', `Removed ${paginationElements.length} pagination elements.`);
+Lib.debug('cleanup', `Removed ${relationTablesCount} relation helper tables.`);
+Lib.debug('cleanup', `Removed ${sliderCount} Slick slider containers.`);
+Lib.debug('cleanup', `Removed <details> block containing ${imgCount} images.`);
+Lib.debug('cleanup', `Removing other configured section starting with header: "${headerText}"`);
+Lib.debug('cleanup', `Skipping removal of column ${idx} ("${txt}"). Setting "${settingKey}" is disabled.`);
+Lib.debug('cleanup', `Stopping cleanup at next H2 header before finding table. This may indicate incomplete section removal.`);
+Lib.debug('cleanup', `Successfully deleted column: ${colName}`);
+Lib.debug('export', `Exported ${headers.length} headers: ${headers.join(', ')}`);
+Lib.debug('fetch', 'Context: Standard pagination. Parsing "ul.pagination" from current page.');
+Lib.debug('fetch', 'determineMaxPageFromDOM: No pagination element found; assuming single page (maxPage = 1).');
+Lib.debug('fetch', `  Summary: ${summaryParts.join(' | ')}`);
+Lib.debug('fetch', `Found matching table "${tablesToProcess[0]}" on page ${p} to process.`);
+Lib.debug('fetch', `Initiating fetch for URL: ${url}`);
+Lib.debug('fetch', `No tables found matching "${targetHeader}" on page ${p} to parse. Skipping.`);
+Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
+Lib.debug('fetch', `Total pages to fetch: ${maxPage}`);
+Lib.debug('fetch', `Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
+Lib.debug('fetch', `determineMaxPageFromDOM: Found "Next" link. Extracted page: ${maxPage}`);
+Lib.debug('fetch', `determineMaxPageFromDOM: Parsed page numbers from list. Max found: ${maxPage}`);
+Lib.debug('filter', 'Could not find replacement column filter input');
+Lib.debug('filter', 'Restored focus to column filter input');
+Lib.debug('filter', 'runFilter(): active element =', __activeEl?.className || '(none)');
+Lib.debug('filter', `Attempting focus restore: tableIdx=${tableIdx}, colIdx=${colIdx}`);
+Lib.debug('filter', `Column filter updated on column ${idx}: "${input.value}"`);
+Lib.debug('filter', `Filter completed in ${filterDuration}ms`);
+Lib.debug('highlight', 'Restoring filter highlights by re-running filters');
+Lib.debug('highlight', `Restoring prefilter highlight for: "${query}"`);
+Lib.debug('highlight', `Saved filter highlight state: global=${!!globalQuery}, columns=${columnFilters.length}`);
+Lib.debug('highlight', `Saved prefilter highlight state: ${savedPrefilterHighlights.hasContent ? 'has prefilter' : 'no prefilter'}`);
+Lib.debug('init', 'Initializing aggressive full-width sidebar toggle.');
+Lib.debug('init', `Detected pageType: ${pageType}`);
+Lib.debug('init', `Detected tableMode: ${activeDefinition ? activeDefinition.tableMode : 'unknown'}`);
+Lib.debug('init', `Has "link_type_id": ${isFilteredRelationshipPage}`);
+Lib.debug('init', `Query parameters: ${params}`);
+Lib.debug('init', `URL basepath: ${basePath}`);
+Lib.debug('init', `URL path: ${path}`);
+Lib.debug('init', `URL: ${currentUrl}`);
+Lib.debug('init', `mainColIdx forced to ${mainColIdx} by configuration.`);
+Lib.debug('meta', `Sidebar ${isCollapsing ? 'collapsed' : 'expanded'}. Full width applied.`);
+Lib.debug('navigation', `Opening overflow table: ${targetUrl} (New tab: ${Lib.settings.sa_render_overflow_tables_in_new_tab})`);
+Lib.debug('parse', 'No table body found in fetched document.');
+Lib.debug('parse', 'No targetHeader provided; returning all tables found in container.');
+Lib.debug('parse', `Found header ${foundH2}`);
+Lib.debug('parse', `Found table...`);
+Lib.debug('parse', `Skipping "See all" relationship row.`);
+Lib.debug('parse', `Stored "See All" URL and Count for ${currentStatus}: ${currentGroup.seeAllUrl} (${currentGroup.seeAllCount}) `);
+Lib.debug('parse', `Table body found. Processing child nodes. Total nodes: ${tableBody.childNodes.length}`);
+Lib.debug('parse', `parseDocumentForTables: Found ${tablesToProcess.length} total tables. Target header filter: "${targetHeader || 'none'}"`);
+Lib.debug('render', 'Aborting updateH2Count: No table.tbl found on page.');
+Lib.debug('render', 'All h3 headers (types) hidden via Ctrl+Click');
+Lib.debug('render', 'All h3 headers (types) shown via Ctrl+Click');
+Lib.debug('render', 'Appending filterContainer to targetH2.');
+Lib.debug('render', 'DOM rendering starting...');
+Lib.debug('render', 'Failed to identify a target H2 header for count update.');
+Lib.debug('render', 'Initializing collapsible H2 headers...');
+Lib.debug('render', 'No valid referenceNode found inside targetH2; appending count span to end.');
+Lib.debug('render', 'Removing existing row count stat span.');
+Lib.debug('render', 'Target H2 not found by specific type, falling back to document position logic.');
+Lib.debug('render', 'Target H2 not found by specific type, falling back to document position logic.');
+Lib.debug('render', 'filterContainer is already attached to targetH2.');
+Lib.debug('render', `DOM rendering finished in ${totalRenderingTime.toFixed(2)}ms`);
+Lib.debug('render', `Inserting count span before referenceNode: ${referenceNode.className || referenceNode.tagName}`);
+Lib.debug('render', `Search method identified: "${prefix}..."`);
+Lib.debug('render', `Searching for target H2. Current pageType: ${pageType}`);
+Lib.debug('render', `Searching for target H2. Current pageType: ${pageType}`);
+Lib.debug('render', `Starting updateH2Count: filtered=${filteredCount}, total=${totalCount}`);
+Lib.debug('render', `Stopping H2 search at index ${i}: table no longer follows this header.`);
+Lib.debug('render', `Stopping H2 search at index ${i}: table no longer follows this header.`);
+Lib.debug('render', `Target element identified: "${targetH2Name}..."`);
+Lib.debug('render', `Target found using rowTargetSelector: ${activeDefinition.rowTargetSelector}`);
+Lib.debug('render', `Transforming ${targetH2.tagName} to H2 per configuration.`);
+Lib.debug('render', `Updated header/target ${targetH2Name} count: ${countText}`);
+Lib.debug('resize', 'Enabled horizontal scrolling at window level to preserve sticky headers');
+Lib.debug('resize', `Header ${colIndex}: "${th.textContent.trim()}" = ${width}px`);
+Lib.debug('resize', `Header ${colIndex}: Skipped (hidden)`);
+Lib.debug('resize', `Started resizing column ${colIndex} from width ${startWidth}px`);
+Lib.debug('resize', `Table ${tableIndex}, Column ${index}: ${finalWidth}px (visible)`);
+Lib.debug('resize', `Table ${tableIndex}, Column ${index}: 0px (hidden)`);
+Lib.debug('resize', `Table ${tableIndex}: Restored original state`);
+Lib.debug('shortcuts', 'All h3 headers (types) hidden via Ctrl+3');
+Lib.debug('shortcuts', 'All h3 headers (types) shown via Ctrl+3');
+Lib.debug('shortcuts', 'Density menu opened via Ctrl+D');
+Lib.debug('shortcuts', 'Export menu triggered via Ctrl+E');
+Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Help');
+Lib.debug('shortcuts', 'Global filter focused via Ctrl+G');
+Lib.debug('shortcuts', 'Keyboard shortcuts already initialized');
+Lib.debug('shortcuts', 'Load from disk triggered via Ctrl+L');
+Lib.debug('shortcuts', 'Press any key or Escape to cancel');
+Lib.debug('shortcuts', 'Save to disk triggered via Ctrl+S');
+Lib.debug('shortcuts', 'Settings dialog opened via Ctrl+,');
+Lib.debug('shortcuts', 'Visible Columns menu opened via Ctrl+V');
+Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
+Lib.debug('shortcuts', `${filterType} filter blurred via Escape (second press)`);
+Lib.debug('shortcuts', `${filterType} filter cleared via Escape (first press, focus kept)`);
+Lib.debug('shortcuts', `Action button ${buttonIndex + 1} selected via ${getPrefixDisplay()} then '${keyOriginal}': "${selectedButton.textContent.trim()}"`);
+Lib.debug('shortcuts', `All h2 headers ${isExpanding ? 'expanded' : 'collapsed'} via Ctrl+2`);
+Lib.debug('shortcuts', `Entered ${getPrefixDisplay()} mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
+Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode (Escape pressed)`);
+Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode (timeout)`);
+Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode`);
+Lib.debug('shortcuts', `First column filter focused via Ctrl+C (table ${currentTableIndex + 1}/${tables.length})`);
+Lib.debug('shortcuts', `Function "${funcEntry.description}" triggered via ${getPrefixDisplay()} then '${keyOriginal}'`);
+Lib.debug('sort', `Added column ${index} to multi-sort (position ${state.multiSortColumns.length})`);
+Lib.debug('sort', `Multi-sorting table "${sortKey}" by [${colList}]. Row count: ${rowCount}`);
+Lib.debug('sort', `Removed column ${index} from multi-sort (${state.multiSortColumns.length} remain)`);
+Lib.debug('sort', `Sorting table "${sortKey}" by column: "${getCleanColName(headers[index])}" ${icon} (index: ${index}) to state ${targetState}. Row count: ${rowCount}`);
+Lib.debug('sort', `Updated column ${index} direction in multi-sort`);
+Lib.debug('ui', 'Load dialog closed via Escape key');
+Lib.debug('ui', 'Sticky headers styles already applied');
+Lib.debug('ui', `Column ${columnIndex} ${show ? 'shown' : 'hidden'} in ${allTables.length} table(s)`);
+Lib.debug('ui', `Column ${columnIndex} shown and re-measured: ${finalWidth}px`);
+Lib.debug('ui', `Table width updated to ${totalWidth}px after toggling column ${columnIndex}`);
+Lib.debug) {
+Lib.debug) {
+Lib.debug) {
+Lib.debug) {
+Lib.debug) {
+Lib.debug) {
+Lib.error('cache', 'Failed to load data from file:', err);
+Lib.error('cache', 'Failed to read file');
+Lib.error('cache', 'Failed to serialize table data:', err);
+Lib.error('export', 'No table found for CSV export');
+Lib.error('export', 'No table found for JSON export');
+Lib.error('export', 'No table found for Org-Mode export');
+Lib.error('fetch', 'Critical Error during fetch:', err);
+Lib.error('fetch', 'Error fetching maxPage:', err);
+Lib.error('fetch', `Error fetching/parsing page ${p}:`, e);
+Lib.error('init', 'Required elements not found. Terminating.', { pageType, hasHeader: !!headerContainer });
+Lib.error('render', 'Abort: #content container not found.');
+Lib.error('render', 'Abort: #tbody container not found.');
+Lib.error('render', 'No rows provided to renderFinalTable.');
+Lib.error('render', 'No template table head found.');
+Lib.error('sort', 'Error during sort:', error);
+Lib.info('cache', 'Load confirmed. Triggering file selector...');
+Lib.info('cache', 'Starting table data serialization...');
+Lib.info('cache', 'User cancelled the operation.');
+Lib.info('cache', 'User chose to save data directly without rendering.');
+Lib.info('cache', `Compression: ${originalSize.toLocaleString()} bytes → ${compressedSize.toLocaleString()} bytes (${compressionRatio}% smaller) in ${compressionTime.toFixed(2)}ms`);
+Lib.info('cache', `Data saved to ${filename}`);
+Lib.info('cache', `Decompressed ${compressedData.length.toLocaleString()} bytes → ${decompressedData.length.toLocaleString()} bytes in ${decompressionTime.toFixed(2)}ms`);
+Lib.info('cache', `Loaded data version ${data.version} from ${data.timestampReadable} (File total: ${data.rowCount} rows)`);
+Lib.info('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}`);
+Lib.info('cache', `Serialized ${dataToSave.groups.length} groups with ${dataToSave.rowCount} total rows.`);
+Lib.info('cache', `Serialized ${dataToSave.rowCount} rows.`);
+Lib.info('cache', `Successfully loaded ${loadedRowCount} ${rowLabel} from disk!`);
+Lib.info('cleanup', 'Fetch loop stopped at page ' + p);
+Lib.info('cleanup', 'Final cleanup complete: No consecutive <br> tags found.');
+Lib.info('cleanup', 'Running cleanup after initial data load from disk...');
+Lib.info('cleanup', 'Signalling other scripts to stop...');
+Lib.info('cleanup', 'Starting clutter element removal.');
+Lib.info('cleanup', 'Stop requested by user.');
+Lib.info('cleanup', `Final cleanup complete: Removed a total of ${totalRemoved} consecutive <br> tags across ${instancesFound} locations.`);
+Lib.info('cleanup', `Removed ${removedDetailsCount} gallery/details blocks.`);
+Lib.info('cleanup', `Removing ${indicesToRemove.length} columns from table.`);
+Lib.info('density', `Applied ${config.label} density to ${tables.length} table(s)`);
+Lib.info('export', 'Starting CSV export...');
+Lib.info('export', 'Starting JSON export...');
+Lib.info('export', 'Starting Org-Mode export...');
+Lib.info('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
+Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
+Lib.info('export', `JSON export complete: ${filename} (${rowsExported} rows)`);
+Lib.info('export', `Org-Mode export complete: ${filename} (${rowsExported} rows)`);
+Lib.info('fetch', 'Context: Non-paginated page definition. Initially assuming maxPage = 1.');
+Lib.info('fetch', 'Context: Paginated page definition. Fetching maxPage from DOM.');
+Lib.info('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
+Lib.info('fetch', 'Starting fetch process...', overrideParams);
+Lib.info('fetch', `Fetching URL for page ${p}: ${fetchUrl.toString()}`);
+Lib.info('fetch', `Fetching maxPage from: ${url.toString()}`);
+Lib.info('fetch', `Page ${p} is current page. Using existing document.`);
+Lib.info('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
+Lib.info('filter', 'All column filters cleared');
+Lib.info('filter', `Column filters cleared for table: ${tableName}`);
+Lib.info('highlight', 'Filter highlights removed (saved state for restoration)');
+Lib.info('highlight', 'Filter highlights restored via runFilter()');
+Lib.info('highlight', 'Filter highlights restored');
+Lib.info('highlight', 'No saved filter highlight state to restore');
+Lib.info('highlight', 'No saved prefilter highlight state to restore');
+Lib.info('highlight', 'Prefilter highlights removed (saved state for restoration)');
+Lib.info('highlight', 'Prefilter highlights restored');
+Lib.info('highlight', 'Prefilter highlights restored');
+Lib.info('init', "Script loaded with external library!");
+Lib.info('init', 'Initializing script for path:', path);
+Lib.info('meta', 'Second fetch attempt detected. Setting reload flag and reloading page to ensure filter stability.');
+Lib.info('render', 'Cloning table head for template.');
+Lib.info('render', 'Finished renderGroupedTable.');
+Lib.info('render', 'Master toggle: Hiding all tables.');
+Lib.info('render', 'Master toggle: Showing all tables.');
+Lib.info('render', 'No query provided; performing initial cleanup of existing elements.');
+Lib.info('render', 'Skipping removal of H3 containing worklink.');
+Lib.info('render', ` Injecting master toggle and filter container after target header ${targetH2Name}.`);
+Lib.info('render', `Adding missing sub-table controls during filtering for "${categoryName}"`);
+Lib.info('render', `Adding missing sub-table controls to existing h3 for "${categoryName}"`);
+Lib.info('render', `Chunked render complete: ${totalRows} rows rendered in ${chunks} chunks.`);
+Lib.info('render', `Chunked render: ${totalRows} rows in ${chunks} chunks of ${chunkSize}`);
+Lib.info('render', `Creating new table and H3 for group "${categoryName}".`);
+Lib.info('render', `Fast render: Injected ${rowCount} rows into DOM.`);
+Lib.info('render', `Filtering: Cleaning up overflow tables beyond data length (${dataArray.length}).`);
+Lib.info('render', `Group "${categoryName}" auto-expand status: ${shouldStayOpen}`);
+Lib.info('render', `Processing group: "${categoryName}" with ${group.rows.length} rows.`);
+Lib.info('render', `Reusing existing table at index ${index} for group "${categoryName}".`);
+Lib.info('render', `Starting renderFinalTable with ${rowCount} rows.`);
+Lib.info('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}"`);
+Lib.info('render', `Toggling table for "${categoryName}". New state: ${isHidden ? 'visible' : 'hidden'}`);
+Lib.info('resize', 'Original column widths restored');
+Lib.info('resize', 'Restoring original column widths...');
+Lib.info('resize', `Auto-resize complete: ${totalColumnsResized} visible columns across ${tableCount} table(s) in ${duration}ms`);
+Lib.info('resize', `Auto-resizing ${tables.length} table(s)...`);
+Lib.info('resize', `Finished resizing column ${colIndex} to ${finalWidth}px`);
+Lib.info('resize', `Made ${headers.length} columns resizable`);
+Lib.info('resize', `Table ${tableIndex}: Resized ${columnCount} columns, total width: ${totalWidth}px`);
+Lib.info('shortcuts', 'All filters cleared');
+Lib.info('shortcuts', 'Keyboard shortcuts help displayed');
+Lib.info('shortcuts', 'Keyboard shortcuts initialized');
+Lib.info('sort', `Sort completed in ${durationMs}ms for ${rowCount} rows`);
+Lib.info('stats', `Statistics panel displayed: ${visibleRows.length}/${allRows.length} rows, ${visibleColumns}/${totalColumns} columns`);
+Lib.info('success', `Determined maxPage: ${maxPage}`);
+Lib.info('success', `Process complete. Data saved without rendering. Row Count: ${totalRows}. Fetch Time: ${fetchSeconds}s`);
+Lib.info('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
+Lib.info('ui', 'Application help dialog displayed');
+Lib.info('ui', 'Auto-resize button added to controls');
+Lib.info('ui', 'Auto-resize button already exists, skipping');
+Lib.info('ui', 'Chose current column configuration');
+Lib.info('ui', 'Column visibility toggle added to controls');
+Lib.info('ui', 'Column visibility toggle already exists, skipping');
+Lib.info('ui', 'Density control button added to controls');
+Lib.info('ui', 'Density control button already exists, skipping');
+Lib.info('ui', 'Export button already exists, skipping');
+Lib.info('ui', 'Export button with dropdown menu added to controls');
+Lib.info('ui', 'Keyboard shortcuts help button added to controls');
+Lib.info('ui', 'Shortcuts help button already exists, skipping');
+Lib.info('ui', 'Stats button added to controls');
+Lib.info('ui', 'Stats button already exists, skipping');
+Lib.info('ui', 'Sticky headers enabled - column headers will remain visible while scrolling');
+Lib.info('ui', `Column "${colName}" ${checkbox.checked ? 'shown' : 'hidden'}. ${visibleCount}/${checkboxes.length} columns visible`);
+Lib.prefix = `[VZ-ShowAllEntities: ${pageType}]`;
+Lib.settings && Lib.settings.sa_keyboard_shortcut_prefix) {
+Lib.settings);
+Lib.settings.sa_auto_expand;
+Lib.settings.sa_chunked_render_threshold || 1000;
+Lib.settings.sa_chunked_render_threshold || 1000;
+Lib.settings.sa_collabsable_sidebar) return; // Only available if true
+Lib.settings.sa_collabsable_sidebar) {
+Lib.settings.sa_column_filter_highlight_bg};
+Lib.settings.sa_column_filter_highlight_color};
+Lib.settings.sa_enable_column_resizing) {
+Lib.settings.sa_enable_column_resizing) {
+Lib.settings.sa_enable_column_resizing) {
+Lib.settings.sa_enable_column_resizing) {
+Lib.settings.sa_enable_column_visibility) {
+Lib.settings.sa_enable_column_visibility) {
+Lib.settings.sa_enable_density_control) {
+Lib.settings.sa_enable_density_control) {
+Lib.settings.sa_enable_export) {
+Lib.settings.sa_enable_export) {
+Lib.settings.sa_enable_keyboard_shortcut_tooltip) {
+Lib.settings.sa_enable_keyboard_shortcut_tooltip) {
+Lib.settings.sa_enable_keyboard_shortcuts !== false) {
+Lib.settings.sa_enable_keyboard_shortcuts) {
+Lib.settings.sa_enable_keyboard_shortcuts) {
+Lib.settings.sa_enable_save_load) {
+Lib.settings.sa_enable_save_load) {
+Lib.settings.sa_enable_save_load) {
+Lib.settings.sa_enable_save_load) {
+Lib.settings.sa_enable_save_load) {
+Lib.settings.sa_enable_stats_panel) {
+Lib.settings.sa_enable_stats_panel) {
+Lib.settings.sa_enable_sticky_headers) {
+Lib.settings.sa_enable_sticky_headers) {
+Lib.settings.sa_filter_debounce_delay || 300);
+Lib.settings.sa_filter_debounce_delay || 300);
+Lib.settings.sa_global_filter_highlight_bg || Lib.settings.sa_column_filter_highlight_bg || '#90caf9';
+Lib.settings.sa_global_filter_highlight_bg};
+Lib.settings.sa_global_filter_highlight_color};
+Lib.settings.sa_keyboard_shortcut_prefix;
+Lib.settings.sa_load_history_limit || 10;
+Lib.settings.sa_max_page;
+Lib.settings.sa_pre_filter_highlight_bg || '#ffeb3b';
+Lib.settings.sa_pre_filter_highlight_bg};
+Lib.settings.sa_pre_filter_highlight_color};
+Lib.settings.sa_render_overflow_tables_in_new_tab) {
+Lib.settings.sa_render_threshold || 5000;
+Lib.settings.sa_sort_chunk_size || 5000, size);
+Lib.settingsInterface && typeof Lib.settingsInterface.showModal === 'function') {
+Lib.settingsInterface.showModal()');
+Lib.settingsInterface.showModal();
+Lib.settingsInterface:', Lib?.settingsInterface);
+Lib.settings[settingKey]) {
+Lib.settings[settingKey];
+Lib.showSettings === 'function') {
+Lib.showSettings type:', typeof Lib?.showSettings);
+Lib.showSettings()');
+Lib.showSettings();
+Lib.showSettings();
+Lib.warn('cache', 'No file selected.');
+Lib.warn('density', 'No tables found to apply density');
+Lib.warn('density', `Unknown density option: ${densityKey}`);
+Lib.warn('highlight', 'runFilter function not available');
+Lib.warn('resize', 'No tables found for auto-resize');
+Lib.warn('resize', `Table ${tableIndex} has no data rows, skipping`);
+Lib.warn('shortcuts', 'Density button not found');
+Lib.warn('shortcuts', 'Export button not found');
+Lib.warn('shortcuts', 'Load button not found');
+Lib.warn('shortcuts', 'No collapsible h2 headers found');
+Lib.warn('shortcuts', 'No collapsible h3 headers found');
+Lib.warn('shortcuts', 'No tables found for column filter focus');
+Lib.warn('shortcuts', 'Save button not found');
+Lib.warn('shortcuts', 'Visible Columns button not found');
+Lib.warn('shortcuts', `Function "${funcEntry.description}" not available`);
+Lib.warn('shortcuts', `No action button at position ${buttonIndex + 1} (${actionButtons.length} available)`);
+Lib.warn('shortcuts', `No filter row found in table ${currentTableIndex + 1}`);
+Lib.warn('shortcuts', `No suitable column filter input found in table ${currentTableIndex + 1}`);
+Lib.warn('stats', 'No table found for statistics panel');
+Lib.warn('ui', 'Controls container not found, cannot add auto-resize button');
+Lib.warn('ui', 'Controls container not found, cannot add column visibility toggle');
+Lib.warn('ui', 'Controls container not found, cannot add density button');
+Lib.warn('ui', 'Controls container not found, cannot add export button');
+Lib.warn('ui', 'Controls container not found, cannot add shortcuts help button');
+Lib.warn('ui', 'Controls container not found, cannot add stats button');
+Lib.warn('ui', 'No header row found for column visibility toggle');
+Lib.warn('warn', `High page count detected (${maxPage}). User canceled fetch.`);
+Lib.warn) {
+Lib.warn) {
