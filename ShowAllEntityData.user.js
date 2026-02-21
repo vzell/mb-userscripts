@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.60.0+2026-02-21
+// @version      9.61.0+2026-02-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.61.0+2026-02-21', description: 'Three changes: (1) Progress bar text: fetchProgressLabel now shows the full message "Loading page N of M... K rows — estimated X.Xs remaining" (was "N/M — K rows — est. X.Xs"); bar outer width changed from fixed 380px to auto/min-260px/max-500px so the label always fits. (2) Load dialog "Exclude Matches" checkbox (id="sa-load-exclude"): added as a third option in the checkbox row after "Regular Expression". When checked, rows that match the filter expression are EXCLUDED during disk-load instead of kept; rows that do not match are kept. Wired end-to-end: dialog reads #sa-load-exclude → syncs to preFilterExcludeCheckbox in confirmLoad → fileInput.onchange reads preFilterExcludeCheckbox.checked → passes isExclude to loadTableDataFromDisk (new 5th param, default false) → rowMatchesFilter inverts its result when isExclude=true. (3) Load dialog input placeholder renamed from "Search expression..." to "Filter expression...".'},
     {version: '9.60.0+2026-02-21', description: 'Three enhancements: (1) Progress bar text moved inside the bar: replaced the native <progress> element with a custom CSS bar (span#mb-fetch-progress-outer, 220px × 20px) containing a fill div (span#mb-fetch-progress-fill, width animated via CSS transition) and a centered label (span#mb-fetch-progress-label) absolutely positioned over the fill. Label text "3/12 — 847 rows — est. 4.2s" is always readable via mix-blend-mode:difference + filter:invert(1). Fill colour transitions red→orange→green at 0%/50%/100% progress. (2) Rendering time appended to globalStatusDisplay final text: "Loaded N pages (M rows) from MusicBrainz backend database, Fetching time: X.XXs, Rendering time: Y.YYs". (3) New config setting sa_render_warning_threshold (default 10000, Performance Settings section): after the existing large-dataset save-or-render dialog, if the final row count exceeds this threshold a showCustomConfirm dialog warns the user that rendering may be slow and offers Proceed / Cancel. Cancel aborts rendering, sets a descriptive status message, and hides the progress bar. 0 disables the warning.'},
     {version: '9.59.0+2026-02-21', description: 'Enhancement + rename: (1) Inline fetch progress bar added to the h1 controls line, positioned after the ❓ help button. A <progress> element (120px wide, accent-color green) plus a compact label (e.g. "3/12 — 847 rows — est. 4.2s") are wrapped in a span#mb-fetch-progress-wrap that is shown at fetch start and hidden at all exit paths (success, Stop button, render-large-dataset cancel, save-to-disk-only, and error). The bar fills red→orange→green as the page fraction crosses 0%, 50%, and 100%. The existing globalStatusDisplay in the subheader continues to show the full progress text unchanged. (2) Renamed "Clear all COLUMN filters" button label in createClearColumnFiltersButton (used in all h3 sub-table headers on multi-table pages) to "Clear ALL filters" to better reflect its scope and be more concise.'},
     {version: '9.58.0+2026-02-21', description: 'Bug fix: Multi-sort column tints lost on body cells of already-sorted tables when a second multi-sort is activated on another table (multi-table pages only). Root cause: renderGroupedTable has three branches — (a) query+existingTable: reuse tbody, no makeTableSortableUnified call; (b) !query new table: full init including makeTableSortableUnified; (c) else: filter re-run on existing table, no makeTableSortableUnified. Tints were re-applied via the trailing block inside makeTableSortableUnified, so only branch (b) ever re-applied tints after a tbody replacement. Branch (a) always fires on runFilter()-triggered re-renders (query=\'re-run\'), so any previously tinted table A lost its body tints when table B\'s sort triggered a runFilter() cycle. Header tints survived because thead is not replaced by tbody.innerHTML=\'\'. Fix: added explicit tint re-application immediately after the rows-append block in branch (a), keyed by the same ${categoryName}_${index} sortKey that was registered in multiSortTintRegistry at initial makeTableSortableUnified call time. The fix was implemented in the previous session but the file was not saved to outputs — this version corrects that.'},
@@ -5244,8 +5245,9 @@ Press Escape on that notice to cancel the auto-action.
         const filterQueryRaw = preFilterInput.value.trim();
         const isCaseSensitive = preFilterCaseCheckbox.checked;
         const isRegExp = preFilterRxCheckbox.checked;
+        const isExclude = preFilterExcludeCheckbox.checked;
 
-        loadTableDataFromDisk(file, filterQueryRaw, isCaseSensitive, isRegExp);
+        loadTableDataFromDisk(file, filterQueryRaw, isCaseSensitive, isRegExp, isExclude);
     };
 
     loadFromDiskBtn.onclick = () => showLoadFilterDialog(loadFromDiskBtn);
@@ -5342,7 +5344,9 @@ Press Escape on that notice to cancel the auto-action.
     fetchProgressOuter.style.cssText = [
         'display:inline-block',
         'position:relative',
-        'width:220px',
+        'width:auto',
+        'min-width:260px',
+        'max-width:500px',
         'height:20px',
         'background:#e0e0e0',
         'border-radius:4px',
@@ -5417,6 +5421,15 @@ Press Escape on that notice to cancel the auto-action.
     preFilterRxLabel.appendChild(preFilterRxCheckbox);
     preFilterRxLabel.appendChild(document.createTextNode('Rx'));
     preFilterRxLabel.title = 'RegExp (Load)';
+
+    const preFilterExcludeLabel = document.createElement('label');
+    preFilterExcludeLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
+    const preFilterExcludeCheckbox = document.createElement('input');
+    preFilterExcludeCheckbox.type = 'checkbox';
+    preFilterExcludeCheckbox.style.marginRight = '2px';
+    preFilterExcludeLabel.appendChild(preFilterExcludeCheckbox);
+    preFilterExcludeLabel.appendChild(document.createTextNode('Ex'));
+    preFilterExcludeLabel.title = 'Exclude matches (Load) — rows matching the filter expression are excluded instead of kept';
 
     const preFilterMsg = document.createElement('span');
     preFilterMsg.id = 'mb-preload-filter-msg';
@@ -5987,7 +6000,7 @@ Press Escape on that notice to cancel the auto-action.
 
             <div style="margin-bottom:15px; position:relative;">
                 <div style="display:flex; gap:4px;">
-                    <input id="sa-load-filter-input" type="text" placeholder="Search expression..."
+                    <input id="sa-load-filter-input" type="text" placeholder="Filter expression..."
                         style="flex:1; padding:8px 12px; border:1px solid #ccc; border-radius:6px; font-size:1em; outline:none;">
                     ${history.length > 0 ? `
                     <button id="sa-load-history-toggle" title="Show history" style="padding:0 8px; background:#f0f0f0; border:1px solid #ccc; border-radius:6px; cursor:pointer;">▼</button>
@@ -6004,6 +6017,9 @@ Press Escape on that notice to cancel the auto-action.
                 </label>
                 <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;">
                     <input type="checkbox" id="sa-load-regex"> Regular Expression
+                </label>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
+                    <input type="checkbox" id="sa-load-exclude"> Exclude Matches
                 </label>
             </div>
 
@@ -6100,6 +6116,7 @@ Press Escape on that notice to cancel the auto-action.
             const query = input.value.trim();
             const useCase = dialog.querySelector('#sa-load-case').checked;
             const useRegex = dialog.querySelector('#sa-load-regex').checked;
+            const useExclude = dialog.querySelector('#sa-load-exclude').checked;
 
             if (query && historyLimit > 0) {
                 let updatedHistory = [query, ...history.filter(h => h !== query)].slice(0, historyLimit);
@@ -6114,6 +6131,9 @@ Press Escape on that notice to cancel the auto-action.
                 }
                 if (typeof preFilterRegexLabel !== 'undefined') {
                     preFilterRegexLabel.querySelector('input').checked = useRegex;
+                }
+                if (typeof preFilterExcludeLabel !== 'undefined') {
+                    preFilterExcludeLabel.querySelector('input').checked = useExclude;
                 }
             }
 
@@ -8047,7 +8067,7 @@ Press Escape on that notice to cancel the auto-action.
                 fetchProgressFill.style.width = `${fillPct}%`;
                 fetchProgressFill.style.background = fillColor;
                 fetchProgressLabel.textContent =
-                    `${p}/${maxPage} — ${totalRowsAccumulated} rows — est. ${estRemainingSeconds.toFixed(1)}s`;
+                    `Loading page ${p} of ${maxPage}... ${totalRowsAccumulated} rows — estimated ${estRemainingSeconds.toFixed(1)}s remaining`;
 
                 // Detailed statistics per page fetch
                 Lib.debug('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
@@ -9559,8 +9579,9 @@ Press Escape on that notice to cancel the auto-action.
      * @param {string} filterQueryRaw - Pre-filter query string to apply during load
      * @param {boolean} isCaseSensitive - Whether the pre-filter should be case-sensitive
      * @param {boolean} isRegExp - Whether the pre-filter should be treated as a regular expression
+     * @param {boolean} isExclude - When true, rows MATCHING the filter are excluded instead of kept
      */
-    async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false) {
+    async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false, isExclude = false) {
         if (!file) {
             Lib.warn('cache', 'No file selected.');
             return;
@@ -9587,7 +9608,7 @@ Press Escape on that notice to cancel the auto-action.
             }
         }
 
-        Lib.debug('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}`);
+        Lib.debug('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}${filterQueryRaw ? `, exclude: ${isExclude}` : ''}`);
 
         const reader = new FileReader();
 
@@ -9668,17 +9689,20 @@ Press Escape on that notice to cancel the auto-action.
                 // Helper to check if a row matches the pre-load filter
                 const rowMatchesFilter = (tr) => {
                     if (!filterQueryRaw) return true;
+                    let matched;
                     if (isRegExp && globalRegex) {
                         // For regex patterns, test against each cell individually
-                        return Array.from(tr.cells).some(cell => {
+                        matched = Array.from(tr.cells).some(cell => {
                             const cellText = getCleanColumnText(cell);
                             return globalRegex.test(cellText);
                         });
                     } else {
                         // For non-regex, test against concatenated row text
                         const text = getCleanVisibleText(tr);
-                        return isCaseSensitive ? text.includes(filterQuery) : text.toLowerCase().includes(filterQuery);
+                        matched = isCaseSensitive ? text.includes(filterQuery) : text.toLowerCase().includes(filterQuery);
                     }
+                    // isExclude: keep rows that do NOT match; normal: keep rows that DO match
+                    return isExclude ? !matched : matched;
                 };
 
                 // Reconstruct rows from serialized data with Filtering
