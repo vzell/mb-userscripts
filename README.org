@@ -40306,7 +40306,6 @@ The user should be able to press the desired keyboard prefix in the configuratio
 create a text input field, where the user can focus and press the desired key combination to use as a prefix. After
 pressing the key combination, the String value of the key combination should be stored in the text field.
 
-** is there a 
 
 * Add keyboard handling for the complete application
 ** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
@@ -40503,8 +40502,7 @@ Also give each button a unique id when missing, e.g.
 <button title="Clear both global filter and all column filters" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; display: inline-block;">
 #+end_example
 
-
-* add new warning treshold for rendering > treshold rows
+* DONE add new warning treshold for rendering > treshold rows
 
 - add a new warning treshold (default 10000) in the "PERFORMANCE SETTINGS SECTION" of
 
@@ -40525,6 +40523,7 @@ Also give each button a unique id when missing, e.g.
 if the number of rows to be rendered is higher than the treshhold. Create a "Confirm" dialog to interact with the
 enduser.
 
+
 * split column
 
 #+begin_example
@@ -40536,7 +40535,7 @@ enduser.
 #+end_example
 
 
-* refactor showCustomXXX functions
+* DONE refactor showCustomXXX functions
 ** DONE Also refactor the two functions
 
 #+begin_example
@@ -40551,7 +40550,7 @@ the popup UI parameters. Also take into account of possible future configuration
 checkboxes and inputfields in the over all userscript UI. The enduser should later be able to customize the visual
 appearance of all the UI elements.
 
-** add code to library to support new "datatypes" with custom UI confugration
+** DONE add code to library to support new "datatypes" with custom UI confugration
 
 - Please change the display text inside the progressbar from
 
@@ -40895,3 +40894,39 @@ to
 #+begin_example
 Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) - est. ${estRemainingSeconds.toFixed(1)}s
 #+end_example
+
+* keybord shortcut editor
+
+- In the uploaded library "VZ_MBLibrary.user.js" add code to support the "keyboard_shortcut" with a custom UI
+  configuration editor, to prompt the user to press the desired key combination and then fill in the equvalent string
+  version to fit what the code in the uplaoded userscript "ShowAllEntityData.user.js" expects
+
+#+begin_example
+        // ============================================================
+        // KEYBOARD SHORTCUTS SECTION
+        // ============================================================
+        divider_keyboard_shortcuts: {
+            type: 'divider',
+            label: '🎹 KEYBOARD SHORTCUTS'
+        },
+
+        sa_keyboard_shortcut_prefix: {
+            label: "Keyboard Shortcut Prefix",
+            type: "keyboard_shortcut",
+            default: "Ctrl+M",
+            description: "Keyboard shortcut prefix key combination (expects a second key press to be complete, e.g. Ctrl+M, Ctrl+., Alt+X, Ctrl+Shift+,)"
+        },
+#+end_example
+
+- Please change the display text inside the progressbar from
+
+#+begin_example
+Loading page ${p} of ${maxPage}... ${totalRowsAccumulated} rows — estimated ${estRemainingSeconds.toFixed(1)}s remaining
+#+end_example
+
+to
+
+#+begin_example
+Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) - est. ${estRemainingSeconds.toFixed(1)}s
+#+end_example
+

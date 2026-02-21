@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.63.0+2026-02-21
+// @version      9.64.0+2026-02-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.64.0+2026-02-21', description: 'Progress bar label text reformatted: "Loading page N of M... K rows — estimated X.Xs remaining" changed to the more compact "Loading page N of M... (K rows) - est. X.Xs". Parentheses around row count, em-dash replaced by hyphen-minus, "estimated … remaining" shortened to "est. …".'},
     {version: '9.63.0+2026-02-21', description: 'configSchema: all 6 sa_popup_* entries changed from type:"text" to type:"popup_dialog" and each gains a fields:[...] array naming every pipe-separated parameter (e.g. ["bg","border","borderRadius","padding","boxShadow","zIndex","fontFamily","minWidth","maxWidth"] for sa_popup_dialog_style).'},
     {version: '9.62.0+2026-02-21', description: 'Two fixes: (1) Prefilter toggle button text after disk-load now always includes total row count from the file. For "Exclude matches" mode the text is "🎨 N out of T row(s) excluded: \\"query\\""; for normal (keep-matches) mode it is "🎨 N out of T row(s) prefiltered: \\"query\\"". updatePrefilterToggleButton gains two new parameters: totalRows (number, default 0) and isExclude (boolean, default false); call site in loadTableDataFromDisk passes data.rowCount and the local isExclude flag. (2) Progress bar outer element (mb-fetch-progress-outer) min-width raised from 260px to 420px and max-width from 500px to 750px so the long label text "Loading page N of M... K rows — estimated X.Xs remaining" is no longer clipped at either end.'},
     {version: '9.61.0+2026-02-21', description: 'Three changes: (1) Progress bar text: fetchProgressLabel now shows the full message "Loading page N of M... K rows — estimated X.Xs remaining" (was "N/M — K rows — est. X.Xs"); bar outer width changed from fixed 380px to auto/min-260px/max-500px so the label always fits. (2) Load dialog "Exclude Matches" checkbox (id="sa-load-exclude"): added as a third option in the checkbox row after "Regular Expression". When checked, rows that match the filter expression are EXCLUDED during disk-load instead of kept; rows that do not match are kept. Wired end-to-end: dialog reads #sa-load-exclude → syncs to preFilterExcludeCheckbox in confirmLoad → fileInput.onchange reads preFilterExcludeCheckbox.checked → passes isExclude to loadTableDataFromDisk (new 5th param, default false) → rowMatchesFilter inverts its result when isExclude=true. (3) Load dialog input placeholder renamed from "Search expression..." to "Filter expression...".'},
@@ -8080,7 +8081,7 @@ Press Escape on that notice to cancel the auto-action.
                 fetchProgressFill.style.width = `${fillPct}%`;
                 fetchProgressFill.style.background = fillColor;
                 fetchProgressLabel.textContent =
-                    `Loading page ${p} of ${maxPage}... ${totalRowsAccumulated} rows — estimated ${estRemainingSeconds.toFixed(1)}s remaining`;
+                    `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) - est. ${estRemainingSeconds.toFixed(1)}s`;
 
                 // Detailed statistics per page fetch
                 Lib.debug('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
