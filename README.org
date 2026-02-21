@@ -40506,6 +40506,24 @@ Also give each button a unique id when missing, e.g.
 
 * add new warning treshold for rendering > treshold rows
 
+- add a new warning treshold (default 10000) in the "PERFORMANCE SETTINGS SECTION" of
+
+#+begin_example
+    // CONFIG SCHEMA
+    const configSchema = {
+#+end_example
+
+#+begin_example
+        // ============================================================
+        // PERFORMANCE SETTINGS SECTION
+        // ============================================================
+        sa_row_rendering_treshhold: {
+	...
+        },
+#+end_example
+
+if the number of rows to be rendered is higher than the treshhold. Create a "Confirm" dialog to interact with the
+enduser.
 
 * split column
 
@@ -40537,7 +40555,7 @@ appearance of all the UI elements.
 
 
 * reintroduce progressbars on h1 (single/multi - initial downloading and loading from disk), h2 (single/multi - global filtering / single-sorting) and h3 headers (multi - filtering/sorting)
-** progress bar
+** DONE progress bar
 
 - Reintroduce a progess bar in the h1 header line after the help "?" button which displays the following message in a
   progress bar
@@ -40564,7 +40582,32 @@ fetchProgressLabel.textContent
 
 inside the progress bar (adjust it's heigth accordingly)
 
-- Place page rendering time information like "at the end of
+- Place page rendering time information like "Rendering time: <n>s" at the end of the
+
+#+begin_example
+<span id="mb-global-status-display" style="font-size: 0.95em; color: green; font-weight: bold; vertical-align: middle;">Loaded 16 pages (1586 rows) from MusicBrainz backend database, Fetching time: 45.53s</span>
+#+end_example
+
+container
+
+- add a new warning treshold (default 10000) in the "PERFORMANCE SETTINGS SECTION" of
+
+#+begin_example
+    // CONFIG SCHEMA
+    const configSchema = {
+#+end_example
+
+#+begin_example
+        // ============================================================
+        // PERFORMANCE SETTINGS SECTION
+        // ============================================================
+        sa_row_rendering_treshhold: {
+	...
+        },
+#+end_example
+
+if the number of rows to be rendered is higher than the treshhold. Create a "Confirm" dialog to interact with the
+enduser.
 
 ** sort
 
@@ -40689,11 +40732,49 @@ now filter globally "with just version"
 
 now toggle highlightning on/off
 
-DO the same with loading from the filesystem ---- demo of higjlightning filter column there .. just "Greetings from asbury park, n.j." --- toggle highligh of loadin filter
+DO the same with loading from the filesystem ---- demo of higjlightning filter column there .. just "Greetings from asbury park, n.j." --- toggle highligh of loading filter
 
 clear all filters
 
 press anywhere on original sort
 
 
+* add new checkbox
+
+- adjust the progress bar to display the whole info. also rename
+
+#+begin_example
+                fetchProgressLabel.textContent =
+                    `${p}/${maxPage} — ${totalRowsAccumulated} rows — est. ${estRemainingSeconds.toFixed(1)}s`;
+#+end_example
+
+to
+
+#+begin_example
+                fetchProgressLabel.textContent =
+                    `Loading page ${p} of ${maxPage}... ${totalRowsAccumulated} rows — estimated ${estRemainingSeconds.toFixed(1)}s remaining`;
+#+end_example
+
+- Add a new checkbox "[ ] Exclude matches" inside
+
+#+begin_example
+<div style="display:flex; gap:20px; justify-content:center; margin-bottom:20px; background:#f9f9f9; padding:10px; border-radius:8px;">
+                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;">
+                    <input type="checkbox" id="sa-load-case"> Case Sensitive
+                </label>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;">
+                    <input type="checkbox" id="sa-load-regex"> Regular Expression
+                </label>
+            </div>
+#+end_example
+
+after the "Regular Expression" checkbox. When the checkbox is on, during row loading from the filesystem, all rows
+should be filtered out (ignored) already during load which match the "Search expression...", actually rename the text
+"Search expression..." in
+
+#+begin_example
+<input id="sa-load-filter-input" type="text" placeholder="Search expression..."
+#+end_example
+
+to "Filter expression..."
 

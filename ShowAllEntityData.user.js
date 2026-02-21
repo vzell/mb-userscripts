@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.59.0+2026-02-21
+// @version      9.60.0+2026-02-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.60.0+2026-02-21', description: 'Three enhancements: (1) Progress bar text moved inside the bar: replaced the native <progress> element with a custom CSS bar (span#mb-fetch-progress-outer, 220px × 20px) containing a fill div (span#mb-fetch-progress-fill, width animated via CSS transition) and a centered label (span#mb-fetch-progress-label) absolutely positioned over the fill. Label text "3/12 — 847 rows — est. 4.2s" is always readable via mix-blend-mode:difference + filter:invert(1). Fill colour transitions red→orange→green at 0%/50%/100% progress. (2) Rendering time appended to globalStatusDisplay final text: "Loaded N pages (M rows) from MusicBrainz backend database, Fetching time: X.XXs, Rendering time: Y.YYs". (3) New config setting sa_render_warning_threshold (default 10000, Performance Settings section): after the existing large-dataset save-or-render dialog, if the final row count exceeds this threshold a showCustomConfirm dialog warns the user that rendering may be slow and offers Proceed / Cancel. Cancel aborts rendering, sets a descriptive status message, and hides the progress bar. 0 disables the warning.'},
     {version: '9.59.0+2026-02-21', description: 'Enhancement + rename: (1) Inline fetch progress bar added to the h1 controls line, positioned after the ❓ help button. A <progress> element (120px wide, accent-color green) plus a compact label (e.g. "3/12 — 847 rows — est. 4.2s") are wrapped in a span#mb-fetch-progress-wrap that is shown at fetch start and hidden at all exit paths (success, Stop button, render-large-dataset cancel, save-to-disk-only, and error). The bar fills red→orange→green as the page fraction crosses 0%, 50%, and 100%. The existing globalStatusDisplay in the subheader continues to show the full progress text unchanged. (2) Renamed "Clear all COLUMN filters" button label in createClearColumnFiltersButton (used in all h3 sub-table headers on multi-table pages) to "Clear ALL filters" to better reflect its scope and be more concise.'},
     {version: '9.58.0+2026-02-21', description: 'Bug fix: Multi-sort column tints lost on body cells of already-sorted tables when a second multi-sort is activated on another table (multi-table pages only). Root cause: renderGroupedTable has three branches — (a) query+existingTable: reuse tbody, no makeTableSortableUnified call; (b) !query new table: full init including makeTableSortableUnified; (c) else: filter re-run on existing table, no makeTableSortableUnified. Tints were re-applied via the trailing block inside makeTableSortableUnified, so only branch (b) ever re-applied tints after a tbody replacement. Branch (a) always fires on runFilter()-triggered re-renders (query=\'re-run\'), so any previously tinted table A lost its body tints when table B\'s sort triggered a runFilter() cycle. Header tints survived because thead is not replaced by tbody.innerHTML=\'\'. Fix: added explicit tint re-application immediately after the rows-append block in branch (a), keyed by the same ${categoryName}_${index} sortKey that was registered in multiSortTintRegistry at initial makeTableSortableUnified call time. The fix was implemented in the previous session but the file was not saved to outputs — this version corrects that.'},
     {version: '9.57.0+2026-02-20', description: 'Bug fixes (4 items) for multi-sort column tinting introduced in 9.56.0: (1) Tints not clearing on ⇅ click: root cause was that tint application ran before runFilter() replaced tbody content with fresh unclassed rows, so the re-paint was lost. Fixed by moving applyMultiSortColumnTints() / clearMultiSortColumnTints() to AFTER runFilter() in the async sort block. For single-table pages renderFinalTable() is also now hooked to re-apply tints via a new multiSortTintRegistry Map (sortKey → {applyTints, clearTints}), ensuring tints persist across every filter/sort re-render. (2) Tints not appearing on tbody cells (only header) on first Ctrl+Click or Ctrl+same-column: same root cause as (1) — premature application before DOM was replaced. (3) Value-group run-length coloring: applyMultiSortColumnTints() now walks tbody rows per sorted column and alternates between two shades of the column hue (light \'a\' / darker \'b\') each time the cell text value changes. Equal-value runs share the same shade; each value boundary flips to the other shade. CSS updated from 8 flat classes to 16 two-shade pairs (mb-mscol-Na / mb-mscol-Nb) plus 8 header classes. (4) mb-sort-status alignment: .mb-subtable-controls changed from align-items:center to align-items:baseline with vertical-align:middle on each child span so sort-only text aligns with the h3 header baseline even when no filter status text is present.'},
@@ -594,6 +595,13 @@ Press Escape on that notice to cancel the auto-action.
             type: "number",
             default: 5000,
             description: "Row count threshold to prompt save-or-render dialog (0 to disable)"
+        },
+
+        sa_render_warning_threshold: {
+            label: "Render Warning Threshold",
+            type: "number",
+            default: 10000,
+            description: "Row count above which a confirmation dialog warns about potentially slow rendering before proceeding (0 to disable). Checked after the large-dataset threshold dialog."
         },
 
         sa_chunked_render_threshold: {
@@ -5326,20 +5334,60 @@ Press Escape on that notice to cancel the auto-action.
     // --- Fetch progress bar (shown during data loading, hidden otherwise) ---
     const fetchProgressWrap = document.createElement('span');
     fetchProgressWrap.id = 'mb-fetch-progress-wrap';
-    fetchProgressWrap.style.cssText = 'display:none; align-items:center; gap:5px; vertical-align:middle;';
+    fetchProgressWrap.style.cssText = 'display:none; align-items:center; vertical-align:middle;';
 
-    const fetchProgressBar = document.createElement('progress');
-    fetchProgressBar.id = 'mb-fetch-progress-bar';
-    fetchProgressBar.max = 100;
-    fetchProgressBar.value = 0;
-    fetchProgressBar.style.cssText = 'width:120px; height:14px; vertical-align:middle; accent-color:#4CAF50;';
+    // Custom progress bar: outer track + inner fill + label all stacked in one element
+    const fetchProgressOuter = document.createElement('span');
+    fetchProgressOuter.id = 'mb-fetch-progress-outer';
+    fetchProgressOuter.style.cssText = [
+        'display:inline-block',
+        'position:relative',
+        'width:220px',
+        'height:20px',
+        'background:#e0e0e0',
+        'border-radius:4px',
+        'overflow:hidden',
+        'vertical-align:middle',
+        'border:1px solid #bbb',
+    ].join(';');
+
+    const fetchProgressFill = document.createElement('span');
+    fetchProgressFill.id = 'mb-fetch-progress-fill';
+    fetchProgressFill.style.cssText = [
+        'display:block',
+        'position:absolute',
+        'top:0',
+        'left:0',
+        'height:100%',
+        'width:0%',
+        'background:#4CAF50',
+        'transition:width 0.2s ease, background 0.3s ease',
+        'border-radius:3px 0 0 3px',
+    ].join(';');
 
     const fetchProgressLabel = document.createElement('span');
     fetchProgressLabel.id = 'mb-fetch-progress-label';
-    fetchProgressLabel.style.cssText = 'font-size:0.8em; color:#333; white-space:nowrap; vertical-align:middle;';
+    fetchProgressLabel.style.cssText = [
+        'position:absolute',
+        'top:0',
+        'left:0',
+        'width:100%',
+        'height:100%',
+        'display:flex',
+        'align-items:center',
+        'justify-content:center',
+        'font-size:0.75em',
+        'font-weight:bold',
+        'color:#333',
+        'white-space:nowrap',
+        'pointer-events:none',
+        'mix-blend-mode:difference',    // keeps text readable on both light and coloured fill
+        'filter:invert(1)',             // paired with mix-blend-mode for max contrast
+    ].join(';');
 
-    fetchProgressWrap.appendChild(fetchProgressBar);
-    fetchProgressWrap.appendChild(fetchProgressLabel);
+    fetchProgressOuter.appendChild(fetchProgressFill);
+    fetchProgressOuter.appendChild(fetchProgressLabel);
+    fetchProgressWrap.appendChild(fetchProgressOuter);
     controlsContainer.appendChild(fetchProgressWrap);
 
     // --- Pre-load Filter UI elements ---
@@ -7497,10 +7545,10 @@ Press Escape on that notice to cancel the auto-action.
 
         // Show the inline fetch progress bar
         fetchProgressWrap.style.display = 'inline-flex';
-        fetchProgressBar.value = 0;
-        fetchProgressBar.max = 100;
+        fetchProgressFill.style.width = '0%';
+        fetchProgressFill.style.background = '#c00';
         fetchProgressLabel.textContent = 'Loading…';
-        fetchProgressLabel.style.color = '#999';
+        fetchProgressLabel.style.color = '#333';
 
         const startTime = performance.now();
         let fetchingTimeStart = performance.now();
@@ -7994,10 +8042,12 @@ Press Escape on that notice to cancel the auto-action.
                 globalStatusDisplay.style.color = progress >= 1.0 ? 'green' : (progress >= 0.5 ? 'orange' : '#c00');
 
                 // Drive the inline progress bar in the h1 controls line
-                fetchProgressBar.value = Math.round(progress * 100);
+                const fillPct = Math.round(progress * 100);
+                const fillColor = progress >= 1.0 ? '#4CAF50' : (progress >= 0.5 ? '#ff9800' : '#e53935');
+                fetchProgressFill.style.width = `${fillPct}%`;
+                fetchProgressFill.style.background = fillColor;
                 fetchProgressLabel.textContent =
                     `${p}/${maxPage} — ${totalRowsAccumulated} rows — est. ${estRemainingSeconds.toFixed(1)}s`;
-                fetchProgressLabel.style.color = progress >= 1.0 ? 'green' : (progress >= 0.5 ? 'orange' : '#c00');
 
                 // Detailed statistics per page fetch
                 Lib.debug('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
@@ -8060,6 +8110,33 @@ Press Escape on that notice to cancel the auto-action.
                     return;
                 }
                 // If userChoice === 'render', continue with normal rendering below
+            }
+
+            // --- RENDER WARNING THRESHOLD ---
+            // A lighter second gate: if row count exceeds the warning threshold, confirm
+            // before rendering to let the user bail out of a potentially slow operation.
+            const renderWarnThreshold = Lib.settings.sa_render_warning_threshold ?? 10000;
+            if (renderWarnThreshold > 0 && totalRows > renderWarnThreshold) {
+                const proceed = await showCustomConfirm(
+                    `You are about to render ${totalRows.toLocaleString()} rows into the page.\n\n` +
+                    `This is above your configured warning threshold of ${renderWarnThreshold.toLocaleString()} rows ` +
+                    `and may cause the browser to become slow or unresponsive during rendering.\n\n` +
+                    `Proceed with rendering?`,
+                    '⚠️ Large Render Warning',
+                    activeBtn
+                );
+                if (!proceed) {
+                    Lib.warn('render', `User aborted render at warning threshold (${totalRows} rows).`);
+                    activeBtn.disabled = false;
+                    activeBtn.classList.remove('mb-show-all-btn-loading');
+                    allActionButtons.forEach(b => b.disabled = false);
+                    stopBtn.style.display = 'none';
+                    delete ctrlMFunctionMap['o'];
+                    globalStatusDisplay.textContent = `Render cancelled (${totalRows.toLocaleString()} rows fetched — use "Load from disk" to render later)`;
+                    globalStatusDisplay.style.color = 'orange';
+                    fetchProgressWrap.style.display = 'none';
+                    return;
+                }
             }
 
             let renderingTimeStart = performance.now();
@@ -8174,7 +8251,7 @@ Press Escape on that notice to cancel the auto-action.
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
 
             const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
-            globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows) from MusicBrainz backend database, Fetching time: ${fetchSeconds}s`;
+            globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows) from MusicBrainz backend database, Fetching time: ${fetchSeconds}s, Rendering time: ${renderSeconds}s`;
             fetchProgressWrap.style.display = 'none';
 
             Lib.debug('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
