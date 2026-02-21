@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.55.0+2026-02-20
+// @version      9.57.0+2026-02-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,8 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.57.0+2026-02-20', description: 'Bug fixes (4 items) for multi-sort column tinting introduced in 9.56.0: (1) Tints not clearing on ⇅ click: root cause was that tint application ran before runFilter() replaced tbody content with fresh unclassed rows, so the re-paint was lost. Fixed by moving applyMultiSortColumnTints() / clearMultiSortColumnTints() to AFTER runFilter() in the async sort block. For single-table pages renderFinalTable() is also now hooked to re-apply tints via a new multiSortTintRegistry Map (sortKey → {applyTints, clearTints}), ensuring tints persist across every filter/sort re-render. (2) Tints not appearing on tbody cells (only header) on first Ctrl+Click or Ctrl+same-column: same root cause as (1) — premature application before DOM was replaced. (3) Value-group run-length coloring: applyMultiSortColumnTints() now walks tbody rows per sorted column and alternates between two shades of the column hue (light \'a\' / darker \'b\') each time the cell text value changes. Equal-value runs share the same shade; each value boundary flips to the other shade. CSS updated from 8 flat classes to 16 two-shade pairs (mb-mscol-Na / mb-mscol-Nb) plus 8 header classes. (4) mb-sort-status alignment: .mb-subtable-controls changed from align-items:center to align-items:baseline with vertical-align:middle on each child span so sort-only text aligns with the h3 header baseline even when no filter status text is present.'},
+    {version: '9.56.0+2026-02-20', description: 'Enhancement: Visual column-group tinting for multi-column sort mode. When two or more columns are in the multi-sort chain each sorted column gets a distinct pastel tint applied to every body cell (td) and its header cell (th) in that column: amber (priority 1), sky-blue (2), mint (3), mauve (4), peach (5), teal (6), lavender (7), vanilla (8). Tints use rgba semi-transparency so the existing even/odd zebra-stripe row backgrounds remain visible underneath. A slightly more opaque variant is used for header cells so the priority is visually anchored. Tints are applied/updated by a new applyMultiSortColumnTints() helper and fully removed by clearMultiSortColumnTints() — which is called on: plain click (entering single-sort mode), ⇅ click (restoring original order), and in the single-column visual update branch. Tints are also re-applied on every runFilter() re-render via the existing trailing updateMultiSortVisuals block. Works independently per table on both single-table and multi-table pages.'},
     {version: '9.55.0+2026-02-20', description: 'Enhancement: Multi-column sort lifted to all page types. Previously Ctrl+Click multi-sort was restricted to single-table pages; multi-table pages only supported single-column sort per sub-table. Now every sub-table on a multi-table page is independently multi-sortable with the same full feature set: (1) Ctrl+Click ▲/▼ adds/updates/removes a column from that sub-table\'s own multi-sort chain; (2) auto-seeding from existing single-sort state works per sub-table; (3) plain click clears the chain for that sub-table and returns to single-sort; (4) ⇅ restores original order and clears the chain; (5) superscript priority numbers (¹²³…) are rendered on the active icons; (6) the h3 .mb-sort-status span shows "Multi-sorted by: …" text matching the single-table display. All isMultiTable guards removed from: sort-state update, debug log, visual update, isRestore determination, compareFn selection, status display, and the trailing updateMultiSortVisuals call. Tooltips unified across both page types.'},
     {version: '9.54.0+2026-02-20', description: 'Enhancement: Multi-column sort UX — auto-seed chain from existing single-sort. Previously, starting a multi-sort session required Ctrl+clicking the already-sorted column first to add it to the chain before adding further columns. Now, when the user Ctrl+clicks any sort icon on a column that is NOT the currently sorted one, the existing single-sort column is automatically promoted as priority 1 in the multi-sort chain, and the newly Ctrl+clicked column is added as priority 2. If the user Ctrl+clicks the same column that is already sorted, behaviour is unchanged (normal add/update/remove cycle). Plain clicks still clear the chain and enter single-sort mode as before.'},
     {version: '9.53.0+2026-02-20', description: 'Refactor + Enhancement (3 items): (1) showCustomAlert and showCustomConfirm merged into a single showCustomDialog(message, title, triggerButton, mode) function (mode: "alert"|"confirm"). Both original functions remain as thin wrappers so all call sites are unchanged. (2) All visual parameters of the custom popup dialog are now fully configurable via 6 new condensed pipe-separated config strings in a new "🪟 CUSTOM POPUP UI" section of configSchema: sa_popup_dialog_style, sa_popup_header_style, sa_popup_message_style, sa_popup_ok_btn_style, sa_popup_cancel_btn_style, sa_popup_btn_gap. Helper functions parseCondensedStyle / popupDialogCSS / popupHeaderCSS / popupMessageCSS / popupOkBtnCSS / popupCancelBtnCSS extract the values at render time so changes in settings take effect immediately. (3) Default values increase readability: header font-size 1.3em→1.5em, message font-size 1.05em→1.2em / line-height 1.6→1.7 / color #555→#444, border-radius 8px→10px, padding 24px→28px, max-width 550px→600px. A new stub section "🖌️ UI APPEARANCE (future)" documents the planned extension point for configuring all other UI elements (action buttons, filter inputs, subtable controls, checkboxes, etc.) via the same condensed-string pattern.'},
@@ -5696,20 +5698,50 @@ Press Escape on that notice to cancel the auto-action.
         }
         .sort-icon-btn { cursor: pointer; padding: 0 2px; font-weight: bold; transition: color 0.1s; color: black; border-radius: 2px; }
         .sort-icon-active { color: Green !important; background-color: #FFFF00 !important; }
+
+        /* Multi-sort column group tinting — two alternating shades per priority, semi-transparent   */
+        /* so even/odd zebra striping remains visible underneath.                                    */
+        /* 'a' shade = first value-run, 'b' shade = next value-run (alternates on each value change) */
+        .mb-mscol-0a { background-color: rgba(255, 200,  80, 0.22) !important; }  /* amber   light  */
+        .mb-mscol-0b { background-color: rgba(255, 200,  80, 0.44) !important; }  /* amber   dark   */
+        .mb-mscol-1a { background-color: rgba( 80, 180, 255, 0.22) !important; }  /* sky     light  */
+        .mb-mscol-1b { background-color: rgba( 80, 180, 255, 0.44) !important; }  /* sky     dark   */
+        .mb-mscol-2a { background-color: rgba(120, 230, 120, 0.22) !important; }  /* mint    light  */
+        .mb-mscol-2b { background-color: rgba(120, 230, 120, 0.44) !important; }  /* mint    dark   */
+        .mb-mscol-3a { background-color: rgba(230, 120, 230, 0.22) !important; }  /* mauve   light  */
+        .mb-mscol-3b { background-color: rgba(230, 120, 230, 0.44) !important; }  /* mauve   dark   */
+        .mb-mscol-4a { background-color: rgba(255, 160, 100, 0.22) !important; }  /* peach   light  */
+        .mb-mscol-4b { background-color: rgba(255, 160, 100, 0.44) !important; }  /* peach   dark   */
+        .mb-mscol-5a { background-color: rgba(100, 230, 210, 0.22) !important; }  /* teal    light  */
+        .mb-mscol-5b { background-color: rgba(100, 230, 210, 0.44) !important; }  /* teal    dark   */
+        .mb-mscol-6a { background-color: rgba(180, 160, 255, 0.22) !important; }  /* lavender light */
+        .mb-mscol-6b { background-color: rgba(180, 160, 255, 0.44) !important; }  /* lavender dark  */
+        .mb-mscol-7a { background-color: rgba(255, 220, 180, 0.22) !important; }  /* vanilla  light */
+        .mb-mscol-7b { background-color: rgba(255, 220, 180, 0.44) !important; }  /* vanilla  dark  */
+
+        /* Header cell highlight — solid hue at 60% so the priority anchor is clearly visible */
+        .mb-mscol-hdr-0 { background-color: rgba(255, 200,  80, 0.60) !important; }
+        .mb-mscol-hdr-1 { background-color: rgba( 80, 180, 255, 0.60) !important; }
+        .mb-mscol-hdr-2 { background-color: rgba(120, 230, 120, 0.60) !important; }
+        .mb-mscol-hdr-3 { background-color: rgba(230, 120, 230, 0.60) !important; }
+        .mb-mscol-hdr-4 { background-color: rgba(255, 160, 100, 0.60) !important; }
+        .mb-mscol-hdr-5 { background-color: rgba(100, 230, 210, 0.60) !important; }
+        .mb-mscol-hdr-6 { background-color: rgba(180, 160, 255, 0.60) !important; }
+        .mb-mscol-hdr-7 { background-color: rgba(255, 220, 180, 0.60) !important; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
         .mb-toggle-h3:hover, .mb-toggle-h2:hover {
             color: #222;
             background-color: #f9f9f9;
         }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; }
-        .mb-subtable-controls { display: inline-flex; align-items: center; gap: 8px; margin-left: 12px; }
+        .mb-subtable-controls { display: inline-flex; align-items: baseline; gap: 8px; margin-left: 12px; vertical-align: middle; }
         .mb-subtable-clear-btn { font-size: 0.8em; padding: 2px 6px; cursor: pointer; vertical-align: middle; border-radius: 4px; background: #f0f0f0; border: 1px solid #ccc; }
         .mb-subtable-clear-btn:hover { background: #e0e0e0; }
         .mb-show-all-subtable-btn { font-size: 0.8em; padding: 2px 6px; cursor: pointer; vertical-align: middle; border-radius: 4px; background: #f0f0f0; border: 1px solid #ccc; }
         .mb-show-all-subtable-btn:hover { background: #e0e0e0; }
         .mb-subtable-status-display { font-size: 0.85em; color: #333; font-weight: bold; vertical-align: middle; }
-        .mb-filter-status { font-family: 'Courier New', monospace; font-size: 1.1em; margin-right: 8px; }
-        .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 1.0em; font-style: italic; }
+        .mb-filter-status { font-family: 'Courier New', monospace; font-size: 1.0em; vertical-align: middle; margin-right: 4px; }
+        .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 1.0em; font-style: italic; vertical-align: middle; }
         .mb-toggle-h2 { cursor: pointer; user-select: none; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; cursor: pointer; }
         .mb-master-toggle { color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; cursor: default; }
@@ -5849,6 +5881,8 @@ Press Escape on that notice to cancel the auto-action.
     let isLoaded = false;
     let stopRequested = false;
     let multiTableSortStates = new Map();
+    // Registry of per-table tint functions so renderFinalTable can re-apply tints after re-render
+    let multiSortTintRegistry = new Map(); // sortKey → { applyTints, clearTints }
 
     // Track highlight toggle states separately
     let prefilterHighlightEnabled = true;
@@ -8163,10 +8197,15 @@ Press Escape on that notice to cancel the auto-action.
         if (Lib.settings.sa_enable_save_load) {
             saveToDiskBtn.style.display = 'inline-block';
         }
+
+        // Re-apply multi-sort column tints if a multi-sort is active for this table.
+        // renderFinalTable replaces all tbody content with fresh clones that carry no tint
+        // classes, so tints must be repainted after every render.
+        const tintEntry = multiSortTintRegistry.get('main_table');
+        if (tintEntry) tintEntry.applyTints();
     }
 
     /**
-     * Chunked async renderer with progress updates
      * Renders rows in batches to avoid blocking the UI thread
      * @param {HTMLTableSectionElement} tbody - The table body element to render into
      * @param {Array<HTMLTableRowElement>} rows - Array of table row elements to render
@@ -8753,6 +8792,81 @@ Press Escape on that notice to cancel the auto-action.
             });
         };
 
+        // --- Helper: apply column-group background tints for all active multi-sort columns ---
+        // Within each sorted column the tint alternates between two shades whenever the cell
+        // value changes, making equal-value runs visually obvious.
+        // Semi-transparent colours overlay the existing even/odd zebra striping.
+        const applyMultiSortColumnTints = () => {
+            // Clear any existing tint classes first so a re-apply starts clean
+            clearMultiSortColumnTints();
+            if (state.multiSortColumns.length === 0) return;
+
+            // Two-shade pairs per priority (light / slightly-darker of the same hue)
+            // Index 0 = first shade (run starts), index 1 = second shade (run changes)
+            const bodyPairs = [
+                ['mb-mscol-0a', 'mb-mscol-0b'],   // amber
+                ['mb-mscol-1a', 'mb-mscol-1b'],   // sky-blue
+                ['mb-mscol-2a', 'mb-mscol-2b'],   // mint
+                ['mb-mscol-3a', 'mb-mscol-3b'],   // mauve
+                ['mb-mscol-4a', 'mb-mscol-4b'],   // peach
+                ['mb-mscol-5a', 'mb-mscol-5b'],   // teal
+                ['mb-mscol-6a', 'mb-mscol-6b'],   // lavender
+                ['mb-mscol-7a', 'mb-mscol-7b'],   // vanilla
+            ];
+            const hdrClasses = [
+                'mb-mscol-hdr-0','mb-mscol-hdr-1','mb-mscol-hdr-2','mb-mscol-hdr-3',
+                'mb-mscol-hdr-4','mb-mscol-hdr-5','mb-mscol-hdr-6','mb-mscol-hdr-7'
+            ];
+
+            const bodyRows = Array.from(table.querySelectorAll('tbody tr'));
+            const mainHeaderRow = table.querySelector('thead tr:first-child');
+
+            state.multiSortColumns.forEach((sortCol, priorityIdx) => {
+                const colIdx = sortCol.colIndex;
+                const pair   = bodyPairs[priorityIdx % bodyPairs.length];
+                const hdrCls = hdrClasses[priorityIdx % hdrClasses.length];
+
+                // Walk rows, flip shade each time the cell text value changes
+                let shadeIdx  = 0;
+                let lastValue = null;
+                bodyRows.forEach(tr => {
+                    const cell = tr.cells[colIdx];
+                    if (!cell) return;
+                    const cellValue = cell.textContent.trim();
+                    if (lastValue !== null && cellValue !== lastValue) {
+                        shadeIdx = 1 - shadeIdx; // toggle between 0 and 1
+                    }
+                    lastValue = cellValue;
+                    cell.classList.add(pair[shadeIdx]);
+                });
+
+                // Tint the header cell
+                if (mainHeaderRow) {
+                    const th = mainHeaderRow.cells[colIdx];
+                    if (th) th.classList.add(hdrCls);
+                }
+            });
+        };
+
+        // --- Helper: remove all multi-sort column tint classes from this table ---
+        const clearMultiSortColumnTints = () => {
+            const allTintClasses = [
+                'mb-mscol-0a','mb-mscol-0b','mb-mscol-1a','mb-mscol-1b',
+                'mb-mscol-2a','mb-mscol-2b','mb-mscol-3a','mb-mscol-3b',
+                'mb-mscol-4a','mb-mscol-4b','mb-mscol-5a','mb-mscol-5b',
+                'mb-mscol-6a','mb-mscol-6b','mb-mscol-7a','mb-mscol-7b',
+                'mb-mscol-hdr-0','mb-mscol-hdr-1','mb-mscol-hdr-2','mb-mscol-hdr-3',
+                'mb-mscol-hdr-4','mb-mscol-hdr-5','mb-mscol-hdr-6','mb-mscol-hdr-7'
+            ];
+            table.querySelectorAll('tbody td, thead tr:first-child th').forEach(cell => {
+                cell.classList.remove(...allTintClasses);
+            });
+        };
+
+        // Register this table's tint functions so external callers (renderFinalTable) can
+        // re-apply after replacing tbody content with fresh rows.
+        multiSortTintRegistry.set(sortKey, { applyTints: applyMultiSortColumnTints, clearTints: clearMultiSortColumnTints });
+
         // --- Helper: derive clean column name from a th element ---------------
         const getCleanColName = (th) =>
             th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim() : '';
@@ -8848,6 +8962,7 @@ Press Escape on that notice to cancel the auto-action.
                         // Plain click (no Ctrl), or ⇅ clicked:
                         // always single-sort mode — clear the multi-sort chain.
                         state.multiSortColumns = [];
+                        clearMultiSortColumnTints();
                         state.lastSortIndex = targetState === 0 ? -1 : index;
                         state.sortState = targetState;
                     }
@@ -8876,7 +8991,7 @@ Press Escape on that notice to cancel the auto-action.
                         try {
                             const startSort = performance.now();
 
-                            // === Visual update ===
+                            // === Visual update (icons + superscripts only — tints applied after runFilter below) ===
                             if (state.multiSortColumns.length > 0) {
                                 updateMultiSortVisuals();
                             } else {
@@ -8924,6 +9039,14 @@ Press Escape on that notice to cancel the auto-action.
                             }
 
                             runFilter();
+
+                            // Apply or clear column tints AFTER runFilter() so the fresh tbody
+                            // rows are already in the DOM when we paint.
+                            if (state.multiSortColumns.length > 0) {
+                                applyMultiSortColumnTints();
+                            } else {
+                                clearMultiSortColumnTints();
+                            }
 
                             const durationMs = (performance.now() - startSort).toFixed(0);
                             const colorByDuration = durationMs > 2000 ? 'red' : (durationMs > 1000 ? 'orange' : 'green');
@@ -9000,10 +9123,13 @@ Press Escape on that notice to cancel the auto-action.
             th.appendChild(createIcon('▼', 2));
         });
 
-        // Restore multi-sort visuals if state already has columns in the chain
-        // (called on every re-render triggered by runFilter after a sort)
+        // Restore multi-sort visuals and column tints if state already has columns in the chain
+        // (called on every re-render triggered by renderGroupedTable after a sort on multi-table pages)
         if (state.multiSortColumns.length > 0) {
             updateMultiSortVisuals();
+            applyMultiSortColumnTints();
+        } else {
+            clearMultiSortColumnTints();
         }
     }
 

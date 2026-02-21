@@ -40596,6 +40596,40 @@ Everything else should stay the same. Please implement
 Now also lift the restriction to single table pages and implement the whole stuff also for multi table pages.
 Every table on a multi table page should be independantly be sortable with multi-column sort mode.
 
+** now implement a nice visusal representation of the different column grouping
+
+Now implement a nice visusal representation of the different column groupings when in multi column sort mode. Take into
+account the even/add background highlightning which is present on the original rows. It should definitley be restore
+when leaving multi-column sort mode, but when in, the visualization of the column groups should be clear
+
+** color glitch
+
+When I first "Ctrl"-click a column which should be part of a multi-column sort, th column header AND all column cells get colorized.
+
+First bug:
+
+- when I then leave multi-column sort mode by pressing one of the "⇅" original sort icons, the colorization still exists, it should actually vanish
+- also I would expect the colorization to change INSIDE a column when the value changes. Right now just the whole column
+  is colorized the same (which actually just works like an indicator for which column has been sorted by, but this we
+  already know by the sort symbol getting a numeric postfix)
+- When first sorting by a column and the pressing the "Ctrl" key on one of the sort symbols in the SAME column, just the
+  header get colorized. The same is true for every further "Ctrl" click on another column sort icon, just the header
+  gets colorized
+
+- When the following element
+
+#+begin_example
+<span class="mb-sort-status" data-table-name="engineering location for" data-table-index="0" style="color: green;">✓ Sorted by column "Title" ▼: 6 rows in 4ms</span>
+#+end_example
+
+is displayed alone (no column filter expression in effect), the text is not aligned with the h3 header text in the same line. As soon as filter information is displayed
+
+#+begin_example
+<span class="mb-filter-status" data-table-name="engineering location for" data-table-index="0" style="color: green;">✓ Filtered 2 rows [Title:"the"]</span>
+#+end_example
+
+everything is aligned perfectly. Please fix.
+
 
 * forum demo screen shot - RG-R sort format/lable/catalog/country
 
@@ -40614,5 +40648,20 @@ clear all filters
 press anywhere on original sort
 
 
+* glitch
+
+- When the following element
+
+#+begin_example
+<span class="mb-sort-status" data-table-name="engineering location for" data-table-index="0" style="color: green;">✓ Sorted by column "Title" ▼: 6 rows in 4ms</span>
+#+end_example
+
+is displayed alone (no column filter expression in effect), the text is not aligned with the h3 header text in the same line. As soon as filter information is displayed
+
+#+begin_example
+<span class="mb-filter-status" data-table-name="engineering location for" data-table-index="0" style="color: green;">✓ Filtered 2 rows [Title:"the"]</span>
+#+end_example
+
+everything is aligned perfectly. Please fix.
 
 
