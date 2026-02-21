@@ -29037,6 +29037,7 @@ content. Make sure that an eventual scrollbar on the "content container does not
 ** TODO when sidebar is toggled there is artificial empty space reachable with the horizontal scrollbar
 ** TODO ghost sidebar toggle sometimes stays visible inside the data aread depending on previous action  (Which ONE ??)
 
+
 * generalize special column handling (e.g. Tagger, jesus2099 image handling, collapsing RGs, Advance Relationship icons ==> discogs, SL, MB
 ** remove or fix "Tagger" column
 *** DONE initial
@@ -32126,7 +32127,6 @@ Since you recently added logic to transform search results (converting p to h2),
 
 #+end_example
 
-
 * TODO generalize column splitting
 ** generalize column data splitting
 *** DONE Area
@@ -35077,6 +35077,7 @@ what would be a much shorter and more pregnant name for this userscript, given t
 
 * refactor in memory column removal to filter large pagination pages
 
+
 * TODO Priority of script execution and interoperation
 ** talk to
 *** jesus2009 - render ing of coverimages befreo table and before each row
@@ -35551,12 +35552,12 @@ or a country flag in front of the country name
 So please fix also the column filtering for regexps to only take real text into account
 
 
-* TODO Sticky headers
+* DONE Sticky headers
 ** DONE works for single table views
 
 go with "Sticky Headers - See columns while scrolling", but include the filter row with the other stiky headers
 
-** TODO multi table mode
+** DONE multi table mode
 ** make the whole MB page header up to the filter row sticky
 
 
@@ -39127,8 +39128,7 @@ because the toggle hightlightning button has been pressed a couple of times and 
 NOT be present) would actually be toggled OFF, the actual highlighning immediately shows up again if I at least insert a
 filter charachter in just one column filter
 
-
-* TODO multi-column sort
+* DONE multi-column sort
 ** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -39513,7 +39513,9 @@ please generate complete rewritten source code to the chat window
 
 ** make it work on multi table pages
 
+
 * TODO sensible defaults for configuration options
+
 
 * DONE overwhoule of the logging statements... make lots of stuff debug statements
 * DONE collapsable sidebar breaks sticky headers
@@ -39525,7 +39527,7 @@ In the uploaded userscript "ShowAllEntityData.user.js"
 The "Auto-Resize" (function toggleAutoResizeColumns()) feature breaks the "sticky headers" "function applyStickyHeaders()" feature, please investigate and fix
 
 
-* TODO Add Ctrl-M handling also on page entry, not only on rendered page
+* DONE Add Ctrl-M handling also on page entry, not only on rendered page
 ** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -39729,7 +39731,7 @@ this app (you can also use the unicode symbols used for buttons or in text in th
 the value of this variable in the current code. Position it right to the "⚙️" button This button should also already be
 visible on page entry (not only when the page is finally render after an action button click).
 
-** TODO Underline "o" in "Stop" button and add keyboard shortcut "Ctrl-M"+o 
+** DONE Underline "o" in "Stop" button and add keyboard shortcut "Ctrl-M"+o 
 
 
 
@@ -40305,6 +40307,7 @@ create a text input field, where the user can focus and press the desired key co
 pressing the key combination, the String value of the key combination should be stored in the text field.
 
 ** is there a 
+
 * Add keyboard handling for the complete application
 ** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
 ** Ctrl-Shift-- ==> un-collapse all tables (maybe make it toggle)
@@ -40395,15 +40398,18 @@ How can I force the open file dialog, triggered from my own user script to show 
 
 * Scrollable "Shortcuts menu"
 
+
 * TODO Is the check for invalid regexp really working
 
+
 * TODO Render the initial Render time after the "Fetching" time below h1
+
 
 * Reapploy  2. Setup UI Feedback
 
 * Make status area clickable like the empty space
 
-* TODO Order of UI elements on multi table h3 headers
+* DONE Order of UI elements on multi table h3 headers
 ** DONE desired order for filtered state is:
 
 #+begin_example
@@ -40500,6 +40506,7 @@ Also give each button a unique id when missing, e.g.
 
 * add new warning treshold for rendering > treshold rows
 
+
 * split column
 
 #+begin_example
@@ -40530,6 +40537,36 @@ appearance of all the UI elements.
 
 
 * reintroduce progressbars on h1 (single/multi - initial downloading and loading from disk), h2 (single/multi - global filtering / single-sorting) and h3 headers (multi - filtering/sorting)
+** progress bar
+
+- Reintroduce a progess bar in the h1 header line after the help "?" button which displays the following message in a
+  progress bar
+
+#+begin_example
+                // Show live progress in the subheader status display
+                globalStatusDisplay.textContent =
+                    `Loading page ${p} of ${maxPage}… (${totalRowsAccumulated} rows) — ` +
+                    `est. ${estRemainingSeconds.toFixed(1)}s remaining`;
+                globalStatusDisplay.style.color = progress >= 1.0 ? 'green' : (progress >= 0.5 ? 'orange' : '#c00');
+#+end_example
+
+instead of in the "globalStatusDisplay"
+
+- Rename "Clear all COLUMN filters" to "Clear ALL filters" on the "Clear all COLUMN filters"-buttons in the h3 headers"Clear all COLUMN filters"
+
+** adjust
+
+- Please place the current
+
+#+begin_example
+fetchProgressLabel.textContent
+#+end_example
+
+inside the progress bar (adjust it's heigth accordingly)
+
+- Place page rendering time information like "at the end of
+
+** sort
 
 #+begin_example
 const progressContainer = document.createElement('div');
@@ -40578,7 +40615,8 @@ if (showProgressBar && progressContainer) {
 #+end_example
 
 
-* Ctrl-click should switch in multi column sort mode if another column has already been sorted
+
+* DONE Ctrl-click should switch in multi column sort mode if another column has already been sorted
 ** initial
 
 Please change the for the multi column sort feature, the processing of keybindings in the following way:
@@ -40616,6 +40654,15 @@ First bug:
   header get colorized. The same is true for every further "Ctrl" click on another column sort icon, just the header
   gets colorized
 
+** on bug left
+
+There is still a bug left:
+
+On pages with multiple tables, when multi-column sorting one table, everythiny works fine. As soon as I do a second
+(third...) multi-column sort on another table the data cells on the other already sorted table loose their colorization, ONLY the header columns are still colorized.
+
+* DONE glitch
+
 - When the following element
 
 #+begin_example
@@ -40630,12 +40677,7 @@ is displayed alone (no column filter expression in effect), the text is not alig
 
 everything is aligned perfectly. Please fix.
 
-** on bug left
 
-There is still a bug left:
-
-On pages with multiple tables, when multi-column sorting one table, everythiny works fine. As soon as I do a second
-(third...) multi-column sort on another table the data cells on the other already sorted table loose their colorization, ONLY the header columns are still colorized.
 
 * forum demo screen shot - RG-R sort format/lable/catalog/country
 
@@ -40653,21 +40695,5 @@ clear all filters
 
 press anywhere on original sort
 
-
-* glitch
-
-- When the following element
-
-#+begin_example
-<span class="mb-sort-status" data-table-name="engineering location for" data-table-index="0" style="color: green;">✓ Sorted by column "Title" ▼: 6 rows in 4ms</span>
-#+end_example
-
-is displayed alone (no column filter expression in effect), the text is not aligned with the h3 header text in the same line. As soon as filter information is displayed
-
-#+begin_example
-<span class="mb-filter-status" data-table-name="engineering location for" data-table-index="0" style="color: green;">✓ Filtered 2 rows [Title:"the"]</span>
-#+end_example
-
-everything is aligned perfectly. Please fix.
 
 

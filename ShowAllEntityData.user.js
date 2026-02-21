@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.58.0+2026-02-21
+// @version      9.59.0+2026-02-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.59.0+2026-02-21', description: 'Enhancement + rename: (1) Inline fetch progress bar added to the h1 controls line, positioned after the ❓ help button. A <progress> element (120px wide, accent-color green) plus a compact label (e.g. "3/12 — 847 rows — est. 4.2s") are wrapped in a span#mb-fetch-progress-wrap that is shown at fetch start and hidden at all exit paths (success, Stop button, render-large-dataset cancel, save-to-disk-only, and error). The bar fills red→orange→green as the page fraction crosses 0%, 50%, and 100%. The existing globalStatusDisplay in the subheader continues to show the full progress text unchanged. (2) Renamed "Clear all COLUMN filters" button label in createClearColumnFiltersButton (used in all h3 sub-table headers on multi-table pages) to "Clear ALL filters" to better reflect its scope and be more concise.'},
     {version: '9.58.0+2026-02-21', description: 'Bug fix: Multi-sort column tints lost on body cells of already-sorted tables when a second multi-sort is activated on another table (multi-table pages only). Root cause: renderGroupedTable has three branches — (a) query+existingTable: reuse tbody, no makeTableSortableUnified call; (b) !query new table: full init including makeTableSortableUnified; (c) else: filter re-run on existing table, no makeTableSortableUnified. Tints were re-applied via the trailing block inside makeTableSortableUnified, so only branch (b) ever re-applied tints after a tbody replacement. Branch (a) always fires on runFilter()-triggered re-renders (query=\'re-run\'), so any previously tinted table A lost its body tints when table B\'s sort triggered a runFilter() cycle. Header tints survived because thead is not replaced by tbody.innerHTML=\'\'. Fix: added explicit tint re-application immediately after the rows-append block in branch (a), keyed by the same ${categoryName}_${index} sortKey that was registered in multiSortTintRegistry at initial makeTableSortableUnified call time. The fix was implemented in the previous session but the file was not saved to outputs — this version corrects that.'},
     {version: '9.57.0+2026-02-20', description: 'Bug fixes (4 items) for multi-sort column tinting introduced in 9.56.0: (1) Tints not clearing on ⇅ click: root cause was that tint application ran before runFilter() replaced tbody content with fresh unclassed rows, so the re-paint was lost. Fixed by moving applyMultiSortColumnTints() / clearMultiSortColumnTints() to AFTER runFilter() in the async sort block. For single-table pages renderFinalTable() is also now hooked to re-apply tints via a new multiSortTintRegistry Map (sortKey → {applyTints, clearTints}), ensuring tints persist across every filter/sort re-render. (2) Tints not appearing on tbody cells (only header) on first Ctrl+Click or Ctrl+same-column: same root cause as (1) — premature application before DOM was replaced. (3) Value-group run-length coloring: applyMultiSortColumnTints() now walks tbody rows per sorted column and alternates between two shades of the column hue (light \'a\' / darker \'b\') each time the cell text value changes. Equal-value runs share the same shade; each value boundary flips to the other shade. CSS updated from 8 flat classes to 16 two-shade pairs (mb-mscol-Na / mb-mscol-Nb) plus 8 header classes. (4) mb-sort-status alignment: .mb-subtable-controls changed from align-items:center to align-items:baseline with vertical-align:middle on each child span so sort-only text aligns with the h3 header baseline even when no filter status text is present.'},
     {version: '9.56.0+2026-02-20', description: 'Enhancement: Visual column-group tinting for multi-column sort mode. When two or more columns are in the multi-sort chain each sorted column gets a distinct pastel tint applied to every body cell (td) and its header cell (th) in that column: amber (priority 1), sky-blue (2), mint (3), mauve (4), peach (5), teal (6), lavender (7), vanilla (8). Tints use rgba semi-transparency so the existing even/odd zebra-stripe row backgrounds remain visible underneath. A slightly more opaque variant is used for header cells so the priority is visually anchored. Tints are applied/updated by a new applyMultiSortColumnTints() helper and fully removed by clearMultiSortColumnTints() — which is called on: plain click (entering single-sort mode), ⇅ click (restoring original order), and in the single-column visual update branch. Tints are also re-applied on every runFilter() re-render via the existing trailing updateMultiSortVisuals block. Works independently per table on both single-table and multi-table pages.'},
@@ -1963,7 +1964,7 @@ Press Escape on that notice to cancel the auto-action.
         xSymbol.style.fontWeight = 'bold';
 
         clearBtn.appendChild(xSymbol);
-        clearBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
+        clearBtn.appendChild(document.createTextNode('Clear ALL filters'));
 
         clearBtn.onclick = (e) => {
             e.preventDefault();
@@ -5322,6 +5323,25 @@ Press Escape on that notice to cancel the auto-action.
     appHelpBtn.onclick = showAppHelp;
     controlsContainer.appendChild(appHelpBtn);
 
+    // --- Fetch progress bar (shown during data loading, hidden otherwise) ---
+    const fetchProgressWrap = document.createElement('span');
+    fetchProgressWrap.id = 'mb-fetch-progress-wrap';
+    fetchProgressWrap.style.cssText = 'display:none; align-items:center; gap:5px; vertical-align:middle;';
+
+    const fetchProgressBar = document.createElement('progress');
+    fetchProgressBar.id = 'mb-fetch-progress-bar';
+    fetchProgressBar.max = 100;
+    fetchProgressBar.value = 0;
+    fetchProgressBar.style.cssText = 'width:120px; height:14px; vertical-align:middle; accent-color:#4CAF50;';
+
+    const fetchProgressLabel = document.createElement('span');
+    fetchProgressLabel.id = 'mb-fetch-progress-label';
+    fetchProgressLabel.style.cssText = 'font-size:0.8em; color:#333; white-space:nowrap; vertical-align:middle;';
+
+    fetchProgressWrap.appendChild(fetchProgressBar);
+    fetchProgressWrap.appendChild(fetchProgressLabel);
+    controlsContainer.appendChild(fetchProgressWrap);
+
     // --- Pre-load Filter UI elements ---
     const preFilterContainer = document.createElement('span');
     preFilterContainer.style.cssText = 'display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding-left:6px; border-left:1px solid #ccc; vertical-align:middle; height:24px;';
@@ -7475,6 +7495,13 @@ Press Escape on that notice to cancel the auto-action.
         globalStatusDisplay.textContent = 'Loading…';
         globalStatusDisplay.style.color = '#999';
 
+        // Show the inline fetch progress bar
+        fetchProgressWrap.style.display = 'inline-flex';
+        fetchProgressBar.value = 0;
+        fetchProgressBar.max = 100;
+        fetchProgressLabel.textContent = 'Loading…';
+        fetchProgressLabel.style.color = '#999';
+
         const startTime = performance.now();
         let fetchingTimeStart = performance.now();
         let totalFetchingTime = 0;
@@ -7966,6 +7993,12 @@ Press Escape on that notice to cancel the auto-action.
                     `est. ${estRemainingSeconds.toFixed(1)}s remaining`;
                 globalStatusDisplay.style.color = progress >= 1.0 ? 'green' : (progress >= 0.5 ? 'orange' : '#c00');
 
+                // Drive the inline progress bar in the h1 controls line
+                fetchProgressBar.value = Math.round(progress * 100);
+                fetchProgressLabel.textContent =
+                    `${p}/${maxPage} — ${totalRowsAccumulated} rows — est. ${estRemainingSeconds.toFixed(1)}s`;
+                fetchProgressLabel.style.color = progress >= 1.0 ? 'green' : (progress >= 0.5 ? 'orange' : '#c00');
+
                 // Detailed statistics per page fetch
                 Lib.debug('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
 
@@ -8010,6 +8043,7 @@ Press Escape on that notice to cancel the auto-action.
                     const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
                     globalStatusDisplay.textContent = `Fetched ${pagesProcessed} ${pageLabel} (${totalRows} rows) in ${fetchSeconds}s - Saved to disk without rendering`;
                     globalStatusDisplay.style.color = 'green';
+                    fetchProgressWrap.style.display = 'none';
 
                     Lib.debug('success', `Process complete. Data saved without rendering. Row Count: ${totalRows}. Fetch Time: ${fetchSeconds}s`);
                     return; // Exit without rendering
@@ -8022,6 +8056,7 @@ Press Escape on that notice to cancel the auto-action.
                     stopBtn.style.display = 'none';
                     delete ctrlMFunctionMap['o'];
                     globalStatusDisplay.textContent = 'Operation cancelled';
+                    fetchProgressWrap.style.display = 'none';
                     return;
                 }
                 // If userChoice === 'render', continue with normal rendering below
@@ -8039,6 +8074,7 @@ Press Escape on that notice to cancel the auto-action.
             allActionButtons.forEach(b => b.disabled = false);
             stopBtn.style.display = 'none';
             delete ctrlMFunctionMap['o'];
+            fetchProgressWrap.style.display = 'none';
 
             // Only show filter container if it wasn't already appended to H2 (handled in updateH2Count or renderGroupedTable)
             if (!filterContainer.parentNode) {
@@ -8139,11 +8175,13 @@ Press Escape on that notice to cancel the auto-action.
 
             const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
             globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows) from MusicBrainz backend database, Fetching time: ${fetchSeconds}s`;
+            fetchProgressWrap.style.display = 'none';
 
             Lib.debug('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
         } catch (err) {
             Lib.error('fetch', 'Critical Error during fetch:', err);
             globalStatusDisplay.textContent = 'Error during load… (repress the "Show all" button)';
+            fetchProgressWrap.style.display = 'none';
             activeBtn.disabled = false;
             allActionButtons.forEach(b => b.disabled = false);
             activeBtn.style.backgroundColor = '';
