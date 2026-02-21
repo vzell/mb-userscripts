@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.62.0+2026-02-21
+// @version      9.63.0+2026-02-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.63.0+2026-02-21', description: 'configSchema: all 6 sa_popup_* entries changed from type:"text" to type:"popup_dialog" and each gains a fields:[...] array naming every pipe-separated parameter (e.g. ["bg","border","borderRadius","padding","boxShadow","zIndex","fontFamily","minWidth","maxWidth"] for sa_popup_dialog_style).'},
     {version: '9.62.0+2026-02-21', description: 'Two fixes: (1) Prefilter toggle button text after disk-load now always includes total row count from the file. For "Exclude matches" mode the text is "🎨 N out of T row(s) excluded: \\"query\\""; for normal (keep-matches) mode it is "🎨 N out of T row(s) prefiltered: \\"query\\"". updatePrefilterToggleButton gains two new parameters: totalRows (number, default 0) and isExclude (boolean, default false); call site in loadTableDataFromDisk passes data.rowCount and the local isExclude flag. (2) Progress bar outer element (mb-fetch-progress-outer) min-width raised from 260px to 420px and max-width from 500px to 750px so the long label text "Loading page N of M... K rows — estimated X.Xs remaining" is no longer clipped at either end.'},
     {version: '9.61.0+2026-02-21', description: 'Three changes: (1) Progress bar text: fetchProgressLabel now shows the full message "Loading page N of M... K rows — estimated X.Xs remaining" (was "N/M — K rows — est. X.Xs"); bar outer width changed from fixed 380px to auto/min-260px/max-500px so the label always fits. (2) Load dialog "Exclude Matches" checkbox (id="sa-load-exclude"): added as a third option in the checkbox row after "Regular Expression". When checked, rows that match the filter expression are EXCLUDED during disk-load instead of kept; rows that do not match are kept. Wired end-to-end: dialog reads #sa-load-exclude → syncs to preFilterExcludeCheckbox in confirmLoad → fileInput.onchange reads preFilterExcludeCheckbox.checked → passes isExclude to loadTableDataFromDisk (new 5th param, default false) → rowMatchesFilter inverts its result when isExclude=true. (3) Load dialog input placeholder renamed from "Search expression..." to "Filter expression...".'},
     {version: '9.60.0+2026-02-21', description: 'Three enhancements: (1) Progress bar text moved inside the bar: replaced the native <progress> element with a custom CSS bar (span#mb-fetch-progress-outer, 220px × 20px) containing a fill div (span#mb-fetch-progress-fill, width animated via CSS transition) and a centered label (span#mb-fetch-progress-label) absolutely positioned over the fill. Label text "3/12 — 847 rows — est. 4.2s" is always readable via mix-blend-mode:difference + filter:invert(1). Fill colour transitions red→orange→green at 0%/50%/100% progress. (2) Rendering time appended to globalStatusDisplay final text: "Loaded N pages (M rows) from MusicBrainz backend database, Fetching time: X.XXs, Rendering time: Y.YYs". (3) New config setting sa_render_warning_threshold (default 10000, Performance Settings section): after the existing large-dataset save-or-render dialog, if the final row count exceeds this threshold a showCustomConfirm dialog warns the user that rendering may be slow and offers Proceed / Cancel. Cancel aborts rendering, sets a descriptive status message, and hides the progress bar. 0 disables the warning.'},
@@ -659,42 +660,48 @@ Press Escape on that notice to cancel the auto-action.
 
         sa_popup_dialog_style: {
             label: 'Popup dialog container style',
-            type: 'text',
+            type: 'popup_dialog',
+            fields: ['bg', 'border', 'borderRadius', 'padding', 'boxShadow', 'zIndex', 'fontFamily', 'minWidth', 'maxWidth'],
             default: 'white|1px solid #ccc|10px|28px|0 8px 32px rgba(0,0,0,0.2)|10001|-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif|380px|600px',
             description: 'Condensed style for the popup dialog container: bg|border|borderRadius|padding|boxShadow|zIndex|fontFamily|minWidth|maxWidth'
         },
 
         sa_popup_header_style: {
             label: 'Popup header style',
-            type: 'text',
+            type: 'popup_dialog',
+            fields: ['fontWeight', 'fontSize', 'marginBottom', 'paddingBottom', 'borderBottom', 'color'],
             default: '700|1.5em|18px|14px|2px solid #ddd|#222',
             description: 'Condensed style for the popup header: fontWeight|fontSize|marginBottom|paddingBottom|borderBottom|color'
         },
 
         sa_popup_message_style: {
             label: 'Popup message style',
-            type: 'text',
+            type: 'popup_dialog',
+            fields: ['marginBottom', 'lineHeight', 'color', 'fontSize'],
             default: '24px|1.7|#444|1.2em',
             description: 'Condensed style for the popup message: marginBottom|lineHeight|color|fontSize'
         },
 
         sa_popup_ok_btn_style: {
             label: 'Popup OK button style',
-            type: 'text',
+            type: 'popup_dialog',
+            fields: ['padding', 'bg', 'color', 'border', 'borderRadius', 'fontSize', 'fontWeight', 'bgHover'],
             default: '10px 22px|#4CAF50|white|1px solid #45a049|5px|1.1em|600|#45a049',
             description: 'Condensed style for the OK button: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover'
         },
 
         sa_popup_cancel_btn_style: {
             label: 'Popup Cancel button style',
-            type: 'text',
+            type: 'popup_dialog',
+            fields: ['padding', 'bg', 'color', 'border', 'borderRadius', 'fontSize', 'fontWeight', 'bgHover'],
             default: '10px 22px|#f0f0f0|#333|1px solid #ccc|5px|1.1em|500|#e0e0e0',
             description: 'Condensed style for the Cancel button: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover'
         },
 
         sa_popup_btn_gap: {
             label: 'Popup button gap',
-            type: 'text',
+            type: 'popup_dialog',
+            fields: ['gap'],
             default: '12px',
             description: 'Gap between buttons in the popup dialog button row'
         },
