@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.57.0+2026-02-20
+// @version      9.58.0+2026-02-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.58.0+2026-02-21', description: 'Bug fix: Multi-sort column tints lost on body cells of already-sorted tables when a second multi-sort is activated on another table (multi-table pages only). Root cause: renderGroupedTable has three branches — (a) query+existingTable: reuse tbody, no makeTableSortableUnified call; (b) !query new table: full init including makeTableSortableUnified; (c) else: filter re-run on existing table, no makeTableSortableUnified. Tints were re-applied via the trailing block inside makeTableSortableUnified, so only branch (b) ever re-applied tints after a tbody replacement. Branch (a) always fires on runFilter()-triggered re-renders (query=\'re-run\'), so any previously tinted table A lost its body tints when table B\'s sort triggered a runFilter() cycle. Header tints survived because thead is not replaced by tbody.innerHTML=\'\'. Fix: added explicit tint re-application immediately after the rows-append block in branch (a), keyed by the same ${categoryName}_${index} sortKey that was registered in multiSortTintRegistry at initial makeTableSortableUnified call time. The fix was implemented in the previous session but the file was not saved to outputs — this version corrects that.'},
     {version: '9.57.0+2026-02-20', description: 'Bug fixes (4 items) for multi-sort column tinting introduced in 9.56.0: (1) Tints not clearing on ⇅ click: root cause was that tint application ran before runFilter() replaced tbody content with fresh unclassed rows, so the re-paint was lost. Fixed by moving applyMultiSortColumnTints() / clearMultiSortColumnTints() to AFTER runFilter() in the async sort block. For single-table pages renderFinalTable() is also now hooked to re-apply tints via a new multiSortTintRegistry Map (sortKey → {applyTints, clearTints}), ensuring tints persist across every filter/sort re-render. (2) Tints not appearing on tbody cells (only header) on first Ctrl+Click or Ctrl+same-column: same root cause as (1) — premature application before DOM was replaced. (3) Value-group run-length coloring: applyMultiSortColumnTints() now walks tbody rows per sorted column and alternates between two shades of the column hue (light \'a\' / darker \'b\') each time the cell text value changes. Equal-value runs share the same shade; each value boundary flips to the other shade. CSS updated from 8 flat classes to 16 two-shade pairs (mb-mscol-Na / mb-mscol-Nb) plus 8 header classes. (4) mb-sort-status alignment: .mb-subtable-controls changed from align-items:center to align-items:baseline with vertical-align:middle on each child span so sort-only text aligns with the h3 header baseline even when no filter status text is present.'},
     {version: '9.56.0+2026-02-20', description: 'Enhancement: Visual column-group tinting for multi-column sort mode. When two or more columns are in the multi-sort chain each sorted column gets a distinct pastel tint applied to every body cell (td) and its header cell (th) in that column: amber (priority 1), sky-blue (2), mint (3), mauve (4), peach (5), teal (6), lavender (7), vanilla (8). Tints use rgba semi-transparency so the existing even/odd zebra-stripe row backgrounds remain visible underneath. A slightly more opaque variant is used for header cells so the priority is visually anchored. Tints are applied/updated by a new applyMultiSortColumnTints() helper and fully removed by clearMultiSortColumnTints() — which is called on: plain click (entering single-sort mode), ⇅ click (restoring original order), and in the single-column visual update branch. Tints are also re-applied on every runFilter() re-render via the existing trailing updateMultiSortVisuals block. Works independently per table on both single-table and multi-table pages.'},
     {version: '9.55.0+2026-02-20', description: 'Enhancement: Multi-column sort lifted to all page types. Previously Ctrl+Click multi-sort was restricted to single-table pages; multi-table pages only supported single-column sort per sub-table. Now every sub-table on a multi-table page is independently multi-sortable with the same full feature set: (1) Ctrl+Click ▲/▼ adds/updates/removes a column from that sub-table\'s own multi-sort chain; (2) auto-seeding from existing single-sort state works per sub-table; (3) plain click clears the chain for that sub-table and returns to single-sort; (4) ⇅ restores original order and clears the chain; (5) superscript priority numbers (¹²³…) are rendered on the active icons; (6) the h3 .mb-sort-status span shows "Multi-sorted by: …" text matching the single-table display. All isMultiTable guards removed from: sort-state update, debug log, visual update, isRestore determination, compareFn selection, status display, and the trailing updateMultiSortVisuals call. Tooltips unified across both page types.'},
@@ -8455,6 +8456,16 @@ Press Escape on that notice to cancel the auto-action.
                 tbody.appendChild(fragment);
             } else {
                 group.rows.forEach(r => tbody.appendChild(r));
+            }
+
+            // After rows are in the DOM: re-apply any active multi-sort tints for this table.
+            // This covers the reuse-existing-table branch (query truthy) where
+            // makeTableSortableUnified is NOT called, so the trailing restore block never fires.
+            // The new-table branch handles itself via makeTableSortableUnified's trailing block.
+            if (query && existingTables[index]) {
+                const tintKey = `${categoryName}_${index}`;
+                const tintEntry = multiSortTintRegistry.get(tintKey);
+                if (tintEntry) tintEntry.applyTints();
             }
 
             if (!query) {

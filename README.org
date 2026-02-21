@@ -40630,6 +40630,12 @@ is displayed alone (no column filter expression in effect), the text is not alig
 
 everything is aligned perfectly. Please fix.
 
+** on bug left
+
+There is still a bug left:
+
+On pages with multiple tables, when multi-column sorting one table, everythiny works fine. As soon as I do a second
+(third...) multi-column sort on another table the data cells on the other already sorted table loose their colorization, ONLY the header columns are still colorized.
 
 * forum demo screen shot - RG-R sort format/lable/catalog/country
 
