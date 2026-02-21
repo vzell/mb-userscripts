@@ -40739,7 +40739,7 @@ clear all filters
 press anywhere on original sort
 
 
-* add new checkbox
+* DONE add new checkbox
 
 - adjust the progress bar to display the whole info. also rename
 
@@ -40777,4 +40777,31 @@ should be filtered out (ignored) already during load which match the "Search exp
 #+end_example
 
 to "Filter expression..."
+
+
+* better button text
+
+- In the case of loading data from the filesystem when the "[x] Exclude matches" is checked, after the loading the current button text of
+
+#+begin_example
+prefilterToggleBtn.textContent = `🎨 ${count} row${count === 1 ? '' : 's'} prefiltered: "${query}"`;
+#+end_example
+
+should change to "🎨 <number of rows exluded> out of <total rows> row(s)"
+
+Also in the case of "[ ] Exclude matches" it should be
+
+#+begin_example
+prefilterToggleBtn.textContent = `🎨 ${count} row${count === 1 ? '' : 's'} out of <total_rows> prefiltered: "${query}"`;
+#+end_example
+
+So essentially the total row count in the loaded file should always be included in the output.
+
+- The progress bar "mb-fetch-progress-outer" must be made wider
+
+#+begin_example
+<span id="mb-fetch-progress-outer" style="display: inline-block; position: relative; width: auto; min-width: 260px; max-width: 500px; height: 20px; background: rgb(224, 224, 224); border-radius: 4px; overflow: hidden; vertical-align: middle; border: 1px solid rgb(187, 187, 187);"><span id="mb-fetch-progress-fill" style="display: block; position: absolute; top: 0px; left: 0px; height: 100%; width: 25%; background: rgb(229, 57, 53); transition: width 0.2s, background 0.3s; border-radius: 3px 0px 0px 3px;"></span><span id="mb-fetch-progress-label" style="position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: bold; color: rgb(51, 51, 51); white-space: nowrap; pointer-events: none; mix-blend-mode: difference; filter: invert(1);">Loading page 4 of 16... 400 rows — estimated 23.0s remaining</span></span>
+#+end_example
+
+as it currently cuts of the displayed text inside at both ends
 
