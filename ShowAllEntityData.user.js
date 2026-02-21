@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.61.0+2026-02-21
+// @version      9.62.0+2026-02-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.62.0+2026-02-21', description: 'Two fixes: (1) Prefilter toggle button text after disk-load now always includes total row count from the file. For "Exclude matches" mode the text is "🎨 N out of T row(s) excluded: \\"query\\""; for normal (keep-matches) mode it is "🎨 N out of T row(s) prefiltered: \\"query\\"". updatePrefilterToggleButton gains two new parameters: totalRows (number, default 0) and isExclude (boolean, default false); call site in loadTableDataFromDisk passes data.rowCount and the local isExclude flag. (2) Progress bar outer element (mb-fetch-progress-outer) min-width raised from 260px to 420px and max-width from 500px to 750px so the long label text "Loading page N of M... K rows — estimated X.Xs remaining" is no longer clipped at either end.'},
     {version: '9.61.0+2026-02-21', description: 'Three changes: (1) Progress bar text: fetchProgressLabel now shows the full message "Loading page N of M... K rows — estimated X.Xs remaining" (was "N/M — K rows — est. X.Xs"); bar outer width changed from fixed 380px to auto/min-260px/max-500px so the label always fits. (2) Load dialog "Exclude Matches" checkbox (id="sa-load-exclude"): added as a third option in the checkbox row after "Regular Expression". When checked, rows that match the filter expression are EXCLUDED during disk-load instead of kept; rows that do not match are kept. Wired end-to-end: dialog reads #sa-load-exclude → syncs to preFilterExcludeCheckbox in confirmLoad → fileInput.onchange reads preFilterExcludeCheckbox.checked → passes isExclude to loadTableDataFromDisk (new 5th param, default false) → rowMatchesFilter inverts its result when isExclude=true. (3) Load dialog input placeholder renamed from "Search expression..." to "Filter expression...".'},
     {version: '9.60.0+2026-02-21', description: 'Three enhancements: (1) Progress bar text moved inside the bar: replaced the native <progress> element with a custom CSS bar (span#mb-fetch-progress-outer, 220px × 20px) containing a fill div (span#mb-fetch-progress-fill, width animated via CSS transition) and a centered label (span#mb-fetch-progress-label) absolutely positioned over the fill. Label text "3/12 — 847 rows — est. 4.2s" is always readable via mix-blend-mode:difference + filter:invert(1). Fill colour transitions red→orange→green at 0%/50%/100% progress. (2) Rendering time appended to globalStatusDisplay final text: "Loaded N pages (M rows) from MusicBrainz backend database, Fetching time: X.XXs, Rendering time: Y.YYs". (3) New config setting sa_render_warning_threshold (default 10000, Performance Settings section): after the existing large-dataset save-or-render dialog, if the final row count exceeds this threshold a showCustomConfirm dialog warns the user that rendering may be slow and offers Proceed / Cancel. Cancel aborts rendering, sets a descriptive status message, and hides the progress bar. 0 disables the warning.'},
     {version: '9.59.0+2026-02-21', description: 'Enhancement + rename: (1) Inline fetch progress bar added to the h1 controls line, positioned after the ❓ help button. A <progress> element (120px wide, accent-color green) plus a compact label (e.g. "3/12 — 847 rows — est. 4.2s") are wrapped in a span#mb-fetch-progress-wrap that is shown at fetch start and hidden at all exit paths (success, Stop button, render-large-dataset cancel, save-to-disk-only, and error). The bar fills red→orange→green as the page fraction crosses 0%, 50%, and 100%. The existing globalStatusDisplay in the subheader continues to show the full progress text unchanged. (2) Renamed "Clear all COLUMN filters" button label in createClearColumnFiltersButton (used in all h3 sub-table headers on multi-table pages) to "Clear ALL filters" to better reflect its scope and be more concise.'},
@@ -5345,8 +5346,8 @@ Press Escape on that notice to cancel the auto-action.
         'display:inline-block',
         'position:relative',
         'width:auto',
-        'min-width:260px',
-        'max-width:500px',
+        'min-width:420px',
+        'max-width:750px',
         'height:20px',
         'background:#e0e0e0',
         'border-radius:4px',
@@ -5515,16 +5516,21 @@ Press Escape on that notice to cancel the auto-action.
 
     /**
      * Update the prefilter toggle button text and appearance
-     * @param {number} count - Number of prefiltered rows
+     * @param {number} count - Number of rows kept (or excluded) after prefiltering
      * @param {string} query - The prefilter query string
      * @param {boolean} show - Whether to show the button
+     * @param {number} totalRows - Total rows in the loaded file (before filtering)
+     * @param {boolean} isExclude - When true, rows matching the query were excluded
      */
-    function updatePrefilterToggleButton(count = 0, query = '', show = false) {
+    function updatePrefilterToggleButton(count = 0, query = '', show = false, totalRows = 0, isExclude = false) {
         prefilterInfo = { count, query };
 
-        if (show && count > 0 && query) {
-            // Show prefilter info in button text with emoji
-            prefilterToggleBtn.textContent = `🎨 ${count} row${count === 1 ? '' : 's'} prefiltered: "${query}"`;
+        if (show && query) {
+            // Show prefilter info in button text with emoji, always including total row count
+            const rowWord = count === 1 ? 'row' : 'rows';
+            const totalPart = totalRows > 0 ? ` out of ${totalRows}` : '';
+            const action = isExclude ? 'excluded' : 'prefiltered';
+            prefilterToggleBtn.textContent = `🎨 ${count}${totalPart} ${rowWord} ${action}: "${query}"`;
             prefilterToggleBtn.style.display = 'inline-block';
             prefilterToggleBtn.title = 'Toggle prefilter highlighting on/off';
         } else {
@@ -9843,7 +9849,8 @@ Press Escape on that notice to cancel the auto-action.
                 // --- Update UI Feedback for Pre-Filter ---
                 if (filterQueryRaw) {
                     // Update the prefilter toggle button with prefilter info and show it
-                    updatePrefilterToggleButton(loadedRowCount, filterQueryRaw, true);
+                    // Pass the file's total row count and isExclude so the label always shows "N out of T"
+                    updatePrefilterToggleButton(loadedRowCount, filterQueryRaw, true, data.rowCount || 0, isExclude);
                     // Hide the old prefilter message span (no longer needed)
                     preFilterMsg.style.display = 'none';
                     // Reset the input field

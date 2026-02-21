@@ -40779,7 +40779,7 @@ should be filtered out (ignored) already during load which match the "Search exp
 to "Filter expression..."
 
 
-* better button text
+* DONE better button text
 
 - In the case of loading data from the filesystem when the "[x] Exclude matches" is checked, after the loading the current button text of
 
@@ -40805,3 +40805,27 @@ So essentially the total row count in the loaded file should always be included 
 
 as it currently cuts of the displayed text inside at both ends
 
+
+* Please take the progressbar implementation from the uploaded file ""progressbar.js"
+
+Please change the progressbar implementation in the file "ShowAllEntityData.user.js"
+to the one from the uploaded file "progressbar.js"
+
+#+begin_example
+    const progressBar = document.createElement('div');
+    progressBar.id = 'mb-fetch-progress-bar';
+    progressBar.style.cssText = 'width:0%; height:100%; transition: width 0.3s, background-color 0.3s; position:absolute; left:0; top:0;';
+
+
+                // Update progress bar
+                const progress = p / maxPage;
+                progressBar.style.width = `${progress * 100}%`;
+                progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
+#+end_example
+
+- alos remove the redundant display in
+
+#+begin_example
+<span id="mb-global-status-display" style="font-size: 0.95em; color: rgb(204, 0, 0); font-weight: bold; vertical-align: middle;">Loading page 4 of 16… (400 rows) — est. 24.7s remaining</span>
+#+end_example
+  
