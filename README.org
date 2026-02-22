@@ -41294,3 +41294,6 @@ Do the same for the following elements
 or better yet please refactor all the export functions (JSON, CSV and Org-Mode") because they share lots of common code.
 
 
+* For display purposes, upcase the character after capturing
+
+so instead of "Ctrl-m" it should be displayed in the configuration dialog and the keyboard popup dialog as "Ctrl-M"
