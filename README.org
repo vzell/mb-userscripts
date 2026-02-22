@@ -40398,6 +40398,175 @@ Ctrl-f
 
 ** problem with browser defined keyboard shortcust, e.g. Ctrl++ ==> increase font instead of "Settings" dialog
 
+* keybord shortcut editor
+** initial
+
+- In the uploaded library "VZ_MBLibrary.user.js" add code to support the "keyboard_shortcut" with a custom UI
+  configuration editor, to prompt the user to press the desired key combination and then fill in the equvalent string
+  version to fit what the code in the uplaoded userscript "ShowAllEntityData.user.js" expects
+
+#+begin_example
+        // ============================================================
+        // KEYBOARD SHORTCUTS SECTION
+        // ============================================================
+        divider_keyboard_shortcuts: {
+            type: 'divider',
+            label: '🎹 KEYBOARD SHORTCUTS'
+        },
+
+        sa_keyboard_shortcut_prefix: {
+            label: "Keyboard Shortcut Prefix",
+            type: "keyboard_shortcut",
+            default: "Ctrl+M",
+            description: "Keyboard shortcut prefix key combination (expects a second key press to be complete, e.g. Ctrl+M, Ctrl+., Alt+X, Ctrl+Shift+,)"
+        },
+#+end_example
+
+- Please change the display text inside the progressbar from
+
+#+begin_example
+Loading page ${p} of ${maxPage}... ${totalRowsAccumulated} rows — estimated ${estRemainingSeconds.toFixed(1)}s remaining
+#+end_example
+
+to
+
+#+begin_example
+Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) - est. ${estRemainingSeconds.toFixed(1)}s
+#+end_example
+
+** prevent browser
+
+In the uploaded library "VZ_MBLibrary.user.js", in the "KEYBOARD SHORTCUT CAPTURE" section, currently the capturing of
+keyboard events works and the string representation is stored in the input field
+
+#+begin_example
+<input type="text" id="vzell-mb-show-all-entities-input-sa_keyboard_shortcut_prefix" value="Ctrl+m" readonly="" style="width: 130px; padding: 3px 6px; border: 1px solid rgb(249, 168, 37); border-radius: 4px; font-family: monospace; cursor: default;">
+#+end_example
+
+I realized that I need to prevent the browser (and the underlying page) from processing the keys while the dialog has
+focus. Otherwise the capturing of keyboard shortcuts within a userscript dialog, does NOT work for e.g native browser
+key combinations e.g. "Ctrl-N" (for New Window).
+
+This is probably achieved by using a combination of keydown listeners and event.stopPropagation(). Please implement.
+
+** new buttons
+
+- in the uploaded library "VZ_MBLibrary.user.js", add a new button named "Collapse all configuration sections" right aligned in the following container
+
+#+begin_example
+<input id="vzell-mb-show-all-entities-search" placeholder="🔍 Search settings..." style="
+                                   width:100%;
+                                   padding:7px 10px;
+                                   border-radius:6px;
+                                   border:1px solid #ccc;
+                                   margin-top:6px;
+                               ">
+#+end_example
+
+with the following action when clicked: Collapse all rows under each section header e.g.
+
+#+begin_example
+<tr class="section-header" data-section="divider_" style="
+                                    cursor:pointer;
+                                    background:linear-gradient(to right,#6c7a89,#8fa3b5,#6c7a89);
+                                    color:white;
+                                    border-bottom:1px solid rgba(255,255,255,0.2);
+                                ">
+                                <td colspan="3" style="padding:10px 14px;font-weight:600;">
+                                    ▼ 🛠️ Generic settings
+                                </td>
+                            </tr>
+#+end_example
+
+The button should than change it's name to "Uncollapse all configuration sections"
+
+- Also refactor the current hardcoded key combinations (and the code using it) from the uploaded userscript
+  "ShowAllEntityData.user.js" in the followin code section
+
+#+begin_example
+        // Create shortcuts sections
+        const sections = [
+            {
+                title: 'Filter & Search',
+                shortcuts: [
+                    { keys: 'Ctrl/Cmd + G', desc: 'Focus global filter' },
+                    { keys: 'Ctrl/Cmd + C', desc: 'Focus first column filter (cycle through tables)' },
+                    { keys: 'Ctrl/Cmd + Shift + G', desc: 'Clear all filters' },
+                    { keys: 'Escape', desc: 'Clear focused filter (press twice to blur)' }
+                ]
+            },
+            {
+                title: 'View & Layout',
+                shortcuts: [
+                    { keys: 'Ctrl/Cmd + V', desc: 'Open "Visible Columns" menu' },
+                    { keys: 'Ctrl/Cmd + D', desc: 'Open "Density" menu' },
+                    { keys: 'Ctrl/Cmd + 2', desc: 'Toggle collapse all h2 headers' },
+                    { keys: 'Ctrl/Cmd + 3', desc: 'Toggle collapse all h3 headers (types)' },
+                    { keys: getPrefixDisplay(), desc: 'Enter prefix mode (then a second key selects action / function)' }
+                ]
+            },
+            {
+                title: 'Visible Columns Menu (when open)',
+                shortcuts: [
+                    { keys: 'Up/Down', desc: 'Navigate checkboxes' },
+                    { keys: 'Space/Shift', desc: 'Toggle checkbox' },
+                    { keys: 'Tab', desc: 'Cycle to buttons' },
+                    { keys: 'Alt + S', desc: 'Select All' },
+                    { keys: 'Alt + D', desc: 'Deselect All' },
+                    { keys: 'Alt + C', desc: 'Choose current configuration' },
+                    { keys: 'Enter/Escape', desc: 'Close menu' }
+                ]
+            },
+            {
+                title: 'Density Menu (when open)',
+                shortcuts: [
+                    { keys: 'Up/Down', desc: 'Navigate options (live preview)' },
+                    { keys: 'Enter', desc: 'Apply and close' },
+                    { keys: 'Escape', desc: 'Close menu' }
+                ]
+            },
+            {
+                title: 'Export Menu (when open)',
+                shortcuts: [
+                    { keys: 'Up/Down', desc: 'Navigate formats' },
+                    { keys: 'Enter', desc: 'Execute and close' },
+                    { keys: 'Escape', desc: 'Close menu' }
+                ]
+            },
+            {
+                title: 'Data Export & Management',
+                shortcuts: [
+                    { keys: 'Ctrl/Cmd + E', desc: 'Open export menu (CSV, JSON, Org-Mode)' },
+                    { keys: 'Ctrl/Cmd + S', desc: 'Save to disk (JSON)' },
+                    { keys: 'Ctrl/Cmd + L', desc: 'Load from disk' }
+                ]
+            },
+            {
+                title: 'Settings',
+                shortcuts: [
+                    { keys: 'Ctrl/Cmd + ,', desc: 'Open settings dialog' }
+                ]
+            },
+            {
+                title: 'Help',
+                shortcuts: [
+                    { keys: '? or /', desc: 'Show this help' }
+                ]
+            }
+        ];
+#+end_example
+  
+in such a way, that the enduser can actually configure it's own key combinations by leveraging the same type of key
+press capture dialog like what is now in the uploaded library "VZ_MBLibrary.user.js" in the "KEYBOARD EVENT ISOLATION" section
+
+Add new entries for the current key combinations (like "Ctrl+E" - Export, "Ctrl-R" - Auto-Resize etc.) under the
+
+#+begin_example
+            label: '🎹 KEYBOARD SHORTCUTS'
+#+end_example
+
+section in the variable "const configSchema"
+
 
 * DONE In the file open dialog - All files (*.*)
 ** initial
@@ -40963,42 +41132,6 @@ if (showProgressBar && progressContainer) {
 #+end_example
 
 
-
-
-* keybord shortcut editor
-
-- In the uploaded library "VZ_MBLibrary.user.js" add code to support the "keyboard_shortcut" with a custom UI
-  configuration editor, to prompt the user to press the desired key combination and then fill in the equvalent string
-  version to fit what the code in the uplaoded userscript "ShowAllEntityData.user.js" expects
-
-#+begin_example
-        // ============================================================
-        // KEYBOARD SHORTCUTS SECTION
-        // ============================================================
-        divider_keyboard_shortcuts: {
-            type: 'divider',
-            label: '🎹 KEYBOARD SHORTCUTS'
-        },
-
-        sa_keyboard_shortcut_prefix: {
-            label: "Keyboard Shortcut Prefix",
-            type: "keyboard_shortcut",
-            default: "Ctrl+M",
-            description: "Keyboard shortcut prefix key combination (expects a second key press to be complete, e.g. Ctrl+M, Ctrl+., Alt+X, Ctrl+Shift+,)"
-        },
-#+end_example
-
-- Please change the display text inside the progressbar from
-
-#+begin_example
-Loading page ${p} of ${maxPage}... ${totalRowsAccumulated} rows — estimated ${estRemainingSeconds.toFixed(1)}s remaining
-#+end_example
-
-to
-
-#+begin_example
-Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) - est. ${estRemainingSeconds.toFixed(1)}s
-#+end_example
 
 
 * UI
