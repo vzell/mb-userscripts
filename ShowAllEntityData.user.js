@@ -3612,8 +3612,6 @@ Press Escape on that notice to cancel the auto-action.
         return `margin-right:${marginRight}; vertical-align:middle;`;
     }
 
-    // ── End UI Appearance CSS helpers ────────────────────────────────────────────
-
     /**
      * Build a CSS object for the popup dialog container from the condensed config string.
      * Format: bg|border|borderRadius|padding|boxShadow|zIndex|fontFamily|minWidth|maxWidth
@@ -3678,6 +3676,8 @@ Press Escape on that notice to cancel the auto-action.
             hoverBg: bgHover
         };
     }
+
+    // ── End UI Appearance CSS helpers ────────────────────────────────────────────
 
     /**
      * Unified custom dialog — replaces the old showCustomAlert and showCustomConfirm.
