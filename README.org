@@ -30731,6 +30731,7 @@ Go back to your Production script (ShowAllConsolidated.user.js).
 Update its @version and ensure its @require still points to the raw.githubusercontent or cdn.jsdelivr URL.
 
 Push the Production script.
+
 ** header
 *** CDN
 
@@ -30812,13 +30813,13 @@ Push the Production script.
 *** CDN
 
 #+begin_example
-// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZ_MBLibrary-2.1.0.user.js
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZ_MBLibrary.user.js
 #+end_example
 
 *** raw github
 
 #+begin_example
-// @require      https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZMBLibrary.user.js
+// @require      https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZ_MBLibrary.user.js
 #+end_example
 
 *** purging CDN
@@ -41370,18 +41371,7 @@ mb-global-filter input
 
 field
 
-
-* check the keyboard popup for errors
-
-* update the help text of the app
-
-* include lib from github
-
-* align button texts and make everything configurable (size, font, height, character to underline)
-
-* settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
-
-In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
+- In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
 
 Here is how it looks like
 
@@ -41397,4 +41387,47 @@ Here is how it looks like
                                 </td>
                             </tr>
 
+#+end_example
+
+
+* check the keyboard popup for errors
+
+* update the help text of the app
+
+* include lib from github
+
+* align button texts and make everything configurable (size, font, height, character to underline)
+
+* settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
+
+- In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
+
+Here is how it looks like
+
+#+begin_example
+<tr class="section-header collapsed" data-section="divider_ui_appearance" style="
+                                    cursor:pointer;
+                                    background:linear-gradient(to right,#6c7a89,#8fa3b5,#6c7a89);
+                                    color:white;
+                                    border-bottom:1px solid rgba(255,255,255,0.2);
+                                ">
+                                <td colspan="3" style="padding:10px 14px;font-weight:600;">
+                                    ▶ 🖌️ ELEMENT UI STYLES
+                                </td>
+                            </tr>
+
+#+end_example
+
+* document all functions in the library and the user script where missing
+
+* Do not sort the "functions"
+
+#+begin_example
+       // Function shortcuts
+        tooltipHTML += '<strong>Functions:</strong><br/>';
+        const sortedFunctions = Object.entries(ctrlMFunctionMap)
+            .sort((a, b) => a[0].localeCompare(b[0]));
+        for (const [key, entry] of sortedFunctions) {
+            tooltipHTML += `<div style="margin-left: 4px;"><strong>${key}</strong>: ${entry.description}</div>`;
+        }
 #+end_example

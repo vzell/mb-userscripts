@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.75.0+2026-02-22
+// @version      9.76.0+2026-02-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.76.0+2026-02-22', description: 'Five fixes/enhancements: (1) Column Visibility menu Tab-key now traps focus inside the menu — Tab cycles forward through checkboxes → "Select All" → "Deselect All" → "Choose current configuration" → back to first checkbox; Shift+Tab reverses; previously Tab escaped to unrelated page UI. (2) Ctrl+T wired as a direct shortcut to open the Statistics panel (sa_shortcut_open_statistics, matching the existing configSchema entry and shortcuts-help label). (3) Ctrl+K hard-wired as a direct shortcut to show the keyboard-shortcuts help dialog; entry added to the "Help" section in showShortcutsHelp(). (4) Initial page load: #headerid-query input is blurred so keyboard shortcuts are immediately reachable without clicking away. (5) Final page render: #mb-global-filter-input is auto-focused (150 ms after render completes) so users can type a filter query immediately.'},
     {version: '9.75.0+2026-02-22', description: 'Four fixes: (1) Prefix-mode shortcuts help key changed from "?" to "k" throughout (ctrlMFunctionMap, debug log strings, showShortcutsHelp Help section) — "?" / "/" remain as direct (non-prefix) shortcuts to open the help dialog. (2) CSV export fix: in the original code exportTableToCSV called showExportNotification("CSV", filename, ...) before const filename was declared, causing a TDZ ReferenceError that silently aborted the export; now the single call is correctly placed after filename is defined, matching the pattern used by exportTableToJSON and exportTableToOrgMode. (3) Ctrl+M + h (App Help) and Ctrl+M + , (Settings) were already added to ctrlMFunctionMap in v9.74 but are included here for completeness. (4) VZ_MBLibrary v2.8: buildShortcutString now uppercases captured alphabetic keys so the config dialog and shortcuts popup display "Ctrl+M" instead of "Ctrl+m".'},
     {version: '9.74.0+2026-02-22', description: 'Three improvements: (1) Ctrl-M prefix shortcuts now cover all four always-visible buttons from page entry: added h=App Help and ","=Settings to ctrlMFunctionMap (alongside existing l=Load, ?=Shortcuts Help); tooltip debug message and showShortcutsHelp "Help" section updated accordingly. (2) Export refactor: exportTableToCSV\'s duplicate inline notification popup removed — it now calls showExportNotification("CSV", filename, rowsExported) like JSON and Org-Mode, making all three export formats share a single popup implementation. (3) triggerStandardDownload (used by saveTableDataToDisk) now auto-focuses the Close button via setTimeout so keyboard users can dismiss it with Enter/Space immediately after it appears (Escape was already handled).'},
     {version: '9.73.0+2026-02-22', description: 'Configurable keyboard shortcuts: 12 new keyboard_shortcut entries added to the "🎹 KEYBOARD SHORTCUTS" configSchema section (sa_shortcut_open_settings, sa_shortcut_focus_global_filter, sa_shortcut_focus_column_filter, sa_shortcut_clear_filters, sa_shortcut_open_export, sa_shortcut_save_to_disk, sa_shortcut_load_from_disk, sa_shortcut_open_visible_columns, sa_shortcut_open_density, sa_shortcut_toggle_h2, sa_shortcut_toggle_h3, sa_shortcut_auto_resize). Two new helpers: isShortcutEvent(e, settingKey, fallback) mirrors isPrefixKeyEvent logic against an arbitrary setting; getShortcutDisplay(settingKey, fallback) returns the configured string for UI display. initKeyboardShortcuts() fully refactored: every hardcoded (ctrlKey||metaKey)&&key==="x" guard replaced by isShortcutEvent() calls. New sa_shortcut_auto_resize handler added (default Ctrl+R) that triggers toggleAutoResizeColumns directly in addition to the existing prefix-mode sub-key. showShortcutsHelp() sections array updated: all configurable shortcut keys now shown via getShortcutDisplay() so the help dialog reflects the user\'s live configuration.'},
@@ -2851,9 +2852,29 @@ Press Escape on that notice to cancel the auto-action.
                     cb.dispatchEvent(new Event('change'));
                     break;
 
-                case 'Tab':
-                    // Allow natural Tab navigation to buttons
+                case 'Tab': {
+                    // Trap focus inside the menu: cycle checkboxes → Select All →
+                    // Deselect All → Choose current configuration → first checkbox.
+                    // Shift+Tab reverses the cycle.
+                    e.preventDefault();
+                    const menuFocusables = [...checkboxes, selectAllBtn, deselectAllBtn, chooseConfigBtn];
+                    let focusedIdx = menuFocusables.indexOf(document.activeElement);
+                    if (focusedIdx === -1) focusedIdx = 0;
+                    const nextIdx = e.shiftKey
+                        ? (focusedIdx - 1 + menuFocusables.length) % menuFocusables.length
+                        : (focusedIdx + 1) % menuFocusables.length;
+                    if (nextIdx < checkboxes.length) {
+                        // Moving onto a checkbox — use the existing focus helper
+                        selectedCheckboxIndex = nextIdx;
+                        updateCheckboxFocus(nextIdx);
+                    } else {
+                        // Moving onto one of the three action buttons — clear any
+                        // checkbox highlight and focus the button directly
+                        checkboxes.forEach(cb => { cb.parentElement.style.background = ''; });
+                        menuFocusables[nextIdx].focus();
+                    }
                     break;
+                }
 
                 case 's':
                 case 'S':
@@ -4042,6 +4063,7 @@ Press Escape on that notice to cancel the auto-action.
                 title: 'Help',
                 shortcuts: [
                     { keys: '? or /', desc: 'Show this shortcuts help' },
+                    { keys: 'Ctrl+K', desc: 'Show keyboard shortcuts help (direct)' },
                     { keys: `${getPrefixDisplay()}, then k`, desc: 'Show shortcuts help (prefix mode)' },
                     { keys: `${getPrefixDisplay()}, then h`, desc: 'Show app help (prefix mode)' }
                 ]
@@ -4485,6 +4507,28 @@ Press Escape on that notice to cancel the auto-action.
                 } else {
                     Lib.warn('shortcuts', 'No collapsible h3 headers found');
                 }
+            }
+
+            // Open Statistics panel (configurable, default Ctrl+T)
+            if (isShortcutEvent(e, 'sa_shortcut_open_statistics', 'Ctrl+T')) {
+                e.preventDefault();
+                const statsBtn = document.querySelector('#mb-show-all-controls-container button[id="mb-stats-btn"], #mb-show-all-controls-container button');
+                // Prefer finding the Stats button by its emoji text
+                const statsBtnEl = Array.from(document.querySelectorAll('button'))
+                    .find(btn => btn.textContent.includes('Stats'));
+                if (statsBtnEl) {
+                    statsBtnEl.click();
+                    Lib.debug('shortcuts', 'Statistics panel opened via ' + getShortcutDisplay('sa_shortcut_open_statistics', 'Ctrl+T'));
+                } else {
+                    Lib.warn('shortcuts', 'Stats button not found');
+                }
+            }
+
+            // Show keyboard shortcuts help (hard-wired Ctrl+K)
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toUpperCase() === 'K') {
+                e.preventDefault();
+                showShortcutsHelp();
+                Lib.debug('shortcuts', 'Shortcuts help opened via Ctrl+K');
             }
 
             // Toggle auto-resize columns (direct shortcut; also available as prefix sub-key 'r')
@@ -6615,6 +6659,15 @@ Press Escape on that notice to cancel the auto-action.
         headerContainer.after(controlsContainer);
     } else {
         headerContainer.appendChild(controlsContainer);
+    }
+
+    // Blur the native MusicBrainz search / header query input so that keyboard
+    // shortcuts registered by this script are immediately reachable without the
+    // user having to manually click away from the text field first.
+    const _initialQueryInput = document.getElementById('headerid-query');
+    if (_initialQueryInput) {
+        _initialQueryInput.blur();
+        Lib.debug('init', 'Blurred #headerid-query input on page entry');
     }
 
     // Show deferred "Page Reloaded" dialog now that action buttons are in the DOM
@@ -8864,6 +8917,16 @@ Press Escape on that notice to cancel the auto-action.
             }
 
             isLoaded = true;
+            // Focus the global filter input after rendering so users can start
+            // typing a filter query immediately without a manual click.
+            setTimeout(() => {
+                const _gfi = document.getElementById('mb-global-filter-input') ||
+                             document.querySelector('.mb-global-filter input');
+                if (_gfi) {
+                    _gfi.focus();
+                    Lib.debug('ui', 'Auto-focused global filter input after final render');
+                }
+            }, 150);
             // Initialize sidebar collapse only now if enabled
             if (Lib.settings.sa_collabsable_sidebar) {
                 initSidebarCollapse();
