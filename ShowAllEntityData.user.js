@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.73.0+2026-02-22
+// @version      9.74.0+2026-02-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.74.0+2026-02-22', description: 'Three improvements: (1) Ctrl-M prefix shortcuts now cover all four always-visible buttons from page entry: added h=App Help and ","=Settings to ctrlMFunctionMap (alongside existing l=Load, ?=Shortcuts Help); tooltip debug message and showShortcutsHelp "Help" section updated accordingly. (2) Export refactor: exportTableToCSV\'s duplicate inline notification popup removed — it now calls showExportNotification("CSV", filename, rowsExported) like JSON and Org-Mode, making all three export formats share a single popup implementation. (3) triggerStandardDownload (used by saveTableDataToDisk) now auto-focuses the Close button via setTimeout so keyboard users can dismiss it with Enter/Space immediately after it appears (Escape was already handled).'},
     {version: '9.73.0+2026-02-22', description: 'Configurable keyboard shortcuts: 12 new keyboard_shortcut entries added to the "🎹 KEYBOARD SHORTCUTS" configSchema section (sa_shortcut_open_settings, sa_shortcut_focus_global_filter, sa_shortcut_focus_column_filter, sa_shortcut_clear_filters, sa_shortcut_open_export, sa_shortcut_save_to_disk, sa_shortcut_load_from_disk, sa_shortcut_open_visible_columns, sa_shortcut_open_density, sa_shortcut_toggle_h2, sa_shortcut_toggle_h3, sa_shortcut_auto_resize). Two new helpers: isShortcutEvent(e, settingKey, fallback) mirrors isPrefixKeyEvent logic against an arbitrary setting; getShortcutDisplay(settingKey, fallback) returns the configured string for UI display. initKeyboardShortcuts() fully refactored: every hardcoded (ctrlKey||metaKey)&&key==="x" guard replaced by isShortcutEvent() calls. New sa_shortcut_auto_resize handler added (default Ctrl+R) that triggers toggleAutoResizeColumns directly in addition to the existing prefix-mode sub-key. showShortcutsHelp() sections array updated: all configurable shortcut keys now shown via getShortcutDisplay() so the help dialog reflects the user\'s live configuration.'},
     {version: '9.72.0+2026-02-22', description: 'Feature: Fully implemented "🖌️ UI APPEARANCE" config section — replaces all hardcoded inline styles on every interactive UI element with 12 condensed pipe-separated settings. New config keys: sa_ui_action_btn_style (fontSize|padding|height|borderRadius — applied to all h1 action-bar buttons: show-all, 🎹, ⚙️, ❓, visible-columns, export, stats, density, auto-resize), sa_ui_save_btn_style (bg|color|border|bgHover), sa_ui_load_btn_style (bg|color|border|bgHover), sa_ui_stop_btn_style (bg|color|border), sa_ui_settings_btn_style (bg|color|border), sa_ui_help_btn_style (bg|color|border), sa_ui_button_divider_style (color|margin — all " | " separators), sa_ui_global_filter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_prefilter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_column_filter_input_style (fontSize|padding — injected into the dynamic CSS block for .mb-col-filter-input), sa_ui_subtable_btn_style (fontSize|padding|borderRadius|bg|border|bgHover — injected for .mb-subtable-clear-btn and .mb-show-all-subtable-btn), sa_ui_filter_bar_btn_style (fontSize|padding|borderRadius|bg|border — prefilter toggle, highlight toggle, clear-column, clear-all buttons), sa_ui_checkbox_style (fontSize|marginRight — all Cc/Rx/Ex checkbox inputs and their labels). Corresponding CSS helper functions added: uiActionBtnBaseCSS, uiSaveBtnCSS, uiLoadBtnCSS, uiStopBtnCSS, uiSettingsBtnCSS, uiHelpBtnCSS, uiButtonDividerCSS, uiGlobalFilterInputCSS, uiPrefilterInputCSS, uiColumnFilterInputVals, uiSubtableBtnVals, uiFilterBarBtnCSS, uiCheckboxVals, uiCheckboxLabelCSS, uiCheckboxInputCSS. Also: added unique mb- IDs to all previously anonymous elements (mb-save-to-disk-btn, mb-load-from-disk-btn, mb-stop-btn, mb-settings-btn, mb-file-input, mb-prefilter-container, mb-prefilter-input, mb-prefilter-case/rx/exclude-label/checkbox, mb-filter-container, mb-global-filter-wrapper, mb-global-filter-input, mb-global-filter-clear, mb-global-filter-case/rx/exclude-label/checkbox, mb-button-divider-initial). Fixed typo: preFilterInput font-size was "1.oem" → corrected to "1em" via config default. Save/Load buttons gain hover effects via onmouseover/onmouseout.'},
     {version: '9.71.0+2026-02-22', description: 'Feature: New ColumnDataExtractor extractor extractFormatTypes for release-group, label, and series pages. Strips leading numeric quantity factors (e.g. "8×", "2x") from each media-type token in a "Format" cell and converts the " + " separator between distinct types to ", ". Examples: "8×12\\" Vinyl" → "12\\" Vinyl", "2xCD-R + DVD" → "CD-R, DVD". Registered as { sourceColumn: \'Format\', extractor: \'extractFormatTypes\', syntheticColumns: [\'Format Types\'] } in the columnExtractors of releasegroup-releases, label-releases, and series-releases pageDefinitions.'},
@@ -1959,7 +1960,7 @@ Press Escape on that notice to cancel the auto-action.
                         Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Help' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
+                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
                 Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
                 if (buttonKeys.length > 0) {
@@ -1969,7 +1970,7 @@ Press Escape on that notice to cancel the auto-action.
                         console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Help' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
+                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
             }
 
             // Auto-exit after 5 seconds
@@ -3009,7 +3010,6 @@ Press Escape on that notice to cancel the auto-action.
         });
 
         Lib.debug('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
-        showExportNotification('CSV', filename, rowsExported);
 
         // Create CSV string
         const csv = rows.map(row => row.join(',')).join('\n');
@@ -3032,7 +3032,7 @@ Press Escape on that notice to cancel the auto-action.
         // Cleanup
         URL.revokeObjectURL(url);
 
-        // Update status
+        // Update status bar
         const infoDisplay = document.getElementById('mb-info-display');
         if (infoDisplay) {
             infoDisplay.textContent = `✓ Exported ${rowsExported} rows to ${filename}`;
@@ -3041,66 +3041,8 @@ Press Escape on that notice to cancel the auto-action.
 
         Lib.debug('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
 
-        // --- INFO POPUP TO ALERT USER (WITH FADE OUT) ---
-        const infoPopup = document.createElement('div');
-        infoPopup.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border: 1px solid #888;
-            border-radius: 6px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10000;
-            max-width: 400px;
-            text-align: center;
-            font-family: sans-serif;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        `;
-
-        const msg = document.createElement('div');
-        msg.textContent = 'CSV export complete. Please monitor your browser for the file download.';
-        msg.style.marginBottom = '15px';
-
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
-        closeBtn.style.cssText = `
-            padding: 6px 12px;
-            cursor: pointer;
-            border-radius: 4px;
-            border: 1px solid #555;
-            background-color: #f0f0f0;
-        `;
-        closeBtn.type = 'button';
-
-        // Close function with fade out
-        const closePopup = () => {
-            infoPopup.style.opacity = '0';
-            // Remove from DOM after transition
-            setTimeout(() => {
-                if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
-                document.removeEventListener('keydown', onEscape);
-            }, 300); // match the CSS transition duration
-        };
-
-        // Button click closes popup
-        closeBtn.addEventListener('click', closePopup);
-
-        // Escape key closes popup
-        const onEscape = (e) => {
-            if (e.key === 'Escape') closePopup();
-        };
-        document.addEventListener('keydown', onEscape);
-
-        infoPopup.appendChild(msg);
-        infoPopup.appendChild(closeBtn);
-        document.body.appendChild(infoPopup);
-
-        // Focus the Close button
-        setTimeout(() => closeBtn.focus(), 50);
+        // Shared notification popup (focus + Escape handled inside)
+        showExportNotification('CSV', filename, rowsExported);
     }
 
     /**
@@ -4083,13 +4025,16 @@ Press Escape on that notice to cancel the auto-action.
             {
                 title: 'Settings',
                 shortcuts: [
-                    { keys: getShortcutDisplay('sa_shortcut_open_settings', 'Ctrl+,'), desc: 'Open settings dialog' }
+                    { keys: getShortcutDisplay('sa_shortcut_open_settings', 'Ctrl+,'), desc: 'Open settings dialog' },
+                    { keys: `${getPrefixDisplay()}, then ,`, desc: 'Open settings dialog (prefix mode)' }
                 ]
             },
             {
                 title: 'Help',
                 shortcuts: [
-                    { keys: '? or /', desc: 'Show this help' }
+                    { keys: '? or /', desc: 'Show this shortcuts help' },
+                    { keys: `${getPrefixDisplay()}, then ?`, desc: 'Show shortcuts help (prefix mode)' },
+                    { keys: `${getPrefixDisplay()}, then h`, desc: 'Show app help (prefix mode)' }
                 ]
             }
         ];
@@ -10228,6 +10173,9 @@ Press Escape on that notice to cancel the auto-action.
         infoPopup.appendChild(msg);
         infoPopup.appendChild(closeBtn);
         document.body.appendChild(infoPopup);
+
+        // Focus the Close button so keyboard users can dismiss immediately with Enter/Space
+        setTimeout(() => closeBtn.focus(), 50);
     }
 
     /**
@@ -10577,6 +10525,8 @@ Press Escape on that notice to cancel the auto-action.
         'v': { fn: openVisibleColumnsMenu, description: 'Open Visible Columns Menu' },
         'e': { fn: openExportMenu, description: 'Open Export Menu' },
         'l': { fn: () => showLoadFilterDialog(document.querySelector('button[title*="Load table data from disk"]')), description: 'Load from Disk' },
-        '?': { fn: showShortcutsHelp, description: 'Show Shortcuts Help' }
+        '?': { fn: showShortcutsHelp, description: 'Show Shortcuts Help' },
+        'h': { fn: showAppHelp, description: 'Show App Help' },
+        ',': { fn: () => Lib.showSettings(), description: 'Open Settings' }
     };
 })();
