@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.70.0+2026-02-22
+// @version      9.71.0+2026-02-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.71.0+2026-02-22', description: 'Feature: New ColumnDataExtractor extractor extractFormatTypes for release-group, label, and series pages. Strips leading numeric quantity factors (e.g. "8×", "2x") from each media-type token in a "Format" cell and converts the " + " separator between distinct types to ", ". Examples: "8×12\\" Vinyl" → "12\\" Vinyl", "2xCD-R + DVD" → "CD-R, DVD". Registered as { sourceColumn: \'Format\', extractor: \'extractFormatTypes\', syntheticColumns: [\'Format Types\'] } in the columnExtractors of releasegroup-releases, label-releases, and series-releases pageDefinitions.'},
     {version: '9.70.0+2026-02-22', description: 'Refactor + Feature: Introduced ColumnDataExtractor — a named-function registry that decouples column extraction and transformation logic from the main fetch/render pipeline. (1) New singleton object ColumnDataExtractor with four named extractors: splitCountryDate (Country/Date → Country + Date), splitLocation (Location → Place + Area + Country), splitArea (Area → MB-Area + Country), and sumTracks (Tracks "9 + 7 + 8" → Total Tracks integer sum). Each extractor has the contract fn(sourceCell: HTMLTableCellElement): HTMLTableCellElement[] and is entirely self-contained. (2) New helper function buildActiveColumnExtractors(def) converts an activeDefinition into a runtime array of {sourceColumn, extractor, syntheticColumns, colIdx} descriptors; translates legacy splitCD/splitLocation/splitArea boolean flags transparently for any future definitions that still use them. (3) All pageDefinitions migrated from the boolean split* flags to the canonical columnExtractors:[{sourceColumn, extractor, syntheticColumns}] array in features; the old splitCD: false entry was removed. (5) Module-level typesWithSplitCD/Location/Area arrays removed; replaced by activeColumnExtractors (single unified list). startFetchingProcess now calls buildActiveColumnExtractors() instead of setting three separate flag arrays. (6) Header scanning loop rewritten: colIdx reset before each page, single forEach over activeColumnExtractors replaces three separate if-blocks. cleanupHeaders synthetic-header injection unified into one forEach. Row-processing split section replaced by: (a) call each extractor before deleteCell (indices still valid), (b) deleteCell excluded columns, (c) append all synthetic cells in declaration order. All legacy inline code (~80 lines) removed.'},
     {version: '9.65.0+2026-02-22', description: 'Five UX enhancements: (1) Action buttons: superscript mnemonics ¹²³⁴… appended after the 🧮 emoji on every action button to remind the user of the Ctrl-M+1/2/3/… shortcut invocations; applies to both "Show all" and pre-existing 🧮-prefixed buttons (e.g. artist RG split buttons). (2) Shortcuts popup (mb-shortcuts-help): restructured with a sticky flex title-bar (header + ✕ button) and a separate scrollable content area (overflow-y:auto; max-height:82vh) so the dialog never overflows the viewport when many shortcut sections are present. (3) Stats panel (mb-stats-panel): added "Sub-Tables: N table(s)" as the first row in the statistics grid so the user can immediately see how many independent sub-tables exist on multi-table pages. (4) Multi-table pages — single sub-table auto-expand: when renderGroupedTable produces exactly one group (dataArray.length === 1) the resulting table is unconditionally shown (shouldStayOpen = true) instead of starting collapsed, independent of the category name or sa_auto_expand threshold. (5) Progress-bar de-duplication: removed the redundant "Loading page N of M…" text update on globalStatusDisplay during page fetching; the inline progress bar (mb-fetch-progress-label inside mb-fetch-progress-outer) already carries the identical information, so showing it twice in the subheader was unnecessary noise.'},
     {version: '9.64.0+2026-02-21', description: 'Progress bar label text reformatted: "Loading page N of M... K rows — estimated X.Xs remaining" changed to the more compact "Loading page N of M... (K rows) - est. X.Xs". Parentheses around row count, em-dash replaced by hyphen-minus, "estimated … remaining" shortened to "est. …".'},
@@ -933,6 +934,35 @@ Press Escape on that notice to cancel the auto-action.
                 }
             }
             return [tdTotal];
+        },
+
+        /**
+         * extractFormatTypes — strips the leading numeric quantity factor (e.g. "8×",
+         * "2x") from each media-type token in a "Format" cell and converts the
+         * " + " separator between distinct types to ", ".
+         *
+         * Input examples  →  Output examples
+         *   "8×12\" Vinyl"  →  "12\" Vinyl"
+         *   "2xCD-R"        →  "CD-R"
+         *   "2xCD-R + DVD"  →  "CD-R, DVD"
+         *
+         * The quantity prefix pattern is: one-or-more digits followed by a lowercase
+         * ASCII 'x' or the Unicode multiplication sign '×' (U+00D7).  Tokens with no
+         * prefix are kept verbatim (e.g. a bare "DVD" remains "DVD").
+         *
+         * Synthetic columns: ['Format Types']
+         */
+        extractFormatTypes(sourceCell) {
+            const tdTypes = document.createElement('td');
+            if (sourceCell) {
+                const text  = sourceCell.textContent || '';
+                const types = text
+                    .split(' + ')
+                    .map(part => part.trim().replace(/^\d+[x\u00D7]/, '').trim())
+                    .filter(t => t.length > 0);
+                tdTypes.textContent = types.join(', ');
+            }
+            return [tdTypes];
         }
     };
 
@@ -1237,7 +1267,8 @@ Press Escape on that notice to cancel the auto-action.
                         sourceColumn:    'Tracks',
                         extractor:       'sumTracks',
                         syntheticColumns: ['Total Tracks']
-                    }
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
                 ],
                 extractMainColumn: 'Release'
             },
@@ -1284,7 +1315,8 @@ Press Escape on that notice to cancel the auto-action.
                         sourceColumn:    'Tracks',
                         extractor:       'sumTracks',
                         syntheticColumns: ['Total Tracks']
-                    }
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
                 ],
                 extractMainColumn: 'Release'
             },
@@ -1425,7 +1457,8 @@ Press Escape on that notice to cancel the auto-action.
                         sourceColumn:    'Tracks',
                         extractor:       'sumTracks',
                         syntheticColumns: ['Total Tracks']
-                    }
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
                 ],
                 extractMainColumn: 'Release'
             },

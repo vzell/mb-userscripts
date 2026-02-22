@@ -33885,12 +33885,41 @@ Please revert that parts of the generated code which defines a new pageType
 ** sum of all tracks
 ** extract the real format
 
-2xCD-R ==> CD-R
-2xCD-R + DVD ==> CD-R, DVD
+In the uploaded script
+
+for the following pageTypes
+
+- https://musicbrainz.org/release-group/85206823-9808-3da2-a9d7-2e9b8b0f4e99
+- https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
+- https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+
+define a new extractor funtion "extractFormatTypes"
 
 #+begin_example
-<td>8×12" Vinyl</td>
+    const ColumnDataExtractor = {
+            
+                columnExtractors: [
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] },
 #+end_example
+
+which extracts format types given in the "Format" cell in the following formats
+
+#+begin_example
+8×12" Vinyl
+2xCD-R
+2xCD-R + DVD
+#+end_example
+
+into an new column for representation as
+
+#+begin_example
+12" Vinyl
+CD-R
+CD-R, DVD
+#+end_example
+
+So basically strip the numeric quantity factor like "8x" from the actual type like "12" Vinyl"
+If there multiple different occurences of type indictated with a " + " in between, change this to ", "
 
 ** https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
 
