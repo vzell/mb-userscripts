@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.78.0+2026-02-22
+// @version      9.79.0+2026-02-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,7 +48,8 @@
 
 // CHANGELOG
 let changelog = [
-    {version: '9.78.0+2026-02-22', description: 'Four fixes/improvements: (1) Column Visibility menu keyboard navigation overhaul: removed the erroneous standalone "Shift" case (pressing Shift alone no longer toggles the focused checkbox — only Space does); ArrowDown/ArrowUp now cycle through ALL focusable items (checkboxes + "Select All" + "Deselect All" + "Choose current configuration") instead of only cycling through checkboxes; a shared moveFocusTo(idx) helper consolidates focus + highlight logic for both Tab and Arrow navigation. (2) Progress bar (mb-fetch-progress-outer) fill colours updated to match the light pastel palette used for action button backgrounds: initial and <50% uses #ffcccc (light red), 50–99% uses #ffe0b2 (light orange), 100% uses #ccffcc (light green) — the previous colours (#e53935, #ff9800, #4CAF50) were too saturated relative to the button tints. Label text colour is now plain #333 with no mix-blend-mode/filter:invert since dark text on pastel is always readable without blending tricks. (3) Visual shadow artifact in settings dialog: the ghost strip that appeared from the resize-handle rightward when all sections were collapsed is eliminated by adding overflow:hidden to the scrollable content <div> — this clips the upward box-shadow cast by the sticky footer before it bleeds into the empty scroll area. (4) JSDoc documentation added to all previously undocumented top-level functions: buildActiveColumnExtractors (converted from //--// comment style), showCtrlMTooltip, hideCtrlMTooltip, openExportMenu, openVisibleColumnsMenu, openDensityMenu.'},
+    {version: '9.79.0+2026-02-22', description: '"Tab", "Shift-Tab" and "cursor up/down" key cycling now works.'},
+    {version: '9.78.0+2026-02-22', description: 'Help-text rewrite.'},
     {version: '9.77.0+2026-02-22', description: 'Two fixes: (1) Column Visibility menu Tab focus-trap now actually works: the menuKeyHandler was registered as a bubbling listener on document, but browsers resolve Tab focus-movement at target phase — before bubbling — so the e.preventDefault() call was always too late. Fixed by registering with useCapture=true (document.addEventListener(\'keydown\', menuKeyHandler, true)); the handler\'s menu.style.display guard prevents any side-effects when the menu is closed. (2) Ctrl-M tooltip "Functions" list no longer sorted alphabetically; entries are now rendered in ctrlMFunctionMap insertion order (s, l, r, v, d, t, e, k, ,, h — matching the logical grouping in the map literal) by replacing the .sort() call with a plain Object.entries() iteration.'},
     {version: '9.76.0+2026-02-22', description: 'Five fixes/enhancements: (1) Column Visibility menu Tab-key now traps focus inside the menu — Tab cycles forward through checkboxes → "Select All" → "Deselect All" → "Choose current configuration" → back to first checkbox; Shift+Tab reverses; previously Tab escaped to unrelated page UI. (2) Ctrl+T wired as a direct shortcut to open the Statistics panel (sa_shortcut_open_statistics, matching the existing configSchema entry and shortcuts-help label). (3) Ctrl+K hard-wired as a direct shortcut to show the keyboard-shortcuts help dialog; entry added to the "Help" section in showShortcutsHelp(). (4) Initial page load: #headerid-query input is blurred so keyboard shortcuts are immediately reachable without clicking away. (5) Final page render: #mb-global-filter-input is auto-focused (150 ms after render completes) so users can type a filter query immediately.'},
     {version: '9.75.0+2026-02-22', description: 'Four fixes: (1) Prefix-mode shortcuts help key changed from "?" to "k" throughout (ctrlMFunctionMap, debug log strings, showShortcutsHelp Help section) — "?" / "/" remain as direct (non-prefix) shortcuts to open the help dialog. (2) CSV export fix: in the original code exportTableToCSV called showExportNotification("CSV", filename, ...) before const filename was declared, causing a TDZ ReferenceError that silently aborted the export; now the single call is correctly placed after filename is defined, matching the pattern used by exportTableToJSON and exportTableToOrgMode. (3) Ctrl+M + h (App Help) and Ctrl+M + , (Settings) were already added to ctrlMFunctionMap in v9.74 but are included here for completeness. (4) VZ_MBLibrary v2.8: buildShortcutString now uppercases captured alphabetic keys so the config dialog and shortcuts popup display "Ctrl+M" instead of "Ctrl+m".'},
@@ -2832,11 +2833,34 @@ Press Escape on that notice to cancel the auto-action.
         const buttonRow = document.createElement('div');
         buttonRow.style.cssText = 'display: flex; gap: 5px;';
 
+        // Base style shared by all three action buttons in the menu.
+        // We use explicit border/background so that browser-default :focus outline
+        // and our manual focus highlight are both clearly visible.
+        const menuBtnBase = 'font-size:0.8em; padding:4px 8px; cursor:pointer; border-radius:3px; border:1px solid #bbb; background:#f5f5f5; transition:background 0.15s, border-color 0.15s;';
+        const menuBtnFocused  = 'background:#d0e8ff; border-color:#5b9bd5;';   // blue tint when focused
+        const menuBtnActive   = 'background:#a8c8f0; border-color:#3a7abf;';   // darker on press
+
+        /**
+         * Applies or removes the keyboard-focus highlight on an action button.
+         * @param {HTMLButtonElement} btn - The button to style
+         * @param {boolean} focused - true = highlight on, false = restore default
+         */
+        const setMenuBtnFocus = (btn, focused) => {
+            btn.style.cssText = menuBtnBase + (focused ? menuBtnFocused : '') + (btn === chooseConfigBtnRef ? 'width:100%; margin-top:5px;' : 'flex:1;');
+        };
+
+        // Forward reference so setMenuBtnFocus can distinguish chooseConfigBtn
+        let chooseConfigBtnRef = null;
+
         const selectAllBtn = document.createElement('button');
         selectAllBtn.innerHTML = '<u>S</u>elect All';
-        selectAllBtn.style.cssText = 'font-size: 0.8em; padding: 4px 8px; cursor: pointer; flex: 1; border-radius: 3px;';
+        selectAllBtn.style.cssText = menuBtnBase + 'flex:1;';
         selectAllBtn.type = 'button';
         selectAllBtn.tabIndex = 0;
+        // Visual feedback on mouse press/release
+        selectAllBtn.addEventListener('mousedown', () => { selectAllBtn.style.cssText = menuBtnBase + menuBtnActive + 'flex:1;'; });
+        selectAllBtn.addEventListener('mouseup',   () => { selectAllBtn.style.cssText = menuBtnBase + 'flex:1;'; });
+        selectAllBtn.addEventListener('mouseleave',() => { selectAllBtn.style.cssText = menuBtnBase + 'flex:1;'; });
         selectAllBtn.onclick = (e) => {
             e.stopPropagation();
             checkboxes.forEach(cb => {
@@ -2845,15 +2869,17 @@ Press Escape on that notice to cancel the auto-action.
                     cb.dispatchEvent(new Event('change'));
                 }
             });
-            // Update button color after all checkboxes processed
             updateButtonColor();
         };
 
         const deselectAllBtn = document.createElement('button');
         deselectAllBtn.innerHTML = '<u>D</u>eselect All';
-        deselectAllBtn.style.cssText = 'font-size: 0.8em; padding: 4px 8px; cursor: pointer; flex: 1; border-radius: 3px;';
+        deselectAllBtn.style.cssText = menuBtnBase + 'flex:1;';
         deselectAllBtn.type = 'button';
         deselectAllBtn.tabIndex = 0;
+        deselectAllBtn.addEventListener('mousedown', () => { deselectAllBtn.style.cssText = menuBtnBase + menuBtnActive + 'flex:1;'; });
+        deselectAllBtn.addEventListener('mouseup',   () => { deselectAllBtn.style.cssText = menuBtnBase + 'flex:1;'; });
+        deselectAllBtn.addEventListener('mouseleave',() => { deselectAllBtn.style.cssText = menuBtnBase + 'flex:1;'; });
         deselectAllBtn.onclick = (e) => {
             e.stopPropagation();
             checkboxes.forEach(cb => {
@@ -2862,7 +2888,6 @@ Press Escape on that notice to cancel the auto-action.
                     cb.dispatchEvent(new Event('change'));
                 }
             });
-            // Update button color after all checkboxes processed
             updateButtonColor();
         };
 
@@ -2872,13 +2897,16 @@ Press Escape on that notice to cancel the auto-action.
 
         // Add "Choose current configuration" button
         const chooseConfigBtn = document.createElement('button');
+        chooseConfigBtnRef = chooseConfigBtn;   // resolve forward reference
         chooseConfigBtn.innerHTML = 'Choose <u>c</u>urrent configuration';
-        chooseConfigBtn.style.cssText = 'font-size: 0.8em; padding: 4px 8px; cursor: pointer; width: 100%; margin-top: 5px; border-radius: 3px;';
+        chooseConfigBtn.style.cssText = menuBtnBase + 'width:100%; margin-top:5px;';
         chooseConfigBtn.type = 'button';
         chooseConfigBtn.tabIndex = 0;
+        chooseConfigBtn.addEventListener('mousedown', () => { chooseConfigBtn.style.cssText = menuBtnBase + menuBtnActive + 'width:100%; margin-top:5px;'; });
+        chooseConfigBtn.addEventListener('mouseup',   () => { chooseConfigBtn.style.cssText = menuBtnBase + 'width:100%; margin-top:5px;'; });
+        chooseConfigBtn.addEventListener('mouseleave',() => { chooseConfigBtn.style.cssText = menuBtnBase + 'width:100%; margin-top:5px;'; });
         chooseConfigBtn.onclick = (e) => {
             e.stopPropagation();
-            // Just close the menu - current configuration is already applied
             menu.style.display = 'none';
             Lib.debug('ui', 'Chose current column configuration');
         };
@@ -2895,10 +2923,14 @@ Press Escape on that notice to cancel the auto-action.
         closeText.style.cssText = 'font-size: 0.9em; color: #666; text-align: center; font-style: italic;';
         contentWrapper.appendChild(closeText);
 
-        // Keyboard navigation state
+        // Keyboard navigation state — tracks the currently-highlighted checkbox index
         let selectedCheckboxIndex = 0;
 
-        // Function to update checkbox focus styling
+        /**
+         * Highlights the checkbox row at `index` with a blue tint and moves browser
+         * focus to that checkbox input.  All other rows are reset to no highlight.
+         * @param {number} index - Index into the checkboxes array
+         */
         const updateCheckboxFocus = (index) => {
             checkboxes.forEach((cb, i) => {
                 const wrapper = cb.parentElement;
@@ -2912,23 +2944,34 @@ Press Escape on that notice to cancel the auto-action.
             });
         };
 
-        // All focusable items in the menu: checkboxes first, then the three action buttons.
+        // All focusable items: checkboxes first, then the three action buttons.
         // Used by both Tab/Shift-Tab and ArrowDown/ArrowUp for full-cycle navigation.
         const menuFocusables = [...checkboxes, selectAllBtn, deselectAllBtn, chooseConfigBtn];
 
         /**
-         * Moves focus to the item at `idx` in menuFocusables.
-         * For checkboxes this also updates the blue highlight strip; for buttons it
-         * clears the highlight and calls .focus() directly.
+         * Moves keyboard focus to the item at `idx` in menuFocusables and applies
+         * the appropriate visual highlight.
+         * - For checkboxes: blue row background via updateCheckboxFocus().
+         * - For action buttons: darker-gray background + border via setMenuBtnFocus();
+         *   all other buttons are reset to their default style.
          * @param {number} idx - Index into menuFocusables
          */
         const moveFocusTo = (idx) => {
+            // Clear button highlights first
+            [selectAllBtn, deselectAllBtn].forEach(b => { b.style.cssText = menuBtnBase + 'flex:1;'; });
+            chooseConfigBtn.style.cssText = menuBtnBase + 'width:100%; margin-top:5px;';
+
             if (idx < checkboxes.length) {
+                // Moving onto a checkbox — clear checkbox highlight for buttons, use row helper
                 selectedCheckboxIndex = idx;
-                updateCheckboxFocus(idx);            // sets background + calls .focus()
+                updateCheckboxFocus(idx);
             } else {
+                // Moving onto an action button — clear checkbox row highlights
                 checkboxes.forEach(cb => { cb.parentElement.style.background = ''; });
-                menuFocusables[idx].focus();
+                const btn = menuFocusables[idx];
+                const isChoose = btn === chooseConfigBtn;
+                btn.style.cssText = menuBtnBase + menuBtnFocused + (isChoose ? 'width:100%; margin-top:5px;' : 'flex:1;');
+                btn.focus();
             }
         };
 
@@ -2941,22 +2984,20 @@ Press Escape on that notice to cancel the auto-action.
                     // Arrow keys cycle through ALL focusables (checkboxes + buttons).
                     e.preventDefault();
                     const cur = menuFocusables.indexOf(document.activeElement);
-                    const next = cur === -1 ? 0 : (cur + 1) % menuFocusables.length;
-                    moveFocusTo(next);
+                    moveFocusTo(cur === -1 ? 0 : (cur + 1) % menuFocusables.length);
                     break;
                 }
 
                 case 'ArrowUp': {
                     e.preventDefault();
                     const cur = menuFocusables.indexOf(document.activeElement);
-                    const prev = cur === -1 ? 0 : (cur - 1 + menuFocusables.length) % menuFocusables.length;
-                    moveFocusTo(prev);
+                    moveFocusTo(cur === -1 ? menuFocusables.length - 1 : (cur - 1 + menuFocusables.length) % menuFocusables.length);
                     break;
                 }
 
                 case ' ': {
-                    // Space toggles the focused checkbox; ignored when a button is focused
-                    // (buttons handle Space natively via their click handler).
+                    // Space toggles the focused checkbox; ignored when a button has focus
+                    // (buttons already handle Space natively via their click handler).
                     const focused = document.activeElement;
                     if (focused && focused.type === 'checkbox') {
                         e.preventDefault();
@@ -2967,9 +3008,8 @@ Press Escape on that notice to cancel the auto-action.
                 }
 
                 case 'Tab': {
-                    // Trap focus inside the menu: cycle checkboxes → Select All →
-                    // Deselect All → Choose current configuration → first checkbox.
-                    // Shift+Tab reverses the cycle.
+                    // Trap focus inside the menu: cycle through all focusables.
+                    // Shift+Tab reverses.
                     e.preventDefault();
                     let focusedIdx = menuFocusables.indexOf(document.activeElement);
                     if (focusedIdx === -1) focusedIdx = 0;
@@ -3036,9 +3076,9 @@ Press Escape on that notice to cancel the auto-action.
                     initialY = 0;
                 }
 
-                // Reset selection and set focus to first checkbox
+                // Reset selection and move focus to first checkbox
                 selectedCheckboxIndex = 0;
-                setTimeout(() => updateCheckboxFocus(0), 10);
+                setTimeout(() => moveFocusTo(0), 10);
             }
         };
 
@@ -4128,9 +4168,8 @@ Press Escape on that notice to cancel the auto-action.
             {
                 title: 'Visible Columns Menu (when open)',
                 shortcuts: [
-                    { keys: 'Up/Down', desc: 'Navigate checkboxes' },
-                    { keys: 'Space/Shift', desc: 'Toggle checkbox' },
-                    { keys: 'Tab', desc: 'Cycle to buttons' },
+                    { keys: 'Up/Down or Tab/Shift-Tab', desc: 'Navigate items (checkboxes and buttons)' },
+                    { keys: 'Space', desc: 'Toggle focused checkbox' },
                     { keys: 'Alt + S', desc: 'Select All' },
                     { keys: 'Alt + D', desc: 'Deselect All' },
                     { keys: 'Alt + C', desc: 'Choose current configuration' },
