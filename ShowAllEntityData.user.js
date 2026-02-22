@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.77.0+2026-02-22
+// @version      9.78.0+2026-02-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.78.0+2026-02-22', description: 'Four fixes/improvements: (1) Column Visibility menu keyboard navigation overhaul: removed the erroneous standalone "Shift" case (pressing Shift alone no longer toggles the focused checkbox — only Space does); ArrowDown/ArrowUp now cycle through ALL focusable items (checkboxes + "Select All" + "Deselect All" + "Choose current configuration") instead of only cycling through checkboxes; a shared moveFocusTo(idx) helper consolidates focus + highlight logic for both Tab and Arrow navigation. (2) Progress bar (mb-fetch-progress-outer) fill colours updated to match the light pastel palette used for action button backgrounds: initial and <50% uses #ffcccc (light red), 50–99% uses #ffe0b2 (light orange), 100% uses #ccffcc (light green) — the previous colours (#e53935, #ff9800, #4CAF50) were too saturated relative to the button tints. Label text colour is now plain #333 with no mix-blend-mode/filter:invert since dark text on pastel is always readable without blending tricks. (3) Visual shadow artifact in settings dialog: the ghost strip that appeared from the resize-handle rightward when all sections were collapsed is eliminated by adding overflow:hidden to the scrollable content <div> — this clips the upward box-shadow cast by the sticky footer before it bleeds into the empty scroll area. (4) JSDoc documentation added to all previously undocumented top-level functions: buildActiveColumnExtractors (converted from //--// comment style), showCtrlMTooltip, hideCtrlMTooltip, openExportMenu, openVisibleColumnsMenu, openDensityMenu.'},
     {version: '9.77.0+2026-02-22', description: 'Two fixes: (1) Column Visibility menu Tab focus-trap now actually works: the menuKeyHandler was registered as a bubbling listener on document, but browsers resolve Tab focus-movement at target phase — before bubbling — so the e.preventDefault() call was always too late. Fixed by registering with useCapture=true (document.addEventListener(\'keydown\', menuKeyHandler, true)); the handler\'s menu.style.display guard prevents any side-effects when the menu is closed. (2) Ctrl-M tooltip "Functions" list no longer sorted alphabetically; entries are now rendered in ctrlMFunctionMap insertion order (s, l, r, v, d, t, e, k, ,, h — matching the logical grouping in the map literal) by replacing the .sort() call with a plain Object.entries() iteration.'},
     {version: '9.76.0+2026-02-22', description: 'Five fixes/enhancements: (1) Column Visibility menu Tab-key now traps focus inside the menu — Tab cycles forward through checkboxes → "Select All" → "Deselect All" → "Choose current configuration" → back to first checkbox; Shift+Tab reverses; previously Tab escaped to unrelated page UI. (2) Ctrl+T wired as a direct shortcut to open the Statistics panel (sa_shortcut_open_statistics, matching the existing configSchema entry and shortcuts-help label). (3) Ctrl+K hard-wired as a direct shortcut to show the keyboard-shortcuts help dialog; entry added to the "Help" section in showShortcutsHelp(). (4) Initial page load: #headerid-query input is blurred so keyboard shortcuts are immediately reachable without clicking away. (5) Final page render: #mb-global-filter-input is auto-focused (150 ms after render completes) so users can type a filter query immediately.'},
     {version: '9.75.0+2026-02-22', description: 'Four fixes: (1) Prefix-mode shortcuts help key changed from "?" to "k" throughout (ctrlMFunctionMap, debug log strings, showShortcutsHelp Help section) — "?" / "/" remain as direct (non-prefix) shortcuts to open the help dialog. (2) CSV export fix: in the original code exportTableToCSV called showExportNotification("CSV", filename, ...) before const filename was declared, causing a TDZ ReferenceError that silently aborted the export; now the single call is correctly placed after filename is defined, matching the pattern used by exportTableToJSON and exportTableToOrgMode. (3) Ctrl+M + h (App Help) and Ctrl+M + , (Settings) were already added to ctrlMFunctionMap in v9.74 but are included here for completeness. (4) VZ_MBLibrary v2.8: buildShortcutString now uppercases captured alphabetic keys so the config dialog and shortcuts popup display "Ctrl+M" instead of "Ctrl+m".'},
@@ -1171,22 +1172,21 @@ Press Escape on that notice to cancel the auto-action.
         }
     };
 
-    //--------------------------------------------------------------------------------
-    // buildActiveColumnExtractors — derives the runtime extractor list from a
-    // merged activeDefinition object.
-    //
-    // Canonical form: features.columnExtractors is an array of descriptor objects:
-    //   { sourceColumn: string, extractor: string, syntheticColumns: string[] }
-    //
-    // Legacy form: features.splitCD / splitLocation / splitArea boolean flags are
-    // automatically translated so any page definitions not yet migrated keep working.
-    //
-    // Returns a new array with a `colIdx` property initialised to -1.  colIdx is
-    // filled in per-page during header scanning inside the fetch loop.
-    //
-    // @param {object} def - merged activeDefinition
-    // @returns {Array<{sourceColumn, extractor, syntheticColumns, colIdx}>}
-    //--------------------------------------------------------------------------------
+    /**
+     * Derives the runtime extractor descriptor list from a merged activeDefinition object.
+     *
+     * Canonical form: features.columnExtractors is an array of descriptor objects:
+     *   { sourceColumn: string, extractor: string, syntheticColumns: string[] }
+     *
+     * Legacy form: features.splitCD / splitLocation / splitArea boolean flags are
+     * automatically translated so any page definitions not yet migrated keep working.
+     *
+     * Each returned descriptor gains a `colIdx` property initialised to -1; the actual
+     * column index is filled in per-page during the header-scanning pass inside the fetch loop.
+     *
+     * @param {object} def - Merged activeDefinition (the resolved page definition object)
+     * @returns {Array<{sourceColumn: string, extractor: string, syntheticColumns: string[], colIdx: number}>}
+     */
     function buildActiveColumnExtractors(def) {
         const features = def?.features || {};
         const result   = [];
@@ -1835,6 +1835,15 @@ Press Escape on that notice to cancel the auto-action.
         return fallback;
     }
 
+    /**
+     * Displays a floating tooltip listing all Ctrl+M prefix-mode shortcuts.
+     * Shows numbered button shortcuts (1–9 / a–z) and named function shortcuts
+     * from ctrlMFunctionMap. Positions the tooltip in the upper-right corner of the
+     * page content area, avoiding overlap with the sidebar.
+     * No-ops when the tooltip is disabled in settings or when Lib is unavailable.
+     * @param {HTMLButtonElement[]} actionButtons - The action buttons shown in the h1 bar
+     * @param {string[]} buttonKeys - Parallel array of key labels ('1','2',…,'a','b',…) for each button
+     */
     function showCtrlMTooltip(actionButtons, buttonKeys) {
         if (typeof Lib === 'undefined' || !Lib.settings.sa_enable_keyboard_shortcut_tooltip) {
             return; // Tooltip disabled in settings or Lib not available
@@ -1911,6 +1920,10 @@ Press Escape on that notice to cancel the auto-action.
         }, 0);
     }
 
+    /**
+     * Removes the Ctrl+M prefix-mode tooltip from the DOM if it is currently visible.
+     * Safe to call even when no tooltip is present.
+     */
     function hideCtrlMTooltip() {
         if (ctrlMTooltipElement) {
             ctrlMTooltipElement.remove();
@@ -2826,52 +2839,71 @@ Press Escape on that notice to cancel the auto-action.
             });
         };
 
+        // All focusable items in the menu: checkboxes first, then the three action buttons.
+        // Used by both Tab/Shift-Tab and ArrowDown/ArrowUp for full-cycle navigation.
+        const menuFocusables = [...checkboxes, selectAllBtn, deselectAllBtn, chooseConfigBtn];
+
+        /**
+         * Moves focus to the item at `idx` in menuFocusables.
+         * For checkboxes this also updates the blue highlight strip; for buttons it
+         * clears the highlight and calls .focus() directly.
+         * @param {number} idx - Index into menuFocusables
+         */
+        const moveFocusTo = (idx) => {
+            if (idx < checkboxes.length) {
+                selectedCheckboxIndex = idx;
+                updateCheckboxFocus(idx);            // sets background + calls .focus()
+            } else {
+                checkboxes.forEach(cb => { cb.parentElement.style.background = ''; });
+                menuFocusables[idx].focus();
+            }
+        };
+
         // Keyboard handler for menu
         const menuKeyHandler = (e) => {
             if (menu.style.display !== 'block') return;
 
             switch (e.key) {
-                case 'ArrowDown':
+                case 'ArrowDown': {
+                    // Arrow keys cycle through ALL focusables (checkboxes + buttons).
                     e.preventDefault();
-                    selectedCheckboxIndex = (selectedCheckboxIndex + 1) % checkboxes.length;
-                    updateCheckboxFocus(selectedCheckboxIndex);
+                    const cur = menuFocusables.indexOf(document.activeElement);
+                    const next = cur === -1 ? 0 : (cur + 1) % menuFocusables.length;
+                    moveFocusTo(next);
                     break;
+                }
 
-                case 'ArrowUp':
+                case 'ArrowUp': {
                     e.preventDefault();
-                    selectedCheckboxIndex = (selectedCheckboxIndex - 1 + checkboxes.length) % checkboxes.length;
-                    updateCheckboxFocus(selectedCheckboxIndex);
+                    const cur = menuFocusables.indexOf(document.activeElement);
+                    const prev = cur === -1 ? 0 : (cur - 1 + menuFocusables.length) % menuFocusables.length;
+                    moveFocusTo(prev);
                     break;
+                }
 
-                case ' ':
-                case 'Shift':
-                    e.preventDefault();
-                    const cb = checkboxes[selectedCheckboxIndex];
-                    cb.checked = !cb.checked;
-                    cb.dispatchEvent(new Event('change'));
+                case ' ': {
+                    // Space toggles the focused checkbox; ignored when a button is focused
+                    // (buttons handle Space natively via their click handler).
+                    const focused = document.activeElement;
+                    if (focused && focused.type === 'checkbox') {
+                        e.preventDefault();
+                        focused.checked = !focused.checked;
+                        focused.dispatchEvent(new Event('change'));
+                    }
                     break;
+                }
 
                 case 'Tab': {
                     // Trap focus inside the menu: cycle checkboxes → Select All →
                     // Deselect All → Choose current configuration → first checkbox.
                     // Shift+Tab reverses the cycle.
                     e.preventDefault();
-                    const menuFocusables = [...checkboxes, selectAllBtn, deselectAllBtn, chooseConfigBtn];
                     let focusedIdx = menuFocusables.indexOf(document.activeElement);
                     if (focusedIdx === -1) focusedIdx = 0;
                     const nextIdx = e.shiftKey
                         ? (focusedIdx - 1 + menuFocusables.length) % menuFocusables.length
                         : (focusedIdx + 1) % menuFocusables.length;
-                    if (nextIdx < checkboxes.length) {
-                        // Moving onto a checkbox — use the existing focus helper
-                        selectedCheckboxIndex = nextIdx;
-                        updateCheckboxFocus(nextIdx);
-                    } else {
-                        // Moving onto one of the three action buttons — clear any
-                        // checkbox highlight and focus the button directly
-                        checkboxes.forEach(cb => { cb.parentElement.style.background = ''; });
-                        menuFocusables[nextIdx].focus();
-                    }
+                    moveFocusTo(nextIdx);
                     break;
                 }
 
@@ -6126,7 +6158,7 @@ Press Escape on that notice to cancel the auto-action.
         'left:0',
         'height:100%',
         'width:0%',
-        'background:#4CAF50',
+        'background:#ffcccc',     // light red — initial colour before first progress update
         'transition:width 0.2s ease, background 0.3s ease',
         'border-radius:3px 0 0 3px',
     ].join(';');
@@ -6144,11 +6176,9 @@ Press Escape on that notice to cancel the auto-action.
         'justify-content:center',
         'font-size:0.75em',
         'font-weight:bold',
-        'color:#333',
+        'color:#333',           // dark text — always readable on the light pastel fill colours
         'white-space:nowrap',
         'pointer-events:none',
-        'mix-blend-mode:difference',    // keeps text readable on both light and coloured fill
-        'filter:invert(1)',             // paired with mix-blend-mode for max contrast
     ].join(';');
 
     fetchProgressOuter.appendChild(fetchProgressFill);
@@ -8333,7 +8363,7 @@ Press Escape on that notice to cancel the auto-action.
         // Show the inline fetch progress bar
         fetchProgressWrap.style.display = 'inline-flex';
         fetchProgressFill.style.width = '0%';
-        fetchProgressFill.style.background = '#c00';
+        fetchProgressFill.style.background = '#ffcccc'; // light red, matching action-button palette
         fetchProgressLabel.textContent = 'Loading…';
         fetchProgressLabel.style.color = '#333';
 
@@ -8725,7 +8755,9 @@ Press Escape on that notice to cancel the auto-action.
 
                 // Drive the inline progress bar in the h1 controls line
                 const fillPct = Math.round(progress * 100);
-                const fillColor = progress >= 1.0 ? '#4CAF50' : (progress >= 0.5 ? '#ff9800' : '#e53935');
+                // Use the same light-toned palette as the action button backgrounds:
+                // light red → light orange → light green (mirrors #ffcccc / #ffe0b2 / #ccffcc).
+                const fillColor = progress >= 1.0 ? '#ccffcc' : (progress >= 0.5 ? '#ffe0b2' : '#ffcccc');
                 fetchProgressFill.style.width = `${fillPct}%`;
                 fetchProgressFill.style.background = fillColor;
                 fetchProgressLabel.textContent =
@@ -10569,6 +10601,10 @@ Press Escape on that notice to cancel the auto-action.
     }
 
     // Wrapper functions for prefix-mode menu shortcuts
+    /**
+     * Opens the Export pull-down menu by programmatically clicking the Export button in the h1 bar.
+     * Used as the Ctrl+M + "e" prefix-mode shortcut target.
+     */
     function openExportMenu() {
         const exportBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
         if (exportBtn) {
@@ -10576,6 +10612,10 @@ Press Escape on that notice to cancel the auto-action.
         }
     }
 
+    /**
+     * Opens the Visible Columns pull-down menu by programmatically clicking the Visible Columns button.
+     * Used as the Ctrl+M + "v" prefix-mode shortcut target.
+     */
     function openVisibleColumnsMenu() {
         const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible Columns'));
         if (visibleColumnsBtn) {
@@ -10583,6 +10623,10 @@ Press Escape on that notice to cancel the auto-action.
         }
     }
 
+    /**
+     * Opens the Density pull-down menu by programmatically clicking the Density button in the h1 bar.
+     * Used as the Ctrl+M + "d" prefix-mode shortcut target.
+     */
     function openDensityMenu() {
         const densityBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Density'));
         if (densityBtn) {
