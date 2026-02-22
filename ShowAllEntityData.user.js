@@ -24,7 +24,7 @@
 // @match        *://*.musicbrainz.org/area/*
 // @match        *://*.musicbrainz.org/instrument/*
 // @match        *://*.musicbrainz.org/event/*
-// @match        *://*.musicbrainz.org/search*
+// @match        *://*.musicbrainz.org/search?query=*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_setValue
@@ -8780,7 +8780,7 @@ Press Escape on that notice to cancel the auto-action.
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
 
             const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
-            globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows) from MusicBrainz backend database, Fetching time: ${fetchSeconds}s, Rendering time: ${renderSeconds}s`;
+            globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows) from MusicBrainz, Fetching time: ${fetchSeconds}s, Rendering time: ${renderSeconds}s`;
             fetchProgressWrap.style.display = 'none';
 
             Lib.debug('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);

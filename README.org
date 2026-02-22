@@ -41099,3 +41099,14 @@ like it has been done for e.g.
 #+end_example
 
 So instead of hardcoding all values for the different UI elements make them configurable. Also add missing unique IDs to all the UI elements
+
+* Use the same background color changes in the progess bar than in the button texts for the action buttons
+
+In the uploaded user script "ShowAllEntityData.user.js"
+
+Use the same background color changes in the progess bar than in the button texts for the action buttons (from ligh red,
+over ligh orange to light green). Now the red and orange colors are to dark.
+
+
+
+
