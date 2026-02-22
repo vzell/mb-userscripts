@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.74.0+2026-02-22
+// @version      9.75.0+2026-02-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.75.0+2026-02-22', description: 'Four fixes: (1) Prefix-mode shortcuts help key changed from "?" to "k" throughout (ctrlMFunctionMap, debug log strings, showShortcutsHelp Help section) — "?" / "/" remain as direct (non-prefix) shortcuts to open the help dialog. (2) CSV export fix: in the original code exportTableToCSV called showExportNotification("CSV", filename, ...) before const filename was declared, causing a TDZ ReferenceError that silently aborted the export; now the single call is correctly placed after filename is defined, matching the pattern used by exportTableToJSON and exportTableToOrgMode. (3) Ctrl+M + h (App Help) and Ctrl+M + , (Settings) were already added to ctrlMFunctionMap in v9.74 but are included here for completeness. (4) VZ_MBLibrary v2.8: buildShortcutString now uppercases captured alphabetic keys so the config dialog and shortcuts popup display "Ctrl+M" instead of "Ctrl+m".'},
     {version: '9.74.0+2026-02-22', description: 'Three improvements: (1) Ctrl-M prefix shortcuts now cover all four always-visible buttons from page entry: added h=App Help and ","=Settings to ctrlMFunctionMap (alongside existing l=Load, ?=Shortcuts Help); tooltip debug message and showShortcutsHelp "Help" section updated accordingly. (2) Export refactor: exportTableToCSV\'s duplicate inline notification popup removed — it now calls showExportNotification("CSV", filename, rowsExported) like JSON and Org-Mode, making all three export formats share a single popup implementation. (3) triggerStandardDownload (used by saveTableDataToDisk) now auto-focuses the Close button via setTimeout so keyboard users can dismiss it with Enter/Space immediately after it appears (Escape was already handled).'},
     {version: '9.73.0+2026-02-22', description: 'Configurable keyboard shortcuts: 12 new keyboard_shortcut entries added to the "🎹 KEYBOARD SHORTCUTS" configSchema section (sa_shortcut_open_settings, sa_shortcut_focus_global_filter, sa_shortcut_focus_column_filter, sa_shortcut_clear_filters, sa_shortcut_open_export, sa_shortcut_save_to_disk, sa_shortcut_load_from_disk, sa_shortcut_open_visible_columns, sa_shortcut_open_density, sa_shortcut_toggle_h2, sa_shortcut_toggle_h3, sa_shortcut_auto_resize). Two new helpers: isShortcutEvent(e, settingKey, fallback) mirrors isPrefixKeyEvent logic against an arbitrary setting; getShortcutDisplay(settingKey, fallback) returns the configured string for UI display. initKeyboardShortcuts() fully refactored: every hardcoded (ctrlKey||metaKey)&&key==="x" guard replaced by isShortcutEvent() calls. New sa_shortcut_auto_resize handler added (default Ctrl+R) that triggers toggleAutoResizeColumns directly in addition to the existing prefix-mode sub-key. showShortcutsHelp() sections array updated: all configurable shortcut keys now shown via getShortcutDisplay() so the help dialog reflects the user\'s live configuration.'},
     {version: '9.72.0+2026-02-22', description: 'Feature: Fully implemented "🖌️ UI APPEARANCE" config section — replaces all hardcoded inline styles on every interactive UI element with 12 condensed pipe-separated settings. New config keys: sa_ui_action_btn_style (fontSize|padding|height|borderRadius — applied to all h1 action-bar buttons: show-all, 🎹, ⚙️, ❓, visible-columns, export, stats, density, auto-resize), sa_ui_save_btn_style (bg|color|border|bgHover), sa_ui_load_btn_style (bg|color|border|bgHover), sa_ui_stop_btn_style (bg|color|border), sa_ui_settings_btn_style (bg|color|border), sa_ui_help_btn_style (bg|color|border), sa_ui_button_divider_style (color|margin — all " | " separators), sa_ui_global_filter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_prefilter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_column_filter_input_style (fontSize|padding — injected into the dynamic CSS block for .mb-col-filter-input), sa_ui_subtable_btn_style (fontSize|padding|borderRadius|bg|border|bgHover — injected for .mb-subtable-clear-btn and .mb-show-all-subtable-btn), sa_ui_filter_bar_btn_style (fontSize|padding|borderRadius|bg|border — prefilter toggle, highlight toggle, clear-column, clear-all buttons), sa_ui_checkbox_style (fontSize|marginRight — all Cc/Rx/Ex checkbox inputs and their labels). Corresponding CSS helper functions added: uiActionBtnBaseCSS, uiSaveBtnCSS, uiLoadBtnCSS, uiStopBtnCSS, uiSettingsBtnCSS, uiHelpBtnCSS, uiButtonDividerCSS, uiGlobalFilterInputCSS, uiPrefilterInputCSS, uiColumnFilterInputVals, uiSubtableBtnVals, uiFilterBarBtnCSS, uiCheckboxVals, uiCheckboxLabelCSS, uiCheckboxInputCSS. Also: added unique mb- IDs to all previously anonymous elements (mb-save-to-disk-btn, mb-load-from-disk-btn, mb-stop-btn, mb-settings-btn, mb-file-input, mb-prefilter-container, mb-prefilter-input, mb-prefilter-case/rx/exclude-label/checkbox, mb-filter-container, mb-global-filter-wrapper, mb-global-filter-input, mb-global-filter-clear, mb-global-filter-case/rx/exclude-label/checkbox, mb-button-divider-initial). Fixed typo: preFilterInput font-size was "1.oem" → corrected to "1em" via config default. Save/Load buttons gain hover effects via onmouseover/onmouseout.'},
@@ -1960,7 +1961,7 @@ Press Escape on that notice to cancel the auto-action.
                         Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
+                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
                 Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
                 if (buttonKeys.length > 0) {
@@ -1970,7 +1971,7 @@ Press Escape on that notice to cancel the auto-action.
                         console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, ?=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
+                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
             }
 
             // Auto-exit after 5 seconds
@@ -4033,7 +4034,7 @@ Press Escape on that notice to cancel the auto-action.
                 title: 'Help',
                 shortcuts: [
                     { keys: '? or /', desc: 'Show this shortcuts help' },
-                    { keys: `${getPrefixDisplay()}, then ?`, desc: 'Show shortcuts help (prefix mode)' },
+                    { keys: `${getPrefixDisplay()}, then k`, desc: 'Show shortcuts help (prefix mode)' },
                     { keys: `${getPrefixDisplay()}, then h`, desc: 'Show app help (prefix mode)' }
                 ]
             }
@@ -10525,7 +10526,7 @@ Press Escape on that notice to cancel the auto-action.
         'v': { fn: openVisibleColumnsMenu, description: 'Open Visible Columns Menu' },
         'e': { fn: openExportMenu, description: 'Open Export Menu' },
         'l': { fn: () => showLoadFilterDialog(document.querySelector('button[title*="Load table data from disk"]')), description: 'Load from Disk' },
-        '?': { fn: showShortcutsHelp, description: 'Show Shortcuts Help' },
+        'k': { fn: showShortcutsHelp, description: 'Show Shortcuts Help' },
         'h': { fn: showAppHelp, description: 'Show App Help' },
         ',': { fn: () => Lib.showSettings(), description: 'Open Settings' }
     };
