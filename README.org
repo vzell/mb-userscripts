@@ -41328,11 +41328,48 @@ k=Shortcuts Help, h=App Help, ,=Settings'
   configuration dialog and the keyboard popup dialog as "Ctrl-M" etc.
 
 
-* blur all input fields on the final render page by default, for example the 
+* "Tab"-key cycles through the checkbox choices
+
+In the uploaded user script "ShowAllEntityData.user.js"
+
+- when the "Column Visibility" pull-down menu is open, the "Tab"-key cycles through the checkbox choices, but then
+  instead of cycling next to the 3 buttons "Select All", "Deselect All", "Choose current configuration" and then starts
+  again with the first checkbox, it instead leaves the menu and cycles through other UI elements visible in the page,
+  even up to the browser URL bar, please fix
+
+- according to the boolean setting 
+
+#+begin_example
+        sa_shortcut_open_stats: {
+            label: "Shortcut: Open Statistics Menu",
+            type: "keyboard_shortcut",
+            default: "Ctrl+T",
+            description: "Open the page Statistics menu (default: Ctrl+T)"
+        },
+#+end_example
+
+handle the clicking of the "📊 Stats"-button when pressing "Ctrl-T" by default. Please wire thead
+
+#+begin_example
+document.addEventListener('keydown', (e) => {
+#+end_example
+
+- also wire "Ctrl+K" (with action of clicking on the "Show keyboard shortcuts"-button and adding it to the keyboard help section) on the final rendered page
+
+- When entering the initial page blur the input field
 
 #+begin_example
 <input id="headerid-query
 #+end_example
+
+and when rendering the final page focus the
+
+#+begin_example
+mb-global-filter input
+#+end_example
+
+field
+
 
 * check the keyboard popup for errors
 
@@ -41340,3 +41377,24 @@ k=Shortcuts Help, h=App Help, ,=Settings'
 
 * include lib from github
 
+* align button texts and make everything configurable (size, font, height, character to underline)
+
+* settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
+
+In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
+
+Here is how it looks like
+
+#+begin_example
+<tr class="section-header collapsed" data-section="divider_ui_appearance" style="
+                                    cursor:pointer;
+                                    background:linear-gradient(to right,#6c7a89,#8fa3b5,#6c7a89);
+                                    color:white;
+                                    border-bottom:1px solid rgba(255,255,255,0.2);
+                                ">
+                                <td colspan="3" style="padding:10px 14px;font-weight:600;">
+                                    ▶ 🖌️ ELEMENT UI STYLES
+                                </td>
+                            </tr>
+
+#+end_example

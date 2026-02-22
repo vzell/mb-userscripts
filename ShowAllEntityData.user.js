@@ -505,6 +505,13 @@ Press Escape on that notice to cancel the auto-action.
             description: "Open the table Density (row-spacing) menu (default: Ctrl+D)"
         },
 
+        sa_shortcut_open_statistics: {
+            label: "Shortcut: Open Statistics Menu",
+            type: "keyboard_shortcut",
+            default: "Ctrl+T",
+            description: "Open the page Statistics menu (default: Ctrl+T)"
+        },
+
         sa_shortcut_open_export: {
             label: "Shortcut: Open Export Menu",
             type: "keyboard_shortcut",
@@ -3974,11 +3981,20 @@ Press Escape on that notice to cancel the auto-action.
             {
                 title: 'View & Layout',
                 shortcuts: [
+                    { keys: getShortcutDisplay('sa_shortcut_auto_resize', 'Ctrl+R'), desc: 'Toggle auto-resize columns (also: prefix mode then r)' },
                     { keys: getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V'), desc: 'Open "Visible Columns" menu' },
                     { keys: getShortcutDisplay('sa_shortcut_open_density', 'Ctrl+D'), desc: 'Open "Density" menu' },
+                    { keys: getShortcutDisplay('sa_shortcut_open_statistics', 'Ctrl+T'), desc: 'Open "Statistics" menu' },
                     { keys: getShortcutDisplay('sa_shortcut_toggle_h2', 'Ctrl+2'), desc: 'Toggle collapse all h2 headers' },
-                    { keys: getShortcutDisplay('sa_shortcut_toggle_h3', 'Ctrl+3'), desc: 'Toggle collapse all h3 headers (types)' },
-                    { keys: getPrefixDisplay(), desc: 'Enter prefix mode (then a second key selects action / function)' }
+                    { keys: getShortcutDisplay('sa_shortcut_toggle_h3', 'Ctrl+3'), desc: 'Toggle collapse all h3 headers (types)' }
+                ]
+            },
+            {
+                title: 'Data Export & Management',
+                shortcuts: [
+                    { keys: getShortcutDisplay('sa_shortcut_save_to_disk', 'Ctrl+S'), desc: 'Save to disk (JSON)' },
+                    { keys: getShortcutDisplay('sa_shortcut_load_from_disk', 'Ctrl+L'), desc: 'Load from disk' },
+                    { keys: getShortcutDisplay('sa_shortcut_open_export', 'Ctrl+E'), desc: 'Open export menu (CSV, JSON, Org-Mode)' }
                 ]
             },
             {
@@ -4010,17 +4026,9 @@ Press Escape on that notice to cancel the auto-action.
                 ]
             },
             {
-                title: 'Data Export & Management',
+                title: 'Keyboard Shortcuts',
                 shortcuts: [
-                    { keys: getShortcutDisplay('sa_shortcut_open_export', 'Ctrl+E'), desc: 'Open export menu (CSV, JSON, Org-Mode)' },
-                    { keys: getShortcutDisplay('sa_shortcut_save_to_disk', 'Ctrl+S'), desc: 'Save to disk (JSON)' },
-                    { keys: getShortcutDisplay('sa_shortcut_load_from_disk', 'Ctrl+L'), desc: 'Load from disk' }
-                ]
-            },
-            {
-                title: 'Column Resizing',
-                shortcuts: [
-                    { keys: getShortcutDisplay('sa_shortcut_auto_resize', 'Ctrl+R'), desc: 'Toggle auto-resize columns (also: prefix mode then r)' }
+                    { keys: getPrefixDisplay(), desc: 'Enter prefix mode (then a second key selects action / function)' }
                 ]
             },
             {
@@ -10519,15 +10527,15 @@ Press Escape on that notice to cancel the auto-action.
 
     // Populate prefix-mode function mapping after all functions are defined
     ctrlMFunctionMap = {
-        'r': { fn: toggleAutoResizeColumns, description: 'Auto-Resize Columns' },
-        't': { fn: showStatsPanel, description: 'Show Stats Panel' },
         's': { fn: saveTableDataToDisk, description: 'Save to Disk' },
-        'd': { fn: openDensityMenu, description: 'Open Density Menu' },
-        'v': { fn: openVisibleColumnsMenu, description: 'Open Visible Columns Menu' },
-        'e': { fn: openExportMenu, description: 'Open Export Menu' },
         'l': { fn: () => showLoadFilterDialog(document.querySelector('button[title*="Load table data from disk"]')), description: 'Load from Disk' },
-        'k': { fn: showShortcutsHelp, description: 'Show Shortcuts Help' },
-        'h': { fn: showAppHelp, description: 'Show App Help' },
-        ',': { fn: () => Lib.showSettings(), description: 'Open Settings' }
+        'r': { fn: toggleAutoResizeColumns, description: 'Auto-Resize Columns' },
+        'v': { fn: openVisibleColumnsMenu, description: 'Open Visible Columns Menu' },
+        'd': { fn: openDensityMenu, description: 'Open Density Menu' },
+        't': { fn: showStatsPanel, description: 'Show Statistics Panel' },
+        'e': { fn: openExportMenu, description: 'Open Export Menu' },
+        'k': { fn: showShortcutsHelp, description: 'Show Keyboard Shortcuts Help' },
+        ',': { fn: () => Lib.showSettings(), description: 'Open Settings' },
+        'h': { fn: showAppHelp, description: 'Show App Help' }
     };
 })();
