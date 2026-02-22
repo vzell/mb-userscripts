@@ -39402,11 +39402,11 @@ I like the filtered outout to be in the following order:
   so basically the two button should come at the end of the h3 header
 
 
-* Checks
+* Checks for unused variables and functions
 ** question
 
-In the uploaded userscript
- for all unused variables and function definitions
+In the uploaded userscript and library for all unused variables and function definitions
+ 
 - Check for obvious code which could make it into a functions without breaking the rest of the big userscript
 - check for code blocks which could easily be refactored to make the code more clear
 
@@ -40886,8 +40886,7 @@ So essentially the total row count in the loaded file should always be included 
 
 as it currently cuts of the displayed text inside at both ends
 
-
-* Please take the progressbar implementation from the uploaded file ""progressbar.js"
+* DONE Please take the progressbar implementation from the uploaded file ""progressbar.js"
 
 ** initial
 
@@ -40937,7 +40936,7 @@ to
 Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) - est. ${estRemainingSeconds.toFixed(1)}s
 #+end_example
 
-* reintroduce progressbars on h1 (single/multi - initial downloading and loading from disk), h2 (single/multi - global filtering / single-sorting) and h3 headers (multi - filtering/sorting)
+* DONE reintroduce progressbars on h1 (single/multi - initial downloading and loading from disk), h2 (single/multi - global filtering / single-sorting) and h3 headers (multi - filtering/sorting)
 ** DONE progress bar
 
 - Reintroduce a progess bar in the h1 header line after the help "?" button which displays the following message in a
@@ -41042,8 +41041,7 @@ if (showProgressBar && progressContainer) {
 
 
 
-
-* UI
+* DONE UI
 ** DONE add superscripts to "Show all..." buttons
 
 - add superscripts '¹','²','³','⁴' as mnemonics after the "🧮" characters to all action buttons on pages like
@@ -41084,7 +41082,6 @@ popup available
 #+end_example
 
 during page fetching, because that information is now available inside the progress bar
-
 
 * DONE Remove "Rating" from numeric column, "Track" ?
 
@@ -41141,14 +41138,12 @@ like it has been done for e.g.
 
 So instead of hardcoding all values for the different UI elements make them configurable. Also add missing unique IDs to all the UI elements
 
-
-* Use the same background color changes in the progess bar than in the button texts for the action buttons
+* DONE Use the same background color changes in the progess bar than in the button texts for the action buttons
 
 In the uploaded user script "ShowAllEntityData.user.js"
 
 Use the same background color changes in the progess bar than in the button texts for the action buttons (from ligh red,
 over ligh orange to light green). Now the red and orange colors are too dark.
-
 
 * DONE collapse
 
@@ -41246,12 +41241,6 @@ It still doesn't work
 - Additionally change the behaviour of the "Shift" key: It shouldn't toggle the check box where the focus is, but instead it should work only together with the Tab-key as "Shift-Tab" to move the cursor upwards
 - The cycling to the 3 buttons "Select All", "Deselect All", "Choose current configuration" and then starting again with the first checkbox still doesn't work
 
-
-- when the "Column Visibility" pull-down menu is open, the "Tab"-key cycles through the checkbox choices, but then
-  instead of cycling next to the 3 buttons "Select All", "Deselect All", "Choose current configuration" and then starts
-  again with the first checkbox, it instead leaves the menu and cycles through other UI elements visible in the page,
-  even up to the browser URL bar, please fix
-
 * TODO "📊 Stats"-button when pressing "Ctrl-I" by default
 
 according to the boolean setting
@@ -41308,8 +41297,6 @@ Here is how it looks like
 #+end_example
 
 
-* check the keyboard popup for errors
-
 * update the help text of the app
 
 * include lib from github
@@ -41336,9 +41323,8 @@ Here is how it looks like
 
 #+end_example
 
-* document all functions in the library and the user script where missing
-
-* Do not sort the "functions" in the "Ctrl-M" shortcut helper popup
+* DONE document all functions in the library and the user script where missing
+* DONE Do not sort the "functions" in the "Ctrl-M" shortcut helper popup
 
 #+begin_example
        // Function shortcuts
@@ -41349,13 +41335,6 @@ Here is how it looks like
             tooltipHTML += `<div style="margin-left: 4px;"><strong>${key}</strong>: ${entry.description}</div>`;
         }
 #+end_example
-
-Also this still doesn't work:
-
-- when the "Column Visibility" pull-down menu is open, the "Tab"-key cycles through the checkbox choices, but then
-  instead of cycling next to the 3 buttons "Select All", "Deselect All", "Choose current configuration" and then starts
-  again with the first checkbox, it instead leaves the menu and cycles through other UI elements visible in the page,
-  even up to the browser URL bar, please fix
 
 * DONE sensible defaults for configuration options
 
@@ -41416,10 +41395,40 @@ You can get the script at https://github.com/vzell/mb-userscripts under [Accumul
 
 In the uploaded user script "ShowAllEntityData.user.js"
 
-It still doesn't work
+1.) Still a bug left regarding tab cycling (or using the cursor up/down keys, as they exhibit the same behaviour)
 
 - "Tab"-key cycles through the checkbox choices. That works
 - Additionally change the behaviour of the "Shift" key: It shouldn't toggle the check box where the focus is, but instead it should work only together with the Tab-key as "Shift-Tab" to move the cursor upwards
 - The cycling to the 3 buttons "Select All", "Deselect All", "Choose current configuration" and then starting again with the first checkbox still doesn't work
 
-- Additionally 
+2.) Additionally the visual glitch is still there in the settings dialog, when all the settings headers are in the
+collapsed state, there is an artificial shadow row starting where the resize handle is located (it stretches from the
+resize handle to the right). When in the un-collapsed state that artefact is gone. When collapsing again, it
+reappears. Please also check the uploaded library file "VZ_MBLibrary.user.js"
+
+3.) Document all functions in the library and the userscript where missing
+
+4.) Use the same background color changes in the progess bar
+
+#+begin_example
+mb-fetch-progress-outer
+#+end_example
+
+than in the button texts for the action buttons (from ligh red, over ligh orange to light green). Now the red and orange colors are too dark.
+
+* still bugs
+
+- The "Tab", "Shift-Tab" and "cursor up/down" key cycling now works, but the buttons do NOT show that they are
+  focused. They need to change the color in a darker gray when focused and also show a viual feedback when
+  pressed/clicked.
+
+- the visual glitch is ALSO still there in the settings dialog when ALL section headers are collapsed at one. The white
+  ghost row ist still present. I have another observation. It looks like each collapsable header contributes a thin part
+  to the final ghost row. Because when I start uncollapsed, there is now shadow ghost row. When I now collapse the first
+  section, by clicking it's header, a thin part of the whole ghost row gets a white color. Clicking another header makes
+  that thin part a little bigger until the final section is collapsed when the whole ghost row is present again.
+
+- Please also check the text in the variable "const APP_HELP_TEXT" and change it, or add to it, or remove from it so
+  that it matches the current code implementation
+
+* Could the "changelog" and the "App help" insted of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
