@@ -28845,48 +28845,6 @@ Finally enable local file access.
 // @connect           *
 
 
-* posting to MusicBrainz forum
-** <2026-01-28 Wed 09:05>
-
-#+begin_example
-# [MusicBrainz: Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
-
-I talked to Misses/Mr. Gemini and out came a new Userscript which accumulates all the paginated MB pages of different entities, renders them depending on the entity type either in a flat or in a grouped table structure with real-time filtering and sorting support.
-
-The currently supported entity types are
-
- * Artist-ReleaseGroups
- * ReleaseGroup-Releases
- * Artist-Releases
- * Artist-Works
- * Artist-Recordings
- * Works
- * Recordings
- * Artist-Events
- * Series
- * Labels
- * Place-Events
- * Place-Performances (buggy, I’m working on that later)
-
-![image|690x343](upload://7UxNLpR1vOIs0xP0wqFnDILhRYm.png)
-
-![image|690x173](upload://bbmH3R7j0EuzA3LGmyxh7OLUaLu.png)
-
-![image|690x276](upload://wLemH2Q4wCerLDPTRSTiRBB2rKd.jpeg)
-
-Almost everything is collapsable/un-collapsable (see the tooltip support).
-
-The final rendrered tables also include new extracted columns for easy sorting, like for example the "Country/Date" column in the Series view is split in its different parts "Country" and "Date"
-
-![image|690x136](upload://aQKg02za09Ktbm8UwTT0Afi4rBG.png)
-
-Also I will make more variables configurable via the TamperMonkey menue in the future
-
-![image|393x499](upload://nnvvX9Cow2FOM9k9NIm5GPnlbtb.png)
-
-You can get the script at https://github.com/vzell/mb-userscripts under [Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
-#+end_example
-
 
 * interact with other USERSCRIPTs - jesus2099
 ** copy image links for releases to final rendered data if available, or grap them again on the rendered page
@@ -29063,7 +29021,7 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 *** clicking the tagger link should not create a new page but instead just execute the action in the background
 
 
-* TODO DOM rendering
+* DONE DOM rendering
 ** DONE timings and logging
 
 where in the code does the actual DOM rendering begin, and end. Pleas place logging statement in there, and add timing info to the log
@@ -29991,7 +29949,7 @@ Please check if something could be made better. All the steps should also have d
 
 Please do not make any other changes to working code, comments and logging statements.
 
-* TODO refactoring
+* DONE refactoring
 ** DONE initial routing configuration
 
 In the uploaded script,
@@ -30448,11 +30406,6 @@ Encapsulation: Using createBaseTable() ensures that even if MusicBrainz changes 
 No Logic Duplication: The "cleanup" and "sortable" triggers are moved into the render engine, so you don't forget to call them when adding new page types.
 #+end_example
 
-** generic refactoring
-
-In the uploaded script, the code has been grown over time and is now more or less unmaintanble.  What are the best
-options to refactor the code, given it's logic but without breaking stuff, Which approach ist the best regarding best
-practices and best patterns
 
 
 * icons
@@ -33817,7 +33770,6 @@ identify additional "Lib.warn" statement usage and potential renames of current 
 In the uploaded userscript
 what would be a much shorter and more pregnant name for this userscript, given the current functionlity
 
-
 * DONE new columns e.g. for labels
 
 In the uploaded script,
@@ -34025,7 +33977,6 @@ Implementation Detail for Search Results
 Since you recently added logic to transform search results (converting p to h2), you can also wrap that transformation into a dedicated function like handleSearchHeaderTransformation(target) to keep the initialization flow clean.
 
 #+end_example
-
 
 * DONE add option to specify filter condition for the initial display already
 
@@ -35154,18 +35105,41 @@ allow Esc to clear all column filters in table with modifier
 visual feedback (“cleared”) animation
 
 
+* Cosmetic - rows and elapsed time
+** elapsed time
+
+what need to be changed to change the text from
+
+#+begin_example
+progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
+#+end_example
+
+
+#+begin_example
+progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`, running since ${elapsed_time};
+#+end_example
+
+** Im Batch Rendering dialog: Elapsed time angeben
+** Loaded <n> rows in <elapsed time>s
+
+** 💾 Save to Disk
+
+In the uploaded userscript
+
+The "💾 Save to Disk"
+
+#+begin_example
+<button type="button" title="Save current table data to disk as JSON" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(76, 175, 80); color: white; border: 1px solid rgb(69, 160, 73); display: inline-flex; align-items: center; justify-content: center;">💾 Save to Disk</button>
+#+end_example
+
+shouldn't be present on the very fist page when the userscript first executes. ONLY after fetching data, so when
+pressing the action button (or one of the action buttons) and loading either all the paginated pages OR pressing the
+"Stop" button if there are lots of pages to load
+
+
 * DONE add divider in config menu + scrollbars
 
-
-* refactor in memory column removal to filter large pagination pages
-
-
-* TODO Priority of script execution and interoperation
-** talk to
-*** jesus2009 - render ing of coverimages befreo table and before each row
-*** xxx -for RGs read in all releases and make collpasable
-
-
+* DONE refactor in memory column removal to filter large pagination pages
 * DONE support for per button configuration
 
 In the uploaded userscript
@@ -35241,7 +35215,6 @@ available in the configuration.
         const non_paginated = buttonConfig.non_paginated || false;
         const features = buttonConfig.features || false;
 
-
 * DONE Wrap debug log statements
 
 In the uploaded userscript
@@ -35307,7 +35280,6 @@ OK, for https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/reco
 [VZ-ShowAllEntities: artist-recordings] 🧹 Final cleanup complete: No consecutive <br> tags found. 
 [VZ-ShowAllEntities: artist-recordings] ✅ Process complete. Final Row Count: 400. Total Time: 5.06s 
 #+end_example
-
 
 * DONE fix Place-Performances column shift to the right
 ** initial
@@ -35428,38 +35400,6 @@ In the following code block
 #+end_example
 
 could the "else if" structure somehow be refactored, it looks error prone
-
-
-* Cosmetic - rows and elapsed time
-** elapsed time
-
-what need to be changed to change the text from
-
-#+begin_example
-progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`;
-#+end_example
-
-
-#+begin_example
-progressText.textContent = `Estimated remaining time: ${estRemainingSeconds.toFixed(1)}s`, running since ${elapsed_time};
-#+end_example
-
-** Im Batch Rendering dialog: Elapsed time angeben
-** Loaded <n> rows in <elapsed time>s
-
-** 💾 Save to Disk
-
-In the uploaded userscript
-
-The "💾 Save to Disk"
-
-#+begin_example
-<button type="button" title="Save current table data to disk as JSON" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(76, 175, 80); color: white; border: 1px solid rgb(69, 160, 73); display: inline-flex; align-items: center; justify-content: center;">💾 Save to Disk</button>
-#+end_example
-
-shouldn't be present on the very fist page when the userscript first executes. ONLY after fetching data, so when
-pressing the action button (or one of the action buttons) and loading either all the paginated pages OR pressing the
-"Stop" button if there are lots of pages to load
 
 * DONE mismatch when using Regexps
 
@@ -35633,7 +35573,6 @@ or a country flag in front of the country name
 
 So please fix also the column filtering for regexps to only take real text into account
 
-
 * DONE Sticky headers
 ** DONE works for single table views
 
@@ -35641,142 +35580,6 @@ go with "Sticky Headers - See columns while scrolling", but include the filter r
 
 ** DONE multi table mode
 ** make the whole MB page header up to the filter row sticky
-
-
-* TODO Export
-** remove "▶" and others before exporting
-** add more formats, JSON, ORG
-*** JSON
-*** ORG-Mode
-*** XML
-*** Excel
-
-** DONE create info popup
-
-In the following function, after the line
-
-#+begin_example
-        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
-#+end_example
-
-include code that pops up an info box which says that the enduser should monitor the browser downloading the file.
-Include a "Close" button and also "Escape" key closing of the popup.
-
-
-#+begin_example
-    function exportTableToCSV() {
-        const table = document.querySelector('table.tbl');
-        if (!table) {
-            alert('No table found to export');
-            Lib.error('export', 'No table found for CSV export');
-            return;
-        }
-
-        Lib.info('export', 'Starting CSV export...');
-
-        const rows = [];
-        let totalCells = 0;
-
-        // Get headers from first row
-        const headerRow = table.querySelector('thead tr:first-child');
-        if (headerRow) {
-            const headers = [];
-            Array.from(headerRow.cells).forEach(cell => {
-                // Skip hidden columns
-                if (cell.style.display === 'none') return;
-
-                // Clean header text (remove sort icons)
-                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
-                // Remove extra whitespace
-                headerText = headerText.replace(/\s+/g, ' ');
-                headers.push(headerText);
-            });
-            rows.push(headers);
-            totalCells += headers.length;
-            Lib.debug('export', `Exported ${headers.length} headers: ${headers.join(', ')}`);
-        }
-
-        // Get data rows (only visible ones)
-        const dataRows = table.querySelectorAll('tbody tr');
-        let rowsExported = 0;
-        let rowsSkipped = 0;
-
-        dataRows.forEach(row => {
-            // Skip hidden rows (filtered out)
-            if (row.style.display === 'none') {
-                rowsSkipped++;
-                return;
-            }
-
-            const cells = [];
-            Array.from(row.cells).forEach((cell, index) => {
-                // Skip hidden columns
-                if (cell.style.display === 'none') return;
-
-                // Get text content and clean it up
-                let text = cell.textContent.trim();
-
-                // Remove extra whitespace
-                text = text.replace(/\s+/g, ' ');
-
-                // Escape quotes (CSV standard: " becomes "")
-                text = text.replace(/"/g, '""');
-
-                // Wrap in quotes if contains comma, newline, or quote
-                if (text.includes(',') || text.includes('\n') || text.includes('"')) {
-                    text = `"${text}"`;
-                }
-
-                cells.push(text);
-            });
-
-            if (cells.length > 0) {
-                rows.push(cells);
-                totalCells += cells.length;
-                rowsExported++;
-            }
-        });
-
-        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
-
-        // Create CSV string
-        const csv = rows.map(row => row.join(',')).join('\n');
-
-        // Create Blob and download
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-
-        // Generate filename with timestamp
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-        const pageName = pageType || 'table';
-        const filename = `musicbrainz-${pageName}-${timestamp}.csv`;
-        link.download = filename;
-
-        // Trigger download
-        link.click();
-
-        // Cleanup
-        URL.revokeObjectURL(url);
-
-        // Update status
-        const statusDisplay = document.getElementById('mb-status-display');
-        if (statusDisplay) {
-            statusDisplay.textContent = `✓ Exported ${rowsExported} rows to ${filename}`;
-            statusDisplay.style.color = 'green';
-        }
-
-        Lib.info('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
-    }
-#+end_example
-
-
-* TODO statistics panel
-** wrong stats
-** make it multitable aware
-** create keyboard shorcut
-
 
 * DONE table density
 
@@ -36492,7 +36295,7 @@ Please apply the same look-and-feel to the changelog "show: function ()"
 
 * DONE remove "Initial rendering" or replace with real values
 
-* during initial rendering, the "Load from Disk" button when pressed, should tell the user, that the feature is ONLY avialable after pressing the action button first
+* DONE during initial rendering, the "Load from Disk" button when pressed, should tell the user, that the feature is ONLY avialable after pressing the action button first
 ** fix it
 
 When the button '<button id="sa-load-confirm' is clicked the actual data loading should be triggered
@@ -36504,7 +36307,6 @@ modal.querySelector('#sa-load-confirm').onclick = () => {
 #+end_example
 
 Also handle the "Escape" key to let the dialog vanish when pressed.
-
 
 * DONE After loading from JSON, remove artefacts
 ** initial
@@ -36524,11 +36326,8 @@ After loading from JSON, remove artefacts like
 - both of the pagination buttons
 - some text below some tables
 
-
-* Ctrl-clicking an h2 header row looses focus
-
+* DONE Ctrl-clicking an h2 header row looses focus
 * DONE Replace the "Warning: This .." to the same nice dialog like after the loading of lots of pages
-
 
 * DONE add global exclude filter
 ** DONE initial
@@ -36703,7 +36502,6 @@ and
 
 couldn't be refactored somehow. It looks like lot's of duplicated code.
 
-
 * DONE Place the 'Sorted "<column name>": <elapsed>s'
 
 Place the 'Sorted "<column name>": <elapsed>s' after the "Unhighlight all" button
@@ -36715,7 +36513,6 @@ Place the 'Sorted "<column name>": <elapsed>s' after the "Unhighlight all" butto
     statusDisplay.id = 'mb-status-display';
     statusDisplay.style.cssText = 'font-size:0.6em; color:#333; display:flex; align-items:center; height:24px; font-weight:bold;';
 #+end_example
-
 
 * DONE ❌ Error during sort: ReferenceError: filteredArray is not defined
 
@@ -36747,7 +36544,6 @@ Place the 'Sorted "<column name>": <elapsed>s' after the "Unhighlight all" butto
             statusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
         }
 #+end_example
-
 
 * DONE remove config menu when called from MusicBrainz "Editing" menu, when pressing Esc
 
@@ -37422,280 +37218,6 @@ c:4832:17)
 [VZ-ShowAllEntities: place-performances] 🎨 Updated header/target ▼Performances(148 of 149)[ Sho count: (144 of 149)     
 #+end_example
 
-
-* Checks
-** question
-
-In the uploaded userscript
- for all unused variables and function definitions
-- Check for obvious code which could make it into a functions without breaking the rest of the big userscript
-- check for code blocks which could easily be refactored to make the code more clear
-
-** answer
-*** gemini
-
-#+begin_example
-This is an impressive and highly functional Tampermonkey script! Managing DOM manipulation, chunked rendering, filtering, and cross-tab/file states in vanilla JavaScript is no small feat.
-
-I have reviewed the script based on your guidelines. Here is a breakdown of unused code, extraction candidates, and areas that would significantly benefit from refactoring for clarity.
-
-1. Unused Variables and Functions
-Unused Functions:
-
-triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) (around line 1618): This function is completely orphaned. The file selection and loading logic is actually handled by the <input type="file"> element created around line 1319 and triggered inside showLoadFilterDialog(). You can safely delete the triggerDiskLoad function.
-
-Dead UI Elements (Never appended to the DOM):
-
-Around line 1334, several pre-filter UI elements are created but never appended to the document:
-
-preFilterContainer
-
-preFilterInput
-
-preFilterCaseLabel
-
-preFilterCaseCheckbox
-
-preFilterRxLabel
-
-preFilterRxCheckbox
-
-(Note: preFilterMsg is appended later, so it is used, but the inputs themselves are legacy code likely superseded by your showLoadFilterDialog modal).
-
-Unused (or Dead-End) Variables:
-
-timerDisplay: Created around line 1406 (const timerDisplay = document.createElement('span');) and appended to the controls, but its text content is never updated during the fetching, sorting, or filtering operations (the script uses globalStatusDisplay and statusDisplay instead).
-
-basePath and isFilteredRelationshipPage: These are declared at the top and only ever used in the Lib.debug('init', ...) statements. Because you want to keep debug logging, these shouldn't be removed, but be aware they serve no logical purpose outside of the console.
-
-2. Code Extraction Candidates (DRY Principle)
-There are several highly repetitive blocks of code that can be extracted into shared helper functions without changing any logic.
-
-A. The Fade-Out Notification Popups
-You have an identical ~45-line block of code for a pop-up alert in both exportTableToCSV() and triggerStandardDownload().
-
-Refactor: Extract this into a reusable UI helper.
-
-JavaScript
-/**
- * Shows a temporary fade-out notification popup
- * @param {string} messageText - The message to display
- */
-function showNotificationPopup(messageText) {
-    const infoPopup = document.createElement('div');
-    infoPopup.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        border: 1px solid #888;
-        border-radius: 6px;
-        padding: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 10000;
-        max-width: 400px;
-        text-align: center;
-        font-family: sans-serif;
-        opacity: 1;
-        transition: opacity 0.3s ease;
-    `;
-
-    const msg = document.createElement('div');
-    msg.textContent = messageText;
-    msg.style.marginBottom = '15px';
-
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Close';
-    closeBtn.style.cssText = `
-        padding: 6px 12px;
-        cursor: pointer;
-        border-radius: 4px;
-        border: 1px solid #555;
-        background-color: #f0f0f0;
-    `;
-    closeBtn.type = 'button';
-
-    // Close function with fade out
-    const closePopup = () => {
-        infoPopup.style.opacity = '0';
-        // Remove from DOM after transition
-        setTimeout(() => {
-            if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
-            document.removeEventListener('keydown', onEscape);
-        }, 300); // match the CSS transition duration
-    };
-
-    // Button click closes popup
-    closeBtn.addEventListener('click', closePopup);
-
-    // Escape key closes popup
-    const onEscape = (e) => {
-        if (e.key === 'Escape') closePopup();
-    };
-    document.addEventListener('keydown', onEscape);
-
-    infoPopup.appendChild(msg);
-    infoPopup.appendChild(closeBtn);
-    document.body.appendChild(infoPopup);
-}
-B. Highlight Resetting
-The logic to clear previous .mb-global-filter-highlight and .mb-column-filter-highlight tags is repeated four times (in runFilter single mode, runFilter multi mode, startFetchingProcess cleanup, and the "Unhighlight all" button).
-
-Refactor:
-
-JavaScript
-function clearHighlights(containerElement) {
-    containerElement.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
-        .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
-}
-C. Button Generation Boilerplate
-Creating top-bar buttons (addExportButton, addDensityControl, addStatsButton, addAutoResizeButton) involves 10-12 lines of identical document.createElement and inline CSS boilerplate.
-
-Refactor: Create a createToolbarButton(label, title, onClickHandler) to generate and return these buttons.
-
-3. Refactoring for Clarity
-A. Massive duplication inside runFilter()
-The runFilter() function has two entirely separate blocks for activeDefinition.tableMode === 'multi' and single table mode. Inside both blocks, the 40+ line loop that resets highlights, checks Regex/Case matches against the global filter, checks the column filters, and applies new highlight spans is 100% duplicated.
-
-You can pull the row-evaluation logic out into a single helper function, drastically cleaning up runFilter():
-
-JavaScript
-/**
- * Evaluates if a row matches the given filters and applies highlights if necessary.
- * Returns true if it matches, false otherwise.
- */
-function evaluateAndHighlightRow(row, globalQuery, globalQueryRaw, globalRegex, colFilters, isCaseSensitive, isRegExp) {
-    // Reset previous highlights (critical for correct filtering)
-    clearHighlights(row);
-
-    // Global match
-    let globalHit = !globalQuery;
-    if (!globalHit) {
-        if (isRegExp && globalRegex) {
-            // For regex patterns, test against each cell individually
-            // This allows anchored patterns like ^Thunder Road to work correctly
-            globalHit = Array.from(row.cells).some(cell => {
-                const cellText = getCleanColumnText(cell);
-                return globalRegex.test(cellText);
-            });
-        } else {
-            // For non-regex, test against concatenated row text
-            const text = getCleanVisibleText(row);
-            globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
-        }
-    }
-
-    // Column matches
-    let colHit = true;
-    for (const f of colFilters) {
-        const cellText = getCleanColumnText(row.cells[f.idx]);
-        let match = false;
-        if (isRegExp) {
-            try {
-                match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
-            } catch (e) {
-                match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
-            }
-        } else {
-            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
-        }
-        if (!match) {
-            colHit = false;
-            break;
-        }
-    }
-
-    const finalHit = globalHit && colHit;
-    if (finalHit) {
-        if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
-        colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
-    }
-    
-    return finalHit;
-}
-With this in place, your matches = group.rows.map(r => r.cloneNode(true)).filter(r => { ... }) just becomes a clean, single line call to evaluateAndHighlightRow(...).
-
-B. The startFetchingProcess Function Complexity
-This function is over 600 lines long. The core of its complexity lies around line 2140: tableBody.childNodes.forEach(node => { ... }). Inside this loop, you're parsing DOM elements, splitting specific columns (Country/Date, Location, Area), extracting data, and applying column exclusions.
-
-Refactor Idea: Move the column manipulation blocks out of the loop.
-For example, the 25-line chunk handling Country/Date splitting could become:
-
-JavaScript
-function splitCountryDateCell(newRow, countryDateIdx) {
-    const tdSplitC = document.createElement('td');
-    const tdSplitD = document.createElement('td');
-    
-    const cdCell = newRow.cells[countryDateIdx];
-    if (cdCell) {
-        const events = Array.from(cdCell.querySelectorAll('.release-event'));
-        events.forEach((ev, i) => {
-            // ... (existing logic) ...
-        });
-    }
-    return { tdSplitC, tdSplitD };
-}
-Doing this for Location and Area as well would shave hundreds of lines of visual noise off startFetchingProcess and make the primary data-collection loop much easier to follow.
-#+end_example
-
-* Reorder
-** question
-
-- Reorder all functions sorted at the end of the file
-- Leave
-
-#+begin_example
-let changelog = [changelog
-const SCRIPT_ID = "vzell-mb-show-all-entities";
-const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
-// CONFIG SCHEMA
-const configSchema = {
-const pageDefinitions = [
-#+end_example
-
-at the very beginning of the file (in that order if possible, and if it does not break the code)
-and other variable definitions after it.
-
-Is that even possible without breaking the code
-
-** answer
-*** claude
-
-#+begin_example
-Code Reorganization
-New structure (from top to bottom):
-
-Changelog (line 50) - Moved to right after userscript header
-IIFE start (function() { 'use strict'; (line 115)
-SCRIPT_ID (line 119)
-SCRIPT_NAME (line 120)
-configSchema (line 123)
-pageDefinitions (line 411)
-All utility functions (line 902+)
-Lib initialization (line 2625)
-Rest of execution code
-
-Why This Works
-JavaScript function declarations are hoisted, meaning they can be defined anywhere and used before their definition in the source code. The functions reference Lib, configSchema, and other variables, but they're only called after everything is initialized, so there's no dependency issue.
-The constants (SCRIPT_ID, SCRIPT_NAME, configSchema, pageDefinitions) are now at the top because:
-
-They have no dependencies (except SCRIPT_NAME uses GM_info which is globally available)
-Lib initialization needs them, so they must come before it
-They're configuration/metadata, so having them at the top improves code organization
-
-Changes Made
-
-Version: Updated to 9.1.2+2026-02-15
-Changelog: Added entry about code reorganization
-Syntax: Verified with Node.js - all valid JavaScript
-
-The reorganized code is functionally identical to the original but much more readable with all configuration at the top!
-#+end_example
-
-*** gemini
-
-
 * DONE reorder Buttons
 
 Please reorder the following buttons in the order supplied (instead of current order)
@@ -37763,403 +37285,6 @@ and render them with different fonts behind each other. Do this for all status d
 * DONE shortcuts
 
 Ctr-f/g ==> change
-
-
-* Forum
-** ChatGPT
-
-#+begin_example
-Here’s a forum-ready description you can post in the MusicBrainz community, followed by concrete screenshot suggestions to showcase the script effectively.
-
-🎛️ VZ: Show All Entity Data In A Consolidated View
-
-A power-user userscript for MusicBrainz that consolidates paginated and multi-table entity pages into a single, filterable, sortable, exportable data view.
-
-Works on:
-
-Artist pages (recordings, releases, works, relationships, etc.)
-
-Release groups
-
-Releases
-
-Recordings
-
-Works
-
-Labels
-
-Areas
-
-Events
-
-Series
-
-Places
-
-Instruments
-
-Search results
-
-🚀 What It Does
-1️⃣ Consolidates All Pages Into One View
-
-No more clicking through 40+ pages.
-
-The script:
-
-Fetches all paginated results
-
-Merges them into one single table
-
-Keeps everything sortable and filterable
-
-Handles multi-table pages (like subheadings or relationship sections)
-
-Perfect for large artists, labels, or search result sets.
-
-2️⃣ Real-Time Filtering (Global + Per Column)
-
-Global filter across all visible columns
-
-Individual column filters
-
-RegExp support (with Rx toggle)
-
-Debounced filtering for performance
-
-ESC clears the focused filter
-
-“Clear All Filters” button
-
-Filtering performance timing is shown in the status bar.
-
-3️⃣ High-Performance Sorting for Large Datasets
-
-Stable sorting
-
-Async chunked sorting for >5000 rows
-
-Progress indicator for very large datasets
-
-Numeric auto-detection
-
-Visual sort indicators
-
-Even 10k+ rows remain responsive.
-
-4️⃣ Column Management
-
-👁️ Show/Hide columns
-
-Select All / Deselect All
-
-Sticky headers (headers and filter row remain visible)
-
-Ctrl+Click header to toggle all headers within the same container
-
-Manual column resizing (drag like Excel)
-
-Auto-resize columns (fit to content)
-
-Restore original widths
-
-5️⃣ Table Density Control
-
-Choose between:
-
-Compact
-
-Normal
-
-Comfortable
-
-Great when working with massive datasets.
-
-6️⃣ CSV Export
-
-Export:
-
-Only visible rows
-
-Only visible columns
-
-Filtered results
-
-Filename automatically includes:
-
-Page type
-
-Timestamp
-
-Perfect for analysis in Excel / LibreOffice / Sheets.
-
-7️⃣ Offline Storage / Caching
-
-Save full dataset to disk (JSON)
-
-Load from disk later
-
-Avoid re-fetching large datasets
-
-Very useful for artists with 8000+ recordings.
-
-8️⃣ Quick Stats Panel
-
-Displays:
-
-Total rows
-
-Visible rows
-
-Column counts
-
-Filter status
-
-Estimated memory usage
-
-Hidden row/column counts
-
-Great for understanding what you’re actually looking at.
-
-9️⃣ Keyboard Shortcuts (Power-User Mode)
-
-Ctrl+F → Focus filter
-
-Ctrl+Shift+F → Clear filters
-
-Ctrl+E → Export CSV
-
-Ctrl+S → Save
-
-Ctrl+L → Load
-
-Ctrl+, → Settings
-
-? → Show shortcuts help
-
-ESC → Clear focused filter
-
-🔧 Additional Highlights
-
-Sidebar collapsing for more horizontal space
-
-Alternating row striping
-
-Chunked rendering for very large tables
-
-Pre-filter on load
-
-Visual progress indicators
-
-Schema-driven settings dialog
-
-Configurable performance thresholds
-
-Status display with timing feedback
-
-Works with other userscripts (e.g., additional columns)
-
-📸 Best Screenshot Suggestions
-
-If you want to show the full power of the script, use 6–8 carefully chosen screenshots:
-
-1️⃣ Before vs After (Most Important)
-
-Use a large artist like:
-
-Bruce Springsteen
-
-Show:
-
-Default multi-page recordings view
-
-Then the single consolidated view with thousands of rows
-
-This immediately demonstrates the core value.
-
-2️⃣ Filtering + Column Filters + RegExp
-
-Show:
-
-Global filter active
-
-At least one column filter active
-
-“Rx” enabled
-
-Status line showing filtering results + timing
-
-This shows depth, not just “a big table”.
-
-3️⃣ Column Visibility Menu Open
-
-Capture:
-
-👁️ Visible Columns dropdown open
-
-Some columns hidden
-
-Table visibly adapted
-
-This shows customization power.
-
-4️⃣ Manual Column Resize + Auto-Resize Toggle
-
-Show:
-
-A very wide table
-
-Auto-resize enabled
-
-Horizontal scroll active
-
-Manual drag handle visible
-
-This makes it look “professional” and Excel-like.
-
-5️⃣ Stats Panel Open
-
-Have:
-
-Stats panel visible
-
-Filters applied
-
-Hidden rows count visible
-
-This visually communicates performance awareness.
-
-6️⃣ CSV Export Feedback Popup
-
-After exporting:
-
-Show status bar update
-
-Export completion popup
-
-Demonstrates practical usefulness.
-
-7️⃣ Density Comparison (Optional but Nice)
-
-Two screenshots:
-
-Compact mode
-
-Comfortable mode
-
-Shows polish and user preference control.
-
-8️⃣ Keyboard Shortcut Overlay
-
-Press ? and capture the shortcuts help overlay.
-
-This reinforces “power tool” positioning.
-
-💡 How To Present It On The Forum
-
-Structure your post like:
-
-Short 3-line summary (what + why)
-
-4–6 screenshots
-
-Bullet list of features
-
-GitHub link
-
-Installation note (tested with Tampermonkey 5.4.1+)
-
-Suggested Short Intro Paragraph
-
-This userscript turns paginated MusicBrainz entity pages into a single consolidated, sortable, filterable data table — optimized for large datasets (thousands of rows), with column management, CSV export, offline caching, keyboard shortcuts, and performance-aware rendering.
-
-If you'd like, I can also generate:
-
-A shorter “teaser-style” forum post
-
-A technical deep-dive version
-
-Or a polished README.md version for GitHub
-#+end_example
-
-** Gemini
-
-#+begin_example
-This userscript is designed to significantly improve the browsing and data-management experience on MusicBrainz by consolidating fragmented, paginated tables into a single, powerful, and highly interactive view.
-
-Below is a highlight-oriented description suitable for the MusicBrainz forum, followed by suggestions for effective screenshots.
-
-Forum Post Draft: [UNOFFICIAL] VZ: MusicBrainz - Show All Entity Data In A Consolidated View
-Tired of clicking through pages of recordings, releases, or events?
-
-The Show All Entity Data userscript transforms the way you interact with MusicBrainz tables. It accumulates paginated and sub-headed lists (Events, Recordings, Releases, Works, Labels, etc.) into one consolidated view, giving you a powerful, spreadsheet-like interface directly in your browser.
-
-Key Highlights:
-🚀 One-Click Consolidation: Instantly fetch all pages of a list (e.g., an artist's 5,000+ recordings) into a single, seamless table.
-
-🔍 Advanced Real-time Filtering:
-
-Global Search: Filter the entire dataset instantly as you type.
-
-Per-Column Filtering: Narrow down results by specific columns (e.g., only show "Live" recordings or specific "Dates").
-
-Regex Support: Power users can use Regular Expressions for complex filtering.
-
-📊 Spreadsheet-style Interaction:
-
-Fast Sorting: High-performance sorting (even for datasets over 10,000 rows) with numeric and date awareness.
-
-Resizable Columns: Drag column edges to adjust widths, just like Excel.
-
-Sticky Headers: Keep your orientation with table headers that stay at the top while you scroll.
-
-Column Visibility: Toggle specific columns on or off to focus on the data that matters.
-
-💾 Data Portability & Persistence:
-
-Export to CSV: Save your filtered view directly to a CSV file for use in Excel or Google Sheets.
-
-Save/Load to Disk: Save the entire fetched dataset to a JSON file and reload it later—perfect for avoiding re-fetching large artist discographies.
-
-📏 Customization & UI:
-
-Table Density: Choose between Compact, Normal, or Comfortable views.
-
-Collapsible Sidebar: Reclaim screen real estate by collapsing the MusicBrainz sidebar into a thin handle.
-
-Quick Stats: View a live summary of row counts, hidden items, and filter status.
-
-🎹 Power User Shortcuts: Use Ctrl+F to search, Ctrl+E to export, and ? to view the full shortcut menu.
-
-Screenshot Recommendations
-To showcase the script effectively, I recommend the following four screenshots:
-
-The "Consolidated Table" View:
-
-Subject: An Artist's Recordings page (with thousands of rows).
-
-What to show: The active "Global Filter" bar at the top, the "Sticky Header" visible while scrolled down, and the consolidated H3/H2 headers showing total counts.
-
-Column Filtering & Highlighting:
-
-Subject: Any entity table with active filters.
-
-What to show: Demonstrate a specific column filter (e.g., filtering the "Format" column for "CD") and show the real-time text highlighting in the result rows.
-
-UI Controls & Density:
-
-Subject: The top control bar.
-
-What to show: The "Visible Columns" dropdown menu, the "Density" toggle, and the "Stats" panel visible on the side.
-
-The Sidebar & Layout:
-
-Subject: Full-page view.
-
-What to show: Show the sidebar in its "Collapsed" state to demonstrate how the table stretches to fill the full screen width, providing a much clearer view for wide tables.
-#+end_example
-
 
 * DONE unicode symbol "✗" in red
 ** initial
@@ -38344,52 +37469,6 @@ the dividing row between the header line and the tabledata should be "|---|"
 - Please also store the data when pressing the "Save to Disk" button on the filesystem in gzip format or whatever format
 is nowadays recommended (especially for large datasets). Please also tell me the performance improvements whith this
 change.
-
-
-* Library
-** configuration settings
-
-In the uploaded userscript
-
-I added now
-
-#+begin_example
-return {
-    settings: settingsInterface.values,
-    settingsInterface: settingsInterface,  // ADD THIS LINE
-    showSettings: () => settingsInterface.showModal(),  // ADD THIS LINE
-    // ... rest of the return object
-};
-#+end_example
-
-but the "Configuration" button which calls 
-
-#+begin_example
-    const settingsBtn = document.createElement('button');
-    settingsBtn.textContent = '⚙️';
-    settingsBtn.style.cssText = 'font-size:1em; padding:4px 8px; cursor:pointer; height:auto; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; float:right; margin-left:10px; transition:transform 0.1s, box-shadow 0.1s;';
-    settingsBtn.type = 'button';
-    settingsBtn.title = 'Open settings manager to configure script behavior';
-    settingsBtn.onclick = () => {
-        // Try to find and click the settings menu link added by the library
-        const links = document.querySelectorAll('a[href="#"]');
-        let settingsLink = null;
-        for (const link of links) {
-            if (link.textContent.includes('Settings Manager') || link.textContent.includes('⚙️')) {
-                settingsLink = link;
-                break;
-            }
-        }
-        if (settingsLink) {
-            settingsLink.click();
-        } else {
-            alert('Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager');
-        }
-    };
-#+end_example
-
-still doesn't work I still gt the 'Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager' message
-
 
 * DONE Bug when loading data from the filesystem, all buttons 'Auto-Resize' up to 'Export' are doubled
 
@@ -38786,7 +37865,6 @@ here the console log
 [VZ-ShowAllEntities: series-releases] 🎨 Updated header/target ▼Releases(354)✕CcRx🎨 Unhighli count: (354) 
 [VZ-ShowAllEntities: series-releases] 📝 Successfully loaded 354 rows from disk! 
 #+end_example
-
 
 * DONE button visibility
 
@@ -39587,10 +38665,6 @@ please generate complete rewritten source code to the chat window
 
 ** make it work on multi table pages
 
-
-* TODO sensible defaults for configuration options
-
-
 * DONE overwhoule of the logging statements... make lots of stuff debug statements
 * DONE collapsable sidebar breaks sticky headers
 
@@ -39600,6 +38674,23 @@ In the uploaded userscript "ShowAllEntityData.user.js"
 
 The "Auto-Resize" (function toggleAutoResizeColumns()) feature breaks the "sticky headers" "function applyStickyHeaders()" feature, please investigate and fix
 
+* DONE The first input field on a page is usually auto-focused - How to stop it (if you want)
+
+#+begin_example
+Option A — Userscript fix
+
+You can blur autofocus elements after load:
+
+window.addEventListener("load", () => {
+  const el = document.querySelector("[autofocus]");
+  if (el) el.blur();
+});
+
+Option B — Force focus to body
+window.addEventListener("load", () => {
+  document.body.focus();
+});
+#+end_example
 
 * DONE Add Ctrl-M handling also on page entry, not only on rendered page
 ** initial
@@ -39806,37 +38897,6 @@ the value of this variable in the current code. Position it right to the "⚙️
 visible on page entry (not only when the page is finally render after an action button click).
 
 ** DONE Underline "o" in "Stop" button and add keyboard shortcut "Ctrl-M"+o 
-
-
-
-
-* Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
-
-Question:
-Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which
-it was triggered, by clicking the "OK" button directly (or maybe wait 2 seconds until the user has read the popop dialog
-text) ? If yes, please implement
-
-
-* DONE The first input field on a page is usually auto-focused - How to stop it (if you want)
-
-#+begin_example
-Option A — Userscript fix
-
-You can blur autofocus elements after load:
-
-window.addEventListener("load", () => {
-  const el = document.querySelector("[autofocus]");
-  if (el) el.blur();
-});
-
-Option B — Force focus to body
-window.addEventListener("load", () => {
-  document.body.focus();
-});
-#+end_example
-
-
 * DONE alignment h1 button with status line below
 ** initial
 
@@ -40342,7 +39402,865 @@ I like the filtered outout to be in the following order:
   so basically the two button should come at the end of the h3 header
 
 
-* TODO Make the keyboard shortcut prefix configurable itself
+* Checks
+** question
+
+In the uploaded userscript
+ for all unused variables and function definitions
+- Check for obvious code which could make it into a functions without breaking the rest of the big userscript
+- check for code blocks which could easily be refactored to make the code more clear
+
+** answer
+*** gemini
+
+#+begin_example
+This is an impressive and highly functional Tampermonkey script! Managing DOM manipulation, chunked rendering, filtering, and cross-tab/file states in vanilla JavaScript is no small feat.
+
+I have reviewed the script based on your guidelines. Here is a breakdown of unused code, extraction candidates, and areas that would significantly benefit from refactoring for clarity.
+
+1. Unused Variables and Functions
+Unused Functions:
+
+triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) (around line 1618): This function is completely orphaned. The file selection and loading logic is actually handled by the <input type="file"> element created around line 1319 and triggered inside showLoadFilterDialog(). You can safely delete the triggerDiskLoad function.
+
+Dead UI Elements (Never appended to the DOM):
+
+Around line 1334, several pre-filter UI elements are created but never appended to the document:
+
+preFilterContainer
+
+preFilterInput
+
+preFilterCaseLabel
+
+preFilterCaseCheckbox
+
+preFilterRxLabel
+
+preFilterRxCheckbox
+
+(Note: preFilterMsg is appended later, so it is used, but the inputs themselves are legacy code likely superseded by your showLoadFilterDialog modal).
+
+Unused (or Dead-End) Variables:
+
+timerDisplay: Created around line 1406 (const timerDisplay = document.createElement('span');) and appended to the controls, but its text content is never updated during the fetching, sorting, or filtering operations (the script uses globalStatusDisplay and statusDisplay instead).
+
+basePath and isFilteredRelationshipPage: These are declared at the top and only ever used in the Lib.debug('init', ...) statements. Because you want to keep debug logging, these shouldn't be removed, but be aware they serve no logical purpose outside of the console.
+
+2. Code Extraction Candidates (DRY Principle)
+There are several highly repetitive blocks of code that can be extracted into shared helper functions without changing any logic.
+
+A. The Fade-Out Notification Popups
+You have an identical ~45-line block of code for a pop-up alert in both exportTableToCSV() and triggerStandardDownload().
+
+Refactor: Extract this into a reusable UI helper.
+
+JavaScript
+/**
+ * Shows a temporary fade-out notification popup
+ * @param {string} messageText - The message to display
+ */
+function showNotificationPopup(messageText) {
+    const infoPopup = document.createElement('div');
+    infoPopup.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border: 1px solid #888;
+        border-radius: 6px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 400px;
+        text-align: center;
+        font-family: sans-serif;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    `;
+
+    const msg = document.createElement('div');
+    msg.textContent = messageText;
+    msg.style.marginBottom = '15px';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = `
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        border: 1px solid #555;
+        background-color: #f0f0f0;
+    `;
+    closeBtn.type = 'button';
+
+    // Close function with fade out
+    const closePopup = () => {
+        infoPopup.style.opacity = '0';
+        // Remove from DOM after transition
+        setTimeout(() => {
+            if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
+            document.removeEventListener('keydown', onEscape);
+        }, 300); // match the CSS transition duration
+    };
+
+    // Button click closes popup
+    closeBtn.addEventListener('click', closePopup);
+
+    // Escape key closes popup
+    const onEscape = (e) => {
+        if (e.key === 'Escape') closePopup();
+    };
+    document.addEventListener('keydown', onEscape);
+
+    infoPopup.appendChild(msg);
+    infoPopup.appendChild(closeBtn);
+    document.body.appendChild(infoPopup);
+}
+B. Highlight Resetting
+The logic to clear previous .mb-global-filter-highlight and .mb-column-filter-highlight tags is repeated four times (in runFilter single mode, runFilter multi mode, startFetchingProcess cleanup, and the "Unhighlight all" button).
+
+Refactor:
+
+JavaScript
+function clearHighlights(containerElement) {
+    containerElement.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
+        .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+}
+C. Button Generation Boilerplate
+Creating top-bar buttons (addExportButton, addDensityControl, addStatsButton, addAutoResizeButton) involves 10-12 lines of identical document.createElement and inline CSS boilerplate.
+
+Refactor: Create a createToolbarButton(label, title, onClickHandler) to generate and return these buttons.
+
+3. Refactoring for Clarity
+A. Massive duplication inside runFilter()
+The runFilter() function has two entirely separate blocks for activeDefinition.tableMode === 'multi' and single table mode. Inside both blocks, the 40+ line loop that resets highlights, checks Regex/Case matches against the global filter, checks the column filters, and applies new highlight spans is 100% duplicated.
+
+You can pull the row-evaluation logic out into a single helper function, drastically cleaning up runFilter():
+
+JavaScript
+/**
+ * Evaluates if a row matches the given filters and applies highlights if necessary.
+ * Returns true if it matches, false otherwise.
+ */
+function evaluateAndHighlightRow(row, globalQuery, globalQueryRaw, globalRegex, colFilters, isCaseSensitive, isRegExp) {
+    // Reset previous highlights (critical for correct filtering)
+    clearHighlights(row);
+
+    // Global match
+    let globalHit = !globalQuery;
+    if (!globalHit) {
+        if (isRegExp && globalRegex) {
+            // For regex patterns, test against each cell individually
+            // This allows anchored patterns like ^Thunder Road to work correctly
+            globalHit = Array.from(row.cells).some(cell => {
+                const cellText = getCleanColumnText(cell);
+                return globalRegex.test(cellText);
+            });
+        } else {
+            // For non-regex, test against concatenated row text
+            const text = getCleanVisibleText(row);
+            globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
+        }
+    }
+
+    // Column matches
+    let colHit = true;
+    for (const f of colFilters) {
+        const cellText = getCleanColumnText(row.cells[f.idx]);
+        let match = false;
+        if (isRegExp) {
+            try {
+                match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
+            } catch (e) {
+                match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+            }
+        } else {
+            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+        }
+        if (!match) {
+            colHit = false;
+            break;
+        }
+    }
+
+    const finalHit = globalHit && colHit;
+    if (finalHit) {
+        if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+        colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
+    }
+    
+    return finalHit;
+}
+With this in place, your matches = group.rows.map(r => r.cloneNode(true)).filter(r => { ... }) just becomes a clean, single line call to evaluateAndHighlightRow(...).
+
+B. The startFetchingProcess Function Complexity
+This function is over 600 lines long. The core of its complexity lies around line 2140: tableBody.childNodes.forEach(node => { ... }). Inside this loop, you're parsing DOM elements, splitting specific columns (Country/Date, Location, Area), extracting data, and applying column exclusions.
+
+Refactor Idea: Move the column manipulation blocks out of the loop.
+For example, the 25-line chunk handling Country/Date splitting could become:
+
+JavaScript
+function splitCountryDateCell(newRow, countryDateIdx) {
+    const tdSplitC = document.createElement('td');
+    const tdSplitD = document.createElement('td');
+    
+    const cdCell = newRow.cells[countryDateIdx];
+    if (cdCell) {
+        const events = Array.from(cdCell.querySelectorAll('.release-event'));
+        events.forEach((ev, i) => {
+            // ... (existing logic) ...
+        });
+    }
+    return { tdSplitC, tdSplitD };
+}
+Doing this for Location and Area as well would shave hundreds of lines of visual noise off startFetchingProcess and make the primary data-collection loop much easier to follow.
+#+end_example
+
+* Reorder
+** question
+
+- Reorder all functions sorted at the end of the file
+- Leave
+
+#+begin_example
+let changelog = [changelog
+const SCRIPT_ID = "vzell-mb-show-all-entities";
+const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
+// CONFIG SCHEMA
+const configSchema = {
+const pageDefinitions = [
+#+end_example
+
+at the very beginning of the file (in that order if possible, and if it does not break the code)
+and other variable definitions after it.
+
+Is that even possible without breaking the code
+
+** answer
+*** claude
+
+#+begin_example
+Code Reorganization
+New structure (from top to bottom):
+
+Changelog (line 50) - Moved to right after userscript header
+IIFE start (function() { 'use strict'; (line 115)
+SCRIPT_ID (line 119)
+SCRIPT_NAME (line 120)
+configSchema (line 123)
+pageDefinitions (line 411)
+All utility functions (line 902+)
+Lib initialization (line 2625)
+Rest of execution code
+
+Why This Works
+JavaScript function declarations are hoisted, meaning they can be defined anywhere and used before their definition in the source code. The functions reference Lib, configSchema, and other variables, but they're only called after everything is initialized, so there's no dependency issue.
+The constants (SCRIPT_ID, SCRIPT_NAME, configSchema, pageDefinitions) are now at the top because:
+
+They have no dependencies (except SCRIPT_NAME uses GM_info which is globally available)
+Lib initialization needs them, so they must come before it
+They're configuration/metadata, so having them at the top improves code organization
+
+Changes Made
+
+Version: Updated to 9.1.2+2026-02-15
+Changelog: Added entry about code reorganization
+Syntax: Verified with Node.js - all valid JavaScript
+
+The reorganized code is functionally identical to the original but much more readable with all configuration at the top!
+#+end_example
+
+*** gemini
+
+
+* Forum
+** ChatGPT
+
+#+begin_example
+Here’s a forum-ready description you can post in the MusicBrainz community, followed by concrete screenshot suggestions to showcase the script effectively.
+
+🎛️ VZ: Show All Entity Data In A Consolidated View
+
+A power-user userscript for MusicBrainz that consolidates paginated and multi-table entity pages into a single, filterable, sortable, exportable data view.
+
+Works on:
+
+Artist pages (recordings, releases, works, relationships, etc.)
+
+Release groups
+
+Releases
+
+Recordings
+
+Works
+
+Labels
+
+Areas
+
+Events
+
+Series
+
+Places
+
+Instruments
+
+Search results
+
+🚀 What It Does
+1️⃣ Consolidates All Pages Into One View
+
+No more clicking through 40+ pages.
+
+The script:
+
+Fetches all paginated results
+
+Merges them into one single table
+
+Keeps everything sortable and filterable
+
+Handles multi-table pages (like subheadings or relationship sections)
+
+Perfect for large artists, labels, or search result sets.
+
+2️⃣ Real-Time Filtering (Global + Per Column)
+
+Global filter across all visible columns
+
+Individual column filters
+
+RegExp support (with Rx toggle)
+
+Debounced filtering for performance
+
+ESC clears the focused filter
+
+“Clear All Filters” button
+
+Filtering performance timing is shown in the status bar.
+
+3️⃣ High-Performance Sorting for Large Datasets
+
+Stable sorting
+
+Async chunked sorting for >5000 rows
+
+Progress indicator for very large datasets
+
+Numeric auto-detection
+
+Visual sort indicators
+
+Even 10k+ rows remain responsive.
+
+4️⃣ Column Management
+
+👁️ Show/Hide columns
+
+Select All / Deselect All
+
+Sticky headers (headers and filter row remain visible)
+
+Ctrl+Click header to toggle all headers within the same container
+
+Manual column resizing (drag like Excel)
+
+Auto-resize columns (fit to content)
+
+Restore original widths
+
+5️⃣ Table Density Control
+
+Choose between:
+
+Compact
+
+Normal
+
+Comfortable
+
+Great when working with massive datasets.
+
+6️⃣ CSV Export
+
+Export:
+
+Only visible rows
+
+Only visible columns
+
+Filtered results
+
+Filename automatically includes:
+
+Page type
+
+Timestamp
+
+Perfect for analysis in Excel / LibreOffice / Sheets.
+
+7️⃣ Offline Storage / Caching
+
+Save full dataset to disk (JSON)
+
+Load from disk later
+
+Avoid re-fetching large datasets
+
+Very useful for artists with 8000+ recordings.
+
+8️⃣ Quick Stats Panel
+
+Displays:
+
+Total rows
+
+Visible rows
+
+Column counts
+
+Filter status
+
+Estimated memory usage
+
+Hidden row/column counts
+
+Great for understanding what you’re actually looking at.
+
+9️⃣ Keyboard Shortcuts (Power-User Mode)
+
+Ctrl+F → Focus filter
+
+Ctrl+Shift+F → Clear filters
+
+Ctrl+E → Export CSV
+
+Ctrl+S → Save
+
+Ctrl+L → Load
+
+Ctrl+, → Settings
+
+? → Show shortcuts help
+
+ESC → Clear focused filter
+
+🔧 Additional Highlights
+
+Sidebar collapsing for more horizontal space
+
+Alternating row striping
+
+Chunked rendering for very large tables
+
+Pre-filter on load
+
+Visual progress indicators
+
+Schema-driven settings dialog
+
+Configurable performance thresholds
+
+Status display with timing feedback
+
+Works with other userscripts (e.g., additional columns)
+
+📸 Best Screenshot Suggestions
+
+If you want to show the full power of the script, use 6–8 carefully chosen screenshots:
+
+1️⃣ Before vs After (Most Important)
+
+Use a large artist like:
+
+Bruce Springsteen
+
+Show:
+
+Default multi-page recordings view
+
+Then the single consolidated view with thousands of rows
+
+This immediately demonstrates the core value.
+
+2️⃣ Filtering + Column Filters + RegExp
+
+Show:
+
+Global filter active
+
+At least one column filter active
+
+“Rx” enabled
+
+Status line showing filtering results + timing
+
+This shows depth, not just “a big table”.
+
+3️⃣ Column Visibility Menu Open
+
+Capture:
+
+👁️ Visible Columns dropdown open
+
+Some columns hidden
+
+Table visibly adapted
+
+This shows customization power.
+
+4️⃣ Manual Column Resize + Auto-Resize Toggle
+
+Show:
+
+A very wide table
+
+Auto-resize enabled
+
+Horizontal scroll active
+
+Manual drag handle visible
+
+This makes it look “professional” and Excel-like.
+
+5️⃣ Stats Panel Open
+
+Have:
+
+Stats panel visible
+
+Filters applied
+
+Hidden rows count visible
+
+This visually communicates performance awareness.
+
+6️⃣ CSV Export Feedback Popup
+
+After exporting:
+
+Show status bar update
+
+Export completion popup
+
+Demonstrates practical usefulness.
+
+7️⃣ Density Comparison (Optional but Nice)
+
+Two screenshots:
+
+Compact mode
+
+Comfortable mode
+
+Shows polish and user preference control.
+
+8️⃣ Keyboard Shortcut Overlay
+
+Press ? and capture the shortcuts help overlay.
+
+This reinforces “power tool” positioning.
+
+💡 How To Present It On The Forum
+
+Structure your post like:
+
+Short 3-line summary (what + why)
+
+4–6 screenshots
+
+Bullet list of features
+
+GitHub link
+
+Installation note (tested with Tampermonkey 5.4.1+)
+
+Suggested Short Intro Paragraph
+
+This userscript turns paginated MusicBrainz entity pages into a single consolidated, sortable, filterable data table — optimized for large datasets (thousands of rows), with column management, CSV export, offline caching, keyboard shortcuts, and performance-aware rendering.
+
+If you'd like, I can also generate:
+
+A shorter “teaser-style” forum post
+
+A technical deep-dive version
+
+Or a polished README.md version for GitHub
+#+end_example
+
+** Gemini
+
+#+begin_example
+This userscript is designed to significantly improve the browsing and data-management experience on MusicBrainz by consolidating fragmented, paginated tables into a single, powerful, and highly interactive view.
+
+Below is a highlight-oriented description suitable for the MusicBrainz forum, followed by suggestions for effective screenshots.
+
+Forum Post Draft: [UNOFFICIAL] VZ: MusicBrainz - Show All Entity Data In A Consolidated View
+Tired of clicking through pages of recordings, releases, or events?
+
+The Show All Entity Data userscript transforms the way you interact with MusicBrainz tables. It accumulates paginated and sub-headed lists (Events, Recordings, Releases, Works, Labels, etc.) into one consolidated view, giving you a powerful, spreadsheet-like interface directly in your browser.
+
+Key Highlights:
+🚀 One-Click Consolidation: Instantly fetch all pages of a list (e.g., an artist's 5,000+ recordings) into a single, seamless table.
+
+🔍 Advanced Real-time Filtering:
+
+Global Search: Filter the entire dataset instantly as you type.
+
+Per-Column Filtering: Narrow down results by specific columns (e.g., only show "Live" recordings or specific "Dates").
+
+Regex Support: Power users can use Regular Expressions for complex filtering.
+
+📊 Spreadsheet-style Interaction:
+
+Fast Sorting: High-performance sorting (even for datasets over 10,000 rows) with numeric and date awareness.
+
+Resizable Columns: Drag column edges to adjust widths, just like Excel.
+
+Sticky Headers: Keep your orientation with table headers that stay at the top while you scroll.
+
+Column Visibility: Toggle specific columns on or off to focus on the data that matters.
+
+💾 Data Portability & Persistence:
+
+Export to CSV: Save your filtered view directly to a CSV file for use in Excel or Google Sheets.
+
+Save/Load to Disk: Save the entire fetched dataset to a JSON file and reload it later—perfect for avoiding re-fetching large artist discographies.
+
+📏 Customization & UI:
+
+Table Density: Choose between Compact, Normal, or Comfortable views.
+
+Collapsible Sidebar: Reclaim screen real estate by collapsing the MusicBrainz sidebar into a thin handle.
+
+Quick Stats: View a live summary of row counts, hidden items, and filter status.
+
+🎹 Power User Shortcuts: Use Ctrl+F to search, Ctrl+E to export, and ? to view the full shortcut menu.
+
+Screenshot Recommendations
+To showcase the script effectively, I recommend the following four screenshots:
+
+The "Consolidated Table" View:
+
+Subject: An Artist's Recordings page (with thousands of rows).
+
+What to show: The active "Global Filter" bar at the top, the "Sticky Header" visible while scrolled down, and the consolidated H3/H2 headers showing total counts.
+
+Column Filtering & Highlighting:
+
+Subject: Any entity table with active filters.
+
+What to show: Demonstrate a specific column filter (e.g., filtering the "Format" column for "CD") and show the real-time text highlighting in the result rows.
+
+UI Controls & Density:
+
+Subject: The top control bar.
+
+What to show: The "Visible Columns" dropdown menu, the "Density" toggle, and the "Stats" panel visible on the side.
+
+The Sidebar & Layout:
+
+Subject: Full-page view.
+
+What to show: Show the sidebar in its "Collapsed" state to demonstrate how the table stretches to fill the full screen width, providing a much clearer view for wide tables.
+#+end_example
+
+
+* Library
+** configuration settings
+
+In the uploaded userscript
+
+I added now
+
+#+begin_example
+return {
+    settings: settingsInterface.values,
+    settingsInterface: settingsInterface,  // ADD THIS LINE
+    showSettings: () => settingsInterface.showModal(),  // ADD THIS LINE
+    // ... rest of the return object
+};
+#+end_example
+
+but the "Configuration" button which calls 
+
+#+begin_example
+    const settingsBtn = document.createElement('button');
+    settingsBtn.textContent = '⚙️';
+    settingsBtn.style.cssText = 'font-size:1em; padding:4px 8px; cursor:pointer; height:auto; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; float:right; margin-left:10px; transition:transform 0.1s, box-shadow 0.1s;';
+    settingsBtn.type = 'button';
+    settingsBtn.title = 'Open settings manager to configure script behavior';
+    settingsBtn.onclick = () => {
+        // Try to find and click the settings menu link added by the library
+        const links = document.querySelectorAll('a[href="#"]');
+        let settingsLink = null;
+        for (const link of links) {
+            if (link.textContent.includes('Settings Manager') || link.textContent.includes('⚙️')) {
+                settingsLink = link;
+                break;
+            }
+        }
+        if (settingsLink) {
+            settingsLink.click();
+        } else {
+            alert('Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager');
+        }
+    };
+#+end_example
+
+still doesn't work I still gt the 'Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager' message
+
+
+
+* Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
+
+Question:
+Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which
+it was triggered, by clicking the "OK" button directly (or maybe wait 2 seconds until the user has read the popop dialog
+text) ? If yes, please implement
+
+
+* TODO Export
+** remove "▶" and others before exporting
+** add more formats, JSON, ORG
+*** JSON
+*** ORG-Mode
+*** XML
+*** Excel
+
+** DONE create info popup
+
+In the following function, after the line
+
+#+begin_example
+        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
+#+end_example
+
+include code that pops up an info box which says that the enduser should monitor the browser downloading the file.
+Include a "Close" button and also "Escape" key closing of the popup.
+
+
+#+begin_example
+    function exportTableToCSV() {
+        const table = document.querySelector('table.tbl');
+        if (!table) {
+            alert('No table found to export');
+            Lib.error('export', 'No table found for CSV export');
+            return;
+        }
+
+        Lib.info('export', 'Starting CSV export...');
+
+        const rows = [];
+        let totalCells = 0;
+
+        // Get headers from first row
+        const headerRow = table.querySelector('thead tr:first-child');
+        if (headerRow) {
+            const headers = [];
+            Array.from(headerRow.cells).forEach(cell => {
+                // Skip hidden columns
+                if (cell.style.display === 'none') return;
+
+                // Clean header text (remove sort icons)
+                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
+                // Remove extra whitespace
+                headerText = headerText.replace(/\s+/g, ' ');
+                headers.push(headerText);
+            });
+            rows.push(headers);
+            totalCells += headers.length;
+            Lib.debug('export', `Exported ${headers.length} headers: ${headers.join(', ')}`);
+        }
+
+        // Get data rows (only visible ones)
+        const dataRows = table.querySelectorAll('tbody tr');
+        let rowsExported = 0;
+        let rowsSkipped = 0;
+
+        dataRows.forEach(row => {
+            // Skip hidden rows (filtered out)
+            if (row.style.display === 'none') {
+                rowsSkipped++;
+                return;
+            }
+
+            const cells = [];
+            Array.from(row.cells).forEach((cell, index) => {
+                // Skip hidden columns
+                if (cell.style.display === 'none') return;
+
+                // Get text content and clean it up
+                let text = cell.textContent.trim();
+
+                // Remove extra whitespace
+                text = text.replace(/\s+/g, ' ');
+
+                // Escape quotes (CSV standard: " becomes "")
+                text = text.replace(/"/g, '""');
+
+                // Wrap in quotes if contains comma, newline, or quote
+                if (text.includes(',') || text.includes('\n') || text.includes('"')) {
+                    text = `"${text}"`;
+                }
+
+                cells.push(text);
+            });
+
+            if (cells.length > 0) {
+                rows.push(cells);
+                totalCells += cells.length;
+                rowsExported++;
+            }
+        });
+
+        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
+
+        // Create CSV string
+        const csv = rows.map(row => row.join(',')).join('\n');
+
+        // Create Blob and download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName = pageType || 'table';
+        const filename = `musicbrainz-${pageName}-${timestamp}.csv`;
+        link.download = filename;
+
+        // Trigger download
+        link.click();
+
+        // Cleanup
+        URL.revokeObjectURL(url);
+
+        // Update status
+        const statusDisplay = document.getElementById('mb-status-display');
+        if (statusDisplay) {
+            statusDisplay.textContent = `✓ Exported ${rowsExported} rows to ${filename}`;
+            statusDisplay.style.color = 'green';
+        }
+
+        Lib.info('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
+    }
+#+end_example
+
+* TODO statistics panel
+** wrong stats
+** make it multitable aware
+** create keyboard shorcut
+
+
+
+* DONE Make the keyboard shortcut prefix configurable itself
 ** DONE initial
 
 Introduce a new configuration parameter "sa_keyboard_shortcut_prefix" with a default value of ""Ctrl+M"" in the variable
@@ -40380,7 +40298,7 @@ The user should be able to press the desired keyboard prefix in the configuratio
 create a text input field, where the user can focus and press the desired key combination to use as a prefix. After
 pressing the key combination, the String value of the key combination should be stored in the text field.
 
-* Add keyboard handling for the complete application
+* DONE Add keyboard handling for the complete application
 ** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
 ** Ctrl-Shift-- ==> un-collapse all tables (maybe make it toggle)
 
@@ -40392,14 +40310,14 @@ or
 ** Ctrl-Alt-2 ==> collapse all h2
 ** Ctrl-Alt-3 ==> collapse all h3
 
-* TODO keyboard shortcuts
+* DONE keyboard shortcuts
 ** make the keyboard shortcuts configurable
 
 Ctrl-f
 
 ** problem with browser defined keyboard shortcust, e.g. Ctrl++ ==> increase font instead of "Settings" dialog
 
-* keybord shortcut editor
+* DONE keybord shortcut editor
 ** initial
 
 - In the uploaded library "VZ_MBLibrary.user.js" add code to support the "keyboard_shortcut" with a custom UI
@@ -40568,7 +40486,6 @@ Add new entries for the current key combinations (like "Ctrl+E" - Export, "Ctrl-
 
 section in the variable "const configSchema"
 
-
 * DONE In the file open dialog - All files (*.*)
 ** initial
 
@@ -40642,18 +40559,12 @@ How can I force the open file dialog, triggered from my own user script to show 
 
 * DONE Restore-Width tooltip text needs the keyboard combination to show to the user
 
-* Replace "|" with native one between buttons
-
-* Scrollable "Shortcuts menu"
-
+* DONE Replace "|" with native one between buttons
+* DONE Scrollable "Shortcuts menu"
+* DONE Render the initial Render time after the "Fetching" time below h1
 
 * TODO Is the check for invalid regexp really working
 
-
-* TODO Render the initial Render time after the "Fetching" time below h1
-
-
-* Reapploy  2. Setup UI Feedback
 
 * DONE Make status area clickable like the empty space
 
@@ -40773,7 +40684,6 @@ if the number of rows to be rendered is higher than the treshhold. Create a "Con
 enduser.
 
 
-
 * DONE refactor showCustomXXX functions
 ** DONE Also refactor the two functions
 
@@ -40830,7 +40740,6 @@ dialog, header, message, okBtn, cancelBtn, btnGap
             description: 'Condensed style for the popup dialog container: bg|border|borderRadius|padding|boxShadow|zIndex|fontFamily|minWidth|maxWidth'
         },
 #+end_example
-
 
 * DONE Ctrl-click should switch in multi column sort mode if another column has already been sorted
 ** initial
@@ -40950,7 +40859,6 @@ should be filtered out (ignored) already during load which match the "Search exp
 #+end_example
 
 to "Filter expression..."
-
 
 * DONE better button text
 
@@ -41178,7 +41086,7 @@ popup available
 during page fetching, because that information is now available inside the progress bar
 
 
-* TODO Remove "Rating" from numeric column, "Track" ?
+* DONE Remove "Rating" from numeric column, "Track" ?
 
 #+begin_example
         // --- Helper: is a column name numeric? ---------------------------------
@@ -41186,7 +41094,6 @@ during page fetching, because that information is now available inside the progr
             name.includes('Year') || name.includes('Releases') || name.includes('Track') ||
             name.includes('Length') || name.includes('Rating') || name.includes('#');
 #+end_example
-
 
 * DONE UI features
 
@@ -41234,15 +41141,16 @@ like it has been done for e.g.
 
 So instead of hardcoding all values for the different UI elements make them configurable. Also add missing unique IDs to all the UI elements
 
+
 * Use the same background color changes in the progess bar than in the button texts for the action buttons
 
 In the uploaded user script "ShowAllEntityData.user.js"
 
 Use the same background color changes in the progess bar than in the button texts for the action buttons (from ligh red,
-over ligh orange to light green). Now the red and orange colors are to dark.
+over ligh orange to light green). Now the red and orange colors are too dark.
 
 
-* collapse
+* DONE collapse
 
 - In the uploaded library "VZ_MBLibrary.user.js"
   
@@ -41294,7 +41202,6 @@ Do the same for the following elements
 
 or better yet please refactor all the export functions (JSON, CSV and Org-Mode") because they share lots of common code.
 
-
 * DONE For display purposes, upcase the character after capturing
 
 There are still some bugs left:
@@ -41329,16 +41236,25 @@ k=Shortcuts Help, h=App Help, ,=Settings'
   configuration dialog and the keyboard popup dialog as "Ctrl-M" etc.
 
 
-* "Tab"-key cycles through the checkbox choices
+* TODO "Tab"-key cycles through the checkbox choices
 
 In the uploaded user script "ShowAllEntityData.user.js"
+
+It still doesn't work
+
+- "Tab"-key cycles through the checkbox choices. That works
+- Additionally change the behaviour of the "Shift" key: It shouldn't toggle the check box where the focus is, but instead it should work only together with the Tab-key as "Shift-Tab" to move the cursor upwards
+- The cycling to the 3 buttons "Select All", "Deselect All", "Choose current configuration" and then starting again with the first checkbox still doesn't work
+
 
 - when the "Column Visibility" pull-down menu is open, the "Tab"-key cycles through the checkbox choices, but then
   instead of cycling next to the 3 buttons "Select All", "Deselect All", "Choose current configuration" and then starts
   again with the first checkbox, it instead leaves the menu and cycles through other UI elements visible in the page,
   even up to the browser URL bar, please fix
 
-- according to the boolean setting 
+* TODO "📊 Stats"-button when pressing "Ctrl-I" by default
+
+according to the boolean setting
 
 #+begin_example
         sa_shortcut_open_stats: {
@@ -41355,7 +41271,8 @@ handle the clicking of the "📊 Stats"-button when pressing "Ctrl-T" by default
 document.addEventListener('keydown', (e) => {
 #+end_example
 
-- also wire "Ctrl+K" (with action of clicking on the "Show keyboard shortcuts"-button and adding it to the keyboard help section) on the final rendered page
+
+* DONE Also wire "Ctrl+K" (with action of clicking on the "Show keyboard shortcuts"-button and adding it to the keyboard help section) on the final rendered page
 
 - When entering the initial page blur the input field
 
@@ -41371,7 +41288,8 @@ mb-global-filter input
 
 field
 
-- In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
+
+* TODO In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
 
 Here is how it looks like
 
@@ -41438,3 +41356,70 @@ Also this still doesn't work:
   instead of cycling next to the 3 buttons "Select All", "Deselect All", "Choose current configuration" and then starts
   again with the first checkbox, it instead leaves the menu and cycles through other UI elements visible in the page,
   even up to the browser URL bar, please fix
+
+* DONE sensible defaults for configuration options
+
+* TODO generic refactoring
+
+In the uploaded script, the code has been grown over time and is now more or less unmaintanble.  What are the best
+options to refactor the code, given it's logic but without breaking stuff, Which approach ist the best regarding best
+practices and best patterns
+
+* TODO Priority of script execution and interoperation
+** talk to
+*** jesus2009 - render ing of coverimages befreo table and before each row
+*** xxx -for RGs read in all releases and make collapsable
+* TODO posting to MusicBrainz forum
+** <2026-01-28 Wed 09:05>
+
+#+begin_example
+# [MusicBrainz: Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
+
+I talked to Misses/Mr. Gemini and out came a new Userscript which accumulates all the paginated MB pages of different entities, renders them depending on the entity type either in a flat or in a grouped table structure with real-time filtering and sorting support.
+
+The currently supported entity types are
+
+ * Artist-ReleaseGroups
+ * ReleaseGroup-Releases
+ * Artist-Releases
+ * Artist-Works
+ * Artist-Recordings
+ * Works
+ * Recordings
+ * Artist-Events
+ * Series
+ * Labels
+ * Place-Events
+ * Place-Performances (buggy, I’m working on that later)
+
+![image|690x343](upload://7UxNLpR1vOIs0xP0wqFnDILhRYm.png)
+
+![image|690x173](upload://bbmH3R7j0EuzA3LGmyxh7OLUaLu.png)
+
+![image|690x276](upload://wLemH2Q4wCerLDPTRSTiRBB2rKd.jpeg)
+
+Almost everything is collapsable/un-collapsable (see the tooltip support).
+
+The final rendrered tables also include new extracted columns for easy sorting, like for example the "Country/Date" column in the Series view is split in its different parts "Country" and "Date"
+
+![image|690x136](upload://aQKg02za09Ktbm8UwTT0Afi4rBG.png)
+
+Also I will make more variables configurable via the TamperMonkey menue in the future
+
+![image|393x499](upload://nnvvX9Cow2FOM9k9NIm5GPnlbtb.png)
+
+You can get the script at https://github.com/vzell/mb-userscripts under [Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
+#+end_example
+
+
+* todo
+
+In the uploaded user script "ShowAllEntityData.user.js"
+
+It still doesn't work
+
+- "Tab"-key cycles through the checkbox choices. That works
+- Additionally change the behaviour of the "Shift" key: It shouldn't toggle the check box where the focus is, but instead it should work only together with the Tab-key as "Shift-Tab" to move the cursor upwards
+- The cycling to the 3 buttons "Select All", "Deselect All", "Choose current configuration" and then starting again with the first checkbox still doesn't work
+
+- Additionally 
