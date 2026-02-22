@@ -9533,7 +9533,7 @@ Press Escape on that notice to cancel the auto-action.
         // --- Helper: is a column name numeric? ---------------------------------
         const isNumericCol = (name) =>
             name.includes('Year') || name.includes('Releases') || name.includes('Track') ||
-            name.includes('Length') || name.includes('Rating') || name.includes('#');
+            name.includes('Length') || name.includes('#');
 
         // -----------------------------------------------------------------------
         headers.forEach((th, index) => {
