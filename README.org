@@ -30891,7 +30891,7 @@ Check for "No releases found which feature this recording." under the h2 header 
 In that case don't even render the additional action buttons when entering such a page, but still log it to the console
 
 
-* TODO generalize column splitting
+* DONE generalize column splitting
 ** generalize column data splitting
 *** DONE Area
 **** initial
@@ -33817,8 +33817,7 @@ In the uploaded userscript
 what would be a much shorter and more pregnant name for this userscript, given the current functionlity
 
 
-
-* TODO new columns e.g. for labels
+* DONE new columns e.g. for labels
 
 In the uploaded script,
 
@@ -33949,8 +33948,7 @@ https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91/aliases
 </td>
 #+end_example
 
-
-* TODO refactor column splitting in different functions and take them out of the main flow
+* DONE refactor column splitting in different functions and take them out of the main flow
 ** initial
 
 In the uploaded script,
@@ -35771,14 +35769,6 @@ Include a "Close" button and also "Escape" key closing of the popup.
         Lib.info('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
     }
 #+end_example
-
-
-* TODO keyboard shortcuts
-** make the keyboard shortcuts configurable
-
-Ctrl-f
-
-** problem with browser defined keyboard shortcust, e.g. Ctrl++ ==> increase font instead of "Settings" dialog
 
 
 * TODO statistics panel
@@ -40389,7 +40379,6 @@ The user should be able to press the desired keyboard prefix in the configuratio
 create a text input field, where the user can focus and press the desired key combination to use as a prefix. After
 pressing the key combination, the String value of the key combination should be stored in the text field.
 
-
 * Add keyboard handling for the complete application
 ** Ctrl-Shift-+ ==> collapse all tables (maybe make it toggle) - h3
 ** Ctrl-Shift-- ==> un-collapse all tables (maybe make it toggle)
@@ -40401,6 +40390,13 @@ or
 ** Ctrl-Alt-1 ==> collapse all h1
 ** Ctrl-Alt-2 ==> collapse all h2
 ** Ctrl-Alt-3 ==> collapse all h3
+
+* TODO keyboard shortcuts
+** make the keyboard shortcuts configurable
+
+Ctrl-f
+
+** problem with browser defined keyboard shortcust, e.g. Ctrl++ ==> increase font instead of "Settings" dialog
 
 
 * DONE In the file open dialog - All files (*.*)
@@ -40489,7 +40485,7 @@ How can I force the open file dialog, triggered from my own user script to show 
 
 * Reapploy  2. Setup UI Feedback
 
-* Make status area clickable like the empty space
+* DONE Make status area clickable like the empty space
 
 * DONE Order of UI elements on multi table h3 headers
 ** DONE desired order for filtered state is:
@@ -40664,111 +40660,6 @@ dialog, header, message, okBtn, cancelBtn, btnGap
             description: 'Condensed style for the popup dialog container: bg|border|borderRadius|padding|boxShadow|zIndex|fontFamily|minWidth|maxWidth'
         },
 #+end_example
-
-
-* reintroduce progressbars on h1 (single/multi - initial downloading and loading from disk), h2 (single/multi - global filtering / single-sorting) and h3 headers (multi - filtering/sorting)
-** DONE progress bar
-
-- Reintroduce a progess bar in the h1 header line after the help "?" button which displays the following message in a
-  progress bar
-
-#+begin_example
-                // Show live progress in the subheader status display
-                globalStatusDisplay.textContent =
-                    `Loading page ${p} of ${maxPage}… (${totalRowsAccumulated} rows) — ` +
-                    `est. ${estRemainingSeconds.toFixed(1)}s remaining`;
-                globalStatusDisplay.style.color = progress >= 1.0 ? 'green' : (progress >= 0.5 ? 'orange' : '#c00');
-#+end_example
-
-instead of in the "globalStatusDisplay"
-
-- Rename "Clear all COLUMN filters" to "Clear ALL filters" on the "Clear all COLUMN filters"-buttons in the h3 headers"Clear all COLUMN filters"
-
-** adjust
-
-- Please place the current
-
-#+begin_example
-fetchProgressLabel.textContent
-#+end_example
-
-inside the progress bar (adjust it's heigth accordingly)
-
-- Place page rendering time information like "Rendering time: <n>s" at the end of the
-
-#+begin_example
-<span id="mb-global-status-display" style="font-size: 0.95em; color: green; font-weight: bold; vertical-align: middle;">Loaded 16 pages (1586 rows) from MusicBrainz backend database, Fetching time: 45.53s</span>
-#+end_example
-
-container
-
-- add a new warning treshold (default 10000) in the "PERFORMANCE SETTINGS SECTION" of
-
-#+begin_example
-    // CONFIG SCHEMA
-    const configSchema = {
-#+end_example
-
-#+begin_example
-        // ============================================================
-        // PERFORMANCE SETTINGS SECTION
-        // ============================================================
-        sa_row_rendering_treshhold: {
-	...
-        },
-#+end_example
-
-if the number of rows to be rendered is higher than the treshhold. Create a "Confirm" dialog to interact with the
-enduser.
-
-** sort
-
-#+begin_example
-const progressContainer = document.createElement('div');
-progressContainer.id = 'mb-fetch-progress-container';
-progressContainer.style.cssText = 'display:none; width:300px; height:26px; background-color:#eee; border:1px solid #ccc; border-radius:3px; overflow:hidden; position:relative; vertical-align:middle;';
-
-const progressBar = document.createElement('div');
-progressBar.id = 'mb-fetch-progress-bar';
-progressBar.style.cssText = 'width:0%; height:100%; transition: width 0.3s, background-color 0.3s; position:absolute; left:0; top:0;';
-
-const progressText = document.createElement('div');
-progressText.id = 'mb-fetch-progress-text';
-progressText.style.cssText = 'position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:black; z-index:1; pointer-events:none; padding: 0 10px; box-sizing: border-box;';
-progressText.style.whiteSpace = 'pre-line';
-
-progressContainer.appendChild(progressBar);
-progressContainer.appendChild(progressText);
-#+end_example
-
-#+begin_example
-// 2. Setup UI Feedback
-const rowCount = targetRows.length;
-const showProgressBar = rowCount >= (Lib.settings.sa_sort_progress_threshold || 10000);
-const showWaitCursor = rowCount > 1000;
-
-Lib.debug('sort', `Sorting table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}. Row count: ${rowCount}`);
-
-// Update sort status display
-const sortStatusDisplay = document.getElementById('mb-sort-status-display');
-if (sortStatusDisplay) {
-    sortStatusDisplay.textContent = '⏳ Sorting...';
-    sortStatusDisplay.style.color = 'orange';
-}
-
-if (showWaitCursor) document.body.classList.add('mb-sorting-active');
-
-// Show progress for large sorts
-let progressBar, progressText;
-if (showProgressBar && progressContainer) {
-    progressContainer.style.display = 'block';
-    progressBar = progressContainer.querySelector('.mb-progress-bar');
-    progressText = progressContainer.querySelector('.mb-progress-text');
-    if (progressBar) progressBar.style.width = '0%';
-    if (progressText) progressText.textContent = 'Sorting: 0%';
-}
-#+end_example
-
 
 
 * DONE Ctrl-click should switch in multi column sort mode if another column has already been sorted
@@ -40968,6 +40859,111 @@ to
 Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) - est. ${estRemainingSeconds.toFixed(1)}s
 #+end_example
 
+* reintroduce progressbars on h1 (single/multi - initial downloading and loading from disk), h2 (single/multi - global filtering / single-sorting) and h3 headers (multi - filtering/sorting)
+** DONE progress bar
+
+- Reintroduce a progess bar in the h1 header line after the help "?" button which displays the following message in a
+  progress bar
+
+#+begin_example
+                // Show live progress in the subheader status display
+                globalStatusDisplay.textContent =
+                    `Loading page ${p} of ${maxPage}… (${totalRowsAccumulated} rows) — ` +
+                    `est. ${estRemainingSeconds.toFixed(1)}s remaining`;
+                globalStatusDisplay.style.color = progress >= 1.0 ? 'green' : (progress >= 0.5 ? 'orange' : '#c00');
+#+end_example
+
+instead of in the "globalStatusDisplay"
+
+- Rename "Clear all COLUMN filters" to "Clear ALL filters" on the "Clear all COLUMN filters"-buttons in the h3 headers"Clear all COLUMN filters"
+
+** adjust
+
+- Please place the current
+
+#+begin_example
+fetchProgressLabel.textContent
+#+end_example
+
+inside the progress bar (adjust it's heigth accordingly)
+
+- Place page rendering time information like "Rendering time: <n>s" at the end of the
+
+#+begin_example
+<span id="mb-global-status-display" style="font-size: 0.95em; color: green; font-weight: bold; vertical-align: middle;">Loaded 16 pages (1586 rows) from MusicBrainz backend database, Fetching time: 45.53s</span>
+#+end_example
+
+container
+
+- add a new warning treshold (default 10000) in the "PERFORMANCE SETTINGS SECTION" of
+
+#+begin_example
+    // CONFIG SCHEMA
+    const configSchema = {
+#+end_example
+
+#+begin_example
+        // ============================================================
+        // PERFORMANCE SETTINGS SECTION
+        // ============================================================
+        sa_row_rendering_treshhold: {
+	...
+        },
+#+end_example
+
+if the number of rows to be rendered is higher than the treshhold. Create a "Confirm" dialog to interact with the
+enduser.
+
+** sort
+
+#+begin_example
+const progressContainer = document.createElement('div');
+progressContainer.id = 'mb-fetch-progress-container';
+progressContainer.style.cssText = 'display:none; width:300px; height:26px; background-color:#eee; border:1px solid #ccc; border-radius:3px; overflow:hidden; position:relative; vertical-align:middle;';
+
+const progressBar = document.createElement('div');
+progressBar.id = 'mb-fetch-progress-bar';
+progressBar.style.cssText = 'width:0%; height:100%; transition: width 0.3s, background-color 0.3s; position:absolute; left:0; top:0;';
+
+const progressText = document.createElement('div');
+progressText.id = 'mb-fetch-progress-text';
+progressText.style.cssText = 'position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:black; z-index:1; pointer-events:none; padding: 0 10px; box-sizing: border-box;';
+progressText.style.whiteSpace = 'pre-line';
+
+progressContainer.appendChild(progressBar);
+progressContainer.appendChild(progressText);
+#+end_example
+
+#+begin_example
+// 2. Setup UI Feedback
+const rowCount = targetRows.length;
+const showProgressBar = rowCount >= (Lib.settings.sa_sort_progress_threshold || 10000);
+const showWaitCursor = rowCount > 1000;
+
+Lib.debug('sort', `Sorting table "${sortKey}" by column: "${colName}" (index: ${index}) to state ${targetState}. Row count: ${rowCount}`);
+
+// Update sort status display
+const sortStatusDisplay = document.getElementById('mb-sort-status-display');
+if (sortStatusDisplay) {
+    sortStatusDisplay.textContent = '⏳ Sorting...';
+    sortStatusDisplay.style.color = 'orange';
+}
+
+if (showWaitCursor) document.body.classList.add('mb-sorting-active');
+
+// Show progress for large sorts
+let progressBar, progressText;
+if (showProgressBar && progressContainer) {
+    progressContainer.style.display = 'block';
+    progressBar = progressContainer.querySelector('.mb-progress-bar');
+    progressText = progressContainer.querySelector('.mb-progress-text');
+    if (progressBar) progressBar.style.width = '0%';
+    if (progressText) progressText.textContent = 'Sorting: 0%';
+}
+#+end_example
+
+
+
 
 * keybord shortcut editor
 
@@ -41048,7 +41044,7 @@ popup available
 during page fetching, because that information is now available inside the progress bar
 
 
-* Remove "Rating" from numeric column, "Track" ?
+* TODO Remove "Rating" from numeric column, "Track" ?
 
 #+begin_example
         // --- Helper: is a column name numeric? ---------------------------------
@@ -41057,3 +41053,49 @@ during page fetching, because that information is now available inside the progr
             name.includes('Length') || name.includes('Rating') || name.includes('#');
 #+end_example
 
+
+* DONE UI features
+
+Implement all the following currently commented UI features
+
+#+begin_example
+        // ============================================================
+        // UI APPEARANCE SECTION
+        // Future home for configurable styles of all UI elements:
+        // buttons (action bar, filter bar, subtable controls),
+        // checkboxes, input fields, status displays, dividers, etc.
+        // Each element type will get its own condensed config string.
+        // ============================================================
+        divider_ui_appearance: {
+            type: 'divider',
+            label: '🖌️ UI APPEARANCE (future)'
+        }
+
+        // Placeholder — to be expanded with entries like:
+        //   sa_ui_action_btn_style   → condensed style for h1 action buttons
+        //   sa_ui_global_filter_input_style → condensed style for the global filter input
+        //   sa_ui_column_filter_input_style → condensed style for the global filter input
+        //   sa_ui_subtable_btn_style → condensed style for mb-subtable-clear-btn / mb-show-all-subtable-btn
+        //   sa_ui_checkbox_style     → condensed style for checkboxes in the filter bar
+        //   sa_ui_checkbox_style     → condensed style for checkboxes in the filter bar
+        //   etc.
+#+end_example
+
+like it has been done for e.g.
+
+#+begin_example
+        divider_popup_ui: {
+            type: 'divider',
+            label: '🪟 CUSTOM POPUP UI'
+        },
+
+        sa_popup_dialog_style: {
+            label: 'Popup dialog container style',
+            type: 'popup_dialog',
+            fields: ['bg', 'border', 'borderRadius', 'padding', 'boxShadow', 'zIndex', 'fontFamily', 'minWidth', 'maxWidth'],
+            default: 'white|1px solid #ccc|10px|28px|0 8px 32px rgba(0,0,0,0.2)|10001|-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif|380px|600px',
+            description: 'Condensed style for the popup dialog container: bg|border|borderRadius|padding|boxShadow|zIndex|fontFamily|minWidth|maxWidth'
+        },
+#+end_example
+
+So instead of hardcoding all values for the different UI elements make them configurable. Also add missing unique IDs to all the UI elements

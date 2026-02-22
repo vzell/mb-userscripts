@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.71.0+2026-02-22
+// @version      9.72.0+2026-02-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.72.0+2026-02-22', description: 'Feature: Fully implemented "🖌️ UI APPEARANCE" config section — replaces all hardcoded inline styles on every interactive UI element with 12 condensed pipe-separated settings. New config keys: sa_ui_action_btn_style (fontSize|padding|height|borderRadius — applied to all h1 action-bar buttons: show-all, 🎹, ⚙️, ❓, visible-columns, export, stats, density, auto-resize), sa_ui_save_btn_style (bg|color|border|bgHover), sa_ui_load_btn_style (bg|color|border|bgHover), sa_ui_stop_btn_style (bg|color|border), sa_ui_settings_btn_style (bg|color|border), sa_ui_help_btn_style (bg|color|border), sa_ui_button_divider_style (color|margin — all " | " separators), sa_ui_global_filter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_prefilter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_column_filter_input_style (fontSize|padding — injected into the dynamic CSS block for .mb-col-filter-input), sa_ui_subtable_btn_style (fontSize|padding|borderRadius|bg|border|bgHover — injected for .mb-subtable-clear-btn and .mb-show-all-subtable-btn), sa_ui_filter_bar_btn_style (fontSize|padding|borderRadius|bg|border — prefilter toggle, highlight toggle, clear-column, clear-all buttons), sa_ui_checkbox_style (fontSize|marginRight — all Cc/Rx/Ex checkbox inputs and their labels). Corresponding CSS helper functions added: uiActionBtnBaseCSS, uiSaveBtnCSS, uiLoadBtnCSS, uiStopBtnCSS, uiSettingsBtnCSS, uiHelpBtnCSS, uiButtonDividerCSS, uiGlobalFilterInputCSS, uiPrefilterInputCSS, uiColumnFilterInputVals, uiSubtableBtnVals, uiFilterBarBtnCSS, uiCheckboxVals, uiCheckboxLabelCSS, uiCheckboxInputCSS. Also: added unique mb- IDs to all previously anonymous elements (mb-save-to-disk-btn, mb-load-from-disk-btn, mb-stop-btn, mb-settings-btn, mb-file-input, mb-prefilter-container, mb-prefilter-input, mb-prefilter-case/rx/exclude-label/checkbox, mb-filter-container, mb-global-filter-wrapper, mb-global-filter-input, mb-global-filter-clear, mb-global-filter-case/rx/exclude-label/checkbox, mb-button-divider-initial). Fixed typo: preFilterInput font-size was "1.oem" → corrected to "1em" via config default. Save/Load buttons gain hover effects via onmouseover/onmouseout.'},
     {version: '9.71.0+2026-02-22', description: 'Feature: New ColumnDataExtractor extractor extractFormatTypes for release-group, label, and series pages. Strips leading numeric quantity factors (e.g. "8×", "2x") from each media-type token in a "Format" cell and converts the " + " separator between distinct types to ", ". Examples: "8×12\\" Vinyl" → "12\\" Vinyl", "2xCD-R + DVD" → "CD-R, DVD". Registered as { sourceColumn: \'Format\', extractor: \'extractFormatTypes\', syntheticColumns: [\'Format Types\'] } in the columnExtractors of releasegroup-releases, label-releases, and series-releases pageDefinitions.'},
     {version: '9.70.0+2026-02-22', description: 'Refactor + Feature: Introduced ColumnDataExtractor — a named-function registry that decouples column extraction and transformation logic from the main fetch/render pipeline. (1) New singleton object ColumnDataExtractor with four named extractors: splitCountryDate (Country/Date → Country + Date), splitLocation (Location → Place + Area + Country), splitArea (Area → MB-Area + Country), and sumTracks (Tracks "9 + 7 + 8" → Total Tracks integer sum). Each extractor has the contract fn(sourceCell: HTMLTableCellElement): HTMLTableCellElement[] and is entirely self-contained. (2) New helper function buildActiveColumnExtractors(def) converts an activeDefinition into a runtime array of {sourceColumn, extractor, syntheticColumns, colIdx} descriptors; translates legacy splitCD/splitLocation/splitArea boolean flags transparently for any future definitions that still use them. (3) All pageDefinitions migrated from the boolean split* flags to the canonical columnExtractors:[{sourceColumn, extractor, syntheticColumns}] array in features; the old splitCD: false entry was removed. (5) Module-level typesWithSplitCD/Location/Area arrays removed; replaced by activeColumnExtractors (single unified list). startFetchingProcess now calls buildActiveColumnExtractors() instead of setting three separate flag arrays. (6) Header scanning loop rewritten: colIdx reset before each page, single forEach over activeColumnExtractors replaces three separate if-blocks. cleanupHeaders synthetic-header injection unified into one forEach. Row-processing split section replaced by: (a) call each extractor before deleteCell (indices still valid), (b) deleteCell excluded columns, (c) append all synthetic cells in declaration order. All legacy inline code (~80 lines) removed.'},
     {version: '9.65.0+2026-02-22', description: 'Five UX enhancements: (1) Action buttons: superscript mnemonics ¹²³⁴… appended after the 🧮 emoji on every action button to remind the user of the Ctrl-M+1/2/3/… shortcut invocations; applies to both "Show all" and pre-existing 🧮-prefixed buttons (e.g. artist RG split buttons). (2) Shortcuts popup (mb-shortcuts-help): restructured with a sticky flex title-bar (header + ✕ button) and a separate scrollable content area (overflow-y:auto; max-height:82vh) so the dialog never overflows the viewport when many shortcut sections are present. (3) Stats panel (mb-stats-panel): added "Sub-Tables: N table(s)" as the first row in the statistics grid so the user can immediately see how many independent sub-tables exist on multi-table pages. (4) Multi-table pages — single sub-table auto-expand: when renderGroupedTable produces exactly one group (dataArray.length === 1) the resulting table is unconditionally shown (shouldStayOpen = true) instead of starting collapsed, independent of the category name or sa_auto_expand threshold. (5) Progress-bar de-duplication: removed the redundant "Loading page N of M…" text update on globalStatusDisplay during page fetching; the inline progress bar (mb-fetch-progress-label inside mb-fetch-progress-outer) already carries the identical information, so showing it twice in the subheader was unnecessary noise.'},
@@ -712,22 +713,126 @@ Press Escape on that notice to cancel the auto-action.
 
         // ============================================================
         // UI APPEARANCE SECTION
-        // Future home for configurable styles of all UI elements:
-        // buttons (action bar, filter bar, subtable controls),
-        // checkboxes, input fields, status displays, dividers, etc.
-        // Each element type will get its own condensed config string.
+        // Condensed pipe-separated config strings for every interactive
+        // UI element in the script. Format is documented per entry.
         // ============================================================
         divider_ui_appearance: {
             type: 'divider',
-            label: '🖌️ UI APPEARANCE (future)'
-        }
+            label: '🖌️ UI APPEARANCE'
+        },
 
-        // Placeholder — to be expanded with entries like:
-        //   sa_ui_action_btn_style   → condensed style for h1 action buttons
-        //   sa_ui_filter_input_style → condensed style for the global filter input
-        //   sa_ui_subtable_btn_style → condensed style for mb-subtable-clear-btn / mb-show-all-subtable-btn
-        //   sa_ui_checkbox_style     → condensed style for checkboxes in the filter bar
-        //   etc.
+        // --- H1 action bar: base shape shared by all buttons ---
+        sa_ui_action_btn_style: {
+            label: 'Action button base style',
+            type: 'popup_dialog',
+            fields: ['fontSize', 'padding', 'height', 'borderRadius'],
+            default: '0.8em|2px 8px|24px|6px',
+            description: 'Base style for all h1 action-bar buttons: fontSize|padding|height|borderRadius'
+        },
+
+        // --- H1 action bar: per-button colour overrides ---
+        sa_ui_save_btn_style: {
+            label: 'Save button colors',
+            type: 'popup_dialog',
+            fields: ['bg', 'color', 'border', 'bgHover'],
+            default: '#4CAF50|white|1px solid #45a049|#45a049',
+            description: 'Save-to-Disk button: bg|color|border|bgHover'
+        },
+
+        sa_ui_load_btn_style: {
+            label: 'Load button colors',
+            type: 'popup_dialog',
+            fields: ['bg', 'color', 'border', 'bgHover'],
+            default: '#2196F3|white|1px solid #0b7dda|#0b7dda',
+            description: 'Load-from-Disk button: bg|color|border|bgHover'
+        },
+
+        sa_ui_stop_btn_style: {
+            label: 'Stop button colors',
+            type: 'popup_dialog',
+            fields: ['bg', 'color', 'border'],
+            default: '#f44336|white|1px solid #d32f2f',
+            description: 'Stop button: bg|color|border'
+        },
+
+        sa_ui_settings_btn_style: {
+            label: 'Settings ⚙️ button colors',
+            type: 'popup_dialog',
+            fields: ['bg', 'color', 'border'],
+            default: '#607D8B|white|1px solid #546E7A',
+            description: 'Settings button: bg|color|border'
+        },
+
+        sa_ui_help_btn_style: {
+            label: 'Help ❓ button colors',
+            type: 'popup_dialog',
+            fields: ['bg', 'color', 'border'],
+            default: '#78909C|white|1px solid #607D8B',
+            description: 'Application-help button: bg|color|border'
+        },
+
+        // --- Button-group separator dividers ---
+        sa_ui_button_divider_style: {
+            label: 'Button divider style',
+            type: 'popup_dialog',
+            fields: ['color', 'margin'],
+            default: '#999|0 4px',
+            description: 'Pipe separator between button groups: color|margin'
+        },
+
+        // --- Global filter input (large input in the H2 bar) ---
+        sa_ui_global_filter_input_style: {
+            label: 'Global filter input style',
+            type: 'popup_dialog',
+            fields: ['fontSize', 'padding', 'border', 'borderRadius', 'width', 'height'],
+            default: '1em|2px 20px 2px 6px|2px solid #ccc|3px|500px|24px',
+            description: 'Global filter input: fontSize|padding|border|borderRadius|width|height'
+        },
+
+        // --- Pre-load filter input (small input in the H1 controls bar) ---
+        sa_ui_prefilter_input_style: {
+            label: 'Pre-load filter input style',
+            type: 'popup_dialog',
+            fields: ['fontSize', 'padding', 'border', 'borderRadius', 'width', 'height'],
+            default: '1em|2px 4px|1px solid #ccc|3px|150px|24px',
+            description: 'Pre-load filter input: fontSize|padding|border|borderRadius|width|height'
+        },
+
+        // --- Per-column filter inputs (thead row) ---
+        sa_ui_column_filter_input_style: {
+            label: 'Column filter input style',
+            type: 'popup_dialog',
+            fields: ['fontSize', 'padding'],
+            default: '1em|1px 18px 1px 4px',
+            description: 'Per-column filter inputs: fontSize|padding'
+        },
+
+        // --- Sub-table control buttons (Clear Filters / Show all N) ---
+        sa_ui_subtable_btn_style: {
+            label: 'Sub-table button style',
+            type: 'popup_dialog',
+            fields: ['fontSize', 'padding', 'borderRadius', 'bg', 'border', 'bgHover'],
+            default: '0.8em|2px 6px|4px|#f0f0f0|1px solid #ccc|#e0e0e0',
+            description: 'mb-subtable-clear-btn / mb-show-all-subtable-btn: fontSize|padding|borderRadius|bg|border|bgHover'
+        },
+
+        // --- Filter-bar utility buttons (Prefilter toggle, Toggle highlighting, Clear filters) ---
+        sa_ui_filter_bar_btn_style: {
+            label: 'Filter bar utility button style',
+            type: 'popup_dialog',
+            fields: ['fontSize', 'padding', 'borderRadius', 'bg', 'border'],
+            default: '0.8em|2px 6px|4px|#f0f0f0|1px solid #ccc',
+            description: 'Filter-bar utility buttons (prefilter toggle, highlight toggle, clear buttons): fontSize|padding|borderRadius|bg|border'
+        },
+
+        // --- Checkboxes and their labels in filter bars ---
+        sa_ui_checkbox_style: {
+            label: 'Filter bar checkbox style',
+            type: 'popup_dialog',
+            fields: ['fontSize', 'marginRight'],
+            default: '0.8em|2px',
+            description: 'Checkboxes (Cc / Rx / Ex) in filter bars: fontSize|marginRight'
+        }
 
     };
 
@@ -2311,7 +2416,7 @@ Press Escape on that notice to cancel the auto-action.
                 beforeShortcutsDivider = document.createElement('span');
                 beforeShortcutsDivider.textContent = ' | ';
                 beforeShortcutsDivider.className = 'mb-button-divider-before-shortcuts';
-                beforeShortcutsDivider.style.cssText = 'color:#999; margin:0 4px;';
+                beforeShortcutsDivider.style.cssText = uiButtonDividerCSS();
             }
             // Re-insert (or insert for the first time) immediately before shortcutsBtn
             if (shortcutsBtn.previousSibling !== beforeShortcutsDivider) {
@@ -2330,7 +2435,7 @@ Press Escape on that notice to cancel the auto-action.
             const divider = document.createElement('span');
             divider.textContent = ' | ';
             divider.className = 'mb-button-divider-after-load';
-            divider.style.cssText = 'color:#999; margin:0 4px;';
+            divider.style.cssText = uiButtonDividerCSS();
             loadBtn.after(divider);
         }
     }
@@ -2358,7 +2463,7 @@ Press Escape on that notice to cancel the auto-action.
         const toggleBtn = document.createElement('button');
         toggleBtn.innerHTML = '👁️ <u>V</u>isible Columns';
         toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then v)`;
-        toggleBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
+        toggleBtn.style.cssText = uiActionBtnBaseCSS();
         toggleBtn.type = 'button';
 
         // Create dropdown menu container
@@ -3099,7 +3204,7 @@ Press Escape on that notice to cancel the auto-action.
         const exportBtn = document.createElement('button');
         exportBtn.innerHTML = '<u>E</u>xport 💾';
         exportBtn.title = `Export visible rows and columns to various formats (${getPrefixDisplay()}, then e)`;
-        exportBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
+        exportBtn.style.cssText = uiActionBtnBaseCSS();
         exportBtn.type = 'button';
 
         // Create dropdown menu with Density-style formatting
@@ -3326,6 +3431,188 @@ Press Escape on that notice to cancel the auto-action.
         const src = (typeof raw === 'string' && raw.trim()) ? raw : defaultRaw;
         return src.split('|').map(s => s.trim());
     }
+
+    // ── UI Appearance CSS helpers ────────────────────────────────────────────────
+    // Each helper reads from Lib.settings at call time so live setting changes
+    // are reflected without a page reload.  The returned string is assigned to
+    // element.style.cssText (or interpolated into an injected <style> block).
+
+    /**
+     * Base CSS shared by every button in the h1 action bar.
+     * Config: sa_ui_action_btn_style — fontSize|padding|height|borderRadius
+     */
+    function uiActionBtnBaseCSS() {
+        const defaults = '0.8em|2px 8px|24px|6px';
+        const [fontSize, padding, height, borderRadius] =
+            parseCondensedStyle(Lib.settings.sa_ui_action_btn_style, defaults);
+        return `font-size:${fontSize}; padding:${padding}; height:${height}; border-radius:${borderRadius}; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center;`;
+    }
+
+    /**
+     * Full CSS for the Save-to-Disk button (base + color overrides).
+     * Config: sa_ui_save_btn_style — bg|color|border|bgHover
+     * Returns { css, normalBg, hoverBg }
+     */
+    function uiSaveBtnCSS() {
+        const defaults = '#4CAF50|white|1px solid #45a049|#45a049';
+        const [bg, color, border, bgHover] =
+            parseCondensedStyle(Lib.settings.sa_ui_save_btn_style, defaults);
+        return {
+            css: `${uiActionBtnBaseCSS()} background-color:${bg}; color:${color}; border:${border};`,
+            normalBg: bg,
+            hoverBg: bgHover
+        };
+    }
+
+    /**
+     * Full CSS for the Load-from-Disk button (base + color overrides).
+     * Config: sa_ui_load_btn_style — bg|color|border|bgHover
+     * Returns { css, normalBg, hoverBg }
+     */
+    function uiLoadBtnCSS() {
+        const defaults = '#2196F3|white|1px solid #0b7dda|#0b7dda';
+        const [bg, color, border, bgHover] =
+            parseCondensedStyle(Lib.settings.sa_ui_load_btn_style, defaults);
+        return {
+            css: `${uiActionBtnBaseCSS()} background-color:${bg}; color:${color}; border:${border};`,
+            normalBg: bg,
+            hoverBg: bgHover
+        };
+    }
+
+    /**
+     * Full CSS for the Stop button.
+     * Config: sa_ui_stop_btn_style — bg|color|border
+     * Note: display is kept at 'none' by the caller and toggled dynamically.
+     */
+    function uiStopBtnCSS() {
+        const defaults = '#f44336|white|1px solid #d32f2f';
+        const [bg, color, border] =
+            parseCondensedStyle(Lib.settings.sa_ui_stop_btn_style, defaults);
+        return `${uiActionBtnBaseCSS()} background-color:${bg}; color:${color}; border:${border}; display:none;`;
+    }
+
+    /**
+     * Full CSS for the Settings ⚙️ button.
+     * Config: sa_ui_settings_btn_style — bg|color|border
+     */
+    function uiSettingsBtnCSS() {
+        const defaults = '#607D8B|white|1px solid #546E7A';
+        const [bg, color, border] =
+            parseCondensedStyle(Lib.settings.sa_ui_settings_btn_style, defaults);
+        return `${uiActionBtnBaseCSS()} background-color:${bg}; color:${color}; border:${border};`;
+    }
+
+    /**
+     * Full CSS for the Help ❓ button.
+     * Config: sa_ui_help_btn_style — bg|color|border
+     */
+    function uiHelpBtnCSS() {
+        const defaults = '#78909C|white|1px solid #607D8B';
+        const [bg, color, border] =
+            parseCondensedStyle(Lib.settings.sa_ui_help_btn_style, defaults);
+        return `${uiActionBtnBaseCSS()} background-color:${bg}; color:${color}; border:${border};`;
+    }
+
+    /**
+     * CSS for button-group separator spans (" | ").
+     * Config: sa_ui_button_divider_style — color|margin
+     */
+    function uiButtonDividerCSS() {
+        const defaults = '#999|0 4px';
+        const [color, margin] =
+            parseCondensedStyle(Lib.settings.sa_ui_button_divider_style, defaults);
+        return `color:${color}; margin:${margin};`;
+    }
+
+    /**
+     * CSS for the large global filter input in the H2 bar.
+     * Config: sa_ui_global_filter_input_style — fontSize|padding|border|borderRadius|width|height
+     */
+    function uiGlobalFilterInputCSS() {
+        const defaults = '1em|2px 20px 2px 6px|2px solid #ccc|3px|500px|24px';
+        const [fontSize, padding, border, borderRadius, width, height] =
+            parseCondensedStyle(Lib.settings.sa_ui_global_filter_input_style, defaults);
+        return `font-size:${fontSize}; padding:${padding}; border:${border}; border-radius:${borderRadius}; width:${width}; height:${height}; box-sizing:border-box; transition:box-shadow 0.2s;`;
+    }
+
+    /**
+     * CSS for the small pre-load filter input in the H1 controls bar.
+     * Config: sa_ui_prefilter_input_style — fontSize|padding|border|borderRadius|width|height
+     */
+    function uiPrefilterInputCSS() {
+        const defaults = '1em|2px 4px|1px solid #ccc|3px|150px|24px';
+        const [fontSize, padding, border, borderRadius, width, height] =
+            parseCondensedStyle(Lib.settings.sa_ui_prefilter_input_style, defaults);
+        return `font-size:${fontSize}; padding:${padding}; border:${border}; border-radius:${borderRadius}; width:${width}; height:${height}; box-sizing:border-box;`;
+    }
+
+    /**
+     * CSS values for per-column filter inputs (used in the injected <style> block).
+     * Config: sa_ui_column_filter_input_style — fontSize|padding
+     * Returns { fontSize, padding }
+     */
+    function uiColumnFilterInputVals() {
+        const defaults = '1em|1px 18px 1px 4px';
+        const [fontSize, padding] =
+            parseCondensedStyle(Lib.settings.sa_ui_column_filter_input_style, defaults);
+        return { fontSize, padding };
+    }
+
+    /**
+     * CSS values for sub-table clear / show-all buttons (used in the injected <style> block).
+     * Config: sa_ui_subtable_btn_style — fontSize|padding|borderRadius|bg|border|bgHover
+     * Returns { fontSize, padding, borderRadius, bg, border, bgHover }
+     */
+    function uiSubtableBtnVals() {
+        const defaults = '0.8em|2px 6px|4px|#f0f0f0|1px solid #ccc|#e0e0e0';
+        const [fontSize, padding, borderRadius, bg, border, bgHover] =
+            parseCondensedStyle(Lib.settings.sa_ui_subtable_btn_style, defaults);
+        return { fontSize, padding, borderRadius, bg, border, bgHover };
+    }
+
+    /**
+     * CSS for the filter-bar utility buttons (prefilter toggle, highlight toggle, clear).
+     * Config: sa_ui_filter_bar_btn_style — fontSize|padding|borderRadius|bg|border
+     * Note: display is managed separately by updateFilterButtonsVisibility().
+     */
+    function uiFilterBarBtnCSS() {
+        const defaults = '0.8em|2px 6px|4px|#f0f0f0|1px solid #ccc';
+        const [fontSize, padding, borderRadius, bg, border] =
+            parseCondensedStyle(Lib.settings.sa_ui_filter_bar_btn_style, defaults);
+        return `font-size:${fontSize}; padding:${padding}; border-radius:${borderRadius}; background:${bg}; border:${border}; cursor:pointer; vertical-align:middle;`;
+    }
+
+    /**
+     * CSS for checkbox inputs (Cc / Rx / Ex) in filter bars.
+     * Config: sa_ui_checkbox_style — fontSize|marginRight
+     * Returns { fontSize, marginRight }
+     */
+    function uiCheckboxVals() {
+        const defaults = '0.8em|2px';
+        const [fontSize, marginRight] =
+            parseCondensedStyle(Lib.settings.sa_ui_checkbox_style, defaults);
+        return { fontSize, marginRight };
+    }
+
+    /**
+     * CSS for checkbox wrapper labels in filter bars.
+     * Derived from sa_ui_checkbox_style fontSize field.
+     */
+    function uiCheckboxLabelCSS() {
+        const { fontSize } = uiCheckboxVals();
+        return `font-size:${fontSize}; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none;`;
+    }
+
+    /**
+     * CSS for filter-bar checkbox inputs (marginRight from settings).
+     */
+    function uiCheckboxInputCSS() {
+        const { marginRight } = uiCheckboxVals();
+        return `margin-right:${marginRight}; vertical-align:middle;`;
+    }
+
+    // ── End UI Appearance CSS helpers ────────────────────────────────────────────
 
     /**
      * Build a CSS object for the popup dialog container from the condensed config string.
@@ -4175,7 +4462,7 @@ Press Escape on that notice to cancel the auto-action.
         helpBtn.id = 'mb-shortcuts-help-btn';
         helpBtn.textContent = '🎹';
         helpBtn.title = 'Show keyboard shortcuts (or press ?)';
-        helpBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
+        helpBtn.style.cssText = uiActionBtnBaseCSS();
         helpBtn.type = 'button';
         helpBtn.onclick = showShortcutsHelp;
 
@@ -4367,7 +4654,7 @@ Press Escape on that notice to cancel the auto-action.
         const statsBtn = document.createElement('button');
         statsBtn.innerHTML = '📊 S<u>t</u>ats';
         statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then t)`;
-        statsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
+        statsBtn.style.cssText = uiActionBtnBaseCSS();
         statsBtn.type = 'button';
         statsBtn.onclick = showStatsPanel;
 
@@ -4467,7 +4754,7 @@ Press Escape on that notice to cancel the auto-action.
         const densityBtn = document.createElement('button');
         densityBtn.innerHTML = '📏 <u>D</u>ensity';
         densityBtn.title = `Change table density (spacing) (${getPrefixDisplay()}, then d)`;
-        densityBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
+        densityBtn.style.cssText = uiActionBtnBaseCSS();
         densityBtn.type = 'button';
 
         // Create menu
@@ -5240,7 +5527,7 @@ Press Escape on that notice to cancel the auto-action.
         const resizeBtn = document.createElement('button');
         resizeBtn.innerHTML = '↔️ Auto-<u>R</u>esize';
         resizeBtn.title = `Auto-resize columns to optimal width (${getPrefixDisplay()}, then r)`;
-        resizeBtn.style.cssText = 'font-size:0.9em; padding:2px 8px; cursor:pointer; height:24px; margin-left:5px; border-radius:6px; transition:transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;';
+        resizeBtn.style.cssText = uiActionBtnBaseCSS();
         resizeBtn.type = 'button';
         resizeBtn.onclick = toggleAutoResizeColumns;
 
@@ -5499,7 +5786,7 @@ Press Escape on that notice to cancel the auto-action.
             labelText = conf.label;
         }
         eb.textContent = labelText;
-        eb.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; display: inline-flex; align-items: center; justify-content: center;';
+        eb.style.cssText = uiActionBtnBaseCSS();
         eb.type = 'button';
 
         // Add tooltip based on button label
@@ -5528,19 +5815,24 @@ Press Escape on that notice to cancel the auto-action.
 
     // Add divider between action buttons and Save to Disk button
     const initialDivider = document.createElement('span');
+    initialDivider.id = 'mb-button-divider-initial';
     initialDivider.textContent = ' | ';
     initialDivider.className = 'mb-button-divider-initial';
-    initialDivider.style.cssText = 'color:#999; margin:0 4px;';
+    initialDivider.style.cssText = uiButtonDividerCSS();
     controlsContainer.appendChild(initialDivider);
 
     // Add Save to Disk button
     const saveToDiskBtn = document.createElement('button');
+    saveToDiskBtn.id = 'mb-save-to-disk-btn';
     saveToDiskBtn.innerHTML = '💾 <u>S</u>ave to Disk';
-    saveToDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#4CAF50; color:white; border:1px solid #45a049; display:none; display: inline-flex; align-items: center; justify-content: center;';
+    const _saveStyle = uiSaveBtnCSS();
+    saveToDiskBtn.style.cssText = _saveStyle.css;
+    saveToDiskBtn.onmouseover = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.hoverBg; };
+    saveToDiskBtn.onmouseout  = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.normalBg; };
     saveToDiskBtn.type = 'button';
     saveToDiskBtn.title = `Save current table data to disk as Gzipped JSON (${getPrefixDisplay()}, then s)`;
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
-    saveToDiskBtn.style.display = 'none'; // - Changed from 'inline-flex' or similar to 'none'
+    saveToDiskBtn.style.display = 'none';
 
     if (Lib.settings.sa_enable_save_load) {
         controlsContainer.appendChild(saveToDiskBtn);
@@ -5548,12 +5840,17 @@ Press Escape on that notice to cancel the auto-action.
 
     // Add Load from Disk button with hidden file input
     const loadFromDiskBtn = document.createElement('button');
+    loadFromDiskBtn.id = 'mb-load-from-disk-btn';
     loadFromDiskBtn.innerHTML = '📂 <u>L</u>oad from Disk';
-    loadFromDiskBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#2196F3; color:white; border:1px solid #0b7dda; display: inline-flex; align-items: center; justify-content: center;';
+    const _loadStyle = uiLoadBtnCSS();
+    loadFromDiskBtn.style.cssText = _loadStyle.css;
+    loadFromDiskBtn.onmouseover = () => { loadFromDiskBtn.style.backgroundColor = _loadStyle.hoverBg; };
+    loadFromDiskBtn.onmouseout  = () => { loadFromDiskBtn.style.backgroundColor = _loadStyle.normalBg; };
     loadFromDiskBtn.type = 'button';
     loadFromDiskBtn.title = `Load table data from disk (JSON file) (${getPrefixDisplay()}, then l)`;
 
     const fileInput = document.createElement('input');
+    fileInput.id = 'mb-file-input';
     fileInput.type = 'file';
     fileInput.accept = ".gz,application/gzip";
     fileInput.style.display = 'none';
@@ -5579,6 +5876,7 @@ Press Escape on that notice to cancel the auto-action.
 
     // Add global settings/configuration button
     const settingsBtn = document.createElement('button');
+    settingsBtn.id = 'mb-settings-btn';
     settingsBtn.textContent = '⚙️';
     settingsBtn.type = 'button';
     settingsBtn.title = 'Open settings manager to configure script behavior';
@@ -5627,20 +5925,20 @@ Press Escape on that notice to cancel the auto-action.
         shortcutsBtn.id = 'mb-shortcuts-help-btn';
         shortcutsBtn.textContent = '🎹';
         shortcutsBtn.title = 'Show keyboard shortcuts (or press ?)';
-        shortcutsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; display: inline-flex; align-items: center; justify-content: center;';
+        shortcutsBtn.style.cssText = uiActionBtnBaseCSS();
         shortcutsBtn.type = 'button';
         shortcutsBtn.onclick = showShortcutsHelp;
         // Separator between the functional buttons (Load from Disk) and the utility group (🎹 ⚙️ ❓)
         const beforeShortcutsDivider = document.createElement('span');
         beforeShortcutsDivider.textContent = ' | ';
         beforeShortcutsDivider.className = 'mb-button-divider-before-shortcuts';
-        beforeShortcutsDivider.style.cssText = 'color:#999; margin:0 4px;';
+        beforeShortcutsDivider.style.cssText = uiButtonDividerCSS();
         controlsContainer.appendChild(beforeShortcutsDivider);
         controlsContainer.appendChild(shortcutsBtn);
     }
 
     // Add settings button to controls container (always last on initial render)
-    settingsBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; display: inline-flex; align-items: center; justify-content: center;';
+    settingsBtn.style.cssText = uiSettingsBtnCSS();
     controlsContainer.appendChild(settingsBtn);
 
     // Add application help button (always visible, right of ⚙️ settings button)
@@ -5648,7 +5946,7 @@ Press Escape on that notice to cancel the auto-action.
     appHelpBtn.id = 'mb-app-help-btn';
     appHelpBtn.textContent = '❓';
     appHelpBtn.title = 'Show application help and feature overview';
-    appHelpBtn.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; background-color:#78909C; color:white; border:1px solid #607D8B; display: inline-flex; align-items: center; justify-content: center;';
+    appHelpBtn.style.cssText = uiHelpBtnCSS();
     appHelpBtn.type = 'button';
     appHelpBtn.onclick = showAppHelp;
     controlsContainer.appendChild(appHelpBtn);
@@ -5716,37 +6014,45 @@ Press Escape on that notice to cancel the auto-action.
 
     // --- Pre-load Filter UI elements ---
     const preFilterContainer = document.createElement('span');
+    preFilterContainer.id = 'mb-prefilter-container';
     preFilterContainer.style.cssText = 'display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding-left:6px; border-left:1px solid #ccc; vertical-align:middle; height:24px;';
 
     const preFilterInput = document.createElement('input');
+    preFilterInput.id = 'mb-prefilter-input';
     preFilterInput.type = 'text';
     preFilterInput.placeholder = 'Filter data load...';
     preFilterInput.title = 'Filter rows while loading from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)';
-    preFilterInput.style.cssText = 'font-size:1.oem; padding:2px 4px; border:1px solid #ccc; border-radius:3px; width:150px; height:24px; box-sizing:border-box;';
+    preFilterInput.style.cssText = uiPrefilterInputCSS();
 
     const preFilterCaseLabel = document.createElement('label');
-    preFilterCaseLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
+    preFilterCaseLabel.id = 'mb-prefilter-case-label';
+    preFilterCaseLabel.style.cssText = uiCheckboxLabelCSS();
     const preFilterCaseCheckbox = document.createElement('input');
+    preFilterCaseCheckbox.id = 'mb-prefilter-case-checkbox';
     preFilterCaseCheckbox.type = 'checkbox';
-    preFilterCaseCheckbox.style.marginRight = '2px';
+    preFilterCaseCheckbox.style.cssText = uiCheckboxInputCSS();
     preFilterCaseLabel.appendChild(preFilterCaseCheckbox);
     preFilterCaseLabel.appendChild(document.createTextNode('Cc'));
     preFilterCaseLabel.title = 'Case Sensitive (Load)';
 
     const preFilterRxLabel = document.createElement('label');
-    preFilterRxLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
+    preFilterRxLabel.id = 'mb-prefilter-rx-label';
+    preFilterRxLabel.style.cssText = uiCheckboxLabelCSS();
     const preFilterRxCheckbox = document.createElement('input');
+    preFilterRxCheckbox.id = 'mb-prefilter-rx-checkbox';
     preFilterRxCheckbox.type = 'checkbox';
-    preFilterRxCheckbox.style.marginRight = '2px';
+    preFilterRxCheckbox.style.cssText = uiCheckboxInputCSS();
     preFilterRxLabel.appendChild(preFilterRxCheckbox);
     preFilterRxLabel.appendChild(document.createTextNode('Rx'));
     preFilterRxLabel.title = 'RegExp (Load)';
 
     const preFilterExcludeLabel = document.createElement('label');
-    preFilterExcludeLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0; user-select: none;';
+    preFilterExcludeLabel.id = 'mb-prefilter-exclude-label';
+    preFilterExcludeLabel.style.cssText = uiCheckboxLabelCSS();
     const preFilterExcludeCheckbox = document.createElement('input');
+    preFilterExcludeCheckbox.id = 'mb-prefilter-exclude-checkbox';
     preFilterExcludeCheckbox.type = 'checkbox';
-    preFilterExcludeCheckbox.style.marginRight = '2px';
+    preFilterExcludeCheckbox.style.cssText = uiCheckboxInputCSS();
     preFilterExcludeLabel.appendChild(preFilterExcludeCheckbox);
     preFilterExcludeLabel.appendChild(document.createTextNode('Ex'));
     preFilterExcludeLabel.title = 'Exclude matches (Load) — rows matching the filter expression are excluded instead of kept';
@@ -5756,9 +6062,10 @@ Press Escape on that notice to cancel the auto-action.
     preFilterMsg.style.cssText = 'font-size:0.8em; color:red; margin-left:4px; font-weight:bold; white-space:nowrap; display:none;';
 
     const stopBtn = document.createElement('button');
+    stopBtn.id = 'mb-stop-btn';
     stopBtn.innerHTML = 'St<u>o</u>p';
     stopBtn.type = 'button';
-    stopBtn.style.cssText = 'display:none; font-size:0.8em; padding:2px 6px; cursor:pointer; background-color:#f44336; color:white; border:1px solid #d32f2f; height:24px; box-sizing:border-box; border-radius:6px; inline-flex; align-items:center; justify-content:center;';
+    stopBtn.style.cssText = uiStopBtnCSS();
     stopBtn.title = 'Stop the current data fetching process from the MusicBrainz backend database';
 
     const globalStatusDisplay = document.createElement('span');
@@ -5773,19 +6080,23 @@ Press Escape on that notice to cancel the auto-action.
     const progressContainer = null; // removed from controls bar; fetch progress shown in globalStatusDisplay
 
     const filterContainer = document.createElement('span');
+    filterContainer.id = 'mb-filter-container';
     // Initially hidden; will be displayed when appended to H2
     filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px;';
 
     const filterWrapper = document.createElement('span');
+    filterWrapper.id = 'mb-global-filter-wrapper';
     filterWrapper.className = 'mb-filter-wrapper';
     filterWrapper.style.cssText = 'position:relative; display:inline-block;';
 
     const filterInput = document.createElement('input');
+    filterInput.id = 'mb-global-filter-input';
     filterInput.placeholder = `Global Filter...`;
     filterInput.title = 'Enter global filter string';
-    filterInput.style.cssText = 'font-size:1em; padding:2px 20px 2px 6px; border:2px solid #ccc; border-radius:3px; width:500px; height:24px; box-sizing:border-box; transition:box-shadow 0.2s;';
+    filterInput.style.cssText = uiGlobalFilterInputCSS();
 
     const filterClear = document.createElement('span');
+    filterClear.id = 'mb-global-filter-clear';
     filterClear.textContent = '✕';
     filterClear.style.cssText = 'position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:0.6em; color:#999; user-select:none;';
     filterClear.title = 'Clear global filter';
@@ -5794,28 +6105,34 @@ Press Escape on that notice to cancel the auto-action.
     filterWrapper.appendChild(filterClear);
 
     const caseLabel = document.createElement('label');
-    caseLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;';
+    caseLabel.id = 'mb-global-filter-case-label';
+    caseLabel.style.cssText = `${uiCheckboxLabelCSS()} font-weight:normal; height:24px;`;
     const caseCheckbox = document.createElement('input');
+    caseCheckbox.id = 'mb-global-filter-case-checkbox';
     caseCheckbox.type = 'checkbox';
-    caseCheckbox.style.cssText = 'margin-right: 2px; vertical-align: middle;';
+    caseCheckbox.style.cssText = uiCheckboxInputCSS();
     caseLabel.appendChild(caseCheckbox);
     caseLabel.appendChild(document.createTextNode('Cc'));
     caseLabel.title = 'Case Sensitive Filtering';
 
     const regexpLabel = document.createElement('label');
-    regexpLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;';
+    regexpLabel.id = 'mb-global-filter-rx-label';
+    regexpLabel.style.cssText = `${uiCheckboxLabelCSS()} font-weight:normal; height:24px;`;
     const regexpCheckbox = document.createElement('input');
+    regexpCheckbox.id = 'mb-global-filter-rx-checkbox';
     regexpCheckbox.type = 'checkbox';
-    regexpCheckbox.style.cssText = 'margin-right: 2px; vertical-align: middle;';
+    regexpCheckbox.style.cssText = uiCheckboxInputCSS();
     regexpLabel.appendChild(regexpCheckbox);
     regexpLabel.appendChild(document.createTextNode('Rx'));
     regexpLabel.title = 'RegExp Filtering';
 
     const excludeLabel = document.createElement('label');
-    excludeLabel.style.cssText = 'font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;';
+    excludeLabel.id = 'mb-global-filter-exclude-label';
+    excludeLabel.style.cssText = `${uiCheckboxLabelCSS()} font-weight:normal; height:24px;`;
     const excludeCheckbox = document.createElement('input');
+    excludeCheckbox.id = 'mb-global-filter-exclude-checkbox';
     excludeCheckbox.type = 'checkbox';
-    excludeCheckbox.style.cssText = 'margin-right: 2px; vertical-align: middle;';
+    excludeCheckbox.style.cssText = uiCheckboxInputCSS();
     excludeLabel.appendChild(excludeCheckbox);
     excludeLabel.appendChild(document.createTextNode('Ex'));
     excludeLabel.title = 'Exclude matches (Global Filter)';
@@ -5830,7 +6147,7 @@ Press Escape on that notice to cancel the auto-action.
     const prefilterToggleBtn = document.createElement('button');
     prefilterToggleBtn.id = 'mb-toggle-prefilter-btn';
     prefilterToggleBtn.textContent = 'Prefilter'; // Will be updated dynamically
-    prefilterToggleBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; transition: background-color 0.3s; display:none; border-radius:4px; background:#f0f0f0; border:1px solid #ccc; vertical-align:middle;';
+    prefilterToggleBtn.style.cssText = `${uiFilterBarBtnCSS()} transition:background-color 0.3s; display:none;`;
     prefilterToggleBtn.title = 'Toggle prefilter highlighting on/off';
 
     /**
@@ -5903,7 +6220,7 @@ Press Escape on that notice to cancel the auto-action.
     const unhighlightAllBtn = document.createElement('button');
     unhighlightAllBtn.id = 'mb-toggle-filter-highlight-btn';
     unhighlightAllBtn.textContent = '🎨 Toggle highlighting';
-    unhighlightAllBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; transition: background-color 0.3s; display: none; border-radius:4px; background:#f0f0f0; border:1px solid #ccc; vertical-align:middle;';
+    unhighlightAllBtn.style.cssText = `${uiFilterBarBtnCSS()} transition:background-color 0.3s; display:none;`;
     unhighlightAllBtn.title = 'Toggle filter highlighting on/off (global filter and column filters)';
 
     /**
@@ -5954,7 +6271,7 @@ Press Escape on that notice to cancel the auto-action.
     clearColumnFiltersBtn.appendChild(xSymbol);
     clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
     clearColumnFiltersBtn.id = 'mb-clear-column-filters-btn';
-    clearColumnFiltersBtn.style.cssText = 'font-size:0.9em; padding:2px 6px; cursor:pointer; display: none; border-radius:4px; background:#f0f0f0; border:1px solid #ccc; vertical-align:middle;';
+    clearColumnFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
     clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
@@ -5983,7 +6300,7 @@ Press Escape on that notice to cancel the auto-action.
     clearAllFiltersBtn.appendChild(xSymbol.cloneNode(true));
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.id = 'mb-clear-all-filters-btn';
-    clearAllFiltersBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; cursor:pointer; display: none; border-radius:4px; background:#f0f0f0; border:1px solid #ccc; vertical-align:middle;';
+    clearAllFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
     clearAllFiltersBtn.title = 'Clear both global filter and all column filters';
     clearAllFiltersBtn.onclick = () => {
         // Clear global filter
@@ -6142,10 +6459,10 @@ Press Escape on that notice to cancel the auto-action.
         }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; }
         .mb-subtable-controls { display: inline-flex; align-items: baseline; gap: 8px; margin-left: 12px; vertical-align: middle; }
-        .mb-subtable-clear-btn { font-size: 0.8em; padding: 2px 6px; cursor: pointer; vertical-align: middle; border-radius: 4px; background: #f0f0f0; border: 1px solid #ccc; }
-        .mb-subtable-clear-btn:hover { background: #e0e0e0; }
-        .mb-show-all-subtable-btn { font-size: 0.8em; padding: 2px 6px; cursor: pointer; vertical-align: middle; border-radius: 4px; background: #f0f0f0; border: 1px solid #ccc; }
-        .mb-show-all-subtable-btn:hover { background: #e0e0e0; }
+        .mb-subtable-clear-btn { font-size: ${uiSubtableBtnVals().fontSize}; padding: ${uiSubtableBtnVals().padding}; cursor: pointer; vertical-align: middle; border-radius: ${uiSubtableBtnVals().borderRadius}; background: ${uiSubtableBtnVals().bg}; border: ${uiSubtableBtnVals().border}; }
+        .mb-subtable-clear-btn:hover { background: ${uiSubtableBtnVals().bgHover}; }
+        .mb-show-all-subtable-btn { font-size: ${uiSubtableBtnVals().fontSize}; padding: ${uiSubtableBtnVals().padding}; cursor: pointer; vertical-align: middle; border-radius: ${uiSubtableBtnVals().borderRadius}; background: ${uiSubtableBtnVals().bg}; border: ${uiSubtableBtnVals().border}; }
+        .mb-show-all-subtable-btn:hover { background: ${uiSubtableBtnVals().bgHover}; }
         .mb-subtable-status-display { font-size: 0.85em; color: #333; font-weight: bold; vertical-align: middle; }
         .mb-filter-status { font-family: 'Courier New', monospace; font-size: 1.0em; vertical-align: middle; margin-right: 4px; }
         .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 1.0em; font-style: italic; vertical-align: middle; }
@@ -6169,8 +6486,8 @@ Press Escape on that notice to cancel the auto-action.
         }
         .mb-col-filter-input {
             width: 100%;
-            font-size: 1em;
-            padding: 1px 18px 1px 4px;
+            font-size: ${uiColumnFilterInputVals().fontSize};
+            padding: ${uiColumnFilterInputVals().padding};
             box-sizing: border-box;
             transition: box-shadow 0.2s;
             display: block;
