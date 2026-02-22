@@ -214,91 +214,135 @@ GETTING STARTED
    Recordings tab).
 2. Click the "Show all …" action button in the controls bar to start fetching
    all pages from the MusicBrainz database.
-3. A real-time progress bar tracks the fetch; click "Stop" (or Ctrl-M, then o) to abort
-   at any time.
+3. A real-time progress bar (light-red → orange → light-green) tracks the
+   fetch.  Click "Stop" at any time to abort; or press the prefix key then "o"
+   while the Stop button is visible.
 4. When complete, the consolidated table appears with filtering, sorting, and
-   all UI features active.
+   all UI features active.  The global filter is auto-focused so you can start
+   typing immediately.
 
 ACTION BUTTONS
 --------------
 • 💾 Save to Disk    — save the current dataset as a compressed .json.gz file
-• 📂 Load from Disk  — load a previously saved dataset (with optional
-                       pre-filter); Alt-L inside the dialog to confirm
+                       (~60–80% smaller than plain JSON)
+• 📂 Load from Disk  — load a previously saved dataset with an optional
+                       pre-filter; Alt-L inside the dialog to confirm
 • ↔️ Auto-Resize     — fit all columns to their content (toggle to restore)
 • 📊 Stats           — show a statistics panel (row/column counts, memory, …)
 • 📏 Density         — choose Compact / Normal / Comfortable row spacing
 • 👁️ Visible Columns — show/hide individual table columns; Alt-S / Alt-D to
-                       select/deselect all
+                       select/deselect all; navigate with ↑/↓ / Tab / Shift-Tab
 • Export 💾          — export visible data as CSV, JSON, or Emacs Org-Mode
-• 🎹                 — show keyboard shortcuts reference (or press ?)
+• 🎹                 — show keyboard shortcuts reference (or press ? / /)
 • ⚙️                 — open the Settings Manager to configure all options
 • ❓                 — show this help dialog
 
 FILTERING
 ---------
-• Global Filter — type in the large input box to filter all columns at once
+• Global Filter — large input box at the top filters all columns at once
 • Column Filters — per-column filter row below the table header
-• Both support plain text, case-sensitive (Cc checkbox), and RegExp (Rx
-  checkbox) matching
+• Both support plain text, case-sensitive (Cc checkbox), regexp (Rx checkbox),
+  and exclude-matches (Ex checkbox) mode — tick Ex to hide rows that match
+  instead of keeping them
+• Ctrl-G  — focus global filter field (configurable)
 • Ctrl-C  — focus first column filter; repeated presses cycle through tables
-• Ctrl-F  — focus global filter field
-• Escape  — first press clears focused filter, second press removes focus
+            (configurable)
+• Ctrl-Shift-G — clear all active filters (configurable)
+• Escape  — first press clears the focused filter, second press removes focus
 • 🎨 Toggle highlighting — toggle highlight colours on/off for active filters
-• Pre-filter — enter a filter expression in the "Filter data load…" field
-  before loading from disk to load only matching rows
+
+PRE-FILTER (Load from Disk)
+---------------------------
+• Enter a filter expression in the "Filter expression…" field of the Load
+  dialog before loading to import only matching rows — useful for large files
+• Cc / Rx / Exclude Matches checkboxes apply to the pre-filter as well
+• The last N expressions (configurable) are saved in a ▼ dropdown
+• Pre-filtered rows are highlighted with 🎨; toggle highlighting with the
+  dynamic prefilter button that appears in the filter bar
 
 SORTING
 -------
-• Click any column header (⇅) to sort ascending; click again for descending
+• Click any column header (⇅) to sort ascending; click again for descending;
+  click the ⇅ icon again to restore original order
 • Visual indicator changes to ▲ / ▼ on the active sort column
-• Large tables use an async chunked merge-sort with a progress bar
+• Multi-column sort: Ctrl+Click ▲ or ▼ to add a column to the sort chain;
+  superscript numbers (¹²³…) show each column's priority; plain click returns
+  to single-column mode
+• Large tables use an async chunked merge-sort
 
 COLLAPSING / EXPANDING
 -----------------------
 • Click an h2 header to collapse/expand its table section
-• Ctrl-Click an h2 to toggle all h2 headers simultaneously
+• Ctrl-Click an h2 to toggle all h2 headers simultaneously (or use Ctrl-2)
 • Click an h3 header to collapse/expand its type group
-• Ctrl-Click an h3 to toggle all h3 headers simultaneously
-• Show All / Hide All links per section
-• Ctrl-2 — keyboard shortcut to toggle all h2 headers
-• Ctrl-3 — keyboard shortcut to toggle all h3 headers
+• Ctrl-Click an h3 to toggle all h3 headers simultaneously (or use Ctrl-3)
+• Show All / Hide All links available per section
 
-KEYBOARD SHORTCUTS (global)
-----------------------------
-  ?  or  /       Show keyboard shortcuts help (🎹)
-  Ctrl-F          Focus global filter
-  Ctrl-C          Focus first column filter (cycles through tables)
-  Ctrl-Shift-F    Clear all filters
-  Ctrl-S          Save to Disk
-  Ctrl-L          Load from Disk dialog
-  Ctrl-E          Open Export menu
-  Ctrl-D          Open Density menu
-  Ctrl-V          Open Visible Columns menu
-  Ctrl-2          Toggle all h2 section headers
-  Ctrl-3          Toggle all h3 type headers
-  Escape          Clear focused filter / close open menus
+KEYBOARD SHORTCUTS  (all configurable in ⚙️ → Keyboard Shortcuts section)
+--------------------------------------------------------------------------
+  ? or /           Show keyboard shortcuts reference
+  Ctrl+K           Show keyboard shortcuts reference (direct, not configurable)
+  Ctrl+G           Focus global filter
+  Ctrl+C           Focus first column filter (cycles through tables)
+  Ctrl+Shift+G     Clear all filters
+  Ctrl+S           Save to Disk
+  Ctrl+L           Load from Disk dialog
+  Ctrl+E           Open Export menu
+  Ctrl+R           Toggle Auto-Resize Columns
+  Ctrl+D           Open Density menu
+  Ctrl+V           Open Visible Columns menu
+  Ctrl+T           Open Statistics panel
+  Ctrl+2           Toggle all h2 section headers
+  Ctrl+3           Toggle all h3 type headers
+  Ctrl+,           Open Settings dialog
+  Escape           Clear focused filter / close open menus
 
-CTRL-M PREFIX SHORTCUTS  (configurable via ⚙️ → "Keyboard Shortcut Prefix")
----------------------------------------------------------------------------
-  The prefix key (default: Ctrl+M) can be changed in ⚙️ Settings to any
-  combination such as "Ctrl+.", "Alt+X", "Ctrl+Shift+,".
+PREFIX-MODE SHORTCUTS  (configurable prefix, default: Ctrl+M)
+--------------------------------------------------------------
   Press the prefix key, release, then press:
-    r  Auto-Resize Columns
-    t  Show Stats Panel
-    s  Save to Disk
-    d  Open Density Menu
-    v  Open Visible Columns Menu
-    e  Open Export Menu
-    l  Load from Disk
-    ?  Show Keyboard Shortcuts Help
-    1–9 / a–z  Trigger the corresponding action button by index
+    s   Save to Disk
+    l   Load from Disk
+    r   Toggle Auto-Resize Columns
+    v   Open Visible Columns menu
+    d   Open Density menu
+    t   Show Statistics panel
+    e   Open Export menu
+    k   Show keyboard shortcuts reference
+    ,   Open Settings dialog
+    h   Show App Help (this dialog)
+    o   Activate Stop button (only while a fetch is running)
+    1–9 / a–z  Trigger the corresponding action button by mnemonic index
+
+  The prefix key can be changed in ⚙️ Settings → "🎹 KEYBOARD SHORTCUTS"
+  to any combination such as "Ctrl+.", "Alt+X", "Ctrl+Shift+,".
+
+VISIBLE COLUMNS MENU (keyboard navigation when open)
+-----------------------------------------------------
+  ↑ / ↓ or Tab / Shift-Tab  Navigate items (checkboxes and buttons)
+  Space                       Toggle focused checkbox
+  Alt+S                       Select All
+  Alt+D                       Deselect All
+  Alt+C                       Choose current configuration (close menu)
+  Enter / Escape              Close menu
+
+DENSITY MENU (keyboard navigation when open)
+--------------------------------------------
+  ↑ / ↓     Navigate options (live preview)
+  Enter      Apply and close
+  Escape     Close menu
+
+EXPORT MENU (keyboard navigation when open)
+-------------------------------------------
+  ↑ / ↓     Navigate formats
+  Enter      Execute export and close
+  Escape     Close menu
 
 SAVE & LOAD (Offline Cache)
 ----------------------------
 • Datasets are saved as gzip-compressed JSON (.json.gz) — ~60–80% smaller
   than plain JSON.
-• When loading, enter an optional pre-filter expression (plain text or RegExp)
-  to load only matching rows — useful for very large datasets.
+• When loading, enter an optional pre-filter expression (plain text, RegExp,
+  or Exclude-Matches mode) to import only the rows you need.
 • Load filter history (last N expressions, configurable) is accessible via the
   ▼ dropdown in the Load dialog.
 • Pre-filtered rows are highlighted with 🎨; toggle highlighting with the
@@ -307,45 +351,74 @@ SAVE & LOAD (Offline Cache)
 COLUMN MANAGEMENT
 -----------------
 • 👁️ Visible Columns menu — check/uncheck any column; Select All (Alt-S) /
-  Deselect All (Alt-D); button turns red when columns are hidden
-• Manual resize — drag column edges with the mouse at any time
-• Auto-Resize — calculates optimal widths including images/icons/links;
+  Deselect All (Alt-D); button turns red when any column is hidden
+• Manual resize — drag column-header edges with the mouse at any time
+• Auto-Resize — calculates optimal widths for content including images/icons;
   acts as a toggle (restores original widths on second click)
+• Synthetic columns — some page types add computed columns alongside the raw
+  data (e.g. "Country" + "Date" split from a combined "Country/Date" cell on
+  release pages; "Format Types" strips quantity prefixes like "8×" from the
+  Format column on release-group, label, and series pages)
 
 DENSITY CONTROL
 ---------------
   Compact     — tighter padding, smaller font, more rows visible
   Normal      — default MusicBrainz-like spacing
   Comfortable — larger padding for easier reading
-  Navigate with ↑/↓ in the menu; immediate live preview; Enter to apply
+  Navigate with ↑/↓ in the menu for an immediate live preview; Enter to apply
 
 EXPORT
 ------
-  CSV          — comma-separated, compatible with Excel / Google Sheets
-  JSON         — structured JSON array of visible rows
+  CSV            — comma-separated, compatible with Excel / Google Sheets
+  JSON           — structured JSON array of visible rows
   Emacs Org-Mode — pipe-delimited Org table format
 
-SETTINGS (⚙️)
---------------
+PROGRESS BAR
+------------
+• The inline progress bar in the controls line transitions from light red →
+  light orange → light green as pages are fetched (0 % / 50 % / 100 %).
+• The action button for the current load changes colour in sync.
+• A time estimate ("est. X.Xs left") is shown inside the bar.
+
+STATISTICS PANEL (📊 or Ctrl+T)
+--------------------------------
+• Shows: sub-table count, total rows, visible rows, column count, multi-sort
+  chain, estimated memory, and per-category row counts on multi-table pages.
+
+SETTINGS (⚙️ or Ctrl+,)
+------------------------
 All options are configurable via the Settings Manager:
-• Enable/disable any UI feature (export, stats, density, column resize, …)
+• Enable / disable any UI feature (export, stats, density, column resize, …)
 • Configure highlight colours for pre-filter, global filter, column filters
-• Set maximum page threshold for the high-page-count warning
-• Toggle debug logging (browser console)
+• Set the high-page-count warning threshold
+• Set the large-dataset render warning threshold
 • Configure load filter history limit
-• Enable experimental collapsible sidebar
+• Enable collapsible sidebar (experimental)
 • Optional column removal (Tagger, Rating, Relationships, Performance, …)
+• 12 configurable direct keyboard shortcuts (see ⚙️ → 🎹 KEYBOARD SHORTCUTS)
+• Configurable prefix shortcut key (default Ctrl+M)
+• Toggle the prefix-mode tooltip overlay on/off
+• Full UI appearance customisation (button sizes, colours, filter input sizes)
 
 SIDEBAR
 -------
 • The page sidebar can be optionally collapsed (experimental setting) to give
   more horizontal space to the data table.
-• Sticky table headers remain visible while scrolling through large tables.
+• Sticky table headers remain visible while scrolling through large tables
+  (can be disabled in Settings).
+
+MULTI-TABLE PAGES
+-----------------
+• On pages like Artist-Relationships or Release-Group releases the data is
+  split into independent sub-tables per category, each with its own filter,
+  sort chain, clear button, and optional "Show all N" overflow expander.
+• A single sub-table is auto-expanded on load.
+• Ctrl+Click sort applies independently per sub-table.
 
 PAGE RELOAD NOTICE
 ------------------
 When MusicBrainz applies a URL filter that would interfere with pagination,
-the script automatically reloads the page to strip the filter. After reload
+the script automatically reloads the page to strip the filter.  After reload
 an ⚠️ Page Reloaded notice appears and automatically re-clicks the "Show all"
 button after 2 seconds (or immediately when you click OK / press Enter).
 Press Escape on that notice to cancel the auto-action.
