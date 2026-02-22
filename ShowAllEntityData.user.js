@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.65.0+2026-02-22
+// @version      9.70.0+2026-02-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.70.0+2026-02-22', description: 'Refactor + Feature: Introduced ColumnDataExtractor — a named-function registry that decouples column extraction and transformation logic from the main fetch/render pipeline. (1) New singleton object ColumnDataExtractor with four named extractors: splitCountryDate (Country/Date → Country + Date), splitLocation (Location → Place + Area + Country), splitArea (Area → MB-Area + Country), and sumTracks (Tracks "9 + 7 + 8" → Total Tracks integer sum). Each extractor has the contract fn(sourceCell: HTMLTableCellElement): HTMLTableCellElement[] and is entirely self-contained. (2) New helper function buildActiveColumnExtractors(def) converts an activeDefinition into a runtime array of {sourceColumn, extractor, syntheticColumns, colIdx} descriptors; translates legacy splitCD/splitLocation/splitArea boolean flags transparently for any future definitions that still use them. (3) All pageDefinitions migrated from the boolean split* flags to the canonical columnExtractors:[{sourceColumn, extractor, syntheticColumns}] array in features; the old splitCD: false entry was removed. (5) Module-level typesWithSplitCD/Location/Area arrays removed; replaced by activeColumnExtractors (single unified list). startFetchingProcess now calls buildActiveColumnExtractors() instead of setting three separate flag arrays. (6) Header scanning loop rewritten: colIdx reset before each page, single forEach over activeColumnExtractors replaces three separate if-blocks. cleanupHeaders synthetic-header injection unified into one forEach. Row-processing split section replaced by: (a) call each extractor before deleteCell (indices still valid), (b) deleteCell excluded columns, (c) append all synthetic cells in declaration order. All legacy inline code (~80 lines) removed.'},
     {version: '9.65.0+2026-02-22', description: 'Five UX enhancements: (1) Action buttons: superscript mnemonics ¹²³⁴… appended after the 🧮 emoji on every action button to remind the user of the Ctrl-M+1/2/3/… shortcut invocations; applies to both "Show all" and pre-existing 🧮-prefixed buttons (e.g. artist RG split buttons). (2) Shortcuts popup (mb-shortcuts-help): restructured with a sticky flex title-bar (header + ✕ button) and a separate scrollable content area (overflow-y:auto; max-height:82vh) so the dialog never overflows the viewport when many shortcut sections are present. (3) Stats panel (mb-stats-panel): added "Sub-Tables: N table(s)" as the first row in the statistics grid so the user can immediately see how many independent sub-tables exist on multi-table pages. (4) Multi-table pages — single sub-table auto-expand: when renderGroupedTable produces exactly one group (dataArray.length === 1) the resulting table is unconditionally shown (shouldStayOpen = true) instead of starting collapsed, independent of the category name or sa_auto_expand threshold. (5) Progress-bar de-duplication: removed the redundant "Loading page N of M…" text update on globalStatusDisplay during page fetching; the inline progress bar (mb-fetch-progress-label inside mb-fetch-progress-outer) already carries the identical information, so showing it twice in the subheader was unnecessary noise.'},
     {version: '9.64.0+2026-02-21', description: 'Progress bar label text reformatted: "Loading page N of M... K rows — estimated X.Xs remaining" changed to the more compact "Loading page N of M... (K rows) - est. X.Xs". Parentheses around row count, em-dash replaced by hyphen-minus, "estimated … remaining" shortened to "est. …".'},
     {version: '9.63.0+2026-02-21', description: 'configSchema: all 6 sa_popup_* entries changed from type:"text" to type:"popup_dialog" and each gains a fields:[...] array naming every pipe-separated parameter (e.g. ["bg","border","borderRadius","padding","boxShadow","zIndex","fontFamily","minWidth","maxWidth"] for sa_popup_dialog_style).'},
@@ -768,6 +769,214 @@ Press Escape on that notice to cancel the auto-action.
     Lib.debug('init', `Query parameters: ${params}`);
     Lib.debug('init', `Has "link_type_id": ${isFilteredRelationshipPage}`);
 
+    // --- ColumnDataExtractor: Column Extraction & Transformation Registry ---
+    //
+    // Each named function receives the *source* <td> element from the fetched page
+    // and returns an ordered array of freshly-created <td> elements — one per
+    // synthetic column declared in the corresponding `columnExtractors` descriptor.
+    //
+    // Contract:
+    //   extractorFn(sourceCell: HTMLTableCellElement): HTMLTableCellElement[]
+    //
+    // The returned array MUST have the same length as the `syntheticColumns` array
+    // in the associated descriptor; extra elements are ignored, missing ones yield
+    // an empty <td> placeholder so the table row stays structurally consistent.
+    //
+    // Adding a new extractor:
+    //   1. Add a function here with a descriptive camelCase name.
+    //   2. Reference it by that name string in the `columnExtractors` array inside
+    //      the relevant pageDefinitions `features` object.
+    //   3. Declare the synthetic column header names in `syntheticColumns`.
+
+    const ColumnDataExtractor = {
+
+        /**
+         * splitCountryDate — splits a "Country/Date" cell into separate Country and
+         * Date cells.  Source structure: .release-event > (.release-country +
+         * .release-date), repeated once per release event.
+         * Synthetic columns: ['Country', 'Date']
+         */
+        splitCountryDate(sourceCell) {
+            const tdC = document.createElement('td');
+            const tdD = document.createElement('td');
+            if (sourceCell) {
+                const events = Array.from(sourceCell.querySelectorAll('.release-event'));
+                events.forEach((ev, i) => {
+                    const countrySpan = ev.querySelector('.release-country');
+                    const dateSpan    = ev.querySelector('.release-date');
+                    if (countrySpan) {
+                        if (i > 0) tdC.appendChild(document.createTextNode(', '));
+                        const flagImg       = countrySpan.querySelector('img')?.outerHTML || '';
+                        const abbr          = countrySpan.querySelector('abbr');
+                        const countryCode   = abbr ? abbr.textContent.trim() : '';
+                        const countryFull   = abbr?.getAttribute('title') || '';
+                        const countryHref   = countrySpan.querySelector('a')?.getAttribute('href') || '#';
+                        const spanContainer = document.createElement('span');
+                        spanContainer.className = countrySpan.className;
+                        if (countryFull && countryCode) {
+                            spanContainer.innerHTML = `${flagImg} <a href="${countryHref}">${countryFull} (${countryCode})</a>`;
+                        } else {
+                            spanContainer.innerHTML = countrySpan.innerHTML;
+                        }
+                        tdC.appendChild(spanContainer);
+                    }
+                    if (dateSpan) {
+                        if (i > 0) tdD.appendChild(document.createTextNode(', '));
+                        tdD.appendChild(document.createTextNode(dateSpan.textContent.trim()));
+                    }
+                });
+            }
+            return [tdC, tdD];
+        },
+
+        /**
+         * splitLocation — splits a "Location" cell (venue / city / country) into
+         * three separate cells: Place, Area, and Country.
+         * Place  ← links whose href contains '/place/'
+         * Area   ← links whose href contains '/area/' but without a flag wrapper
+         * Country← links whose href contains '/area/' wrapped in a .flag span
+         * Synthetic columns: ['Place', 'Area', 'Country']
+         */
+        splitLocation(sourceCell) {
+            const tdP = document.createElement('td');
+            const tdA = document.createElement('td');
+            const tdC = document.createElement('td');
+            if (sourceCell) {
+                sourceCell.querySelectorAll('a').forEach(a => {
+                    const href     = a.getAttribute('href');
+                    const clonedA  = a.cloneNode(true);
+                    if (href && href.includes('/place/')) {
+                        tdP.appendChild(clonedA);
+                    } else if (href && href.includes('/area/')) {
+                        const flagSpan = a.closest('.flag');
+                        if (flagSpan) {
+                            const flagImg     = flagSpan.querySelector('img')?.outerHTML || '';
+                            const abbr        = flagSpan.querySelector('abbr');
+                            const countryCode = abbr ? abbr.textContent.trim() : '';
+                            const countryFull = abbr?.getAttribute('title') || '';
+                            const countryHref = a.getAttribute('href') || '#';
+                            const span        = document.createElement('span');
+                            span.className    = flagSpan.className;
+                            if (countryFull && countryCode) {
+                                span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFull} (${countryCode})</a>`;
+                            } else {
+                                span.innerHTML = flagSpan.innerHTML;
+                            }
+                            tdC.appendChild(span);
+                        } else {
+                            if (tdA.hasChildNodes()) tdA.appendChild(document.createTextNode(', '));
+                            tdA.appendChild(clonedA);
+                        }
+                    }
+                });
+            }
+            return [tdP, tdA, tdC];
+        },
+
+        /**
+         * splitArea — splits an "Area" cell into MB-Area and Country cells.
+         * The country is identified by a .flag span; all remaining sibling nodes go
+         * to MB-Area.  Leading/trailing comma separators adjacent to the country node
+         * are stripped from both output cells.
+         * Synthetic columns: ['MB-Area', 'Country']
+         */
+        splitArea(sourceCell) {
+            const tdArea    = document.createElement('td');
+            const tdCountry = document.createElement('td');
+
+            /** Remove leading/trailing comma-or-whitespace text nodes from a cell. */
+            const trimCell = (cell) => {
+                const isTrimTarget = (n) =>
+                    n.nodeType === Node.TEXT_NODE &&
+                    (n.textContent.trim() === ',' || !n.textContent.trim());
+                while (cell.firstChild && isTrimTarget(cell.firstChild)) cell.removeChild(cell.firstChild);
+                while (cell.lastChild  && isTrimTarget(cell.lastChild))  cell.removeChild(cell.lastChild);
+            };
+
+            if (sourceCell) {
+                const nodes            = Array.from(sourceCell.childNodes);
+                const countryNodeIndex = nodes.findIndex(n =>
+                    n.nodeType === Node.ELEMENT_NODE &&
+                    (n.classList.contains('flag') || n.querySelector('.flag'))
+                );
+                nodes.forEach((n, idx) => {
+                    if (idx === countryNodeIndex) {
+                        tdCountry.appendChild(n.cloneNode(true));
+                    } else {
+                        const isCommaSep = n.nodeType === Node.TEXT_NODE && n.textContent.trim() === ',';
+                        const isAdjacent = (idx === countryNodeIndex - 1 || idx === countryNodeIndex + 1);
+                        if (isCommaSep && isAdjacent) return; // skip dangling comma
+                        tdArea.appendChild(n.cloneNode(true));
+                    }
+                });
+                trimCell(tdArea);
+                trimCell(tdCountry);
+            }
+            return [tdArea, tdCountry];
+        },
+
+        /**
+         * sumTracks — sums the numeric parts of a "Tracks" cell whose content is a
+         * '+'-separated list such as "9 + 7 + 8 + 10 + 11 + 9 + 10 + 12".
+         * Returns a single right-aligned cell containing the integer total.
+         * Synthetic columns: ['Total Tracks']
+         */
+        sumTracks(sourceCell) {
+            const tdTotal = document.createElement('td');
+            if (sourceCell) {
+                const text  = sourceCell.textContent || '';
+                const nums  = text.split('+').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+                const total = nums.reduce((acc, n) => acc + n, 0);
+                if (nums.length > 0) {
+                    tdTotal.textContent    = String(total);
+                    tdTotal.style.cssText  = 'text-align:right; font-variant-numeric:tabular-nums;';
+                }
+            }
+            return [tdTotal];
+        }
+    };
+
+    //--------------------------------------------------------------------------------
+    // buildActiveColumnExtractors — derives the runtime extractor list from a
+    // merged activeDefinition object.
+    //
+    // Canonical form: features.columnExtractors is an array of descriptor objects:
+    //   { sourceColumn: string, extractor: string, syntheticColumns: string[] }
+    //
+    // Legacy form: features.splitCD / splitLocation / splitArea boolean flags are
+    // automatically translated so any page definitions not yet migrated keep working.
+    //
+    // Returns a new array with a `colIdx` property initialised to -1.  colIdx is
+    // filled in per-page during header scanning inside the fetch loop.
+    //
+    // @param {object} def - merged activeDefinition
+    // @returns {Array<{sourceColumn, extractor, syntheticColumns, colIdx}>}
+    //--------------------------------------------------------------------------------
+    function buildActiveColumnExtractors(def) {
+        const features = def?.features || {};
+        const result   = [];
+
+        // ── Canonical columnExtractors declarations (preferred form) ──
+        if (Array.isArray(features.columnExtractors)) {
+            features.columnExtractors.forEach(entry => result.push({ ...entry, colIdx: -1 }));
+        }
+
+        // ── Legacy boolean-flag translations ─────────────────────────
+        // Only add the translated entry when not already covered by an explicit
+        // columnExtractors entry targeting the same source column.
+        if (features.splitCD && !result.some(e => e.sourceColumn === 'Country/Date')) {
+            result.push({ sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'],    colIdx: -1 });
+        }
+        if (features.splitLocation && !result.some(e => e.sourceColumn === 'Location')) {
+            result.push({ sourceColumn: 'Location',     extractor: 'splitLocation',    syntheticColumns: ['Place', 'Area', 'Country'], colIdx: -1 });
+        }
+        if (features.splitArea && !result.some(e => e.sourceColumn === 'Area')) {
+            result.push({ sourceColumn: 'Area',         extractor: 'splitArea',        syntheticColumns: ['MB-Area', 'Country'], colIdx: -1 });
+        }
+
+        return result;
+    }
+
     // --- Configuration: Page Definitions ---
 
     // There are different types of MusicBrainz pages
@@ -799,7 +1008,9 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/artists/),
             buttons: [ { label: 'Show all Artists for Instrument' } ],
             features: {
-                splitArea: true,
+                columnExtractors: [
+                    { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
+                ],
                 extractMainColumn: 'Artist' // Specific header
             },
             tableMode: 'single'
@@ -809,7 +1020,9 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/releases/),
             buttons: [ { label: 'Show all Releases for Instrument' } ],
             features: {
-                splitCD: true,
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                ],
                 extractMainColumn: 'Release' // Specific header
             },
             tableMode: 'single'
@@ -838,7 +1051,9 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
             buttons: [ { label: 'Show all Artists for Area' } ],
             features: {
-                splitArea: true,
+                columnExtractors: [
+                    { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
+                ],
                 extractMainColumn: 'Artist' // Specific header
             },
             tableMode: 'single'
@@ -848,7 +1063,9 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
             buttons: [ { label: 'Show all Events for Area' } ],
             features: {
-                splitLocation: true,
+                columnExtractors: [
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
+                ],
                 extractMainColumn: 'Event'
             },
             tableMode: 'single'
@@ -858,7 +1075,9 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/labels/),
             buttons: [ { label: 'Show all Labels for Area' } ],
             features: {
-                splitArea: true,
+                columnExtractors: [
+                    { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
+                ],
                 extractMainColumn: 'Label' // Specific header
             },
             tableMode: 'single'
@@ -886,7 +1105,9 @@ Press Escape on that notice to cancel the auto-action.
                     tableMode: 'single',
                     extractMainColumn: 'Release',
                     features: {
-                        splitCD: true
+                        columnExtractors: [
+                            { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                        ]
                     }
                 },
                 {
@@ -903,7 +1124,9 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/places/),
             buttons: [ { label: 'Show all Places for Area' } ],
             features: {
-                splitArea: true,
+                columnExtractors: [
+                    { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
+                ],
                 extractMainColumn: 'Place'
             },
             tableMode: 'single'
@@ -1008,7 +1231,14 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.includes('/series'),
             buttons: [ { label: 'Show all Releases for Series' } ],
             features: {
-                splitCD: true,
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    }
+                ],
                 extractMainColumn: 'Release'
             },
             tableMode: 'single'
@@ -1048,7 +1278,14 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.includes('/label'),
             buttons: [ { label: 'Show all Releases for Label' } ],
             features: {
-                splitCD: true,
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    }
+                ],
                 extractMainColumn: 'Release'
             },
             tableMode: 'single'
@@ -1104,7 +1341,6 @@ Press Escape on that notice to cancel the auto-action.
             tableMode: 'multi',
             non_paginated: true
         },
-        // TODO: Needs to be handled separately - actually multi table native, but each table has it's own h2 header
         {
             type: 'artist-aliases',
             match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/aliases/),
@@ -1143,7 +1379,9 @@ Press Escape on that notice to cancel the auto-action.
                 { label: '🧮 Various artist releases', params: { va: '1' } }
             ],
             features: {
-                splitCD: true,
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                ],
                 extractMainColumn: 'Release'
             },
             tableMode: 'single'
@@ -1153,7 +1391,6 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.includes('/recordings'),
             buttons: [ { label: 'Show all Recordings for Artist' } ],
             features: {
-                splitCD: false, // Explicitly false (default), but shown for clarity
                 extractMainColumn: 'Name'
             },
             tableMode: 'single'
@@ -1182,7 +1419,14 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.includes('/release-group/'),
             buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
             features: {
-                splitCD: true,
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    }
+                ],
                 extractMainColumn: 'Release'
             },
             tableMode: 'multi',
@@ -1227,7 +1471,9 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.includes('/recording'),
             buttons: [ { label: 'Show all Releases for Recording' } ],
             features: {
-                splitCD: true,
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                ],
                 extractMainColumn: 'Release title'
             },
             tableMode: 'multi',
@@ -1248,7 +1494,9 @@ Press Escape on that notice to cancel the auto-action.
             match: (path) => path.includes('/events'),
             buttons: [ { label: 'Show all Events for Artist' } ],
             features: {
-                splitLocation: true,
+                columnExtractors: [
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
+                ],
                 extractMainColumn: 'Event'
             },
             tableMode: 'single'
@@ -5177,9 +5425,10 @@ Press Escape on that notice to cancel the auto-action.
 
     // 3. Set Feature Flags based on active definition
     // These are evaluated dynamically during fetch based on button-specific features
-    let typesWithSplitCD = [];
-    let typesWithSplitLocation = [];
-    let typesWithSplitArea = [];
+    // Runtime extractor list populated by buildActiveColumnExtractors() in startFetchingProcess.
+    // Each entry: { sourceColumn, extractor, syntheticColumns, colIdx }
+    // colIdx is resolved per-page during header scanning and reset to -1 between pages.
+    let activeColumnExtractors = [];
 
     // --- UI Elements ---
     const controlsContainer = document.createElement('div');
@@ -7200,49 +7449,21 @@ Press Escape on that notice to cancel the auto-action.
 
         const headerBgColor = '#d3d3d3';
 
-        if (typesWithSplitCD.includes(pageType)) {
+        // Inject synthetic column headers for every active column extractor.
+        // Each extractor may declare one or more synthetic columns; we only add a
+        // header when it is not already present (idempotent across re-renders).
+        activeColumnExtractors.forEach(entry => {
             const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
-            if (!headersText.includes('Country')) {
-                const thC = document.createElement('th');
-                thC.textContent = 'Country';
-                thC.style.backgroundColor = headerBgColor;
-                Lib.debug('cleanup', 'Injecting synthetic header: Country');
-                theadRow.appendChild(thC);
-            }
-            if (!headersText.includes('Date')) {
-                const thD = document.createElement('th');
-                thD.textContent = 'Date';
-                thD.style.backgroundColor = headerBgColor;
-                Lib.debug('cleanup', 'Injecting synthetic header: Date');
-                theadRow.appendChild(thD);
-            }
-        }
-
-        if (typesWithSplitLocation.includes(pageType)) {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
-            ['Place', 'Area', 'Country'].forEach(col => {
-                if (!headersText.includes(col)) {
+            entry.syntheticColumns.forEach(colName => {
+                if (!headersText.includes(colName)) {
                     const th = document.createElement('th');
-                    th.textContent = col;
+                    th.textContent = colName;
                     th.style.backgroundColor = headerBgColor;
-                    Lib.debug('cleanup', `Injecting synthetic header: ${col}`);
+                    Lib.debug('cleanup', `Injecting synthetic header: ${colName} (via extractor: ${entry.extractor})`);
                     theadRow.appendChild(th);
                 }
             });
-        }
-
-        if (typesWithSplitArea.includes(pageType)) {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
-            ['MB-Area', 'Country'].forEach(col => {
-                if (!headersText.includes(col)) {
-                    const th = document.createElement('th');
-                    th.textContent = col;
-                    th.style.backgroundColor = headerBgColor;
-                    Lib.debug('cleanup', `Injecting synthetic header: ${col}`);
-                    theadRow.appendChild(th);
-                }
-            });
-        }
+        });
 
         // Check if the generic split feature is enabled for this page definition
         const mainColConfig = activeDefinition.features?.extractMainColumn;
@@ -7445,9 +7666,9 @@ Press Escape on that notice to cancel the auto-action.
         };
 
         // Update feature flags based on the merged activeDefinition
-        typesWithSplitCD = (activeDefinition.features?.splitCD) ? [pageType] : [];
-        typesWithSplitLocation = (activeDefinition.features?.splitLocation) ? [pageType] : [];
-        typesWithSplitArea = (activeDefinition.features?.splitArea) ? [pageType] : [];
+        // Build the unified column extractor list from the merged activeDefinition.
+        // This replaces the former typesWithSplitCD/Location/Area boolean-flag arrays.
+        activeColumnExtractors = buildActiveColumnExtractors(activeDefinition);
 
         const activeBtn = e.target;
         // Now access properties from the NEW activeDefinition
@@ -7666,9 +7887,9 @@ Press Escape on that notice to cancel the auto-action.
                     break; // Stop fetching further pages on error
                 }
 
-                let countryDateIdx = -1;
-                let locationIdx = -1;
-                let areaIdx = -1;
+                let countryDateIdx = -1; // kept for mainColIdx detection parity — not used for splitting
+                let locationIdx = -1;   // idem
+                let areaIdx = -1;       // idem
                 let mainColIdx = -1;
                 let indicesToExclude = [];
                 const headerNames = []; // Array to store header names for debugging
@@ -7734,6 +7955,10 @@ Press Escape on that notice to cancel the auto-action.
                         'Release events': 'sa_remove_release_events'
                     };
 
+                    // Reset column indices for all active extractors before scanning each page.
+                    // Headers may theoretically vary across pages; resetting prevents stale indices.
+                    activeColumnExtractors.forEach(entry => { entry.colIdx = -1; });
+
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
                         headerNames[idx] = txt; // Store the name
@@ -7746,16 +7971,10 @@ Press Escape on that notice to cancel the auto-action.
                             }
                         }
 
-                        // Check for special column types (independent of removal checks)
-                        if (typesWithSplitCD.includes(pageType) && txt === 'Country/Date') {
-                            countryDateIdx = idx;
-                        }
-                        if (typesWithSplitLocation.includes(pageType) && txt === 'Location') {
-                            locationIdx = idx;
-                        }
-                        if (typesWithSplitArea.includes(pageType) && txt === 'Area') {
-                            areaIdx = idx;
-                        }
+                        // Resolve source-column indices for active column extractors
+                        activeColumnExtractors.forEach(entry => {
+                            if (txt === entry.sourceColumn) entry.colIdx = idx;
+                        });
 
                         // Dynamic detection based on config candidates
                         // We only search if mainColIdx wasn't already forced by a number config
@@ -7765,10 +7984,13 @@ Press Escape on that notice to cancel the auto-action.
                     });
                 }
 
-                // Updated Debug Output with Column Names
+                // Updated Debug Output with Column Names and Extractor summary
+                const extractorSummary = activeColumnExtractors.length
+                    ? activeColumnExtractors.map(e => `${e.extractor}("${e.sourceColumn}"@${e.colIdx})`).join(', ')
+                    : 'none';
                 Lib.debug(
                     'indices',
-                    `Detected indices → mainColIdx=${mainColIdx} (${headerNames[mainColIdx] || 'N/A'}), countryDateIdx=${countryDateIdx} (${headerNames[countryDateIdx] || 'N/A'}), areaIdx=${areaIdx} (${headerNames[areaIdx] || 'N/A'}), locationIdx=${locationIdx} (${headerNames[locationIdx] || 'N/A'}), excluded=[${indicesToExclude.join(',')}] for pageType: ${pageType}`
+                    `Detected indices → mainColIdx=${mainColIdx} (${headerNames[mainColIdx] || 'N/A'}), extractors=[${extractorSummary}], excluded=[${indicesToExclude.join(',')}] for pageType: ${pageType}`
                 );
 
                 let rowsInThisPage = 0;
@@ -7927,137 +8149,37 @@ Press Escape on that notice to cancel the auto-action.
                                         }
                                     }
 
-                                    // Handling Country/Date split
-                                    const tdSplitC = document.createElement('td');
-                                    const tdSplitD = document.createElement('td');
-                                    if (typesWithSplitCD.includes(pageType) && countryDateIdx !== -1) {
-                                        const cdCell = newRow.cells[countryDateIdx];
-                                        if (cdCell) {
-                                            const events = Array.from(cdCell.querySelectorAll('.release-event'));
-                                            events.forEach((ev, i) => {
-                                                const countrySpan = ev.querySelector('.release-country');
-                                                const dateSpan = ev.querySelector('.release-date');
-                                                if (countrySpan) {
-                                                    if (i > 0) tdSplitC.appendChild(document.createTextNode(', '));
-                                                    const flagImg = countrySpan.querySelector('img')?.outerHTML || '';
-                                                    const abbr = countrySpan.querySelector('abbr');
-                                                    const countryCode = abbr ? abbr.textContent.trim() : '';
-                                                    const countryFullName = abbr?.getAttribute('title') || '';
-                                                    const countryA = countrySpan.querySelector('a');
-                                                    const countryHref = countryA?.getAttribute('href') || '#';
-                                                    const spanContainer = document.createElement('span');
-                                                    spanContainer.className = countrySpan.className;
-                                                    if (countryFullName && countryCode) {
-                                                        spanContainer.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
-                                                    } else {
-                                                        spanContainer.innerHTML = countrySpan.innerHTML;
-                                                    }
-                                                    tdSplitC.appendChild(spanContainer);
-                                                }
-                                                if (dateSpan) {
-                                                    if (i > 0) tdSplitD.appendChild(document.createTextNode(', '));
-                                                    tdSplitD.appendChild(document.createTextNode(dateSpan.textContent.trim()));
-                                                }
-                                            });
+                                    // --- Run all active column extractors BEFORE column deletion.
+                                    // colIdx references into newRow are only valid while the cell
+                                    // count matches the fetched DOM; deleteCell() below shifts them.
+                                    // Each extractor returns an array of new <td> elements (one per
+                                    // declared syntheticColumn).  We accumulate them here and append
+                                    // them after deletion so they land at the end of the row.
+                                    const extractedSyntheticCells = activeColumnExtractors.map(entry => {
+                                        if (entry.colIdx === -1) {
+                                            // Source column not present on this page — emit empty cells
+                                            return entry.syntheticColumns.map(() => document.createElement('td'));
                                         }
-                                    }
-
-                                    // Handling Location split (Place, Area and Country)
-                                    const tdP = document.createElement('td');
-                                    const tdA = document.createElement('td');
-                                    const tdC = document.createElement('td');
-                                    if (typesWithSplitLocation.includes(pageType) && locationIdx !== -1) {
-                                        const locCell = newRow.cells[locationIdx];
-                                        if (locCell) {
-                                            locCell.querySelectorAll('a').forEach(a => {
-                                                const href = a.getAttribute('href');
-                                                const clonedA = a.cloneNode(true);
-                                                if (href && href.includes('/place/')) {
-                                                    tdP.appendChild(clonedA);
-                                                } else if (href && href.includes('/area/')) {
-                                                    const flagSpan = a.closest('.flag');
-                                                    if (flagSpan) {
-                                                        const flagImg = flagSpan.querySelector('img')?.outerHTML || '';
-                                                        const abbr = flagSpan.querySelector('abbr');
-                                                        const countryCode = abbr ? abbr.textContent.trim() : '';
-                                                        const countryFullName = abbr?.getAttribute('title') || '';
-                                                        const countryHref = a.getAttribute('href') || '#';
-                                                        const span = document.createElement('span');
-                                                        span.className = flagSpan.className;
-                                                        if (countryFullName && countryCode) {
-                                                            span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFullName} (${countryCode})</a>`;
-                                                        } else {
-                                                            span.innerHTML = flagSpan.innerHTML;
-                                                        }
-                                                        tdC.appendChild(span);
-                                                    } else {
-                                                        if (tdA.hasChildNodes()) tdA.appendChild(document.createTextNode(', '));
-                                                        tdA.appendChild(clonedA);
-                                                    }
-                                                }
-                                            });
+                                        const sourceCell = newRow.cells[entry.colIdx];
+                                        if (!sourceCell) {
+                                            Lib.warn('extract', `colIdx ${entry.colIdx} out of range for extractor "${entry.extractor}" (row has ${newRow.cells.length} cells)`);
+                                            return entry.syntheticColumns.map(() => document.createElement('td'));
                                         }
-                                    }
-
-                                    // Handling Area split (MB-Area and Country)
-                                    const tdAreaOnly = document.createElement('td');
-                                    const tdCountryOnly = document.createElement('td');
-                                    if (typesWithSplitArea.includes(pageType) && areaIdx !== -1) {
-                                        const areaCell = newRow.cells[areaIdx];
-                                        if (areaCell) {
-                                            const nodes = Array.from(areaCell.childNodes);
-                                            // Identify the node that contains the flag (the country)
-                                            const countryNodeIndex = nodes.findIndex(node =>
-                                                node.nodeType === 1 && (node.classList.contains('flag') || node.querySelector('.flag'))
-                                            );
-
-                                            nodes.forEach((node, idx) => {
-                                                if (idx === countryNodeIndex) {
-                                                    // This is the country node, move to Country column
-                                                    tdCountryOnly.appendChild(node.cloneNode(true));
-                                                } else {
-                                                    // Check if this node is a comma/whitespace separator adjacent to the country
-                                                    // We skip these to avoid dangling commas like "Philadelphia, "
-                                                    const isCommaSeparator = node.nodeType === 3 && node.textContent.trim() === ',';
-                                                    const isAdjacentToCountry = (idx === countryNodeIndex - 1 || idx === countryNodeIndex + 1);
-
-                                                    if (isCommaSeparator && isAdjacentToCountry) {
-                                                        return;
-                                                    }
-
-                                                    // All other nodes (smaller areas, aliases, separators) go to MB-Area
-                                                    tdAreaOnly.appendChild(node.cloneNode(true));
-                                                }
-                                            });
-
-                                            // Cleanup: Remove any leading/trailing commas or empty text nodes from the new cells
-                                            const trimCell = (cell) => {
-                                                while (cell.firstChild && cell.nodeType === 1 && (cell.firstChild.nodeType === 3 && (cell.firstChild.textContent.trim() === ',' || !cell.firstChild.textContent.trim()))) {
-                                                    cell.removeChild(cell.firstChild);
-                                                }
-                                                while (cell.lastChild && cell.nodeType === 1 && (cell.lastChild.nodeType === 3 && (cell.lastChild.textContent.trim() === ',' || !cell.lastChild.textContent.trim()))) {
-                                                    cell.removeChild(cell.lastChild);
-                                                }
-                                            };
-
-                                            trimCell(tdAreaOnly);
-                                            trimCell(tdCountryOnly);
+                                        if (typeof ColumnDataExtractor[entry.extractor] !== 'function') {
+                                            Lib.error('extract', `Unknown extractor function: "${entry.extractor}"`);
+                                            return entry.syntheticColumns.map(() => document.createElement('td'));
                                         }
-                                    }
+                                        const result = ColumnDataExtractor[entry.extractor](sourceCell);
+                                        // Pad or trim to declared syntheticColumns length for structural consistency
+                                        while (result.length < entry.syntheticColumns.length) result.push(document.createElement('td'));
+                                        return result.slice(0, entry.syntheticColumns.length);
+                                    });
 
+                                    // Delete excluded columns (descending order preserves index stability)
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
 
-                                    if (typesWithSplitCD.includes(pageType)) {
-                                        newRow.appendChild(tdSplitC);
-                                        newRow.appendChild(tdSplitD);
-                                    } else if (typesWithSplitLocation.includes(pageType)) {
-                                        newRow.appendChild(tdP);
-                                        newRow.appendChild(tdA);
-                                        newRow.appendChild(tdC);
-                                    } else if (typesWithSplitArea.includes(pageType)) {
-                                        newRow.appendChild(tdAreaOnly);
-                                        newRow.appendChild(tdCountryOnly);
-                                    }
+                                    // Append synthetic cells from all extractors in declaration order
+                                    extractedSyntheticCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
 
                                     if (pageType !== 'artist-releasegroups') {
                                         newRow.appendChild(tdName); newRow.appendChild(tdComment);
@@ -8097,11 +8219,6 @@ Press Escape on that notice to cancel the auto-action.
                 if (progress >= 1.0) bgColor = '#ccffcc'; // light green
                 else if (progress >= 0.5) bgColor = '#ffe0b2'; // light orange
                 activeBtn.style.backgroundColor = bgColor;
-
-                // Show live progress exclusively inside the inline progress bar in the h1 controls line.
-                // The globalStatusDisplay (subheader) is intentionally left unchanged during fetching
-                // because the progress bar already carries "Loading page N of M… (K rows) - est. X.Xs".
-                // globalStatusDisplay.textContent = ...; // <-- removed; redundant with progress bar
 
                 // Drive the inline progress bar in the h1 controls line
                 const fillPct = Math.round(progress * 100);
