@@ -41420,7 +41420,7 @@ Here is how it looks like
 
 * document all functions in the library and the user script where missing
 
-* Do not sort the "functions"
+* Do not sort the "functions" in the "Ctrl-M" shortcut helper popup
 
 #+begin_example
        // Function shortcuts
@@ -41431,3 +41431,10 @@ Here is how it looks like
             tooltipHTML += `<div style="margin-left: 4px;"><strong>${key}</strong>: ${entry.description}</div>`;
         }
 #+end_example
+
+Also this still doesn't work:
+
+- when the "Column Visibility" pull-down menu is open, the "Tab"-key cycles through the checkbox choices, but then
+  instead of cycling next to the 3 buttons "Select All", "Deselect All", "Choose current configuration" and then starts
+  again with the first checkbox, it instead leaves the menu and cycles through other UI elements visible in the page,
+  even up to the browser URL bar, please fix
