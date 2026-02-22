@@ -2137,7 +2137,7 @@ Press Escape on that notice to cancel the auto-action.
                     : '';
                 const isNumeric = hdrName.includes('Year') || hdrName.includes('Releases') ||
                                   hdrName.includes('Track') || hdrName.includes('Length') ||
-                                  hdrName.includes('Rating') || hdrName.includes('#');
+                                  hdrName.includes('#');
 
                 let result;
                 if (isNumeric) {
@@ -8576,7 +8576,7 @@ Press Escape on that notice to cancel the auto-action.
                 fetchProgressFill.style.width = `${fillPct}%`;
                 fetchProgressFill.style.background = fillColor;
                 fetchProgressLabel.textContent =
-                    `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) - est. ${estRemainingSeconds.toFixed(1)}s`;
+                    `Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) - ${estRemainingSeconds.toFixed(1)}s left`;
 
                 // Detailed statistics per page fetch
                 Lib.debug('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
