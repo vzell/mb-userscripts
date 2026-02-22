@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.72.0+2026-02-22
+// @version      9.73.0+2026-02-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.73.0+2026-02-22', description: 'Configurable keyboard shortcuts: 12 new keyboard_shortcut entries added to the "🎹 KEYBOARD SHORTCUTS" configSchema section (sa_shortcut_open_settings, sa_shortcut_focus_global_filter, sa_shortcut_focus_column_filter, sa_shortcut_clear_filters, sa_shortcut_open_export, sa_shortcut_save_to_disk, sa_shortcut_load_from_disk, sa_shortcut_open_visible_columns, sa_shortcut_open_density, sa_shortcut_toggle_h2, sa_shortcut_toggle_h3, sa_shortcut_auto_resize). Two new helpers: isShortcutEvent(e, settingKey, fallback) mirrors isPrefixKeyEvent logic against an arbitrary setting; getShortcutDisplay(settingKey, fallback) returns the configured string for UI display. initKeyboardShortcuts() fully refactored: every hardcoded (ctrlKey||metaKey)&&key==="x" guard replaced by isShortcutEvent() calls. New sa_shortcut_auto_resize handler added (default Ctrl+R) that triggers toggleAutoResizeColumns directly in addition to the existing prefix-mode sub-key. showShortcutsHelp() sections array updated: all configurable shortcut keys now shown via getShortcutDisplay() so the help dialog reflects the user\'s live configuration.'},
     {version: '9.72.0+2026-02-22', description: 'Feature: Fully implemented "🖌️ UI APPEARANCE" config section — replaces all hardcoded inline styles on every interactive UI element with 12 condensed pipe-separated settings. New config keys: sa_ui_action_btn_style (fontSize|padding|height|borderRadius — applied to all h1 action-bar buttons: show-all, 🎹, ⚙️, ❓, visible-columns, export, stats, density, auto-resize), sa_ui_save_btn_style (bg|color|border|bgHover), sa_ui_load_btn_style (bg|color|border|bgHover), sa_ui_stop_btn_style (bg|color|border), sa_ui_settings_btn_style (bg|color|border), sa_ui_help_btn_style (bg|color|border), sa_ui_button_divider_style (color|margin — all " | " separators), sa_ui_global_filter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_prefilter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_column_filter_input_style (fontSize|padding — injected into the dynamic CSS block for .mb-col-filter-input), sa_ui_subtable_btn_style (fontSize|padding|borderRadius|bg|border|bgHover — injected for .mb-subtable-clear-btn and .mb-show-all-subtable-btn), sa_ui_filter_bar_btn_style (fontSize|padding|borderRadius|bg|border — prefilter toggle, highlight toggle, clear-column, clear-all buttons), sa_ui_checkbox_style (fontSize|marginRight — all Cc/Rx/Ex checkbox inputs and their labels). Corresponding CSS helper functions added: uiActionBtnBaseCSS, uiSaveBtnCSS, uiLoadBtnCSS, uiStopBtnCSS, uiSettingsBtnCSS, uiHelpBtnCSS, uiButtonDividerCSS, uiGlobalFilterInputCSS, uiPrefilterInputCSS, uiColumnFilterInputVals, uiSubtableBtnVals, uiFilterBarBtnCSS, uiCheckboxVals, uiCheckboxLabelCSS, uiCheckboxInputCSS. Also: added unique mb- IDs to all previously anonymous elements (mb-save-to-disk-btn, mb-load-from-disk-btn, mb-stop-btn, mb-settings-btn, mb-file-input, mb-prefilter-container, mb-prefilter-input, mb-prefilter-case/rx/exclude-label/checkbox, mb-filter-container, mb-global-filter-wrapper, mb-global-filter-input, mb-global-filter-clear, mb-global-filter-case/rx/exclude-label/checkbox, mb-button-divider-initial). Fixed typo: preFilterInput font-size was "1.oem" → corrected to "1em" via config default. Save/Load buttons gain hover effects via onmouseover/onmouseout.'},
     {version: '9.71.0+2026-02-22', description: 'Feature: New ColumnDataExtractor extractor extractFormatTypes for release-group, label, and series pages. Strips leading numeric quantity factors (e.g. "8×", "2x") from each media-type token in a "Format" cell and converts the " + " separator between distinct types to ", ". Examples: "8×12\\" Vinyl" → "12\\" Vinyl", "2xCD-R + DVD" → "CD-R, DVD". Registered as { sourceColumn: \'Format\', extractor: \'extractFormatTypes\', syntheticColumns: [\'Format Types\'] } in the columnExtractors of releasegroup-releases, label-releases, and series-releases pageDefinitions.'},
     {version: '9.70.0+2026-02-22', description: 'Refactor + Feature: Introduced ColumnDataExtractor — a named-function registry that decouples column extraction and transformation logic from the main fetch/render pipeline. (1) New singleton object ColumnDataExtractor with four named extractors: splitCountryDate (Country/Date → Country + Date), splitLocation (Location → Place + Area + Country), splitArea (Area → MB-Area + Country), and sumTracks (Tracks "9 + 7 + 8" → Total Tracks integer sum). Each extractor has the contract fn(sourceCell: HTMLTableCellElement): HTMLTableCellElement[] and is entirely self-contained. (2) New helper function buildActiveColumnExtractors(def) converts an activeDefinition into a runtime array of {sourceColumn, extractor, syntheticColumns, colIdx} descriptors; translates legacy splitCD/splitLocation/splitArea boolean flags transparently for any future definitions that still use them. (3) All pageDefinitions migrated from the boolean split* flags to the canonical columnExtractors:[{sourceColumn, extractor, syntheticColumns}] array in features; the old splitCD: false entry was removed. (5) Module-level typesWithSplitCD/Location/Area arrays removed; replaced by activeColumnExtractors (single unified list). startFetchingProcess now calls buildActiveColumnExtractors() instead of setting three separate flag arrays. (6) Header scanning loop rewritten: colIdx reset before each page, single forEach over activeColumnExtractors replaces three separate if-blocks. cleanupHeaders synthetic-header injection unified into one forEach. Row-processing split section replaced by: (a) call each extractor before deleteCell (indices still valid), (b) deleteCell excluded columns, (c) append all synthetic cells in declaration order. All legacy inline code (~80 lines) removed.'},
@@ -485,6 +486,94 @@ Press Escape on that notice to cancel the auto-action.
             type: "keyboard_shortcut",
             default: "Ctrl+M",
             description: "Keyboard shortcut prefix key combination (expects a second key press to be complete, e.g. Ctrl+M, Ctrl+., Alt+X, Ctrl+Shift+,)"
+        },
+
+        // ---- Configurable direct shortcuts ----
+        // Every entry below controls a single-chord shortcut (no prefix second-key needed).
+        // Use the 🎹 Capture button to record a new combination. Changes take effect after Save.
+
+        sa_shortcut_open_settings: {
+            label: "Shortcut: Open Settings",
+            type: "keyboard_shortcut",
+            default: "Ctrl+,",
+            description: "Open the Settings dialog (default: Ctrl+,)"
+        },
+
+        sa_shortcut_focus_global_filter: {
+            label: "Shortcut: Focus Global Filter",
+            type: "keyboard_shortcut",
+            default: "Ctrl+G",
+            description: "Move keyboard focus to the global filter input (default: Ctrl+G)"
+        },
+
+        sa_shortcut_focus_column_filter: {
+            label: "Shortcut: Focus Column Filter",
+            type: "keyboard_shortcut",
+            default: "Ctrl+C",
+            description: "Focus the first column filter of the next table, cycling through all tables (default: Ctrl+C)"
+        },
+
+        sa_shortcut_clear_filters: {
+            label: "Shortcut: Clear All Filters",
+            type: "keyboard_shortcut",
+            default: "Ctrl+Shift+G",
+            description: "Clear every active filter (global + all column filters) at once (default: Ctrl+Shift+G)"
+        },
+
+        sa_shortcut_open_export: {
+            label: "Shortcut: Open Export Menu",
+            type: "keyboard_shortcut",
+            default: "Ctrl+E",
+            description: "Open the Export menu (CSV / JSON / Org-Mode) (default: Ctrl+E)"
+        },
+
+        sa_shortcut_save_to_disk: {
+            label: "Shortcut: Save to Disk",
+            type: "keyboard_shortcut",
+            default: "Ctrl+S",
+            description: "Save the current table data to disk as Gzipped JSON (default: Ctrl+S)"
+        },
+
+        sa_shortcut_load_from_disk: {
+            label: "Shortcut: Load from Disk",
+            type: "keyboard_shortcut",
+            default: "Ctrl+L",
+            description: "Open the Load-from-disk dialog (default: Ctrl+L)"
+        },
+
+        sa_shortcut_open_visible_columns: {
+            label: "Shortcut: Open Visible Columns Menu",
+            type: "keyboard_shortcut",
+            default: "Ctrl+V",
+            description: "Open the Visible Columns menu (default: Ctrl+V)"
+        },
+
+        sa_shortcut_open_density: {
+            label: "Shortcut: Open Density Menu",
+            type: "keyboard_shortcut",
+            default: "Ctrl+D",
+            description: "Open the table Density (row-spacing) menu (default: Ctrl+D)"
+        },
+
+        sa_shortcut_toggle_h2: {
+            label: "Shortcut: Toggle h2 Headers",
+            type: "keyboard_shortcut",
+            default: "Ctrl+2",
+            description: "Toggle collapse / expand of all h2 section headers (default: Ctrl+2)"
+        },
+
+        sa_shortcut_toggle_h3: {
+            label: "Shortcut: Toggle h3 Headers",
+            type: "keyboard_shortcut",
+            default: "Ctrl+3",
+            description: "Toggle collapse / expand of all h3 type headers (sub-tables) (default: Ctrl+3)"
+        },
+
+        sa_shortcut_auto_resize: {
+            label: "Shortcut: Toggle Auto-Resize Columns",
+            type: "keyboard_shortcut",
+            default: "Ctrl+R",
+            description: "Toggle automatic column-width optimisation (default: Ctrl+R; also available as prefix-mode sub-key r)"
         },
 
         sa_enable_stats_panel: {
@@ -1698,6 +1787,41 @@ Press Escape on that notice to cancel the auto-action.
         const shiftMatch = p.shift ? e.shiftKey               : !e.shiftKey;
         const keyMatch   = e.key.toLowerCase() === p.key.toLowerCase();
         return ctrlMatch && altMatch && shiftMatch && keyMatch;
+    }
+
+    /**
+     * Returns true when a keyboard event matches a configured single-chord shortcut.
+     * Mirrors isPrefixKeyEvent logic but reads an arbitrary setting key.
+     * "Ctrl" in the stored value matches both Ctrl and Meta/Cmd for cross-platform compat.
+     * @param {KeyboardEvent} e
+     * @param {string} settingKey - The configSchema key to read (e.g. 'sa_shortcut_open_export')
+     * @param {string} fallback   - Default shortcut string when the setting is absent
+     * @returns {boolean}
+     */
+    function isShortcutEvent(e, settingKey, fallback) {
+        const raw = (typeof Lib !== 'undefined' && Lib.settings && Lib.settings[settingKey])
+            ? Lib.settings[settingKey]
+            : fallback;
+        const p = parsePrefixShortcut(raw);
+        const ctrlMatch  = p.ctrl  ? (e.ctrlKey || e.metaKey) : (!e.ctrlKey && !e.metaKey);
+        const altMatch   = p.alt   ? e.altKey                 : !e.altKey;
+        const shiftMatch = p.shift ? e.shiftKey               : !e.shiftKey;
+        const keyMatch   = e.key.toLowerCase() === p.key.toLowerCase();
+        return ctrlMatch && altMatch && shiftMatch && keyMatch;
+    }
+
+    /**
+     * Returns the display string for a configured single-chord shortcut.
+     * Falls back to the supplied default when the setting is not yet available.
+     * @param {string} settingKey - The configSchema key to read
+     * @param {string} fallback   - Value to return when setting is absent
+     * @returns {string}
+     */
+    function getShortcutDisplay(settingKey, fallback) {
+        if (typeof Lib !== 'undefined' && Lib.settings && Lib.settings[settingKey]) {
+            return Lib.settings[settingKey];
+        }
+        return fallback;
     }
 
     function showCtrlMTooltip(actionButtons, buttonKeys) {
@@ -3890,24 +4014,26 @@ Press Escape on that notice to cancel the auto-action.
         const scrollArea = document.createElement('div');
         scrollArea.style.cssText = 'overflow-y: auto; flex: 1; padding: 16px 20px;';
 
-        // Create shortcuts sections
+        // Create shortcuts sections.
+        // Configurable entries read the live setting via getShortcutDisplay() so the
+        // help dialog always reflects whatever the user has saved in Settings.
         const sections = [
             {
                 title: 'Filter & Search',
                 shortcuts: [
-                    { keys: 'Ctrl/Cmd + G', desc: 'Focus global filter' },
-                    { keys: 'Ctrl/Cmd + C', desc: 'Focus first column filter (cycle through tables)' },
-                    { keys: 'Ctrl/Cmd + Shift + G', desc: 'Clear all filters' },
+                    { keys: getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G'), desc: 'Focus global filter' },
+                    { keys: getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C'), desc: 'Focus first column filter (cycle through tables)' },
+                    { keys: getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G'), desc: 'Clear all filters' },
                     { keys: 'Escape', desc: 'Clear focused filter (press twice to blur)' }
                 ]
             },
             {
                 title: 'View & Layout',
                 shortcuts: [
-                    { keys: 'Ctrl/Cmd + V', desc: 'Open "Visible Columns" menu' },
-                    { keys: 'Ctrl/Cmd + D', desc: 'Open "Density" menu' },
-                    { keys: 'Ctrl/Cmd + 2', desc: 'Toggle collapse all h2 headers' },
-                    { keys: 'Ctrl/Cmd + 3', desc: 'Toggle collapse all h3 headers (types)' },
+                    { keys: getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V'), desc: 'Open "Visible Columns" menu' },
+                    { keys: getShortcutDisplay('sa_shortcut_open_density', 'Ctrl+D'), desc: 'Open "Density" menu' },
+                    { keys: getShortcutDisplay('sa_shortcut_toggle_h2', 'Ctrl+2'), desc: 'Toggle collapse all h2 headers' },
+                    { keys: getShortcutDisplay('sa_shortcut_toggle_h3', 'Ctrl+3'), desc: 'Toggle collapse all h3 headers (types)' },
                     { keys: getPrefixDisplay(), desc: 'Enter prefix mode (then a second key selects action / function)' }
                 ]
             },
@@ -3942,15 +4068,21 @@ Press Escape on that notice to cancel the auto-action.
             {
                 title: 'Data Export & Management',
                 shortcuts: [
-                    { keys: 'Ctrl/Cmd + E', desc: 'Open export menu (CSV, JSON, Org-Mode)' },
-                    { keys: 'Ctrl/Cmd + S', desc: 'Save to disk (JSON)' },
-                    { keys: 'Ctrl/Cmd + L', desc: 'Load from disk' }
+                    { keys: getShortcutDisplay('sa_shortcut_open_export', 'Ctrl+E'), desc: 'Open export menu (CSV, JSON, Org-Mode)' },
+                    { keys: getShortcutDisplay('sa_shortcut_save_to_disk', 'Ctrl+S'), desc: 'Save to disk (JSON)' },
+                    { keys: getShortcutDisplay('sa_shortcut_load_from_disk', 'Ctrl+L'), desc: 'Load from disk' }
+                ]
+            },
+            {
+                title: 'Column Resizing',
+                shortcuts: [
+                    { keys: getShortcutDisplay('sa_shortcut_auto_resize', 'Ctrl+R'), desc: 'Toggle auto-resize columns (also: prefix mode then r)' }
                 ]
             },
             {
                 title: 'Settings',
                 shortcuts: [
-                    { keys: 'Ctrl/Cmd + ,', desc: 'Open settings dialog' }
+                    { keys: getShortcutDisplay('sa_shortcut_open_settings', 'Ctrl+,'), desc: 'Open settings dialog' }
                 ]
             },
             {
@@ -4217,25 +4349,25 @@ Press Escape on that notice to cancel the auto-action.
             }
 
             // Ctrl/Cmd + , : Open settings
-            if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+            if (isShortcutEvent(e, 'sa_shortcut_open_settings', 'Ctrl+,')) {
                 e.preventDefault();
                 Lib.showSettings();
-                Lib.debug('shortcuts', 'Settings dialog opened via Ctrl+,');
+                Lib.debug('shortcuts', 'Settings dialog opened via ' + getShortcutDisplay('sa_shortcut_open_settings', 'Ctrl+,'));
             }
 
-            // Ctrl/Cmd + G: Focus global filter
-            if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
+            // Focus global filter
+            if (isShortcutEvent(e, 'sa_shortcut_focus_global_filter', 'Ctrl+G')) {
                 e.preventDefault();
                 const filterInput = document.querySelector('input[placeholder*="Global Filter"]');
                 if (filterInput) {
                     filterInput.focus();
                     filterInput.select();
-                    Lib.debug('shortcuts', 'Global filter focused via Ctrl+G');
+                    Lib.debug('shortcuts', 'Global filter focused via ' + getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G'));
                 }
             }
 
-            // Ctrl/Cmd + C: Focus first column filter (cycle through tables, skip checkbox/number columns)
-            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+            // Focus first column filter (cycle through tables, skip checkbox/number columns)
+            if (isShortcutEvent(e, 'sa_shortcut_focus_column_filter', 'Ctrl+C')) {
                 e.preventDefault();
                 const tables = document.querySelectorAll('table.tbl');
                 if (tables.length === 0) {
@@ -4272,7 +4404,7 @@ Press Escape on that notice to cancel the auto-action.
                     if (targetInput) {
                         targetInput.focus();
                         targetInput.select();
-                        Lib.debug('shortcuts', `First column filter focused via Ctrl+C (table ${currentTableIndex + 1}/${tables.length})`);
+                        Lib.debug('shortcuts', `First column filter focused via ${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')} (table ${currentTableIndex + 1}/${tables.length})`);
                     } else {
                         Lib.warn('shortcuts', `No suitable column filter input found in table ${currentTableIndex + 1}`);
                     }
@@ -4281,74 +4413,74 @@ Press Escape on that notice to cancel the auto-action.
                 }
             }
 
-            // Ctrl/Cmd + Shift + G: Clear all filters
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'G') {
+            // Clear all filters
+            if (isShortcutEvent(e, 'sa_shortcut_clear_filters', 'Ctrl+Shift+G')) {
                 e.preventDefault();
                 clearAllFilters();
             }
 
-            // Ctrl/Cmd + E: Export menu
-            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+            // Open export menu
+            if (isShortcutEvent(e, 'sa_shortcut_open_export', 'Ctrl+E')) {
                 e.preventDefault();
                 const exportBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
                 if (exportBtn) {
                     exportBtn.click();
-                    Lib.debug('shortcuts', 'Export menu triggered via Ctrl+E');
+                    Lib.debug('shortcuts', 'Export menu triggered via ' + getShortcutDisplay('sa_shortcut_open_export', 'Ctrl+E'));
                 } else {
                     Lib.warn('shortcuts', 'Export button not found');
                 }
             }
 
-            // Ctrl/Cmd + S: Save to disk (JSON)
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            // Save to disk (JSON)
+            if (isShortcutEvent(e, 'sa_shortcut_save_to_disk', 'Ctrl+S')) {
                 e.preventDefault();
                 const saveBtn = document.querySelector('button[title*="Save current table data"]');
                 if (saveBtn) {
                     saveBtn.click();
-                    Lib.debug('shortcuts', 'Save to disk triggered via Ctrl+S');
+                    Lib.debug('shortcuts', 'Save to disk triggered via ' + getShortcutDisplay('sa_shortcut_save_to_disk', 'Ctrl+S'));
                 } else {
                     Lib.warn('shortcuts', 'Save button not found');
                 }
             }
 
-            // Ctrl/Cmd + L: Load from disk
-            if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+            // Load from disk
+            if (isShortcutEvent(e, 'sa_shortcut_load_from_disk', 'Ctrl+L')) {
                 e.preventDefault();
                 const loadBtn = document.querySelector('button[title*="Load table data from disk"]');
                 if (loadBtn) {
                     loadBtn.click();
-                    Lib.debug('shortcuts', 'Load from disk triggered via Ctrl+L');
+                    Lib.debug('shortcuts', 'Load from disk triggered via ' + getShortcutDisplay('sa_shortcut_load_from_disk', 'Ctrl+L'));
                 } else {
                     Lib.warn('shortcuts', 'Load button not found');
                 }
             }
 
-            // Ctrl/Cmd + V: Open Visible Columns menu
-            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+            // Open Visible Columns menu
+            if (isShortcutEvent(e, 'sa_shortcut_open_visible_columns', 'Ctrl+V')) {
                 e.preventDefault();
                 const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible Columns'));
                 if (visibleColumnsBtn) {
                     visibleColumnsBtn.click();
-                    Lib.debug('shortcuts', 'Visible Columns menu opened via Ctrl+V');
+                    Lib.debug('shortcuts', 'Visible Columns menu opened via ' + getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V'));
                 } else {
                     Lib.warn('shortcuts', 'Visible Columns button not found');
                 }
             }
 
-            // Ctrl/Cmd + D: Open Density menu
-            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+            // Open Density menu
+            if (isShortcutEvent(e, 'sa_shortcut_open_density', 'Ctrl+D')) {
                 e.preventDefault();
                 const densityBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Density'));
                 if (densityBtn) {
                     densityBtn.click();
-                    Lib.debug('shortcuts', 'Density menu opened via Ctrl+D');
+                    Lib.debug('shortcuts', 'Density menu opened via ' + getShortcutDisplay('sa_shortcut_open_density', 'Ctrl+D'));
                 } else {
                     Lib.warn('shortcuts', 'Density button not found');
                 }
             }
 
-            // Ctrl/Cmd + 2: Toggle collapse all h2 headers
-            if ((e.ctrlKey || e.metaKey) && e.key === '2') {
+            // Toggle collapse all h2 headers
+            if (isShortcutEvent(e, 'sa_shortcut_toggle_h2', 'Ctrl+2')) {
                 e.preventDefault();
                 const h2s = document.querySelectorAll('h2.mb-toggle-h2');
                 if (h2s.length > 0) {
@@ -4361,14 +4493,14 @@ Press Escape on that notice to cancel the auto-action.
                             h2._mbToggle(isExpanding);
                         }
                     });
-                    Lib.debug('shortcuts', `All h2 headers ${isExpanding ? 'expanded' : 'collapsed'} via Ctrl+2`);
+                    Lib.debug('shortcuts', `All h2 headers ${isExpanding ? 'expanded' : 'collapsed'} via ${getShortcutDisplay('sa_shortcut_toggle_h2', 'Ctrl+2')}`);
                 } else {
                     Lib.warn('shortcuts', 'No collapsible h2 headers found');
                 }
             }
 
-            // Ctrl/Cmd + 3: Toggle collapse all h3 headers
-            if ((e.ctrlKey || e.metaKey) && e.key === '3') {
+            // Toggle collapse all h3 headers
+            if (isShortcutEvent(e, 'sa_shortcut_toggle_h3', 'Ctrl+3')) {
                 e.preventDefault();
                 const h3s = document.querySelectorAll('.mb-toggle-h3');
                 if (h3s.length > 0) {
@@ -4385,7 +4517,7 @@ Press Escape on that notice to cancel the auto-action.
                             const icon = h.querySelector('.mb-toggle-icon');
                             if (icon) icon.textContent = '▼';
                         });
-                        Lib.debug('shortcuts', 'All h3 headers (types) shown via Ctrl+3');
+                        Lib.debug('shortcuts', `All h3 headers (types) shown via ${getShortcutDisplay('sa_shortcut_toggle_h3', 'Ctrl+3')}`);
                     } else {
                         // Hide all
                         tables.forEach(t => t.style.display = 'none');
@@ -4393,10 +4525,21 @@ Press Escape on that notice to cancel the auto-action.
                             const icon = h.querySelector('.mb-toggle-icon');
                             if (icon) icon.textContent = '▲';
                         });
-                        Lib.debug('shortcuts', 'All h3 headers (types) hidden via Ctrl+3');
+                        Lib.debug('shortcuts', `All h3 headers (types) hidden via ${getShortcutDisplay('sa_shortcut_toggle_h3', 'Ctrl+3')}`);
                     }
                 } else {
                     Lib.warn('shortcuts', 'No collapsible h3 headers found');
+                }
+            }
+
+            // Toggle auto-resize columns (direct shortcut; also available as prefix sub-key 'r')
+            if (isShortcutEvent(e, 'sa_shortcut_auto_resize', 'Ctrl+R')) {
+                e.preventDefault();
+                if (typeof toggleAutoResizeColumns === 'function') {
+                    toggleAutoResizeColumns();
+                    Lib.debug('shortcuts', 'Auto-Resize Columns toggled via ' + getShortcutDisplay('sa_shortcut_auto_resize', 'Ctrl+R'));
+                } else {
+                    Lib.warn('shortcuts', 'toggleAutoResizeColumns not available');
                 }
             }
 

@@ -41241,5 +41241,11 @@ Use the same background color changes in the progess bar than in the button text
 over ligh orange to light green). Now the red and orange colors are to dark.
 
 
+* Focus the dialog
 
+#+begin_example
+Savin of JSON ...
+#+end_example
+
+and add "Escape" handling
 
