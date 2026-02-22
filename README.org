@@ -41241,11 +41241,43 @@ Use the same background color changes in the progess bar than in the button text
 over ligh orange to light green). Now the red and orange colors are to dark.
 
 
-* Focus the dialog
+* collapse
+
+- In the uploaded library "VZ_MBLibrary.user.js"
+  
+please collapse all sections in the following container by default
 
 #+begin_example
-Savin of JSON ...
+const container = document.createElement("div");
+container.id = `${scriptId}-config-container`;
 #+end_example
 
-and add "Escape" handling
+- In the uploaded user script "ShowAllEntityData.user.js"
+
+when the above element popups
+
+#+begin_example
+        const msg = document.createElement('div');
+        msg.textContent = 'Saving of JSON table data to the filesystem initiated. Please monitor your browser for the file download.';
+        msg.style.marginBottom = '15px';
+#+end_example
+
+focus the "Close" button and add "Escape" handling, so that wen pressing escape the same behavious happes as when pressing the "Close" button.
+
+Do the same for the following elements
+
+#+begin_example
+        const msg = document.createElement('div');
+        msg.textContent = 'CSV export complete. Please monitor your browser for the file download.';
+        msg.style.marginBottom = '15px';
+#+end_example
+
+#+begin_example
+        const msg = document.createElement('div');
+        msg.textContent = `${format} export complete. Please monitor your browser for the file download.`;
+        msg.style.marginBottom = '15px';
+#+end_example
+
+or better yet please refactor all the export functions (JSON, CSV and Org-Mode") because they share lots of common code.
+
 

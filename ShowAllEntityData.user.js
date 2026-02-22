@@ -361,7 +361,7 @@ Press Escape on that notice to cancel the auto-action.
         // ============================================================
         divider_: {
             type: 'divider',
-            label: '🛠️ Generic settings'
+            label: '🛠️ GENERIC SETTINGS'
         },
 
         sa_enable_debug_logging: {
@@ -371,13 +371,11 @@ Press Escape on that notice to cancel the auto-action.
             description: "Enable debug logging in the browser developer console"
         },
 
-        sa_load_history_limit: {
-            label: 'Load Filter History Limit',
-            type: 'number',
-            default: 10,
-            min: 0,
-            max: 50,
-            description: 'Number of previous filter expressions to remember in the load dialog.'
+        sa_render_overflow_tables_in_new_tab: {
+            label: "Render overflow tables in a new tab",
+            type: "checkbox",
+            default: true,
+            description: "Render sub-tables on pages like 'Artist-Relastionships' in a new tab. These are limited to 100 rows by default."
         },
 
         // ============================================================
@@ -391,7 +389,7 @@ Press Escape on that notice to cancel the auto-action.
         sa_collabsable_sidebar: {
             label: "Collabsable sidebar (experimental)",
             type: "checkbox",
-            default: false,
+            default: true,
             description: "Render sidebar collabsable"
         },
         // ============================================================
@@ -409,13 +407,6 @@ Press Escape on that notice to cancel the auto-action.
             description: "Remove the Tagger column from the final rendered tables"
         },
 
-        sa_remove_release_events: {
-            label: 'Remove "Release events" column from "Place-Performances" pages',
-            type: "checkbox",
-            default: true,
-            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
-        },
-
         sa_remove_rating: {
             label: "Remove Rating column",
             type: "checkbox",
@@ -423,40 +414,33 @@ Press Escape on that notice to cancel the auto-action.
             description: "Remove the Rating column from the final rendered tables"
         },
 
+        sa_remove_release_events: {
+            label: 'Remove "Release events" column from "Place-Performances" pages',
+            type: "checkbox",
+            default: true,
+            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
+        },
+
         sa_remove_rel: {
             label: "Remove Relationships column",
             type: "checkbox",
             default: true,
-            description: "Remove the Relationships column from the final rendered tables"
+            description: "Remove the Relationships column from the final rendered tables (comes from another userscript) "
         },
 
         sa_remove_perf: {
             label: "Remove Performance column",
             type: "checkbox",
             default: true,
-            description: "Remove the Performance column from the final rendered tables"
+            description: "Remove the Performance column from the final rendered tables (comes from another userscript) "
         },
 
         // ============================================================
-        // UI FEATURES SECTION
+        // KEYBOARD SHORTCUTS SECTION
         // ============================================================
-        divider_ui_features: {
+        divider_keyboard_shortcuts: {
             type: 'divider',
-            label: '🎨 UI FEATURES'
-        },
-
-        sa_enable_column_visibility: {
-            label: 'Enable Column Visibility Toggle',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "👁️ Visible Columns" button for toggling column visibility'
-        },
-
-        sa_enable_export: {
-            label: 'Enable Export',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "Export 💾" button for exporting data to different formats (CSV/JSON/Org-Mode)'
+            label: '🎹 KEYBOARD SHORTCUTS'
         },
 
         sa_enable_keyboard_shortcuts: {
@@ -473,14 +457,6 @@ Press Escape on that notice to cancel the auto-action.
             description: 'Enable keyboard shortcut tooltip for the prefix shortcut map'
         },
 
-        // ============================================================
-        // KEYBOARD SHORTCUTS SECTION
-        // ============================================================
-        divider_keyboard_shortcuts: {
-            type: 'divider',
-            label: '🎹 KEYBOARD SHORTCUTS'
-        },
-
         sa_keyboard_shortcut_prefix: {
             label: "Keyboard Shortcut Prefix",
             type: "keyboard_shortcut",
@@ -491,6 +467,48 @@ Press Escape on that notice to cancel the auto-action.
         // ---- Configurable direct shortcuts ----
         // Every entry below controls a single-chord shortcut (no prefix second-key needed).
         // Use the 🎹 Capture button to record a new combination. Changes take effect after Save.
+
+        sa_shortcut_save_to_disk: {
+            label: "Shortcut: Save to Disk",
+            type: "keyboard_shortcut",
+            default: "Ctrl+S",
+            description: "Save the current table data to disk as Gzipped JSON (default: Ctrl+S)"
+        },
+
+        sa_shortcut_load_from_disk: {
+            label: "Shortcut: Load from Disk",
+            type: "keyboard_shortcut",
+            default: "Ctrl+L",
+            description: "Open the Load-from-disk dialog (default: Ctrl+L)"
+        },
+
+        sa_shortcut_auto_resize: {
+            label: "Shortcut: Toggle Auto-Resize Columns",
+            type: "keyboard_shortcut",
+            default: "Ctrl+R",
+            description: "Toggle automatic column-width optimisation (default: Ctrl+R; also available as prefix-mode sub-key r)"
+        },
+
+        sa_shortcut_open_visible_columns: {
+            label: "Shortcut: Open Visible Columns Menu",
+            type: "keyboard_shortcut",
+            default: "Ctrl+V",
+            description: "Open the Visible Columns menu (default: Ctrl+V)"
+        },
+
+        sa_shortcut_open_density: {
+            label: "Shortcut: Open Density Menu",
+            type: "keyboard_shortcut",
+            default: "Ctrl+D",
+            description: "Open the table Density (row-spacing) menu (default: Ctrl+D)"
+        },
+
+        sa_shortcut_open_export: {
+            label: "Shortcut: Open Export Menu",
+            type: "keyboard_shortcut",
+            default: "Ctrl+E",
+            description: "Open the Export menu (CSV / JSON / Org-Mode) (default: Ctrl+E)"
+        },
 
         sa_shortcut_open_settings: {
             label: "Shortcut: Open Settings",
@@ -520,41 +538,6 @@ Press Escape on that notice to cancel the auto-action.
             description: "Clear every active filter (global + all column filters) at once (default: Ctrl+Shift+G)"
         },
 
-        sa_shortcut_open_export: {
-            label: "Shortcut: Open Export Menu",
-            type: "keyboard_shortcut",
-            default: "Ctrl+E",
-            description: "Open the Export menu (CSV / JSON / Org-Mode) (default: Ctrl+E)"
-        },
-
-        sa_shortcut_save_to_disk: {
-            label: "Shortcut: Save to Disk",
-            type: "keyboard_shortcut",
-            default: "Ctrl+S",
-            description: "Save the current table data to disk as Gzipped JSON (default: Ctrl+S)"
-        },
-
-        sa_shortcut_load_from_disk: {
-            label: "Shortcut: Load from Disk",
-            type: "keyboard_shortcut",
-            default: "Ctrl+L",
-            description: "Open the Load-from-disk dialog (default: Ctrl+L)"
-        },
-
-        sa_shortcut_open_visible_columns: {
-            label: "Shortcut: Open Visible Columns Menu",
-            type: "keyboard_shortcut",
-            default: "Ctrl+V",
-            description: "Open the Visible Columns menu (default: Ctrl+V)"
-        },
-
-        sa_shortcut_open_density: {
-            label: "Shortcut: Open Density Menu",
-            type: "keyboard_shortcut",
-            default: "Ctrl+D",
-            description: "Open the table Density (row-spacing) menu (default: Ctrl+D)"
-        },
-
         sa_shortcut_toggle_h2: {
             label: "Shortcut: Toggle h2 Headers",
             type: "keyboard_shortcut",
@@ -567,48 +550,6 @@ Press Escape on that notice to cancel the auto-action.
             type: "keyboard_shortcut",
             default: "Ctrl+3",
             description: "Toggle collapse / expand of all h3 type headers (sub-tables) (default: Ctrl+3)"
-        },
-
-        sa_shortcut_auto_resize: {
-            label: "Shortcut: Toggle Auto-Resize Columns",
-            type: "keyboard_shortcut",
-            default: "Ctrl+R",
-            description: "Toggle automatic column-width optimisation (default: Ctrl+R; also available as prefix-mode sub-key r)"
-        },
-
-        sa_enable_stats_panel: {
-            label: 'Enable Quick Stats Panel',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "📊 Stats" button for displaying table statistics'
-        },
-
-        sa_enable_density_control: {
-            label: 'Enable Table Density Control',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "📏 Density" button for adjusting table spacing'
-        },
-
-        sa_enable_column_resizing: {
-            label: 'Enable Column Resizing',
-            type: 'checkbox',
-            default: true,
-            description: 'Enable manual column resizing with mouse drag and "↔️ Auto-Resize" button'
-        },
-
-        sa_enable_save_load: {
-            label: 'Enable Save/Load to Disk',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
-        },
-
-        sa_enable_sticky_headers: {
-            label: 'Enable Sticky Headers',
-            type: 'checkbox',
-            default: true,
-            description: 'Keep table headers visible when scrolling'
         },
 
         // ============================================================
@@ -669,6 +610,15 @@ Press Escape on that notice to cancel the auto-action.
             label: '⚡ PERFORMANCE SETTINGS'
         },
 
+        sa_load_history_limit: {
+            label: 'Load Filter History Limit',
+            type: 'number',
+            default: 50,
+            min: 0,
+            max: 50,
+            description: 'Number of previous filter expressions to remember in the load dialog.'
+        },
+
         sa_filter_debounce_delay: {
             label: "Filter debounce delay (ms)",
             type: "number",
@@ -717,13 +667,6 @@ Press Escape on that notice to cancel the auto-action.
             description: "Show progress indicator when sorting tables with more than this many rows"
         },
 
-        sa_render_overflow_tables_in_new_tab: {
-            label: "Render overflow tables in a new tab",
-            type: "checkbox",
-            default: true,
-            description: "Render overflow tables in a new tab"
-        },
-
         sa_max_page: {
             label: "Max Page Warning",
             type: "number",
@@ -738,6 +681,63 @@ Press Escape on that notice to cancel the auto-action.
         },
 
         // ============================================================
+        // UI FEATURES SECTION
+        // ============================================================
+        divider_ui_features: {
+            type: 'divider',
+            label: '🎨 UI FEATURES'
+        },
+
+        sa_enable_save_load: {
+            label: 'Enable Save/Load to Disk',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
+        },
+
+        sa_enable_column_resizing: {
+            label: 'Enable Column Resizing',
+            type: 'checkbox',
+            default: true,
+            description: 'Enable manual column resizing with mouse drag and "↔️ Auto-Resize" button'
+        },
+
+        sa_enable_column_visibility: {
+            label: 'Enable Column Visibility Toggle',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "👁️ Visible Columns" button for toggling column visibility'
+        },
+
+        sa_enable_density_control: {
+            label: 'Enable Table Density Control',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "📏 Density" button for adjusting table spacing'
+        },
+
+        sa_enable_stats_panel: {
+            label: 'Enable Quick Stats Panel',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "📊 Stats" button for displaying table statistics'
+        },
+
+        sa_enable_export: {
+            label: 'Enable Export',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "Export 💾" button for exporting data to different formats (CSV/JSON/Org-Mode)'
+        },
+
+        sa_enable_sticky_headers: {
+            label: 'Enable Sticky Headers',
+            type: 'checkbox',
+            default: true,
+            description: 'Keep table headers visible when scrolling'
+        },
+
+        // ============================================================
         // CUSTOM POPUP UI SECTION
         // Condensed config string format:
         //   dialog:   bg|border|borderRadius|padding|shadow|zIndex|fontFamily|minWidth|maxWidth
@@ -749,7 +749,7 @@ Press Escape on that notice to cancel the auto-action.
         // ============================================================
         divider_popup_ui: {
             type: 'divider',
-            label: '🪟 CUSTOM POPUP UI'
+            label: '🪟 POPUP UI STYLES'
         },
 
         sa_popup_dialog_style: {
@@ -807,7 +807,7 @@ Press Escape on that notice to cancel the auto-action.
         // ============================================================
         divider_ui_appearance: {
             type: 'divider',
-            label: '🖌️ UI APPEARANCE'
+            label: '🖌️ ELEMENT UI STYLES'
         },
 
         // --- H1 action bar: base shape shared by all buttons ---
@@ -3009,6 +3009,7 @@ Press Escape on that notice to cancel the auto-action.
         });
 
         Lib.debug('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
+        showExportNotification('CSV', filename, rowsExported);
 
         // Create CSV string
         const csv = rows.map(row => row.join(',')).join('\n');
