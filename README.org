@@ -41254,6 +41254,19 @@ container.id = `${scriptId}-config-container`;
 
 - In the uploaded user script "ShowAllEntityData.user.js"
 
+enable the "Ctrl-M" prefix shortcuts for the buttons
+
+#+begin_example
+mb-load-from-disk-btn
+mb-shortcuts-help-btn
+mb-settings-btn
+mb-app-help-btn
+#+end_example
+
+already when entering the page, not only when rendering the final page
+
+- In the uploaded user script "ShowAllEntityData.user.js"
+
 when the above element popups
 
 #+begin_example

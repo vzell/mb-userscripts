@@ -933,7 +933,7 @@ Press Escape on that notice to cancel the auto-action.
     const Lib = (typeof VZ_MBLibrary !== 'undefined')
           ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, () => {
               // Dynamic check: returns current value of debug setting
-              return settings.sa_enable_debug_logging ?? true;
+              return settings.sa_enable_debug_logging ?? false;
           })
           : {
               settings: {},
