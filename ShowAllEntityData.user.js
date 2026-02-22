@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.64.0+2026-02-21
+// @version      9.65.0+2026-02-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.65.0+2026-02-22', description: 'Five UX enhancements: (1) Action buttons: superscript mnemonics ¹²³⁴… appended after the 🧮 emoji on every action button to remind the user of the Ctrl-M+1/2/3/… shortcut invocations; applies to both "Show all" and pre-existing 🧮-prefixed buttons (e.g. artist RG split buttons). (2) Shortcuts popup (mb-shortcuts-help): restructured with a sticky flex title-bar (header + ✕ button) and a separate scrollable content area (overflow-y:auto; max-height:82vh) so the dialog never overflows the viewport when many shortcut sections are present. (3) Stats panel (mb-stats-panel): added "Sub-Tables: N table(s)" as the first row in the statistics grid so the user can immediately see how many independent sub-tables exist on multi-table pages. (4) Multi-table pages — single sub-table auto-expand: when renderGroupedTable produces exactly one group (dataArray.length === 1) the resulting table is unconditionally shown (shouldStayOpen = true) instead of starting collapsed, independent of the category name or sa_auto_expand threshold. (5) Progress-bar de-duplication: removed the redundant "Loading page N of M…" text update on globalStatusDisplay during page fetching; the inline progress bar (mb-fetch-progress-label inside mb-fetch-progress-outer) already carries the identical information, so showing it twice in the subheader was unnecessary noise.'},
     {version: '9.64.0+2026-02-21', description: 'Progress bar label text reformatted: "Loading page N of M... K rows — estimated X.Xs remaining" changed to the more compact "Loading page N of M... (K rows) - est. X.Xs". Parentheses around row count, em-dash replaced by hyphen-minus, "estimated … remaining" shortened to "est. …".'},
     {version: '9.63.0+2026-02-21', description: 'configSchema: all 6 sa_popup_* entries changed from type:"text" to type:"popup_dialog" and each gains a fields:[...] array naming every pipe-separated parameter (e.g. ["bg","border","borderRadius","padding","boxShadow","zIndex","fontFamily","minWidth","maxWidth"] for sa_popup_dialog_style).'},
     {version: '9.62.0+2026-02-21', description: 'Two fixes: (1) Prefilter toggle button text after disk-load now always includes total row count from the file. For "Exclude matches" mode the text is "🎨 N out of T row(s) excluded: \\"query\\""; for normal (keep-matches) mode it is "🎨 N out of T row(s) prefiltered: \\"query\\"". updatePrefilterToggleButton gains two new parameters: totalRows (number, default 0) and isExclude (boolean, default false); call site in loadTableDataFromDisk passes data.rowCount and the local isExclude flag. (2) Progress bar outer element (mb-fetch-progress-outer) min-width raised from 260px to 420px and max-width from 500px to 750px so the long label text "Loading page N of M... K rows — estimated X.Xs remaining" is no longer clipped at either end.'},
@@ -3276,19 +3277,50 @@ Press Escape on that notice to cancel the auto-action.
             background: white;
             border: 1px solid #ccc;
             border-radius: 8px;
-            padding: 20px;
+            padding: 0;
             box-shadow: 0 8px 32px rgba(0,0,0,0.2);
             z-index: 10000;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             min-width: 450px;
-            max-width: 550px;
+            max-width: 580px;
+            max-height: 82vh;
+            display: flex;
+            flex-direction: column;
         `;
+
+        // Create sticky header bar (title + close button)
+        const headerBar = document.createElement('div');
+        headerBar.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:16px 20px 12px; border-bottom:2px solid #ddd; flex-shrink:0; border-radius:8px 8px 0 0; background:#f8f8f8; position:relative;';
 
         // Create header
         const header = document.createElement('div');
-        header.style.cssText = 'font-weight: 600; font-size: 1.2em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ddd; color: #333;';
+        header.style.cssText = 'font-weight: 600; font-size: 1.2em; color: #333;';
         header.textContent = '🎹 Keyboard Shortcuts';
-        helpDiv.appendChild(header);
+        headerBar.appendChild(header);
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '✕';
+        closeBtn.title = 'Close';
+        closeBtn.style.cssText = `
+            background: transparent;
+            border: none;
+            color: #999;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 1.2em;
+            transition: all 0.2s;
+            line-height: 1;
+        `;
+        closeBtn.onmouseover = () => { closeBtn.style.background = '#f5f5f5'; closeBtn.style.color = '#333'; };
+        closeBtn.onmouseout  = () => { closeBtn.style.background = 'transparent'; closeBtn.style.color = '#999'; };
+        closeBtn.onclick = () => helpDiv.remove();
+        headerBar.appendChild(closeBtn);
+        helpDiv.appendChild(headerBar);
+
+        // Scrollable content area
+        const scrollArea = document.createElement('div');
+        scrollArea.style.cssText = 'overflow-y: auto; flex: 1; padding: 16px 20px;';
 
         // Create shortcuts sections
         const sections = [
@@ -3387,49 +3419,22 @@ Press Escape on that notice to cancel the auto-action.
                 sectionDiv.appendChild(shortcutDiv);
             });
 
-            helpDiv.appendChild(sectionDiv);
+            scrollArea.appendChild(sectionDiv);
         });
 
         // Add note
         const note = document.createElement('div');
         note.style.cssText = 'margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.85em; color: #666; font-style: italic;';
         note.innerHTML = '<strong>Note:</strong> Ctrl shortcuts work everywhere, even in input fields.<br>? and / only work when not typing in input fields.';
-        helpDiv.appendChild(note);
+        scrollArea.appendChild(note);
 
         // Add close instruction text
         const closeText = document.createElement('div');
         closeText.textContent = 'Click outside or press Escape to close';
         closeText.style.cssText = 'font-size: 0.85em; color: #999; text-align: center; font-style: italic; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;';
-        helpDiv.appendChild(closeText);
+        scrollArea.appendChild(closeText);
 
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = '✕';
-        closeBtn.title = 'Close';
-        closeBtn.style.cssText = `
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: transparent;
-            border: none;
-            color: #999;
-            padding: 4px 8px;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 1.2em;
-            transition: all 0.2s;
-            line-height: 1;
-        `;
-        closeBtn.onmouseover = () => {
-            closeBtn.style.background = '#f5f5f5';
-            closeBtn.style.color = '#333';
-        };
-        closeBtn.onmouseout = () => {
-            closeBtn.style.background = 'transparent';
-            closeBtn.style.color = '#999';
-        };
-        closeBtn.onclick = () => helpDiv.remove();
-
-        helpDiv.appendChild(closeBtn);
+        helpDiv.appendChild(scrollArea);
         document.body.appendChild(helpDiv);
 
         // Close on Escape
@@ -3928,6 +3933,7 @@ Press Escape on that notice to cancel the auto-action.
         let visibleRowCount = 0;
         let totalColumnCount = 0;
         let visibleColumnCount = 0;
+        const subTableCount = tables.length;
 
         tables.forEach(table => {
             const rows = table.querySelectorAll('tbody tr');
@@ -3992,6 +3998,9 @@ Press Escape on that notice to cancel the auto-action.
                 <button id="mb-stats-close" style="background: none; border: none; font-size: 1.3em; cursor: pointer; color: #666; padding: 0; line-height: 1;">✕</button>
             </div>
             <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px 15px; line-height: 1.8;">
+                <div style="font-weight: 600;">Sub-Tables:</div>
+                <div>${subTableCount} ${subTableCount === 1 ? 'table' : 'tables'}</div>
+
                 <div style="font-weight: 600;">Total Rows:</div>
                 <div>${totalRowCount.toLocaleString()}</div>
 
@@ -5184,10 +5193,30 @@ Press Escape on that notice to cancel the auto-action.
         { label: `Show all ${pageType.replace('-', ' ')}` } // Default fallback
     ];
 
-    buttonsToRender.forEach(conf => {
+    // Superscript numerals for Ctrl-M + 1..9 mnemonic display on action buttons
+    const SUPERSCRIPT_DIGITS = ['¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+
+    buttonsToRender.forEach((conf, btnIndex) => {
         const eb = document.createElement('button');
-        // Concatenate "🧮 " if label starts with "Show all"
-        eb.textContent = conf.label.startsWith('Show all') ? '🧮 ' + conf.label : conf.label;
+        // Build button label with Ctrl-M+N superscript mnemonic (¹²³…) after the 🧮 emoji.
+        // Handles two cases:
+        //   (a) label starts with "Show all"  → prefix is "🧮N ", rest is the label as-is
+        //   (b) label already starts with "🧮 " → insert superscript between emoji and space
+        //   (c) any other label                 → leave unchanged (no emoji, no superscript)
+        const superscript = btnIndex < SUPERSCRIPT_DIGITS.length ? SUPERSCRIPT_DIGITS[btnIndex] : '';
+        let labelText;
+        if (conf.label.startsWith('Show all')) {
+            labelText = `🧮${superscript} ` + conf.label;
+        } else if (conf.label.startsWith('🧮 ')) {
+            // Insert superscript between 🧮 and the following space
+            labelText = `🧮${superscript}` + conf.label.slice(1); // slice(1) removes the bare space kept by slice of '🧮 ...'
+            // '🧮 '.slice(1) would give ' ...' which is wrong — use slice(2) since '🧮 ' is emoji+space (2 codepoints but emoji is 2 UTF-16 units)
+            // Safer: rebuild properly
+            labelText = `🧮${superscript} ` + conf.label.replace(/^🧮\s*/, '');
+        } else {
+            labelText = conf.label;
+        }
+        eb.textContent = labelText;
         eb.style.cssText = 'font-size:0.8em; padding:2px 8px; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; height:24px; box-sizing:border-box; border-radius:6px; display: inline-flex; align-items: center; justify-content: center;';
         eb.type = 'button';
 
@@ -8069,11 +8098,10 @@ Press Escape on that notice to cancel the auto-action.
                 else if (progress >= 0.5) bgColor = '#ffe0b2'; // light orange
                 activeBtn.style.backgroundColor = bgColor;
 
-                // Show live progress in the subheader status display
-                globalStatusDisplay.textContent =
-                    `Loading page ${p} of ${maxPage}… (${totalRowsAccumulated} rows) — ` +
-                    `est. ${estRemainingSeconds.toFixed(1)}s remaining`;
-                globalStatusDisplay.style.color = progress >= 1.0 ? 'green' : (progress >= 0.5 ? 'orange' : '#c00');
+                // Show live progress exclusively inside the inline progress bar in the h1 controls line.
+                // The globalStatusDisplay (subheader) is intentionally left unchanged during fetching
+                // because the progress bar already carries "Loading page N of M… (K rows) - est. X.Xs".
+                // globalStatusDisplay.textContent = ...; // <-- removed; redundant with progress bar
 
                 // Drive the inline progress bar in the h1 controls line
                 const fillPct = Math.round(progress * 100);
@@ -8625,9 +8653,13 @@ Press Escape on that notice to cancel the auto-action.
                 // Defensive check: ensure category exists, fallback to "Unknown"
                 const categoryName = group.category || group.key || 'Unknown';
                 const catLower = categoryName.toLowerCase();
-                const shouldStayOpen = (catLower === 'album' || catLower === 'official') && group.rows.length < Lib.settings.sa_auto_expand;
+                // Auto-expand when: only a single sub-table on the page, OR the well-known
+                // categories 'album'/'official' have a small enough row count.
+                const isSingleSubTable = dataArray.length === 1;
+                const shouldStayOpen = isSingleSubTable ||
+                    ((catLower === 'album' || catLower === 'official') && group.rows.length < Lib.settings.sa_auto_expand);
                 table.style.display = shouldStayOpen ? '' : 'none';
-                Lib.debug('render', `Group "${categoryName}" auto-expand status: ${shouldStayOpen}`);
+                Lib.debug('render', `Group "${categoryName}" auto-expand status: ${shouldStayOpen} (singleSubTable=${isSingleSubTable})`);
 
                 // Ensure the H3 text reflects the unique name established during fetching and Capitalize the first or second character
                 let h3DisplayName = categoryName;

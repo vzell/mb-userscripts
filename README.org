@@ -40895,6 +40895,7 @@ to
 Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) - est. ${estRemainingSeconds.toFixed(1)}s
 #+end_example
 
+
 * keybord shortcut editor
 
 - In the uploaded library "VZ_MBLibrary.user.js" add code to support the "keyboard_shortcut" with a custom UI
@@ -40929,4 +40930,46 @@ to
 #+begin_example
 Loading page ${p} of ${maxPage}... (${totalRowsAccumulated} rows) - est. ${estRemainingSeconds.toFixed(1)}s
 #+end_example
+
+* UI
+** DONE add superscripts to "Show all..." buttons
+
+- add superscripts '¹','²','³','⁴' as mnemonics after the "🧮" characters to all action buttons on pages like
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases to remind the end-user of the shortcut
+invocation "Ctrl-M"+1, "Ctrl-M"+2 and so on.
+
+** DONE make the shortcut popup scrollable
+
+In the uploaded user script "ShowAllEntityData.user.js"
+
+- make the shortcut popup
+
+#+begin_example
+<div id="mb-shortcuts-help"
+#+end_example
+  
+scrollable
+
+** DONE on multi table pages count the number of sub-tables   
+
+- on multi table pages count the number of sub-tables and make that information in the stats panel
+
+#+begin_example
+<div id="mb-stats-panel" 
+#+end_example
+
+popup available
+
+- on multi table pages, when there is just ONE sub-table, uncollpase it by default when rendering the final page
+
+** DONE remove the "Loading page..." info text from the
+
+- remove the "Loading page..." info text from the 
+
+#+begin_example
+<span id="mb-global-status-display" style="font-size: 0.95em; color: rgb(204, 0, 0); font-weight: bold; vertical-align: middle;">Loading page 5 of 16… (500 rows) — est. 25.8s remaining</span>
+#+end_example
+
+during page fetching, because that information is now available inside the progress bar
 
