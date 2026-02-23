@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.80.0+2026-02-23
+// @version      9.83.0+2026-02-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.83.0+2026-02-23', description: 'Add missing keyboard shortcuts to tooltips.'},
     {version: '9.82.0+2026-02-23', description: 'Three enhancements: (1) Export/Save dialogs now show row counts; export popups display "N rows exported" and when rows are filtered-out also "of M total"; Save to Disk popup shows "N rows saved"; all three export functions (CSV/JSON/Org-Mode) now count skipped rows; showExportNotification gains optional totalRows parameter; triggerStandardDownload gains rowCount parameter and call-site updated. (2) All tooltip texts: hardcoded lowercase shortcut letters in (${getPrefixDisplay()}, then x) hints uppercased: v→V, e→E, t→I (stats special case per spec), d→D, r→R (3 occurrences), s→S, l→L. (3) Action button tooltips: appended (${getPrefixDisplay()}, then N) hint for each button that has a Ctrl-M+digit shortcut (buttons 1–9).'},
     {version: '9.81.0+2026-02-23', description: 'Refactor: Replace fragile text/title-based button lookups with stable ID-based lookups. Assigned mb-visible-btn to the Visible Columns toggle button (addColumnVisibilityToggle) and mb-resize-btn to the Auto-Resize button (addAutoResizeButton). All querySelector/Array.find lookups that previously matched on textContent or title attribute replaced with document.getElementById calls: duplicate-guard in addColumnVisibilityToggle, duplicate-guard and divider-guard in addAutoResizeButton, updateResizeButtonState, toggleAutoResizeColumns, openVisibleColumnsMenu, and the Ctrl+V shortcut handler. Consistent with existing mb- ID naming convention.'},
     {version: '9.80.0+2026-02-23', description: 'Three fixes/renames: (1) Enter key on focused "Select All" / "Deselect All" / "Choose current configuration" buttons inside the Visible menu now fires the button\'s click handler before closing; previously Enter always just closed the menu regardless of which element had focus. (2) Button renames: "Auto-Resize" → "Resize" (R underlined), "Restore Width" → "Restore" (R underlined), "Visible Columns" → "Visible" (V underlined), "Stats" → "Statistics" (i underlined). All occurrences updated: button innerHTML, textContent finders, APP_HELP_TEXT, showShortcutsHelp sections, ctrlMFunctionMap descriptions, and debug log strings.'},
