@@ -207,6 +207,14 @@ All options are configurable via the Settings Manager:
 • Toggle the prefix-mode tooltip overlay on/off
 • Full UI appearance customisation (button sizes, colours, filter input sizes)
 
+SETTINGS DIALOG SAFETY GUARDS
+------------------------------
+• If you close the dialog (via the CLOSE link, Escape, or clicking outside) while
+  there are unsaved changes a confirmation dialog ("Unsaved Changes") appears.
+  Click OK to discard the changes, or Cancel to return to the dialog.
+• Clicking RESET always opens a confirmation dialog ("Reset All Settings to Defaults")
+  before any defaults are applied. Click OK to proceed, or Cancel to abort.
+
 SIDEBAR
 -------
 • The page sidebar can be optionally collapsed (experimental setting) to give

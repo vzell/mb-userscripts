@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.87.0+2026-02-23
+// @version      9.88.0+2026-02-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -51,20 +51,21 @@
 (function() {
     'use strict';
 
-    const SCRIPT_BASE_NAME="ShowAllEntityData"
-    const SCRIPT_ID = "vz-mb-show-all-entity-data";
-    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "ShowAllEntityData";
+    const SCRIPT_BASE_NAME = "ShowAllEntityData";
+    // SCRIPT_ID is derived from SCRIPT_BASE_NAME: CamelCase → kebab-case, lower-cased, prepend "vz-mb-"
+    const SCRIPT_ID = 'vz-mb-' + SCRIPT_BASE_NAME.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : SCRIPT_BASE_NAME;
 
     // Remote URLs for changelog and help text.
     // The changelog is fetched and the GM menu item registered by VZ_MBLibrary
     // (via remoteConfig passed to the constructor below).
     // The help URL is only used lazily by showAppHelp() via Lib.fetchCachedText().
     const REMOTE_BASE          = 'https://raw.githubusercontent.com/vzell/mb-userscripts/master/';
-    const REMOTE_HELP_URL      = REMOTE_BASE + 'ShowAllEntityData_HELP.txt';
-    const REMOTE_CHANGELOG_URL = REMOTE_BASE + 'ShowAllEntityData_CHANGELOG.json';
+    const REMOTE_HELP_URL      = REMOTE_BASE + SCRIPT_BASE_NAME + '_HELP.txt';
+    const REMOTE_CHANGELOG_URL = REMOTE_BASE + SCRIPT_BASE_NAME + '_CHANGELOG.json';
     const REMOTE_CACHE_TTL_MS  = 60 * 60 * 1000; // 1 hour
-    const CACHE_KEY_HELP       = 'mb-remote-help-text';
-    const CACHE_KEY_CHANGELOG  = 'mb-remote-changelog';
+    const CACHE_KEY_HELP       = SCRIPT_BASE_NAME.toLowerCase() + '-remote-help-text';
+    const CACHE_KEY_CHANGELOG  = SCRIPT_BASE_NAME.toLowerCase() + '-remote-changelog';
 
     // CONFIG SCHEMA
     const configSchema = {
@@ -1657,7 +1658,7 @@
                 if (typeof Lib !== 'undefined' && Lib.debug) {
                     Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode`);
                 } else {
-                    console.log(`[VZ-ShowAllEntityData] Exited ${getPrefixDisplay()} mode`);
+                    console.log(`[VZ-${SCRIPT_BASE_NAME}] Exited ${getPrefixDisplay()} mode`);
                 }
                 return;
             }
@@ -1698,10 +1699,10 @@
                 Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
                 if (buttonKeys.length > 0) {
-                    console.log(`[VZ-ShowAllEntityData] Entered ${getPrefixDisplay()} mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
+                    console.log(`[VZ-${SCRIPT_BASE_NAME}] Entered ${getPrefixDisplay()} mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
                     actionButtons.forEach((btn, idx) => {
                         const key = buttonKeys[idx] || '?';
-                        console.log(`[VZ-ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
+                        console.log(`[VZ-${SCRIPT_BASE_NAME}]   ${key}: ${btn.textContent.trim()}`);
                     });
                 }
                 console.log('[ShowAllEntityData] Function shortcuts: r=Resize, i=Statistics, s=Save, d=Density, v=Visible, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
@@ -1743,13 +1744,13 @@
                     if (typeof Lib !== 'undefined' && Lib.debug) {
                         Lib.debug('shortcuts', `Function "${funcEntry.description}" triggered via ${getPrefixDisplay()} then '${keyOriginal}'`);
                     } else {
-                        console.log(`[VZ-ShowAllEntityData] Function "${funcEntry.description}" triggered`);
+                        console.log(`[VZ-${SCRIPT_BASE_NAME}] Function "${funcEntry.description}" triggered`);
                     }
                 } else {
                     if (typeof Lib !== 'undefined' && Lib.warn) {
                         Lib.warn('shortcuts', `Function "${funcEntry.description}" not available`);
                     } else {
-                        console.warn(`[VZ-ShowAllEntityData] Function not available`);
+                        console.warn(`[VZ-${SCRIPT_BASE_NAME}] Function not available`);
                     }
                 }
                 ctrlMModeActive = false;
@@ -1776,13 +1777,13 @@
                     if (typeof Lib !== 'undefined' && Lib.debug) {
                         Lib.debug('shortcuts', `Action button ${buttonIndex + 1} selected via ${getPrefixDisplay()} then '${keyOriginal}': "${selectedButton.textContent.trim()}"`);
                     } else {
-                        console.log(`[VZ-ShowAllEntityData] Action button ${buttonIndex + 1} clicked: "${selectedButton.textContent.trim()}"`);
+                        console.log(`[VZ-${SCRIPT_BASE_NAME}] Action button ${buttonIndex + 1} clicked: "${selectedButton.textContent.trim()}"`);
                     }
                 } else {
                     if (typeof Lib !== 'undefined' && Lib.warn) {
                         Lib.warn('shortcuts', `No action button at position ${buttonIndex + 1} (${actionButtons.length} available)`);
                     } else {
-                        console.warn(`[VZ-ShowAllEntityData] No action button at position ${buttonIndex + 1}`);
+                        console.warn(`[VZ-${SCRIPT_BASE_NAME}] No action button at position ${buttonIndex + 1}`);
                     }
                 }
             }
@@ -1802,7 +1803,7 @@
             if (typeof Lib !== 'undefined' && Lib.debug) {
                 Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode (Escape pressed)`);
             } else {
-                console.log(`[VZ-ShowAllEntityData] Exited ${getPrefixDisplay()} mode`);
+                console.log(`[VZ-${SCRIPT_BASE_NAME}] Exited ${getPrefixDisplay()} mode`);
             }
             return;
         }
@@ -5758,7 +5759,7 @@
                           document.querySelector('#content h1') || // Often catches search result headers
                           document.querySelector('h1');
 
-    if (pageType) Lib.prefix = `[VZ-ShowAllEntityData: ${pageType}]`;
+    if (pageType) Lib.prefix = `[VZ-${SCRIPT_BASE_NAME}: ${pageType}]`;
     Lib.debug('init', 'Initializing script for path:', path);
 
     if (!pageType || !headerContainer) {

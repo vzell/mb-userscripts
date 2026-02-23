@@ -41844,4 +41844,5 @@ if (pageType) Lib.prefix = `[VZ-ShowAllEntityData: ${pageType}]`;
 Please also double check the whole userscript and library source code if there are still references which could use the
 "SCRIPT_BASE_NAME" variable somehow.
 
-
+- Also add changelog entries to the library and to the external file "ShowAllEntityData_CHANGELOG.json" and if
+  appropriate to the application help file "ShowAllEntityData_HELP.txt"

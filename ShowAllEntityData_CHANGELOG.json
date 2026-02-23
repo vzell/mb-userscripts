@@ -1,5 +1,9 @@
 [
   {
+    "version": "9.88.0+2026-02-23",
+    "description": "Three improvements: (1) Settings dialog safety guard: the CLOSE link, Escape key, and backdrop click now detect unsaved changes via a snapshot comparison taken when the modal opens and present a confirmation dialog (Cancel / OK) before discarding edits. The RESET link always presents a confirmation dialog warning that all configuration settings will be reset to their defaults before proceeding. Both use the new showCustomConfirm helper now available in VZ_MBLibrary. (2) SCRIPT_BASE_NAME refactor: SCRIPT_ID is now derived programmatically from SCRIPT_BASE_NAME by converting CamelCase to kebab-case and prepending 'vz-mb-'; SCRIPT_NAME, REMOTE_HELP_URL, REMOTE_CHANGELOG_URL, CACHE_KEY_HELP, and CACHE_KEY_CHANGELOG are all derived from SCRIPT_BASE_NAME, eliminating the previously hardcoded duplicate string. The Lib.prefix pageType assignment and all console.log / console.warn statements that referenced the hardcoded string '[VZ-ShowAllEntityData]' are updated to use the constant. (3) showCustomDialog / showCustomAlert / showCustomConfirm refactored into VZ_MBLibrary for reuse across consumer scripts; the library functions use self-contained CSS defaults and are exposed on the library public API."
+  },
+  {
     "version": "9.87.0+2026-02-23",
     "description": "Load application help and changelog from GitHub. Logic is now in library"
   },
