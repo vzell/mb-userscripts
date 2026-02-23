@@ -1,0 +1,578 @@
+[
+  {
+    "version": "9.84.0+2026-02-23",
+    "description": "Fix: Added missing prefix-mode shortcut hints to tooltips of the three utility buttons: Keyboard Shortcuts (🎹, k), Settings Manager (⚙️, ,), and App Help (❓, h). Four assignment sites updated: the late-add addShortcutsHelpButton() path, the initial-render shortcuts button, the settings button, and the app-help button. Hints use (${getPrefixDisplay()}, then K/,/H) matching the existing pattern."
+  },
+  {
+    "version": "9.82.0+2026-02-23",
+    "description": "Three enhancements: (1) Export/Save dialogs now show row counts; export popups display \"N rows exported\" and when rows are filtered-out also \"of M total\"; Save to Disk popup shows \"N rows saved\"; all three export functions (CSV/JSON/Org-Mode) now count skipped rows; showExportNotification gains optional totalRows parameter; triggerStandardDownload gains rowCount parameter and call-site updated. (2) All tooltip texts: hardcoded lowercase shortcut letters in (${getPrefixDisplay()}, then x) hints uppercased: v→V, e→E, t→I (stats special case per spec), d→D, r→R (3 occurrences), s→S, l→L. (3) Action button tooltips: appended (${getPrefixDisplay()}, then N) hint for each button that has a Ctrl-M+digit shortcut (buttons 1–9)."
+  },
+  {
+    "version": "9.81.0+2026-02-23",
+    "description": "Refactor: Replace fragile text/title-based button lookups with stable ID-based lookups. Assigned mb-visible-btn to the Visible Columns toggle button (addColumnVisibilityToggle) and mb-resize-btn to the Auto-Resize button (addAutoResizeButton). All querySelector/Array.find lookups that previously matched on textContent or title attribute replaced with document.getElementById calls: duplicate-guard in addColumnVisibilityToggle, duplicate-guard and divider-guard in addAutoResizeButton, updateResizeButtonState, toggleAutoResizeColumns, openVisibleColumnsMenu, and the Ctrl+V shortcut handler. Consistent with existing mb- ID naming convention."
+  },
+  {
+    "version": "9.80.0+2026-02-23",
+    "description": "Three fixes/renames: (1) Enter key on focused \"Select All\" / \"Deselect All\" / \"Choose current configuration\" buttons inside the Visible menu now fires the button's click handler before closing; previously Enter always just closed the menu regardless of which element had focus. (2) Button renames: \"Auto-Resize\" → \"Resize\" (R underlined), \"Restore Width\" → \"Restore\" (R underlined), \"Visible Columns\" → \"Visible\" (V underlined), \"Stats\" → \"Statistics\" (i underlined). All occurrences updated: button innerHTML, textContent finders, APP_HELP_TEXT, showShortcutsHelp sections, ctrlMFunctionMap descriptions, and debug log strings."
+  },
+  {
+    "version": "9.79.0+2026-02-22",
+    "description": "\"Tab\", \"Shift-Tab\" and \"cursor up/down\" key cycling now works."
+  },
+  {
+    "version": "9.78.0+2026-02-22",
+    "description": "Help-text rewrite."
+  },
+  {
+    "version": "9.77.0+2026-02-22",
+    "description": "Two fixes: (1) Column Visibility menu Tab focus-trap now actually works: the menuKeyHandler was registered as a bubbling listener on document, but browsers resolve Tab focus-movement at target phase — before bubbling — so the e.preventDefault() call was always too late. Fixed by registering with useCapture=true (document.addEventListener('keydown', menuKeyHandler, true)); the handler's menu.style.display guard prevents any side-effects when the menu is closed. (2) Ctrl-M tooltip \"Functions\" list no longer sorted alphabetically; entries are now rendered in ctrlMFunctionMap insertion order (s, l, r, v, d, t, e, k, ,, h — matching the logical grouping in the map literal) by replacing the .sort() call with a plain Object.entries() iteration."
+  },
+  {
+    "version": "9.76.0+2026-02-22",
+    "description": "Five fixes/enhancements: (1) Column Visibility menu Tab-key now traps focus inside the menu — Tab cycles forward through checkboxes → \"Select All\" → \"Deselect All\" → \"Choose current configuration\" → back to first checkbox; Shift+Tab reverses; previously Tab escaped to unrelated page UI. (2) Ctrl+T wired as a direct shortcut to open the Statistics panel (sa_shortcut_open_statistics, matching the existing configSchema entry and shortcuts-help label). (3) Ctrl+K hard-wired as a direct shortcut to show the keyboard-shortcuts help dialog; entry added to the \"Help\" section in showShortcutsHelp(). (4) Initial page load: #headerid-query input is blurred so keyboard shortcuts are immediately reachable without clicking away. (5) Final page render: #mb-global-filter-input is auto-focused (150 ms after render completes) so users can type a filter query immediately."
+  },
+  {
+    "version": "9.75.0+2026-02-22",
+    "description": "Four fixes: (1) Prefix-mode shortcuts help key changed from \"?\" to \"k\" throughout (ctrlMFunctionMap, debug log strings, showShortcutsHelp Help section) — \"?\" / \"/\" remain as direct (non-prefix) shortcuts to open the help dialog. (2) CSV export fix: in the original code exportTableToCSV called showExportNotification(\"CSV\", filename, ...) before const filename was declared, causing a TDZ ReferenceError that silently aborted the export; now the single call is correctly placed after filename is defined, matching the pattern used by exportTableToJSON and exportTableToOrgMode. (3) Ctrl+M + h (App Help) and Ctrl+M + , (Settings) were already added to ctrlMFunctionMap in v9.74 but are included here for completeness. (4) VZ_MBLibrary v2.8: buildShortcutString now uppercases captured alphabetic keys so the config dialog and shortcuts popup display \"Ctrl+M\" instead of \"Ctrl+m\"."
+  },
+  {
+    "version": "9.74.0+2026-02-22",
+    "description": "Three improvements: (1) Ctrl-M prefix shortcuts now cover all four always-visible buttons from page entry: added h=App Help and \",\"=Settings to ctrlMFunctionMap (alongside existing l=Load, ?=Shortcuts Help); tooltip debug message and showShortcutsHelp \"Help\" section updated accordingly. (2) Export refactor: exportTableToCSV's duplicate inline notification popup removed — it now calls showExportNotification(\"CSV\", filename, rowsExported) like JSON and Org-Mode, making all three export formats share a single popup implementation. (3) triggerStandardDownload (used by saveTableDataToDisk) now auto-focuses the Close button via setTimeout so keyboard users can dismiss it with Enter/Space immediately after it appears (Escape was already handled)."
+  },
+  {
+    "version": "9.73.0+2026-02-22",
+    "description": "Configurable keyboard shortcuts: 12 new keyboard_shortcut entries added to the \"🎹 KEYBOARD SHORTCUTS\" configSchema section (sa_shortcut_open_settings, sa_shortcut_focus_global_filter, sa_shortcut_focus_column_filter, sa_shortcut_clear_filters, sa_shortcut_open_export, sa_shortcut_save_to_disk, sa_shortcut_load_from_disk, sa_shortcut_open_visible_columns, sa_shortcut_open_density, sa_shortcut_toggle_h2, sa_shortcut_toggle_h3, sa_shortcut_auto_resize). Two new helpers: isShortcutEvent(e, settingKey, fallback) mirrors isPrefixKeyEvent logic against an arbitrary setting; getShortcutDisplay(settingKey, fallback) returns the configured string for UI display. initKeyboardShortcuts() fully refactored: every hardcoded (ctrlKey||metaKey)&&key===\"x\" guard replaced by isShortcutEvent() calls. New sa_shortcut_auto_resize handler added (default Ctrl+R) that triggers toggleAutoResizeColumns directly in addition to the existing prefix-mode sub-key. showShortcutsHelp() sections array updated: all configurable shortcut keys now shown via getShortcutDisplay() so the help dialog reflects the user's live configuration."
+  },
+  {
+    "version": "9.72.0+2026-02-22",
+    "description": "Feature: Fully implemented \"🖌️ UI APPEARANCE\" config section — replaces all hardcoded inline styles on every interactive UI element with 12 condensed pipe-separated settings. New config keys: sa_ui_action_btn_style (fontSize|padding|height|borderRadius — applied to all h1 action-bar buttons: show-all, 🎹, ⚙️, ❓, visible-columns, export, stats, density, auto-resize), sa_ui_save_btn_style (bg|color|border|bgHover), sa_ui_load_btn_style (bg|color|border|bgHover), sa_ui_stop_btn_style (bg|color|border), sa_ui_settings_btn_style (bg|color|border), sa_ui_help_btn_style (bg|color|border), sa_ui_button_divider_style (color|margin — all \" | \" separators), sa_ui_global_filter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_prefilter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_column_filter_input_style (fontSize|padding — injected into the dynamic CSS block for .mb-col-filter-input), sa_ui_subtable_btn_style (fontSize|padding|borderRadius|bg|border|bgHover — injected for .mb-subtable-clear-btn and .mb-show-all-subtable-btn), sa_ui_filter_bar_btn_style (fontSize|padding|borderRadius|bg|border — prefilter toggle, highlight toggle, clear-column, clear-all buttons), sa_ui_checkbox_style (fontSize|marginRight — all Cc/Rx/Ex checkbox inputs and their labels). Corresponding CSS helper functions added: uiActionBtnBaseCSS, uiSaveBtnCSS, uiLoadBtnCSS, uiStopBtnCSS, uiSettingsBtnCSS, uiHelpBtnCSS, uiButtonDividerCSS, uiGlobalFilterInputCSS, uiPrefilterInputCSS, uiColumnFilterInputVals, uiSubtableBtnVals, uiFilterBarBtnCSS, uiCheckboxVals, uiCheckboxLabelCSS, uiCheckboxInputCSS. Also: added unique mb- IDs to all previously anonymous elements (mb-save-to-disk-btn, mb-load-from-disk-btn, mb-stop-btn, mb-settings-btn, mb-file-input, mb-prefilter-container, mb-prefilter-input, mb-prefilter-case/rx/exclude-label/checkbox, mb-filter-container, mb-global-filter-wrapper, mb-global-filter-input, mb-global-filter-clear, mb-global-filter-case/rx/exclude-label/checkbox, mb-button-divider-initial). Fixed typo: preFilterInput font-size was \"1.oem\" → corrected to \"1em\" via config default. Save/Load buttons gain hover effects via onmouseover/onmouseout."
+  },
+  {
+    "version": "9.71.0+2026-02-22",
+    "description": "Feature: New ColumnDataExtractor extractor extractFormatTypes for release-group, label, and series pages. Strips leading numeric quantity factors (e.g. \"8×\", \"2x\") from each media-type token in a \"Format\" cell and converts the \" + \" separator between distinct types to \", \". Examples: \"8×12\\\\\" Vinyl\" → \"12\\\\\" Vinyl\", \"2xCD-R + DVD\" → \"CD-R, DVD\". Registered as { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] } in the columnExtractors of releasegroup-releases, label-releases, and series-releases pageDefinitions."
+  },
+  {
+    "version": "9.70.0+2026-02-22",
+    "description": "Refactor + Feature: Introduced ColumnDataExtractor — a named-function registry that decouples column extraction and transformation logic from the main fetch/render pipeline. (1) New singleton object ColumnDataExtractor with four named extractors: splitCountryDate (Country/Date → Country + Date), splitLocation (Location → Place + Area + Country), splitArea (Area → MB-Area + Country), and sumTracks (Tracks \"9 + 7 + 8\" → Total Tracks integer sum). Each extractor has the contract fn(sourceCell: HTMLTableCellElement): HTMLTableCellElement[] and is entirely self-contained. (2) New helper function buildActiveColumnExtractors(def) converts an activeDefinition into a runtime array of {sourceColumn, extractor, syntheticColumns, colIdx} descriptors; translates legacy splitCD/splitLocation/splitArea boolean flags transparently for any future definitions that still use them. (3) All pageDefinitions migrated from the boolean split* flags to the canonical columnExtractors:[{sourceColumn, extractor, syntheticColumns}] array in features; the old splitCD: false entry was removed. (5) Module-level typesWithSplitCD/Location/Area arrays removed; replaced by activeColumnExtractors (single unified list). startFetchingProcess now calls buildActiveColumnExtractors() instead of setting three separate flag arrays. (6) Header scanning loop rewritten: colIdx reset before each page, single forEach over activeColumnExtractors replaces three separate if-blocks. cleanupHeaders synthetic-header injection unified into one forEach. Row-processing split section replaced by: (a) call each extractor before deleteCell (indices still valid), (b) deleteCell excluded columns, (c) append all synthetic cells in declaration order. All legacy inline code (~80 lines) removed."
+  },
+  {
+    "version": "9.65.0+2026-02-22",
+    "description": "Five UX enhancements: (1) Action buttons: superscript mnemonics ¹²³⁴… appended after the 🧮 emoji on every action button to remind the user of the Ctrl-M+1/2/3/… shortcut invocations; applies to both \"Show all\" and pre-existing 🧮-prefixed buttons (e.g. artist RG split buttons). (2) Shortcuts popup (mb-shortcuts-help): restructured with a sticky flex title-bar (header + ✕ button) and a separate scrollable content area (overflow-y:auto; max-height:82vh) so the dialog never overflows the viewport when many shortcut sections are present. (3) Stats panel (mb-stats-panel): added \"Sub-Tables: N table(s)\" as the first row in the statistics grid so the user can immediately see how many independent sub-tables exist on multi-table pages. (4) Multi-table pages — single sub-table auto-expand: when renderGroupedTable produces exactly one group (dataArray.length === 1) the resulting table is unconditionally shown (shouldStayOpen = true) instead of starting collapsed, independent of the category name or sa_auto_expand threshold. (5) Progress-bar de-duplication: removed the redundant \"Loading page N of M…\" text update on globalStatusDisplay during page fetching; the inline progress bar (mb-fetch-progress-label inside mb-fetch-progress-outer) already carries the identical information, so showing it twice in the subheader was unnecessary noise."
+  },
+  {
+    "version": "9.64.0+2026-02-21",
+    "description": "Progress bar label text reformatted: \"Loading page N of M... K rows — estimated X.Xs remaining\" changed to the more compact \"Loading page N of M... (K rows) - est. X.Xs\". Parentheses around row count, em-dash replaced by hyphen-minus, \"estimated … remaining\" shortened to \"est. …\"."
+  },
+  {
+    "version": "9.63.0+2026-02-21",
+    "description": "configSchema: all 6 sa_popup_* entries changed from type:\"text\" to type:\"popup_dialog\" and each gains a fields:[...] array naming every pipe-separated parameter (e.g. [\"bg\",\"border\",\"borderRadius\",\"padding\",\"boxShadow\",\"zIndex\",\"fontFamily\",\"minWidth\",\"maxWidth\"] for sa_popup_dialog_style)."
+  },
+  {
+    "version": "9.62.0+2026-02-21",
+    "description": "Two fixes: (1) Prefilter toggle button text after disk-load now always includes total row count from the file. For \"Exclude matches\" mode the text is \"🎨 N out of T row(s) excluded: \\\\\"query\\\\\"\"; for normal (keep-matches) mode it is \"🎨 N out of T row(s) prefiltered: \\\\\"query\\\\\"\". updatePrefilterToggleButton gains two new parameters: totalRows (number, default 0) and isExclude (boolean, default false); call site in loadTableDataFromDisk passes data.rowCount and the local isExclude flag. (2) Progress bar outer element (mb-fetch-progress-outer) min-width raised from 260px to 420px and max-width from 500px to 750px so the long label text \"Loading page N of M... K rows — estimated X.Xs remaining\" is no longer clipped at either end."
+  },
+  {
+    "version": "9.61.0+2026-02-21",
+    "description": "Three changes: (1) Progress bar text: fetchProgressLabel now shows the full message \"Loading page N of M... K rows — estimated X.Xs remaining\" (was \"N/M — K rows — est. X.Xs\"); bar outer width changed from fixed 380px to auto/min-260px/max-500px so the label always fits. (2) Load dialog \"Exclude Matches\" checkbox (id=\"sa-load-exclude\"): added as a third option in the checkbox row after \"Regular Expression\". When checked, rows that match the filter expression are EXCLUDED during disk-load instead of kept; rows that do not match are kept. Wired end-to-end: dialog reads #sa-load-exclude → syncs to preFilterExcludeCheckbox in confirmLoad → fileInput.onchange reads preFilterExcludeCheckbox.checked → passes isExclude to loadTableDataFromDisk (new 5th param, default false) → rowMatchesFilter inverts its result when isExclude=true. (3) Load dialog input placeholder renamed from \"Search expression...\" to \"Filter expression...\"."
+  },
+  {
+    "version": "9.60.0+2026-02-21",
+    "description": "Three enhancements: (1) Progress bar text moved inside the bar: replaced the native <progress> element with a custom CSS bar (span#mb-fetch-progress-outer, 220px × 20px) containing a fill div (span#mb-fetch-progress-fill, width animated via CSS transition) and a centered label (span#mb-fetch-progress-label) absolutely positioned over the fill. Label text \"3/12 — 847 rows — est. 4.2s\" is always readable via mix-blend-mode:difference + filter:invert(1). Fill colour transitions red→orange→green at 0%/50%/100% progress. (2) Rendering time appended to globalStatusDisplay final text: \"Loaded N pages (M rows) from MusicBrainz backend database, Fetching time: X.XXs, Rendering time: Y.YYs\". (3) New config setting sa_render_warning_threshold (default 10000, Performance Settings section): after the existing large-dataset save-or-render dialog, if the final row count exceeds this threshold a showCustomConfirm dialog warns the user that rendering may be slow and offers Proceed / Cancel. Cancel aborts rendering, sets a descriptive status message, and hides the progress bar. 0 disables the warning."
+  },
+  {
+    "version": "9.59.0+2026-02-21",
+    "description": "Enhancement + rename: (1) Inline fetch progress bar added to the h1 controls line, positioned after the ❓ help button. A <progress> element (120px wide, accent-color green) plus a compact label (e.g. \"3/12 — 847 rows — est. 4.2s\") are wrapped in a span#mb-fetch-progress-wrap that is shown at fetch start and hidden at all exit paths (success, Stop button, render-large-dataset cancel, save-to-disk-only, and error). The bar fills red→orange→green as the page fraction crosses 0%, 50%, and 100%. The existing globalStatusDisplay in the subheader continues to show the full progress text unchanged. (2) Renamed \"Clear all COLUMN filters\" button label in createClearColumnFiltersButton (used in all h3 sub-table headers on multi-table pages) to \"Clear ALL filters\" to better reflect its scope and be more concise."
+  },
+  {
+    "version": "9.58.0+2026-02-21",
+    "description": "Bug fix: Multi-sort column tints lost on body cells of already-sorted tables when a second multi-sort is activated on another table (multi-table pages only). Root cause: renderGroupedTable has three branches — (a) query+existingTable: reuse tbody, no makeTableSortableUnified call; (b) !query new table: full init including makeTableSortableUnified; (c) else: filter re-run on existing table, no makeTableSortableUnified. Tints were re-applied via the trailing block inside makeTableSortableUnified, so only branch (b) ever re-applied tints after a tbody replacement. Branch (a) always fires on runFilter()-triggered re-renders (query='re-run'), so any previously tinted table A lost its body tints when table B's sort triggered a runFilter() cycle. Header tints survived because thead is not replaced by tbody.innerHTML=''. Fix: added explicit tint re-application immediately after the rows-append block in branch (a), keyed by the same ${categoryName}_${index} sortKey that was registered in multiSortTintRegistry at initial makeTableSortableUnified call time. The fix was implemented in the previous session but the file was not saved to outputs — this version corrects that."
+  },
+  {
+    "version": "9.57.0+2026-02-20",
+    "description": "Bug fixes (4 items) for multi-sort column tinting introduced in 9.56.0: (1) Tints not clearing on ⇅ click: root cause was that tint application ran before runFilter() replaced tbody content with fresh unclassed rows, so the re-paint was lost. Fixed by moving applyMultiSortColumnTints() / clearMultiSortColumnTints() to AFTER runFilter() in the async sort block. For single-table pages renderFinalTable() is also now hooked to re-apply tints via a new multiSortTintRegistry Map (sortKey → {applyTints, clearTints}), ensuring tints persist across every filter/sort re-render. (2) Tints not appearing on tbody cells (only header) on first Ctrl+Click or Ctrl+same-column: same root cause as (1) — premature application before DOM was replaced. (3) Value-group run-length coloring: applyMultiSortColumnTints() now walks tbody rows per sorted column and alternates between two shades of the column hue (light 'a' / darker 'b') each time the cell text value changes. Equal-value runs share the same shade; each value boundary flips to the other shade. CSS updated from 8 flat classes to 16 two-shade pairs (mb-mscol-Na / mb-mscol-Nb) plus 8 header classes. (4) mb-sort-status alignment: .mb-subtable-controls changed from align-items:center to align-items:baseline with vertical-align:middle on each child span so sort-only text aligns with the h3 header baseline even when no filter status text is present."
+  },
+  {
+    "version": "9.56.0+2026-02-20",
+    "description": "Enhancement: Visual column-group tinting for multi-column sort mode. When two or more columns are in the multi-sort chain each sorted column gets a distinct pastel tint applied to every body cell (td) and its header cell (th) in that column: amber (priority 1), sky-blue (2), mint (3), mauve (4), peach (5), teal (6), lavender (7), vanilla (8). Tints use rgba semi-transparency so the existing even/odd zebra-stripe row backgrounds remain visible underneath. A slightly more opaque variant is used for header cells so the priority is visually anchored. Tints are applied/updated by a new applyMultiSortColumnTints() helper and fully removed by clearMultiSortColumnTints() — which is called on: plain click (entering single-sort mode), ⇅ click (restoring original order), and in the single-column visual update branch. Tints are also re-applied on every runFilter() re-render via the existing trailing updateMultiSortVisuals block. Works independently per table on both single-table and multi-table pages."
+  },
+  {
+    "version": "9.55.0+2026-02-20",
+    "description": "Enhancement: Multi-column sort lifted to all page types. Previously Ctrl+Click multi-sort was restricted to single-table pages; multi-table pages only supported single-column sort per sub-table. Now every sub-table on a multi-table page is independently multi-sortable with the same full feature set: (1) Ctrl+Click ▲/▼ adds/updates/removes a column from that sub-table's own multi-sort chain; (2) auto-seeding from existing single-sort state works per sub-table; (3) plain click clears the chain for that sub-table and returns to single-sort; (4) ⇅ restores original order and clears the chain; (5) superscript priority numbers (¹²³…) are rendered on the active icons; (6) the h3 .mb-sort-status span shows \"Multi-sorted by: …\" text matching the single-table display. All isMultiTable guards removed from: sort-state update, debug log, visual update, isRestore determination, compareFn selection, status display, and the trailing updateMultiSortVisuals call. Tooltips unified across both page types."
+  },
+  {
+    "version": "9.54.0+2026-02-20",
+    "description": "Enhancement: Multi-column sort UX — auto-seed chain from existing single-sort. Previously, starting a multi-sort session required Ctrl+clicking the already-sorted column first to add it to the chain before adding further columns. Now, when the user Ctrl+clicks any sort icon on a column that is NOT the currently sorted one, the existing single-sort column is automatically promoted as priority 1 in the multi-sort chain, and the newly Ctrl+clicked column is added as priority 2. If the user Ctrl+clicks the same column that is already sorted, behaviour is unchanged (normal add/update/remove cycle). Plain clicks still clear the chain and enter single-sort mode as before."
+  },
+  {
+    "version": "9.53.0+2026-02-20",
+    "description": "Refactor + Enhancement (3 items): (1) showCustomAlert and showCustomConfirm merged into a single showCustomDialog(message, title, triggerButton, mode) function (mode: \"alert\"|\"confirm\"). Both original functions remain as thin wrappers so all call sites are unchanged. (2) All visual parameters of the custom popup dialog are now fully configurable via 6 new condensed pipe-separated config strings in a new \"🪟 CUSTOM POPUP UI\" section of configSchema: sa_popup_dialog_style, sa_popup_header_style, sa_popup_message_style, sa_popup_ok_btn_style, sa_popup_cancel_btn_style, sa_popup_btn_gap. Helper functions parseCondensedStyle / popupDialogCSS / popupHeaderCSS / popupMessageCSS / popupOkBtnCSS / popupCancelBtnCSS extract the values at render time so changes in settings take effect immediately. (3) Default values increase readability: header font-size 1.3em→1.5em, message font-size 1.05em→1.2em / line-height 1.6→1.7 / color #555→#444, border-radius 8px→10px, padding 24px→28px, max-width 550px→600px. A new stub section \"🖌️ UI APPEARANCE (future)\" documents the planned extension point for configuring all other UI elements (action buttons, filter inputs, subtable controls, checkboxes, etc.) via the same condensed-string pattern."
+  },
+  {
+    "version": "9.52.0+2026-02-20",
+    "description": "UI Fix (3 items): (1) mb-subtable-clear-btn is now always rendered to the left of span.mb-filter-status in all three subtable-controls construction sites (new-h3, reuse-existing-h3, and filter-time branches). (2) Buttons mb-toggle-prefilter-btn, mb-toggle-filter-highlight-btn, mb-clear-column-filters-btn (new ID), and mb-clear-all-filters-btn (new ID) now share the same rounded-corner visual style as mb-subtable-clear-btn (border-radius:4px, background:#f0f0f0, border:1px solid #ccc, vertical-align:middle) while preserving their individual font-size and display values. (3) Added unique IDs mb-clear-column-filters-btn and mb-clear-all-filters-btn to the two previously ID-less filter clear buttons."
+  },
+  {
+    "version": "9.51.0+2026-02-20",
+    "description": "UI Fix (3 items): (1) \"Show all <n>\" sub-table overflow button: added class mb-show-all-subtable-btn (styled like mb-subtable-clear-btn), and moved it to the beginning of span.mb-subtable-controls so it appears visually where the controls span starts. (2) Stop button repositioned in the h1 controls bar: now appears right before the first divider (mb-button-divider-initial), between the action buttons and Save/Load group. Also added type=\"button\" and consistent inline-flex styling. (3) Ctrl-M + o keyboard shortcut: activates the Stop button, but ONLY while the Stop button is visible (i.e. during an active fetch). The shortcut is registered when the button becomes visible and deregistered when it is hidden again."
+  },
+  {
+    "version": "9.50.0+2026-02-20",
+    "description": "Bug fix: Invalid CSS selector prevented to read the state of the global filter input. So the highlight toggle button and the keyboard shortcut Ctrl-Shift-G were not working."
+  },
+  {
+    "version": "9.49.0+2026-02-19",
+    "description": "Removed \"info\" logging for upcoming release."
+  },
+  {
+    "version": "9.48.0+2026-02-19",
+    "description": "Feature: Multi-column sorting for single-table page types. (1) New createMultiColumnComparator(sortColumns, headers) function inserted alongside createSortComparator. (2) makeTableSortableUnified rewritten: state now carries a multiSortColumns:[{colIndex,direction}] array alongside lastSortIndex/sortState. Interaction model: plain click on any sort icon → single-sort mode (clears multiSortColumns, sorts by that column alone); Ctrl+Click on ▲ or ▼ → adds the column to multiSortColumns (or updates direction / removes it if already present); clicking ⇅ always restores original order and clears multiSortColumns regardless of Ctrl. Visual feedback: active icons in multi-sort mode are annotated with superscript priority numbers (¹²³…) via updateMultiSortVisuals(). Sort-status display shows \"Multi-sorted by: \\\"Col1\\\"▲, \\\"Col2\\\"▼ (N rows in Xms)\". Multi-table pages are unaffected (still single-column only). Tooltips updated to reflect Ctrl+Click behaviour. Removed stale progressBar/progressText/progressContainer references that were cleaned up in 9.45.0."
+  },
+  {
+    "version": "9.47.0+2026-02-19",
+    "description": "UI Fix: On multi-table pages the h3 sub-table control order is corrected. Previously: clearBtn → filterStatus → sortStatus → showAllBtn. Now: filterStatus → sortStatus → clearBtn → showAllBtn — status text appears immediately after the row-count, action buttons are grouped at the end. Fixed in both the new-h3 and the reuse-existing-h3 branches of renderGroupedTable."
+  },
+  {
+    "version": "9.46.0+2026-02-19",
+    "description": "Bug fixes: (1) Sort debug log now includes the direction icon (▲/▼/⇅) before the column index, matching the sort-status-display text. (2) Filter status display in single-table mode no longer queries tbody tr count from the DOM after an async chunked render (which only has 500 rows inserted at that point); it now uses filteredRows.length from the in-memory array, giving the correct total immediately. (3) Same fix eliminates the mismatch between the H2 row-count span (correct) and the filter-status-display (was wrong) when a global filter is active after sorting."
+  },
+  {
+    "version": "9.45.0+2026-02-19",
+    "description": "UI Polish: (1) Fixed vertical alignment of mb-global-status-display and mb-info-display — both now use display:inline/font-size:0.95em and rely on the parent inline-flex align-items:center instead of carrying their own height/flex context; margin-left on infoDisplay removed since parent gap handles spacing. (2) Removed mb-fetch-progress-container (and its bar/text children) and the never-used timerDisplay span from the h1 controls bar; live per-page fetch progress is now shown in globalStatusDisplay in the subheader instead. (3) Button-group separators: initialDivider (Show-all → Save/Load) is no longer removed by ensureSettingsButtonIsLast so it persists after load; a new mb-button-divider-before-shortcuts span is inserted before 🎹 at initial setup and kept pinned immediately before 🎹 by ensureSettingsButtonIsLast on every subsequent button addition, covering both the Load→🎹 (initial page) and Export→🎹 (after-load) cases."
+  },
+  {
+    "version": "9.44.0+2026-02-19",
+    "description": "UI Fix: statusDisplaysContainer is now injected inline into the existing <p class=\"subheader\"> line (present on all non-search pages) so it sits on the same line as the subheader text (e.g. \"~Country\"). Its left edge is dynamically aligned to the first action button via getBoundingClientRect(); if the subheader text already reaches or passes that point a fixed 10px gap is used instead. On search pages (no subheader) it falls back to a dedicated block line below the h1. A resize listener keeps alignment correct in both modes."
+  },
+  {
+    "version": "9.43.0+2026-02-19",
+    "description": "UI Enhancement: statusDisplaysContainer is now always rendered as a block div directly below the h1 header row. Its left edge is dynamically aligned with the first \"Show all\" action button using getBoundingClientRect() so it tracks any entity-name length. A resize listener keeps alignment correct when the viewport changes. Removed the three separate per-page-type placement branches (search / subheader / fallback) in favour of a single universal strategy."
+  },
+  {
+    "version": "9.42.0+2026-02-19",
+    "description": "Refactor: Extract getColFilters() and testRowMatch() helpers to eliminate duplicated row-matching logic shared between multi-table and single-table branches of runFilter()."
+  },
+  {
+    "version": "9.41.0+2026-02-19",
+    "description": "Add new global filter exclusion checkbox."
+  },
+  {
+    "version": "9.40.0+2026-02-19",
+    "description": "Enhancement: Configurable keyboard shortcut prefix. (1) New configSchema section \"🎹 KEYBOARD SHORTCUTS\" with sa_keyboard_shortcut_prefix setting (default: \"Ctrl+M\", type: keyboard_shortcut). Accepts any combination like \"Ctrl+.\", \"Alt+X\", \"Ctrl+Shift+,\". (2) Added helper functions parsePrefixShortcut(), getPrefixDisplay(), isPrefixKeyEvent() to centralise prefix parsing and matching. \"Ctrl\" in the config always matches both Ctrl and Meta/Cmd for cross-platform compatibility. (3) Refactored keydown handler: hardcoded (e.ctrlKey||e.metaKey)&&e.key==='m' replaced by isPrefixKeyEvent(e). (4) All button tooltips, tooltip overlay header, shortcuts-help dialog entry, debug log messages, and APP_HELP_TEXT now reflect the configured prefix dynamically via getPrefixDisplay()."
+  },
+  {
+    "version": "9.39.0+2026-02-19",
+    "description": "Added ❓ application help button (always visible, right of ⚙️): opens a scrollable popup dialog presenting a full feature overview of the script, closeable via \"Close\" button or Escape key."
+  },
+  {
+    "version": "9.38.0+2026-02-19",
+    "description": "Fix & Enhancement: (1) \"Page Reloaded\" popup now positioned below the triggering \"Show all\" action button after final page render, consistent with other dialogs. (2) \"📂 Load Table Data\" dialog repositioned below the \"📂 Load from Disk\" button; added Alt-L shortcut to confirm/load from within the dialog. (3) Fixed OK button focus and Tab keyboard navigation in all custom popup dialogs: removed outline:none from buttons so focus outline is visible, ensuring keyboard navigation between OK and Cancel works. (4) Renamed \"⌨️ Shortcuts\" button to \"🎹\"; button is now visible immediately on page entry (before action button click), positioned left of the ⚙️ settings button."
+  },
+  {
+    "version": "9.37.0+2026-02-19",
+    "description": "The \"Load from Disk\" option now defaults to Gzipped files (*.gz)."
+  },
+  {
+    "version": "9.36.0+2026-02-19",
+    "description": "Reordered source code: configuration and pageType definitions at the beginning of the file."
+  },
+  {
+    "version": "9.35.0+2026-02-18",
+    "description": "Enhancement: Replaced three native browser dialogs with custom styled implementations. (1) Page reload alert: custom dialog when MusicBrainz page is reloaded for filter stability. (2) High page count warning: custom confirm dialog instead of native when entity has more pages than configured threshold - user can proceed or cancel with keyboard support (Enter=proceed, Escape=cancel). (3) Page type mismatch: custom confirm dialog when loading file from different page type with clear warning and user choice. (4) Invalid regex alert: custom alert for invalid regex pattern in load filter. All custom dialogs match userscript styling (white background, button styling, centered, shadow, z-index 10001), support keyboard shortcuts (Enter=OK, Escape=Cancel), and auto-focus OK button for accessibility."
+  },
+  {
+    "version": "9.34.0+2026-02-18",
+    "description": "Enhancement: Comprehensive Ctrl-M Emacs-style keybinding system with tooltip. (1) Press Ctrl-M and release to enter mode, then press key: 1-9 select action buttons, a-z select additional buttons (up to 35). (2) Function shortcuts: r=Auto-Resize, t=Stats Panel, s=Save to Disk, d=Density, v=Visible Columns, e=Export, l=Load from Disk, ?=Show Help. (3) Configurable tooltip (default enabled) displays all available shortcuts when Ctrl-M is pressed, positioned in upper right of content div without overlapping sidebar. (4) Underlined keyboard shortcuts in button text for visual reference. (5) Tooltip auto-hides when mode exits (Escape, timeout, or selection). (6) Extended key support (1-9, a-z, A-Z, ,;.:-_+*<>#'?!%&/()=) for future extensions."
+  },
+  {
+    "version": "9.33.1+2026-02-17",
+    "description": "Enhancement: Added action shortcuts and h3 Ctrl+Click functionality. (1) Ctrl+M: Triggers the first \"Show all\" action button on the page - useful for pages with multiple action buttons (chooses first one). (2) h3 Headers: Added Ctrl+Click support to toggle ALL h3 headers (types) simultaneously, matching h2 functionality. Regular click still toggles individual h3. Updated tooltip: \"Click to Collapse/Uncollapse table section (Ctrl+Click to toggle all types)\". (3) Added Ctrl+M to shortcuts help dialog."
+  },
+  {
+    "version": "9.33.0+2026-02-17",
+    "description": "Major Enhancement: Extended keyboard shortcuts and smart button visibility. (1) \"Visible Columns\": Added \"Choose <u>c</u>urrent configuration\" button with Alt-C shortcut. (2) Collapse shortcuts: Ctrl-2 toggles all h2 headers, Ctrl-3 toggles all h3 headers (types) - mimics existing Ctrl-click and Show/Hide all functionality. (3) Smart button visibility: \"Toggle highlighting\", \"Clear all COLUMN filters\", and \"Clear ALL filters\" buttons now only appear when filters are actually active. (4) Updated Shortcuts help with comprehensive sections for all menu-specific and global shortcuts including new View & Layout section."
+  },
+  {
+    "version": "9.32.0+2026-02-17",
+    "description": "Enhancement: Extended keyboard navigation for menus. (1) \"Visible Columns\": Added Ctrl+V to open menu, Tab cycles through checkboxes and buttons, Alt-S triggers \"Select All\", Alt-D triggers \"Deselect All\" (only when menu open). Buttons now show underlined letters (<u>S</u>elect All, <u>D</u>eselect All). (2) \"Density\": Added Ctrl+D to open menu. (3) \"Export\": Close button in export complete popup now auto-focused for quick dismissal with Enter or Space."
+  },
+  {
+    "version": "9.31.0+2026-02-17",
+    "description": "Enhancement: Added keyboard navigation to pull-down menus. (1) \"Visible Columns\": Up/Down to navigate checkboxes, Space/Shift to toggle selection, Enter to close. Auto-focus first checkbox on open. (2) \"Density\": Up/Down to navigate options with immediate table preview, Enter to apply and close. Auto-focus current density on open. (3) \"Export\": Up/Down to navigate formats, Enter to execute and close. Auto-focus first option on open. All menus now have visual focus indicators and support keyboard-only operation."
+  },
+  {
+    "version": "9.30.0+2026-02-17",
+    "description": "Fix: \"Collapsable Sidebar\" and \"Auto-Resize Columns\" feature break \"Stick Table Headers\" feature."
+  },
+  {
+    "version": "9.26.1+2026-02-16",
+    "description": "Fix & Enhancement: (1) Removed redundant \"Unhighlight prefilter\" button (functionality now in dynamic prefilter toggle button). (2) Fixed \"Toggle highlighting\" button restore functionality - now correctly restores filter highlights by re-running runFilter() instead of manual highlight re-application. (3) Added 🎨 emoji to dynamic prefilter button text (e.g., \"🎨 2 rows prefiltered: 'Westfalenhalle'\")."
+  },
+  {
+    "version": "9.26.0+2026-02-16",
+    "description": "Major Enhancement - Split Toggle Functionality: (1) Created separate prefilter toggle button that only appears when data is loaded from disk with a prefilter. Shows dynamic text like \"2 rows prefiltered: 'Westfalenhalle'\" and only toggles prefilter highlighting. (2) \"Toggle highlighting\" button now only toggles global filter and column filter highlighting, not prefilter. (3) Separate tracking for prefilter and filter highlight states with independent save/restore functions. (4) Both buttons change background color to their respective highlight colors when highlighting is disabled."
+  },
+  {
+    "version": "9.25.0+2026-02-16",
+    "description": "Major Enhancement: (1) \"Unhighlight all\" button renamed to \"Toggle highlighting\" with toggle functionality - click once to remove all highlights, click again to restore them. (2) Prefilter information now displayed in button text instead of separate span (e.g., \"2 rows prefiltered: 'Westfalenhalle'\"). (3) Button changes background color to highlight color when highlighting is disabled, providing visual feedback. (4) Improved highlight save/restore using re-application of highlighting parameters rather than DOM manipulation."
+  },
+  {
+    "version": "9.24.2+2026-02-16",
+    "description": "Fix: Prefiltering when loading from disk now works correctly. Updated fileInput.onchange handler to read filter parameters (query, case sensitivity, regex) from UI elements before calling loadTableDataFromDisk()."
+  },
+  {
+    "version": "9.24.1+2026-02-16",
+    "description": "Fix: Resolved \"Cannot access settingsBtn before initialization\" error by moving settingsBtn declaration before its first usage in controlsContainer."
+  },
+  {
+    "version": "9.24.0+2026-02-16",
+    "description": "UI Enhancement: (1) Clear column filter buttons now render ✗ symbol in red for better visibility - refactored into createClearColumnFiltersButton() helper function to avoid code duplication. (2) Settings button (⚙️) relocated: initially appears after Load from Disk button, then always as last button after data is loaded. (3) Added dividers \" | \" between button groups: initially between action buttons and Save to Disk; after data load between Load from Disk and Auto-Resize."
+  },
+  {
+    "version": "9.23.0+2026-02-16",
+    "description": "UI Restructuring: Moved global status display and info display from h1 header to subheader area. Now appears one line below h1 header inside <p class=\"subheader\"> after entity link (for all page types except search). For search pages, displays immediately below h1. Aligns with controls container for consistent layout."
+  },
+  {
+    "version": "9.22.0+2026-02-16",
+    "description": "Enhancement: Added dedicated infoDisplay area for general status messages (Auto-resize, Density, Export, Load operations) separate from filtering/sorting status. These messages no longer overwrite filter/sort status and appear in their own display area after the global status display."
+  },
+  {
+    "version": "9.21.1+2026-02-16",
+    "description": "Fix: Escape key two-press behavior in filter fields now works correctly. Removed conflicting old Escape handlers that were immediately clearing and blurring the field. First press now properly clears and keeps focus, second press blurs as intended."
+  },
+  {
+    "version": "9.21.0+2026-02-16",
+    "description": "UI Enhancements: (1) Escape key in filter fields: first press clears field but keeps focus, second press removes focus. (2) Shortcuts help dialog redesigned with modern white background, organized sections, and better readability - no more dark overlay. (3) Added \"Click outside or press Escape to close\" text to Shortcuts, Density, and Export menus for consistency."
+  },
+  {
+    "version": "9.20.2+2026-02-16",
+    "description": "Enhancement: (1) Ctrl-C now intelligently skips checkbox columns and number columns (#), focusing on the first actual data column filter. (2) All Ctrl/Cmd keyboard shortcuts now work even when typing in input fields, enabling seamless cycling between filter fields without losing focus. Only ? and / shortcuts require not typing in input fields."
+  },
+  {
+    "version": "9.20.1+2026-02-16",
+    "description": "Fix: Ctrl-C keyboard shortcut now works correctly - fixed incorrect CSS class selector (was mb-filter-row, should be mb-col-filter-row). Automatically skips checkbox columns and focuses on first actual filter input field."
+  },
+  {
+    "version": "9.20.0+2026-02-16",
+    "description": "Enhancement: (1) Added Ctrl-C keyboard shortcut to focus first column filter field. On multi-table pages, repeatedly pressing Ctrl-C cycles through all tables. (2) Export button dropdown menu now uses same styling as Density button for consistency - includes header and descriptive text for each format."
+  },
+  {
+    "version": "9.19.0+2026-02-16",
+    "description": "Fix: Fixed button duplication bug when loading data from disk. Buttons from Auto-Resize to Export in the h1 header line are no longer doubled after data load finishes. All button-adding functions now check for existing buttons before creating new ones."
+  },
+  {
+    "version": "9.18.0+2026-02-15",
+    "description": "Major enhancements: (1) Settings button now works by triggering menu link. (2) Export button renamed to \"Export\" with dropdown menu offering CSV, JSON, and Emacs Org-Mode formats. (3) Save to Disk now uses gzip compression (.json.gz) for ~60-80% file size reduction with minimal performance cost. Load from Disk automatically detects and decompresses .gz files. Added pako library for compression."
+  },
+  {
+    "version": "9.17.1+2026-02-15",
+    "description": "Fix: Moved ⚙️ Settings button to h1 header (entity name header) instead of h2 header as originally intended. Button floats right and remains at far right edge when window resizes."
+  },
+  {
+    "version": "9.17.0+2026-02-15",
+    "description": "Fix: ⚙️ Settings button now properly positioned at far right of h2 header with float:right (responsive to window size). Fixed Ctrl-F shortcut to properly focus global filter. Fixed Stats panel to show correct statistics across all tables (Total/Visible/Hidden Columns, Filtered Out rows, Global Filter value)."
+  },
+  {
+    "version": "9.16.0+2026-02-15",
+    "description": "UI Polish: Added tooltips to unhighlight buttons, clear filter buttons, and all Show all/RG/release buttons. Added global ⚙️ Settings button in h2 header (right-aligned) to open settings manager dialog."
+  },
+  {
+    "version": "9.15.0+2026-02-15",
+    "description": "Fix: Sub-table status displays (filter/sort) now properly appear in h3 headers on multi-table pages (like release-group pages). Previously only showed on initial render, not when filtering. Global filter status now displays correctly in h2 header for all multi-table page types."
+  },
+  {
+    "version": "9.14.0+2026-02-15",
+    "description": "Enhancement: \"Visible Columns\" button now displays in red when not all columns are visible, providing visual feedback about hidden columns."
+  },
+  {
+    "version": "9.13.0+2026-02-15",
+    "description": "Fix: Hiding/showing columns after Auto-Resize now properly updates column widths and table layout. Previously caused text wrapping and misalignment. Hidden columns now properly removed from width calculation, shown columns re-measured. Status message now shows correct visible column count (not summed across tables)."
+  },
+  {
+    "version": "9.12.0+2026-02-15",
+    "description": "Fix: Auto-Resize now properly handles hidden columns from Visible Columns feature. Previously caused rendering glitches where content spread across wrong columns. Now skips hidden columns entirely during measurement and sizing."
+  },
+  {
+    "version": "9.11.0+2026-02-15",
+    "description": "Fix: Auto-Resize now includes sorting symbol widths (⇅, ▲, ▼) in column header measurement. Previously columns with short data could be sized too narrow, cutting off header content."
+  },
+  {
+    "version": "9.10.0+2026-02-15",
+    "description": "Fix: Column visibility menu now auto-sizes to content without scrollbars. Status display font sizes adjusted to better correspond with h2/h3 header text heights."
+  },
+  {
+    "version": "9.9.0+2026-02-15",
+    "description": "Enhancement: Column visibility menu now has a draggable header and additional separator with close instructions."
+  },
+  {
+    "version": "9.8.0+2026-02-15",
+    "description": "Enhancement: Separate sorting and filtering status displays with different fonts for clarity. Applied to both single-table and multi-table pages."
+  },
+  {
+    "version": "9.7.0+2026-02-15",
+    "description": "Add: Sub-table specific status displays and clear filter buttons in h3 headers on multi-table pages."
+  },
+  {
+    "version": "9.6.0+2026-02-15",
+    "description": "Fix: Add toggle column visibility to ALL tables on multitable pages."
+  },
+  {
+    "version": "9.5.0+2026-02-15",
+    "description": "Reintroduce browser native \"confirm\" instead of modal dialog, otherwise execution hangs."
+  },
+  {
+    "version": "9.4.0+2026-02-15",
+    "description": "Reorderd action buttons in a more logic workflow."
+  },
+  {
+    "version": "9.3.0+2026-02-15",
+    "description": "Fix: Better sidebar toggling to get more real estate for data container when sidebar is collapsed."
+  },
+  {
+    "version": "9.2.0+2026-02-15",
+    "description": "Fix: Status display now correctly shows sorting/filtering results with table name and column info. Fixed ReferenceError that caused \"Sort failed\" and \"Filtering...\" to persist incorrectly."
+  },
+  {
+    "version": "9.1.0+2026-02-15",
+    "description": "Add new clear all filter button, global AND column level."
+  },
+  {
+    "version": "9.0.0+2026-02-15",
+    "description": "New status display handling, global and sorting/filtering related."
+  },
+  {
+    "version": "8.0.0+2026-02-15",
+    "description": "Function descriptions throughout."
+  },
+  {
+    "version": "7.4.0+2026-02-14",
+    "description": "New configuration dialog with sections and dividers. Make all UI features opinionated."
+  },
+  {
+    "version": "7.3.2+2026-02-14",
+    "description": "Fix: Resize handles now persist after clicking \"Restore Width\" button. Previously handles were removed during restore and not re-added, preventing further manual resizing. Now handles are automatically restored so users can continue resizing columns after restoration."
+  },
+  {
+    "version": "7.3.1+2026-02-14",
+    "description": "Fix: Manual column resizing now works correctly on initial page load. Fixed undefined variable bug that prevented drag-to-resize from functioning when resize handles were added automatically."
+  },
+  {
+    "version": "7.3.0+2026-02-14",
+    "description": "Enhancement: Manual column resizing now enabled immediately on page render - no need to click Auto-Resize first. Button labels improved: \"👁️ Visible Columns\" (was \"Columns\"), \"Export 💾\" (was \"Export CSV\"). Users can now drag column edges to resize as soon as table loads."
+  },
+  {
+    "version": "7.2.0+2026-02-14",
+    "description": "Feature: Added manual column resizing - drag column edges with mouse to adjust widths (like Excel/Sheets). Resize handles appear after auto-resize or when manually adjusting. Button changes to \"Restore Width\" during manual resizing. Restore button restores both auto-resized and manually adjusted columns to original state. Visual feedback with hover highlights and green active indicator."
+  },
+  {
+    "version": "7.1.1+2026-02-14",
+    "description": "Fix: Auto-Resize Columns now accurately measures cells with images, icons, and links. Previously used text-only measurement which caused columns with flag icons (like Country/Date) to be artificially wider. Now clones actual cell content preserving HTML structure for precise width calculation."
+  },
+  {
+    "version": "7.1.0+2026-02-14",
+    "description": "Enhancement: Auto-Resize Columns now has toggle functionality - click once to resize, click again to restore original widths. Button changes to \"↔️ Restore Width\" when active with green highlight. Original table state is preserved and fully restored including colgroup, table layout, and scroll settings."
+  },
+  {
+    "version": "7.0.0+2026-02-13",
+    "description": "Feature: Added Auto-Resize Columns - automatically calculates optimal column widths to prevent text wrapping. Click \"↔️ Auto-Resize\" to fit each column to its content. Enables horizontal scrolling in content area while keeping sidebar fixed. Perfect for wide tables with many columns."
+  },
+  {
+    "version": "6.9.0+2026-02-13",
+    "description": "Feature: Added Table Density Control - choose between Compact (fit more rows), Normal (balanced), or Comfortable (easier reading) spacing options using \"📏 Density\" button. Adjusts padding, font size, and line height for optimal viewing based on personal preference."
+  },
+  {
+    "version": "6.8.0+2026-02-13",
+    "description": "Feature: Added Quick Stats Panel - displays table statistics including row counts, column counts, filter status, memory usage, and more. Click \"📊 Stats\" button or any visible/hidden item counts. Perfect for understanding data at a glance."
+  },
+  {
+    "version": "6.7.0+2026-02-13",
+    "description": "Feature: Added keyboard shortcuts for power users - Ctrl+F (focus filter), Ctrl+Shift+F (clear filters), Ctrl+E (export CSV), Ctrl+S (save), Ctrl+L (load), Escape (clear focused filter), ?/slash (show help). Includes \"⌨️ Shortcuts\" help button."
+  },
+  {
+    "version": "6.6.0+2026-02-13",
+    "description": "Feature: Added CSV export - export visible rows and columns to CSV file using the \"📥 Export CSV\" button. Automatically generates filename with timestamp and page type. Perfect for using data in Excel, Google Sheets, or other applications."
+  },
+  {
+    "version": "6.5.0+2026-02-13",
+    "description": "UI: Added column visibility toggle - users can now show/hide individual columns using the \"👁️ Columns\" button. Includes Select All/Deselect All options for quick control. Perfect for customizing view and focusing on relevant data."
+  },
+  {
+    "version": "6.4.0+2026-02-13",
+    "description": "UI: Added sticky table headers - column headers and filter row remain visible while scrolling through large tables. Improves usability when working with thousands of rows."
+  },
+  {
+    "version": "6.3.0+2026-02-13",
+    "description": "Performance: Optimized table sorting with async chunked merge sort algorithm for large tables (>5000 rows). Added progress bar for sorts over 10k rows. Improved sort timing display with color-coded indicators. Better numeric column detection."
+  },
+  {
+    "version": "6.2.0+2026-02-13",
+    "description": "Performance: Added debounced filtering with configurable delay (default 300ms) to prevent UI freezing with large tables. Added filter timing display in status line showing execution time with color-coded performance indicators."
+  },
+  {
+    "version": "6.1.0+2026-02-13",
+    "description": "Fixed Regexp filtering with column filter when decorating symbols like \"▶\" are in front."
+  },
+  {
+    "version": "6.0.0+2026-02-13",
+    "description": "Fixed Regexp filtering with global filter not take into account each column separately."
+  },
+  {
+    "version": "5.0.0+2026-02-13",
+    "description": "Implemented a chunked renderer with progess updates when a configurable number of fetched rows is exceeded."
+  },
+  {
+    "version": "4.5.0+2026-02-13",
+    "description": "Add large dataset handling by directly offering for saving to disk instead of rendering."
+  },
+  {
+    "version": "4.4.2+2026-02-13",
+    "description": "Add popup dialog to enter prefilter string instead of showing it on the main page all the time."
+  },
+  {
+    "version": "4.4.1+2026-02-12",
+    "description": "Add highlightning of pre-filter expression."
+  },
+  {
+    "version": "4.4.0+2026-02-12",
+    "description": "Add \"pre filter when loading\" functionality."
+  },
+  {
+    "version": "4.3.1+2026-02-12",
+    "description": "Fix: Remove duplicate filter row when loading from disk. Fix: Restore alternating even/odd row backgrounds."
+  },
+  {
+    "version": "4.3.0+2026-02-12",
+    "description": "Add offline storage/cache feature: Save table data to disk and load from disk to avoid re-fetching from MusicBrainz."
+  },
+  {
+    "version": "4.2.0+2026-02-11",
+    "description": "Refactor removing columns with a removalMap object."
+  },
+  {
+    "version": "4.1.0+2026-02-11",
+    "description": "Pass a function to the library constructor that dynamically checks the debug logging flag."
+  },
+  {
+    "version": "4.0.0+2026-02-11",
+    "description": "Userscript renamed to better reflect current functionality."
+  },
+  {
+    "version": "3.3.0+2026-02-11",
+    "description": "Fix broken Aliases pages resulting in column misalignment."
+  },
+  {
+    "version": "3.2.0+2026-02-10",
+    "description": "Fix Artist-Aliases pages not rendering the \"Artist credits\" table with sorting/filtering."
+  },
+  {
+    "version": "3.1.0+2026-02-10",
+    "description": "Fix overflow tables for Area-Releases pages in the case of Relationship subtable."
+  },
+  {
+    "version": "3.0.0+2026-02-10",
+    "description": "Add support for Area-Releases pages with multiple different initial table data."
+  },
+  {
+    "version": "2.7.0+2026-02-09",
+    "description": "Transform search results paragraph into collapsible H2 header."
+  },
+  {
+    "version": "2.6.0+2026-02-08",
+    "description": "Add \"Area splitting\"."
+  },
+  {
+    "version": "2.5.1+2026-02-08",
+    "description": "Fix URL construction to preserve query parameters (fixes Search pages). Added extra debugging for table detection."
+  },
+  {
+    "version": "2.5.0+2026-02-08",
+    "description": "Fix support for Search pages: target .pageselector-results instead of h2 for row counts/filters."
+  },
+  {
+    "version": "2.4.0+2026-02-07",
+    "description": "Fix detection of filtered MusicBrainz pages (link_type_id) to allow proper pagination instead of treating them as overview pages (e.g. Artist-Relationships."
+  },
+  {
+    "version": "2.3.0+2026-02-05",
+    "description": "Handle multitable pages of type \"non_paginated\" like Place-Performances."
+  },
+  {
+    "version": "2.2.1+2026-02-04",
+    "description": "Refactor column removal in final rendered table. Supports now \"Release events\" column from jesus2099 Super Mind Control script."
+  },
+  {
+    "version": "2.2.0+2026-02-04",
+    "description": "Support for \"Show all Performances for Recordings\"."
+  },
+  {
+    "version": "2.1.0+2026-02-04",
+    "description": "Refactor the single- and multi-table on one page sorting functions."
+  },
+  {
+    "version": "2.0.0+2026-02-03",
+    "description": "Refactor the pageType detection."
+  },
+  {
+    "version": "1.8.0+2026-02-03",
+    "description": "Add support for RegExp filtering with an additional \"Rx\" checkbox."
+  },
+  {
+    "version": "1.7.0+2026-02-02",
+    "description": "Make sidebar collapse conditional on setting and only init after process completion."
+  },
+  {
+    "version": "1.6.2+2026-02-02",
+    "description": "Fix pageType Recording-Releases (button text was wrong)."
+  },
+  {
+    "version": "1.6.1+2026-02-02",
+    "description": "Expose loggerInterface.prefix with getter/setter."
+  },
+  {
+    "version": "1.6.0+2026-02-02",
+    "description": "Add color picker for variables which represent a color."
+  },
+  {
+    "version": "1.5.0+2026-02-01",
+    "description": "Refactored settings, logging and changelog handling to a library."
+  },
+  {
+    "version": "1.4.0+2026-02-01",
+    "description": "Refactored settings to a schema-driven framework."
+  },
+  {
+    "version": "1.3.0+2026-01-30",
+    "description": "Implemented Ctrl+Click on headers to toggle all headers within the same container (sidebar vs main content)."
+  },
+  {
+    "version": "1.2.0+2026-01-30",
+    "description": "Added collapsable sidebar functionality with a handle on the vertical line."
+  },
+  {
+    "version": "1.1.0+2026-01-30",
+    "description": "Increased the size of the filter input boxes and text. Several other small UI improvements."
+  },
+  {
+    "version": "1.0.0+2026-01-30",
+    "description": "Support \"Official\" and \"Various Artists\" on Artis-Releases pages."
+  },
+  {
+    "version": "0.9.4+2026-01-29",
+    "description": "Modernized logging framework with colors, icons, and structured levels."
+  },
+  {
+    "version": "0.9.3+2026-01-29",
+    "description": "Added visual progress bar with centered estimated time and dynamic coloring."
+  },
+  {
+    "version": "0.9.2+2026-01-29",
+    "description": "Show busy cursor for long running sort operations (> 1000 table rows)"
+  },
+  {
+    "version": "0.9.1+2026-01-29",
+    "description": "Added \"Esc\" key handling for clearing the filter fields when focused; Added \"ChangeLog\" userscript manager menu entry."
+  },
+  {
+    "version": "0.9.0+2026-01-28",
+    "description": "1st official release version."
+  }
+]
