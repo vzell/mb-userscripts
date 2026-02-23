@@ -4232,9 +4232,9 @@ Press Escape on that notice to cancel the auto-action.
                 title: 'Help',
                 shortcuts: [
                     { keys: '? or /', desc: 'Show this shortcuts help' },
-                    { keys: 'Ctrl+K', desc: 'Show keyboard shortcuts help (direct)' },
-                    { keys: `${getPrefixDisplay()}, then k`, desc: 'Show shortcuts help (prefix mode)' },
-                    { keys: `${getPrefixDisplay()}, then h`, desc: 'Show app help (prefix mode)' }
+                    { keys: 'Ctrl+K', desc: 'Show keyboard shortcuts help' },
+                    { keys: `${getPrefixDisplay()}, then K`, desc: 'Show shortcuts help (prefix mode)' },
+                    { keys: `${getPrefixDisplay()}, then H`, desc: 'Show app help (prefix mode)' }
                 ]
             }
         ];
@@ -4772,7 +4772,7 @@ Press Escape on that notice to cancel the auto-action.
         const helpBtn = document.createElement('button');
         helpBtn.id = 'mb-shortcuts-help-btn';
         helpBtn.textContent = '🎹';
-        helpBtn.title = 'Show keyboard shortcuts (or press ?)';
+        helpBtn.title = `Show keyboard shortcuts (or press ? / ${getPrefixDisplay()}, then K)`;
         helpBtn.style.cssText = uiActionBtnBaseCSS();
         helpBtn.type = 'button';
         helpBtn.onclick = showShortcutsHelp;
@@ -6196,7 +6196,7 @@ Press Escape on that notice to cancel the auto-action.
     settingsBtn.id = 'mb-settings-btn';
     settingsBtn.textContent = '⚙️';
     settingsBtn.type = 'button';
-    settingsBtn.title = 'Open settings manager to configure script behavior';
+    settingsBtn.title = `Open settings manager to configure script behavior (${getPrefixDisplay()}, then ,)`;
     settingsBtn.onclick = () => {
         console.log('Settings button clicked');
         console.log('Lib object:', Lib);
@@ -6241,7 +6241,7 @@ Press Escape on that notice to cancel the auto-action.
         const shortcutsBtn = document.createElement('button');
         shortcutsBtn.id = 'mb-shortcuts-help-btn';
         shortcutsBtn.textContent = '🎹';
-        shortcutsBtn.title = 'Show keyboard shortcuts (or press ?)';
+        shortcutsBtn.title = `Show keyboard shortcuts (or press ? / ${getPrefixDisplay()}, then K)`;
         shortcutsBtn.style.cssText = uiActionBtnBaseCSS();
         shortcutsBtn.type = 'button';
         shortcutsBtn.onclick = showShortcutsHelp;
@@ -6262,7 +6262,7 @@ Press Escape on that notice to cancel the auto-action.
     const appHelpBtn = document.createElement('button');
     appHelpBtn.id = 'mb-app-help-btn';
     appHelpBtn.textContent = '❓';
-    appHelpBtn.title = 'Show application help and feature overview';
+    appHelpBtn.title = `Show application help and feature overview (${getPrefixDisplay()}, then H)`;
     appHelpBtn.style.cssText = uiHelpBtnCSS();
     appHelpBtn.type = 'button';
     appHelpBtn.onclick = showAppHelp;
