@@ -41785,7 +41785,7 @@ the function must accept an optional "icon character", the button text and the c
 * align button texts and make everything configurable (size, font, height, character to underline)
 
 
-* make the configuration dialog resilent against accidently leaving it
+* DONE make the configuration dialog resilent against accidently leaving it
 ** initial
 
 In the uploaded user script "ShowAllEntityData.user.js"
@@ -41860,6 +41860,7 @@ upper right corner (when clicked the latest file from github should be downloade
 
 
 * Please add support for more complex changelog entries like the following:
+** initial
 
 Please refactor the changelog display and maybe the formattting in the current json file (it's even up to you if another
 format fits better)
@@ -41903,3 +41904,123 @@ to look like the following
 Please rewrite the whole changelog code accordingly.
 
 Please also rewrite the current "ShowAllEntityData_CHANGELOG.json" accordinlyg after choosing the right technique/approach.
+
+** rerender
+
+- Now please rewrite the rendering engine to display the different changelog entries in the following way:
+
+#+begin_example
+## 9.89.0 – 2026-02-23
+
+### 🚀 Improvements
+- Help dialog:
+  - Added 🔄 Force refresh
+  - Cache bypass support
+  - Extended fetch logging
+- Refactored popup system to VZ_MBLibrary
+
+### 🧹 Cleanup
+- Removed popup CSS configuration options
+- Removed local dialog implementations
+
+### ⚙ Internal
+- SCRIPT_ID derived automatically
+- Unified SCRIPT_BASE_NAME usage
+#+end_example
+
+- also include a search dialog in the changelog popup.
+
+
+* rewrite the configuration dialog
+
+In the uploaded library file "VZ_MBLibrary.user.js"
+
+there is a visual glitch in the settings dialog with a shadow/ghost white row starting where the resize handle is
+located (it stretches from the resize handle, so, from the lower right corner of the dialog to the right). The visual
+glitch is there in the settings dialog when ALL section headers are collapsed at once. I have an additional
+observation. It looks like each collapsable header contributes a thin part to the final ghost row. Because when I start
+uncollapsed, there is now shadow ghost row at ALL. When I now collapse the first section, by clicking it's header, a
+thin part of the whole ghost row gets a white color. Clicking another header makes that thin part a little bigger until
+the final section is collapsed when the whole ghost row is present again.
+
+This is for example how the HTML of the ghost row looks like when just the first section is collapsed
+
+#+begin_example
+<tr class="section-header collapsed" data-section="divider_" style="
+                                    cursor:pointer;
+                                    color:white;
+                                ">
+                                <td colspan="3" style="
+                                    padding:10px 14px;
+                                    font-weight:600;
+                                    background:linear-gradient(to right,#6c7a89,#8fa3b5,#6c7a89);
+                                    border-bottom:1px solid rgba(255,255,255,0.2);
+                                ">
+                                    ▶ 🛠️ GENERIC SETTINGS
+                                </td>
+                            </tr>
+#+end_example
+
+Please rewrite the complete dialog in such a way that this visual glitch does not show up anymore.
+Featurewise everything should be stiil available
+
+- collapsable section headers
+- draggable dialog
+- resizable dialog
+- same information available per setting
+   - dialog to change each setting, also special renderers, like color chooser or keyboard caputure should still be available
+   - default value
+   - description
+- global reset button
+- search functionality
+
+Please rewrite it in a modern style which fits the overall application look and feel
+
+** again
+
+- In the uploaded library file "VZ_MBLibrary.user.js" change the rendering implementation (without touching other code
+  and comments) to be the same as in the library file "newRenderer.js"
+
+- There is a also a visual glitch in the settings dialog with a shadow/ghost white row starting where the resize handle is
+located (it stretches from the resize handle, so, from the lower right corner of the dialog to the right). The visual
+glitch is there in the settings dialog when ALL section headers are collapsed at once. I have an additional
+observation. It looks like each collapsable header contributes a thin part to the final ghost row. Because when I start
+uncollapsed, there is now shadow ghost row at ALL. When I now collapse the first section, by clicking it's header, a
+thin part of the whole ghost row gets a white color. Clicking another header makes that thin part a little bigger until
+the final section is collapsed when the whole ghost row is present again.
+
+This is for example how the HTML of the ghost row looks like when just the first section is collapsed
+
+#+begin_example
+<tr class="section-header collapsed" data-section="divider_" style="
+                                    cursor:pointer;
+                                    color:white;
+                                ">
+                                <td colspan="3" style="
+                                    padding:10px 14px;
+                                    font-weight:600;
+                                    background:linear-gradient(to right,#6c7a89,#8fa3b5,#6c7a89);
+                                    border-bottom:1px solid rgba(255,255,255,0.2);
+                                ">
+                                    ▶ 🛠️ GENERIC SETTINGS
+                                </td>
+                            </tr>
+#+end_example
+
+Please rewrite the complete dialog in such a way that this visual glitch does not show up anymore.
+Featurewise everything should be stiil available
+
+- collapsable section headers
+- draggable dialog
+- resizable dialog
+- same information available per setting
+   - dialog to change each setting, also special renderers, like color chooser or keyboard caputure should still be available
+   - default value
+   - description
+- global reset button
+- search functionality
+
+Please rewrite it in a modern style which fits the overall application look and feel
+
+
+
