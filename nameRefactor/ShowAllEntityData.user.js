@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.89.0+2026-02-23
+// @version      9.88.0+2026-02-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -455,6 +455,69 @@
             type: 'checkbox',
             default: true,
             description: 'Keep table headers visible when scrolling'
+        },
+
+        // ============================================================
+        // CUSTOM POPUP UI SECTION
+        // Condensed config string format:
+        //   dialog:   bg|border|borderRadius|padding|shadow|zIndex|fontFamily|minWidth|maxWidth
+        //   header:   fontWeight|fontSize|marginBottom|paddingBottom|borderBottom|color
+        //   message:  marginBottom|lineHeight|color|fontSize
+        //   okBtn:    padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
+        //   cancelBtn:padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
+        //   btnGap:   gap
+        // ============================================================
+        divider_popup_ui: {
+            type: 'divider',
+            label: '🪟 POPUP UI STYLES'
+        },
+
+        sa_popup_dialog_style: {
+            label: 'Popup dialog container style',
+            type: 'popup_dialog',
+            fields: ['bg', 'border', 'borderRadius', 'padding', 'boxShadow', 'zIndex', 'fontFamily', 'minWidth', 'maxWidth'],
+            default: 'white|1px solid #ccc|10px|28px|0 8px 32px rgba(0,0,0,0.2)|10001|-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif|380px|600px',
+            description: 'Condensed style for the popup dialog container: bg|border|borderRadius|padding|boxShadow|zIndex|fontFamily|minWidth|maxWidth'
+        },
+
+        sa_popup_header_style: {
+            label: 'Popup header style',
+            type: 'popup_dialog',
+            fields: ['fontWeight', 'fontSize', 'marginBottom', 'paddingBottom', 'borderBottom', 'color'],
+            default: '700|1.5em|18px|14px|2px solid #ddd|#222',
+            description: 'Condensed style for the popup header: fontWeight|fontSize|marginBottom|paddingBottom|borderBottom|color'
+        },
+
+        sa_popup_message_style: {
+            label: 'Popup message style',
+            type: 'popup_dialog',
+            fields: ['marginBottom', 'lineHeight', 'color', 'fontSize'],
+            default: '24px|1.7|#444|1.2em',
+            description: 'Condensed style for the popup message: marginBottom|lineHeight|color|fontSize'
+        },
+
+        sa_popup_ok_btn_style: {
+            label: 'Popup OK button style',
+            type: 'popup_dialog',
+            fields: ['padding', 'bg', 'color', 'border', 'borderRadius', 'fontSize', 'fontWeight', 'bgHover'],
+            default: '10px 22px|#4CAF50|white|1px solid #45a049|5px|1.1em|600|#45a049',
+            description: 'Condensed style for the OK button: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover'
+        },
+
+        sa_popup_cancel_btn_style: {
+            label: 'Popup Cancel button style',
+            type: 'popup_dialog',
+            fields: ['padding', 'bg', 'color', 'border', 'borderRadius', 'fontSize', 'fontWeight', 'bgHover'],
+            default: '10px 22px|#f0f0f0|#333|1px solid #ccc|5px|1.1em|500|#e0e0e0',
+            description: 'Condensed style for the Cancel button: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover'
+        },
+
+        sa_popup_btn_gap: {
+            label: 'Popup button gap',
+            type: 'popup_dialog',
+            fields: ['gap'],
+            default: '12px',
+            description: 'Gap between buttons in the popup dialog button row'
         },
 
         // ============================================================
@@ -3477,12 +3540,218 @@
         return `margin-right:${marginRight}; vertical-align:middle;`;
     }
 
-    // ── NOTE: Custom popup dialogs are now provided by VZ_MBLibrary via
-    // Lib.showCustomAlert() and Lib.showCustomConfirm(). The former local
-    // implementations (showCustomDialog, showCustomAlert, showCustomConfirm) and
-    // their associated CSS helpers (popupDialogCSS, popupHeaderCSS, …) have been
-    // removed. The configSchema entries under "🪟 POPUP UI STYLES" have also been
-    // removed as they are no longer needed.
+    /**
+     * Build a CSS object for the popup dialog container from the condensed config string.
+     * Format: bg|border|borderRadius|padding|boxShadow|zIndex|fontFamily|minWidth|maxWidth
+     */
+    function popupDialogCSS() {
+        const defaults = 'white|1px solid #ccc|10px|28px|0 8px 32px rgba(0,0,0,0.2)|10001|-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif|380px|600px';
+        const [bg, border, borderRadius, padding, boxShadow, zIndex, fontFamily, minWidth, maxWidth] =
+            parseCondensedStyle(Lib.settings.sa_popup_dialog_style, defaults);
+        return `position:fixed; background:${bg}; border:${border}; border-radius:${borderRadius}; padding:${padding}; box-shadow:${boxShadow}; z-index:${zIndex}; font-family:${fontFamily}; min-width:${minWidth}; max-width:${maxWidth};`;
+    }
+
+    /**
+     * Build a CSS object for the popup header from the condensed config string.
+     * Format: fontWeight|fontSize|marginBottom|paddingBottom|borderBottom|color
+     */
+    function popupHeaderCSS() {
+        const defaults = '700|1.5em|18px|14px|2px solid #ddd|#222';
+        const [fontWeight, fontSize, marginBottom, paddingBottom, borderBottom, color] =
+            parseCondensedStyle(Lib.settings.sa_popup_header_style, defaults);
+        return `font-weight:${fontWeight}; font-size:${fontSize}; margin-bottom:${marginBottom}; padding-bottom:${paddingBottom}; border-bottom:${borderBottom}; color:${color};`;
+    }
+
+    /**
+     * Build a CSS object for the popup message from the condensed config string.
+     * Format: marginBottom|lineHeight|color|fontSize
+     */
+    function popupMessageCSS() {
+        const defaults = '24px|1.7|#444|1.2em';
+        const [marginBottom, lineHeight, color, fontSize] =
+            parseCondensedStyle(Lib.settings.sa_popup_message_style, defaults);
+        return `margin-bottom:${marginBottom}; line-height:${lineHeight}; color:${color}; font-size:${fontSize}; word-wrap:break-word;`;
+    }
+
+    /**
+     * Build CSS + hover color for the OK button from the condensed config string.
+     * Format: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
+     * @returns {{ css: string, hoverBg: string, normalBg: string }}
+     */
+    function popupOkBtnCSS() {
+        const defaults = '10px 22px|#4CAF50|white|1px solid #45a049|5px|1.1em|600|#45a049';
+        const [padding, bg, color, border, borderRadius, fontSize, fontWeight, bgHover] =
+            parseCondensedStyle(Lib.settings.sa_popup_ok_btn_style, defaults);
+        return {
+            css: `padding:${padding}; background-color:${bg}; color:${color}; border:${border}; border-radius:${borderRadius}; font-size:${fontSize}; font-weight:${fontWeight}; cursor:pointer; transition:background-color 0.2s;`,
+            normalBg: bg,
+            hoverBg: bgHover
+        };
+    }
+
+    /**
+     * Build CSS + hover color for the Cancel button from the condensed config string.
+     * Format: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
+     * @returns {{ css: string, hoverBg: string, normalBg: string }}
+     */
+    function popupCancelBtnCSS() {
+        const defaults = '10px 22px|#f0f0f0|#333|1px solid #ccc|5px|1.1em|500|#e0e0e0';
+        const [padding, bg, color, border, borderRadius, fontSize, fontWeight, bgHover] =
+            parseCondensedStyle(Lib.settings.sa_popup_cancel_btn_style, defaults);
+        return {
+            css: `padding:${padding}; background-color:${bg}; color:${color}; border:${border}; border-radius:${borderRadius}; font-size:${fontSize}; font-weight:${fontWeight}; cursor:pointer; transition:background-color 0.2s;`,
+            normalBg: bg,
+            hoverBg: bgHover
+        };
+    }
+
+    // ── End UI Appearance CSS helpers ────────────────────────────────────────────
+
+    /**
+     * Unified custom dialog — replaces the old showCustomAlert and showCustomConfirm.
+     *
+     * @param {string}      message       - The body text (supports \n → <br> if isConfirm)
+     * @param {string}      [title]       - Dialog header text
+     * @param {HTMLElement} [triggerButton] - Element used to position the dialog below
+     * @param {'alert'|'confirm'} [mode]  - 'alert' shows only OK; 'confirm' shows Cancel + OK
+     * @returns {Promise<void|boolean>}   - alert: resolves undefined; confirm: resolves true/false
+     */
+    function showCustomDialog(message, title = 'Notice', triggerButton = null, mode = 'alert') {
+        return new Promise((resolve) => {
+            const isConfirm = mode === 'confirm';
+
+            const dialogDiv = document.createElement('div');
+            dialogDiv.style.cssText = popupDialogCSS();
+
+            // Header
+            const headerDiv = document.createElement('div');
+            headerDiv.style.cssText = popupHeaderCSS();
+            headerDiv.textContent = title;
+            dialogDiv.appendChild(headerDiv);
+
+            // Message
+            const msgDiv = document.createElement('div');
+            msgDiv.style.cssText = popupMessageCSS();
+            if (isConfirm) {
+                msgDiv.innerHTML = message.replace(/\n/g, '<br>');
+            } else {
+                msgDiv.textContent = message;
+            }
+            dialogDiv.appendChild(msgDiv);
+
+            // Button container
+            const btnGap = (Lib.settings.sa_popup_btn_gap || '12px').trim();
+            const btnContainer = document.createElement('div');
+            btnContainer.style.cssText = `display:flex; justify-content:flex-end; gap:${btnGap};`;
+
+            let cancelBtn = null;
+
+            if (isConfirm) {
+                // Cancel button
+                cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Cancel';
+                const cancelStyle = popupCancelBtnCSS();
+                cancelBtn.style.cssText = cancelStyle.css;
+                cancelBtn.onmouseover = () => { cancelBtn.style.backgroundColor = cancelStyle.hoverBg; };
+                cancelBtn.onmouseout  = () => { cancelBtn.style.backgroundColor = cancelStyle.normalBg; };
+                cancelBtn.onclick = () => {
+                    dialogDiv.remove();
+                    document.removeEventListener('keydown', keyHandler);
+                    resolve(false);
+                };
+                btnContainer.appendChild(cancelBtn);
+            }
+
+            // OK button
+            const okBtn = document.createElement('button');
+            okBtn.textContent = 'OK';
+            const okStyle = popupOkBtnCSS();
+            okBtn.style.cssText = okStyle.css;
+            okBtn.onmouseover = () => { okBtn.style.backgroundColor = okStyle.hoverBg; };
+            okBtn.onmouseout  = () => { okBtn.style.backgroundColor = okStyle.normalBg; };
+            okBtn.onclick = () => {
+                dialogDiv.remove();
+                document.removeEventListener('keydown', keyHandler);
+                resolve(isConfirm ? true : undefined);
+            };
+            btnContainer.appendChild(okBtn);
+
+            dialogDiv.appendChild(btnContainer);
+            document.body.appendChild(dialogDiv);
+
+            // Position below trigger button or center screen
+            setTimeout(() => {
+                if (triggerButton) {
+                    const btnRect = triggerButton.getBoundingClientRect();
+                    const dialogRect = dialogDiv.getBoundingClientRect();
+                    let top  = btnRect.bottom + 10;
+                    let left = btnRect.left;
+
+                    if (top + dialogRect.height > window.innerHeight) {
+                        top = btnRect.top - dialogRect.height - 10;
+                    }
+                    if (left + dialogRect.width > window.innerWidth) {
+                        left = window.innerWidth - dialogRect.width - 10;
+                    }
+                    if (left < 0) left = 10;
+
+                    dialogDiv.style.left = left + 'px';
+                    dialogDiv.style.top  = top  + 'px';
+                } else {
+                    dialogDiv.style.left      = '50%';
+                    dialogDiv.style.top       = '50%';
+                    dialogDiv.style.transform = 'translate(-50%, -50%)';
+                }
+
+                okBtn.focus();
+            }, 0);
+
+            // Keyboard handler
+            const keyHandler = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    if (isConfirm && cancelBtn) {
+                        cancelBtn.click();
+                    } else {
+                        okBtn.click();
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    okBtn.click();
+                } else if (e.key === 'Tab' && isConfirm && cancelBtn) {
+                    e.preventDefault();
+                    if (document.activeElement === cancelBtn) {
+                        okBtn.focus();
+                    } else {
+                        cancelBtn.focus();
+                    }
+                }
+            };
+            document.addEventListener('keydown', keyHandler);
+        });
+    }
+
+    /**
+     * Convenience wrapper: alert-style dialog (single OK button).
+     * @param {string} message
+     * @param {string} [title]
+     * @param {HTMLElement} [triggerButton]
+     * @returns {Promise<void>}
+     */
+    function showCustomAlert(message, title = 'Notice', triggerButton = null) {
+        return showCustomDialog(message, title, triggerButton, 'alert');
+    }
+
+    /**
+     * Convenience wrapper: confirm-style dialog (Cancel + OK buttons).
+     * @param {string} message
+     * @param {string} [title]
+     * @param {HTMLElement} [triggerButton]
+     * @returns {Promise<boolean>}
+     */
+    function showCustomConfirm(message, title = 'Confirm', triggerButton = null) {
+        return showCustomDialog(message, title, triggerButton, 'confirm');
+    }
 
     /**
      * Show keyboard shortcuts help dialog
@@ -3754,24 +4023,6 @@
         titleText.style.cssText = 'font-weight: 700; font-size: 1.15em; color: #222;';
         titleBar.appendChild(titleText);
 
-        // Right-side group: Force refresh link + close button
-        const titleBarRight = document.createElement('div');
-        titleBarRight.style.cssText = 'display:flex; align-items:center; gap:12px; flex-shrink:0;';
-
-        const refreshLink = document.createElement('a');
-        refreshLink.textContent = '🔄 Force refresh';
-        refreshLink.title = 'Bypass cache and download the latest help text from GitHub';
-        refreshLink.style.cssText = `
-            font-size: 0.82em;
-            font-weight: 600;
-            color: #0066cc;
-            cursor: pointer;
-            text-decoration: none;
-            user-select: none;
-            white-space: nowrap;
-        `;
-        titleBarRight.appendChild(refreshLink);
-
         const closeX = document.createElement('button');
         closeX.textContent = '✕';
         closeX.title = 'Close (Escape)';
@@ -3784,8 +4035,7 @@
             padding: 0 4px;
             line-height: 1;
         `;
-        titleBarRight.appendChild(closeX);
-        titleBar.appendChild(titleBarRight);
+        titleBar.appendChild(closeX);
         dialog.appendChild(titleBar);
 
         // Scrollable content area (starts with a loading spinner)
@@ -3861,11 +4111,11 @@
         };
         document.addEventListener('keydown', keyHandler);
 
-        // Make draggable (exclude both close button and refresh link from drag initiation)
+        // Make draggable
         let isDragging = false;
         let dragOffsetX = 0, dragOffsetY = 0;
         titleBar.addEventListener('mousedown', (e) => {
-            if (e.target === closeX || e.target === refreshLink) return;
+            if (e.target === closeX) return;
             isDragging = true;
             const rect = dialog.getBoundingClientRect();
             dragOffsetX = e.clientX - rect.left;
@@ -3886,17 +4136,14 @@
         // ── Fetch help text (with cache) and render ───────────────────────────
         /**
          * Render the fetched text or an error/retry UI inside contentArea.
-         * @param {boolean} [forceRefresh=false] - When true, bypass cache and fetch fresh from GitHub.
          */
-        async function loadAndRender(forceRefresh = false) {
-            loadingEl.textContent = forceRefresh ? '⏳ Force-fetching latest help text…' : '⏳ Loading help text…';
+        async function loadAndRender() {
+            loadingEl.textContent = '⏳ Loading help text…';
             loadingEl.style.color = '#888';
 
-            Lib.info('ui', `Application help: fetching from ${REMOTE_HELP_URL} (forceRefresh=${forceRefresh})`);
+            const { data, fromCache, error } = await Lib.fetchCachedText(REMOTE_HELP_URL, CACHE_KEY_HELP, REMOTE_CACHE_TTL_MS);
 
-            const { data, fromCache, error } = await Lib.fetchCachedText(REMOTE_HELP_URL, CACHE_KEY_HELP, REMOTE_CACHE_TTL_MS, forceRefresh);
-
-            // Remove loading indicator and any existing content
+            // Remove loading indicator
             if (contentArea.contains(loadingEl)) contentArea.removeChild(loadingEl);
             if (contentArea.contains(pre))       contentArea.removeChild(pre);
 
@@ -3910,8 +4157,7 @@
                     contentArea.appendChild(warn);
                 }
                 contentArea.appendChild(pre);
-                const sourceLabel = fromCache ? '📦 cache' : '🌐 network (fresh)';
-                Lib.info('ui', `Application help displayed: ${data.length} bytes, source=${sourceLabel}${error ? ' (stale, ' + error + ')' : ''}`);
+                Lib.debug('ui', `Application help displayed (fromCache=${fromCache})`);
             } else {
                 // Both fetch and cache failed — show error with Retry button
                 const errEl = document.createElement('div');
@@ -3932,24 +4178,9 @@
             }
         }
 
-        // Wire Force refresh link
-        refreshLink.addEventListener('click', async () => {
-            refreshLink.textContent = '⏳ Refreshing…';
-            refreshLink.style.pointerEvents = 'none';
-            refreshLink.style.color = '#888';
-            contentArea.innerHTML = '';
-            contentArea.appendChild(loadingEl);
-            await loadAndRender(true);
-            refreshLink.textContent = '✅ Refreshed';
-            setTimeout(() => {
-                refreshLink.textContent = '🔄 Force refresh';
-                refreshLink.style.pointerEvents = '';
-                refreshLink.style.color = '#0066cc';
-            }, 2500);
-        });
-
-        Lib.info('ui', 'Application help dialog opened');
         loadAndRender();
+
+        Lib.debug('ui', 'Application help dialog opened');
     }
 
     /**
@@ -6327,7 +6558,7 @@
     // Show deferred "Page Reloaded" dialog now that action buttons are in the DOM
     if (reloadFlag) {
         const firstActionBtn = allActionButtons.length > 0 ? allActionButtons[0] : null;
-        Lib.showCustomAlert(
+        showCustomAlert(
             'The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.',
             '⚠️ Page Reloaded',
             firstActionBtn
@@ -7946,7 +8177,7 @@
 
         // If page count is above threshold, show modal
         if (maxPage > maxThreshold) {
-            const proceedConfirmed = await Lib.showCustomConfirm(
+            const proceedConfirmed = await showCustomConfirm(
                 `Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.\n\nProceed?`,
                 '⚠️ High Page Count',
                 activeBtn
@@ -8453,7 +8684,7 @@
             // before rendering to let the user bail out of a potentially slow operation.
             const renderWarnThreshold = Lib.settings.sa_render_warning_threshold ?? 10000;
             if (renderWarnThreshold > 0 && totalRows > renderWarnThreshold) {
-                const proceed = await Lib.showCustomConfirm(
+                const proceed = await showCustomConfirm(
                     `You are about to render ${totalRows.toLocaleString()} rows into the page.\n\n` +
                     `This is above your configured warning threshold of ${renderWarnThreshold.toLocaleString()} rows ` +
                     `and may cause the browser to become slow or unresponsive during rendering.\n\n` +
@@ -9931,7 +10162,7 @@
             try {
                 globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
             } catch (e) {
-                await Lib.showCustomAlert(
+                await showCustomAlert(
                     'Invalid Regular Expression in load filter field. Load aborted.',
                     '❌ Invalid Regex',
                     loadFromDiskBtn
@@ -9971,7 +10202,7 @@
 
                 // Validation: Check if the file matches the current page type
                 if (data.pageType !== pageType) {
-                    const loadAnywayConfirmed = await Lib.showCustomConfirm(
+                    const loadAnywayConfirmed = await showCustomConfirm(
                         `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
                         '⚠️ Page Type Mismatch',
                         loadFromDiskBtn

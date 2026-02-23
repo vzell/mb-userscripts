@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Unified Library
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      3.6.0+2026-02-23
+// @version      3.5.0+2026-02-23
 // @description  Unified library for Logging, Settings, Changelog management, and remote content fetching
 // @author       Gemini (directed by vzell)
 // @license      MIT
@@ -23,7 +23,6 @@
 
 // CHANGELOG
 // let changelog_library = [
-//     {version: '3.6.0+2026-02-23', description: 'Changelog dialog and app-help dialog: debug/info logging added to report cache status (source: static / cache / fresh, entry count, cache age in seconds) every time the respective popup is opened. A "🔄 Force refresh" link is added to the upper-right header of both dialogs; clicking it bypasses the cache, re-fetches from GitHub, updates the in-memory data and re-renders the content in place without closing the dialog. Force-refresh success / failure is logged at info/warn level and reflected in the UI. fetchCachedText gains an optional fourth parameter forceRefresh (default false) that, when true, skips the cache-hit check and goes straight to the network. _changelogMeta object tracks {fromCache, fetchedAt, url, cacheKey, cacheTtlMs} for the last changelog load so that changelogInterface.show() can report accurate cache status.'},
 //     {version: '3.5.0+2026-02-23', description: 'Added showCustomDialog / showCustomAlert / showCustomConfirm to the library public API for reuse across consumer scripts. The settings modal now guards against accidental data loss: (1) Escape key, the CLOSE link, and backdrop clicks first check for unsaved changes via a snapshot comparison and present a showCustomConfirm prompt before discarding edits; (2) the RESET link always presents a showCustomConfirm prompt that warns the user all configuration settings will be reset to their default values before proceeding.'},
 //     {version: '3.4.0+2026-02-23', description: 'Fix: changelog source diagnostic messages promoted from debug to info level. They were previously suppressed whenever sa_enable_debug_logging was false (the default), producing no output at all. As operational diagnostics that always matter they now use loggerInterface.info() and are always visible in the console.'},
 //     {version: '3.3.0+2026-02-23', description: 'Improved changelog source diagnostics: four debug/warn log statements now cover every path — (1) static entries seeded at construction, (2) initRemoteContent skipped because no remoteConfig was provided (static is final), (3) remote fetch failed and static entries survive as fallback, (4) remote success now reports "replaced N local with M remote" instead of just the final count.'},
@@ -63,16 +62,6 @@ const VZ_MBLibrary = (function() {
         // extended/replaced at runtime by initRemoteContent() after an async fetch.
         let _changelog = Array.isArray(changelog) ? [...changelog] : [];
 
-        // Metadata about the last changelog load — used for cache-status logging in the
-        // changelog dialog and for re-fetching on "Force refresh".
-        const _changelogMeta = {
-            fromCache: null,   // true = served from GM cache, false = fresh network fetch, null = static only
-            fetchedAt: null,   // Date.now() at time of load, or null for static
-            url:       null,   // Remote URL used, or null for static
-            cacheKey:  null,   // GM storage key used, or null for static
-            cacheTtlMs: null   // TTL used during the last fetch, or null for static
-        };
-
         // ── Remote content helpers ────────────────────────────────────────────────
         // fetchRemoteText and fetchCachedText are defined here (before loggerInterface)
         // because they must be reachable from the public API. They reference
@@ -103,35 +92,24 @@ const VZ_MBLibrary = (function() {
 
         /**
          * Fetch text from a URL with GM_setValue/GM_getValue caching.
-         * @param {string}  url
-         * @param {string}  cacheKey       GM storage key
-         * @param {number}  [cacheTtlMs=3600000]  Cache TTL in milliseconds (default 1 hour)
-         * @param {boolean} [forceRefresh=false]   When true, skip cache read and always fetch from network
+         * @param {string} url
+         * @param {string} cacheKey  GM storage key
+         * @param {number} [cacheTtlMs=3600000]  Cache TTL in milliseconds (default 1 hour)
          * @returns {Promise<{data: string|null, fromCache: boolean, error: string|null}>}
          */
-        const fetchCachedText = async function(url, cacheKey, cacheTtlMs = 3600000, forceRefresh = false) {
-            if (!forceRefresh) {
-                try {
-                    const cached = GM_getValue(cacheKey, null);
-                    if (cached && (Date.now() - cached.ts) < cacheTtlMs) {
-                        const ageS = Math.round((Date.now() - cached.ts) / 1000);
-                        loggerInterface.debug('remote', `Cache hit for ${cacheKey} (age ${ageS}s, TTL ${Math.round(cacheTtlMs / 1000)}s)`);
-                        return { data: cached.data, fromCache: true, error: null };
-                    } else if (cached) {
-                        loggerInterface.debug('remote', `Cache stale for ${cacheKey} — will re-fetch`);
-                    } else {
-                        loggerInterface.debug('remote', `Cache miss for ${cacheKey} — will fetch`);
-                    }
-                } catch (_) { /* GM_getValue unavailable — skip cache read */ }
-            } else {
-                loggerInterface.info('remote', `Force refresh requested for ${cacheKey} — bypassing cache`);
-            }
+        const fetchCachedText = async function(url, cacheKey, cacheTtlMs = 3600000) {
+            try {
+                const cached = GM_getValue(cacheKey, null);
+                if (cached && (Date.now() - cached.ts) < cacheTtlMs) {
+                    loggerInterface.debug('remote', `Using cached content for ${cacheKey} (age ${Math.round((Date.now() - cached.ts) / 1000)}s)`);
+                    return { data: cached.data, fromCache: true, error: null };
+                }
+            } catch (_) { /* GM_getValue unavailable — skip cache read */ }
 
             try {
-                loggerInterface.debug('remote', `Fetching: ${url}`);
                 const data = await fetchRemoteText(url);
                 try { GM_setValue(cacheKey, { ts: Date.now(), data }); } catch (_) {}
-                loggerInterface.info('remote', `Fetched and cached fresh content for ${cacheKey} (${data.length} bytes)`);
+                loggerInterface.debug('remote', `Fetched and cached remote content for ${cacheKey}`);
                 return { data, fromCache: false, error: null };
             } catch (err) {
                 loggerInterface.warn('remote', `Fetch failed for ${url}: ${err.message}`);
@@ -139,7 +117,7 @@ const VZ_MBLibrary = (function() {
                 try {
                     const stale = GM_getValue(cacheKey, null);
                     if (stale) {
-                        loggerInterface.warn('remote', `Serving stale cache for ${cacheKey} as last resort`);
+                        loggerInterface.warn('remote', `Using stale cache for ${cacheKey}`);
                         return { data: stale.data, fromCache: true, error: 'Network error — showing cached version' };
                     }
                 } catch (_) {}
@@ -1169,17 +1147,6 @@ const VZ_MBLibrary = (function() {
             show: function () {
                 if (!_changelog || _changelog.length === 0) return;
 
-                // ── Cache-status debug log ────────────────────────────────────────
-                const metaSource = _changelogMeta.fromCache === null
-                    ? 'static'
-                    : _changelogMeta.fromCache
-                        ? `cache (age ${_changelogMeta.fetchedAt ? Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000) : '?'}s)`
-                        : 'fresh network fetch';
-                loggerInterface.info('ui', `Displaying changelog: ${_changelog.length} entries, source=${metaSource}`);
-                if (_changelogMeta.url) {
-                    loggerInterface.debug('ui', `Changelog URL: ${_changelogMeta.url} | cacheKey: ${_changelogMeta.cacheKey}`);
-                }
-
                 const sizeKey = `${scriptId}-changelog-size`;
 
                 const savedSize = GM_getValue(sizeKey, {
@@ -1224,41 +1191,34 @@ const VZ_MBLibrary = (function() {
                     transition: 'all 0.18s ease'
                 });
 
-                /* ================= BUILD CHANGELOG TABLE ROWS ================= */
+                /* ================= BUILD CHANGELOG TABLE ================= */
 
-                /**
-                 * Build the <tbody> innerHTML from the current _changelog array.
-                 * Extracted so it can be called both on initial render and after
-                 * a force-refresh re-populates _changelog.
-                 * @returns {string} HTML string for all <tr> rows
-                 */
-                const buildRows = () => {
-                    let html = '';
-                    _changelog.forEach((entry, idx) => {
-                        const stripe = idx % 2 === 0 ? '#fafafa' : '#f4f6f8';
-                        html += `
-                            <tr style="background:${stripe};border-bottom:1px solid #e3e6ea;">
-                                <td style="padding:8px 12px; width:200px;">
-                                    <i>${entry.version}</i>
-                                </td>
-                                <td style="padding:8px 12px; color:#444;">
-                                    ${entry.description}
-                                </td>
-                            </tr>`;
-                    });
-                    return html;
-                };
+                let rows = '';
+                let i = 0;
+
+                _changelog.forEach(entry => {
+
+                    const stripe = i % 2 === 0 ? '#fafafa' : '#f4f6f8';
+                    i++;
+
+                    rows += `
+                        <tr style="
+                            background:${stripe};
+                            border-bottom:1px solid #e3e6ea;
+                        ">
+                            <td style="padding:8px 12px; width:200px;">
+                                <i>${entry.version}</i>
+                            </td>
+                            <td style="padding:8px 12px; color:#444;">
+                                ${entry.description}
+                            </td>
+                        </tr>`;
+                });
 
                 container.innerHTML = `
                     <div id="${scriptId}-changelog-drag"
                          style="cursor:move;user-select:none;margin-bottom:12px;">
-                        <p style="text-align:right;margin:0 0 6px 0;display:flex;justify-content:flex-end;align-items:center;gap:10px;">
-                            <a id="${scriptId}-changelog-refresh"
-                               style="cursor:pointer;font-weight:600;color:#0066cc;font-size:0.9em;"
-                               title="Bypass cache and download the latest changelog from GitHub">
-                                🔄 Force refresh
-                            </a>
-                            <span style="color:#bbb;">|</span>
+                        <p style="text-align:right;margin:0 0 6px 0;">
                             <a id="${scriptId}-changelog-close"
                                style="cursor:pointer;font-weight:600;color:#555;">
                                 CLOSE
@@ -1267,12 +1227,6 @@ const VZ_MBLibrary = (function() {
                         <h3 style="margin:4px 0;font-size:18px;font-weight:600;color:#222;">
                             ${scriptName.toUpperCase()} — CHANGELOG
                         </h3>
-                        <p id="${scriptId}-changelog-meta"
-                           style="margin:4px 0 0 0;font-size:0.78em;color:#888;">
-                            ${_changelogMeta.fromCache === null
-                                ? `${_changelog.length} entries (static/local)`
-                                : `${_changelog.length} entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
-                        </p>
                     </div>
 
                     <div style="flex:1;overflow-y:auto;background:#f9f9fb;border-radius:8px;">
@@ -1283,8 +1237,8 @@ const VZ_MBLibrary = (function() {
                                     <th style="padding:8px 12px;text-align:left;">Description</th>
                                 </tr>
                             </thead>
-                            <tbody id="${scriptId}-changelog-tbody">
-                                ${buildRows()}
+                            <tbody>
+                                ${rows}
                             </tbody>
                         </table>
                     </div>
@@ -1331,70 +1285,6 @@ const VZ_MBLibrary = (function() {
                 requestAnimationFrame(() => {
                     container.style.transform = 'scale(1)';
                     container.style.opacity = '1';
-                });
-
-                /* ================= FORCE REFRESH ================= */
-
-                const refreshLink = container.querySelector(`#${scriptId}-changelog-refresh`);
-                const metaEl      = container.querySelector(`#${scriptId}-changelog-meta`);
-                const tbody       = container.querySelector(`#${scriptId}-changelog-tbody`);
-
-                /**
-                 * Update the metadata line below the title with current cache info.
-                 */
-                const updateMetaLine = () => {
-                    if (!metaEl) return;
-                    metaEl.innerHTML = _changelogMeta.fromCache === null
-                        ? `${_changelog.length} entries (static/local)`
-                        : `${_changelog.length} entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`;
-                };
-
-                refreshLink.addEventListener('click', async () => {
-                    if (!_changelogMeta.url || !_changelogMeta.cacheKey) {
-                        loggerInterface.warn('ui', 'Force refresh not available — no remote URL configured (static changelog only)');
-                        refreshLink.textContent = '⚠️ No remote URL';
-                        setTimeout(() => { refreshLink.textContent = '🔄 Force refresh'; }, 2500);
-                        return;
-                    }
-
-                    refreshLink.textContent = '⏳ Refreshing…';
-                    refreshLink.style.pointerEvents = 'none';
-                    refreshLink.style.color = '#888';
-
-                    loggerInterface.info('ui', `Changelog force refresh triggered — fetching from ${_changelogMeta.url}`);
-
-                    const { data, error } = await fetchCachedText(
-                        _changelogMeta.url,
-                        _changelogMeta.cacheKey,
-                        _changelogMeta.cacheTtlMs || 3600000,
-                        true /* forceRefresh */
-                    );
-
-                    if (data) {
-                        try {
-                            const entries = JSON.parse(data);
-                            _changelog.length = 0;
-                            entries.forEach(e => _changelog.push(e));
-                            _changelogMeta.fromCache = false;
-                            _changelogMeta.fetchedAt = Date.now();
-                            tbody.innerHTML = buildRows();
-                            updateMetaLine();
-                            refreshLink.textContent = '✅ Refreshed';
-                            loggerInterface.info('ui', `Changelog force refresh complete: ${_changelog.length} entries loaded from network`);
-                        } catch (parseErr) {
-                            loggerInterface.warn('ui', `Changelog force refresh: JSON parse error — ${parseErr.message}`);
-                            refreshLink.textContent = '⚠️ Parse error';
-                        }
-                    } else {
-                        loggerInterface.warn('ui', `Changelog force refresh failed: ${error}`);
-                        refreshLink.textContent = '⚠️ Refresh failed';
-                    }
-
-                    setTimeout(() => {
-                        refreshLink.textContent = '🔄 Force refresh';
-                        refreshLink.style.pointerEvents = '';
-                        refreshLink.style.color = '#0066cc';
-                    }, 2500);
                 });
 
                 /* ================= DRAGGING ================= */
@@ -1535,15 +1425,10 @@ const VZ_MBLibrary = (function() {
                 cacheTtlMs = 3600000
             } = remoteConfig;
 
-            // Store fetch coordinates so changelogInterface.show() can force-refresh later.
-            _changelogMeta.url        = changelogUrl;
-            _changelogMeta.cacheKey   = cacheKeyChangelog;
-            _changelogMeta.cacheTtlMs = cacheTtlMs;
-
             // Capture the static count before the fetch so we can report the replacement.
             const localCount = _changelog.length;
 
-            const { data, fromCache, error } = await fetchCachedText(changelogUrl, cacheKeyChangelog, cacheTtlMs);
+            const { data, error } = await fetchCachedText(changelogUrl, cacheKeyChangelog, cacheTtlMs);
             if (!data) {
                 loggerInterface.warn('remote', `Changelog not available remotely: ${error}`);
                 if (localCount > 0) {
@@ -1558,12 +1443,7 @@ const VZ_MBLibrary = (function() {
                 // Replace _changelog in place so any existing reference stays valid
                 _changelog.length = 0;
                 entries.forEach(e => _changelog.push(e));
-
-                // Record cache metadata for the dialog
-                _changelogMeta.fromCache  = fromCache;
-                _changelogMeta.fetchedAt  = Date.now();
-
-                loggerInterface.info('remote', `Changelog source: remote — replaced ${localCount} local entr${localCount === 1 ? 'y' : 'ies'} with ${_changelog.length} remote entries (fromCache=${fromCache})`);
+                loggerInterface.info('remote', `Changelog source: remote — replaced ${localCount} local entr${localCount === 1 ? 'y' : 'ies'} with ${_changelog.length} remote entries`);
                 // Register the menu item now that we have data
                 if (typeof GM_registerMenuCommand !== 'undefined' && _changelog.length > 0) {
                     GM_registerMenuCommand("📜 ChangeLog", () => changelogInterface.show());

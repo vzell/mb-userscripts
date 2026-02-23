@@ -215,26 +215,6 @@ SETTINGS DIALOG SAFETY GUARDS
 • Clicking RESET always opens a confirmation dialog ("Reset All Settings to Defaults")
   before any defaults are applied. Click OK to proceed, or Cancel to abort.
 
-CHANGELOG DIALOG (📜 ChangeLog in the Tampermonkey menu)
-----------------------------------------------------------
-• The changelog is loaded from GitHub (with a 1-hour GM cache) at startup.
-• When you open the Changelog dialog the console shows cache-status info:
-  entry count, source (📦 cache / 🌐 fresh fetch / static), and cache age.
-• A "🔄 Force refresh" link in the upper-right corner (left of CLOSE) bypasses
-  the cache, downloads the latest changelog from GitHub, and re-renders the table
-  in place — without closing the dialog.
-• Force-refresh success / failure is reported in the browser console and reflected
-  briefly in the link label (✅ Refreshed / ⚠️ Refresh failed).
-
-APPLICATION HELP DIALOG (❓ button or prefix key + H)
--------------------------------------------------------
-• The help text is fetched from GitHub (with a 1-hour GM cache) when the dialog
-  opens. The console reports the URL, source (📦 cache / 🌐 fresh), and byte size.
-• A "🔄 Force refresh" link in the title bar (left of ✕) downloads the latest help
-  text from GitHub and re-renders the content in place.
-• While a force refresh is in progress the link shows "⏳ Refreshing…", then
-  briefly "✅ Refreshed" on success before returning to its default label.
-
 SIDEBAR
 -------
 • The page sidebar can be optionally collapsed (experimental setting) to give

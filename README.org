@@ -41786,6 +41786,7 @@ the function must accept an optional "icon character", the button text and the c
 
 
 * make the configuration dialog resilent against accidently leaving it
+** initial
 
 In the uploaded user script "ShowAllEntityData.user.js"
 
@@ -41846,3 +41847,56 @@ Please also double check the whole userscript and library source code if there a
 
 - Also add changelog entries to the library and to the external file "ShowAllEntityData_CHANGELOG.json" and if
   appropriate to the application help file "ShowAllEntityData_HELP.txt"
+
+** please add debug log statements
+
+- please add debug log statements to show if the "changelog" is read from cache, when clicking the "ChangeLog" menu entry
+in the TamperMonkey menu, and displayed to the end-user. Also add a "Force refresh" link left to the "CLOSE" link in the
+upper right corner (when clicked the latest file from github should be downloaded and displayed). Do the same for the
+"Application help" popup.
+
+- now that we have a library version for the confirm and alter dialogs, please refactor the ones used in the user script
+  directly.
+
+
+* Please add support for more complex changelog entries like the following:
+
+Please refactor the changelog display and maybe the formattting in the current json file (it's even up to you if another
+format fits better)
+
+from the current style, e.g.
+
+#+begin_example
+{
+  "version": "9.89.0+2026-02-23",
+  "description": "Three improvements:",
+  "description_list": [
+    "(1) Application help dialog: a '🔄 Force refresh' link is added to the title bar, left of the ✕ close button. Clicking it bypasses the GM cache, fetches the latest help text from GitHub and re-renders the content in place without closing the dialog. Detailed info-level log statements report the fetch URL, whether data was served from cache or the network, byte size, and any stale-cache warnings. The loadAndRender() function now accepts a forceRefresh boolean parameter.",
+    "(2) showCustomDialog / showCustomAlert / showCustomConfirm refactored: the local implementations (and their configurable CSS helper functions popupDialogCSS, popupHeaderCSS, etc.) have been removed from the script. All five call sites now use Lib.showCustomAlert() and Lib.showCustomConfirm() from VZ_MBLibrary. The '🪟 POPUP UI STYLES' section (six configSchema entries: sa_popup_dialog_style, sa_popup_header_style, sa_popup_message_style, sa_popup_ok_btn_style, sa_popup_cancel_btn_style, sa_popup_btn_gap) has been removed from the Settings dialog accordingly.",
+    "(3) SCRIPT_BASE_NAME derivation: SCRIPT_ID is now derived programmatically, SCRIPT_NAME / remote URLs / cache keys all use SCRIPT_BASE_NAME — carried forward from 9.88.0 together with the settings-dialog safety guards."
+  ]
+}
+#+end_example
+
+to look like the following
+
+#+begin_example
+## 9.89.0 – 2026-02-23
+
+### 🚀 Improvements
+- Help dialog:
+  - Added 🔄 Force refresh
+  - Cache bypass support
+  - Extended fetch logging
+- Refactored popup system to VZ_MBLibrary
+
+### 🧹 Cleanup
+- Removed popup CSS configuration options
+- Removed local dialog implementations
+
+### ⚙ Internal
+- SCRIPT_ID derived automatically
+- Unified SCRIPT_BASE_NAME usage
+#+end_example
+
+Please also rewrite the current "ShowAllEntityData_CHANGELOG.json" accordinlyg after choosing the right technique/approach.
