@@ -41584,3 +41584,183 @@ please refactor the creation of the button "innerHTML" element in a function cal
 #+end_example
 
 the function must accept an optional "icon character", the button text and the character to underline
+
+* refactoring changelog and app help to library
+** initial
+
+In the uploaded user script "ShowAllEntityData.user.js"
+
+could the following be refactored into the library "VZ_MBLibrary.user.js"
+
+#+begin_example
+// CHANGELOG — loaded at runtime from GitHub (see fetchRemoteData)
+let changelog = [];
+
+// APPLICATION HELP TEXT — loaded at runtime from GitHub (see fetchRemoteData)
+const APP_HELP_TEXT = null;
+#+end_example
+
+and everything in between
+
+#+begin_example
+    // ── REMOTE CONTENT (help text + changelog) ─────────────────────────────────
+
+    // ── END REMOTE CONTENT ──────────────────────────────────────────────────────
+#+end_example
+
+Right now the following command in the library doesn't work anymore
+
+#+begin_example
+        // --- 4. Setup Menus ---
+        const setupMenus = function() {
+            if (typeof GM_registerMenuCommand !== 'undefined') {
+                if (configSchema) {
+                    GM_registerMenuCommand("⚙️ Settings Manager", () => settingsInterface.showModal());
+                }
+                if (changelog && changelog.length > 0) {
+                    GM_registerMenuCommand("📜 ChangeLog", () => changelogInterface.show());
+                }
+            }
+#+end_example
+
+And of course I want to use the app help and changelog loading from GitHub also in my other user scripts. Please refactor
+
+** bug
+
+1.) This is the debug log
+
+#+begin_example
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /label/3d995ca7-d9de-4404-b96e-4e007fc2be5e 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: label-releases 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: single 
+[VZ-ShowAllEntities: label-releases] 🚀 Initializing script for path: /label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
+[VZ-ShowAllEntities: label-releases] 🚀 Blurred #headerid-query input on page entry 
+[VZ-ShowAllEntities: label-releases] 📝 Fetched and cached remote content for mb-remote-changelog 
+[VZ-ShowAllEntities: label-releases] 📝 Remote changelog loaded: 147 entries 
+#+end_example
+
+when I have the following in my userscript
+
+#+begin_example
+// CHANGELOG — loaded at runtime from GitHub (see fetchRemoteData)
+let changelog = [];
+
+// APPLICATION HELP TEXT — loaded at runtime from GitHub (see fetchRemoteData)
+const APP_HELP_TEXT = null;
+#+end_example
+
+In this case I would expect from
+
+#+begin_example
+        const initRemoteContent = async function() {
+            if (!remoteConfig || !remoteConfig.changelogUrl) return;
+            const {
+                changelogUrl,
+                cacheKeyChangelog = `${scriptId}-remote-changelog`,
+                cacheTtlMs = 3600000
+            } = remoteConfig;
+
+            const { data, error } = await fetchCachedText(changelogUrl, cacheKeyChangelog, cacheTtlMs);
+            if (!data) {
+                loggerInterface.warn('remote', `Changelog not available remotely: ${error}`);
+                return;
+            }
+            try {
+                const entries = JSON.parse(data);
+                // Replace _changelog in place so any existing reference stays valid
+                _changelog.length = 0;
+                entries.forEach(e => _changelog.push(e));
+                loggerInterface.debug('remote', `Remote changelog loaded: ${_changelog.length} entries`);
+                // Register the menu item now that we have data
+                if (typeof GM_registerMenuCommand !== 'undefined' && _changelog.length > 0) {
+                    GM_registerMenuCommand("📜 ChangeLog", () => changelogInterface.show());
+                }
+            } catch (err) {
+                loggerInterface.warn('remote', `Failed to parse remote changelog JSON: ${err.message}`);
+            }
+        };
+#+end_example
+
+that the "ChangeLog" entry is registered on the Tampermonkey menu, but it is NOT
+
+
+2.) This is the debug log
+
+#+begin_example
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Script loaded with external library! 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7?page=2&tport=8000 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /recording/e94a1986-8853-4c1e-932b-cec1e01914a7 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters: page=2&tport=8000 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: recording-releases 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+[VZ-ShowAllEntities: recording-releases] 🚀 Initializing script for path: /recording/e94a1986-8853-4c1e-932b-cec1e01914a7
+[VZ-ShowAllEntities: recording-releases] 🚀 Blurred #headerid-query input on page entry 
+[VZ-ShowAllEntities: recording-releases] 📝 Remote changelog loaded: 147 entries 
+#+end_example
+
+when I have the following in my userscript
+
+#+begin_example
+// CHANGELOG - hardcoded
+let changelog = [
+    {version: '9.85.0+2026-02-23', description: 'Refactor: Extract makeButtonHTML(text, underlineChar, icon) helper. All button innerHTML assignments that embed a single underlined accelerator character now use this function instead of hand-crafted HTML strings.'},
+    {version: '0.9.1+2026-01-29', description: 'Added "Esc" key handling for clearing the filter fields when focused; Added "ChangeLog" userscript manager menu entry.'},
+    {version: '0.9.0+2026-01-28', description: '1st official release version.'}
+];
+
+  let changelog = [
+    {version: '9.85.0+2026-02-23', description: 'Refactor: Extract makeButtonHTML(text, underlineChar, icon) helper. All button innerHTML assignments that embed a single underlined accelerator character now use this function instead of hand-crafted HTML strings.'},
+    {version: '0.9.1+2026-01-29', description: 'Added "Esc" key handling for clearing the filter fields when focused; Added "ChangeLog" userscript manager menu entry.'},
+    {version: '0.9.0+2026-01-28', description: '1st official release version.'}
+  ];
+
+    const Lib = (typeof VZ_MBLibrary !== 'undefined')
+          ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, () => {
+              // Dynamic check: returns current value of debug setting
+              return settings.sa_enable_debug_logging ?? false;
+          }, remoteConfig)
+          : {
+              settings: {},
+              info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
+          };
+#+end_example
+
+Here I get
+
+#+begin_example
+[VZ-ShowAllEntities: label-releases] 📝 Remote changelog loaded: 147 entries
+#+end_example
+
+but when I open the "ChangeLog" entry (it IS registered on the Tampermonkey menu in this case) it actually shows 147 entries but I expected 3 entries as expected, so the debug log entry is wrong
+
+Please explain, but don't change any code
+
+** for testing purposes of STATIC changelog
+
+#+begin_example
+  const remoteConfig = null;
+  
+  let changelog = [
+    {version: '9.85.0+2026-02-23', description: 'Refactor: Extract makeButtonHTML(text, underlineChar, icon) helper. All button innerHTML assignments that embed a single underlined accelerator character now use this function instead of hand-crafted HTML strings.'},
+    {version: '0.9.1+2026-01-29', description: 'Added "Esc" key handling for clearing the filter fields when focused; Added "ChangeLog" userscript manager menu entry.'},
+    {version: '0.9.0+2026-01-28', description: '1st official release version.'}
+  ];
+
+    const Lib = (typeof VZ_MBLibrary !== 'undefined')
+          ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, () => {
+              // Dynamic check: returns current value of debug setting
+              return settings.sa_enable_debug_logging ?? false;
+          }, remoteConfig)
+          : {
+              settings: {},
+              info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
+          };
+#+end_example
+

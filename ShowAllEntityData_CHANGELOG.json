@@ -1,7 +1,11 @@
 [
   {
+    "version": "9.87.0+2026-02-23",
+    "description": "Load application help and changelog from GitHub. Logic is now in library"
+  },
+  {
     "version": "9.86.0+2026-02-23",
-    "description": "Load application help and changelog from GitHub."
+    "description": "Upload application help and changelog to GitHub in separate files."
   },
   {
     "version": "9.85.0+2026-02-23",
