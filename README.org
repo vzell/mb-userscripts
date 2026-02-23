@@ -41491,13 +41491,8 @@ This is for example how the HTML of the ghost row looks like when just the first
 - Please also check the text in the variable "const APP_HELP_TEXT" and change it, or add to it, or remove from it so
   that it matches the current code implementation
 
-
-* Could the "changelog" and the "App help" instead of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
-
 * DONE shortcut Ctrl-T ==> Ctrl-I; Visible Columns in the description
-
-* In all the "Export" and "Save to Disk" dialogs also show number of rows exported and if filtered also the actual total number of rows
-
+* DONE In all the "Export" and "Save to Disk" dialogs also show number of rows exported and if filtered also the actual total number of rows
 * DONE rename problems
 
 Are the following three code sections still working as expected after the button renames from "Visible Columns" to "Visible" and "Auto-Resize" to "Resize"
@@ -41539,8 +41534,33 @@ const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(b
         const resizeBtn = document.querySelector('button[title*="Auto-resize"], button[title*="Restore original"]');
 #+end_example
 
+* DONE replace in all the tooltip texts the hardcoded keyboard shortcuts dynamically from the configured values
+* DONE key combi to all action buttons in the tooltips
 
-* replace in all the tooltip texts the hardcoded keyboard shortcuts dynamically from the configured values
+- In all the "Export" and "Save to Disk" dialogs also show number of rows exported and if filtered also the actual total number of rows
+- replace in all the tooltip texts the hardcoded keyboard shortcuts "(${getPrefixDisplay()}, then <lowercase>)" to (${getPrefixDisplay()}, then <uppercase>)
 
-* key combi to all action buttons in the tooltips
+also change specifically
+
+#+begin_example
+statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then t)`  
+#+end_example
+
+to
+
+#+begin_example
+statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then I)`  
+#+end_example
+
+- also add to the "Show all ..." action button tooltips the missing "(${getPrefixDisplay()}, then <numeric superscript>)"
+
+
+* fix tooltips for keyboard, settings and app-help on initial page and final rendered page
+
+fix tooltips for the "Keyboard shortcuts", "Settings Manager" and "Show application help" button to also have their "(${getPrefixDisplay()}, then <numeric superscript>)" counterparts
+
+
+on initial page and final rendered page
+
+* Could the "changelog" and the "App help" instead of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
 

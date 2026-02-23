@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.82.0+2026-02-23', description: 'Three enhancements: (1) Export/Save dialogs now show row counts; export popups display "N rows exported" and when rows are filtered-out also "of M total"; Save to Disk popup shows "N rows saved"; all three export functions (CSV/JSON/Org-Mode) now count skipped rows; showExportNotification gains optional totalRows parameter; triggerStandardDownload gains rowCount parameter and call-site updated. (2) All tooltip texts: hardcoded lowercase shortcut letters in (${getPrefixDisplay()}, then x) hints uppercased: v→V, e→E, t→I (stats special case per spec), d→D, r→R (3 occurrences), s→S, l→L. (3) Action button tooltips: appended (${getPrefixDisplay()}, then N) hint for each button that has a Ctrl-M+digit shortcut (buttons 1–9).'},
     {version: '9.81.0+2026-02-23', description: 'Refactor: Replace fragile text/title-based button lookups with stable ID-based lookups. Assigned mb-visible-btn to the Visible Columns toggle button (addColumnVisibilityToggle) and mb-resize-btn to the Auto-Resize button (addAutoResizeButton). All querySelector/Array.find lookups that previously matched on textContent or title attribute replaced with document.getElementById calls: duplicate-guard in addColumnVisibilityToggle, duplicate-guard and divider-guard in addAutoResizeButton, updateResizeButtonState, toggleAutoResizeColumns, openVisibleColumnsMenu, and the Ctrl+V shortcut handler. Consistent with existing mb- ID naming convention.'},
     {version: '9.80.0+2026-02-23', description: 'Three fixes/renames: (1) Enter key on focused "Select All" / "Deselect All" / "Choose current configuration" buttons inside the Visible menu now fires the button\'s click handler before closing; previously Enter always just closed the menu regardless of which element had focus. (2) Button renames: "Auto-Resize" → "Resize" (R underlined), "Restore Width" → "Restore" (R underlined), "Visible Columns" → "Visible" (V underlined), "Stats" → "Statistics" (i underlined). All occurrences updated: button innerHTML, textContent finders, APP_HELP_TEXT, showShortcutsHelp sections, ctrlMFunctionMap descriptions, and debug log strings.'},
     {version: '9.79.0+2026-02-22', description: '"Tab", "Shift-Tab" and "cursor up/down" key cycling now works.'},
@@ -2685,7 +2686,7 @@ Press Escape on that notice to cancel the auto-action.
         const toggleBtn = document.createElement('button');
         toggleBtn.id = 'mb-visible-btn';
         toggleBtn.innerHTML = '👁️ <u>V</u>isible';
-        toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then v)`;
+        toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then V)`;
         toggleBtn.style.cssText = uiActionBtnBaseCSS();
         toggleBtn.type = 'button';
 
@@ -3227,10 +3228,11 @@ Press Escape on that notice to cancel the auto-action.
             infoDisplay.style.color = 'green';
         }
 
-        Lib.debug('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
+        Lib.debug('export', `CSV export complete: ${filename} (${rowsExported} rows exported, ${rowsSkipped} skipped, ${totalCells} cells)`);
 
         // Shared notification popup (focus + Escape handled inside)
-        showExportNotification('CSV', filename, rowsExported);
+        const csvTotalRows = rowsExported + rowsSkipped;
+        showExportNotification('CSV', filename, rowsExported, csvTotalRows);
     }
 
     /**
@@ -3261,9 +3263,10 @@ Press Escape on that notice to cancel the auto-action.
         // Get data rows (only visible ones)
         const dataRows = table.querySelectorAll('tbody tr');
         let rowsExported = 0;
+        let rowsSkipped = 0;
 
         dataRows.forEach(row => {
-            if (row.style.display === 'none') return;
+            if (row.style.display === 'none') { rowsSkipped++; return; }
 
             const rowData = {};
             Array.from(row.cells).forEach((cell, index) => {
@@ -3296,8 +3299,9 @@ Press Escape on that notice to cancel the auto-action.
         link.click();
         URL.revokeObjectURL(url);
 
-        Lib.debug('export', `JSON export complete: ${filename} (${rowsExported} rows)`);
-        showExportNotification('JSON', filename, rowsExported);
+        Lib.debug('export', `JSON export complete: ${filename} (${rowsExported} rows exported, ${rowsSkipped} skipped)`);
+        const jsonTotalRows = rowsExported + rowsSkipped;
+        showExportNotification('JSON', filename, rowsExported, jsonTotalRows);
     }
 
     /**
@@ -3331,9 +3335,10 @@ Press Escape on that notice to cancel the auto-action.
         // Get data rows (only visible ones)
         const dataRows = table.querySelectorAll('tbody tr');
         let rowsExported = 0;
+        let rowsSkipped = 0;
 
         dataRows.forEach(row => {
-            if (row.style.display === 'none') return;
+            if (row.style.display === 'none') { rowsSkipped++; return; }
 
             const cells = [];
             Array.from(row.cells).forEach(cell => {
@@ -3367,17 +3372,22 @@ Press Escape on that notice to cancel the auto-action.
         link.click();
         URL.revokeObjectURL(url);
 
-        Lib.debug('export', `Org-Mode export complete: ${filename} (${rowsExported} rows)`);
-        showExportNotification('Org-Mode', filename, rowsExported);
+        Lib.debug('export', `Org-Mode export complete: ${filename} (${rowsExported} rows exported, ${rowsSkipped} skipped)`);
+        const orgTotalRows = rowsExported + rowsSkipped;
+        showExportNotification('Org-Mode', filename, rowsExported, orgTotalRows);
     }
 
     /**
      * Show export notification popup
      */
-    function showExportNotification(format, filename, rowCount) {
+    function showExportNotification(format, filename, rowCount, totalRows = 0) {
+        const isFiltered = totalRows > rowCount;
+        const rowSummary = isFiltered
+            ? `${rowCount.toLocaleString()} of ${totalRows.toLocaleString()} rows (${totalRows - rowCount} filtered out)`
+            : `${rowCount.toLocaleString()} rows`;
         const infoDisplay = document.getElementById('mb-info-display');
         if (infoDisplay) {
-            infoDisplay.textContent = `✓ Exported ${rowCount} rows to ${filename}`;
+            infoDisplay.textContent = `✓ Exported ${rowSummary} to ${filename}`;
             infoDisplay.style.color = 'green';
         }
 
@@ -3401,7 +3411,7 @@ Press Escape on that notice to cancel the auto-action.
         `;
 
         const msg = document.createElement('div');
-        msg.textContent = `${format} export complete. Please monitor your browser for the file download.`;
+        msg.textContent = `${format} export complete: ${rowSummary}. Please monitor your browser for the file download.`;
         msg.style.marginBottom = '15px';
 
         const closeBtn = document.createElement('button');
@@ -3458,7 +3468,7 @@ Press Escape on that notice to cancel the auto-action.
 
         const exportBtn = document.createElement('button');
         exportBtn.innerHTML = '<u>E</u>xport 💾';
-        exportBtn.title = `Export visible rows and columns to various formats (${getPrefixDisplay()}, then e)`;
+        exportBtn.title = `Export visible rows and columns to various formats (${getPrefixDisplay()}, then E)`;
         exportBtn.style.cssText = uiActionBtnBaseCSS();
         exportBtn.type = 'button';
 
@@ -4954,7 +4964,7 @@ Press Escape on that notice to cancel the auto-action.
 
         const statsBtn = document.createElement('button');
         statsBtn.innerHTML = '📊 Stat<u>i</u>stics';
-        statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then t)`;
+        statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then I)`;
         statsBtn.style.cssText = uiActionBtnBaseCSS();
         statsBtn.type = 'button';
         statsBtn.onclick = showStatsPanel;
@@ -5054,7 +5064,7 @@ Press Escape on that notice to cancel the auto-action.
         // Create button
         const densityBtn = document.createElement('button');
         densityBtn.innerHTML = '📏 <u>D</u>ensity';
-        densityBtn.title = `Change table density (spacing) (${getPrefixDisplay()}, then d)`;
+        densityBtn.title = `Change table density (spacing) (${getPrefixDisplay()}, then D)`;
         densityBtn.style.cssText = uiActionBtnBaseCSS();
         densityBtn.type = 'button';
 
@@ -5423,12 +5433,12 @@ Press Escape on that notice to cancel the auto-action.
 
         if (isResized) {
             resizeBtn.innerHTML = '↔️ <u>R</u>estore';
-            resizeBtn.title = `Restore original column widths (click to toggle / ${getPrefixDisplay()}, then r)`;
+            resizeBtn.title = `Restore original column widths (click to toggle / ${getPrefixDisplay()}, then R)`;
             resizeBtn.style.background = '#e8f5e9';
             resizeBtn.style.borderColor = '#4CAF50';
         } else {
             resizeBtn.innerHTML = '↔️ <u>R</u>esize';
-            resizeBtn.title = `Auto-resize columns to optimal width (click to toggle / ${getPrefixDisplay()}, then r)`;
+            resizeBtn.title = `Auto-resize columns to optimal width (click to toggle / ${getPrefixDisplay()}, then R)`;
             resizeBtn.style.background = '';
             resizeBtn.style.borderColor = '';
         }
@@ -5828,7 +5838,7 @@ Press Escape on that notice to cancel the auto-action.
         const resizeBtn = document.createElement('button');
         resizeBtn.id = 'mb-resize-btn';
         resizeBtn.innerHTML = '↔️ <u>R</u>esize';
-        resizeBtn.title = `Auto-resize columns to optimal width (${getPrefixDisplay()}, then r)`;
+        resizeBtn.title = `Auto-resize columns to optimal width (${getPrefixDisplay()}, then R)`;
         resizeBtn.style.cssText = uiActionBtnBaseCSS();
         resizeBtn.type = 'button';
         resizeBtn.onclick = toggleAutoResizeColumns;
@@ -6109,6 +6119,11 @@ Press Escape on that notice to cancel the auto-action.
             eb.title = 'Fetch all various artist releases from the MusicBrainz backend database';
         }
 
+        // Append Ctrl-M + N prefix-mode shortcut hint to tooltip (buttons 1–9 only)
+        if (superscript && eb.title) {
+            eb.title += ` (${getPrefixDisplay()}, then ${btnIndex + 1})`;
+        }
+
         // Pass the entire config object
         eb.onclick = (e) => startFetchingProcess(e, conf, activeDefinition);
         controlsContainer.appendChild(eb);
@@ -6132,7 +6147,7 @@ Press Escape on that notice to cancel the auto-action.
     saveToDiskBtn.onmouseover = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.hoverBg; };
     saveToDiskBtn.onmouseout  = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.normalBg; };
     saveToDiskBtn.type = 'button';
-    saveToDiskBtn.title = `Save current table data to disk as Gzipped JSON (${getPrefixDisplay()}, then s)`;
+    saveToDiskBtn.title = `Save current table data to disk as Gzipped JSON (${getPrefixDisplay()}, then S)`;
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
     saveToDiskBtn.style.display = 'none';
 
@@ -6149,7 +6164,7 @@ Press Escape on that notice to cancel the auto-action.
     loadFromDiskBtn.onmouseover = () => { loadFromDiskBtn.style.backgroundColor = _loadStyle.hoverBg; };
     loadFromDiskBtn.onmouseout  = () => { loadFromDiskBtn.style.backgroundColor = _loadStyle.normalBg; };
     loadFromDiskBtn.type = 'button';
-    loadFromDiskBtn.title = `Load table data from disk (JSON file) (${getPrefixDisplay()}, then l)`;
+    loadFromDiskBtn.title = `Load table data from disk (JSON file) (${getPrefixDisplay()}, then L)`;
 
     const fileInput = document.createElement('input');
     fileInput.id = 'mb-file-input';
@@ -10321,8 +10336,8 @@ Press Escape on that notice to cancel the auto-action.
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
             const filename = `mb-${pageType}-${timestamp}.json.gz`;
 
-            triggerStandardDownload(url, filename);
-            infoDisplay.textContent = `✓ Serialized ${dataToSave.rowCount} rows to ${filename}`;
+            triggerStandardDownload(url, filename, dataToSave.rowCount);
+            infoDisplay.textContent = `✓ Serialized ${dataToSave.rowCount.toLocaleString()} rows to ${filename}`;
             infoDisplay.style.color = 'green';
 
 
@@ -10337,7 +10352,7 @@ Press Escape on that notice to cancel the auto-action.
      * @param {string} url - The blob URL to download from
      * @param {string} filename - The filename to save as
      */
-    function triggerStandardDownload(url, filename) {
+    function triggerStandardDownload(url, filename, rowCount = 0) {
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
@@ -10369,7 +10384,8 @@ Press Escape on that notice to cancel the auto-action.
         `;
 
         const msg = document.createElement('div');
-        msg.textContent = 'Saving of JSON table data to the filesystem initiated. Please monitor your browser for the file download.';
+        const rowNote = rowCount > 0 ? ` ${rowCount.toLocaleString()} rows saved.` : '';
+        msg.textContent = `Saving of JSON table data to the filesystem initiated.${rowNote} Please monitor your browser for the file download.`;
         msg.style.marginBottom = '15px';
 
         const closeBtn = document.createElement('button');
