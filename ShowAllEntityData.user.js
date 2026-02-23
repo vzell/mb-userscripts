@@ -238,7 +238,7 @@ ACTION BUTTONS
 • 📏 Density         — choose Compact / Normal / Comfortable row spacing
 • 👁️ Visible         — show/hide individual table columns; Alt-S / Alt-D to
                        select/deselect all; navigate with ↑/↓ / Tab / Shift-Tab
-• Export 💾          — export visible data as CSV, JSON, or Emacs Org-Mode
+• 💾 Export          — export visible data as CSV, JSON, or Emacs Org-Mode
 • 🎹                 — show keyboard shortcuts reference (or press ? / /)
 • ⚙️                 — open the Settings Manager to configure all options
 • ❓                 — show this help dialog
@@ -818,7 +818,7 @@ Press Escape on that notice to cancel the auto-action.
             label: 'Enable Export',
             type: 'checkbox',
             default: true,
-            description: 'Show/hide the "Export 💾" button for exporting data to different formats (CSV/JSON/Org-Mode)'
+            description: 'Show/hide the "💾 Export" button for exporting data to different formats (CSV/JSON/Org-Mode)'
         },
 
         sa_enable_sticky_headers: {
@@ -3469,7 +3469,7 @@ Press Escape on that notice to cancel the auto-action.
         }
 
         const exportBtn = document.createElement('button');
-        exportBtn.innerHTML = '<span><span style="text-decoration:underline">E</span>xport 💾</span>';
+        exportBtn.innerHTML = '<span>💾 <span style="text-decoration:underline">E</span>xport</span>';
         exportBtn.title = `Export visible rows and columns to various formats (${getPrefixDisplay()}, then E)`;
         exportBtn.style.cssText = uiActionBtnBaseCSS();
         exportBtn.type = 'button';

@@ -41434,7 +41434,6 @@ Here is how it looks like
 
 #+end_example
 
-
 * Visual Glitch
 
 In the uploaded library file "VZ_MBLibrary.user.js"
@@ -41557,8 +41556,29 @@ statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then I)`
 fix tooltips for the "Keyboard shortcuts", "Settings Manager" and "Show application help" button to also have their "(${getPrefixDisplay()}, then <numeric superscript>)" counterparts
 on initial page and final rendered page
 
+* DONE Why is the button text of the "Statistics"-button aligned normally up to the underlined "i" and from then on, the rest of the text is aligned upward
 
 * Could the "changelog" and the "App help" instead of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
 
+* refactor button texts
 
-* Why is the button text of the "Statistics"-button aligned normally up to the underlined "i" and from then on, the rest of the text is aligned upward
+In the uploaded user script "ShowAllEntityData.user.js"
+
+please refactor the creation of the button 
+#+begin_example
+   2690:        toggleBtn.innerHTML = '<span>👁️ <span style="text-decoration:underline">V</span>isible</span>';
+   2862:        selectAllBtn.innerHTML = '<span><span style="text-decoration:underline">S</span>elect All</span>';
+   2882:        deselectAllBtn.innerHTML = '<span><span style="text-decoration:underline">D</span>eselect All</span>';
+   2907:        chooseConfigBtn.innerHTML = '<span>Choose <span style="text-decoration:underline">c</span>urrent configuration</span>';
+   3472:        exportBtn.innerHTML = '<span><span style="text-decoration:underline">E</span>xport 💾</span>';
+   4968:        statsBtn.innerHTML = '<span>📊 Stat<span style="text-decoration:underline">i</span>stics</span>';
+   5068:        densityBtn.innerHTML = '<span>📏 <span style="text-decoration:underline">D</span>ensity</span>';
+   5437:            resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>estore</span>';
+   5442:            resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>esize</span>';
+   5842:        resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>esize</span>';
+   6146:    saveToDiskBtn.innerHTML = '<span>💾 <span style="text-decoration:underline">S</span>ave to Disk</span>';
+   6163:    loadFromDiskBtn.innerHTML = '<span>📂 <span style="text-decoration:underline">L</span>oad from Disk</span>';
+   6383:    stopBtn.innerHTML = '<span>St<span style="text-decoration:underline">o</span>p</span>';
+   6995:                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span style="text-decoration:underline">L</span>oad Data</button>
+#+end_example
+
