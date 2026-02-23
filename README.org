@@ -42022,5 +42022,32 @@ Featurewise everything should be stiil available
 
 Please rewrite it in a modern style which fits the overall application look and feel
 
+** bugs
 
+Two bugs:
 
+- actually the color picker (iro.js) is somehow not wired, pressing the color chooser icons does nothing.
+- the "Settings", "Default" and "Description" values are not layed out in one row, instead they are rendered below each other
+  The "Default" value is under the "Default" header column, but one row below the "Settings" value. And the "Description" value is rendered two rows below the "Settings" value, but in the "Settings" column
+
+Please fix
+
+** bug
+
+The layout bug is stiil present of the individual settings is still buggy. Now all three values of a setting are rendered below each other in the first column
+
+This is an example of a such rendered setting which spans actually three rows, the values are rendered below each other
+
+#+begin_example
+<div class="vz-setting-row" data-section="divider_" style="flex-wrap: nowrap; align-items: stretch; background: rgb(255, 255, 255); border-bottom: 1px solid rgb(228, 232, 239); min-height: 44px;">
+  <div style="flex: 0 0 280px; width: 280px; min-width: 0px; padding: 10px 14px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; border-right: 1px solid rgb(228, 232, 239); box-sizing: border-box;">
+    <label for="vz-mb-show-all-entity-data-input-sa_enable_debug_logging" style="font-size:0.85em;font-weight:500;color:#334;cursor:pointer;white-space:nowrap;margin-right:4px;">Enable debug logging:
+    </label>
+    <input type="checkbox" id="vz-mb-show-all-entity-data-input-sa_enable_debug_logging" checked="" style="width:16px;height:16px;cursor:pointer;">
+  </div>
+  <div style="flex: 0 0 130px; width: 130px; min-width: 0px; padding: 10px; font-size: 0.76em; color: rgb(136, 136, 136); text-align: center; border-right: 1px solid rgb(228, 232, 239); word-break: break-all; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">false
+  </div>
+  <div style="flex: 1 1 0px; min-width: 0px; padding: 10px 14px; font-size: 0.84em; color: rgb(85, 85, 85); line-height: 1.5; word-break: break-word; box-sizing: border-box;">Enable debug logging in the browser developer console
+  </div>
+</div>
+#+end_example
