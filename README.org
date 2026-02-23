@@ -41558,7 +41558,7 @@ on initial page and final rendered page
 * DONE Why is the button text of the "Statistics"-button aligned normally up to the underlined "i" and from then on, the rest of the text is aligned upward
 
 * DONE Could the "changelog" and the "App help" instead of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
-* refactoring changelog and app help to library
+* DONE refactoring changelog and app help to library
 ** initial
 
 In the uploaded user script "ShowAllEntityData.user.js"
@@ -41756,7 +41756,6 @@ userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-
 userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:164 16:38:31.525 [VZ-ShowAllEntities: label-releases] 🚀 Blurred #headerid-query input on page entry 
 #+end_example
 
-
 * DONE refactor button texts
 
 In the uploaded user script "ShowAllEntityData.user.js"
@@ -41782,5 +41781,67 @@ please refactor the creation of the button "innerHTML" element in a function cal
 
 the function must accept an optional "icon character", the button text and the character to underline
 
+
 * align button texts and make everything configurable (size, font, height, character to underline)
+
+
+* make the configuration dialog resilent against accidently leaving it
+
+In the uploaded user script "ShowAllEntityData.user.js"
+
+- make the configuration dialog resilent against accidently leaving it when the configuration has changed (when pressing
+  the "Escape" key or the "Close" link in the upper right corner). Please wire action handlers with corresponding popup
+  dialogs. Try to reuse/refactor the following functions from the user script "ShowAllEntityData.user.js"
+
+#+begin_example
+    function showCustomAlert(message, title = 'Notice', triggerButton = null) {
+        return showCustomDialog(message, title, triggerButton, 'alert');
+    }
+
+    /**
+     * Convenience wrapper: confirm-style dialog (Cancel + OK buttons).
+     * @param {string} message
+     * @param {string} [title]
+     * @param {HTMLElement} [triggerButton]
+     * @returns {Promise<boolean>}
+     */
+    function showCustomConfirm(message, title = 'Confirm', triggerButton = null) {
+        return showCustomDialog(message, title, triggerButton, 'confirm');
+    }
+#+end_example
+
+into the library "VZ_MBLibrary.user.js" (also for reuse in other scripts). In this case the "showCustomConfirm" dialog
+is probably be appropriate.
+
+Do the same for the "Reset" link in the upper right corner and confirm from the user that this click will actually RESET
+ALL confiuration settings to the default value.
+
+- Please refactor the hardcoded string "ShowAllEntityData" in the following code block
+
+#+begin_example
+    const SCRIPT_BASE_NAME="ShowAllEntityData"
+    const SCRIPT_ID = "vz-mb-show-all-entity-data";
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "ShowAllEntityData";
+
+    // Remote URLs for changelog and help text.
+    // The changelog is fetched and the GM menu item registered by VZ_MBLibrary
+    // (via remoteConfig passed to the constructor below).
+    // The help URL is only used lazily by showAppHelp() via Lib.fetchCachedText().
+    const REMOTE_BASE          = 'https://raw.githubusercontent.com/vzell/mb-userscripts/master/';
+    const REMOTE_HELP_URL      = REMOTE_BASE + 'ShowAllEntityData_HELP.txt';
+    const REMOTE_CHANGELOG_URL = REMOTE_BASE + 'ShowAllEntityData_CHANGELOG.json';
+#+end_example
+
+"SCRIPT_ID" should be derived from "SCRIPT_BASE_NAME" by lowercasing everything and prepending "vz-mb-". The other
+variables should just use the "SCRIPT_BASE_NAME".
+
+In the following line also just replace the hardcoded string with "SCRIPT_BASE_NAME"
+
+#+begin_example
+if (pageType) Lib.prefix = `[VZ-ShowAllEntityData: ${pageType}]`;
+#+end_example
+
+Please also double check the whole userscript and library source code if there are still references which could use the
+"SCRIPT_BASE_NAME" variable somehow.
+
 
