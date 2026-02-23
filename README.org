@@ -41277,29 +41277,8 @@ field
 
 * DONE update the help text of the app
 
-* include lib from github
 
-* align button texts and make everything configurable (size, font, height, character to underline)
-
-* settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
-
-- In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
-
-Here is how it looks like
-
-#+begin_example
-<tr class="section-header collapsed" data-section="divider_ui_appearance" style="
-                                    cursor:pointer;
-                                    background:linear-gradient(to right,#6c7a89,#8fa3b5,#6c7a89);
-                                    color:white;
-                                    border-bottom:1px solid rgba(255,255,255,0.2);
-                                ">
-                                <td colspan="3" style="padding:10px 14px;font-weight:600;">
-                                    ▶ 🖌️ ELEMENT UI STYLES
-                                </td>
-                            </tr>
-
-#+end_example
+* TODO include lib from github
 
 
 * DONE document all functions in the library and the user script where missing
@@ -41415,6 +41394,26 @@ In the uploaded user script "ShowAllEntityData.user.js"
 
 are focused doesn't trigger the same actions as if the button were clicked. please fix
 
+
+* settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
+
+- In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
+
+Here is how it looks like
+
+#+begin_example
+<tr class="section-header collapsed" data-section="divider_ui_appearance" style="
+                                    cursor:pointer;
+                                    background:linear-gradient(to right,#6c7a89,#8fa3b5,#6c7a89);
+                                    color:white;
+                                    border-bottom:1px solid rgba(255,255,255,0.2);
+                                ">
+                                <td colspan="3" style="padding:10px 14px;font-weight:600;">
+                                    ▶ 🖌️ ELEMENT UI STYLES
+                                </td>
+                            </tr>
+
+#+end_example
 
 * TODO In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the right)
 
@@ -41560,11 +41559,13 @@ on initial page and final rendered page
 
 * Could the "changelog" and the "App help" instead of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
 
+* align button texts and make everything configurable (size, font, height, character to underline)
 * refactor button texts
 
 In the uploaded user script "ShowAllEntityData.user.js"
 
-please refactor the creation of the button 
+please refactor the creation of the button "innerHTML" element in a function call for the following lines
+
 #+begin_example
    2690:        toggleBtn.innerHTML = '<span>👁️ <span style="text-decoration:underline">V</span>isible</span>';
    2862:        selectAllBtn.innerHTML = '<span><span style="text-decoration:underline">S</span>elect All</span>';
@@ -41582,3 +41583,4 @@ please refactor the creation of the button
    6995:                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span style="text-decoration:underline">L</span>oad Data</button>
 #+end_example
 
+the function must accept an optional "icon character", the button text and the character to underline

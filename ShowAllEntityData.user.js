@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.84.0+2026-02-23
+// @version      9.85.0+2026-02-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.85.0+2026-02-23', description: 'Refactor: Extract makeButtonHTML(text, underlineChar, icon) helper. All button innerHTML assignments that embed a single underlined accelerator character now use this function instead of hand-crafted HTML strings.'},
     {version: '9.84.0+2026-02-23', description: 'Fix alignment of button text when underline characters are present.'},
     {version: '9.83.0+2026-02-23', description: 'Add missing keyboard shortcuts to tooltips.'},
     {version: '9.82.0+2026-02-23', description: 'Three enhancements: (1) Export/Save dialogs now show row counts; export popups display "N rows exported" and when rows are filtered-out also "of M total"; Save to Disk popup shows "N rows saved"; all three export functions (CSV/JSON/Org-Mode) now count skipped rows; showExportNotification gains optional totalRows parameter; triggerStandardDownload gains rowCount parameter and call-site updated. (2) All tooltip texts: hardcoded lowercase shortcut letters in (${getPrefixDisplay()}, then x) hints uppercased: v→V, e→E, t→I (stats special case per spec), d→D, r→R (3 occurrences), s→S, l→L. (3) Action button tooltips: appended (${getPrefixDisplay()}, then N) hint for each button that has a Ctrl-M+digit shortcut (buttons 1–9).'},
@@ -2687,7 +2688,7 @@ Press Escape on that notice to cancel the auto-action.
         // Create toggle button
         const toggleBtn = document.createElement('button');
         toggleBtn.id = 'mb-visible-btn';
-        toggleBtn.innerHTML = '<span>👁️ <span style="text-decoration:underline">V</span>isible</span>';
+        toggleBtn.innerHTML = makeButtonHTML('Visible', 'V', '👁️');
         toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then V)`;
         toggleBtn.style.cssText = uiActionBtnBaseCSS();
         toggleBtn.type = 'button';
@@ -2859,7 +2860,7 @@ Press Escape on that notice to cancel the auto-action.
         let chooseConfigBtnRef = null;
 
         const selectAllBtn = document.createElement('button');
-        selectAllBtn.innerHTML = '<span><span style="text-decoration:underline">S</span>elect All</span>';
+        selectAllBtn.innerHTML = makeButtonHTML('Select All', 'S');
         selectAllBtn.style.cssText = menuBtnBase + 'flex:1;';
         selectAllBtn.type = 'button';
         selectAllBtn.tabIndex = 0;
@@ -2879,7 +2880,7 @@ Press Escape on that notice to cancel the auto-action.
         };
 
         const deselectAllBtn = document.createElement('button');
-        deselectAllBtn.innerHTML = '<span><span style="text-decoration:underline">D</span>eselect All</span>';
+        deselectAllBtn.innerHTML = makeButtonHTML('Deselect All', 'D');
         deselectAllBtn.style.cssText = menuBtnBase + 'flex:1;';
         deselectAllBtn.type = 'button';
         deselectAllBtn.tabIndex = 0;
@@ -2904,7 +2905,7 @@ Press Escape on that notice to cancel the auto-action.
         // Add "Choose current configuration" button
         const chooseConfigBtn = document.createElement('button');
         chooseConfigBtnRef = chooseConfigBtn;   // resolve forward reference
-        chooseConfigBtn.innerHTML = '<span>Choose <span style="text-decoration:underline">c</span>urrent configuration</span>';
+        chooseConfigBtn.innerHTML = makeButtonHTML('Choose current configuration', 'c');
         chooseConfigBtn.style.cssText = menuBtnBase + 'width:100%; margin-top:5px;';
         chooseConfigBtn.type = 'button';
         chooseConfigBtn.tabIndex = 0;
@@ -3469,7 +3470,7 @@ Press Escape on that notice to cancel the auto-action.
         }
 
         const exportBtn = document.createElement('button');
-        exportBtn.innerHTML = '<span>💾 <span style="text-decoration:underline">E</span>xport</span>';
+        exportBtn.innerHTML = makeButtonHTML('Export', 'E', '💾');
         exportBtn.title = `Export visible rows and columns to various formats (${getPrefixDisplay()}, then E)`;
         exportBtn.style.cssText = uiActionBtnBaseCSS();
         exportBtn.type = 'button';
@@ -3708,6 +3709,32 @@ Press Escape on that notice to cancel the auto-action.
      * Base CSS shared by every button in the h1 action bar.
      * Config: sa_ui_action_btn_style — fontSize|padding|height|borderRadius
      */
+
+    /**
+     * Build the innerHTML for a button that has one underlined accelerator character.
+     *
+     * @param {string}      text          - Full visible button label, e.g. "Save to Disk".
+     * @param {string}      underlineChar - Single character inside `text` to underline
+     *                                     (first occurrence is used), e.g. "S".
+     * @param {string|null} [icon]        - Optional leading emoji/icon, e.g. "💾".
+     *                                     When supplied it is prepended with a space separator.
+     * @returns {string} HTML string of the form
+     *   <span>[icon ]before<span style="text-decoration:underline">char</span>after</span>
+     */
+    function makeButtonHTML(text, underlineChar, icon) {
+        const idx = text.indexOf(underlineChar);
+        let label;
+        if (idx === -1) {
+            label = text;
+        } else {
+            label = text.slice(0, idx) +
+                '<span style="text-decoration:underline">' + underlineChar + '</span>' +
+                text.slice(idx + underlineChar.length);
+        }
+        const content = icon ? icon + ' ' + label : label;
+        return '<span>' + content + '</span>';
+    }
+
     function uiActionBtnBaseCSS() {
         const defaults = '0.8em|2px 8px|24px|6px';
         const [fontSize, padding, height, borderRadius] =
@@ -4965,7 +4992,7 @@ Press Escape on that notice to cancel the auto-action.
         }
 
         const statsBtn = document.createElement('button');
-        statsBtn.innerHTML = '<span>📊 Stat<span style="text-decoration:underline">i</span>stics</span>';
+        statsBtn.innerHTML = makeButtonHTML('Statistics', 'i', '📊');
         statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then I)`;
         statsBtn.style.cssText = uiActionBtnBaseCSS();
         statsBtn.type = 'button';
@@ -5065,7 +5092,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // Create button
         const densityBtn = document.createElement('button');
-        densityBtn.innerHTML = '<span>📏 <span style="text-decoration:underline">D</span>ensity</span>';
+        densityBtn.innerHTML = makeButtonHTML('Density', 'D', '📏');
         densityBtn.title = `Change table density (spacing) (${getPrefixDisplay()}, then D)`;
         densityBtn.style.cssText = uiActionBtnBaseCSS();
         densityBtn.type = 'button';
@@ -5434,12 +5461,12 @@ Press Escape on that notice to cancel the auto-action.
         if (!resizeBtn) return;
 
         if (isResized) {
-            resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>estore</span>';
+            resizeBtn.innerHTML = makeButtonHTML('Restore', 'R', '↔️');
             resizeBtn.title = `Restore original column widths (click to toggle / ${getPrefixDisplay()}, then R)`;
             resizeBtn.style.background = '#e8f5e9';
             resizeBtn.style.borderColor = '#4CAF50';
         } else {
-            resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>esize</span>';
+            resizeBtn.innerHTML = makeButtonHTML('Resize', 'R', '↔️');
             resizeBtn.title = `Auto-resize columns to optimal width (click to toggle / ${getPrefixDisplay()}, then R)`;
             resizeBtn.style.background = '';
             resizeBtn.style.borderColor = '';
@@ -5839,7 +5866,7 @@ Press Escape on that notice to cancel the auto-action.
 
         const resizeBtn = document.createElement('button');
         resizeBtn.id = 'mb-resize-btn';
-        resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>esize</span>';
+        resizeBtn.innerHTML = makeButtonHTML('Resize', 'R', '↔️');
         resizeBtn.title = `Auto-resize columns to optimal width (${getPrefixDisplay()}, then R)`;
         resizeBtn.style.cssText = uiActionBtnBaseCSS();
         resizeBtn.type = 'button';
@@ -6143,7 +6170,7 @@ Press Escape on that notice to cancel the auto-action.
     // Add Save to Disk button
     const saveToDiskBtn = document.createElement('button');
     saveToDiskBtn.id = 'mb-save-to-disk-btn';
-    saveToDiskBtn.innerHTML = '<span>💾 <span style="text-decoration:underline">S</span>ave to Disk</span>';
+    saveToDiskBtn.innerHTML = makeButtonHTML('Save to Disk', 'S', '💾');
     const _saveStyle = uiSaveBtnCSS();
     saveToDiskBtn.style.cssText = _saveStyle.css;
     saveToDiskBtn.onmouseover = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.hoverBg; };
@@ -6160,7 +6187,7 @@ Press Escape on that notice to cancel the auto-action.
     // Add Load from Disk button with hidden file input
     const loadFromDiskBtn = document.createElement('button');
     loadFromDiskBtn.id = 'mb-load-from-disk-btn';
-    loadFromDiskBtn.innerHTML = '<span>📂 <span style="text-decoration:underline">L</span>oad from Disk</span>';
+    loadFromDiskBtn.innerHTML = makeButtonHTML('Load from Disk', 'L', '📂');
     const _loadStyle = uiLoadBtnCSS();
     loadFromDiskBtn.style.cssText = _loadStyle.css;
     loadFromDiskBtn.onmouseover = () => { loadFromDiskBtn.style.backgroundColor = _loadStyle.hoverBg; };
@@ -6380,7 +6407,7 @@ Press Escape on that notice to cancel the auto-action.
 
     const stopBtn = document.createElement('button');
     stopBtn.id = 'mb-stop-btn';
-    stopBtn.innerHTML = '<span>St<span style="text-decoration:underline">o</span>p</span>';
+    stopBtn.innerHTML = makeButtonHTML('Stop', 'o');
     stopBtn.type = 'button';
     stopBtn.style.cssText = uiStopBtnCSS();
     stopBtn.title = 'Stop the current data fetching process from the MusicBrainz backend database';
@@ -6992,7 +7019,7 @@ Press Escape on that notice to cancel the auto-action.
             </div>
 
             <div style="display:flex; gap:12px;">
-                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span style="text-decoration:underline">L</span>oad Data</button>
+                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">${makeButtonHTML('Load Data', 'L')}</button>
                 <button id="sa-load-cancel" style="flex:1; padding:10px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancel</button>
             </div>
         `;
