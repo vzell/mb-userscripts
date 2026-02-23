@@ -41557,34 +41557,7 @@ on initial page and final rendered page
 
 * DONE Why is the button text of the "Statistics"-button aligned normally up to the underlined "i" and from then on, the rest of the text is aligned upward
 
-* Could the "changelog" and the "App help" instead of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
-
-* align button texts and make everything configurable (size, font, height, character to underline)
-* refactor button texts
-
-In the uploaded user script "ShowAllEntityData.user.js"
-
-please refactor the creation of the button "innerHTML" element in a function call for the following lines
-
-#+begin_example
-   2690:        toggleBtn.innerHTML = '<span>👁️ <span style="text-decoration:underline">V</span>isible</span>';
-   2862:        selectAllBtn.innerHTML = '<span><span style="text-decoration:underline">S</span>elect All</span>';
-   2882:        deselectAllBtn.innerHTML = '<span><span style="text-decoration:underline">D</span>eselect All</span>';
-   2907:        chooseConfigBtn.innerHTML = '<span>Choose <span style="text-decoration:underline">c</span>urrent configuration</span>';
-   3472:        exportBtn.innerHTML = '<span><span style="text-decoration:underline">E</span>xport 💾</span>';
-   4968:        statsBtn.innerHTML = '<span>📊 Stat<span style="text-decoration:underline">i</span>stics</span>';
-   5068:        densityBtn.innerHTML = '<span>📏 <span style="text-decoration:underline">D</span>ensity</span>';
-   5437:            resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>estore</span>';
-   5442:            resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>esize</span>';
-   5842:        resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>esize</span>';
-   6146:    saveToDiskBtn.innerHTML = '<span>💾 <span style="text-decoration:underline">S</span>ave to Disk</span>';
-   6163:    loadFromDiskBtn.innerHTML = '<span>📂 <span style="text-decoration:underline">L</span>oad from Disk</span>';
-   6383:    stopBtn.innerHTML = '<span>St<span style="text-decoration:underline">o</span>p</span>';
-   6995:                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span style="text-decoration:underline">L</span>oad Data</button>
-#+end_example
-
-the function must accept an optional "icon character", the button text and the character to underline
-
+* DONE Could the "changelog" and the "App help" instead of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
 * refactoring changelog and app help to library
 ** initial
 
@@ -41763,4 +41736,51 @@ Please explain, but don't change any code
               info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
           };
 #+end_example
+
+** create debug log statements when the changelog is not coming from remote
+
+** no output
+
+Now there is NO output at all when not static changelog is provided
+
+#+begin_example
+16:38:31.516 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Script loaded with external library! 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:164 16:38:31.516 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:164 16:38:31.516 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:164 16:38:31.516 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /label/8e6ab8cc-b190-482e-9975-cce113fba59c 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:164 16:38:31.516 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:164 16:38:31.516 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:164 16:38:31.517 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: label-releases 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:164 16:38:31.517 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: single 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:164 16:38:31.517 [VZ-ShowAllEntities: label-releases] 🚀 Initializing script for path: /label/8e6ab8cc-b190-482e-9975-cce113fba59c
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=5a0d140f-9551-4704-b0f2-d9dc2512c69c:164 16:38:31.525 [VZ-ShowAllEntities: label-releases] 🚀 Blurred #headerid-query input on page entry 
+#+end_example
+
+
+* DONE refactor button texts
+
+In the uploaded user script "ShowAllEntityData.user.js"
+
+please refactor the creation of the button "innerHTML" element in a function call for the following lines
+
+#+begin_example
+   2690:        toggleBtn.innerHTML = '<span>👁️ <span style="text-decoration:underline">V</span>isible</span>';
+   2862:        selectAllBtn.innerHTML = '<span><span style="text-decoration:underline">S</span>elect All</span>';
+   2882:        deselectAllBtn.innerHTML = '<span><span style="text-decoration:underline">D</span>eselect All</span>';
+   2907:        chooseConfigBtn.innerHTML = '<span>Choose <span style="text-decoration:underline">c</span>urrent configuration</span>';
+   3472:        exportBtn.innerHTML = '<span><span style="text-decoration:underline">E</span>xport 💾</span>';
+   4968:        statsBtn.innerHTML = '<span>📊 Stat<span style="text-decoration:underline">i</span>stics</span>';
+   5068:        densityBtn.innerHTML = '<span>📏 <span style="text-decoration:underline">D</span>ensity</span>';
+   5437:            resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>estore</span>';
+   5442:            resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>esize</span>';
+   5842:        resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>esize</span>';
+   6146:    saveToDiskBtn.innerHTML = '<span>💾 <span style="text-decoration:underline">S</span>ave to Disk</span>';
+   6163:    loadFromDiskBtn.innerHTML = '<span>📂 <span style="text-decoration:underline">L</span>oad from Disk</span>';
+   6383:    stopBtn.innerHTML = '<span>St<span style="text-decoration:underline">o</span>p</span>';
+   6995:                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span style="text-decoration:underline">L</span>oad Data</button>
+#+end_example
+
+the function must accept an optional "icon character", the button text and the character to underline
+
+* align button texts and make everything configurable (size, font, height, character to underline)
 
