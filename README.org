@@ -39405,7 +39405,7 @@ I like the filtered outout to be in the following order:
 * Checks for unused variables and functions
 ** question
 
-In the uploaded userscript and library for all unused variables and function definitions
+In the uploaded userscript and library check for all unused variables and function definitions
  
 - Check for obvious code which could make it into a functions without breaking the rest of the big userscript
 - check for code blocks which could easily be refactored to make the code more clear
@@ -41278,7 +41278,7 @@ mb-global-filter input
 field
 
 
-* TODO In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
+* TODO In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the right)
 
 Here is how it looks like
 
@@ -41391,7 +41391,7 @@ You can get the script at https://github.com/vzell/mb-userscripts under [Accumul
 #+end_example
 
 
-* todo
+* DONE todo
 
 In the uploaded user script "ShowAllEntityData.user.js"
 
@@ -41416,19 +41416,120 @@ mb-fetch-progress-outer
 
 than in the button texts for the action buttons (from ligh red, over ligh orange to light green). Now the red and orange colors are too dark.
 
-* still bugs
+* DONE The "Tab", "Shift-Tab" and "cursor up/down" key cycling
+** initial
 
-- The "Tab", "Shift-Tab" and "cursor up/down" key cycling now works, but the buttons do NOT show that they are
+  The "Tab", "Shift-Tab" and "cursor up/down" key cycling now works, but the buttons do NOT show that they are
   focused. They need to change the color in a darker gray when focused and also show a viual feedback when
   pressed/clicked.
 
-- the visual glitch is ALSO still there in the settings dialog when ALL section headers are collapsed at one. The white
-  ghost row ist still present. I have another observation. It looks like each collapsable header contributes a thin part
-  to the final ghost row. Because when I start uncollapsed, there is now shadow ghost row. When I now collapse the first
-  section, by clicking it's header, a thin part of the whole ghost row gets a white color. Clicking another header makes
-  that thin part a little bigger until the final section is collapsed when the whole ghost row is present again.
+**  Return problem
+
+In the uploaded user script "ShowAllEntityData.user.js"
+
+* DONE The "Return" key when pressed and the two buttons
+
+#+begin_example
+"Select All"
+"Deselect All"
+#+end_example
+
+are focused doesn't trigger the same actions as if the button were clicked. please fix
+
+
+* Visual Glitch
+
+In the uploaded library file "VZ_MBLibrary.user.js"
+
+there is a visual glitch in the settings dialog with a shadow/ghost white row starting where the resize handle is
+located (it stretches from the resize handle to the right). The visual glitch is there in the settings dialog when ALL
+section headers are collapsed at once. I have an additional observation. It looks like each collapsable header
+contributes a thin part to the final ghost row. Because when I start uncollapsed, there is now shadow ghost row. When I
+now collapse the first section, by clicking it's header, a thin part of the whole ghost row gets a white color. Clicking
+another header makes that thin part a little bigger until the final section is collapsed when the whole ghost row is
+present again.
+
+This is for example how the HTML of the ghost row looks like when just the first section is collapsed
+
+#+begin_example
+<tr class="section-header collapsed" data-section="divider_" style="
+                                    cursor:pointer;
+                                    color:white;
+                                ">
+                                <td colspan="3" style="
+                                    padding:10px 14px;
+                                    font-weight:600;
+                                    background:linear-gradient(to right,#6c7a89,#8fa3b5,#6c7a89);
+                                    border-bottom:1px solid rgba(255,255,255,0.2);
+                                ">
+                                    ▶ 🛠️ GENERIC SETTINGS
+                                </td>
+                            </tr>
+#+end_example
+
+
+
+- Please check the code in the uploaded library "VZ_MBLibrary.user.js". The visual glitch is still there in the settings
+  dialog when ALL section headers are collapsed at once. The white ghost row ist still present. I have another
+  observation. It looks like each collapsable header contributes a thin part to the final ghost row. Because when I
+  start uncollapsed, there is now shadow ghost row. When I now collapse the first section, by clicking it's header, a
+  thin part of the whole ghost row gets a white color. Clicking another header makes that thin part a little bigger
+  until the final section is collapsed when the whole ghost row is present again.
+
+
+* DONE Please also rename the following buttons (+ all occurences in the keyboard help section and the "const APP_HELP_TEXT")
+
+#+begin_example
+"Auto-Resize", where the "R" is underlined  ==> "Resize", the "R" should be underlined
+"Restore-Width", where the "R" is underlined  ==> "Restore", the "R" should be underlined
+"Visible Columns", where the "V" is underlined  ==> "Visible", the "V" should be underlined
+"Stats", where the "t" is underlined  ==> "Statistics", the "i" should be underlined
+#+end_example
+
+* DONE help text
 
 - Please also check the text in the variable "const APP_HELP_TEXT" and change it, or add to it, or remove from it so
   that it matches the current code implementation
 
-* Could the "changelog" and the "App help" insted of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
+
+* Could the "changelog" and the "App help" instead of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
+
+* DONE shortcut Ctrl-T ==> Ctrl-I; Visible Columns in the description
+
+* In the export and save dialogs also show number of rows exported and if filtered also the actual total number of rows
+
+* const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible') && !btn.textContent.includes('Columns:'));
+
+#+begin_example
+    function updateResizeButtonState(isResized) {
+        const resizeBtn = document.querySelector('button[title*="Auto-resize"], button[title*="Restore original"]');
+
+        if (!resizeBtn) return;
+
+        if (isResized) {
+            resizeBtn.innerHTML = '↔️ <u>R</u>estore';
+            resizeBtn.title = `Restore original column widths (click to toggle / ${getPrefixDisplay()}, then r)`;
+            resizeBtn.style.background = '#e8f5e9';
+            resizeBtn.style.borderColor = '#4CAF50';
+        } else {
+            resizeBtn.innerHTML = '↔️ <u>R</u>esize';
+            resizeBtn.title = `Auto-resize columns to optimal width (click to toggle / ${getPrefixDisplay()}, then r)`;
+            resizeBtn.style.background = '';
+            resizeBtn.style.borderColor = '';
+        }
+    }
+#+end_example
+
+#+begin_example
+    function toggleAutoResizeColumns() {
+        const tables = document.querySelectorAll('table.tbl');
+
+        if (tables.length === 0) {
+            alert('No tables found to resize');
+            Lib.warn('resize', 'No tables found for auto-resize');
+            return;
+        }
+
+        const resizeBtn = document.querySelector('button[title*="Auto-resize"], button[title*="Restore original"]');
+#+end_example
+

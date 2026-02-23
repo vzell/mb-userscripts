@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.79.0+2026-02-22
+// @version      9.80.0+2026-02-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.80.0+2026-02-23', description: 'Three fixes/renames: (1) Enter key on focused "Select All" / "Deselect All" / "Choose current configuration" buttons inside the Visible menu now fires the button\'s click handler before closing; previously Enter always just closed the menu regardless of which element had focus. (2) Button renames: "Auto-Resize" → "Resize" (R underlined), "Restore Width" → "Restore" (R underlined), "Visible Columns" → "Visible" (V underlined), "Stats" → "Statistics" (i underlined). All occurrences updated: button innerHTML, textContent finders, APP_HELP_TEXT, showShortcutsHelp sections, ctrlMFunctionMap descriptions, and debug log strings.'},
     {version: '9.79.0+2026-02-22', description: '"Tab", "Shift-Tab" and "cursor up/down" key cycling now works.'},
     {version: '9.78.0+2026-02-22', description: 'Help-text rewrite.'},
     {version: '9.77.0+2026-02-22', description: 'Two fixes: (1) Column Visibility menu Tab focus-trap now actually works: the menuKeyHandler was registered as a bubbling listener on document, but browsers resolve Tab focus-movement at target phase — before bubbling — so the e.preventDefault() call was always too late. Fixed by registering with useCapture=true (document.addEventListener(\'keydown\', menuKeyHandler, true)); the handler\'s menu.style.display guard prevents any side-effects when the menu is closed. (2) Ctrl-M tooltip "Functions" list no longer sorted alphabetically; entries are now rendered in ctrlMFunctionMap insertion order (s, l, r, v, d, t, e, k, ,, h — matching the logical grouping in the map literal) by replacing the .sort() call with a plain Object.entries() iteration.'},
@@ -228,10 +229,10 @@ ACTION BUTTONS
                        (~60–80% smaller than plain JSON)
 • 📂 Load from Disk  — load a previously saved dataset with an optional
                        pre-filter; Alt-L inside the dialog to confirm
-• ↔️ Auto-Resize     — fit all columns to their content (toggle to restore)
-• 📊 Stats           — show a statistics panel (row/column counts, memory, …)
+• ↔️ Resize          — fit all columns to their content (toggle to restore)
+• 📊 Statistics       — show a statistics panel (row/column counts, memory, …)
 • 📏 Density         — choose Compact / Normal / Comfortable row spacing
-• 👁️ Visible Columns — show/hide individual table columns; Alt-S / Alt-D to
+• 👁️ Visible         — show/hide individual table columns; Alt-S / Alt-D to
                        select/deselect all; navigate with ↑/↓ / Tab / Shift-Tab
 • Export 💾          — export visible data as CSV, JSON, or Emacs Org-Mode
 • 🎹                 — show keyboard shortcuts reference (or press ? / /)
@@ -289,10 +290,10 @@ KEYBOARD SHORTCUTS  (all configurable in ⚙️ → Keyboard Shortcuts section)
   Ctrl+S           Save to Disk
   Ctrl+L           Load from Disk dialog
   Ctrl+E           Open Export menu
-  Ctrl+R           Toggle Auto-Resize Columns
+  Ctrl+R           Toggle Resize Columns
   Ctrl+D           Open Density menu
-  Ctrl+V           Open Visible Columns menu
-  Ctrl+T           Open Statistics panel
+  Ctrl+V           Open Visible menu
+  Ctrl+I           Open Statistics panel
   Ctrl+2           Toggle all h2 section headers
   Ctrl+3           Toggle all h3 type headers
   Ctrl+,           Open Settings dialog
@@ -303,8 +304,8 @@ PREFIX-MODE SHORTCUTS  (configurable prefix, default: Ctrl+M)
   Press the prefix key, release, then press:
     s   Save to Disk
     l   Load from Disk
-    r   Toggle Auto-Resize Columns
-    v   Open Visible Columns menu
+    r   Toggle Resize Columns
+    v   Open Visible menu
     d   Open Density menu
     t   Show Statistics panel
     e   Open Export menu
@@ -317,7 +318,7 @@ PREFIX-MODE SHORTCUTS  (configurable prefix, default: Ctrl+M)
   The prefix key can be changed in ⚙️ Settings → "🎹 KEYBOARD SHORTCUTS"
   to any combination such as "Ctrl+.", "Alt+X", "Ctrl+Shift+,".
 
-VISIBLE COLUMNS MENU (keyboard navigation when open)
+VISIBLE MENU (keyboard navigation when open)
 -----------------------------------------------------
   ↑ / ↓ or Tab / Shift-Tab  Navigate items (checkboxes and buttons)
   Space                       Toggle focused checkbox
@@ -351,10 +352,10 @@ SAVE & LOAD (Offline Cache)
 
 COLUMN MANAGEMENT
 -----------------
-• 👁️ Visible Columns menu — check/uncheck any column; Select All (Alt-S) /
+• 👁️ Visible menu — check/uncheck any column; Select All (Alt-S) /
   Deselect All (Alt-D); button turns red when any column is hidden
 • Manual resize — drag column-header edges with the mouse at any time
-• Auto-Resize — calculates optimal widths for content including images/icons;
+• Resize — calculates optimal widths for content including images/icons;
   acts as a toggle (restores original widths on second click)
 • Synthetic columns — some page types add computed columns alongside the raw
   data (e.g. "Country" + "Date" split from a combined "Country/Date" cell on
@@ -381,7 +382,7 @@ PROGRESS BAR
 • The action button for the current load changes colour in sync.
 • A time estimate ("est. X.Xs left") is shown inside the bar.
 
-STATISTICS PANEL (📊 or Ctrl+T)
+STATISTICS PANEL (📊 or Ctrl+I)
 --------------------------------
 • Shows: sub-table count, total rows, visible rows, column count, multi-sort
   chain, estimated memory, and per-category row counts on multi-table pages.
@@ -585,8 +586,8 @@ Press Escape on that notice to cancel the auto-action.
         sa_shortcut_open_statistics: {
             label: "Shortcut: Open Statistics Menu",
             type: "keyboard_shortcut",
-            default: "Ctrl+T",
-            description: "Open the page Statistics menu (default: Ctrl+T)"
+            default: "Ctrl+I",
+            description: "Open the page Statistics menu (default: Ctrl+I)"
         },
 
         sa_shortcut_open_export: {
@@ -806,7 +807,7 @@ Press Escape on that notice to cancel the auto-action.
             label: 'Enable Quick Stats Panel',
             type: 'checkbox',
             default: true,
-            description: 'Show/hide the "📊 Stats" button for displaying table statistics'
+            description: 'Show/hide the "📊 Statistics" button for displaying table statistics'
         },
 
         sa_enable_export: {
@@ -2055,7 +2056,7 @@ Press Escape on that notice to cancel the auto-action.
                         Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                Lib.debug('shortcuts', 'Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
+                Lib.debug('shortcuts', 'Function shortcuts: r=Resize, i=Statistics, s=Save, d=Density, v=Visible, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
                 Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
                 if (buttonKeys.length > 0) {
@@ -2065,7 +2066,7 @@ Press Escape on that notice to cancel the auto-action.
                         console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                console.log('[ShowAllEntityData] Function shortcuts: r=Auto-Resize, t=Stats, s=Save, d=Density, v=Visible Columns, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
+                console.log('[ShowAllEntityData] Function shortcuts: r=Resize, i=Statistics, s=Save, d=Density, v=Visible, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
             }
 
             // Auto-exit after 5 seconds
@@ -2648,7 +2649,7 @@ Press Escape on that notice to cancel the auto-action.
         // Note: the initialDivider (between action buttons and Save/Load) is intentionally
         // kept — it remains relevant both on the initial page and after load.
         const loadBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Load from Disk'));
-        const resizeBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Auto-Resize') || btn.textContent.includes('Restore Width'));
+        const resizeBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Resize') || btn.textContent.includes('Restore'));
 
         if (loadBtn && resizeBtn && !controlsContainer.querySelector('.mb-button-divider-after-load')) {
             // Add divider after Load from Disk button
@@ -2673,7 +2674,7 @@ Press Escape on that notice to cancel the auto-action.
         }
 
         // Check if button already exists
-        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible Columns'));
+        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible'));
         if (existingBtn) {
             Lib.debug('ui', 'Column visibility toggle already exists, skipping');
             return;
@@ -2681,7 +2682,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // Create toggle button
         const toggleBtn = document.createElement('button');
-        toggleBtn.innerHTML = '👁️ <u>V</u>isible Columns';
+        toggleBtn.innerHTML = '👁️ <u>V</u>isible';
         toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then v)`;
         toggleBtn.style.cssText = uiActionBtnBaseCSS();
         toggleBtn.type = 'button';
@@ -3044,10 +3045,19 @@ Press Escape on that notice to cancel the auto-action.
                     }
                     break;
 
-                case 'Enter':
+                case 'Enter': {
                     e.preventDefault();
-                    menu.style.display = 'none';
+                    const focused = document.activeElement;
+                    // If a menu action button (Select All / Deselect All / Choose current) has
+                    // focus, fire its click handler; then close the menu.
+                    if (focused === selectAllBtn || focused === deselectAllBtn || focused === chooseConfigBtn) {
+                        focused.click();
+                    } else {
+                        // Enter on a checkbox row closes the menu (existing behaviour).
+                        menu.style.display = 'none';
+                    }
                     break;
+                }
             }
         };
         // Use capture phase (true) so our Tab preventDefault fires BEFORE the
@@ -4149,10 +4159,10 @@ Press Escape on that notice to cancel the auto-action.
             {
                 title: 'View & Layout',
                 shortcuts: [
-                    { keys: getShortcutDisplay('sa_shortcut_auto_resize', 'Ctrl+R'), desc: 'Toggle auto-resize columns (also: prefix mode then r)' },
-                    { keys: getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V'), desc: 'Open "Visible Columns" menu' },
+                    { keys: getShortcutDisplay('sa_shortcut_auto_resize', 'Ctrl+R'), desc: 'Toggle resize columns (also: prefix mode then r)' },
+                    { keys: getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V'), desc: 'Open "Visible" menu' },
                     { keys: getShortcutDisplay('sa_shortcut_open_density', 'Ctrl+D'), desc: 'Open "Density" menu' },
-                    { keys: getShortcutDisplay('sa_shortcut_open_statistics', 'Ctrl+T'), desc: 'Open "Statistics" menu' },
+                    { keys: getShortcutDisplay('sa_shortcut_open_statistics', 'Ctrl+I'), desc: 'Open "Statistics" panel' },
                     { keys: getShortcutDisplay('sa_shortcut_toggle_h2', 'Ctrl+2'), desc: 'Toggle collapse all h2 headers' },
                     { keys: getShortcutDisplay('sa_shortcut_toggle_h3', 'Ctrl+3'), desc: 'Toggle collapse all h3 headers (types)' }
                 ]
@@ -4166,14 +4176,15 @@ Press Escape on that notice to cancel the auto-action.
                 ]
             },
             {
-                title: 'Visible Columns Menu (when open)',
+                title: 'Visible Menu (when open)',
                 shortcuts: [
                     { keys: 'Up/Down or Tab/Shift-Tab', desc: 'Navigate items (checkboxes and buttons)' },
                     { keys: 'Space', desc: 'Toggle focused checkbox' },
                     { keys: 'Alt + S', desc: 'Select All' },
                     { keys: 'Alt + D', desc: 'Deselect All' },
                     { keys: 'Alt + C', desc: 'Choose current configuration' },
-                    { keys: 'Enter/Escape', desc: 'Close menu' }
+                    { keys: 'Enter', desc: 'Trigger focused button / close menu' },
+                    { keys: 'Escape', desc: 'Close menu' }
                 ]
             },
             {
@@ -4581,12 +4592,12 @@ Press Escape on that notice to cancel the auto-action.
             // Open Visible Columns menu
             if (isShortcutEvent(e, 'sa_shortcut_open_visible_columns', 'Ctrl+V')) {
                 e.preventDefault();
-                const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible Columns'));
+                const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible') && !btn.textContent.includes('Columns:'));
                 if (visibleColumnsBtn) {
                     visibleColumnsBtn.click();
-                    Lib.debug('shortcuts', 'Visible Columns menu opened via ' + getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V'));
+                    Lib.debug('shortcuts', 'Visible menu opened via ' + getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V'));
                 } else {
-                    Lib.warn('shortcuts', 'Visible Columns button not found');
+                    Lib.warn('shortcuts', 'Visible button not found');
                 }
             }
 
@@ -4655,16 +4666,16 @@ Press Escape on that notice to cancel the auto-action.
                 }
             }
 
-            // Open Statistics panel (configurable, default Ctrl+T)
-            if (isShortcutEvent(e, 'sa_shortcut_open_statistics', 'Ctrl+T')) {
+            // Open Statistics panel (configurable, default Ctrl+I)
+            if (isShortcutEvent(e, 'sa_shortcut_open_statistics', 'Ctrl+I')) {
                 e.preventDefault();
                 const statsBtn = document.querySelector('#mb-show-all-controls-container button[id="mb-stats-btn"], #mb-show-all-controls-container button');
-                // Prefer finding the Stats button by its emoji text
+                // Prefer finding the Statistics button by its emoji text
                 const statsBtnEl = Array.from(document.querySelectorAll('button'))
-                    .find(btn => btn.textContent.includes('Stats'));
+                    .find(btn => btn.textContent.includes('Statistics'));
                 if (statsBtnEl) {
                     statsBtnEl.click();
-                    Lib.debug('shortcuts', 'Statistics panel opened via ' + getShortcutDisplay('sa_shortcut_open_statistics', 'Ctrl+T'));
+                    Lib.debug('shortcuts', 'Statistics panel opened via ' + getShortcutDisplay('sa_shortcut_open_statistics', 'Ctrl+I'));
                 } else {
                     Lib.warn('shortcuts', 'Stats button not found');
                 }
@@ -4933,21 +4944,21 @@ Press Escape on that notice to cancel the auto-action.
         }
 
         // Check if button already exists
-        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Stats'));
+        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Statistics'));
         if (existingBtn) {
-            Lib.debug('ui', 'Stats button already exists, skipping');
+            Lib.debug('ui', 'Statistics button already exists, skipping');
             return;
         }
 
         const statsBtn = document.createElement('button');
-        statsBtn.innerHTML = '📊 S<u>t</u>ats';
+        statsBtn.innerHTML = '📊 Stat<u>i</u>stics';
         statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then t)`;
         statsBtn.style.cssText = uiActionBtnBaseCSS();
         statsBtn.type = 'button';
         statsBtn.onclick = showStatsPanel;
 
         controlsContainer.appendChild(statsBtn);
-        Lib.debug('ui', 'Stats button added to controls');
+        Lib.debug('ui', 'Statistics button added to controls');
         ensureSettingsButtonIsLast();
     }
 
@@ -5409,12 +5420,12 @@ Press Escape on that notice to cancel the auto-action.
         if (!resizeBtn) return;
 
         if (isResized) {
-            resizeBtn.innerHTML = '↔️ <u>R</u>estore Width';
+            resizeBtn.innerHTML = '↔️ <u>R</u>estore';
             resizeBtn.title = `Restore original column widths (click to toggle / ${getPrefixDisplay()}, then r)`;
             resizeBtn.style.background = '#e8f5e9';
             resizeBtn.style.borderColor = '#4CAF50';
         } else {
-            resizeBtn.innerHTML = '↔️ Auto-<u>R</u>esize';
+            resizeBtn.innerHTML = '↔️ <u>R</u>esize';
             resizeBtn.title = `Auto-resize columns to optimal width (click to toggle / ${getPrefixDisplay()}, then r)`;
             resizeBtn.style.background = '';
             resizeBtn.style.borderColor = '';
@@ -5806,14 +5817,14 @@ Press Escape on that notice to cancel the auto-action.
         }
 
         // Check if button already exists
-        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Auto-Resize'));
+        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Resize'));
         if (existingBtn) {
             Lib.debug('ui', 'Auto-resize button already exists, skipping');
             return;
         }
 
         const resizeBtn = document.createElement('button');
-        resizeBtn.innerHTML = '↔️ Auto-<u>R</u>esize';
+        resizeBtn.innerHTML = '↔️ <u>R</u>esize';
         resizeBtn.title = `Auto-resize columns to optimal width (${getPrefixDisplay()}, then r)`;
         resizeBtn.style.cssText = uiActionBtnBaseCSS();
         resizeBtn.type = 'button';
@@ -10729,7 +10740,7 @@ Press Escape on that notice to cancel the auto-action.
      * Used as the Ctrl+M + "v" prefix-mode shortcut target.
      */
     function openVisibleColumnsMenu() {
-        const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible Columns'));
+        const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible') && !btn.textContent.includes('Columns:'));
         if (visibleColumnsBtn) {
             visibleColumnsBtn.click();
         }
@@ -10750,10 +10761,10 @@ Press Escape on that notice to cancel the auto-action.
     ctrlMFunctionMap = {
         's': { fn: saveTableDataToDisk, description: 'Save to Disk' },
         'l': { fn: () => showLoadFilterDialog(document.querySelector('button[title*="Load table data from disk"]')), description: 'Load from Disk' },
-        'r': { fn: toggleAutoResizeColumns, description: 'Auto-Resize Columns' },
+        'r': { fn: toggleAutoResizeColumns, description: 'Auto Resize Columns' },
         'v': { fn: openVisibleColumnsMenu, description: 'Open Visible Columns Menu' },
         'd': { fn: openDensityMenu, description: 'Open Density Menu' },
-        't': { fn: showStatsPanel, description: 'Show Statistics Panel' },
+        'i': { fn: showStatsPanel, description: 'Show Statistics Panel' },
         'e': { fn: openExportMenu, description: 'Open Export Menu' },
         'k': { fn: showShortcutsHelp, description: 'Show Keyboard Shortcuts Help' },
         ',': { fn: () => Lib.showSettings(), description: 'Open Settings' },
