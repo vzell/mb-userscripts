@@ -39,16 +39,21 @@
  * VZ: MusicBrainz - Show All Entity Data In A Consolidated View
  *
  * A userscript which accumulates paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events,
- * Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting.
+ * Recordings, Releases, Works, etc.) into a single view with real-time multi-column sorting and filtering.
  *
- * This script has been created by giving the right facts and asking the right questions to Gemini.
- * When Gemini gots stuck, I asked ChatGPT for help, until I got everything right.
+ * This script has been created by giving the right facts and asking the right questions initially to Gemini. When
+ * Gemini gots stuck, I asked ChatGPT for help, until I got everything right. Later when the script increased in size I
+ * switched to Claude and only now and then asked the other tow for help.
  *
  * NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome and Firefox.
  */
 
 (function() {
     'use strict';
+
+    const SCRIPT_BASE_NAME="ShowAllEntityData"
+    const SCRIPT_ID = "vz-mb-show-all-entity-data";
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "ShowAllEntityData";
 
     // Remote URLs for changelog and help text.
     // The changelog is fetched and the GM menu item registered by VZ_MBLibrary
@@ -60,9 +65,6 @@
     const REMOTE_CACHE_TTL_MS  = 60 * 60 * 1000; // 1 hour
     const CACHE_KEY_HELP       = 'mb-remote-help-text';
     const CACHE_KEY_CHANGELOG  = 'mb-remote-changelog';
-
-    const SCRIPT_ID = "vzell-mb-show-all-entities";
-    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
 
     // CONFIG SCHEMA
     const configSchema = {
@@ -1655,7 +1657,7 @@
                 if (typeof Lib !== 'undefined' && Lib.debug) {
                     Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode`);
                 } else {
-                    console.log(`[ShowAllEntityData] Exited ${getPrefixDisplay()} mode`);
+                    console.log(`[VZ-ShowAllEntityData] Exited ${getPrefixDisplay()} mode`);
                 }
                 return;
             }
@@ -1696,10 +1698,10 @@
                 Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
                 if (buttonKeys.length > 0) {
-                    console.log(`[ShowAllEntityData] Entered ${getPrefixDisplay()} mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
+                    console.log(`[VZ-ShowAllEntityData] Entered ${getPrefixDisplay()} mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
                     actionButtons.forEach((btn, idx) => {
                         const key = buttonKeys[idx] || '?';
-                        console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
+                        console.log(`[VZ-ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
                     });
                 }
                 console.log('[ShowAllEntityData] Function shortcuts: r=Resize, i=Statistics, s=Save, d=Density, v=Visible, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
@@ -1741,13 +1743,13 @@
                     if (typeof Lib !== 'undefined' && Lib.debug) {
                         Lib.debug('shortcuts', `Function "${funcEntry.description}" triggered via ${getPrefixDisplay()} then '${keyOriginal}'`);
                     } else {
-                        console.log(`[ShowAllEntityData] Function "${funcEntry.description}" triggered`);
+                        console.log(`[VZ-ShowAllEntityData] Function "${funcEntry.description}" triggered`);
                     }
                 } else {
                     if (typeof Lib !== 'undefined' && Lib.warn) {
                         Lib.warn('shortcuts', `Function "${funcEntry.description}" not available`);
                     } else {
-                        console.warn(`[ShowAllEntityData] Function not available`);
+                        console.warn(`[VZ-ShowAllEntityData] Function not available`);
                     }
                 }
                 ctrlMModeActive = false;
@@ -1774,13 +1776,13 @@
                     if (typeof Lib !== 'undefined' && Lib.debug) {
                         Lib.debug('shortcuts', `Action button ${buttonIndex + 1} selected via ${getPrefixDisplay()} then '${keyOriginal}': "${selectedButton.textContent.trim()}"`);
                     } else {
-                        console.log(`[ShowAllEntityData] Action button ${buttonIndex + 1} clicked: "${selectedButton.textContent.trim()}"`);
+                        console.log(`[VZ-ShowAllEntityData] Action button ${buttonIndex + 1} clicked: "${selectedButton.textContent.trim()}"`);
                     }
                 } else {
                     if (typeof Lib !== 'undefined' && Lib.warn) {
                         Lib.warn('shortcuts', `No action button at position ${buttonIndex + 1} (${actionButtons.length} available)`);
                     } else {
-                        console.warn(`[ShowAllEntityData] No action button at position ${buttonIndex + 1}`);
+                        console.warn(`[VZ-ShowAllEntityData] No action button at position ${buttonIndex + 1}`);
                     }
                 }
             }
@@ -1800,7 +1802,7 @@
             if (typeof Lib !== 'undefined' && Lib.debug) {
                 Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode (Escape pressed)`);
             } else {
-                console.log(`[ShowAllEntityData] Exited ${getPrefixDisplay()} mode`);
+                console.log(`[VZ-ShowAllEntityData] Exited ${getPrefixDisplay()} mode`);
             }
             return;
         }
@@ -5756,7 +5758,7 @@
                           document.querySelector('#content h1') || // Often catches search result headers
                           document.querySelector('h1');
 
-    if (pageType) Lib.prefix = `[VZ-ShowAllEntities: ${pageType}]`;
+    if (pageType) Lib.prefix = `[VZ-ShowAllEntityData: ${pageType}]`;
     Lib.debug('init', 'Initializing script for path:', path);
 
     if (!pageType || !headerContainer) {
