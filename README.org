@@ -41230,8 +41230,7 @@ k=Shortcuts Help, h=App Help, ,=Settings'
 - For display purposes, upcase the character after capturing so instead of "Ctrl-m" it should be displayed in the
   configuration dialog and the keyboard popup dialog as "Ctrl-M" etc.
 
-
-* TODO "Tab"-key cycles through the checkbox choices
+* DONE "Tab"-key cycles through the checkbox choices
 
 In the uploaded user script "ShowAllEntityData.user.js"
 
@@ -41241,7 +41240,7 @@ It still doesn't work
 - Additionally change the behaviour of the "Shift" key: It shouldn't toggle the check box where the focus is, but instead it should work only together with the Tab-key as "Shift-Tab" to move the cursor upwards
 - The cycling to the 3 buttons "Select All", "Deselect All", "Choose current configuration" and then starting again with the first checkbox still doesn't work
 
-* TODO "📊 Stats"-button when pressing "Ctrl-I" by default
+* DONE "📊 Stats"-button when pressing "Ctrl-I" by default
 
 according to the boolean setting
 
@@ -41260,7 +41259,6 @@ handle the clicking of the "📊 Stats"-button when pressing "Ctrl-T" by default
 document.addEventListener('keydown', (e) => {
 #+end_example
 
-
 * DONE Also wire "Ctrl+K" (with action of clicking on the "Show keyboard shortcuts"-button and adding it to the keyboard help section) on the final rendered page
 
 - When entering the initial page blur the input field
@@ -41277,27 +41275,7 @@ mb-global-filter input
 
 field
 
-
-* TODO In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the right)
-
-Here is how it looks like
-
-#+begin_example
-<tr class="section-header collapsed" data-section="divider_ui_appearance" style="
-                                    cursor:pointer;
-                                    background:linear-gradient(to right,#6c7a89,#8fa3b5,#6c7a89);
-                                    color:white;
-                                    border-bottom:1px solid rgba(255,255,255,0.2);
-                                ">
-                                <td colspan="3" style="padding:10px 14px;font-weight:600;">
-                                    ▶ 🖌️ ELEMENT UI STYLES
-                                </td>
-                            </tr>
-
-#+end_example
-
-
-* update the help text of the app
+* DONE update the help text of the app
 
 * include lib from github
 
@@ -41322,6 +41300,7 @@ Here is how it looks like
                             </tr>
 
 #+end_example
+
 
 * DONE document all functions in the library and the user script where missing
 * DONE Do not sort the "functions" in the "Ctrl-M" shortcut helper popup
@@ -41436,6 +41415,24 @@ In the uploaded user script "ShowAllEntityData.user.js"
 
 are focused doesn't trigger the same actions as if the button were clicked. please fix
 
+
+* TODO In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the right)
+
+Here is how it looks like
+
+#+begin_example
+<tr class="section-header collapsed" data-section="divider_ui_appearance" style="
+                                    cursor:pointer;
+                                    background:linear-gradient(to right,#6c7a89,#8fa3b5,#6c7a89);
+                                    color:white;
+                                    border-bottom:1px solid rgba(255,255,255,0.2);
+                                ">
+                                <td colspan="3" style="padding:10px 14px;font-weight:600;">
+                                    ▶ 🖌️ ELEMENT UI STYLES
+                                </td>
+                            </tr>
+
+#+end_example
 
 * Visual Glitch
 
@@ -41554,13 +41551,11 @@ statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then I)`
 
 - also add to the "Show all ..." action button tooltips the missing "(${getPrefixDisplay()}, then <numeric superscript>)"
 
-
-* fix tooltips for keyboard, settings and app-help on initial page and final rendered page
+* DONE fix tooltips for keyboard, settings and app-help on initial page and final rendered page
 
 fix tooltips for the "Keyboard shortcuts", "Settings Manager" and "Show application help" button to also have their "(${getPrefixDisplay()}, then <numeric superscript>)" counterparts
-
-
 on initial page and final rendered page
 
 * Could the "changelog" and the "App help" instead of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
 
+* Why is the button text of the "Statistics"-button aligned normally up to the underlined "i" and from then on, the rest of the text is aligned upward
