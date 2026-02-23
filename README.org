@@ -41899,4 +41899,7 @@ to look like the following
 - Unified SCRIPT_BASE_NAME usage
 #+end_example
 
+
+Please rewrite the whole changelog code accordingly.
+
 Please also rewrite the current "ShowAllEntityData_CHANGELOG.json" accordinlyg after choosing the right technique/approach.
