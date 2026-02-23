@@ -41434,17 +41434,18 @@ Here is how it looks like
 
 #+end_example
 
+
 * Visual Glitch
 
 In the uploaded library file "VZ_MBLibrary.user.js"
 
 there is a visual glitch in the settings dialog with a shadow/ghost white row starting where the resize handle is
-located (it stretches from the resize handle to the right). The visual glitch is there in the settings dialog when ALL
-section headers are collapsed at once. I have an additional observation. It looks like each collapsable header
-contributes a thin part to the final ghost row. Because when I start uncollapsed, there is now shadow ghost row. When I
-now collapse the first section, by clicking it's header, a thin part of the whole ghost row gets a white color. Clicking
-another header makes that thin part a little bigger until the final section is collapsed when the whole ghost row is
-present again.
+located (it stretches from the resize handle, so, from the lower right corner of the dialog to the right). The visual
+glitch is there in the settings dialog when ALL section headers are collapsed at once. I have an additional
+observation. It looks like each collapsable header contributes a thin part to the final ghost row. Because when I start
+uncollapsed, there is now shadow ghost row at ALL. When I now collapse the first section, by clicking it's header, a
+thin part of the whole ghost row gets a white color. Clicking another header makes that thin part a little bigger until
+the final section is collapsed when the whole ghost row is present again.
 
 This is for example how the HTML of the ghost row looks like when just the first section is collapsed
 
@@ -41473,7 +41474,7 @@ This is for example how the HTML of the ghost row looks like when just the first
   thin part of the whole ghost row gets a white color. Clicking another header makes that thin part a little bigger
   until the final section is collapsed when the whole ghost row is present again.
 
-
+  
 * DONE Please also rename the following buttons (+ all occurences in the keyboard help section and the "const APP_HELP_TEXT")
 
 #+begin_example
@@ -41556,6 +41557,8 @@ statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then I)`
 fix tooltips for the "Keyboard shortcuts", "Settings Manager" and "Show application help" button to also have their "(${getPrefixDisplay()}, then <numeric superscript>)" counterparts
 on initial page and final rendered page
 
+
 * Could the "changelog" and the "App help" instead of being hardcoded in the code itself, be fetched from a raw file on github and display in the same dialog as the current hardcoded code ?
+
 
 * Why is the button text of the "Statistics"-button aligned normally up to the underlined "i" and from then on, the rest of the text is aligned upward
