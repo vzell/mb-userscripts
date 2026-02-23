@@ -41496,9 +41496,15 @@ This is for example how the HTML of the ghost row looks like when just the first
 
 * DONE shortcut Ctrl-T ==> Ctrl-I; Visible Columns in the description
 
-* In the export and save dialogs also show number of rows exported and if filtered also the actual total number of rows
+* In all the "Export" and "Save to Disk" dialogs also show number of rows exported and if filtered also the actual total number of rows
 
-* const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible') && !btn.textContent.includes('Columns:'));
+* DONE rename problems
+
+Are the following three code sections still working as expected after the button renames from "Visible Columns" to "Visible" and "Auto-Resize" to "Resize"
+
+#+begin_example
+const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible') && !btn.textContent.includes('Columns:'));
+#+end_example
 
 #+begin_example
     function updateResizeButtonState(isResized) {
@@ -41532,4 +41538,9 @@ This is for example how the HTML of the ghost row looks like when just the first
 
         const resizeBtn = document.querySelector('button[title*="Auto-resize"], button[title*="Restore original"]');
 #+end_example
+
+
+* replace in all the tooltip texts the hardcoded keyboard shortcuts dynamically from the configured values
+
+* key combi to all action buttons in the tooltips
 

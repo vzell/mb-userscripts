@@ -48,6 +48,7 @@
 
 // CHANGELOG
 let changelog = [
+    {version: '9.81.0+2026-02-23', description: 'Refactor: Replace fragile text/title-based button lookups with stable ID-based lookups. Assigned mb-visible-btn to the Visible Columns toggle button (addColumnVisibilityToggle) and mb-resize-btn to the Auto-Resize button (addAutoResizeButton). All querySelector/Array.find lookups that previously matched on textContent or title attribute replaced with document.getElementById calls: duplicate-guard in addColumnVisibilityToggle, duplicate-guard and divider-guard in addAutoResizeButton, updateResizeButtonState, toggleAutoResizeColumns, openVisibleColumnsMenu, and the Ctrl+V shortcut handler. Consistent with existing mb- ID naming convention.'},
     {version: '9.80.0+2026-02-23', description: 'Three fixes/renames: (1) Enter key on focused "Select All" / "Deselect All" / "Choose current configuration" buttons inside the Visible menu now fires the button\'s click handler before closing; previously Enter always just closed the menu regardless of which element had focus. (2) Button renames: "Auto-Resize" → "Resize" (R underlined), "Restore Width" → "Restore" (R underlined), "Visible Columns" → "Visible" (V underlined), "Stats" → "Statistics" (i underlined). All occurrences updated: button innerHTML, textContent finders, APP_HELP_TEXT, showShortcutsHelp sections, ctrlMFunctionMap descriptions, and debug log strings.'},
     {version: '9.79.0+2026-02-22', description: '"Tab", "Shift-Tab" and "cursor up/down" key cycling now works.'},
     {version: '9.78.0+2026-02-22', description: 'Help-text rewrite.'},
@@ -2648,8 +2649,8 @@ Press Escape on that notice to cancel the auto-action.
         // Add divider between Load from Disk and Auto-Resize if not already present.
         // Note: the initialDivider (between action buttons and Save/Load) is intentionally
         // kept — it remains relevant both on the initial page and after load.
-        const loadBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Load from Disk'));
-        const resizeBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Resize') || btn.textContent.includes('Restore'));
+        const loadBtn = document.getElementById('mb-load-from-disk-btn');
+        const resizeBtn = document.getElementById('mb-resize-btn');
 
         if (loadBtn && resizeBtn && !controlsContainer.querySelector('.mb-button-divider-after-load')) {
             // Add divider after Load from Disk button
@@ -2674,7 +2675,7 @@ Press Escape on that notice to cancel the auto-action.
         }
 
         // Check if button already exists
-        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible'));
+        const existingBtn = document.getElementById('mb-visible-btn');
         if (existingBtn) {
             Lib.debug('ui', 'Column visibility toggle already exists, skipping');
             return;
@@ -2682,6 +2683,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // Create toggle button
         const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'mb-visible-btn';
         toggleBtn.innerHTML = '👁️ <u>V</u>isible';
         toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then v)`;
         toggleBtn.style.cssText = uiActionBtnBaseCSS();
@@ -4592,7 +4594,7 @@ Press Escape on that notice to cancel the auto-action.
             // Open Visible Columns menu
             if (isShortcutEvent(e, 'sa_shortcut_open_visible_columns', 'Ctrl+V')) {
                 e.preventDefault();
-                const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible') && !btn.textContent.includes('Columns:'));
+                const visibleColumnsBtn = document.getElementById('mb-visible-btn');
                 if (visibleColumnsBtn) {
                     visibleColumnsBtn.click();
                     Lib.debug('shortcuts', 'Visible menu opened via ' + getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V'));
@@ -5415,7 +5417,7 @@ Press Escape on that notice to cancel the auto-action.
      * @param {boolean} isResized - Whether table is currently resized
      */
     function updateResizeButtonState(isResized) {
-        const resizeBtn = document.querySelector('button[title*="Auto-resize"], button[title*="Restore original"]');
+        const resizeBtn = document.getElementById('mb-resize-btn');
 
         if (!resizeBtn) return;
 
@@ -5527,7 +5529,7 @@ Press Escape on that notice to cancel the auto-action.
             return;
         }
 
-        const resizeBtn = document.querySelector('button[title*="Auto-resize"], button[title*="Restore original"]');
+        const resizeBtn = document.getElementById('mb-resize-btn');
 
         // Toggle: If already resized (auto or manual), restore original state
         if (isAutoResized || isManuallyResized) {
@@ -5817,13 +5819,14 @@ Press Escape on that notice to cancel the auto-action.
         }
 
         // Check if button already exists
-        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Resize'));
+        const existingBtn = document.getElementById('mb-resize-btn');
         if (existingBtn) {
             Lib.debug('ui', 'Auto-resize button already exists, skipping');
             return;
         }
 
         const resizeBtn = document.createElement('button');
+        resizeBtn.id = 'mb-resize-btn';
         resizeBtn.innerHTML = '↔️ <u>R</u>esize';
         resizeBtn.title = `Auto-resize columns to optimal width (${getPrefixDisplay()}, then r)`;
         resizeBtn.style.cssText = uiActionBtnBaseCSS();
@@ -10740,7 +10743,7 @@ Press Escape on that notice to cancel the auto-action.
      * Used as the Ctrl+M + "v" prefix-mode shortcut target.
      */
     function openVisibleColumnsMenu() {
-        const visibleColumnsBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Visible') && !btn.textContent.includes('Columns:'));
+        const visibleColumnsBtn = document.getElementById('mb-visible-btn');
         if (visibleColumnsBtn) {
             visibleColumnsBtn.click();
         }
