@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.91.0+2026-02-24
+// @version      9.92.0+2026-02-24
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -7438,7 +7438,17 @@
             // On single-table pages: show all filter info
             if (activeDefinition.tableMode === 'multi') {
                 const globalFilterInfo = globalQuery ? ` [global:"${globalQuery}"]` : '';
-                filterStatusDisplay.textContent = `✓ Global filter${globalFilterInfo}`;
+
+                // Build a label that reflects the active filter modes
+                const activeModeParts = [];
+                if (isRegExp)        activeModeParts.push('Regexp');
+                if (isCaseSensitive) activeModeParts.push('Case-sensitive');
+                if (isExclude)       activeModeParts.push('Exclude');
+                const modeLabel = activeModeParts.length > 0
+                    ? activeModeParts.join(' ') + ' filter'
+                    : 'Global filter';
+
+                filterStatusDisplay.textContent = `✓ ${modeLabel}${globalFilterInfo}`;
                 filterStatusDisplay.style.color = 'green';
 
                 // Update each sub-table filter status display with its specific info

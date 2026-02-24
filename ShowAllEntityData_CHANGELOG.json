@@ -1,5 +1,12 @@
 [
   {
+    "version": "9.92.0",
+    "date": "2026-02-24",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["✓ Global filter dynamically replaced by ✓ Regexp filter, ✓ Case-sensitive filter, ✓ Exclude filter, or combinations thereof when the respective checkboxes are active"] }
+    ]
+  },
+  {
     "version": "9.91.0",
     "date": "2026-02-24",
     "sections": [

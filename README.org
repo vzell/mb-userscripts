@@ -42180,9 +42180,6 @@ to
 #+end_example
 
 
-* `✓ Global filter${globalFilterInfo}`; switched to "Case sensitive filterg/Rexexp filtering/EXclude mode filtering"
-
-
 * optional per sub-table "sub-table global filter" [] Cs [] Rx [] [] Ex
 
 * write special about it in the forum because of the 2 Action buttons
@@ -42245,7 +42242,7 @@ to
 - For the dialogs which can be resized, leave the cursor ALWAYS at the position of the resize handle and do not move it
   artificially around
 
-** The "Escape" key handling in the "Settings" and "ChangeLog" dialog doesn't work right
+** DONE The "Escape" key handling in the "Settings" and "ChangeLog" dialog doesn't work right
 
 - The "Escape" key handling in the "Settings" and "ChangeLog" dialog doesn't work right.
 
@@ -42258,13 +42255,21 @@ to
 
 1. doesn't already work, pressing "Escape" key immediately closes BOTH dialogs
 
-- When opening the "ChangeLog" dialog via the Tampermonkey menu, the "Filter changelog entries..." input field should
-  be focused
-
 - Please also increase the font size inside the "ChangeLog" and "Application Help & Feature Overview" dialog overall to
   a larger font. Also put the fontsize into a variable at the beginning of the file for easily be changed by the
   developer. Or would it be possible to make the setting editable by the end-user, also it's library variable. If yes,
   please create a small settings editor for variable which are library specific (with futur enhancement in mind)
 
-
 - `✓ Global filter${globalFilterInfo}`; switched to "Case sensitive filterg/Rexexp filtering/EXclude mode filtering"
+
+** "Filter changelog entries..." input field should be focused
+
+- When opening the "ChangeLog" dialog via the Tampermonkey menu, the "Filter changelog entries..." input field IS STILL
+  NOT focused
+
+- Please also add When opening the "Settings" dialog, the "Search settings..." input field should be focused
+
+- increasing the font size inside the "ChangeLog" did work but NOT in the "Application Help & Feature Overview" dialog
+
+- Please also add a new variable (configurable in the library settings editor) for the "Content font" itself
+
