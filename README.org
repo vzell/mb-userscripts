@@ -28853,6 +28853,435 @@ Finally enable local file access.
 
 
 
+* icons
+
+⏱
+🔔
+🛠
+
+
+* add support for http://brucebase.wikidot.com/stats:discography-single#streetsofminneapolis in my plugin "Add discography relationships..."
+** URL
+
+https://musicbrainz.org/release-group/c8e768c9-448b-4ebd-8e5e-4ae95609dd0b
+
+** add config dialog for end-user
+
+
+* fix my userscript for adding SP URLs to work pages
+
+
+* create userscript which directly scrolls to the first difference on http://brucebase.wikidot.com/song:streets-of-minneapolis pages when clicking history
+
+See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
+
+
+* TODO Release page enhancer / MB page enhancer
+** DONE create a userscript which shows coverart on the mainpage in miniature form
+*** DONE initial
+
+In the uploaded userscript ShowAllConsolidated.user.js", create a userscript for URLs of type
+https://musicbrainz.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60 which shows the coverart from the tab "Cover art
+(<number of images>)", https://musicbrainz.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/cover-art on the mainpage
+before the h2 header element "Tracklist":
+
+#+begin_example
+<h2 class="tracklist">Tracklist</h2>
+#+end_example
+
+
+Use similar logic like in the script https://github.com/jesus2099/konami-command/blob/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
+
+*** DONE 250px
+
+Show the 250px types of images https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475411558-250.jpg
+
+*** DONE collapsable
+**** DONE initial
+
+Add the following h2 header in front of all images: "<h2>Cover Art</h2>" and make it collapsable/un-collabsable when clicking on it
+
+**** DONE collapse configurable during initial rendering
+
+In the uploaded userscript,
+introduce a boolen variable mich makes the collapse state configurable during initial rendering. The default should collapsed.
+
+***** problems
+
+There are two problems:
+- first of all the configuration UI is somehow NOT added as amenue entry under the "Editing" pull-down menu entry on the webpage
+- the default collapsed state is NOT applied right now
+
+***** editing menu position
+
+Actually this is the place where the configuration UI should be injected:
+
+#+begin_example
+<div class="right">
+  <div class="bottom">
+    <ul class="menu">
+      <li class="editing" tabindex="-1">
+#+end_example
+
+- Please check with your current implementation and refine if neccessary.
+
+- Also remove the h2 headers text parts "(click to show)" and "(click to hide)" and make these part of a popup tooltip
+  which should appear when hovering over the h2 header "Cover art"
+
+- Rename the menu entry to "Release Page Enhancer"
+
+*** DONE only visible on the "Overview tab
+
+In the '<ul class="tabs">' make the '"<h2>Cover Art</h2>"' container visible only when on the 
+
+#+begin_example
+	<bdi>Overview
+	</bdi>
+#+end_example
+
+tab
+
+#+begin_example
+<ul class="tabs">
+  <li>
+    <span class="name-variation">
+      <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29" title="Double Shot in South Bend">
+	<bdi>Overview
+	</bdi>
+      </a>
+    </span>
+  </li>
+  <li class="sel">
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/discids">
+      <bdi>Disc IDs (0)
+      </bdi>
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/cover-art">
+      <bdi>Cover art (3)
+      </bdi>
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/aliases">Aliases (0)
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/tags">
+      <bdi>Tags
+      </bdi>
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/details">
+      <bdi>Details
+      </bdi>
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/edit">
+      <bdi>Edit
+      </bdi>
+    </a>
+  </li>
+  <li>
+    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/edit-relationships">
+      <bdi>Edit relationships
+      </bdi>
+    </a>
+  </li>
+</ul>
+#+end_example
+
+*** DONE config
+
+In the uploaded userscript
+- add a transition effect to the collapse logic
+- make the image size configurable by adding a menue entry under the "Editing" pull-down menu entry on the page. When
+  clicked generate a UI where you can specify the image dimensions in pixels and store them per user in browser
+  storage. The default pixel size should be 250px
+
+[MB-ShowAll] 🚀 Script loaded and starting... 
+[MB-ShowAll] 🚀 Conditions not met: MBID found: false, Tracklist Header: true
+
+Here is URL I ran it on: https://musicbrainz.org/release/68136206-2939-42ed-a39d-f9c41b0defb1
+
+*** DONE default
+
+Yes,
+- add a "Reset to Default" button inside the settings modal?
+- also change the placement from insert before
+
+#+begin_example
+  <h2 class="tracklist">Tracklist<button class="work-button-style">Edit recording comments</button><span id="settings-icon">⚙️</span></h2>
+#+end_example
+
+to insert after
+
+#+begin_example
+<div class="tabs">
+#+end_example
+
+*** DONE adjust display logging in config dialog to look like jesus
+
+In the uploaded userscript
+adjust the configuration dialog to visually look like the one uploaded in "jesus.config.html".
+
+So basically, for our case
+
+| Setting                                          | Default | Description                        |
+|--------------------------------------------------+---------+------------------------------------|
+| Pixel Size <input area with size up/down dialog> |     250 | Set the cover image size in pixels |
+|                                                  |         |                                    |
+
+but still retain the functionality to explicitely save all the values with a "Save" button, cancel the dialog with a
+"Cancel" button (should alos react on pressing the "Esc" key), reset the whole dialog to the initial state with a
+"Reset" button. The "Save" button should store everything in persistent storage and apply everything immediately without
+a page reload
+
+*** DONE maybe make the fuction async
+
+Is it a good idea to make the cover art display in a function and make the execution asynch
+
+*** DONE unique id
+
+Should a userscript have a unique id beside it's name ? And what can I use it for
+
+*** DONE nice name
+
+Could you change the variable
+
+#+begin_example
+    const SCRIPT_ID = "vzell-mb-release-enhancer";
+#+end_example
+
+to have two parts, an actual ID part like "vzell-mb-release-enhancer" and a nice name for using for display purposes (or could this be done by referenceing the script "name" header somehow)
+In the following prefix
+
+#+begin_example
+    const Logger = {
+        prefix: `[${SCRIPT_ID}]`,
+#+end_example
+
+I would like to use the nice friendly name
+
+*** add icon to userscript config menu entry + versionnumber after the name
+*** add tooltip about configuration option like in jeses super script
+*** make the whole "Show cover art" functionality in a configurable subfunction besides other subfunctions which could separately be enabled or not
+*** add sidebar collapse handle
+** sidebar collapse
+** sorting (multi column)
+** filtering
+** h2/h3 toggle collapse data container
+** h2/h3 toggle collapse sidebar container
+** visible columns
+** auto-resize
+
+
+* filter (funnel) icon from chrome console
+
+#+begin_example
+<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M1 3h14l-5.6 6.7v3.3l-2.8 2v-5.3L1 3z"/>
+</svg>
+#+end_example
+
+
+* Userscripts - WORKFLOW
+** temporary workflow
+
+If you find yourself updating the library frequently and don't want to bump the main script version every time, you can temporarily append a "cache buster" to the @require line in your local dev copy:
+
+#+begin_example
+// During development only:
+// @require https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js?v=1
+#+end_example
+
+** development workflow
+
+The "Hybrid" Workflow (Recommended)
+To prevent accidentally breaking things for others, here is how the "pros" usually handle this:
+
+1. The Local Main Script
+Create a second script in Tampermonkey called VZ: ShowAll (DEV).
+
+Paste your main code there.
+
+Point the @require to your local path: // @require file:///C:/.../VZMBLibrary.user.js.
+
+Disable the "Production" version of the script in the Tampermonkey dashboard so they don't conflict.
+
+2. The Development Library
+Keep your VZMBLibrary.user.js on your hard drive. Open it in a real code editor (VS Code, Sublime, etc.).
+
+Every time you save the file in your editor, simply refresh the MusicBrainz page.
+
+The "DEV" script will immediately see the changes.
+
+3. The Commit Step
+When you are happy with the library:
+
+Push the library to GitHub.
+
+Go back to your Production script (ShowAllConsolidated.user.js).
+
+Update its @version and ensure its @require still points to the raw.githubusercontent or cdn.jsdelivr URL.
+
+Push the Production script.
+
+** header
+*** CDN
+
+#+begin_example
+// ==UserScript==
+// @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      1.6.0+2026-02-02
+// @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
+// @author       Gemini (directed by vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
+// @match        *://*.musicbrainz.org/artist/*
+// @match        *://*.musicbrainz.org/release-group/*
+// @match        *://*.musicbrainz.org/work/*
+// @match        *://*.musicbrainz.org/recording/*
+// @match        *://*.musicbrainz.org/label/*
+// @match        *://*.musicbrainz.org/series/*
+// @match        *://*.musicbrainz.org/place/*/events
+// @match        *://*.musicbrainz.org/place/*/performances
+// @grant        GM_xmlhttpRequest
+// @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
+// @license      MIT
+// ==/UserScript==
+#+end_example
+
+*** local
+
+#+begin_example
+// ==UserScript==
+// @name         [AA] VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      1.6.0+2026-02-02
+// @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
+// @author       Gemini (directed by vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
+// @match        *://*.musicbrainz.org/artist/*
+// @match        *://*.musicbrainz.org/release-group/*
+// @match        *://*.musicbrainz.org/work/*
+// @match        *://*.musicbrainz.org/recording/*
+// @match        *://*.musicbrainz.org/label/*
+// @match        *://*.musicbrainz.org/series/*
+// @match        *://*.musicbrainz.org/place/*/events
+// @match        *://*.musicbrainz.org/place/*/performances
+// @grant        GM_xmlhttpRequest
+// @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
+// @license      MIT
+// ==/UserScript==
+#+end_example
+
+** require
+*** local
+
+#+begin_example
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZ_MBLibrary.user.js
+#+end_example
+
+*** CDN
+
+#+begin_example
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZ_MBLibrary.user.js
+#+end_example
+
+*** raw github
+
+#+begin_example
+// @require      https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZ_MBLibrary.user.js
+#+end_example
+
+*** purging CDN
+
+curl -v https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
+
+curl -v https://purge.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
+
+** userscript match conditions
+*** 1
+
+Why is for the following URL
+
+https://musicbrainz.org/release/add
+
+the userscript with the following definition still executed:
+
+#+begin_example
+// ==UserScript==
+// @name         VZ: MusicBrainz - Release Page Enhancer
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      0.9.5+2026-02-01
+// @description  Enhance Release Page with show all cover art images on the page itself, collapsible with configurable image size
+// @author       Gemini (directed by vzell)
+// @tag          AI generated
+// @homepageURL  https://github.com/vzell/mb-userscripts
+// @supportURL   https://github.com/vzell/mb-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
+// @match        *://*.musicbrainz.org/release/*
+// @exclude      *://*.musicbrainz.org/release/add
+// @exclude      *://*.musicbrainz.org/release/*/*
+// @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
+// @license      MIT
+// ==/UserScript==
+#+end_example
+
+*** release
+
+How to best formulate a userscript match condition to exactly match the following types of URLs, which have MusicBrainz MBIDs at the end
+
+#+begin_example
+https://musicbrainz.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29
+#+end_example
+
+Currently I have
+
+#+begin_example
+// @match        *://*.musicbrainz.org/release/*
+#+end_example
+
+which is much to broad and also runs on
+
+#+begin_example
+https://musicbrainz.org/release/add
+#+end_example
+
+
 * DONE DOM rendering
 ** DONE timings and logging
 
@@ -29578,8 +30007,8 @@ Probably when the info line is stuck, the system already renders the DOM, so it 
 
 Is my assumption right, does it have to do with DOM rendering
 
-* Sorting
-** rethink timings for sorting 
+* DONE Sorting
+** DONE rethink timings for sorting 
 
 In the uploaded script,
 why is the sort time in the status line printed as 4s when sorting 4000 rows, but in usertime it tokk maybe 25s ?
@@ -29606,7 +30035,7 @@ Leave the background shading of even and odd classes still visible
 <tr class="even"
 #+end_example
 
-** fix colours/shading
+** DONE fix colours/shading
 *** on table headers
 *** highlightning, global and per column
 ** DONE show sanduhr for long sorts
@@ -29614,7 +30043,7 @@ Leave the background shading of even and odd classes still visible
 In the uploaded script,
 change the mouse pointer to a "sand clock", if long running sorting actions are taken place, e.g. if more than 1000 rows are involved.
 
-** Updates the UI and logs the busy state.
+** DONE Updates the UI and logs the busy state.
 
 #+begin_example
 mplementation Example (User Script)
@@ -29667,9 +30096,9 @@ function triggerSort(columnIdx, table) {
 }
 #+end_example
 
-** why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
+** DONE why ist statistics about sorting/rendering much smaller when display in the status line, comparted to the actual wait time for the user
 
-* Filtering
+* DONE Filtering
 ** DONE add escape handling when cursor is in filter field, equivalent to pressing the Xicon
 
 In the uploaded script, pressing the "Escape" key when the focus is inside either the global or one of the columns
@@ -29705,7 +30134,7 @@ Also allow, besides clicking the ChangeLog popup text filed, the "Esc" key to le
 Please do not make any changes to the code in "AA.user.js", comments, debugging statements except adding a new entry in
 the "setupMenu: function()" of "AA.user.js", see instructions above
 
-** very large tables and filtering
+** DONE very large tables and filtering
 
 In the uploaded userscript
 
@@ -29716,16 +30145,15 @@ Should the current logic be adjusted, maybe waiting between keystrokes. PLease i
 
 Maybe also display filter timing info in status line.
 
-** show sanduhr for long filters
-
-** sorting
+** DONE show sanduhr for long filters
+** DONE sorting
 
 Please also check the current logic for sorting tables on specific columns. Please also implement best
 practices/patterns here for very large tables
 
-** what else could be done for improving performance and UI layout in this userscript
+** DONE what else could be done for improving performance and UI layout in this userscript
 
-* Timings
+* DONE Timings
 ** DONE 0
 
 Change "Loading page <current page number> of <total page numbers>..."
@@ -30237,445 +30665,6 @@ Encapsulation: Using createBaseTable() ensures that even if MusicBrainz changes 
 
 No Logic Duplication: The "cleanup" and "sortable" triggers are moved into the render engine, so you don't forget to call them when adding new page types.
 #+end_example
-
-
-
-* icons
-
-⏱
-🔔
-🛠
-
-
-* add support for http://brucebase.wikidot.com/stats:discography-single#streetsofminneapolis in my plugin "Add discography relationships..."
-** URL
-
-https://musicbrainz.org/release-group/c8e768c9-448b-4ebd-8e5e-4ae95609dd0b
-
-** add config dialog for end-user
-
-
-* fix my userscript for adding SP URLs to work pages
-
-
-* create userscript which directly scrolls to the first difference on http://brucebase.wikidot.com/song:streets-of-minneapolis pages when clicking history
-
-See also "mb. SUPER MIND CONTROL Ⅱ X TURBO" - https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
-
-
-* TODO Release page enhancer / MB page enhancer
-** DONE create a userscript which shows coverart on the mainpage in miniature form
-*** DONE initial
-
-In the uploaded userscript ShowAllConsolidated.user.js", create a userscript for URLs of type
-https://musicbrainz.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60 which shows the coverart from the tab "Cover art
-(<number of images>)", https://musicbrainz.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/cover-art on the mainpage
-before the h2 header element "Tracklist":
-
-#+begin_example
-<h2 class="tracklist">Tracklist</h2>
-#+end_example
-
-
-Use similar logic like in the script https://github.com/jesus2099/konami-command/blob/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
-
-*** DONE 250px
-
-Show the 250px types of images https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475411558-250.jpg
-
-*** DONE collapsable
-**** DONE initial
-
-Add the following h2 header in front of all images: "<h2>Cover Art</h2>" and make it collapsable/un-collabsable when clicking on it
-
-**** DONE collapse configurable during initial rendering
-
-In the uploaded userscript,
-introduce a boolen variable mich makes the collapse state configurable during initial rendering. The default should collapsed.
-
-***** problems
-
-There are two problems:
-- first of all the configuration UI is somehow NOT added as amenue entry under the "Editing" pull-down menu entry on the webpage
-- the default collapsed state is NOT applied right now
-
-***** editing menu position
-
-Actually this is the place where the configuration UI should be injected:
-
-#+begin_example
-<div class="right">
-  <div class="bottom">
-    <ul class="menu">
-      <li class="editing" tabindex="-1">
-#+end_example
-
-- Please check with your current implementation and refine if neccessary.
-
-- Also remove the h2 headers text parts "(click to show)" and "(click to hide)" and make these part of a popup tooltip
-  which should appear when hovering over the h2 header "Cover art"
-
-- Rename the menu entry to "Release Page Enhancer"
-
-*** DONE only visible on the "Overview tab
-
-In the '<ul class="tabs">' make the '"<h2>Cover Art</h2>"' container visible only when on the 
-
-#+begin_example
-	<bdi>Overview
-	</bdi>
-#+end_example
-
-tab
-
-#+begin_example
-<ul class="tabs">
-  <li>
-    <span class="name-variation">
-      <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29" title="Double Shot in South Bend">
-	<bdi>Overview
-	</bdi>
-      </a>
-    </span>
-  </li>
-  <li class="sel">
-    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/discids">
-      <bdi>Disc IDs (0)
-      </bdi>
-    </a>
-  </li>
-  <li>
-    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/cover-art">
-      <bdi>Cover art (3)
-      </bdi>
-    </a>
-  </li>
-  <li>
-    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/aliases">Aliases (0)
-    </a>
-  </li>
-  <li>
-    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/tags">
-      <bdi>Tags
-      </bdi>
-    </a>
-  </li>
-  <li>
-    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/details">
-      <bdi>Details
-      </bdi>
-    </a>
-  </li>
-  <li>
-    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/edit">
-      <bdi>Edit
-      </bdi>
-    </a>
-  </li>
-  <li>
-    <a href="/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/edit-relationships">
-      <bdi>Edit relationships
-      </bdi>
-    </a>
-  </li>
-</ul>
-#+end_example
-
-*** DONE config
-
-In the uploaded userscript
-- add a transition effect to the collapse logic
-- make the image size configurable by adding a menue entry under the "Editing" pull-down menu entry on the page. When
-  clicked generate a UI where you can specify the image dimensions in pixels and store them per user in browser
-  storage. The default pixel size should be 250px
-
-[MB-ShowAll] 🚀 Script loaded and starting... 
-[MB-ShowAll] 🚀 Conditions not met: MBID found: false, Tracklist Header: true
-
-Here is URL I ran it on: https://musicbrainz.org/release/68136206-2939-42ed-a39d-f9c41b0defb1
-
-*** DONE default
-
-Yes,
-- add a "Reset to Default" button inside the settings modal?
-- also change the placement from insert before
-
-#+begin_example
-  <h2 class="tracklist">Tracklist<button class="work-button-style">Edit recording comments</button><span id="settings-icon">⚙️</span></h2>
-#+end_example
-
-to insert after
-
-#+begin_example
-<div class="tabs">
-#+end_example
-
-*** DONE adjust display logging in config dialog to look like jesus
-
-In the uploaded userscript
-adjust the configuration dialog to visually look like the one uploaded in "jesus.config.html".
-
-So basically, for our case
-
-| Setting                                          | Default | Description                        |
-|--------------------------------------------------+---------+------------------------------------|
-| Pixel Size <input area with size up/down dialog> |     250 | Set the cover image size in pixels |
-|                                                  |         |                                    |
-
-but still retain the functionality to explicitely save all the values with a "Save" button, cancel the dialog with a
-"Cancel" button (should alos react on pressing the "Esc" key), reset the whole dialog to the initial state with a
-"Reset" button. The "Save" button should store everything in persistent storage and apply everything immediately without
-a page reload
-
-*** DONE maybe make the fuction async
-
-Is it a good idea to make the cover art display in a function and make the execution asynch
-
-*** DONE unique id
-
-Should a userscript have a unique id beside it's name ? And what can I use it for
-
-*** DONE nice name
-
-Could you change the variable
-
-#+begin_example
-    const SCRIPT_ID = "vzell-mb-release-enhancer";
-#+end_example
-
-to have two parts, an actual ID part like "vzell-mb-release-enhancer" and a nice name for using for display purposes (or could this be done by referenceing the script "name" header somehow)
-In the following prefix
-
-#+begin_example
-    const Logger = {
-        prefix: `[${SCRIPT_ID}]`,
-#+end_example
-
-I would like to use the nice friendly name
-
-*** add icon to userscript config menu entry + versionnumber after the name
-*** add tooltip about configuration option like in jeses super script
-*** make the whole "Show cover art" functionality in a configurable subfunction besides other subfunctions which could separately be enabled or not
-*** add sidebar collapse handle
-** sidebar collapse
-** sorting (multi column)
-** filtering
-** h2/h3 toggle collapse data container
-** h2/h3 toggle collapse sidebar container
-** visible columns
-** auto-resize
-
-
-* filter (funnel) icon from chrome console
-
-#+begin_example
-<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M1 3h14l-5.6 6.7v3.3l-2.8 2v-5.3L1 3z"/>
-</svg>
-#+end_example
-
-
-* Userscripts - WORKFLOW
-** temporary workflow
-
-If you find yourself updating the library frequently and don't want to bump the main script version every time, you can temporarily append a "cache buster" to the @require line in your local dev copy:
-
-#+begin_example
-// During development only:
-// @require https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js?v=1
-#+end_example
-
-** development workflow
-
-The "Hybrid" Workflow (Recommended)
-To prevent accidentally breaking things for others, here is how the "pros" usually handle this:
-
-1. The Local Main Script
-Create a second script in Tampermonkey called VZ: ShowAll (DEV).
-
-Paste your main code there.
-
-Point the @require to your local path: // @require file:///C:/.../VZMBLibrary.user.js.
-
-Disable the "Production" version of the script in the Tampermonkey dashboard so they don't conflict.
-
-2. The Development Library
-Keep your VZMBLibrary.user.js on your hard drive. Open it in a real code editor (VS Code, Sublime, etc.).
-
-Every time you save the file in your editor, simply refresh the MusicBrainz page.
-
-The "DEV" script will immediately see the changes.
-
-3. The Commit Step
-When you are happy with the library:
-
-Push the library to GitHub.
-
-Go back to your Production script (ShowAllConsolidated.user.js).
-
-Update its @version and ensure its @require still points to the raw.githubusercontent or cdn.jsdelivr URL.
-
-Push the Production script.
-
-** header
-*** CDN
-
-#+begin_example
-// ==UserScript==
-// @name         VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
-// @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.6.0+2026-02-02
-// @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
-// @author       Gemini (directed by vzell)
-// @tag          AI generated
-// @homepageURL  https://github.com/vzell/mb-userscripts
-// @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
-// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
-// @match        *://*.musicbrainz.org/artist/*
-// @match        *://*.musicbrainz.org/release-group/*
-// @match        *://*.musicbrainz.org/work/*
-// @match        *://*.musicbrainz.org/recording/*
-// @match        *://*.musicbrainz.org/label/*
-// @match        *://*.musicbrainz.org/series/*
-// @match        *://*.musicbrainz.org/place/*/events
-// @match        *://*.musicbrainz.org/place/*/performances
-// @grant        GM_xmlhttpRequest
-// @grant        GM_info
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @grant        GM_registerMenuCommand
-// @grant        GM_unregisterMenuCommand
-// @license      MIT
-// ==/UserScript==
-#+end_example
-
-*** local
-
-#+begin_example
-// ==UserScript==
-// @name         [AA] VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities
-// @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.6.0+2026-02-02
-// @description  Consolidated tool to accumulate paginated MusicBrainz lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
-// @author       Gemini (directed by vzell)
-// @tag          AI generated
-// @homepageURL  https://github.com/vzell/mb-userscripts
-// @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ShowAllConsolidated.user.js
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
-// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
-// @match        *://*.musicbrainz.org/artist/*
-// @match        *://*.musicbrainz.org/release-group/*
-// @match        *://*.musicbrainz.org/work/*
-// @match        *://*.musicbrainz.org/recording/*
-// @match        *://*.musicbrainz.org/label/*
-// @match        *://*.musicbrainz.org/series/*
-// @match        *://*.musicbrainz.org/place/*/events
-// @match        *://*.musicbrainz.org/place/*/performances
-// @grant        GM_xmlhttpRequest
-// @grant        GM_info
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @grant        GM_registerMenuCommand
-// @grant        GM_unregisterMenuCommand
-// @license      MIT
-// ==/UserScript==
-#+end_example
-
-** require
-*** local
-
-#+begin_example
-// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZ_MBLibrary.user.js
-#+end_example
-
-*** CDN
-
-#+begin_example
-// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZ_MBLibrary.user.js
-#+end_example
-
-*** raw github
-
-#+begin_example
-// @require      https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZ_MBLibrary.user.js
-#+end_example
-
-*** purging CDN
-
-curl -v https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
-
-curl -v https://purge.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
-
-** userscript match conditions
-*** 1
-
-Why is for the following URL
-
-https://musicbrainz.org/release/add
-
-the userscript with the following definition still executed:
-
-#+begin_example
-// ==UserScript==
-// @name         VZ: MusicBrainz - Release Page Enhancer
-// @namespace    https://github.com/vzell/mb-userscripts
-// @version      0.9.5+2026-02-01
-// @description  Enhance Release Page with show all cover art images on the page itself, collapsible with configurable image size
-// @author       Gemini (directed by vzell)
-// @tag          AI generated
-// @homepageURL  https://github.com/vzell/mb-userscripts
-// @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
-// @match        *://*.musicbrainz.org/release/*
-// @exclude      *://*.musicbrainz.org/release/add
-// @exclude      *://*.musicbrainz.org/release/*/*
-// @grant        GM_info
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @grant        GM_registerMenuCommand
-// @grant        GM_unregisterMenuCommand
-// @license      MIT
-// ==/UserScript==
-#+end_example
-
-*** release
-
-How to best formulate a userscript match condition to exactly match the following types of URLs, which have MusicBrainz MBIDs at the end
-
-#+begin_example
-https://musicbrainz.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29
-#+end_example
-
-Currently I have
-
-#+begin_example
-// @match        *://*.musicbrainz.org/release/*
-#+end_example
-
-which is much to broad and also runs on
-
-#+begin_example
-https://musicbrainz.org/release/add
-#+end_example
-
-
-* TODO exclude standalone recordings
-
-https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72
-
-Check for "No releases found which feature this recording." under the h2 header "Appears on releases".
-In that case don't even render the additional action buttons when entering such a page, but still log it to the console
-
 
 * DONE generalize column splitting
 ** generalize column data splitting
@@ -33812,1132 +33801,7 @@ Since you recently added logic to transform search results (converting p to h2),
 
 * DONE add option to specify filter condition for the initial display already
 
-
-* TODO add fetching to local db storage and reading from it
-** initial
-
-In the uploaded userscript
-
-is it possible to serialize the table data read from the paginated musicbrainz pages and store the rows in a database
-format on the filesystem and later, by another button action, instead of downloading again from the internet, read the
-rows from the filesystem and reuse just the musicbrainz page as a container to present the data.
-
-Hyperlinked data, like the artist name, or the flag symbol in the Country column preserved in the case we read back from the filesystem
-
-Please implement a "Offline Storage" or "Cache" feature for the userscript. Since the script already processes table
-data as DOM nodes and arrays of rows, we should serialize this data into a JSON structure, store it our filesystem and
-later "re-hydrate" the MusicBrainz page with that data.
-
-1. Technical Feasibility
-
-Data Structure: The script already maintains two primary data structures: allRows (for simple lists) and groupedRows
-(for Artist and Release Group pages).
-
-Serialization: Since these are DOM <tr> elements, we should save the innerHTML of each row
-
-Storage Options:
-
-Filesystem: To save to a "database format on the filesystem," the script can trigger a download of a .json file containing the serialized rows.
-
-2. Implementation Strategy
-   
-Serialization (Saving the Data)
-
-You should add a "Save to Disk" button. When clicked, it would iterate through allRows or groupedRows and convert them
-into a serializable array:
-
-like this probably
-
-#+begin_example
-function serializeRows() {
-    const dataToSave = allRows.map(row => {
-        return Array.from(row.cells).map(cell => cell.innerHTML);
-    });
-    const blob = new Blob([JSON.stringify({
-        url: window.location.href,
-        timestamp: Date.now(),
-        rows: dataToSave
-    })], {type: "application/json"});
-    // Trigger download...
-}
-#+end_example
-
-B. Re-hydration (Loading from Disk)
-
-You should add a "Load from Disk" button with a file input. When a file is selected:
-
-Clear the Page: Use the existing performClutterCleanup() logic to prepare the MusicBrainz container.
-
-Reconstruct Rows: Create new <tr> elements and set their innerHTML from the saved JSON.
-
-Inject Rows: Use the script's existing renderGroupedTable() or standard table injection functions to populate the page.
-
-Restore Functionality: Because the filtering logic (runFilter()) and sorting logic rely on the allRows array, you simply
-need to point that variable to your newly reconstructed rows. The script's filter will then work on the "offline" data
-just as it does on "live" data.
-
-3. Benefits of this Approach
-   
-Speed: Loading 1,000+ rows from a local file is nearly instantaneous compared to fetching 50+ paginated web pages.
-
-Stability: You avoid MusicBrainz's rate-limiting or temporary server errors.
-
-Container Reuse: As you suggested, the MusicBrainz page serves only as the "UI shell" (header, sidebar, and CSS), while the data is purely local.
-
-So, please implement the "Serialization (Saving the Data)" and "Re-hydration (Loading from Disk)" strategy by introducing
-two new buttons on each supported URL type and use "Physical Filesystem (GM_download / File API)"
-
-** answer
-
-#+begin_example
-Yes, it is entirely possible to implement a "Offline Storage" or "Cache" feature for this userscript. Since the script already processes table data as DOM nodes and arrays of rows, you can serialize this data into a JSON structure, store it on your filesystem (or in browser storage), and later "re-hydrate" the MusicBrainz page with that data.
-
-Based on the provided source code of VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages, here is the technical feasibility and a high-level implementation plan.
-
-1. Technical Feasibility
-Data Structure: The script already maintains two primary data structures: allRows (for simple lists) and groupedRows (for Artist and Release Group pages).
-
-Serialization: Since these are DOM <tr> elements, they cannot be directly saved as JSON. However, you can save the innerHTML of each row or, more efficiently, extract the data into a pure JSON object (Title, Year, Format, etc.).
-
-Storage Options:
-
-Browser Storage: GM_setValue (which the script already grants) can store large amounts of data, but it is tied to the browser profile, not a standalone file.
-
-Filesystem: To save to a "database format on the filesystem," the script can trigger a download of a .json file containing the serialized rows.
-
-2. Implementation Strategy
-A. Serialization (Saving the Data)
-You would add a "Save to Disk" button. When clicked, it would iterate through allRows or groupedRows and convert them into a serializable array:
-
-JavaScript
-function serializeRows() {
-    const dataToSave = allRows.map(row => {
-        return Array.from(row.cells).map(cell => cell.innerHTML);
-    });
-    const blob = new Blob([JSON.stringify({
-        url: window.location.href,
-        timestamp: Date.now(),
-        rows: dataToSave
-    })], {type: "application/json"});
-    // Trigger download...
-}
-B. Re-hydration (Loading from Disk)
-You would add a "Load from Disk" button with a file input. When a file is selected:
-
-Clear the Page: Use the existing performClutterCleanup() logic to prepare the MusicBrainz container.
-
-Reconstruct Rows: Create new <tr> elements and set their innerHTML from the saved JSON.
-
-Inject Rows: Use the script's existing renderGroupedTable() or standard table injection functions to populate the page.
-
-Restore Functionality: Because the filtering logic (runFilter()) and sorting logic rely on the allRows array, you simply need to point that variable to your newly reconstructed rows. The script's filter will then work on the "offline" data just as it does on "live" data.
-
-3. Benefits of this Approach
-Speed: Loading 1,000+ rows from a local file is nearly instantaneous compared to fetching 50+ paginated web pages.
-
-Stability: You avoid MusicBrainz's rate-limiting or temporary server errors.
-
-Container Reuse: As you suggested, the MusicBrainz page serves only as the "UI shell" (header, sidebar, and CSS), while the data is purely local.
-
-4. Constraints to Consider
-Images: If you save the rows, the cover art images might still try to load from MusicBrainz's servers unless you base64-encode them (which would make the file very large).
-
-Version Mismatch: If MusicBrainz changes its table structure (e.g., adds a new column), an old saved file might not align perfectly with the current page's headers.
-
-This would be a significant but very powerful addition to the script's current capabilities.
-#+end_example
-
-** questions
-
-is hyperlinked data, like the artist name, or the flag symbol in the Country column preserved in the case we read back from the filesystem
-
-how much storage can a userscript use on the filesystem
-
-** implement
-
-In the uploaded script,
-
-please implement a "Offline Storage" or "Cache" feature for the userscript. Since the script already processes table
-data as DOM nodes and arrays of rows, we should serialize this data into a JSON structure, store it our filesystem and
-later "re-hydrate" the MusicBrainz page with that data.
-
-1. Technical Feasibility
-
-Data Structure: The script already maintains two primary data structures: allRows (for simple lists) and groupedRows
-(for Artist and Release Group pages).
-
-Serialization: Since these are DOM <tr> elements, we should save the innerHTML of each row
-
-Storage Options:
-
-Filesystem: To save to a "database format on the filesystem," the script can trigger a download of a .json file containing the serialized rows.
-
-2. Implementation Strategy
-   
-Serialization (Saving the Data)
-
-You should add a "Save to Disk" button. When clicked, it would iterate through allRows or groupedRows and convert them
-into a serializable array:
-
-like this probably
-
-#+begin_example
-function serializeRows() {
-    const dataToSave = allRows.map(row => {
-        return Array.from(row.cells).map(cell => cell.innerHTML);
-    });
-    const blob = new Blob([JSON.stringify({
-        url: window.location.href,
-        timestamp: Date.now(),
-        rows: dataToSave
-    })], {type: "application/json"});
-    // Trigger download...
-}
-#+end_example
-
-B. Re-hydration (Loading from Disk)
-
-You should add a "Load from Disk" button with a file input. When a file is selected:
-
-Clear the Page: Use the existing performClutterCleanup() logic to prepare the MusicBrainz container.
-
-Reconstruct Rows: Create new <tr> elements and set their innerHTML from the saved JSON.
-
-Inject Rows: Use the script's existing renderGroupedTable() or standard table injection functions to populate the page.
-
-Restore Functionality: Because the filtering logic (runFilter()) and sorting logic rely on the allRows array, you simply
-need to point that variable to your newly reconstructed rows. The script's filter will then work on the "offline" data
-just as it does on "live" data.
-
-3. Benefits of this Approach
-   
-Speed: Loading 1,000+ rows from a local file is nearly instantaneous compared to fetching 50+ paginated web pages.
-
-Stability: You avoid MusicBrainz's rate-limiting or temporary server errors.
-
-Container Reuse: As you suggested, the MusicBrainz page serves only as the "UI shell" (header, sidebar, and CSS), while the data is purely local.
-
-So, please implement the "Serialization (Saving the Data)" and "Re-hydration (Loading from Disk)" stratey by introducing
-two new buttons on each supported URL type and use "Physical Filesystem (GM_download / File API)"
-
-Please do not make any other changes to working code, comments and logging statements except adding the buttons plus their logic
-
-** chatgpt
-
-#+begin_example
-Alright — this is a good design and it fits your script very cleanly 👍
-Because the userscript is already very large and stable, the safest and most maintainable way to do this is surgical additions only:
-
-✅ no refactors
-
-✅ no behavior changes
-
-✅ no comment / logging changes
-
-✅ only new buttons + new logic, wired into existing variables (allRows, groupedRows, render…, runFilter(), etc.)
-
-Below is exactly what to add, and where to add it.
-
-1️⃣ Add two new buttons to the existing controls bar
-📍 Location
-
-Inside the UI Elements section, after the existing action buttons are created and pushed into allActionButtons, and before stopBtn is appended.
-
-✅ Insert this code verbatim
-    // --- Offline Storage Buttons ---
-
-    const saveBtn = document.createElement('button');
-    saveBtn.textContent = 'Save to Disk';
-    saveBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; height:24px; box-sizing:border-box;';
-    saveBtn.type = 'button';
-    saveBtn.onclick = () => serializeRowsToDisk();
-    controlsContainer.appendChild(saveBtn);
-
-    const loadBtn = document.createElement('button');
-    loadBtn.textContent = 'Load from Disk';
-    loadBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; height:24px; box-sizing:border-box;';
-    loadBtn.type = 'button';
-    loadBtn.onclick = () => loadRowsFromDisk();
-    controlsContainer.appendChild(loadBtn);
-
-
-Nothing else in the UI is touched.
-
-2️⃣ Serialization: Save current table state to disk
-📍 Location
-
-Add near the bottom of the script, anywhere before the final })();
-(no existing functions modified).
-
-✅ Add this function
-    function serializeRowsToDisk() {
-        Lib.info('offline', 'Serializing table data to disk…');
-
-        let payload;
-
-        if (Array.isArray(groupedRows) && groupedRows.length) {
-            payload = {
-                type: 'grouped',
-                url: window.location.href,
-                timestamp: Date.now(),
-                groups: groupedRows.map(g => ({
-                    category: g.category,
-                    rows: g.rows.map(r => r.innerHTML)
-                }))
-            };
-        } else {
-            payload = {
-                type: 'flat',
-                url: window.location.href,
-                timestamp: Date.now(),
-                rows: allRows.map(r => r.innerHTML)
-            };
-        }
-
-        const blob = new Blob(
-            [JSON.stringify(payload, null, 2)],
-            { type: 'application/json' }
-        );
-
-        const filename =
-            'musicbrainz-cache-' +
-            pageType +
-            '-' +
-            new Date().toISOString().replace(/[:.]/g, '-') +
-            '.json';
-
-        GM_download({
-            blob,
-            name: filename,
-            saveAs: true
-        });
-
-        Lib.info('offline', `Saved ${payload.type} data to disk.`);
-    }
-
-
-✔ Uses innerHTML
-✔ Preserves grouped vs flat tables
-✔ Includes URL + timestamp
-✔ Uses physical filesystem via GM_download
-
-3️⃣ Re-hydration: Load JSON and rebuild the page
-📍 Location
-
-Right next to the serialization function (before })();)
-
-✅ Add this function
-    function loadRowsFromDisk() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'application/json';
-
-        input.onchange = () => {
-            const file = input.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = () => {
-                try {
-                    const data = JSON.parse(reader.result);
-                    Lib.info('offline', 'Loading offline data…', data);
-
-                    performClutterCleanup();
-
-                    if (data.type === 'grouped') {
-                        groupedRows = data.groups.map(g => ({
-                            category: g.category,
-                            rows: g.rows.map(html => {
-                                const tr = document.createElement('tr');
-                                tr.innerHTML = html;
-                                return tr;
-                            })
-                        }));
-
-                        renderGroupedTable(groupedRows);
-                    } else {
-                        allRows = data.rows.map(html => {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = html;
-                            return tr;
-                        });
-                        originalAllRows = [...allRows];
-
-                        const table = document.querySelector('table.tbl tbody');
-                        table.innerHTML = '';
-                        allRows.forEach(r => table.appendChild(r));
-
-                        makeSortable();
-                    }
-
-                    runFilter();
-                    Lib.info('offline', 'Offline data successfully rehydrated.');
-                } catch (err) {
-                    Lib.error('offline', 'Failed to load offline cache', err);
-                }
-            };
-
-            reader.readAsText(file);
-        };
-
-        input.click();
-    }
-
-
-✔ Clears page via existing cleanup
-✔ Rebuilds <tr> nodes from innerHTML
-✔ Reuses existing render / sort / filter logic
-✔ No special “offline mode” flags needed
-
-4️⃣ What this gives you (exactly as intended)
-
-🚀 Instant loading of 1,000+ rows
-
-📴 Fully usable offline MusicBrainz UI
-
-🧠 All filtering & sorting keeps working
-
-📁 Portable JSON “database” per entity type
-
-🧱 MusicBrainz page becomes a pure UI shell
-
-No coupling. No fragile hacks. No DOM mutation observers.
-
-If you want next steps, easy upgrades are:
-
-auto-restore cache on page revisit
-
-cache versioning / migration
-
-merging multiple saved files
-
-background auto-save during pagination
-
-Just say the word.
-#+end_example
-
-** error
-
-In the uploaded script,
-when loading the data from a file I get the following error in the console
-
-#+begin_example
-20:53:43.086 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ❌ Failed to load file: ReferenceError: renderFlatTable is not defined
-    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1014:21)
-#+end_example
-
-** claude
-
-I get the following error when trying to save
-
-#+begin_example
-[VZ-ShowAllEntities: releasegroup-releases] 📝 Starting table data serialization... 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 00:20:52.041 [VZ-ShowAllEntities: releasegroup-releases] 📝 Serialized 4 groups with 213 total rows. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3656 Uncaught TypeError: Lib.success is not a function
-    at Object.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3656:29)
-    at At (<anonymous>:10:89)
-    at <anonymous>:73:13
-    at At (<anonymous>:10:89)
-    at r (<anonymous>:32:70)
-    at <anonymous>:32:194
-    at <anonymous>:22:300
-    at _ (<anonymous>:22:319)
-#+end_example
-
-Here is the return value from the library:
-
-#+begin_example
-
-        // Initialization
-        settingsInterface.init();
-        setupMenus();
-
-        // Return combined API
-        return {
-            settings: settingsInterface.values, // Exposed as simple property
-            log: loggerInterface.log.bind(loggerInterface),
-            debug: loggerInterface.debug.bind(loggerInterface),
-            info: loggerInterface.info.bind(loggerInterface),
-            warn: loggerInterface.warn.bind(loggerInterface),
-            error: loggerInterface.error.bind(loggerInterface),
-            time: loggerInterface.time.bind(loggerInterface),
-            timeEnd: loggerInterface.timeEnd.bind(loggerInterface),
-            // Replace the static property with a getter/setter
-            get prefix() { return loggerInterface.prefix; },
-            set prefix(val) { loggerInterface.prefix = val; }
-        };
-    };
-})();
-#+end_example
-
-** fix
-
-Please apply the following fixes:
-
-- remove the 1st filter column row when rerendering and loding the data from the filesystem
-
-There is an artificial (non functioning first row after the header column row) left over with column filter fields, this should be removed
-
-For example for the following URL https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
-
-after rerendering I get the following row which should be removed
-
-#+begin_example
-<tr>
-  <th>
-  </th>
-  <th>
-    <span class="mb-col-filter-wrapper">
-      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="1">
-      <span class="mb-col-filter-clear" title="Clear column filter">✕
-      </span>
-    </span>
-  </th>
-  <th>
-    <span class="mb-col-filter-wrapper">
-      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="2">
-      <span class="mb-col-filter-clear" title="Clear column filter">✕
-      </span>
-    </span>
-  </th>
-  <th>
-    <span class="mb-col-filter-wrapper">
-      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="3">
-      <span class="mb-col-filter-clear" title="Clear column filter">✕
-      </span>
-    </span>
-  </th>
-  <th>
-    <span class="mb-col-filter-wrapper">
-      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="4">
-      <span class="mb-col-filter-clear" title="Clear column filter">✕
-      </span>
-    </span>
-  </th>
-  <th>
-    <span class="mb-col-filter-wrapper">
-      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="5">
-      <span class="mb-col-filter-clear" title="Clear column filter">✕
-      </span>
-    </span>
-  </th>
-  <th>
-    <span class="mb-col-filter-wrapper">
-      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="6">
-      <span class="mb-col-filter-clear" title="Clear column filter">✕
-      </span>
-    </span>
-  </th>
-  <th>
-    <span class="mb-col-filter-wrapper">
-      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="7">
-      <span class="mb-col-filter-clear" title="Clear column filter">✕
-      </span>
-    </span>
-  </th>
-  <th>
-    <span class="mb-col-filter-wrapper">
-      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="8" style="box-shadow: green 0px 0px 2px 2px;">
-      <span class="mb-col-filter-clear" title="Clear column filter">✕
-      </span>
-    </span>
-  </th>
-  <th>
-    <span class="mb-col-filter-wrapper">
-      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="9">
-      <span class="mb-col-filter-clear" title="Clear column filter">✕
-      </span>
-    </span>
-  </th>
-  <th>
-    <span class="mb-col-filter-wrapper">
-      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="10">
-      <span class="mb-col-filter-clear" title="Clear column filter">✕
-      </span>
-    </span>
-  </th>
-  <th>
-    <span class="mb-col-filter-wrapper">
-      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="11">
-      <span class="mb-col-filter-clear" title="Clear column filter">✕
-      </span>
-    </span>
-  </th>
-</tr>
-#+end_example
-
-aftert his one is the FUNCTIONING row with the column filter fields
-
-#+begin_example
-<tr class="mb-col-filter-row"><th></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="1"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="2"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="3"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="4"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="5"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="6"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="7"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="8" style=""><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="9"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="10"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="11"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th></tr>
-#+end_example
-
-- also re-apply the alternate white/grey background to the individual rows
-
-It used to be implemented on the original tables before rerendering as '<tr class="even"' and '<tr class="even"' wsomehow with the class attribute
-
-** storage
-** What is the meaning of the "General" block under "Settings" tab of a userscript in Tampermonkey, like for example the value e.g. 138
-
-#+begin_example
-How to inspect what is stored
-
-You can quickly check inside your script console:
-
-console.log(await GM.listValues());
-
-
-or
-
-GM_listValues().forEach(k => {
-    console.log(k, GM_getValue(k));
-});
-
-
-That will show you what those 138 entries actually are.
-#+end_example
-
-** TODO Future Improvements
-
-Potential enhancements for the offline storage feature:
-
-Preserve Filter State: Save current filter values and restore them
-Preserve Sort State: Save current sort column/direction
-Preserve UI State: Save expanded/collapsed sections
-Compression: Use gzip to reduce file sizes for large datasets
-Delta Updates: Only save changed rows for incremental updates
-Multiple Snapshots: Manage multiple saved versions per page
-Auto-save: Periodically save data automatically
-Metadata Enhancement: Include more context (user notes, tags)
-
-** DONE Performance Upgrades
-
-Performance Upgrade (Highly Recommended)
-
-If I still want to allow rendering 8000+ rows fast, would you strongly recommend the following ? And how could this be implemented ?
-
-Use DocumentFragment
-Disable live highlighting during initial render
-Add virtual scrolling (advanced mode)
-If you'd like, I can give you:
-🔥 A high-performance batch renderer
-⚡ Chunked async rendering (non-blocking UI)
-📊 Progressive render with progress indicator
-
-** DONE filtering data when loding from filesystem
-*** question
-**** DONE initial
-
-In the uploaded script,
-
-in the function"function loadTableDataFromDisk(file)" please add the functionality to directly filter data on the row
-level when loading from a .json file from the filesystem (in case of very long tables, the browser would take forever to
-render such a page).
-
-Create a new global filter input text field (+ "case sensitivity" or "regex" support) to accept a filter condition (same
-as for filtering standard pages, with additional "case sensitivity" or "regex" support) right beside the "Load from
-Disk" button.
-
-When the filtered data is loaded add the following text in red after the "Rx" checkbox
-
-#+begin_example
-<number of rows> prefiltered with expression <filter string for data load>
-#+end_example
-
-and reset the '<filter string for data load>'
-
-**** DONE refine
-
-In the uploaded script,
-
-Actually, Create a new global filter input text field (+ "case sensitivity" or "regex" support) instead of reusing the
-one present on an already renderd page (so we get the filtering support already on an initial start page URL), to accept
-a filter condition (same as for filtering standard pages, with additional "case sensitivity" or "regex" support) right
-beside the "Load from Disk" button.
-
-When the filtered data is loaded add the following text in red after the "Rx" checkbox
-
-#+begin_example
-<number of rows> prefiltered with expression <filter string for data load>
-#+end_example
-
-and reset the '<filter string for data load>'
-
-**** DONE refine for highlightning
-***** initial
-
-In the uploaded script,
-
-when the data is rerendered after loading from disk, the filter expression should be highlighted (initially yellow on
-light blue background) in the loaded rows, like the same functionality which is present when the global filter input
-field is used. The colors should be configurable by the user via the two new variables in "const configSchema"
-
-#+begin_example
-        sa_prefilter_highlight_color: {
-            label: "Global Prefilter Highlight Color",
-            type: "color_picker",
-            default: "red",
-            description: "Text color for global prefilter matches"
-        },
-        sa_prefilter_highlight_bg: {
-            label: "Global Prefilter Highlight Background",
-            type: "color_picker",
-            default: "#lightblue",
-            description: "Background color for global prefilter matches"
-        },
-#+end_example
-
-Another button should be rendered with the text "Unhighlight" after the text
-
-#+begin_example
-Checkbox [ ] Rx
-#+end_example
-
-in the h2 header line where the global filter is currently positioned. When pressed the highlightning should be removed
-which was entered for prefiltering.
-
-***** question chatgpt
-
-Where exactly should I put the following
-
-#+begin_example
-if (savedData.prefilterExpression) {
-    highlightPrefilterMatches(
-        document.querySelector('.sa-data-table-container'),
-        savedData.prefilterExpression
-    );
-}
-#+end_example
-
-because in the uploaded code ther is NO 'renderDataTable(finalData);' and alos NO variable named "savedData".
-
-Please give me more context and the right variable to use
-
-***** fixed code block
-
-#+begin_example
-if (data.prefilterExpression) {
-    highlightPrefilterMatches(
-        document.querySelector('.sa-data-table-container'),
-        data.prefilterExpression
-    );
-}
-#+end_example
-
-***** one more
-
-thx this works now, except I actually have three highlight CSS settings, the original two
-
-#+begin_example
-mb-filter-highlight      - used for highlightning when using the global input filter field
-mb-col-filter-highlight  - used for highlightning when using the column level input filter fields
-#+end_example
-
-and a new one
-
-#+begin_example
-mb-prefilter-highlight   - should be used when the data was loaded with some prefilter input string
-#+end_example
-
-Please adjust for these facts. Probably the parameters of the function "highlightText" need to be adjusted for the
-different type of filter-highlights, maybe in the line
-
-#+begin_example
-const className = targetColIndex === -1 ? 'mb-filter-highlight' : 'mb-col-filter-highlight';
-#+end_example
-
-**** DONE adjust further
-
-Please further adjust in the following way
-
-The new global filter input text field (+ "case sensitivity" or "regex" support)
-
-#+begin_example
-<span style="display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding-left: 6px; border-left: 1px solid rgb(204, 204, 204); vertical-align: middle; height: 24px;">
-  <input type="text" placeholder="Filter data load..." title="Filter rows while loading from disk" style="font-size: 0.8em; padding: 2px 4px; border: 1px solid rgb(204, 204, 204); border-radius: 3px; width: 150px; height: 24px; box-sizing: border-box;">
-  <label title="Case Sensitive (Load)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none;">
-    <input type="checkbox" style="margin-right: 2px;">Cc
-  </label>
-  <label title="RegExp (Load)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none;">
-    <input type="checkbox" style="margin-right: 2px;">Rx
-  </label>
-</span>
-#+end_example
-
-should not be displayed directly on the page but instead when pressing the "Load from disk" button there should first be
-a popup window with this container, to let the user optionally enter a filter expression before finally either pressing
-the new "Load filtered data from disk" button (which should initiate the actual data load from disk) or pressing the new
-"Cancel" button to cancel the popup (should also be canceled when pressing the "Escape" key). Both new buttons should be
-positioned centered below the filter input text field.
-
-2.) When the data is rerendered after loading from disk, the filter expression should be highlighted (initially
-yellow on light blue background) in the loaded rows, like the same functionality which is present when the global filter
-input field is used. The colors should be configurable by the user via the two new variables
-
-#+begin_example
-        sa_prefilter_highlight_color: {
-            label: "Global Prefilter Highlight Color",
-            type: "color_picker",
-            default: "red",
-            description: "Text color for global prefilter matches"
-        },
-        sa_prefilter_highlight_bg: {
-            label: "Global Prefilter Highlight Background",
-            type: "color_picker",
-            default: "#lightblue",
-            description: "Background color for global prefilter matches"
-        },
-#+end_example
-
-Another button should be rendered with the text "Unhighlight" after the text
-
-#+begin_example
-<number of rows> prefiltered with expression <filter string for data load>
-#+end_example
-
-from point 1.)
-
-When pressed the highlightning should be removed which was entered for prefiltering.
-
-*** answer gemini - fast
-
-#+begin_example
-async function loadTableDataFromDisk(file) {
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-
-                // Validation: Check if the file matches the current page type
-                if (data.pageType !== pageType) {
-                    if (!confirm(`Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page. Try loading anyway?`)) {
-                        return;
-                    }
-                }
-
-                Lib.info('cache', `Loading ${data.rowCount} rows from disk...`);
-                statusDisplay.textContent = '⌛ Processing data...';
-
-                // --- NEW: Row-level filtering before rendering ---
-                const filterValue = filterInput.value.trim();
-                if (filterValue) {
-                    const isRegex = regexpCheckbox.checked;
-                    const isCaseSensitive = caseCheckbox.checked;
-                    let regex;
-
-                    try {
-                        if (isRegex) {
-                            regex = new RegExp(filterValue, isCaseSensitive ? '' : 'i');
-                        } else {
-                            // Escape special chars for non-regex search
-                            const escaped = filterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                            regex = new RegExp(escaped, isCaseSensitive ? '' : 'i');
-                        }
-
-                        const originalCount = data.rows.length;
-                        // Filter the rows based on whether any cell content matches the regex
-                        data.rows = data.rows.filter(row => 
-                            row.cells.some(cellText => regex.test(cellText))
-                        );
-
-                        Lib.info('cache', `Filter applied: "${filterValue}" (Rx: ${isRegex}, Cc: ${isCaseSensitive}). Rows reduced from ${originalCount} to ${data.rows.length}.`);
-                    } catch (err) {
-                        Lib.error('cache', 'Invalid Filter/RegExp:', err);
-                        alert('Invalid Filter/RegExp: ' + err.message);
-                    }
-                }
-                // --- End of filtering logic ---
-
-                // Clear current content and prepare for rendering
-                const target = document.querySelector(activeDefinition.rowTargetSelector || 'table.tbl') || headerContainer;
-                const container = target.closest('#content') || document.getElementById('content');
-
-                // Hide original elements
-                const toHide = container.querySelectorAll('table.tbl, .pagination, .pageselector-results, p:not(#mb-show-all-controls-container p)');
-                toHide.forEach(el => el.style.display = 'none');
-
-                // Re-initialize logic similar to startFetchingProcess
-                allRows = data.rows;
-                const mainTable = createBaseTable(data.headers);
-                container.appendChild(mainTable);
-
-                // Add rows to table
-                const tbody = mainTable.querySelector('tbody');
-                if (activeDefinition.tableMode === 'multi') {
-                    // Logic for multi-table (grouped) rendering
-                    groupedRows = groupRowsByHeader(allRows);
-                    renderGroupedTables(groupedRows, container);
-                } else {
-                    // Logic for single table rendering
-                    allRows.forEach(rowData => {
-                        const tr = document.createElement('tr');
-                        rowData.cells.forEach(cellHtml => {
-                            const td = document.createElement('td');
-                            td.innerHTML = cellHtml;
-                            tr.appendChild(td);
-                        });
-                        tbody.appendChild(tr);
-                    });
-                    
-                    if (allRows.length > 0) {
-                        addColumnFilterRow(mainTable);
-                        makeTableSortableUnified(mainTable, 'main_table');
-                    }
-                }
-
-                // Perform final cleanup and make headers collapsible
-                finalCleanup();
-                makeH2sCollapsible();
-
-                // Update row count in header
-                const totalRows = (activeDefinition.tableMode === 'multi') ?
-                    groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
-                updateH2Count(totalRows, totalRows);
-
-                // Show filter container
-                if (!filterContainer.parentNode) {
-                    filterContainer.style.display = 'inline-flex';
-                }
-
-                // Show the save button now that we have data
-                saveToDiskBtn.style.display = 'inline-block';
-
-                Lib.info('cache', `Successfully loaded ${totalRows} rows!`);
-                statusDisplay.textContent = `✓ Loaded: ${totalRows} rows`;
-                statusDisplay.style.color = 'green';
-
-            } catch (err) {
-                Lib.error('cache', 'Failed to load data from file:', err);
-                alert('Failed to load data: ' + err.message);
-            }
-        };
-
-        reader.onerror = () => {
-            Lib.error('cache', 'Failed to read file');
-            alert('Failed to read file');
-        };
-
-        reader.readAsText(file);
-    }
-#+end_example
-
-** DONE check for errors on the multitable case
-
-In the case of loading back the data coming from multiple tables I get the following errors depending on the pageType (URL)
-
-- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-- https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings
-  
-For these I get:
-
-#+begin_example
-23:54:42.626 [VZ-ShowAllEntities: artist-releasegroups] 📝 Loading data from file: mb-artist-releasegroups-2026-02-12T16-44-52.json. Prefilter active: false 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.631 [VZ-ShowAllEntities: artist-releasegroups] 📝 Loaded data version 1.0 from 2026-02-12T16:44:52.684Z (File total: 579 rows) 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.631 [VZ-ShowAllEntities: artist-releasegroups] 🧹 Starting clutter element removal. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.654 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Starting renderGroupedTable with 17 categories. Query: "" 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.654 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Cloning table head for template. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.654 [VZ-ShowAllEntities: artist-releasegroups] 🎨 No query provided; performing initial cleanup of existing elements. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.658 [VZ-ShowAllEntities: artist-releasegroups] 🎨  Injecting master toggle and filter container after target header Discography. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.658 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Processing group: "undefined" with 21 rows. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.658 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Creating new table and H3 for group "undefined". 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.659 [VZ-ShowAllEntities: artist-releasegroups] ❌ Failed to load data from file: TypeError: Cannot read properties of undefined (reading 'toLowerCase')
-    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3371:49
-    at Array.forEach (<anonymous>)
-    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3339:19)
-    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:4043:21)
-#+end_example
-
-- https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-
-Here I get:
-
-#+begin_example
-[VZ-ShowAllEntities: releasegroup-releases] 📝 Loading data from file: mb-releasegroup-releases-2026-02-12T16-45-27.json 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.179 [VZ-ShowAllEntities: releasegroup-releases] 📝 Loaded data version 1.0 from 2026-02-12T16:45:27.363Z (124 rows) 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.179 [VZ-ShowAllEntities: releasegroup-releases] 🧹 Starting clutter element removal. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] 📝 Reconstructed 3 groups with 124 total rows. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] 🎨 Starting renderGroupedTable with 3 categories. Query: "" 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] ❌ No template table head found. 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.204 [VZ-ShowAllEntities: releasegroup-releases] ❌ Failed to load data from file: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
-    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3051:31)
-    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3809:21)
-#+end_example
-
-*** DONE cosmetic
-
-Change
-
-#+begin_example
-                Lib.info('cache', `Successfully loaded ${loadedRowCount} rows from disk!`);
-                statusDisplay.textContent = `✓ Loaded: ${loadedRowCount} rows`;
-#+end_example
-
-to
-
-#+begin_example
-                Lib.info('cache', `Successfully loaded ${loadedRowCount} row from disk!`);
-                statusDisplay.textContent = `✓ Loaded: ${loadedRowCount} row`;
-#+end_example
-
-if there is just one row involved
-
-
-Concatenate the unicode symbol and a blank "🧮 " from the variable "pageDefinitions" to every occurence of the button label that start with 'Show all ....'
-when used later in the code. So dont put it at each definition of e.g.
-
-#+begin_example
-        // Search pages
-        {
-            type: 'search',
-            match: (path) => path.includes('/search'),
-            buttons: [ { label: '🧮 Show all Search results' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Name', // Specific header
-                transformToH2: true        // New flag to trigger <h2> transformation
-            },
-            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
-        },
-#+end_example
-
-but leave the definition as is and concatenate at usage
-
-** DONE saving directly to disk for very large paginated pages
-
-In the uploaded script,
-
-when loading data from many pages, for example at
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases data would be fetched from 81 pages (times
-100 etries, so 8100 rows) the rendering would take forever.
-
-For such cases we need a popup window at the end of the download stage, which tells us how many rows would be rendered
-and offer two new buttons:
-
-- one button for just saving the table data directly to the filesystem with the "saveTableDataToDisk" function
-- the other button, to actually render the table as usually
-
-Is this feasible, or are there other considerations regarding the functionality when reloading directly from the
-filesystem in json form
-
-** DONE syntax errors
-
-I had to change the code you generated
-
-#+begin_example
-                // Render
-                if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
-                    await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
-                } else if (allRows.length > 0 || loadedRowCount === 0) {
-                    await renderFinalTable(allRows);
-                    document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
-                    const mainTable = document.querySelector('table.tbl');
-                    if (mainTable) {
-                        addColumnFilterRow(mainTable);
-                        makeTableSortableUnified(mainTable, 'main_table');
-                    }
-                }
-#+end_example
-
-to
-
-#+begin_example
-                // Render
-                if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
-		    renderGroupedTable(groupedRows, pageType === 'artist-releasegroups').catch(err => {
-			Lib.error('render', 'Error rendering grouped table:', err);
-		    });
-                } else if (allRows.length > 0 || loadedRowCount === 0) {
-                    renderFinalTable(allRows).catch(err => {
-			Lib.error('render', 'Error rendering grouped table:', err);
-		    });
-                    document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
-                    const mainTable = document.querySelector('table.tbl');
-                    if (mainTable) {
-                        addColumnFilterRow(mainTable);
-                        makeTableSortableUnified(mainTable, 'main_table');
-                    }
-                }
-#+end_example
-
-in order to avoid the following stack trace
-
-#+begin_example
-Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': await is only valid in async functions and the top level bodies of modules (at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:4305:21)
-    at At (<anonymous>:10:89)
-    at m (<anonymous>:21:352)
-    at c (<anonymous>:24:266)
-    at <anonymous>:24:328
-    at co (<anonymous>:18:250)
-    at Object.send (<anonymous>:24:188)
-    at <anonymous>:91:328
-    at _ (<anonymous>:22:406)
-#+end_example
-
-Otherwise the the script woudn't even load
-
-
-* TODO "Esc" handling in filter field
-** initial
-
-In the uploaded script,
-
-when the focus is inside a filter field, pressing "Esc" once should empty the filter but leave the focus IN the filter
-field, so that we can enter characters by the keyboard for example), but when the cursor is at the beginning of the
-filter field (so basically there is no filter condition at all typed in, or the filter field was just made empty)
-pressing "Esc" should finally release the focus from the filter field.
-
-Rigth now the filter is emptied and the focus is released unconditionally.
-
-** 1
-
-the filters actually get cleared, if something has been typed in before as in the previous implementation, but the focus
-is NOT retained in such a way, that I can start typing right away. I have to artifically click again inside the now empty filter field to gain focus again
-
-** chatgpt
-
-In the uploaded script,
-
-when the focus is inside a filter field, pressing "Esc" once should empty the filter but leave the focus IN the filter
-field, so that we can enter characters by the keyboard for example), but when the cursor is at the beginning of the
-filter field (so basically there is no filter condition at all typed in, or the filter field was just made empty)
-pressing "Esc" should finally release the focus from the filter field.
-
-Rigth now the filter is emptied and the focus is released unconditionally.
-
-So, distinguish between two states when "Esc" is pressed:
-
-Field is not empty: Clear the text but stay inside (keep focus).
-
-Field is already empty: The user wants to leave the field (release focus/blur).
-
-** global ok
-
-OK, so the behaviour for the global filter is OK now, but the column specific filters (remember they also exist in each
-table for a rendered page with multi tables) the first "Esc" clears the filter but it doesn't stay focused, so that I can start typing again 
-
-** TODO midifier escape
-
-If you want, next step could be:
-
-Shift+Esc to always blur
-
-Ctrl+Esc to clear all filters (global + columns)
-
-----------
-
-If you want next-level polish:
-
-restore same table index, not just first matching column
-
-allow Esc to clear all column filters in table with modifier
-
-visual feedback (“cleared”) animation
-
-
-* Cosmetic - rows and elapsed time
+* DONE Cosmetic - rows and elapsed time
 ** elapsed time
 
 what need to be changed to change the text from
@@ -34967,7 +33831,6 @@ The "💾 Save to Disk"
 shouldn't be present on the very fist page when the userscript first executes. ONLY after fetching data, so when
 pressing the action button (or one of the action buttons) and loading either all the paginated pages OR pressing the
 "Stop" button if there are lots of pages to load
-
 
 * DONE add divider in config menu + scrollbars
 
@@ -39771,7 +38634,6 @@ is displayed alone (no column filter expression in effect), the text is not alig
 
 everything is aligned perfectly. Please fix.
 
-
 * DONE add new checkbox
 
 - adjust the progress bar to display the whole info. also rename
@@ -39989,7 +38851,6 @@ if (showProgressBar && progressContainer) {
     if (progressText) progressText.textContent = 'Sorting: 0%';
 }
 #+end_example
-
 
 * DONE UI
 ** DONE add superscripts to "Show all..." buttons
@@ -41025,6 +39886,1140 @@ Here is the rendered HTML for the whole the header area (inklusive search field)
 ** finally fixed
 
 finally fixed. now please make the first column "SETTING" a litle wider so that the text and or buttons etc. don't flow into the second row. the other columns are perfect.
+
+
+* TODO exclude standalone recordings
+
+https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72
+
+Check for "No releases found which feature this recording." under the h2 header "Appears on releases".
+In that case don't even render the additional action buttons when entering such a page, but still log it to the console
+
+
+
+* TODO add fetching to local db storage and reading from it
+** initial
+
+In the uploaded userscript
+
+is it possible to serialize the table data read from the paginated musicbrainz pages and store the rows in a database
+format on the filesystem and later, by another button action, instead of downloading again from the internet, read the
+rows from the filesystem and reuse just the musicbrainz page as a container to present the data.
+
+Hyperlinked data, like the artist name, or the flag symbol in the Country column preserved in the case we read back from the filesystem
+
+Please implement a "Offline Storage" or "Cache" feature for the userscript. Since the script already processes table
+data as DOM nodes and arrays of rows, we should serialize this data into a JSON structure, store it our filesystem and
+later "re-hydrate" the MusicBrainz page with that data.
+
+1. Technical Feasibility
+
+Data Structure: The script already maintains two primary data structures: allRows (for simple lists) and groupedRows
+(for Artist and Release Group pages).
+
+Serialization: Since these are DOM <tr> elements, we should save the innerHTML of each row
+
+Storage Options:
+
+Filesystem: To save to a "database format on the filesystem," the script can trigger a download of a .json file containing the serialized rows.
+
+2. Implementation Strategy
+   
+Serialization (Saving the Data)
+
+You should add a "Save to Disk" button. When clicked, it would iterate through allRows or groupedRows and convert them
+into a serializable array:
+
+like this probably
+
+#+begin_example
+function serializeRows() {
+    const dataToSave = allRows.map(row => {
+        return Array.from(row.cells).map(cell => cell.innerHTML);
+    });
+    const blob = new Blob([JSON.stringify({
+        url: window.location.href,
+        timestamp: Date.now(),
+        rows: dataToSave
+    })], {type: "application/json"});
+    // Trigger download...
+}
+#+end_example
+
+B. Re-hydration (Loading from Disk)
+
+You should add a "Load from Disk" button with a file input. When a file is selected:
+
+Clear the Page: Use the existing performClutterCleanup() logic to prepare the MusicBrainz container.
+
+Reconstruct Rows: Create new <tr> elements and set their innerHTML from the saved JSON.
+
+Inject Rows: Use the script's existing renderGroupedTable() or standard table injection functions to populate the page.
+
+Restore Functionality: Because the filtering logic (runFilter()) and sorting logic rely on the allRows array, you simply
+need to point that variable to your newly reconstructed rows. The script's filter will then work on the "offline" data
+just as it does on "live" data.
+
+3. Benefits of this Approach
+   
+Speed: Loading 1,000+ rows from a local file is nearly instantaneous compared to fetching 50+ paginated web pages.
+
+Stability: You avoid MusicBrainz's rate-limiting or temporary server errors.
+
+Container Reuse: As you suggested, the MusicBrainz page serves only as the "UI shell" (header, sidebar, and CSS), while the data is purely local.
+
+So, please implement the "Serialization (Saving the Data)" and "Re-hydration (Loading from Disk)" strategy by introducing
+two new buttons on each supported URL type and use "Physical Filesystem (GM_download / File API)"
+
+** answer
+
+#+begin_example
+Yes, it is entirely possible to implement a "Offline Storage" or "Cache" feature for this userscript. Since the script already processes table data as DOM nodes and arrays of rows, you can serialize this data into a JSON structure, store it on your filesystem (or in browser storage), and later "re-hydrate" the MusicBrainz page with that data.
+
+Based on the provided source code of VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages, here is the technical feasibility and a high-level implementation plan.
+
+1. Technical Feasibility
+Data Structure: The script already maintains two primary data structures: allRows (for simple lists) and groupedRows (for Artist and Release Group pages).
+
+Serialization: Since these are DOM <tr> elements, they cannot be directly saved as JSON. However, you can save the innerHTML of each row or, more efficiently, extract the data into a pure JSON object (Title, Year, Format, etc.).
+
+Storage Options:
+
+Browser Storage: GM_setValue (which the script already grants) can store large amounts of data, but it is tied to the browser profile, not a standalone file.
+
+Filesystem: To save to a "database format on the filesystem," the script can trigger a download of a .json file containing the serialized rows.
+
+2. Implementation Strategy
+A. Serialization (Saving the Data)
+You would add a "Save to Disk" button. When clicked, it would iterate through allRows or groupedRows and convert them into a serializable array:
+
+JavaScript
+function serializeRows() {
+    const dataToSave = allRows.map(row => {
+        return Array.from(row.cells).map(cell => cell.innerHTML);
+    });
+    const blob = new Blob([JSON.stringify({
+        url: window.location.href,
+        timestamp: Date.now(),
+        rows: dataToSave
+    })], {type: "application/json"});
+    // Trigger download...
+}
+B. Re-hydration (Loading from Disk)
+You would add a "Load from Disk" button with a file input. When a file is selected:
+
+Clear the Page: Use the existing performClutterCleanup() logic to prepare the MusicBrainz container.
+
+Reconstruct Rows: Create new <tr> elements and set their innerHTML from the saved JSON.
+
+Inject Rows: Use the script's existing renderGroupedTable() or standard table injection functions to populate the page.
+
+Restore Functionality: Because the filtering logic (runFilter()) and sorting logic rely on the allRows array, you simply need to point that variable to your newly reconstructed rows. The script's filter will then work on the "offline" data just as it does on "live" data.
+
+3. Benefits of this Approach
+Speed: Loading 1,000+ rows from a local file is nearly instantaneous compared to fetching 50+ paginated web pages.
+
+Stability: You avoid MusicBrainz's rate-limiting or temporary server errors.
+
+Container Reuse: As you suggested, the MusicBrainz page serves only as the "UI shell" (header, sidebar, and CSS), while the data is purely local.
+
+4. Constraints to Consider
+Images: If you save the rows, the cover art images might still try to load from MusicBrainz's servers unless you base64-encode them (which would make the file very large).
+
+Version Mismatch: If MusicBrainz changes its table structure (e.g., adds a new column), an old saved file might not align perfectly with the current page's headers.
+
+This would be a significant but very powerful addition to the script's current capabilities.
+#+end_example
+
+** questions
+
+is hyperlinked data, like the artist name, or the flag symbol in the Country column preserved in the case we read back from the filesystem
+
+how much storage can a userscript use on the filesystem
+
+** implement
+
+In the uploaded script,
+
+please implement a "Offline Storage" or "Cache" feature for the userscript. Since the script already processes table
+data as DOM nodes and arrays of rows, we should serialize this data into a JSON structure, store it our filesystem and
+later "re-hydrate" the MusicBrainz page with that data.
+
+1. Technical Feasibility
+
+Data Structure: The script already maintains two primary data structures: allRows (for simple lists) and groupedRows
+(for Artist and Release Group pages).
+
+Serialization: Since these are DOM <tr> elements, we should save the innerHTML of each row
+
+Storage Options:
+
+Filesystem: To save to a "database format on the filesystem," the script can trigger a download of a .json file containing the serialized rows.
+
+2. Implementation Strategy
+   
+Serialization (Saving the Data)
+
+You should add a "Save to Disk" button. When clicked, it would iterate through allRows or groupedRows and convert them
+into a serializable array:
+
+like this probably
+
+#+begin_example
+function serializeRows() {
+    const dataToSave = allRows.map(row => {
+        return Array.from(row.cells).map(cell => cell.innerHTML);
+    });
+    const blob = new Blob([JSON.stringify({
+        url: window.location.href,
+        timestamp: Date.now(),
+        rows: dataToSave
+    })], {type: "application/json"});
+    // Trigger download...
+}
+#+end_example
+
+B. Re-hydration (Loading from Disk)
+
+You should add a "Load from Disk" button with a file input. When a file is selected:
+
+Clear the Page: Use the existing performClutterCleanup() logic to prepare the MusicBrainz container.
+
+Reconstruct Rows: Create new <tr> elements and set their innerHTML from the saved JSON.
+
+Inject Rows: Use the script's existing renderGroupedTable() or standard table injection functions to populate the page.
+
+Restore Functionality: Because the filtering logic (runFilter()) and sorting logic rely on the allRows array, you simply
+need to point that variable to your newly reconstructed rows. The script's filter will then work on the "offline" data
+just as it does on "live" data.
+
+3. Benefits of this Approach
+   
+Speed: Loading 1,000+ rows from a local file is nearly instantaneous compared to fetching 50+ paginated web pages.
+
+Stability: You avoid MusicBrainz's rate-limiting or temporary server errors.
+
+Container Reuse: As you suggested, the MusicBrainz page serves only as the "UI shell" (header, sidebar, and CSS), while the data is purely local.
+
+So, please implement the "Serialization (Saving the Data)" and "Re-hydration (Loading from Disk)" stratey by introducing
+two new buttons on each supported URL type and use "Physical Filesystem (GM_download / File API)"
+
+Please do not make any other changes to working code, comments and logging statements except adding the buttons plus their logic
+
+** chatgpt
+
+#+begin_example
+Alright — this is a good design and it fits your script very cleanly 👍
+Because the userscript is already very large and stable, the safest and most maintainable way to do this is surgical additions only:
+
+✅ no refactors
+
+✅ no behavior changes
+
+✅ no comment / logging changes
+
+✅ only new buttons + new logic, wired into existing variables (allRows, groupedRows, render…, runFilter(), etc.)
+
+Below is exactly what to add, and where to add it.
+
+1️⃣ Add two new buttons to the existing controls bar
+📍 Location
+
+Inside the UI Elements section, after the existing action buttons are created and pushed into allActionButtons, and before stopBtn is appended.
+
+✅ Insert this code verbatim
+    // --- Offline Storage Buttons ---
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save to Disk';
+    saveBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; height:24px; box-sizing:border-box;';
+    saveBtn.type = 'button';
+    saveBtn.onclick = () => serializeRowsToDisk();
+    controlsContainer.appendChild(saveBtn);
+
+    const loadBtn = document.createElement('button');
+    loadBtn.textContent = 'Load from Disk';
+    loadBtn.style.cssText = 'font-size:0.5em; padding:2px 6px; cursor:pointer; height:24px; box-sizing:border-box;';
+    loadBtn.type = 'button';
+    loadBtn.onclick = () => loadRowsFromDisk();
+    controlsContainer.appendChild(loadBtn);
+
+
+Nothing else in the UI is touched.
+
+2️⃣ Serialization: Save current table state to disk
+📍 Location
+
+Add near the bottom of the script, anywhere before the final })();
+(no existing functions modified).
+
+✅ Add this function
+    function serializeRowsToDisk() {
+        Lib.info('offline', 'Serializing table data to disk…');
+
+        let payload;
+
+        if (Array.isArray(groupedRows) && groupedRows.length) {
+            payload = {
+                type: 'grouped',
+                url: window.location.href,
+                timestamp: Date.now(),
+                groups: groupedRows.map(g => ({
+                    category: g.category,
+                    rows: g.rows.map(r => r.innerHTML)
+                }))
+            };
+        } else {
+            payload = {
+                type: 'flat',
+                url: window.location.href,
+                timestamp: Date.now(),
+                rows: allRows.map(r => r.innerHTML)
+            };
+        }
+
+        const blob = new Blob(
+            [JSON.stringify(payload, null, 2)],
+            { type: 'application/json' }
+        );
+
+        const filename =
+            'musicbrainz-cache-' +
+            pageType +
+            '-' +
+            new Date().toISOString().replace(/[:.]/g, '-') +
+            '.json';
+
+        GM_download({
+            blob,
+            name: filename,
+            saveAs: true
+        });
+
+        Lib.info('offline', `Saved ${payload.type} data to disk.`);
+    }
+
+
+✔ Uses innerHTML
+✔ Preserves grouped vs flat tables
+✔ Includes URL + timestamp
+✔ Uses physical filesystem via GM_download
+
+3️⃣ Re-hydration: Load JSON and rebuild the page
+📍 Location
+
+Right next to the serialization function (before })();)
+
+✅ Add this function
+    function loadRowsFromDisk() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json';
+
+        input.onchange = () => {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const data = JSON.parse(reader.result);
+                    Lib.info('offline', 'Loading offline data…', data);
+
+                    performClutterCleanup();
+
+                    if (data.type === 'grouped') {
+                        groupedRows = data.groups.map(g => ({
+                            category: g.category,
+                            rows: g.rows.map(html => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = html;
+                                return tr;
+                            })
+                        }));
+
+                        renderGroupedTable(groupedRows);
+                    } else {
+                        allRows = data.rows.map(html => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = html;
+                            return tr;
+                        });
+                        originalAllRows = [...allRows];
+
+                        const table = document.querySelector('table.tbl tbody');
+                        table.innerHTML = '';
+                        allRows.forEach(r => table.appendChild(r));
+
+                        makeSortable();
+                    }
+
+                    runFilter();
+                    Lib.info('offline', 'Offline data successfully rehydrated.');
+                } catch (err) {
+                    Lib.error('offline', 'Failed to load offline cache', err);
+                }
+            };
+
+            reader.readAsText(file);
+        };
+
+        input.click();
+    }
+
+
+✔ Clears page via existing cleanup
+✔ Rebuilds <tr> nodes from innerHTML
+✔ Reuses existing render / sort / filter logic
+✔ No special “offline mode” flags needed
+
+4️⃣ What this gives you (exactly as intended)
+
+🚀 Instant loading of 1,000+ rows
+
+📴 Fully usable offline MusicBrainz UI
+
+🧠 All filtering & sorting keeps working
+
+📁 Portable JSON “database” per entity type
+
+🧱 MusicBrainz page becomes a pure UI shell
+
+No coupling. No fragile hacks. No DOM mutation observers.
+
+If you want next steps, easy upgrades are:
+
+auto-restore cache on page revisit
+
+cache versioning / migration
+
+merging multiple saved files
+
+background auto-save during pagination
+
+Just say the word.
+#+end_example
+
+** error
+
+In the uploaded script,
+when loading the data from a file I get the following error in the console
+
+#+begin_example
+20:53:43.086 [VZ: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities] ❌ Failed to load file: ReferenceError: renderFlatTable is not defined
+    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Accumulate-Paginated-MusicBrainz-Pages-With-Filtering-And-Sorting-Capabilities.user.js&id=d8e7e7c3-bdfd-4b15-a655-b182400abb8a:1014:21)
+#+end_example
+
+** claude
+
+I get the following error when trying to save
+
+#+begin_example
+[VZ-ShowAllEntities: releasegroup-releases] 📝 Starting table data serialization... 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 00:20:52.041 [VZ-ShowAllEntities: releasegroup-releases] 📝 Serialized 4 groups with 213 total rows. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3656 Uncaught TypeError: Lib.success is not a function
+    at Object.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3656:29)
+    at At (<anonymous>:10:89)
+    at <anonymous>:73:13
+    at At (<anonymous>:10:89)
+    at r (<anonymous>:32:70)
+    at <anonymous>:32:194
+    at <anonymous>:22:300
+    at _ (<anonymous>:22:319)
+#+end_example
+
+Here is the return value from the library:
+
+#+begin_example
+
+        // Initialization
+        settingsInterface.init();
+        setupMenus();
+
+        // Return combined API
+        return {
+            settings: settingsInterface.values, // Exposed as simple property
+            log: loggerInterface.log.bind(loggerInterface),
+            debug: loggerInterface.debug.bind(loggerInterface),
+            info: loggerInterface.info.bind(loggerInterface),
+            warn: loggerInterface.warn.bind(loggerInterface),
+            error: loggerInterface.error.bind(loggerInterface),
+            time: loggerInterface.time.bind(loggerInterface),
+            timeEnd: loggerInterface.timeEnd.bind(loggerInterface),
+            // Replace the static property with a getter/setter
+            get prefix() { return loggerInterface.prefix; },
+            set prefix(val) { loggerInterface.prefix = val; }
+        };
+    };
+})();
+#+end_example
+
+** fix
+
+Please apply the following fixes:
+
+- remove the 1st filter column row when rerendering and loding the data from the filesystem
+
+There is an artificial (non functioning first row after the header column row) left over with column filter fields, this should be removed
+
+For example for the following URL https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
+
+after rerendering I get the following row which should be removed
+
+#+begin_example
+<tr>
+  <th>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="1">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="2">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="3">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="4">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="5">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="6">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="7">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="8" style="box-shadow: green 0px 0px 2px 2px;">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="9">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="10">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+  <th>
+    <span class="mb-col-filter-wrapper">
+      <input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="11">
+      <span class="mb-col-filter-clear" title="Clear column filter">✕
+      </span>
+    </span>
+  </th>
+</tr>
+#+end_example
+
+aftert his one is the FUNCTIONING row with the column filter fields
+
+#+begin_example
+<tr class="mb-col-filter-row"><th></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="1"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="2"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="3"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="4"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="5"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="6"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="7"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="8" style=""><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="9"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="10"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th><th><span class="mb-col-filter-wrapper"><input type="text" placeholder="..." title="Enter column filter string" class="mb-col-filter-input" data-col-idx="11"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th></tr>
+#+end_example
+
+- also re-apply the alternate white/grey background to the individual rows
+
+It used to be implemented on the original tables before rerendering as '<tr class="even"' and '<tr class="even"' wsomehow with the class attribute
+
+** storage
+** What is the meaning of the "General" block under "Settings" tab of a userscript in Tampermonkey, like for example the value e.g. 138
+
+#+begin_example
+How to inspect what is stored
+
+You can quickly check inside your script console:
+
+console.log(await GM.listValues());
+
+
+or
+
+GM_listValues().forEach(k => {
+    console.log(k, GM_getValue(k));
+});
+
+
+That will show you what those 138 entries actually are.
+#+end_example
+
+** TODO Future Improvements
+
+Potential enhancements for the offline storage feature:
+
+Preserve Filter State: Save current filter values and restore them
+Preserve Sort State: Save current sort column/direction
+Preserve UI State: Save expanded/collapsed sections
+Compression: Use gzip to reduce file sizes for large datasets
+Delta Updates: Only save changed rows for incremental updates
+Multiple Snapshots: Manage multiple saved versions per page
+Auto-save: Periodically save data automatically
+Metadata Enhancement: Include more context (user notes, tags)
+
+** DONE Performance Upgrades
+
+Performance Upgrade (Highly Recommended)
+
+If I still want to allow rendering 8000+ rows fast, would you strongly recommend the following ? And how could this be implemented ?
+
+Use DocumentFragment
+Disable live highlighting during initial render
+Add virtual scrolling (advanced mode)
+If you'd like, I can give you:
+🔥 A high-performance batch renderer
+⚡ Chunked async rendering (non-blocking UI)
+📊 Progressive render with progress indicator
+
+** DONE filtering data when loding from filesystem
+*** question
+**** DONE initial
+
+In the uploaded script,
+
+in the function"function loadTableDataFromDisk(file)" please add the functionality to directly filter data on the row
+level when loading from a .json file from the filesystem (in case of very long tables, the browser would take forever to
+render such a page).
+
+Create a new global filter input text field (+ "case sensitivity" or "regex" support) to accept a filter condition (same
+as for filtering standard pages, with additional "case sensitivity" or "regex" support) right beside the "Load from
+Disk" button.
+
+When the filtered data is loaded add the following text in red after the "Rx" checkbox
+
+#+begin_example
+<number of rows> prefiltered with expression <filter string for data load>
+#+end_example
+
+and reset the '<filter string for data load>'
+
+**** DONE refine
+
+In the uploaded script,
+
+Actually, Create a new global filter input text field (+ "case sensitivity" or "regex" support) instead of reusing the
+one present on an already renderd page (so we get the filtering support already on an initial start page URL), to accept
+a filter condition (same as for filtering standard pages, with additional "case sensitivity" or "regex" support) right
+beside the "Load from Disk" button.
+
+When the filtered data is loaded add the following text in red after the "Rx" checkbox
+
+#+begin_example
+<number of rows> prefiltered with expression <filter string for data load>
+#+end_example
+
+and reset the '<filter string for data load>'
+
+**** DONE refine for highlightning
+***** initial
+
+In the uploaded script,
+
+when the data is rerendered after loading from disk, the filter expression should be highlighted (initially yellow on
+light blue background) in the loaded rows, like the same functionality which is present when the global filter input
+field is used. The colors should be configurable by the user via the two new variables in "const configSchema"
+
+#+begin_example
+        sa_prefilter_highlight_color: {
+            label: "Global Prefilter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for global prefilter matches"
+        },
+        sa_prefilter_highlight_bg: {
+            label: "Global Prefilter Highlight Background",
+            type: "color_picker",
+            default: "#lightblue",
+            description: "Background color for global prefilter matches"
+        },
+#+end_example
+
+Another button should be rendered with the text "Unhighlight" after the text
+
+#+begin_example
+Checkbox [ ] Rx
+#+end_example
+
+in the h2 header line where the global filter is currently positioned. When pressed the highlightning should be removed
+which was entered for prefiltering.
+
+***** question chatgpt
+
+Where exactly should I put the following
+
+#+begin_example
+if (savedData.prefilterExpression) {
+    highlightPrefilterMatches(
+        document.querySelector('.sa-data-table-container'),
+        savedData.prefilterExpression
+    );
+}
+#+end_example
+
+because in the uploaded code ther is NO 'renderDataTable(finalData);' and alos NO variable named "savedData".
+
+Please give me more context and the right variable to use
+
+***** fixed code block
+
+#+begin_example
+if (data.prefilterExpression) {
+    highlightPrefilterMatches(
+        document.querySelector('.sa-data-table-container'),
+        data.prefilterExpression
+    );
+}
+#+end_example
+
+***** one more
+
+thx this works now, except I actually have three highlight CSS settings, the original two
+
+#+begin_example
+mb-filter-highlight      - used for highlightning when using the global input filter field
+mb-col-filter-highlight  - used for highlightning when using the column level input filter fields
+#+end_example
+
+and a new one
+
+#+begin_example
+mb-prefilter-highlight   - should be used when the data was loaded with some prefilter input string
+#+end_example
+
+Please adjust for these facts. Probably the parameters of the function "highlightText" need to be adjusted for the
+different type of filter-highlights, maybe in the line
+
+#+begin_example
+const className = targetColIndex === -1 ? 'mb-filter-highlight' : 'mb-col-filter-highlight';
+#+end_example
+
+**** DONE adjust further
+
+Please further adjust in the following way
+
+The new global filter input text field (+ "case sensitivity" or "regex" support)
+
+#+begin_example
+<span style="display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding-left: 6px; border-left: 1px solid rgb(204, 204, 204); vertical-align: middle; height: 24px;">
+  <input type="text" placeholder="Filter data load..." title="Filter rows while loading from disk" style="font-size: 0.8em; padding: 2px 4px; border: 1px solid rgb(204, 204, 204); border-radius: 3px; width: 150px; height: 24px; box-sizing: border-box;">
+  <label title="Case Sensitive (Load)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none;">
+    <input type="checkbox" style="margin-right: 2px;">Cc
+  </label>
+  <label title="RegExp (Load)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none;">
+    <input type="checkbox" style="margin-right: 2px;">Rx
+  </label>
+</span>
+#+end_example
+
+should not be displayed directly on the page but instead when pressing the "Load from disk" button there should first be
+a popup window with this container, to let the user optionally enter a filter expression before finally either pressing
+the new "Load filtered data from disk" button (which should initiate the actual data load from disk) or pressing the new
+"Cancel" button to cancel the popup (should also be canceled when pressing the "Escape" key). Both new buttons should be
+positioned centered below the filter input text field.
+
+2.) When the data is rerendered after loading from disk, the filter expression should be highlighted (initially
+yellow on light blue background) in the loaded rows, like the same functionality which is present when the global filter
+input field is used. The colors should be configurable by the user via the two new variables
+
+#+begin_example
+        sa_prefilter_highlight_color: {
+            label: "Global Prefilter Highlight Color",
+            type: "color_picker",
+            default: "red",
+            description: "Text color for global prefilter matches"
+        },
+        sa_prefilter_highlight_bg: {
+            label: "Global Prefilter Highlight Background",
+            type: "color_picker",
+            default: "#lightblue",
+            description: "Background color for global prefilter matches"
+        },
+#+end_example
+
+Another button should be rendered with the text "Unhighlight" after the text
+
+#+begin_example
+<number of rows> prefiltered with expression <filter string for data load>
+#+end_example
+
+from point 1.)
+
+When pressed the highlightning should be removed which was entered for prefiltering.
+
+*** answer gemini - fast
+
+#+begin_example
+async function loadTableDataFromDisk(file) {
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+
+                // Validation: Check if the file matches the current page type
+                if (data.pageType !== pageType) {
+                    if (!confirm(`Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page. Try loading anyway?`)) {
+                        return;
+                    }
+                }
+
+                Lib.info('cache', `Loading ${data.rowCount} rows from disk...`);
+                statusDisplay.textContent = '⌛ Processing data...';
+
+                // --- NEW: Row-level filtering before rendering ---
+                const filterValue = filterInput.value.trim();
+                if (filterValue) {
+                    const isRegex = regexpCheckbox.checked;
+                    const isCaseSensitive = caseCheckbox.checked;
+                    let regex;
+
+                    try {
+                        if (isRegex) {
+                            regex = new RegExp(filterValue, isCaseSensitive ? '' : 'i');
+                        } else {
+                            // Escape special chars for non-regex search
+                            const escaped = filterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            regex = new RegExp(escaped, isCaseSensitive ? '' : 'i');
+                        }
+
+                        const originalCount = data.rows.length;
+                        // Filter the rows based on whether any cell content matches the regex
+                        data.rows = data.rows.filter(row => 
+                            row.cells.some(cellText => regex.test(cellText))
+                        );
+
+                        Lib.info('cache', `Filter applied: "${filterValue}" (Rx: ${isRegex}, Cc: ${isCaseSensitive}). Rows reduced from ${originalCount} to ${data.rows.length}.`);
+                    } catch (err) {
+                        Lib.error('cache', 'Invalid Filter/RegExp:', err);
+                        alert('Invalid Filter/RegExp: ' + err.message);
+                    }
+                }
+                // --- End of filtering logic ---
+
+                // Clear current content and prepare for rendering
+                const target = document.querySelector(activeDefinition.rowTargetSelector || 'table.tbl') || headerContainer;
+                const container = target.closest('#content') || document.getElementById('content');
+
+                // Hide original elements
+                const toHide = container.querySelectorAll('table.tbl, .pagination, .pageselector-results, p:not(#mb-show-all-controls-container p)');
+                toHide.forEach(el => el.style.display = 'none');
+
+                // Re-initialize logic similar to startFetchingProcess
+                allRows = data.rows;
+                const mainTable = createBaseTable(data.headers);
+                container.appendChild(mainTable);
+
+                // Add rows to table
+                const tbody = mainTable.querySelector('tbody');
+                if (activeDefinition.tableMode === 'multi') {
+                    // Logic for multi-table (grouped) rendering
+                    groupedRows = groupRowsByHeader(allRows);
+                    renderGroupedTables(groupedRows, container);
+                } else {
+                    // Logic for single table rendering
+                    allRows.forEach(rowData => {
+                        const tr = document.createElement('tr');
+                        rowData.cells.forEach(cellHtml => {
+                            const td = document.createElement('td');
+                            td.innerHTML = cellHtml;
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    
+                    if (allRows.length > 0) {
+                        addColumnFilterRow(mainTable);
+                        makeTableSortableUnified(mainTable, 'main_table');
+                    }
+                }
+
+                // Perform final cleanup and make headers collapsible
+                finalCleanup();
+                makeH2sCollapsible();
+
+                // Update row count in header
+                const totalRows = (activeDefinition.tableMode === 'multi') ?
+                    groupedRows.reduce((acc, g) => acc + g.rows.length, 0) : allRows.length;
+                updateH2Count(totalRows, totalRows);
+
+                // Show filter container
+                if (!filterContainer.parentNode) {
+                    filterContainer.style.display = 'inline-flex';
+                }
+
+                // Show the save button now that we have data
+                saveToDiskBtn.style.display = 'inline-block';
+
+                Lib.info('cache', `Successfully loaded ${totalRows} rows!`);
+                statusDisplay.textContent = `✓ Loaded: ${totalRows} rows`;
+                statusDisplay.style.color = 'green';
+
+            } catch (err) {
+                Lib.error('cache', 'Failed to load data from file:', err);
+                alert('Failed to load data: ' + err.message);
+            }
+        };
+
+        reader.onerror = () => {
+            Lib.error('cache', 'Failed to read file');
+            alert('Failed to read file');
+        };
+
+        reader.readAsText(file);
+    }
+#+end_example
+
+** DONE check for errors on the multitable case
+
+In the case of loading back the data coming from multiple tables I get the following errors depending on the pageType (URL)
+
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+- https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings
+  
+For these I get:
+
+#+begin_example
+23:54:42.626 [VZ-ShowAllEntities: artist-releasegroups] 📝 Loading data from file: mb-artist-releasegroups-2026-02-12T16-44-52.json. Prefilter active: false 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.631 [VZ-ShowAllEntities: artist-releasegroups] 📝 Loaded data version 1.0 from 2026-02-12T16:44:52.684Z (File total: 579 rows) 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.631 [VZ-ShowAllEntities: artist-releasegroups] 🧹 Starting clutter element removal. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.654 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Starting renderGroupedTable with 17 categories. Query: "" 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.654 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Cloning table head for template. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.654 [VZ-ShowAllEntities: artist-releasegroups] 🎨 No query provided; performing initial cleanup of existing elements. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.658 [VZ-ShowAllEntities: artist-releasegroups] 🎨  Injecting master toggle and filter container after target header Discography. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.658 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Processing group: "undefined" with 21 rows. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.658 [VZ-ShowAllEntities: artist-releasegroups] 🎨 Creating new table and H3 for group "undefined". 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 23:54:42.659 [VZ-ShowAllEntities: artist-releasegroups] ❌ Failed to load data from file: TypeError: Cannot read properties of undefined (reading 'toLowerCase')
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3371:49
+    at Array.forEach (<anonymous>)
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3339:19)
+    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:4043:21)
+#+end_example
+
+- https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+Here I get:
+
+#+begin_example
+[VZ-ShowAllEntities: releasegroup-releases] 📝 Loading data from file: mb-releasegroup-releases-2026-02-12T16-45-27.json 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.179 [VZ-ShowAllEntities: releasegroup-releases] 📝 Loaded data version 1.0 from 2026-02-12T16:45:27.363Z (124 rows) 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.179 [VZ-ShowAllEntities: releasegroup-releases] 🧹 Starting clutter element removal. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] 📝 Reconstructed 3 groups with 124 total rows. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] 🎨 Starting renderGroupedTable with 3 categories. Query: "" 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.203 [VZ-ShowAllEntities: releasegroup-releases] ❌ No template table head found. 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:78 16:49:03.204 [VZ-ShowAllEntities: releasegroup-releases] ❌ Failed to load data from file: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3051:31)
+    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:3809:21)
+#+end_example
+
+*** DONE cosmetic
+
+Change
+
+#+begin_example
+                Lib.info('cache', `Successfully loaded ${loadedRowCount} rows from disk!`);
+                statusDisplay.textContent = `✓ Loaded: ${loadedRowCount} rows`;
+#+end_example
+
+to
+
+#+begin_example
+                Lib.info('cache', `Successfully loaded ${loadedRowCount} row from disk!`);
+                statusDisplay.textContent = `✓ Loaded: ${loadedRowCount} row`;
+#+end_example
+
+if there is just one row involved
+
+
+Concatenate the unicode symbol and a blank "🧮 " from the variable "pageDefinitions" to every occurence of the button label that start with 'Show all ....'
+when used later in the code. So dont put it at each definition of e.g.
+
+#+begin_example
+        // Search pages
+        {
+            type: 'search',
+            match: (path) => path.includes('/search'),
+            buttons: [ { label: '🧮 Show all Search results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name', // Specific header
+                transformToH2: true        // New flag to trigger <h2> transformation
+            },
+            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
+        },
+#+end_example
+
+but leave the definition as is and concatenate at usage
+
+** DONE saving directly to disk for very large paginated pages
+
+In the uploaded script,
+
+when loading data from many pages, for example at
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases data would be fetched from 81 pages (times
+100 etries, so 8100 rows) the rendering would take forever.
+
+For such cases we need a popup window at the end of the download stage, which tells us how many rows would be rendered
+and offer two new buttons:
+
+- one button for just saving the table data directly to the filesystem with the "saveTableDataToDisk" function
+- the other button, to actually render the table as usually
+
+Is this feasible, or are there other considerations regarding the functionality when reloading directly from the
+filesystem in json form
+
+** DONE syntax errors
+
+I had to change the code you generated
+
+#+begin_example
+                // Render
+                if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
+                    await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
+                } else if (allRows.length > 0 || loadedRowCount === 0) {
+                    await renderFinalTable(allRows);
+                    document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+                    const mainTable = document.querySelector('table.tbl');
+                    if (mainTable) {
+                        addColumnFilterRow(mainTable);
+                        makeTableSortableUnified(mainTable, 'main_table');
+                    }
+                }
+#+end_example
+
+to
+
+#+begin_example
+                // Render
+                if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
+		    renderGroupedTable(groupedRows, pageType === 'artist-releasegroups').catch(err => {
+			Lib.error('render', 'Error rendering grouped table:', err);
+		    });
+                } else if (allRows.length > 0 || loadedRowCount === 0) {
+                    renderFinalTable(allRows).catch(err => {
+			Lib.error('render', 'Error rendering grouped table:', err);
+		    });
+                    document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+                    const mainTable = document.querySelector('table.tbl');
+                    if (mainTable) {
+                        addColumnFilterRow(mainTable);
+                        makeTableSortableUnified(mainTable, 'main_table');
+                    }
+                }
+#+end_example
+
+in order to avoid the following stack trace
+
+#+begin_example
+Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': await is only valid in async functions and the top level bodies of modules (at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=524ff5e3-1797-476b-bbd1-e48606503058:4305:21)
+    at At (<anonymous>:10:89)
+    at m (<anonymous>:21:352)
+    at c (<anonymous>:24:266)
+    at <anonymous>:24:328
+    at co (<anonymous>:18:250)
+    at Object.send (<anonymous>:24:188)
+    at <anonymous>:91:328
+    at _ (<anonymous>:22:406)
+#+end_example
+
+Otherwise the the script woudn't even load
+
+
+* TODO "Esc" handling in filter field
+** initial
+
+In the uploaded script,
+
+when the focus is inside a filter field, pressing "Esc" once should empty the filter but leave the focus IN the filter
+field, so that we can enter characters by the keyboard for example), but when the cursor is at the beginning of the
+filter field (so basically there is no filter condition at all typed in, or the filter field was just made empty)
+pressing "Esc" should finally release the focus from the filter field.
+
+Rigth now the filter is emptied and the focus is released unconditionally.
+
+** 1
+
+the filters actually get cleared, if something has been typed in before as in the previous implementation, but the focus
+is NOT retained in such a way, that I can start typing right away. I have to artifically click again inside the now empty filter field to gain focus again
+
+** chatgpt
+
+In the uploaded script,
+
+when the focus is inside a filter field, pressing "Esc" once should empty the filter but leave the focus IN the filter
+field, so that we can enter characters by the keyboard for example), but when the cursor is at the beginning of the
+filter field (so basically there is no filter condition at all typed in, or the filter field was just made empty)
+pressing "Esc" should finally release the focus from the filter field.
+
+Rigth now the filter is emptied and the focus is released unconditionally.
+
+So, distinguish between two states when "Esc" is pressed:
+
+Field is not empty: Clear the text but stay inside (keep focus).
+
+Field is already empty: The user wants to leave the field (release focus/blur).
+
+** global ok
+
+OK, so the behaviour for the global filter is OK now, but the column specific filters (remember they also exist in each
+table for a rendered page with multi tables) the first "Esc" clears the filter but it doesn't stay focused, so that I can start typing again 
+
+** TODO midifier escape
+
+If you want, next step could be:
+
+Shift+Esc to always blur
+
+Ctrl+Esc to clear all filters (global + columns)
+
+----------
+
+If you want next-level polish:
+
+restore same table index, not just first matching column
+
+allow Esc to clear all column filters in table with modifier
+
+visual feedback (“cleared”) animation
+
 
 
 * interact with other USERSCRIPTs - jesus2099
@@ -42165,3 +42160,16 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 
 * TODO include lib from github
+
+* When dragging the config dialog and releasing it, becasue the mouse pointer is outsode of the popup window, it directly closes, although it remember ist size and position.
+
+* Keyboard short cuts popup should be draggable
+
+* changelog popup should get focus when popupped ("Close button is not needed, we have the "CLOSE" lin and esc handling), when filtering the search string should be highlighted, and the number of hits should be displayed in the the header area
+
+* `✓ Global filter${globalFilterInfo}`; switched to "Case sensiteive filterg/Rexexp filtering/EXclude mode filtering"
+
+* optional per sub-table "sub-table global filter" [] Cs [] Rx [] [] Ex
+
+* write special about it in the forum because of the 2 Action buttons
+
