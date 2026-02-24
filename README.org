@@ -39887,6 +39887,51 @@ Here is the rendered HTML for the whole the header area (inklusive search field)
 
 finally fixed. now please make the first column "SETTING" a litle wider so that the text and or buttons etc. don't flow into the second row. the other columns are perfect.
 
+* DONE Library
+** configuration settings
+
+In the uploaded userscript
+
+I added now
+
+#+begin_example
+return {
+    settings: settingsInterface.values,
+    settingsInterface: settingsInterface,  // ADD THIS LINE
+    showSettings: () => settingsInterface.showModal(),  // ADD THIS LINE
+    // ... rest of the return object
+};
+#+end_example
+
+but the "Configuration" button which calls 
+
+#+begin_example
+    const settingsBtn = document.createElement('button');
+    settingsBtn.textContent = '⚙️';
+    settingsBtn.style.cssText = 'font-size:1em; padding:4px 8px; cursor:pointer; height:auto; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; float:right; margin-left:10px; transition:transform 0.1s, box-shadow 0.1s;';
+    settingsBtn.type = 'button';
+    settingsBtn.title = 'Open settings manager to configure script behavior';
+    settingsBtn.onclick = () => {
+        // Try to find and click the settings menu link added by the library
+        const links = document.querySelectorAll('a[href="#"]');
+        let settingsLink = null;
+        for (const link of links) {
+            if (link.textContent.includes('Settings Manager') || link.textContent.includes('⚙️')) {
+                settingsLink = link;
+                break;
+            }
+        }
+        if (settingsLink) {
+            settingsLink.click();
+        } else {
+            alert('Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager');
+        }
+    };
+#+end_example
+
+still doesn't work I still gt the 'Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager' message
+
+
 
 * TODO exclude standalone recordings
 
@@ -39894,7 +39939,6 @@ https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72
 
 Check for "No releases found which feature this recording." under the h2 header "Appears on releases".
 In that case don't even render the additional action buttons when entering such a page, but still log it to the console
-
 
 
 * TODO add fetching to local db storage and reading from it
@@ -40962,7 +41006,6 @@ Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': await is only v
 
 Otherwise the the script woudn't even load
 
-
 * TODO "Esc" handling in filter field
 ** initial
 
@@ -41020,23 +41063,6 @@ allow Esc to clear all column filters in table with modifier
 
 visual feedback (“cleared”) animation
 
-
-
-* interact with other USERSCRIPTs - jesus2099
-** copy image links for releases to final rendered data if available, or grap them again on the rendered page
-
-** copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-
-** redirect to an artificial page after rendering and call all plugins again, maybe my own versions
-
-Lets say I enter a web page with tabular data, where a couple of userscripts are running and enrich the data with new
-columns. One of the scripts provide a button and when pressed does something to the data and but stays on the same page
-but most of the enriched data is gone.
-
-How can I achieve that after the script which provides the button has run, the same registered other userscripts run
-automatically again. What pattern could be used ?
-
-I actually would want this for the uploaded userscript to happen, as it has the button logic, and I would refire after rendering the final page, the other scripts which already run, when the button was rendered
 
 
 * TODO make the whole sidebar vanish to the right side of the browser window
@@ -41172,6 +41198,26 @@ content. Make sure that an eventual scrollbar on the "content container does not
 ** TODO ghost sidebar toggle sometimes stays visible inside the data aread depending on previous action  (Which ONE ??)
 
 
+* TODO interact with other USERSCRIPTs - jesus2099
+** copy image links for releases to final rendered data if available, or grap them again on the rendered page
+
+** copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+** redirect to an artificial page after rendering and call all plugins again, maybe my own versions
+
+Lets say I enter a web page with tabular data, where a couple of userscripts are running and enrich the data with new
+columns. One of the scripts provide a button and when pressed does something to the data and but stays on the same page
+but most of the enriched data is gone.
+
+How can I achieve that after the script which provides the button has run, the same registered other userscripts run
+automatically again. What pattern could be used ?
+
+I actually would want this for the uploaded userscript to happen, as it has the button logic, and I would refire after rendering the final page, the other scripts which already run, when the button was rendered
+
+* TODO Priority of script execution and interoperation
+** talk to
+*** jesus2009 - render ing of coverimages befreo table and before each row
+*** xxx -for RGs read in all releases and make collapsable
 * generalize special column handling (e.g. Tagger, jesus2099 image handling, collapsing RGs, Advance Relationship icons ==> discogs, SL, MB
 ** remove or fix "Tagger" column
 *** DONE initial
@@ -41198,7 +41244,7 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 
 
 
-* Checks for unused variables and functions
+* TODO Checks for unused variables and functions
 ** question
 
 In the uploaded userscript and library check for all unused variables and function definitions
@@ -41414,7 +41460,13 @@ function splitCountryDateCell(newRow, countryDateIdx) {
 Doing this for Location and Area as well would shave hundreds of lines of visual noise off startFetchingProcess and make the primary data-collection loop much easier to follow.
 #+end_example
 
-* Reorder
+* TODO generic refactoring
+
+In the uploaded script, the code has been grown over time and is now more or less unmaintanble.  What are the best
+options to refactor the code, given it's logic but without breaking stuff, Which approach ist the best regarding best
+practices and best patterns
+
+* Reorder functions
 ** question
 
 - Reorder all functions sorted at the end of the file
@@ -41470,6 +41522,48 @@ The reorganized code is functionally identical to the original but much more rea
 
 *** gemini
 
+
+* TODO posting to MusicBrainz forum
+** <2026-01-28 Wed 09:05>
+
+#+begin_example
+# [MusicBrainz: Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
+
+I talked to Misses/Mr. Gemini and out came a new Userscript which accumulates all the paginated MB pages of different entities, renders them depending on the entity type either in a flat or in a grouped table structure with real-time filtering and sorting support.
+
+The currently supported entity types are
+
+ * Artist-ReleaseGroups
+ * ReleaseGroup-Releases
+ * Artist-Releases
+ * Artist-Works
+ * Artist-Recordings
+ * Works
+ * Recordings
+ * Artist-Events
+ * Series
+ * Labels
+ * Place-Events
+ * Place-Performances (buggy, I’m working on that later)
+
+![image|690x343](upload://7UxNLpR1vOIs0xP0wqFnDILhRYm.png)
+
+![image|690x173](upload://bbmH3R7j0EuzA3LGmyxh7OLUaLu.png)
+
+![image|690x276](upload://wLemH2Q4wCerLDPTRSTiRBB2rKd.jpeg)
+
+Almost everything is collapsable/un-collapsable (see the tooltip support).
+
+The final rendrered tables also include new extracted columns for easy sorting, like for example the "Country/Date" column in the Series view is split in its different parts "Country" and "Date"
+
+![image|690x136](upload://aQKg02za09Ktbm8UwTT0Afi4rBG.png)
+
+Also I will make more variables configurable via the TamperMonkey menue in the future
+
+![image|393x499](upload://nnvvX9Cow2FOM9k9NIm5GPnlbtb.png)
+
+You can get the script at https://github.com/vzell/mb-userscripts under [Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
+#+end_example
 
 * Forum
 ** ChatGPT
@@ -41867,52 +41961,6 @@ What to show: Show the sidebar in its "Collapsed" state to demonstrate how the t
 #+end_example
 
 
-* Library
-** configuration settings
-
-In the uploaded userscript
-
-I added now
-
-#+begin_example
-return {
-    settings: settingsInterface.values,
-    settingsInterface: settingsInterface,  // ADD THIS LINE
-    showSettings: () => settingsInterface.showModal(),  // ADD THIS LINE
-    // ... rest of the return object
-};
-#+end_example
-
-but the "Configuration" button which calls 
-
-#+begin_example
-    const settingsBtn = document.createElement('button');
-    settingsBtn.textContent = '⚙️';
-    settingsBtn.style.cssText = 'font-size:1em; padding:4px 8px; cursor:pointer; height:auto; box-sizing:border-box; border-radius:6px; background-color:#607D8B; color:white; border:1px solid #546E7A; float:right; margin-left:10px; transition:transform 0.1s, box-shadow 0.1s;';
-    settingsBtn.type = 'button';
-    settingsBtn.title = 'Open settings manager to configure script behavior';
-    settingsBtn.onclick = () => {
-        // Try to find and click the settings menu link added by the library
-        const links = document.querySelectorAll('a[href="#"]');
-        let settingsLink = null;
-        for (const link of links) {
-            if (link.textContent.includes('Settings Manager') || link.textContent.includes('⚙️')) {
-                settingsLink = link;
-                break;
-            }
-        }
-        if (settingsLink) {
-            settingsLink.click();
-        } else {
-            alert('Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager');
-        }
-    };
-#+end_example
-
-still doesn't work I still gt the 'Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager' message
-
-
-
 * Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
 
 Question:
@@ -42052,62 +42100,9 @@ Include a "Close" button and also "Escape" key closing of the popup.
 * TODO statistics panel
 ** wrong stats
 ** make it multitable aware
-** create keyboard shorcut
+** DONE create keyboard shorcut
 
 
-
-
-* TODO generic refactoring
-
-In the uploaded script, the code has been grown over time and is now more or less unmaintanble.  What are the best
-options to refactor the code, given it's logic but without breaking stuff, Which approach ist the best regarding best
-practices and best patterns
-
-* TODO Priority of script execution and interoperation
-** talk to
-*** jesus2009 - render ing of coverimages befreo table and before each row
-*** xxx -for RGs read in all releases and make collapsable
-* TODO posting to MusicBrainz forum
-** <2026-01-28 Wed 09:05>
-
-#+begin_example
-# [MusicBrainz: Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
-
-I talked to Misses/Mr. Gemini and out came a new Userscript which accumulates all the paginated MB pages of different entities, renders them depending on the entity type either in a flat or in a grouped table structure with real-time filtering and sorting support.
-
-The currently supported entity types are
-
- * Artist-ReleaseGroups
- * ReleaseGroup-Releases
- * Artist-Releases
- * Artist-Works
- * Artist-Recordings
- * Works
- * Recordings
- * Artist-Events
- * Series
- * Labels
- * Place-Events
- * Place-Performances (buggy, I’m working on that later)
-
-![image|690x343](upload://7UxNLpR1vOIs0xP0wqFnDILhRYm.png)
-
-![image|690x173](upload://bbmH3R7j0EuzA3LGmyxh7OLUaLu.png)
-
-![image|690x276](upload://wLemH2Q4wCerLDPTRSTiRBB2rKd.jpeg)
-
-Almost everything is collapsable/un-collapsable (see the tooltip support).
-
-The final rendrered tables also include new extracted columns for easy sorting, like for example the "Country/Date" column in the Series view is split in its different parts "Country" and "Date"
-
-![image|690x136](upload://aQKg02za09Ktbm8UwTT0Afi4rBG.png)
-
-Also I will make more variables configurable via the TamperMonkey menue in the future
-
-![image|393x499](upload://nnvvX9Cow2FOM9k9NIm5GPnlbtb.png)
-
-You can get the script at https://github.com/vzell/mb-userscripts under [Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
-#+end_example
 
 
 * TODO Is the check for invalid regexp really working
@@ -42119,9 +42114,9 @@ You can get the script at https://github.com/vzell/mb-userscripts under [Accumul
 
 * add version to app help, configuration and keybord shortcuts dialogs
 
+
 * why does the "Global Prefilter Highlight Color" starts out in black when clicking on the color chooser icon
 
-* keyboard shortcut and app help popups should have a sticky bottom with the help about "Click outside or press Escape to close"
 
 * Click outside should always close
 
@@ -42172,4 +42167,25 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 * optional per sub-table "sub-table global filter" [] Cs [] Rx [] [] Ex
 
 * write special about it in the forum because of the 2 Action buttons
+
+* keyboard shortcut and app help popups should have a sticky bottom with the help about "Click outside or press Escape to close"
+** initial
+
+Please refactor the "Keyboard Shortcuts" and "Application Help & Feature Overview" dialogs in such a way, that the
+latter should have the "Close" button (plus all the wiring) at the bottom removed and instead have the same horizontal
+divider line with the text "Click outside or press Escape to close" below it. In both dialogs make that body part
+(divider line + text below it) sticky when scrolling the dialog.
+
+Additionally the "Application Help & Feature Overview" is missing the "Click outside" functionality to also close the
+whole dialog. Please implement...
+
+** restore
+
+Please restore in both dialogs the functionality, that when the dialog is focused (for example if the mouse is hovered
+over the visible area), the keyboard UP/DOWN/Page-Up/Page-Down/Pos1/END still work and remove the visual glitch that
+there is a blinking pipe symbol visible in the "Application help" button
+
+** draggable
+
+The "Keyboard Shortcuts" dialog should also be draggable. 
 

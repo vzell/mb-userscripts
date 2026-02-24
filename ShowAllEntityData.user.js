@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.89.0+2026-02-23
+// @version      9.90.1+2026-02-24
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -3376,7 +3376,9 @@
         const defaults = '#78909C|white|1px solid #607D8B';
         const [bg, color, border] =
             parseCondensedStyle(Lib.settings.sa_ui_help_btn_style, defaults);
-        return `${uiActionBtnBaseCSS()} background-color:${bg}; color:${color}; border:${border};`;
+        // user-select:none prevents some browsers from rendering a text-insertion
+        // caret inside the button when the ❓ emoji is treated as a selectable glyph.
+        return `${uiActionBtnBaseCSS()} background-color:${bg}; color:${color}; border:${border}; user-select:none; -webkit-user-select:none;`;
     }
 
     /**
@@ -3545,9 +3547,12 @@
         headerBar.appendChild(closeBtn);
         helpDiv.appendChild(headerBar);
 
-        // Scrollable content area
+        // Scrollable content area — tabIndex makes it focusable so keyboard scroll keys
+        // (↑ ↓ PageUp PageDown Home End) work natively while the mouse hovers over it.
         const scrollArea = document.createElement('div');
-        scrollArea.style.cssText = 'overflow-y: auto; flex: 1; padding: 16px 20px;';
+        scrollArea.tabIndex = 0;
+        scrollArea.style.cssText = 'overflow-y: auto; flex: 1; padding: 16px 20px; outline: none;';
+        scrollArea.addEventListener('mouseenter', () => scrollArea.focus());
 
         // Create shortcuts sections.
         // Configurable entries read the live setting via getShortcutDisplay() so the
@@ -3668,13 +3673,18 @@
         note.innerHTML = '<strong>Note:</strong> Ctrl shortcuts work everywhere, even in input fields.<br>? and / only work when not typing in input fields.';
         scrollArea.appendChild(note);
 
-        // Add close instruction text
+        helpDiv.appendChild(scrollArea);
+
+        // Sticky close-hint footer (outside scrollArea so it stays visible while scrolling)
+        const closeFooter = document.createElement('div');
+        closeFooter.style.cssText = 'flex-shrink: 0; border-top: 1px solid #eee; padding: 8px 20px 12px;';
+
         const closeText = document.createElement('div');
         closeText.textContent = 'Click outside or press Escape to close';
-        closeText.style.cssText = 'font-size: 0.85em; color: #999; text-align: center; font-style: italic; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;';
-        scrollArea.appendChild(closeText);
+        closeText.style.cssText = 'font-size: 0.85em; color: #999; text-align: center; font-style: italic;';
+        closeFooter.appendChild(closeText);
+        helpDiv.appendChild(closeFooter);
 
-        helpDiv.appendChild(scrollArea);
         document.body.appendChild(helpDiv);
 
         // Close on Escape
@@ -3788,8 +3798,10 @@
         titleBar.appendChild(titleBarRight);
         dialog.appendChild(titleBar);
 
-        // Scrollable content area (starts with a loading spinner)
+        // Scrollable content area — tabIndex makes it focusable so keyboard scroll keys
+        // (↑ ↓ PageUp PageDown Home End) work natively while the mouse hovers over it.
         const contentArea = document.createElement('div');
+        contentArea.tabIndex = 0;
         contentArea.style.cssText = `
             overflow-y: auto;
             padding: 20px 24px;
@@ -3797,7 +3809,9 @@
             font-size: 0.92em;
             line-height: 1.65;
             color: #333;
+            outline: none;
         `;
+        contentArea.addEventListener('mouseenter', () => contentArea.focus());
 
         const pre = document.createElement('pre');
         pre.style.cssText = `
@@ -3816,50 +3830,45 @@
         contentArea.appendChild(loadingEl);
         dialog.appendChild(contentArea);
 
-        // Footer with Close button
-        const footer = document.createElement('div');
-        footer.style.cssText = `
-            display: flex;
-            justify-content: flex-end;
-            padding: 12px 20px;
-            border-top: 1px solid #eee;
+        // Sticky close-hint footer (outside contentArea so it stays visible while scrolling)
+        const closeFooter = document.createElement('div');
+        closeFooter.style.cssText = `
             flex-shrink: 0;
-            background: #f8f8f8;
+            border-top: 1px solid #eee;
+            padding: 8px 20px 12px;
             border-radius: 0 0 10px 10px;
         `;
 
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
-        closeBtn.style.cssText = `
-            padding: 8px 24px;
-            background-color: #607D8B;
-            color: white;
-            border: 1px solid #546E7A;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        `;
-        closeBtn.onmouseover = () => { closeBtn.style.backgroundColor = '#546E7A'; };
-        closeBtn.onmouseout  = () => { closeBtn.style.backgroundColor = '#607D8B'; };
-        footer.appendChild(closeBtn);
-        dialog.appendChild(footer);
+        const closeFooterText = document.createElement('div');
+        closeFooterText.textContent = 'Click outside or press Escape to close';
+        closeFooterText.style.cssText = 'font-size: 0.85em; color: #999; text-align: center; font-style: italic;';
+        closeFooter.appendChild(closeFooterText);
+        dialog.appendChild(closeFooter);
 
         document.body.appendChild(dialog);
 
         const closeDialog = () => {
             dialog.remove();
             document.removeEventListener('keydown', keyHandler);
+            document.removeEventListener('click', clickOutsideHandler);
         };
 
-        closeBtn.onclick = closeDialog;
-        closeX.onclick   = closeDialog;
+        closeX.onclick = closeDialog;
 
         const keyHandler = (e) => {
             if (e.key === 'Escape') { e.preventDefault(); closeDialog(); }
         };
         document.addEventListener('keydown', keyHandler);
+
+        // Close on click outside (delayed to prevent the opening click from immediately closing it)
+        const clickOutsideHandler = (e) => {
+            if (!dialog.contains(e.target)) {
+                closeDialog();
+            }
+        };
+        setTimeout(() => {
+            document.addEventListener('click', clickOutsideHandler);
+        }, 100);
 
         // Make draggable (exclude both close button and refresh link from drag initiation)
         let isDragging = false;
@@ -3880,8 +3889,6 @@
             dialog.style.top  = (e.clientY - dragOffsetY) + 'px';
         });
         document.addEventListener('mouseup', () => { isDragging = false; });
-
-        setTimeout(() => closeBtn.focus(), 0);
 
         // ── Fetch help text (with cache) and render ───────────────────────────
         /**

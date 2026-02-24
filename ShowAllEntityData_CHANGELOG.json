@@ -1,5 +1,50 @@
 [
   {
+    "version": "9.90.1",
+    "date": "2026-02-24",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          {
+            "text": "Keyboard scrolling restored in Shortcuts and App Help dialogs",
+            "sub": [
+              "Both scrollable areas (scrollArea in showShortcutsHelp, contentArea in showAppHelp) now carry tabIndex=0 and outline:none so the browser can give them keyboard focus",
+              "A mouseenter listener calls .focus() on the scroll container whenever the mouse enters, so ↑ ↓ PageUp PageDown Home End all work natively without any manual scroll math",
+              "No interference with existing Escape / click-outside close handlers"
+            ]
+          },
+          {
+            "text": "Blinking text-caret in ❓ Application Help button eliminated",
+            "sub": [
+              "uiHelpBtnCSS() now appends user-select:none; -webkit-user-select:none; to its returned CSS string",
+              "Some browsers treated the ❓ emoji glyph as a selectable text node inside the inline-flex button and rendered a blinking I-beam caret; making the content non-selectable suppresses this"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.90.0",
+    "date": "2026-02-24",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          {
+            "text": "Dialog UX: unified sticky close-hint footer",
+            "sub": [
+              "Keyboard Shortcuts dialog: moved 'Click outside or press Escape to close' hint out of the scrollable content area into a dedicated flex-shrink:0 footer sibling — the hint now stays visible while scrolling",
+              "Application Help & Feature Overview dialog: replaced the 'Close' button footer with the same sticky divider + close-hint footer pattern used in the Shortcuts dialog",
+              "Application Help & Feature Overview dialog: implemented click-outside-to-close handler (with 100 ms delay to avoid the opening click triggering an immediate close); closeDialog() now also removes the click-outside listener on teardown"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.89.0",
     "date": "2026-02-23",
     "sections": [
