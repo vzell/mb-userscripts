@@ -42298,11 +42298,11 @@ The following two functions share more or less the same popup code
 Please refactor
 
 
-* default font 1.3em
+* DONE default font 1.3em
 
-* ## ==> v.
+* DONE ## ==> v.
 
-* 🔍 in filter input field
+* DONE 🔍 in filter input field
 
 #+begin_example
     filterInput.placeholder = `🔍 Global Filter...`;

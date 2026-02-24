@@ -5854,7 +5854,7 @@
 
     const filterInput = document.createElement('input');
     filterInput.id = 'mb-global-filter-input';
-    filterInput.placeholder = `Global Filter...`;
+    filterInput.placeholder = `🔍 Global Filter...`;
     filterInput.title = 'Enter global filter string';
     filterInput.style.cssText = uiGlobalFilterInputCSS();
 
