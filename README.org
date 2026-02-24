@@ -42156,13 +42156,35 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 * TODO include lib from github
 
+
 * When dragging the config dialog and releasing it, becasue the mouse pointer is outsode of the popup window, it directly closes, although it remember ist size and position.
+
 
 * Keyboard short cuts popup should be draggable
 
-* changelog popup should get focus when popupped ("Close button is not needed, we have the "CLOSE" lin and esc handling), when filtering the search string should be highlighted, and the number of hits should be displayed in the the header area
 
-* `✓ Global filter${globalFilterInfo}`; switched to "Case sensiteive filterg/Rexexp filtering/EXclude mode filtering"
+* changelog popup should get focus when popupped
+
+The ChangeLog popup should get focus when popupped (the "Close" button a the bottom right corner is not needed, we have
+the "CLOSE" link and "Escape"-key handling). Additionally when filtering, the search string should be highlighted in the
+changelog entries and the number of hits should be displayed in the the header area, so change this
+
+#+begin_example
+                            ${_changelogMeta.fromCache === null
+                                ? `${_changelog.length} entries (static/local)`
+                                : `${_changelog.length} entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
+#+end_example
+
+to
+
+#+begin_example
+                            ${_changelogMeta.fromCache === null
+                                ? `${_changelog.length} entries (static/local)`
+                                : `${_changelog.length} (<n> filtered) entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
+#+end_example
+
+* `✓ Global filter${globalFilterInfo}`; switched to "Case sensitive filterg/Rexexp filtering/EXclude mode filtering"
+
 
 * optional per sub-table "sub-table global filter" [] Cs [] Rx [] [] Ex
 
@@ -42187,5 +42209,27 @@ there is a blinking pipe symbol visible in the "Application help" button
 
 ** draggable
 
-The "Keyboard Shortcuts" dialog should also be draggable. 
+- The "Keyboard Shortcuts" dialog should also be draggable. While your at it, isn't it possible to refactor the whole
+  scenario, as the two dialogs only use a different type of content area. Maybe this dialog could be used in the future
+  for other scenarious.
 
+- The ChangeLog popup should get focus when popupped (the "Close" button a the bottom right corner is not needed, we
+  have the "CLOSE" link and "Escape"-key handling). Additionally when filtering, the search string should be highlighted
+  in the changelog entries and the number of hits should be displayed in the the header area, so change this
+
+#+begin_example
+                            ${_changelogMeta.fromCache === null
+                                ? `${_changelog.length} entries (static/local)`
+                                : `${_changelog.length} entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
+#+end_example
+
+to
+
+#+begin_example
+                            ${_changelogMeta.fromCache === null
+                                ? `${_changelog.length} entries (static/local)`
+                                : `${_changelog.length} (<n> filtered) entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
+#+end_example
+
+- When dragging the "Configuration" dialog and releasing it, becasue the mouse pointer is outside of the popup window,
+  it directly closes, although it remembers it's size and position. Please fix.
