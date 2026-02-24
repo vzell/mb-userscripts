@@ -9852,8 +9852,10 @@
             padding: 6px 12px;
             cursor: pointer;
             border-radius: 4px;
-            border: 1px solid #555;
-            background-color: #f0f0f0;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            font-size: 0.9em;
         `;
         closeBtn.type = 'button';
 

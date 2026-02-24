@@ -42122,9 +42122,6 @@ Include a "Close" button and also "Escape" key closing of the popup.
 
 * make the h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
 
-
-* "Saving of JSON table data..." is NOT focused when popping up, also the button should be green
-
 * Make all popup dialogs use the format of
 
 #+begin_example
@@ -42276,4 +42273,58 @@ to
 - When opening the "ChangeLog" dialog via the Tampermonkey menu, the "Filter changelog entries..." input field IS STILL
   NOT focused
 
+- The following dialog
 
+#+begin_example
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid rgb(136, 136, 136); border-radius: 6px; padding: 20px; box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px; z-index: 10000; max-width: 400px; text-align: center; font-family: sans-serif; opacity: 1; transition: opacity 0.3s;">
+  <div style="margin-bottom: 15px;">Saving of JSON table data to the filesystem initiated. 102 rows saved. Please monitor your browser for the file download.
+  </div>
+  <button type="button" style="padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px solid rgb(85, 85, 85); background-color: rgb(240, 240, 240);">Close
+  </button>
+</div>
+#+end_example
+
+doesn't look like it's focused when popping up (it should), also the "Close" button should be green, like the other "Close" buttons on the export dialogs
+
+* refactor
+
+The following two functions share more or less the same popup code
+
+#+begin_example
+    function triggerStandardDownload(url, filename, rowCount = 0) {
+    function showExportNotification(format, filename, rowCount, totalRows = 0) {
+#+end_example
+
+Please refactor
+
+
+* default font 1.3em
+
+* ## ==> v.
+
+* 🔍 in filter input field
+
+#+begin_example
+    filterInput.placeholder = `🔍 Global Filter...`;
+#+end_example
+
+
+* sync to single table mode
+
+Please sync the following multi table mode "modeLabel" feature
+
+#+begin_example
+                // Build a label that reflects the active filter modes
+                const activeModeParts = [];
+                if (isRegExp)        activeModeParts.push('Regexp');
+                if (isCaseSensitive) activeModeParts.push('Case-sensitive');
+                if (isExclude)       activeModeParts.push('Exclude');
+                const modeLabel = activeModeParts.length > 0
+                    ? activeModeParts.join(' ') + ' filter'
+                    : 'Global filter';
+
+                filterStatusDisplay.textContent = `✓ ${modeLabel}${globalFilterInfo}`;
+                filterStatusDisplay.style.color = 'green';
+#+end_example
+
+also to the case of single table pages
