@@ -1251,10 +1251,10 @@
             // Root artist page (Official/Non-Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
-                { label: '🧮 Official artist RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official artist RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official various artists RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official various artists RGs', params: { all: '1', va: '1' } }
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
             ],
             tableMode: 'multi' // native tables, h3 headers
         },
@@ -1263,8 +1263,8 @@
             // Artist Releases page (Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
             buttons: [
-                { label: '🧮 Official artist releases', params: { va: '0' } },
-                { label: '🧮 Various artist releases', params: { va: '1' } }
+                { label: '🧮 Official releases', params: { va: '0' } },
+                { label: '🧮 VA releases', params: { va: '1' } }
             ],
             features: {
                 columnExtractors: [
@@ -5586,18 +5586,18 @@
         if (conf.label.includes('Show all')) {
             // Extract entity types from label (e.g., "Show all Releases for ReleaseGroup")
             eb.title = `Fetch all the table data from the MusicBrainz backend database`;
-        } else if (conf.label.includes('Official artist RGs')) {
+        } else if (conf.label.includes('Official RGs')) {
             eb.title = 'Fetch all official artist release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Non-official artist RGs')) {
+        } else if (conf.label.includes('Non-official RGs')) {
             eb.title = 'Fetch all non-official artist release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Official various artists RGs')) {
+        } else if (conf.label.includes('Official VA RGs')) {
             eb.title = 'Fetch all official various artists release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Non-official various artists RGs')) {
+        } else if (conf.label.includes('Non-official VA RGs')) {
             eb.title = 'Fetch all non-official various artists release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Official artist releases')) {
+        } else if (conf.label.includes('Official releases')) {
             eb.title = 'Fetch all official artist releases from the MusicBrainz backend database';
-        } else if (conf.label.includes('Various artist releases')) {
-            eb.title = 'Fetch all various artist releases from the MusicBrainz backend database';
+        } else if (conf.label.includes('VA releases')) {
+            eb.title = 'Fetch all various artists releases from the MusicBrainz backend database';
         }
 
         // Append Ctrl-M + N prefix-mode shortcut hint to tooltip (buttons 1–9 only)

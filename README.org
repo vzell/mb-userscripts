@@ -42144,3 +42144,12 @@ Here is the rendered HTML for the whole the header area (inklusive search field)
 ** finally fixed
 
 finally fixed. now please make the first column "SETTING" a litle wider so that the text and or buttons etc. don't flow into the second row. the other columns are perfect.
+
+
+* add version to app help, configuration and keybord shortcuts dialogs
+
+* why does the "Global Prefilter Highlight Color" starts out in black when clicking on the color chooser icon
+
+* keyboard shortcut and app help popups should have a sticky bottom with the help about "Click outside or press Escape to close"
+
+* Click outside should always close
