@@ -41395,7 +41395,7 @@ In the uploaded user script "ShowAllEntityData.user.js"
 are focused doesn't trigger the same actions as if the button were clicked. please fix
 
 
-* settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
+* DONE settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
 
 - In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the left)
 
@@ -41415,7 +41415,7 @@ Here is how it looks like
 
 #+end_example
 
-* TODO In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the right)
+* DONE In the settings dialog, when resizing leaves shadow row starting where the resize handle is located (it stretches from the resize handle to the right)
 
 Here is how it looks like
 
@@ -41433,7 +41433,7 @@ Here is how it looks like
 
 #+end_example
 
-* Visual Glitch
+* DONE Visual Glitch
 
 In the uploaded library file "VZ_MBLibrary.user.js"
 
@@ -41472,7 +41472,6 @@ This is for example how the HTML of the ghost row looks like when just the first
   thin part of the whole ghost row gets a white color. Clicking another header makes that thin part a little bigger
   until the final section is collapsed when the whole ghost row is present again.
 
-  
 * DONE Please also rename the following buttons (+ all occurences in the keyboard help section and the "const APP_HELP_TEXT")
 
 #+begin_example
@@ -41858,8 +41857,7 @@ upper right corner (when clicked the latest file from github should be downloade
 - now that we have a library version for the confirm and alter dialogs, please refactor the ones used in the user script
   directly.
 
-
-* Please add support for more complex changelog entries like the following:
+* DONE Please add support for more complex changelog entries like the following:
 ** initial
 
 Please refactor the changelog display and maybe the formattting in the current json file (it's even up to you if another
@@ -42056,10 +42054,62 @@ This is an example of a such rendered setting which spans actually three rows, t
 
 There is still the alignment bug, the actual 3 columns in the settings section are not aligned with headers
 
-Here is the rendered HTML fo the header row, the section divider and an actual settings row
+Here is the rendered HTML for the whole the header area (inklusive search field), the section divider and an actual settings row
 
 #+begin_example
-<div style="
+<div id="vz-mb-show-all-entity-data-drag-header" style="
+                            cursor:move;
+                            user-select:none;
+                            padding:14px 18px 10px 18px;
+                            background:#fff;
+                            border-bottom:1px solid #d0d5dd;
+                            flex-shrink:0;
+                         ">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                            <div>
+                                <div style="font-size:17px;font-weight:700;color:#1a2340;letter-spacing:0.01em;">
+                                    VZ: MUSICBRAINZ - SHOW ALL ENTITY DATA IN A CONSOLIDATED VIEW
+                                </div>
+                                <div style="font-size:12px;color:#e07000;font-weight:600;margin-top:2px;">
+                                    Settings are applied IMMEDIATELY upon saving.
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:12px;align-items:center;">
+                                <a id="vz-mb-show-all-entity-data-reset" style="cursor:pointer;font-weight:600;color:#666;font-size:0.85em;
+                                          text-decoration:none;">
+                                    RESET
+                                </a>
+                                <span style="color:#ccc;">|</span>
+                                <a id="vz-mb-show-all-entity-data-close" style="cursor:pointer;font-weight:600;color:#666;font-size:0.85em;
+                                          text-decoration:none;">
+                                    CLOSE
+                                </a>
+                            </div>
+                        </div>
+                        <!-- search + collapse-all row -->
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+                            <input id="vz-mb-show-all-entity-data-search" type="search" placeholder="🔍 Search settings…" style="
+                                       flex:1;
+                                       padding:7px 10px;
+                                       border-radius:6px;
+                                       border:1px solid #c8cdd5;
+                                       font-size:0.88em;
+                                       background:#f8f9fc;
+                                       outline:none;
+                                   ">
+                            <button type="button" id="vz-mb-show-all-entity-data-collapse-all-btn" style="
+                                        white-space:nowrap;
+                                        padding:6px 12px;
+                                        font-size:0.85em;
+                                        cursor:pointer;
+                                        border:1px solid #aaa;
+                                        border-radius:5px;
+                                        background:#eff1f5;
+                                        flex-shrink:0;
+                                    ">⬇ Uncollapse all</button>
+                        </div>
+                        <!-- sticky column headers -->
+                        <div style="
                             display:flex;
                             gap:0;
                             margin-top:8px;
@@ -42077,8 +42127,9 @@ Here is the rendered HTML fo the header row, the section divider and an actual s
                             <div style="flex:0 0 280px;width:280px;padding:6px 14px;border-right:1px solid #d0d5dd;box-sizing:border-box;">Setting</div>
                             <div style="flex:0 0 130px;width:130px;padding:6px 10px;text-align:center;border-right:1px solid #d0d5dd;box-sizing:border-box;">Default</div>
                             <div style="flex:1 1 0;padding:6px 14px;box-sizing:border-box;">Description</div>
-</div>
+                        </div>
+                    </div>			
+			
 <div class="vz-section-header" data-section="divider_" style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: linear-gradient(to right, rgb(90, 103, 120), rgb(122, 148, 168), rgb(90, 103, 120)); color: rgb(255, 255, 255); font-weight: 600; font-size: 0.9em; cursor: pointer; user-select: none; border-bottom: 1px solid rgba(255, 255, 255, 0.15);"><span class="vz-section-arrow" style="font-size: 0.75em; transition: transform 0.2s; transform: rotate(0deg);">▼</span><span>🛠️ GENERIC SETTINGS</span></div>
 <div class="vz-setting-row" data-section="divider_" style="display: flex; flex-wrap: nowrap; align-items: stretch; background: rgb(255, 255, 255); border-bottom: 1px solid rgb(228, 232, 239); min-height: 44px;"><div style="flex: 0 0 280px; width: 280px; min-width: 0px; padding: 10px 14px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; border-right: 1px solid rgb(228, 232, 239); box-sizing: border-box;"><label for="vz-mb-show-all-entity-data-input-sa_enable_debug_logging" style="font-size:0.85em;font-weight:500;color:#334;cursor:pointer;white-space:nowrap;margin-right:4px;">Enable debug logging:</label><input type="checkbox" id="vz-mb-show-all-entity-data-input-sa_enable_debug_logging" checked="" style="width:16px;height:16px;cursor:pointer;"></div><div style="flex: 0 0 130px; width: 130px; min-width: 0px; padding: 10px; font-size: 0.76em; color: rgb(136, 136, 136); text-align: center; border-right: 1px solid rgb(228, 232, 239); word-break: break-all; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">false</div><div style="flex: 1 1 0px; min-width: 0px; padding: 10px 14px; font-size: 0.84em; color: rgb(85, 85, 85); line-height: 1.5; word-break: break-word; box-sizing: border-box;">Enable debug logging in the browser developer console</div></div>
 #+end_example
-
