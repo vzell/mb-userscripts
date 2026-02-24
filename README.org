@@ -42118,9 +42118,10 @@ Include a "Close" button and also "Escape" key closing of the popup.
 * why does the "Global Prefilter Highlight Color" starts out in black when clicking on the color chooser icon
 
 
-* Click outside should always close
+* DONE Click outside should always close
 
-* make the headerline texts clickable so they belong to the collpase/uncollapse functionality
+* make the h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
+
 
 * "Saving of JSON table data..." is NOT focused when popping up, also the button should be green
 
@@ -42262,14 +42263,17 @@ to
 
 - `✓ Global filter${globalFilterInfo}`; switched to "Case sensitive filterg/Rexexp filtering/EXclude mode filtering"
 
-** "Filter changelog entries..." input field should be focused
-
-- When opening the "ChangeLog" dialog via the Tampermonkey menu, the "Filter changelog entries..." input field IS STILL
-  NOT focused
+** DONE increasing the font size + make font itlsef configurable
 
 - Please also add When opening the "Settings" dialog, the "Search settings..." input field should be focused
 
 - increasing the font size inside the "ChangeLog" did work but NOT in the "Application Help & Feature Overview" dialog
 
 - Please also add a new variable (configurable in the library settings editor) for the "Content font" itself
+
+** "Filter changelog entries..." input field should be focused
+
+- When opening the "ChangeLog" dialog via the Tampermonkey menu, the "Filter changelog entries..." input field IS STILL
+  NOT focused
+
 

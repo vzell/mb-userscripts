@@ -1,5 +1,12 @@
 [
   {
+    "version": "9.93.0",
+    "date": "2026-02-24",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Fixed keyboard focus on the Settings dialog and made font configurable for ChangeLog and Application Help dialog"] }
+    ]
+  },
+  {
     "version": "9.92.0",
     "date": "2026-02-24",
     "sections": [

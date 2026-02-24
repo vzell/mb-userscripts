@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.92.0+2026-02-24
+// @version      9.93.0+2026-02-24
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -3828,7 +3828,8 @@
         const { dialog, scrollArea: contentArea, close: closeDialog } = result;
         Object.assign(contentArea.style, {
             padding:    '20px 24px',
-            fontSize:   '0.92em',
+            fontSize:   Lib.libPrefs.lib_content_font_size,
+            fontFamily: Lib.libPrefs.lib_content_font_family,
             lineHeight: '1.65',
             color:      '#333',
         });
