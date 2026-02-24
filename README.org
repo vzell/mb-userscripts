@@ -42054,5 +42054,31 @@ This is an example of a such rendered setting which spans actually three rows, t
 
 ** bug is fixed
 
-Finally, the bug is fixed. There is one glitch left, the actual 3 columns in the settings section are not aligned with headers
+There is still the alignment bug, the actual 3 columns in the settings section are not aligned with headers
+
+Here is the rendered HTML fo the header row, the section divider and an actual settings row
+
+#+begin_example
+<div style="
+                            display:flex;
+                            gap:0;
+                            margin-top:8px;
+                            background:#e8ecf2;
+                            border-radius:6px 6px 0 0;
+                            border:1px solid #d0d5dd;
+                            border-bottom:none;
+                            overflow:hidden;
+                            font-size:0.78em;
+                            font-weight:700;
+                            color:#556;
+                            letter-spacing:0.04em;
+                            text-transform:uppercase;
+                        ">
+                            <div style="flex:0 0 280px;width:280px;padding:6px 14px;border-right:1px solid #d0d5dd;box-sizing:border-box;">Setting</div>
+                            <div style="flex:0 0 130px;width:130px;padding:6px 10px;text-align:center;border-right:1px solid #d0d5dd;box-sizing:border-box;">Default</div>
+                            <div style="flex:1 1 0;padding:6px 14px;box-sizing:border-box;">Description</div>
+</div>
+<div class="vz-section-header" data-section="divider_" style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: linear-gradient(to right, rgb(90, 103, 120), rgb(122, 148, 168), rgb(90, 103, 120)); color: rgb(255, 255, 255); font-weight: 600; font-size: 0.9em; cursor: pointer; user-select: none; border-bottom: 1px solid rgba(255, 255, 255, 0.15);"><span class="vz-section-arrow" style="font-size: 0.75em; transition: transform 0.2s; transform: rotate(0deg);">▼</span><span>🛠️ GENERIC SETTINGS</span></div>
+<div class="vz-setting-row" data-section="divider_" style="display: flex; flex-wrap: nowrap; align-items: stretch; background: rgb(255, 255, 255); border-bottom: 1px solid rgb(228, 232, 239); min-height: 44px;"><div style="flex: 0 0 280px; width: 280px; min-width: 0px; padding: 10px 14px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; border-right: 1px solid rgb(228, 232, 239); box-sizing: border-box;"><label for="vz-mb-show-all-entity-data-input-sa_enable_debug_logging" style="font-size:0.85em;font-weight:500;color:#334;cursor:pointer;white-space:nowrap;margin-right:4px;">Enable debug logging:</label><input type="checkbox" id="vz-mb-show-all-entity-data-input-sa_enable_debug_logging" checked="" style="width:16px;height:16px;cursor:pointer;"></div><div style="flex: 0 0 130px; width: 130px; min-width: 0px; padding: 10px; font-size: 0.76em; color: rgb(136, 136, 136); text-align: center; border-right: 1px solid rgb(228, 232, 239); word-break: break-all; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">false</div><div style="flex: 1 1 0px; min-width: 0px; padding: 10px 14px; font-size: 0.84em; color: rgb(85, 85, 85); line-height: 1.5; word-break: break-word; box-sizing: border-box;">Enable debug logging in the browser developer console</div></div>
+#+end_example
 
