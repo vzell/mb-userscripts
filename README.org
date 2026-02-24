@@ -42051,3 +42051,8 @@ This is an example of a such rendered setting which spans actually three rows, t
   </div>
 </div>
 #+end_example
+
+** bug is fixed
+
+Finally, the bug is fixed. There is one glitch left, the actual 3 columns in the settings section are not aligned with headers
+
