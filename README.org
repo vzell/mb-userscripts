@@ -1337,6 +1337,13 @@ container.addEventListener.capture @ userscript.html?name=MB%253A-Auto-select-Di
 r @ helpers.js:97
 #+end_example
 
+** refactor
+
+For the following tpye of MusicBrainz pages https://musicbrainz.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/edit
+
+please refactor the uploaded user scripts into one, and use the uploaded library for extensive debug logging.
+Also take into account that it sometime takes a while until the container "External Links" is rendered by the backend.
+ONly then start injecting the extern URL in the text field "Add another link" 
 
 * Customizable multi select
 ** Gemini
@@ -41928,8 +41935,7 @@ Please also rewrite the current "ShowAllEntityData_CHANGELOG.json" accordinlyg a
 
 - also include a search dialog in the changelog popup.
 
-
-* rewrite the configuration dialog
+* DONE rewrite the configuration dialog
 
 In the uploaded library file "VZ_MBLibrary.user.js"
 
