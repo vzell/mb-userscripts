@@ -42122,7 +42122,7 @@ Include a "Close" button and also "Escape" key closing of the popup.
 
 * make the headerline texts clickable so they belong to the collpase/uncollapse functionality
 
-* "Saving of JSON table data..." is NOT focused when popping up, alos the button should be green
+* "Saving of JSON table data..." is NOT focused when popping up, also the button should be green
 
 * Make all popup dialogs use the format of
 
@@ -42157,12 +42157,8 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 * TODO include lib from github
 
 
-* When dragging the config dialog and releasing it, becasue the mouse pointer is outsode of the popup window, it directly closes, although it remember ist size and position.
-
-
-* Keyboard short cuts popup should be draggable
-
-
+* DONE When dragging the config dialog and releasing it, becasue the mouse pointer is outsode of the popup window, it directly closes, although it remember ist size and position.
+* DONE Keyboard short cuts popup should be draggable
 * changelog popup should get focus when popupped
 
 The ChangeLog popup should get focus when popupped (the "Close" button a the bottom right corner is not needed, we have
@@ -42182,6 +42178,7 @@ to
                                 ? `${_changelog.length} entries (static/local)`
                                 : `${_changelog.length} (<n> filtered) entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
 #+end_example
+
 
 * `✓ Global filter${globalFilterInfo}`; switched to "Case sensitive filterg/Rexexp filtering/EXclude mode filtering"
 
@@ -42248,4 +42245,26 @@ to
 - For the dialogs which can be resized, leave the cursor ALWAYS at the position of the resize handle and do not move it
   artificially around
 
-https://claude.ai/chat/919edf2c-291d-4bf1-a29b-05dbe49d7d7e
+** The "Escape" key handling in the "Settings" and "ChangeLog" dialog doesn't work right
+
+- The "Escape" key handling in the "Settings" and "ChangeLog" dialog doesn't work right.
+
+#+begin_example
+// Escape key behaviour (in priority order):
+//   1. Search field focused + has text  → clear text, keep focus
+//   2. Search field focused + empty     → blur the field
+//   3. Otherwise                        → try to close the dialog
+#+end_example
+
+1. doesn't already work, pressing "Escape" key immediately closes BOTH dialogs
+
+- When opening the "ChangeLog" dialog via the Tampermonkey menu, the "Filter changelog entries..." input field should
+  be focused
+
+- Please also increase the font size inside the "ChangeLog" and "Application Help & Feature Overview" dialog overall to
+  a larger font. Also put the fontsize into a variable at the beginning of the file for easily be changed by the
+  developer. Or would it be possible to make the setting editable by the end-user, also it's library variable. If yes,
+  please create a small settings editor for variable which are library specific (with futur enhancement in mind)
+
+
+- `✓ Global filter${globalFilterInfo}`; switched to "Case sensitive filterg/Rexexp filtering/EXclude mode filtering"
