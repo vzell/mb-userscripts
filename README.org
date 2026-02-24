@@ -42034,7 +42034,7 @@ Please fix
 
 ** bug
 
-The layout bug is stiil present of the individual settings is still buggy. Now all three values of a setting are rendered below each other in the first column
+There is a layout bug still present in the settings container of the uploaded library. Aall three values of a setting are rendered below each other in the first column
 
 This is an example of a such rendered setting which spans actually three rows, the values are rendered below each other
 
