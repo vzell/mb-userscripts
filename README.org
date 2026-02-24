@@ -42231,5 +42231,19 @@ to
                                 : `${_changelog.length} (<n> filtered) entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
 #+end_example
 
-- When dragging the "Configuration" dialog and releasing it, becasue the mouse pointer is outside of the popup window,
+- When dragging the "Configuration" dialog and releasing it, becauye the mouse pointer is outside of the popup window,
   it directly closes, although it remembers it's size and position. Please fix.
+
+** bug resize
+
+- when the filter field is selected, and text has been entered, the "Escape"-key should clear the filter field instead
+  of closing the whole dialog. A second "Escape"-key press should blur the filter field.
+
+- For the dialogs which can be resized by the resize handle at the lower right corner, e.g the "Configuration" and
+  "ChangeLog" dialog, when resizing to make the dialog bigger and releasing it, because the mouse pointer is outside of
+  the popup window, it directly closes the whole dialog, although it remembers it's size and position. Also when
+  resizing to make it smaller, there is a small visual glitch, the text from inside the dialog could be marked (e.g. the
+  "Save" button in the "Configuration" dialog) Please fix.
+
+- For the dialogs which can be resized, leave the cursor ALWAYS at the position of the resize handle and do not move it
+  artificially around

@@ -1,6 +1,26 @@
 [
   {
-    "version": "9.90.1",
+    "version": "9.91.0",
+    "date": "2026-02-24",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          {
+            "text": "ShowAllEntityData: createInfoDialog() shared factory for info dialogs",
+            "sub": [
+              "New createInfoDialog(opts) function encapsulates all structure, behaviour, and wiring shared by lightweight info dialogs: draggable title bar, focusable scroll area (tabIndex + mouseenter→focus for native ↑↓/PageUp/PageDown/Home/End), sticky close-hint footer, Escape-key handler, click-outside handler (100 ms delay), and full document-listener cleanup on close",
+              "titleBarExtras[] option allows callers to inject controls (e.g. 🔄 Force refresh) left of the ✕ button; e.target.closest('button, a') guard prevents drag initiation on any such control",
+              "centerV option: true (default) centres vertically via translate(-50%,-50%); false positions at top:60px for dialogs that sit below the page header",
+              "showShortcutsHelp() rewritten as a thin wrapper — now also draggable (was not before)",
+              "showAppHelp() rewritten as a thin wrapper — all manual drag/Escape/click-outside boilerplate removed; behaviour preserved"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
     "date": "2026-02-24",
     "sections": [
       {
