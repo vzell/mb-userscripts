@@ -42247,3 +42247,5 @@ to
 
 - For the dialogs which can be resized, leave the cursor ALWAYS at the position of the resize handle and do not move it
   artificially around
+
+https://claude.ai/chat/919edf2c-291d-4bf1-a29b-05dbe49d7d7e
