@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.3+2026-02-26
+// @version      9.97.5+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -9729,9 +9729,13 @@
             const toggleFn = (e) => {
                 // Detect clicks on the read-only status spans BEFORE the guard clause so they are
                 // explicitly exempted from the filterContainer.contains() block below.
-                // Covers both #mb-filter-status-display and #mb-sort-status-display — both live
-                // inside filterContainer but are read-only labels that should propagate the toggle.
+                // Both spans live inside filterContainer but are read-only labels that must propagate
+                // the toggle rather than be silently blocked.
                 // This mirrors the h3 handler pattern (isStatusSpan / !isStatusSpan guard).
+                //
+                // Toggle semantics (both spans identical — normal header behaviour):
+                //   plain click  → toggle THIS h2 only
+                //   Ctrl+click   → toggle ALL h2 peers
                 const isStatusClick = e.target.closest('#mb-filter-status-display') ||
                                       e.target.closest('#mb-sort-status-display');
 
@@ -9750,7 +9754,9 @@
 
                 const isExpanding = icon.textContent === '▲';
 
-                if (isStatusClick || e.ctrlKey) {
+                // All-toggle when Ctrl is held (anywhere on the h2 header).
+                // Plain clicks — including on either status span — toggle only this h2.
+                if (e.ctrlKey) {
                     // Logic to toggle all peers in the same container (sidebar vs main)
                     const sidebar = document.getElementById('sidebar');
                     const isInsideSidebar = sidebar && sidebar.contains(h2);

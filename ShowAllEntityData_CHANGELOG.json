@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.97.5",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes / Behaviour Change",
+        "items": [
+          "H2 click handler: '#mb-sort-status-display' now behaves identically to '#mb-filter-status-display' — plain click toggles only the current h2 section; Ctrl+click toggles ALL h2 peers. Both spans are again handled by the single 'isStatusClick' variable (the split into 'isFilterStatusClick'/'isSortStatusClick' introduced in 9.97.4 is reverted as it is no longer needed)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.97.4",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes / Behaviour Change",
+        "items": [
+          "H2 click handler: corrected toggle semantics for '#mb-filter-status-display' — plain click now toggles only the current h2 section (normal header behaviour); Ctrl+click toggles ALL h2 peers. Previously a plain click on that span incorrectly triggered the all-toggle path. The '#mb-sort-status-display' all-toggle-on-any-click behaviour introduced in 9.97.3 is unchanged. Internally 'isStatusClick' is now split into 'isFilterStatusClick' and 'isSortStatusClick' to allow distinct branching per span."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.3",
     "date": "2026-02-26",
     "sections": [

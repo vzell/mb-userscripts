@@ -42593,6 +42593,32 @@ Please fix
   
 should also trigger the "collapsing/uncollapsing" of all the h2 sections
 
+** final fix
+
+Actually
+
+- please implement, that clicking inside the h2 header row the
+
+#+begin_example
+<span id="mb-filter-status-display" class="mb-filter-status"
+#+end_example
+  
+should trigger the "collapsing/uncollapsing" of just the current h2 section when, but trigger the "collapsing/uncollapsing" of ALL the h2 sectiosn when "Ctrl"-clicking
+
+#+begin_example
+<span id="mb-filter-status-display" class="mb-filter-status"
+#+end_example
+
+** maybe
+
+- please implement, that clicking inside the h2 header row the text part "all Types" in
+
+#+begin_example
+<span class="mb-master-toggle">[ <span title="Show all sub-tables">Show</span> | <span title="Hide all sub-tables">Hide</span> ] all Types</span>
+#+end_example
+
+should trigger the "collapsing/uncollapsing" of just the current h2 section when, but trigger the "collapsing/uncollapsing" of ALL the h2 sections when "Ctrl"-clicking
+
 
 * TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter
 
