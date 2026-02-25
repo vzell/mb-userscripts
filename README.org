@@ -42556,10 +42556,6 @@ should also trigger the "collapsing/uncollapsing" of all the h2 sections
 
 * fix invalid filter regexp
 
-#+begin_example
-
-#+end_example
-
 * tooltip for global "Clear all COLUMN filters" from
 
 #+begin_example
@@ -42575,6 +42571,6 @@ to
 * resize global filter input field (configurable) + the subtable specific one
 
 
-* change tooltip text depending on single or mult table pages - maybe use "Globally" versus "Sub-table"
+* change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
 
 
