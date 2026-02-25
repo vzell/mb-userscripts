@@ -42482,7 +42482,7 @@ and should now also toggle additionally the highlighning from the sub-table filt
 
 should get a new 'title="Clear all COLUMN filters for this table"' and the button text should read 'Clear all COLUMN filters'
 
-** bug left
+** bug left - h3 header collapse when loading from disk NOT working
 
 - when loading data from disk by pressing the "Load from Disk"-button after the page entry, everything works as expected
   regarding filtering with global and sub-table specific filtering. Especially when clicking the h3 header row (not the
@@ -42497,7 +42497,7 @@ should get a new 'title="Clear all COLUMN filters for this table"' and the butto
 should also trigger the "collapsing/uncollapsing" of the section
 
 - now the bug: when already on the final rendered page and THEN loading data from disk by pressing the "Load from
-  Disk"-button the h3 header line does not respond anymore on the click trigger (also the buttons and filter filed
+  Disk"-button the h2 header line does not respond anymore on the click trigger (also the buttons and filter field
   do). Please fix. Another hint: if I start the action of loading data from disk by pressing the "Load from
   Disk"-button, and there was a previous global filtering string in action, after the loading and rendering of the
   loaded data, all rows are rendered as they should, BUT the global filter STILL has the previous filter
@@ -42522,24 +42522,32 @@ inside the 'mb-subtable-controls', but don't touch the button click functionalit
 * Tests: "to" as column level filter on "Album" in the "Title" column
 
 
-* TODO make the h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
+* TODO make the h2/h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
 
 In the uploaded userscript,
 
-update the click handler on the h3 headerlines in multi table mode to toggle the collapse/uncollapse of the sections also
+- update the click handler on the h3 headerlines in multi table mode to toggle the collapse/uncollapse of the sections also
 when clicking on the following status text containers
 
 #+begin_example
-<span class="mb-filter-status" data-table-name="Promotion" data-table-index="1" style="color: green;">✓ Filtered 1 rows [Country/Date:"zw"]</span>
+<span class="mb-filter-status"
 #+end_example
 
 and
 
 #+begin_example
-<span class="mb-sort-status" data-table-name="Promotion" data-table-index="1" style="color: green;">✓ Sorted by column "Country/Date" ▼: 14 rows in 41ms</span>
+<span class="mb-sort-status"
 #+end_example
 
 inside the 'mb-subtable-controls', but don't touch the button click functionality in that outer container
+
+- please also implement, that clicking inside the h2 header row the
+
+#+begin_example
+<span id="mb-filter-status-display" class="mb-filter-status"
+#+end_example
+  
+should also trigger the "collapsing/uncollapsing" of all the h2 sections
 
 
 * TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter
