@@ -42120,7 +42120,23 @@ Include a "Close" button and also "Escape" key closing of the popup.
 
 * DONE Click outside should always close
 
-* make the h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
+* TODO make the h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
+
+update the click handler on the h3 headerlines in muti table mode to toggle the collapse/uncollapse of the sections also
+when clicking on the following status text containers
+
+#+begin_example
+<span class="mb-filter-status" data-table-name="Promotion" data-table-index="1" style="color: green;">✓ Filtered 1 rows [Country/Date:"zw"]</span>
+#+end_example
+
+and
+
+#+begin_example
+<span class="mb-sort-status" data-table-name="Promotion" data-table-index="1" style="color: green;">✓ Sorted by column "Country/Date" ▼: 14 rows in 41ms</span>
+#+end_example
+
+inside the 'mb-subtable-controls', but don't touch the button click functionality in that outer container
+
 
 * Make all popup dialogs use the format of
 
@@ -42325,6 +42341,7 @@ also to the case of single table pages
 
 
 * Add an 🔍 icon per subtable
+** initial
 
 Add an 🔍 icon (make it a toggle switch) in every h3 header row after the 
 
@@ -42364,7 +42381,27 @@ The '<extrated category name>' string below should of course be replaced for eac
 
 please also make the "id"-s unique per subtable (use the subtabe h3 header name somwhow). Also change the placeholder text to be subtable specific.
 
-The functionality should be support additively the following (always independantly for each subtable and in addition what is already active on the global filtering level)
+The functionality should be to support additively the following (always independantly for each subtable and in addition to what is already active on the global filtering level)
 - the filter condition (dependant on the switches of the checkboxes) should filter ONLY the currently visible rows in that specific subtable (taking all columns in that subtable into account)
 - when rows are filtered, the filter string should be highlighted with a green background (in addition to currently active hightlights)
 - clicking the 'mb-stf-<extrated category name>-toggle-filter-highlight-btn' repeatedly should toggle the highlightning of the subtable specific filter string
+- the first "Escape" key press should also clear the subtable filter field if text has been added, the second should blur 
+
+** highlight bug
+
+There are bugs:
+
+- When start typing in the subgroup filter field the first character if it matches will get highlighted everywhere. when
+  typing the next character, it correctly filters rows (when they match of course) but the highighning in the matched
+  rows is completely removed
+
+- When clearing the filter (either pressing Escape or clicking the littel clear x icon at the end of the filter field,
+  all rows in the subtable show up again (taken the gloabl filter in acoount). Good so far. But if I instead, with
+  filtered rows, delete character by character from the filter string (up to complete removal) the original present rows
+  are NOT shown, but instead still the filtered ones (actually when just one char is left, that even gets hightlighted
+  again), but of course clearing the filter field by deleting char by char should also produce the original rows like using the escape key.
+
+** bugs
+
+The row filtering is now technically correct, but counted number of rows NOT and alos the hightlighning is still not working per subtable when filtering i active
+

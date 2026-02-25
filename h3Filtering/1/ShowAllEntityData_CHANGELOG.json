@@ -1,0 +1,1559 @@
+[
+  {
+    "version": "9.97.0",
+    "date": "2026-02-25",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          {
+            "text": "Per-subtable filter UI (🔍 toggle on every h3 header in multi-table mode)",
+            "sub": [
+              "A 🔍 icon is injected after the mb-row-count-stat span in each h3 header; clicking it toggles a subtable-specific filter bar on/off",
+              "Filter bar contains: text input with subtable-specific placeholder/tooltip, clear (✕) button, Cc (case-sensitive), Rx (regexp), Ex (exclude) checkboxes, and 🎨 Toggle highlighting button — mirroring the global filter structure",
+              "All element IDs are unique per subtable (derived from the sanitized category name, e.g. mb-stf-Album-input)",
+              "Filtering is additive: only currently visible rows (not already hidden by global/column filter) are filtered; rows hidden by the subtable filter carry a data-mb-stf-hidden attribute so global re-renders can identify them",
+              "Matches are highlighted with .mb-subtable-filter-highlight (green background) independently from global and column filter highlights",
+              "🎨 Toggle highlighting button toggles subtable-specific highlight on/off per subtable, independently of the global highlight toggle",
+              "First Escape press in the subtable filter input clears the text (and restores hidden rows); second press blurs the input",
+              "reapplyAllSubTableFilters() is called at the end of runFilter() so subtable filters remain active after global/column filter re-renders",
+              "h3 and h2 click handlers updated to guard against accidental collapse when clicking the toggle icon or filter container"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.94.0",
+    "date": "2026-02-25",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          "Refactored duplicate popup code: extracted shared showDownloadNotification() helper used by both showExportNotification() and triggerStandardDownload()",
+          "Synced modeLabel (Regexp / Case-sensitive / Exclude) feature to single-table pages — filter status now reads '✓ Regexp filter: N rows in Xms' etc. instead of the generic 'Filtered N rows'"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.93.0",
+    "date": "2026-02-24",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Fixed keyboard focus on the Settings dialog and made font configurable for ChangeLog and Application Help dialog"] }
+    ]
+  },
+  {
+    "version": "9.92.0",
+    "date": "2026-02-24",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["✓ Global filter dynamically replaced by ✓ Regexp filter, ✓ Case-sensitive filter, ✓ Exclude filter, or combinations thereof when the respective checkboxes are active"] }
+    ]
+  },
+  {
+    "version": "9.91.0",
+    "date": "2026-02-24",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          {
+            "text": "ShowAllEntityData: createInfoDialog() shared factory for info dialogs",
+            "sub": [
+              "New createInfoDialog(opts) function encapsulates all structure, behaviour, and wiring shared by lightweight info dialogs: draggable title bar, focusable scroll area (tabIndex + mouseenter→focus for native ↑↓/PageUp/PageDown/Home/End), sticky close-hint footer, Escape-key handler, click-outside handler (100 ms delay), and full document-listener cleanup on close",
+              "titleBarExtras[] option allows callers to inject controls (e.g. 🔄 Force refresh) left of the ✕ button; e.target.closest('button, a') guard prevents drag initiation on any such control",
+              "centerV option: true (default) centres vertically via translate(-50%,-50%); false positions at top:60px for dialogs that sit below the page header",
+              "showShortcutsHelp() rewritten as a thin wrapper — now also draggable (was not before)",
+              "showAppHelp() rewritten as a thin wrapper — all manual drag/Escape/click-outside boilerplate removed; behaviour preserved"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2026-02-24",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          {
+            "text": "Keyboard scrolling restored in Shortcuts and App Help dialogs",
+            "sub": [
+              "Both scrollable areas (scrollArea in showShortcutsHelp, contentArea in showAppHelp) now carry tabIndex=0 and outline:none so the browser can give them keyboard focus",
+              "A mouseenter listener calls .focus() on the scroll container whenever the mouse enters, so ↑ ↓ PageUp PageDown Home End all work natively without any manual scroll math",
+              "No interference with existing Escape / click-outside close handlers"
+            ]
+          },
+          {
+            "text": "Blinking text-caret in ❓ Application Help button eliminated",
+            "sub": [
+              "uiHelpBtnCSS() now appends user-select:none; -webkit-user-select:none; to its returned CSS string",
+              "Some browsers treated the ❓ emoji glyph as a selectable text node inside the inline-flex button and rendered a blinking I-beam caret; making the content non-selectable suppresses this"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.90.0",
+    "date": "2026-02-24",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          {
+            "text": "Dialog UX: unified sticky close-hint footer",
+            "sub": [
+              "Keyboard Shortcuts dialog: moved 'Click outside or press Escape to close' hint out of the scrollable content area into a dedicated flex-shrink:0 footer sibling — the hint now stays visible while scrolling",
+              "Application Help & Feature Overview dialog: replaced the 'Close' button footer with the same sticky divider + close-hint footer pattern used in the Shortcuts dialog",
+              "Application Help & Feature Overview dialog: implemented click-outside-to-close handler (with 100 ms delay to avoid the opening click triggering an immediate close); closeDialog() now also removes the click-outside listener on teardown"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.89.0",
+    "date": "2026-02-23",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          {
+            "text": "Help dialog: Force refresh",
+            "sub": [
+              "Added 🔄 Force refresh link in title bar (left of ✕)",
+              "Bypasses GM cache and downloads latest help text from GitHub in-place",
+              "loadAndRender() now accepts forceRefresh boolean parameter",
+              "Extended info-level logging: URL, source (cache / network), byte size, stale-cache warnings"
+            ]
+          },
+          {
+            "text": "Popup dialogs refactored to VZ_MBLibrary",
+            "sub": [
+              "All 5 call sites now use Lib.showCustomAlert() / Lib.showCustomConfirm()",
+              "Local showCustomDialog / showCustomAlert / showCustomConfirm removed"
+            ]
+          }
+        ]
+      },
+      {
+        "label": "🧹 Cleanup",
+        "items": [
+          "Removed 🪟 POPUP UI STYLES configSchema section (sa_popup_dialog_style, …_header_style, …_message_style, …_ok_btn_style, …_cancel_btn_style, sa_popup_btn_gap)",
+          "Removed local popupDialogCSS / popupHeaderCSS / popupMessageCSS / popupOkBtnCSS / popupCancelBtnCSS helpers"
+        ]
+      },
+      {
+        "label": "⚙️ Internal",
+        "items": [
+          "SCRIPT_ID derived automatically from SCRIPT_BASE_NAME (CamelCase → kebab-case + vz-mb- prefix)",
+          "SCRIPT_NAME, REMOTE_HELP_URL, REMOTE_CHANGELOG_URL, CACHE_KEY_HELP, CACHE_KEY_CHANGELOG all derived from SCRIPT_BASE_NAME — no more hardcoded duplicates"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.88.0",
+    "date": "2026-02-23",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          {
+            "text": "Settings dialog safety guards",
+            "sub": [
+              "CLOSE link, Escape key, and backdrop click detect unsaved changes via snapshot diff",
+              "Confirmation dialog shown before discarding edits",
+              "RESET always requires explicit confirmation before applying defaults"
+            ]
+          },
+          {
+            "text": "showCustomDialog / showCustomAlert / showCustomConfirm moved to VZ_MBLibrary",
+            "sub": [
+              "Library functions use self-contained CSS defaults",
+              "Exposed on the library public API for all consumer scripts"
+            ]
+          }
+        ]
+      },
+      {
+        "label": "⚙️ Internal",
+        "items": [
+          {
+            "text": "SCRIPT_BASE_NAME refactor",
+            "sub": [
+              "SCRIPT_ID derived programmatically from SCRIPT_BASE_NAME (CamelCase → kebab-case)",
+              "All constants (SCRIPT_NAME, URLs, cache keys) derived from SCRIPT_BASE_NAME",
+              "All [VZ-ShowAllEntityData] log strings updated to use the constant",
+              "Lib.prefix assignment updated"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.87.0",
+    "date": "2026-02-23",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          "Application help and changelog now loaded from GitHub on demand",
+          "Fetch + cache logic moved to VZ_MBLibrary (fetchCachedText / fetchRemoteText)"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.86.0",
+    "date": "2026-02-23",
+    "sections": [
+      {
+        "label": "⚙️ Internal",
+        "items": [
+          "Application help text uploaded to GitHub as ShowAllEntityData_HELP.txt",
+          "Changelog uploaded to GitHub as ShowAllEntityData_CHANGELOG.json"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.85.0",
+    "date": "2026-02-23",
+    "sections": [
+      {
+        "label": "🧹 Refactor",
+        "items": [
+          "Extracted makeButtonHTML(text, underlineChar, icon) helper",
+          "All button innerHTML assignments with a single underlined accelerator now use this function"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.84.0",
+    "date": "2026-02-23",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Fixed alignment of button text when underline characters are present"] }
+    ]
+  },
+  {
+    "version": "9.83.0",
+    "date": "2026-02-23",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Added missing keyboard shortcut hints to button tooltips"] }
+    ]
+  },
+  {
+    "version": "9.82.0",
+    "date": "2026-02-23",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          {
+            "text": "Export / Save dialogs now show row counts",
+            "sub": [
+              "Export popups: N rows exported (+ of M total when rows are filtered)",
+              "Save to Disk popup: N rows saved",
+              "showExportNotification gains optional totalRows parameter",
+              "triggerStandardDownload gains rowCount parameter; all export functions count skipped rows"
+            ]
+          },
+          "Tooltip shortcut letters uppercased: v→V, e→E, t→I, d→D, r→R (×3), s→S, l→L",
+          "Action button tooltips: appended (prefix, then N) hint for Ctrl-M+digit shortcuts (buttons 1–9)"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.81.0",
+    "date": "2026-02-23",
+    "sections": [
+      {
+        "label": "🧹 Refactor",
+        "items": [
+          {
+            "text": "Replace text/title-based button lookups with stable ID-based lookups",
+            "sub": [
+              "mb-visible-btn assigned to Visible Columns toggle button",
+              "mb-resize-btn assigned to Auto-Resize button",
+              "All querySelector/Array.find lookups replaced with document.getElementById"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.80.0",
+    "date": "2026-02-23",
+    "sections": [
+      {
+        "label": "🐛 Fixes",
+        "items": ["Enter on focused Select All / Deselect All / Choose current configuration in Visible menu now fires the click handler before closing"]
+      },
+      {
+        "label": "🎨 UI",
+        "items": [
+          { "text": "Button renames", "sub": ["Auto-Resize → Resize (R underlined)", "Restore Width → Restore (R underlined)", "Visible Columns → Visible (V underlined)", "Stats → Statistics (i underlined)"] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.79.0",
+    "date": "2026-02-22",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Tab, Shift-Tab, and cursor up/down key cycling now works correctly"] }
+    ]
+  },
+  {
+    "version": "9.78.0",
+    "date": "2026-02-22",
+    "sections": [
+      { "label": "📝 Docs", "items": ["Help text rewrite"] }
+    ]
+  },
+  {
+    "version": "9.77.0",
+    "date": "2026-02-22",
+    "sections": [
+      {
+        "label": "🐛 Fixes",
+        "items": [
+          { "text": "Column Visibility Tab focus-trap: registered keydown with useCapture=true (browsers resolve Tab at target phase, before bubbling)", "sub": ["menu.style.display guard prevents side-effects when menu is closed"] },
+          "Ctrl-M tooltip Functions list: now in ctrlMFunctionMap insertion order, not alphabetically sorted"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.76.0",
+    "date": "2026-02-22",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          { "text": "Column Visibility menu: Tab focus-trap", "sub": ["Tab: checkboxes → Select All → Deselect All → Choose current config → back to first checkbox", "Shift+Tab reverses"] },
+          "Ctrl+T: direct shortcut for Statistics panel",
+          "Ctrl+K: direct shortcut for keyboard-shortcuts help dialog"
+        ]
+      },
+      {
+        "label": "🎨 UI",
+        "items": [
+          "#headerid-query input blurred on page load so shortcuts are immediately reachable",
+          "#mb-global-filter-input auto-focused 150 ms after render"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.75.0",
+    "date": "2026-02-22",
+    "sections": [
+      {
+        "label": "🐛 Fixes",
+        "items": [
+          "Prefix-mode shortcuts help key changed from ? to k; ?/slash remain as direct shortcuts",
+          "CSV export: showExportNotification called before filename const declaration (TDZ ReferenceError) — moved after declaration",
+          "VZ_MBLibrary: buildShortcutString now uppercases alphabetic keys (Ctrl+M, not Ctrl+m)"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.74.0",
+    "date": "2026-02-22",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          "Ctrl-M extended: h=App Help and ,=Settings added to ctrlMFunctionMap",
+          { "text": "Export refactor", "sub": ["exportTableToCSV duplicate inline notification removed", "Now calls showExportNotification() like JSON and Org-Mode"] },
+          "triggerStandardDownload: Close button auto-focused via setTimeout"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.73.0",
+    "date": "2026-02-22",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          {
+            "text": "Configurable keyboard shortcuts — 12 new configSchema entries",
+            "sub": [
+              "sa_shortcut_open_settings, sa_shortcut_focus_global_filter, sa_shortcut_focus_column_filter, sa_shortcut_clear_filters",
+              "sa_shortcut_open_export, sa_shortcut_save_to_disk, sa_shortcut_load_from_disk, sa_shortcut_open_visible_columns",
+              "sa_shortcut_open_density, sa_shortcut_toggle_h2, sa_shortcut_toggle_h3, sa_shortcut_auto_resize"
+            ]
+          },
+          "Helpers: isShortcutEvent(e, settingKey, fallback) and getShortcutDisplay(settingKey, fallback)",
+          "initKeyboardShortcuts() fully refactored — all hardcoded guards replaced by isShortcutEvent()",
+          "showShortcutsHelp() sections updated: all configurable shortcuts shown via getShortcutDisplay()"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.72.0",
+    "date": "2026-02-22",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          {
+            "text": "Fully implemented 🖌️ UI APPEARANCE config section — 13 condensed pipe-separated settings",
+            "sub": [
+              "sa_ui_action_btn_style, sa_ui_save_btn_style, sa_ui_load_btn_style, sa_ui_stop_btn_style",
+              "sa_ui_settings_btn_style, sa_ui_help_btn_style, sa_ui_button_divider_style",
+              "sa_ui_global_filter_input_style, sa_ui_prefilter_input_style, sa_ui_column_filter_input_style",
+              "sa_ui_subtable_btn_style, sa_ui_filter_bar_btn_style, sa_ui_checkbox_style"
+            ]
+          },
+          "Unique mb- IDs added to all previously anonymous elements"
+        ]
+      },
+      {
+        "label": "🐛 Fixes",
+        "items": ["preFilterInput font-size typo \"1.oem\" → \"1em\" fixed via config default"]
+      }
+    ]
+  },
+  {
+    "version": "9.71.0",
+    "date": "2026-02-22",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          {
+            "text": "New extractFormatTypes column extractor for release-group, label, and series pages",
+            "sub": [
+              "Strips leading quantity factors (8×, 2x) from media-type tokens in Format cells",
+              "Converts + separator to , between distinct types",
+              "Registered in columnExtractors for releasegroup-releases, label-releases, series-releases"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.70.0",
+    "date": "2026-02-22",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          {
+            "text": "ColumnDataExtractor — named-function registry for column extraction",
+            "sub": [
+              "Four named extractors: splitCountryDate, splitLocation, splitArea, sumTracks",
+              "buildActiveColumnExtractors(def) converts activeDefinition to runtime descriptor array",
+              "Translates legacy splitCD/splitLocation/splitArea boolean flags transparently"
+            ]
+          }
+        ]
+      },
+      {
+        "label": "🧹 Refactor",
+        "items": [
+          "All pageDefinitions migrated from boolean split* flags to canonical columnExtractors array",
+          "Module-level typesWithSplitCD/Location/Area arrays replaced by unified activeColumnExtractors",
+          "Header scanning and row-processing loops rewritten; ~80 lines of legacy inline code removed"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.65.0",
+    "date": "2026-02-22",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          "Action buttons: superscript mnemonics ¹²³… appended after 🧮 emoji as Ctrl-M+digit reminders",
+          { "text": "Shortcuts popup restructured", "sub": ["Sticky flex title-bar with separate scrollable content area", "No longer overflows viewport with many sections"] },
+          "Stats panel: Sub-Tables: N table(s) added as first row",
+          "Single sub-table on multi-table page: auto-expanded unconditionally",
+          "Progress-bar: removed redundant Loading page N of M… text from globalStatusDisplay"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.64.0",
+    "date": "2026-02-21",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Progress bar label reformatted: \"Loading page N of M... (K rows) - est. X.Xs\""] }
+    ]
+  },
+  {
+    "version": "9.63.0",
+    "date": "2026-02-21",
+    "sections": [
+      { "label": "⚙️ Internal", "items": ["All 6 sa_popup_* configSchema entries: type changed to \"popup_dialog\"; each gains a fields[] array"] }
+    ]
+  },
+  {
+    "version": "9.62.0",
+    "date": "2026-02-21",
+    "sections": [
+      {
+        "label": "🐛 Fixes",
+        "items": [
+          { "text": "Prefilter toggle button text after disk-load always includes total row count", "sub": ["Exclude mode: \"🎨 N out of T row(s) excluded: query\"", "Keep mode: \"🎨 N out of T row(s) prefiltered: query\""] },
+          "Progress bar: min-width 420px / max-width 750px to prevent label clipping"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.61.0",
+    "date": "2026-02-21",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          "Progress bar label: full message with estimated time; outer width changed to auto/min-260px/max-500px",
+          { "text": "Load dialog: Exclude Matches checkbox", "sub": ["Rows matching the filter are EXCLUDED; non-matching rows kept", "Wired end-to-end through confirmLoad, fileInput.onchange, loadTableDataFromDisk (new isExclude param)"] },
+          "Load dialog placeholder renamed from \"Search expression…\" to \"Filter expression…\""
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.60.0",
+    "date": "2026-02-21",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          { "text": "Custom CSS progress bar replaces native <progress>", "sub": ["Fill width animated via CSS transition; label absolutely centered over fill", "mix-blend-mode:difference + filter:invert(1) for always-readable text", "Fill colour transitions red→orange→green at 0%/50%/100%"] },
+          "Rendering time appended to globalStatusDisplay final text",
+          "New sa_render_warning_threshold config (default 10 000): warns before rendering large datasets; Cancel aborts render"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.59.0",
+    "date": "2026-02-21",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          { "text": "Inline fetch progress bar added to the h1 controls line", "sub": ["Wrapped in span#mb-fetch-progress-wrap; shown at fetch start, hidden at all exit paths", "Fills red→orange→green as page fraction crosses 0%/50%/100%"] }
+        ]
+      },
+      { "label": "🎨 UI", "items": ["Renamed \"Clear all COLUMN filters\" button to \"Clear ALL filters\""] }
+    ]
+  },
+  {
+    "version": "9.58.0",
+    "date": "2026-02-21",
+    "sections": [
+      {
+        "label": "🐛 Fixes",
+        "items": [
+          { "text": "Multi-sort tints lost on body cells when second multi-sort activates on another table", "sub": ["Root cause: tints only re-applied in makeTableSortableUnified branch (b), not in query+existingTable re-render branch (a)", "Fix: explicit tint re-application added after rows-append in branch (a), keyed by multiSortTintRegistry sortKey"] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.57.0",
+    "date": "2026-02-20",
+    "sections": [
+      {
+        "label": "🐛 Fixes",
+        "items": [
+          "Tints not clearing on ⇅ click / not appearing on first Ctrl+Click: moved applyMultiSortColumnTints() to after runFilter() so fresh rows are tinted",
+          { "text": "Value-group run-length coloring: alternates between two shades (light 'a' / darker 'b') each time cell text changes", "sub": ["CSS updated from 8 flat classes to 16 two-shade pairs (mb-mscol-Na / mb-mscol-Nb)"] },
+          "mb-sort-status alignment: align-items:baseline for correct h3 header baseline alignment"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.56.0",
+    "date": "2026-02-20",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          { "text": "Visual column-group tinting for multi-column sort", "sub": ["8 pastel tints per column priority: amber, sky-blue, mint, mauve, peach, teal, lavender, vanilla", "Semi-transparent rgba preserves zebra-stripe row backgrounds", "applyMultiSortColumnTints() / clearMultiSortColumnTints() helpers", "Works independently per table on both page types"] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.55.0",
+    "date": "2026-02-20",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          { "text": "Multi-column sort lifted to all page types", "sub": ["Previously restricted to single-table pages; every sub-table on multi-table pages now independently multi-sortable", "All isMultiTable guards removed; tooltips unified"] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.54.0",
+    "date": "2026-02-20",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          { "text": "Multi-sort UX: auto-seed chain from existing single-sort", "sub": ["Ctrl+clicking a new column promotes existing single-sort column to priority 1, new column to priority 2"] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.53.0",
+    "date": "2026-02-20",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          "showCustomAlert / showCustomConfirm merged into showCustomDialog(message, title, triggerButton, mode)",
+          { "text": "All popup visual parameters configurable via 6 condensed config strings", "sub": ["sa_popup_dialog_style, sa_popup_header_style, sa_popup_message_style", "sa_popup_ok_btn_style, sa_popup_cancel_btn_style, sa_popup_btn_gap", "New section 🪟 CUSTOM POPUP UI in configSchema"] },
+          "Improved defaults: header font-size 1.5em, message font-size 1.2em / line-height 1.7, border-radius 10px, padding 28px"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.52.0",
+    "date": "2026-02-20",
+    "sections": [
+      {
+        "label": "🐛 Fixes",
+        "items": [
+          "mb-subtable-clear-btn always rendered left of span.mb-filter-status in all three construction sites",
+          "Toggle buttons share consistent rounded-corner style",
+          "Added unique IDs mb-clear-column-filters-btn and mb-clear-all-filters-btn"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.51.0",
+    "date": "2026-02-20",
+    "sections": [
+      {
+        "label": "🎨 UI",
+        "items": [
+          "Show all sub-table overflow button: added mb-show-all-subtable-btn class; moved to beginning of mb-subtable-controls",
+          "Stop button repositioned: appears right before first divider, between action buttons and Save/Load",
+          "Ctrl-M + o wired to Stop button (only while Stop button is visible)"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.50.0",
+    "date": "2026-02-20",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Invalid CSS selector broke global filter input state read; highlight toggle and Ctrl-Shift-G were broken"] }
+    ]
+  },
+  {
+    "version": "9.49.0",
+    "date": "2026-02-19",
+    "sections": [
+      { "label": "🧹 Cleanup", "items": ["Removed info logging for upcoming release"] }
+    ]
+  },
+  {
+    "version": "9.48.0",
+    "date": "2026-02-19",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          { "text": "Multi-column sorting for single-table page types", "sub": ["New createMultiColumnComparator(sortColumns, headers)", "State carries multiSortColumns:[{colIndex,direction}] array", "Plain click → single-sort; Ctrl+Click → add/update/remove from chain; ⇅ → restore and clear", "Superscript priority numbers ¹²³… on active icons via updateMultiSortVisuals()", "Sort-status: \"Multi-sorted by: \\\"Col1\\\"▲, \\\"Col2\\\"▼ (N rows in Xms)\""] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.47.0",
+    "date": "2026-02-19",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["h3 sub-table control order corrected: filterStatus → sortStatus → clearBtn → showAllBtn"] }
+    ]
+  },
+  {
+    "version": "9.46.0",
+    "date": "2026-02-19",
+    "sections": [
+      {
+        "label": "🐛 Fixes",
+        "items": [
+          "Sort debug log now includes direction icon before column index",
+          "Filter status in single-table mode uses filteredRows.length (in-memory) instead of DOM tbody tr count — eliminates mismatch with H2 row-count span after async chunked render"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.45.0",
+    "date": "2026-02-19",
+    "sections": [
+      {
+        "label": "🎨 UI",
+        "items": [
+          "Fixed vertical alignment of mb-global-status-display and mb-info-display",
+          "Removed mb-fetch-progress-container and never-used timerDisplay — live progress now in globalStatusDisplay",
+          { "text": "Button-group separators improved", "sub": ["initialDivider no longer removed by ensureSettingsButtonIsLast", "New mb-button-divider-before-shortcuts kept pinned before 🎹"] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.44.0",
+    "date": "2026-02-19",
+    "sections": [
+      {
+        "label": "🎨 UI",
+        "items": [
+          "statusDisplaysContainer injected inline into <p class=\"subheader\"> on the same line as subheader text",
+          "Left edge aligned to first action button via getBoundingClientRect(); resize listener keeps alignment correct",
+          "Falls back to block line below h1 on search pages (no subheader)"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.43.0",
+    "date": "2026-02-19",
+    "sections": [
+      {
+        "label": "🎨 UI",
+        "items": [
+          "statusDisplaysContainer rendered as block div below h1; left edge aligned to first action button",
+          "Removed three separate per-page-type placement branches in favour of single universal strategy"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.42.0",
+    "date": "2026-02-19",
+    "sections": [
+      { "label": "🧹 Refactor", "items": ["Extracted getColFilters() and testRowMatch() helpers to eliminate duplicated row-matching logic in runFilter()"] }
+    ]
+  },
+  {
+    "version": "9.41.0",
+    "date": "2026-02-19",
+    "sections": [
+      { "label": "🚀 Features", "items": ["New global filter exclusion checkbox"] }
+    ]
+  },
+  {
+    "version": "9.40.0",
+    "date": "2026-02-19",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          { "text": "Configurable keyboard shortcut prefix", "sub": ["New sa_keyboard_shortcut_prefix setting (default: Ctrl+M); accepts Ctrl+., Alt+X, Ctrl+Shift+, etc.", "Helpers: parsePrefixShortcut(), getPrefixDisplay(), isPrefixKeyEvent()", "Ctrl in config matches both Ctrl and Meta/Cmd", "All tooltips, overlay header, shortcuts-help dialog, debug logs updated dynamically"] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.39.0",
+    "date": "2026-02-19",
+    "sections": [
+      { "label": "🚀 Features", "items": ["❓ Application Help button (always visible, right of ⚙️): scrollable popup with full feature overview"] }
+    ]
+  },
+  {
+    "version": "9.38.0",
+    "date": "2026-02-19",
+    "sections": [
+      {
+        "label": "🐛 Fixes",
+        "items": [
+          "Page Reloaded popup positioned below triggering Show all button after final render",
+          "📂 Load Table Data dialog repositioned below 📂 Load from Disk button; Alt-L shortcut to confirm from within dialog",
+          "OK button focus and Tab navigation in custom popups: removed outline:none so focus outline is visible"
+        ]
+      },
+      { "label": "🎨 UI", "items": ["⌨️ Shortcuts button renamed to 🎹; visible immediately on page entry, left of ⚙️"] }
+    ]
+  },
+  {
+    "version": "9.37.0",
+    "date": "2026-02-19",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Load from Disk now defaults to Gzipped files (*.gz)"] }
+    ]
+  },
+  {
+    "version": "9.36.0",
+    "date": "2026-02-19",
+    "sections": [
+      { "label": "🧹 Refactor", "items": ["Reordered source code: configuration and pageType definitions moved to top of file"] }
+    ]
+  },
+  {
+    "version": "9.35.0",
+    "date": "2026-02-18",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          { "text": "Replaced three native browser dialogs with custom styled implementations", "sub": ["Page reload alert", "High page count warning (Enter=proceed, Escape=cancel)", "Page type mismatch on load", "Invalid regex alert"] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.34.0",
+    "date": "2026-02-18",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          { "text": "Ctrl-M Emacs-style keybinding system with tooltip", "sub": ["Press Ctrl-M + release, then press key: 1-9 = action buttons, a-z = additional buttons", "Function shortcuts: r=Resize, t=Stats, s=Save, d=Density, v=Visible, e=Export, l=Load, ?=Help", "Configurable tooltip positioned upper-right of content; auto-hides on exit", "Underlined keyboard shortcuts in button text for visual reference"] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.33.1",
+    "date": "2026-02-17",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Ctrl+M triggers first Show all button", "h3 Ctrl+Click toggles ALL h3 headers simultaneously", "Ctrl+M added to shortcuts help dialog"] }
+    ]
+  },
+  {
+    "version": "9.33.0",
+    "date": "2026-02-17",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          "Visible Columns: Choose current configuration button with Alt-C shortcut",
+          "Collapse shortcuts: Ctrl-2 toggles all h2; Ctrl-3 toggles all h3",
+          { "text": "Smart button visibility", "sub": ["Toggle highlighting, Clear COLUMN filters, Clear ALL filters only appear when filters are active"] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.32.0",
+    "date": "2026-02-17",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Visible Columns: Ctrl+V to open; Tab cycles checkboxes and buttons; Alt-S/Alt-D for Select/Deselect All", "Density: Ctrl+D to open", "Export close button auto-focused"] }
+    ]
+  },
+  {
+    "version": "9.31.0",
+    "date": "2026-02-17",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Full keyboard navigation in all pull-down menus (Visible Columns, Density, Export): Up/Down, Space/Enter, auto-focus on open"] }
+    ]
+  },
+  {
+    "version": "9.30.0",
+    "date": "2026-02-17",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Collapsible Sidebar and Auto-Resize Columns no longer break Stick Table Headers"] }
+    ]
+  },
+  {
+    "version": "9.26.1",
+    "date": "2026-02-16",
+    "sections": [
+      {
+        "label": "🐛 Fixes",
+        "items": [
+          "Removed redundant Unhighlight prefilter button",
+          "Toggle highlighting Restore: now re-runs runFilter() instead of manual highlight re-application",
+          "Added 🎨 emoji to dynamic prefilter button text"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.26.0",
+    "date": "2026-02-16",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          { "text": "Split prefilter / filter highlighting into separate toggle buttons", "sub": ["Separate prefilter toggle (only visible when disk-loaded data has a prefilter)", "Toggle highlighting only controls global filter and column filter", "Independent state tracking and save/restore for each"] }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.25.0",
+    "date": "2026-02-16",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Unhighlight all → Toggle highlighting (click once to remove, again to restore)", "Prefilter info in button text instead of separate span", "Button background changes to highlight color when highlighting is disabled"] }
+    ]
+  },
+  {
+    "version": "9.24.2",
+    "date": "2026-02-16",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Prefiltering on disk-load: fileInput.onchange now reads filter parameters from UI before calling loadTableDataFromDisk()"] }
+    ]
+  },
+  {
+    "version": "9.24.1",
+    "date": "2026-02-16",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["\"Cannot access settingsBtn before initialization\" — moved declaration before first usage"] }
+    ]
+  },
+  {
+    "version": "9.24.0",
+    "date": "2026-02-16",
+    "sections": [
+      {
+        "label": "🎨 UI",
+        "items": [
+          "Clear column filter buttons render ✗ in red; refactored into createClearColumnFiltersButton() helper",
+          "⚙️ button relocated: after Load from Disk initially, then always last after data is loaded",
+          "| dividers added between button groups"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.23.0",
+    "date": "2026-02-16",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Global status display and info display moved to subheader area (one line below h1)"] }
+    ]
+  },
+  {
+    "version": "9.22.0",
+    "date": "2026-02-16",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Dedicated infoDisplay for Auto-resize, Density, Export, Load messages — no longer overwrites filter/sort status"] }
+    ]
+  },
+  {
+    "version": "9.21.1",
+    "date": "2026-02-16",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Escape two-press in filter fields: first press clears and keeps focus; second press blurs (conflicting old handlers removed)"] }
+    ]
+  },
+  {
+    "version": "9.21.0",
+    "date": "2026-02-16",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Escape in filter: first press clears, second blurs", "Shortcuts dialog redesigned: modern white background, organized sections, no dark overlay", "Added close hint to Shortcuts, Density, and Export menus"] }
+    ]
+  },
+  {
+    "version": "9.20.2",
+    "date": "2026-02-16",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Ctrl-C skips checkbox and number (#) columns", "All Ctrl/Cmd shortcuts work while typing in input fields; only ? and / require not typing"] }
+    ]
+  },
+  {
+    "version": "9.20.1",
+    "date": "2026-02-16",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Ctrl-C: fixed CSS class selector (mb-filter-row → mb-col-filter-row)"] }
+    ]
+  },
+  {
+    "version": "9.20.0",
+    "date": "2026-02-16",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Ctrl-C: focus first column filter; on multi-table pages cycles through all tables", "Export dropdown: header and format descriptions, consistent styling with Density"] }
+    ]
+  },
+  {
+    "version": "9.19.0",
+    "date": "2026-02-16",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Button duplication after disk-load: all button-adding functions now check before creating"] }
+    ]
+  },
+  {
+    "version": "9.18.0",
+    "date": "2026-02-15",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          "Export dropdown: CSV, JSON, and Emacs Org-Mode formats",
+          "Save to Disk: gzip compression (.json.gz) via pako (~60-80% size reduction); Load auto-detects and decompresses .gz",
+          "Settings button works by triggering the Editing menu link"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.17.1",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["⚙️ Settings button correctly positioned in h1 header with float:right; responsive to window resize"] }
+    ]
+  },
+  {
+    "version": "9.17.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["⚙️ Settings positioned at far right of h2 with float:right", "Ctrl-F shortcut properly focuses global filter", "Stats panel shows correct cross-table statistics"] }
+    ]
+  },
+  {
+    "version": "9.16.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Tooltips on unhighlight, clear filter, and Show all buttons", "Global ⚙️ Settings button in h2 header"] }
+    ]
+  },
+  {
+    "version": "9.15.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Sub-table status displays appear in h3 headers when filtering on multi-table pages", "Global filter status correct in h2 header for all multi-table page types"] }
+    ]
+  },
+  {
+    "version": "9.14.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Visible Columns button turns red when columns are hidden"] }
+    ]
+  },
+  {
+    "version": "9.13.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Hiding/showing columns after Auto-Resize correctly updates widths; hidden columns excluded from measurement; visible column count correct"] }
+    ]
+  },
+  {
+    "version": "9.12.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Auto-Resize skips hidden Visible-Columns columns during measurement and sizing"] }
+    ]
+  },
+  {
+    "version": "9.11.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Auto-Resize includes sort symbol widths (⇅, ▲, ▼) in header measurement"] }
+    ]
+  },
+  {
+    "version": "9.10.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Column visibility menu auto-sizes to content without scrollbars", "Status display font sizes adjusted to h2/h3 text heights"] }
+    ]
+  },
+  {
+    "version": "9.9.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Column visibility menu: draggable header and close instructions"] }
+    ]
+  },
+  {
+    "version": "9.8.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Separate sorting and filtering status displays with different fonts; applied to both single-table and multi-table pages"] }
+    ]
+  },
+  {
+    "version": "9.7.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Sub-table specific status displays and clear filter buttons in h3 headers on multi-table pages"] }
+    ]
+  },
+  {
+    "version": "9.6.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Column visibility toggle now applied to ALL tables on multi-table pages"] }
+    ]
+  },
+  {
+    "version": "9.5.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Reintroduced native browser confirm (modal dialog caused execution to hang)"] }
+    ]
+  },
+  {
+    "version": "9.4.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Reordered action buttons into a more logical workflow"] }
+    ]
+  },
+  {
+    "version": "9.3.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Better sidebar toggling for more screen real estate when collapsed"] }
+    ]
+  },
+  {
+    "version": "9.2.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Status display correctly shows sorting/filtering results with table name and column info", "Fixed ReferenceError causing Sort failed and Filtering… to persist"] }
+    ]
+  },
+  {
+    "version": "9.1.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Clear-all-filters button at both global and column level"] }
+    ]
+  },
+  {
+    "version": "9.0.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "🚀 Features", "items": ["New status display handling — global and sorting/filtering related"] }
+    ]
+  },
+  {
+    "version": "8.0.0",
+    "date": "2026-02-15",
+    "sections": [
+      { "label": "📝 Docs", "items": ["Function descriptions added throughout"] }
+    ]
+  },
+  {
+    "version": "7.4.0",
+    "date": "2026-02-14",
+    "sections": [
+      { "label": "🚀 Features", "items": ["New configuration dialog with sections and dividers; all UI features made opinionated via settings"] }
+    ]
+  },
+  {
+    "version": "7.3.2",
+    "date": "2026-02-14",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Resize handles persist after clicking Restore Width (were removed during restore and not re-added)"] }
+    ]
+  },
+  {
+    "version": "7.3.1",
+    "date": "2026-02-14",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Manual column resizing on initial page load (undefined variable bug)"] }
+    ]
+  },
+  {
+    "version": "7.3.0",
+    "date": "2026-02-14",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Manual column resizing enabled immediately on page render — no need to click Auto-Resize first", "Button labels: 👁️ Visible Columns, Export 💾"] }
+    ]
+  },
+  {
+    "version": "7.2.0",
+    "date": "2026-02-14",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Manual column resizing: drag column edges (like Excel/Sheets); Restore Width button; hover highlights and green active indicator"] }
+    ]
+  },
+  {
+    "version": "7.1.1",
+    "date": "2026-02-14",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Auto-Resize measures cells with images, icons, and links correctly by cloning actual cell HTML (not text-only)"] }
+    ]
+  },
+  {
+    "version": "7.1.0",
+    "date": "2026-02-14",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Auto-Resize toggle: click once to resize, again to restore; button changes to ↔️ Restore Width with green highlight; full table state preserved"] }
+    ]
+  },
+  {
+    "version": "7.0.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Auto-Resize Columns: optimal column widths preventing text wrapping; horizontal scrolling in content area while sidebar stays fixed"] }
+    ]
+  },
+  {
+    "version": "6.9.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Table Density Control: Compact / Normal / Comfortable spacing via 📏 Density button"] }
+    ]
+  },
+  {
+    "version": "6.8.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Quick Stats Panel: row counts, column counts, filter status, memory usage via 📊 Stats button"] }
+    ]
+  },
+  {
+    "version": "6.7.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Keyboard shortcuts: Ctrl+F, Ctrl+Shift+F, Ctrl+E, Ctrl+S, Ctrl+L, Escape, ?/slash; ⌨️ Shortcuts help button"] }
+    ]
+  },
+  {
+    "version": "6.6.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "🚀 Features", "items": ["CSV export via 📥 Export CSV button; auto-generated filename with timestamp"] }
+    ]
+  },
+  {
+    "version": "6.5.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Column visibility toggle via 👁️ Columns button: show/hide individual columns; Select All / Deselect All"] }
+    ]
+  },
+  {
+    "version": "6.4.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Sticky table headers: column headers and filter row remain visible while scrolling"] }
+    ]
+  },
+  {
+    "version": "6.3.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "⚡ Performance", "items": ["Async chunked merge sort for large tables (>5000 rows)", "Progress bar for sorts over 10k rows; color-coded sort timing"] }
+    ]
+  },
+  {
+    "version": "6.2.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "⚡ Performance", "items": ["Debounced filtering with configurable delay (default 300ms)", "Filter timing display with color-coded performance indicators"] }
+    ]
+  },
+  {
+    "version": "6.1.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Regexp column filter: decorating symbols (e.g. ▶) no longer break matching"] }
+    ]
+  },
+  {
+    "version": "6.0.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Regexp global filter now considers each column separately"] }
+    ]
+  },
+  {
+    "version": "5.0.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "⚡ Performance", "items": ["Chunked renderer with progress updates when fetched row count exceeds configurable threshold"] }
+    ]
+  },
+  {
+    "version": "4.5.0",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Large dataset handling: offer direct save-to-disk instead of rendering when row count is excessive"] }
+    ]
+  },
+  {
+    "version": "4.4.2",
+    "date": "2026-02-13",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Popup dialog for prefilter string entry instead of permanent on-page display"] }
+    ]
+  },
+  {
+    "version": "4.4.1",
+    "date": "2026-02-12",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Highlighting of pre-filter expression"] }
+    ]
+  },
+  {
+    "version": "4.4.0",
+    "date": "2026-02-12",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Pre-filter when loading from disk"] }
+    ]
+  },
+  {
+    "version": "4.3.1",
+    "date": "2026-02-12",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Remove duplicate filter row when loading from disk", "Restore alternating even/odd row backgrounds after load"] }
+    ]
+  },
+  {
+    "version": "4.3.0",
+    "date": "2026-02-12",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Offline storage / cache: Save table data to disk and load from disk to avoid re-fetching from MusicBrainz"] }
+    ]
+  },
+  {
+    "version": "4.2.0",
+    "date": "2026-02-11",
+    "sections": [
+      { "label": "🧹 Refactor", "items": ["Column removal refactored using a removalMap object"] }
+    ]
+  },
+  {
+    "version": "4.1.0",
+    "date": "2026-02-11",
+    "sections": [
+      { "label": "🧹 Refactor", "items": ["Debug logging flag passed as function to library constructor (dynamic check)"] }
+    ]
+  },
+  {
+    "version": "4.0.0",
+    "date": "2026-02-11",
+    "sections": [
+      { "label": "⚙️ Internal", "items": ["Userscript renamed to better reflect current functionality"] }
+    ]
+  },
+  {
+    "version": "3.3.0",
+    "date": "2026-02-11",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Fixed broken Aliases pages resulting in column misalignment"] }
+    ]
+  },
+  {
+    "version": "3.2.0",
+    "date": "2026-02-10",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Artist-Aliases pages: Artist credits table now renders with sorting/filtering"] }
+    ]
+  },
+  {
+    "version": "3.1.0",
+    "date": "2026-02-10",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Fixed overflow tables for Area-Releases pages (Relationship subtable case)"] }
+    ]
+  },
+  {
+    "version": "3.0.0",
+    "date": "2026-02-10",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Support for Area-Releases pages with multiple different initial table data"] }
+    ]
+  },
+  {
+    "version": "2.7.0",
+    "date": "2026-02-09",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Transform search results paragraph into collapsible H2 header"] }
+    ]
+  },
+  {
+    "version": "2.6.0",
+    "date": "2026-02-08",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Area splitting"] }
+    ]
+  },
+  {
+    "version": "2.5.1",
+    "date": "2026-02-08",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["URL construction preserves query parameters (fixes Search pages)", "Extra debugging for table detection"] }
+    ]
+  },
+  {
+    "version": "2.5.0",
+    "date": "2026-02-08",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Search pages: target .pageselector-results instead of h2 for row counts/filters"] }
+    ]
+  },
+  {
+    "version": "2.4.0",
+    "date": "2026-02-07",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["Detection of filtered MusicBrainz pages (link_type_id): now allows proper pagination instead of treating them as overview pages"] }
+    ]
+  },
+  {
+    "version": "2.3.0",
+    "date": "2026-02-05",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Support for multi-table pages of type non_paginated (e.g. Place-Performances)"] }
+    ]
+  },
+  {
+    "version": "2.2.1",
+    "date": "2026-02-04",
+    "sections": [
+      { "label": "🧹 Refactor", "items": ["Column removal refactored; now supports Release events column from jesus2099 Super Mind Control script"] }
+    ]
+  },
+  {
+    "version": "2.2.0",
+    "date": "2026-02-04",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Support for Show all Performances for Recordings"] }
+    ]
+  },
+  {
+    "version": "2.1.0",
+    "date": "2026-02-04",
+    "sections": [
+      { "label": "🧹 Refactor", "items": ["Single- and multi-table sorting functions unified into shared implementation"] }
+    ]
+  },
+  {
+    "version": "2.0.0",
+    "date": "2026-02-03",
+    "sections": [
+      { "label": "🧹 Refactor", "items": ["pageType detection refactored"] }
+    ]
+  },
+  {
+    "version": "1.8.0",
+    "date": "2026-02-03",
+    "sections": [
+      { "label": "🚀 Features", "items": ["RegExp filtering via additional Rx checkbox"] }
+    ]
+  },
+  {
+    "version": "1.7.0",
+    "date": "2026-02-02",
+    "sections": [
+      { "label": "🚀 Improvements", "items": ["Sidebar collapse made conditional on setting; only initialized after process completion"] }
+    ]
+  },
+  {
+    "version": "1.6.2",
+    "date": "2026-02-02",
+    "sections": [
+      { "label": "🐛 Fixes", "items": ["pageType Recording-Releases: button text was wrong"] }
+    ]
+  },
+  {
+    "version": "1.6.1",
+    "date": "2026-02-02",
+    "sections": [
+      { "label": "⚙️ Internal", "items": ["loggerInterface.prefix exposed with getter/setter"] }
+    ]
+  },
+  {
+    "version": "1.6.0",
+    "date": "2026-02-02",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Color picker for settings fields that represent a color"] }
+    ]
+  },
+  {
+    "version": "1.5.0",
+    "date": "2026-02-01",
+    "sections": [
+      { "label": "🧹 Refactor", "items": ["Settings, logging, and changelog handling extracted to VZ_MBLibrary"] }
+    ]
+  },
+  {
+    "version": "1.4.0",
+    "date": "2026-02-01",
+    "sections": [
+      { "label": "🧹 Refactor", "items": ["Settings refactored to a schema-driven framework"] }
+    ]
+  },
+  {
+    "version": "1.3.0",
+    "date": "2026-01-30",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Ctrl+Click on headers toggles all headers within the same container (sidebar vs main content)"] }
+    ]
+  },
+  {
+    "version": "1.2.0",
+    "date": "2026-01-30",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Collapsible sidebar with drag handle on vertical divider line"] }
+    ]
+  },
+  {
+    "version": "1.1.0",
+    "date": "2026-01-30",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Larger filter input boxes and text; several small UI improvements"] }
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "2026-01-30",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Support for Official and Various Artists on Artist-Releases pages"] }
+    ]
+  },
+  {
+    "version": "0.9.4",
+    "date": "2026-01-29",
+    "sections": [
+      { "label": "⚙️ Internal", "items": ["Modernized logging framework with colors, icons, and structured levels"] }
+    ]
+  },
+  {
+    "version": "0.9.3",
+    "date": "2026-01-29",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Visual progress bar with centered estimated time and dynamic coloring"] }
+    ]
+  },
+  {
+    "version": "0.9.2",
+    "date": "2026-01-29",
+    "sections": [
+      { "label": "🎨 UI", "items": ["Busy cursor for long-running sort operations (>1000 table rows)"] }
+    ]
+  },
+  {
+    "version": "0.9.1",
+    "date": "2026-01-29",
+    "sections": [
+      { "label": "🚀 Features", "items": ["Esc key clears focused filter fields", "ChangeLog entry added to Tampermonkey menu"] }
+    ]
+  },
+  {
+    "version": "0.9.0",
+    "date": "2026-01-28",
+    "sections": [
+      { "label": "🎉 Release", "items": ["First official release"] }
+    ]
+  }
+]
