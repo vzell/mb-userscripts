@@ -42286,18 +42286,6 @@ to
 
 doesn't look like it's focused when popping up (it should), also the "Close" button should be green, like the other "Close" buttons on the export dialogs
 
-* refactor
-
-The following two functions share more or less the same popup code
-
-#+begin_example
-    function triggerStandardDownload(url, filename, rowCount = 0) {
-    function showExportNotification(format, filename, rowCount, totalRows = 0) {
-#+end_example
-
-Please refactor
-
-
 * DONE default font 1.3em
 
 * DONE ## ==> v.
@@ -42309,9 +42297,18 @@ Please refactor
 #+end_example
 
 
-* sync to single table mode
+* refactor
 
-Please sync the following multi table mode "modeLabel" feature
+- The following two functions share more or less the same popup code
+
+#+begin_example
+    function triggerStandardDownload(url, filename, rowCount = 0) {
+    function showExportNotification(format, filename, rowCount, totalRows = 0) {
+#+end_example
+
+Please refactor
+
+- Please also sync the following multi table mode "modeLabel" feature
 
 #+begin_example
                 // Build a label that reflects the active filter modes
@@ -42328,3 +42325,38 @@ Please sync the following multi table mode "modeLabel" feature
 #+end_example
 
 also to the case of single table pages
+
+
+* Add an 🔍 icon
+
+Add an 🔍 icon (make it a toggle switch) in every h3 header row after the 
+
+#+begin_example
+<span class="mb-row-count-stat">
+#+end_example
+
+with the tooltip text "Toggle filter elements on/off" and the following action when clicked:
+
+Render a sub-table specific filter container after the 🔍 icon which should be modeled like the global filter
+infrastructure (which works for ALL tables in multi table mode) which should equivalently work now with the specific
+subtable or make the container invisible again when the 🔍 icon is clicked again.
+
+The sub-table specific filter container should have the following elements inside in the same order like the global pendant
+
+#+begin_example
+    <input id="mb-global-filter-input" placeholder="Global Filter..." title="Enter global filter string" style="font-size: 1em; padding: 2px 20px 2px 6px; border: 2px solid rgb(204, 204, 204); border-radius: 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;">
+    <span id="mb-global-filter-clear" title="Clear global filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
+    </span>
+  </span>
+  <label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+    <input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc
+  </label>
+  <label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+    <input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx
+  </label>
+  <label id="mb-global-filter-exclude-label" title="Exclude matches (Global Filter)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+    <input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex
+  </label>
+#+end_example
+
+please make the "id"-s unique per subtable (maybe use the subtabe h3 header name somwhow). Also change the placeholder text to be subtable specific
