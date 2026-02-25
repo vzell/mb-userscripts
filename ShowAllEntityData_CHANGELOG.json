@@ -1,6 +1,6 @@
 [
   {
-    "version": "9.97.2",
+    "version": "9.97.0",
     "date": "2026-02-25",
     "sections": [
       {
@@ -12,6 +12,51 @@
           "🔴 Clear ALL filters button now also clears all sub-table specific filter input fields (title updated to 'Clear global/sub-table filters and ALL column filters in all sub-tables')",
           "🎨 Toggle highlighting button now also removes/restores sub-table filter highlights in addition to global and column-filter highlights (title updated accordingly)",
           "Sub-table clear button text changed from 'Clear ALL filters' to 'Clear all COLUMN filters' and title updated to 'Clear all COLUMN filters for this table'"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.96.0",
+    "date": "2026-02-25",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          {
+            "text": "Sub-table filter: fixed highlight disappearing on second character and rows not restoring when deleting characters",
+            "sub": [
+              "Root cause: applySubFilter() skipped rows with display:none, but those included rows previously hidden by the subtable filter itself — so editing/deleting filter text never re-evaluated them",
+              "Fix: applySubFilter() now always restores all stf-hidden rows (data-mb-stf-hidden marker) and clears highlights at the top of every run, then re-evaluates ALL currently-visible rows against the new filter string",
+              "Secondary fix: highlight injection now uses a DocumentFragment instead of a wrapper span to inline the highlight spans directly into the parent element, preventing accumulation of empty wrapper spans across re-runs that confused the TreeWalker on subsequent calls",
+              "Deleting characters from the filter field now correctly restores matching rows (same behaviour as Escape / clear-button)"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.95.0",
+    "date": "2026-02-25",
+    "sections": [
+      {
+        "label": "🚀 Features",
+        "items": [
+          {
+            "text": "Per-subtable filter UI (🔍 toggle on every h3 header in multi-table mode)",
+            "sub": [
+              "A 🔍 icon is injected after the mb-row-count-stat span in each h3 header; clicking it toggles a subtable-specific filter bar on/off",
+              "Filter bar contains: text input with subtable-specific placeholder/tooltip, clear (✕) button, Cc (case-sensitive), Rx (regexp), Ex (exclude) checkboxes, and 🎨 Toggle highlighting button — mirroring the global filter structure",
+              "All element IDs are unique per subtable (derived from the sanitized category name, e.g. mb-stf-Album-input)",
+              "Filtering is additive: only currently visible rows (not already hidden by global/column filter) are filtered; rows hidden by the subtable filter carry a data-mb-stf-hidden attribute so global re-renders can identify them",
+              "Matches are highlighted with .mb-subtable-filter-highlight (green background) independently from global and column filter highlights",
+              "🎨 Toggle highlighting button toggles subtable-specific highlight on/off per subtable, independently of the global highlight toggle",
+              "First Escape press in the subtable filter input clears the text (and restores hidden rows); second press blurs the input",
+              "reapplyAllSubTableFilters() is called at the end of runFilter() so subtable filters remain active after global/column filter re-renders",
+              "h3 and h2 click handlers updated to guard against accidental collapse when clicking the toggle icon or filter container"
+            ]
+          }
         ]
       }
     ]
