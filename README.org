@@ -42182,7 +42182,7 @@ to
 
 * write special about it in the forum because of the 2 Action buttons
 
-* keyboard shortcut and app help popups should have a sticky bottom with the help about "Click outside or press Escape to close"
+* DONE keyboard shortcut and app help popups should have a sticky bottom with the help about "Click outside or press Escape to close"
 ** initial
 
 Please refactor the "Keyboard Shortcuts" and "Application Help & Feature Overview" dialogs in such a way, that the
@@ -42287,17 +42287,14 @@ to
 doesn't look like it's focused when popping up (it should), also the "Close" button should be green, like the other "Close" buttons on the export dialogs
 
 * DONE default font 1.3em
-
 * DONE ## ==> v.
-
 * DONE 🔍 in filter input field
 
 #+begin_example
     filterInput.placeholder = `🔍 Global Filter...`;
 #+end_example
 
-
-* refactor
+* DONE refactor
 
 - The following two functions share more or less the same popup code
 
@@ -42326,7 +42323,10 @@ Please refactor
 
 also to the case of single table pages
 
-- Add an 🔍 icon (make it a toggle switch) in every h3 header row after the 
+
+* Add an 🔍 icon per subtable
+
+Add an 🔍 icon (make it a toggle switch) in every h3 header row after the 
 
 #+begin_example
 <span class="mb-row-count-stat">
@@ -42338,22 +42338,33 @@ Render a sub-table specific filter container after the 🔍 icon which should be
 infrastructure (which works for ALL tables in multi table mode) which should equivalently work now with the specific
 subtable or make the container invisible again when the 🔍 icon is clicked again.
 
-The sub-table specific filter container should have the following elements inside in the same order like the global pendant
+The sub-table specific filter container should have the following elements inside in the same order like the global pendant (the 🔍 icon should NOT be present inside filter field)
+The '<extrated category name>' string below should of course be replaced for each subheader specific container.
 
 #+begin_example
-    <input id="mb-global-filter-input" placeholder="Global Filter..." title="Enter global filter string" style="font-size: 1em; padding: 2px 20px 2px 6px; border: 2px solid rgb(204, 204, 204); border-radius: 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;">
-    <span id="mb-global-filter-clear" title="Clear global filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
+<span class="mb-subtable-filter-container visible" data-category-name="<extrated category name>">
+  <span class="mb-subtable-filter-wrapper">
+    <input id="mb-stf-<extrated category name>-input" placeholder="Filter &quot;<extrated category name>&quot;…" title="Filter rows in the &quot;<extrated category name>&quot; sub-table" style="font-size: 1em; padding: 2px 20px 2px 6px; border: 2px solid rgb(204, 204, 204); border-radius: 3px; width: 320px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;">
+    <span id="mb-stf-<extrated category name>-clear" title="Clear filter for &quot;<extrated category name>&quot;" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
     </span>
   </span>
-  <label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
-    <input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc
+  <label id="mb-stf-<extrated category name>-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+    <input id="mb-stf-<extrated category name>-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc
   </label>
-  <label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
-    <input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx
+  <label id="mb-stf-<extrated category name>-rx-label" title="RegExp Filtering" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+    <input id="mb-stf-<extrated category name>-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx
   </label>
-  <label id="mb-global-filter-exclude-label" title="Exclude matches (Global Filter)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
-    <input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex
+  <label id="mb-stf-<extrated category name>-ex-label" title="Exclude matches (Filter for &quot;<extrated category name>&quot;)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+    <input id="mb-stf-<extrated category name>-ex-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex
   </label>
+  <button id="mb-stf-<extrated category name>-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (sub-table filter and column filters)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: inline-block;">🎨 Toggle highlighting
+  </button>
+</span>
 #+end_example
 
-please make the "id"-s unique per subtable (maybe use the subtabe h3 header name somwhow). Also change the placeholder text to be subtable specific
+please also make the "id"-s unique per subtable (use the subtabe h3 header name somwhow). Also change the placeholder text to be subtable specific.
+
+The functionality should be support additively the following (always independantly for each subtable and in addition what is already active on the global filtering level)
+- the filter condition (dependant on the switches of the checkboxes) should filter ONLY the currently visible rows in that specific subtable (taking all columns in that subtable into account)
+- when rows are filtered, the filter string should be highlighted with a green background (in addition to currently active hightlights)
+- clicking the 'mb-stf-<extrated category name>-toggle-filter-highlight-btn' repeatedly should toggle the highlightning of the subtable specific filter string
