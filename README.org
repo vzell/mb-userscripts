@@ -42115,6 +42115,15 @@ Include a "Close" button and also "Escape" key closing of the popup.
 
 * why does the "Global Prefilter Highlight Color" starts out in black when clicking on the color chooser icon
 
+In the uploaded library, 
+
+why does the "Global Prefilter Highlight Color" starts out in black when clicking on the color chooser icon
+
+#+begin_example
+<button id="vz-mb-show-all-entity-data-input-sa_pre_filter_highlight_color-picker-btn" type="button" style="margin-left: 6px; width: 26px; height: 26px; border-radius: 4px; cursor: pointer; border: 1px solid rgb(170, 170, 170); vertical-align: middle; background-color: green;">🎨</button>
+#+end_example
+
+All other buttons which use the color chooser dialog work with the color defined as default in the configuration
 
 * DONE Click outside should always close
 
@@ -42323,7 +42332,7 @@ also to the case of single table pages
 
 * optional per sub-table "sub-table global filter" [] Cs [] Rx [] [] Ex
 
-* Add an 🔍 icon per subtable
+* TODO Add an 🔍 icon per subtable
 ** initial
 
 Add an 🔍 icon (make it a toggle switch) in every h3 header row after the 
@@ -42482,7 +42491,7 @@ and should now also toggle additionally the highlighning from the sub-table filt
 
 should get a new 'title="Clear all COLUMN filters for this table"' and the button text should read 'Clear all COLUMN filters'
 
-** bug left - h3 header collapse when loading from disk NOT working
+** TODO bug left - h3 header collapse when loading from disk NOT working
 
 - when loading data from disk by pressing the "Load from Disk"-button after the page entry, everything works as expected
   regarding filtering with global and sub-table specific filtering. Especially when clicking the h3 header row (not the
@@ -42523,7 +42532,7 @@ inside the 'mb-subtable-controls', but don't touch the button click functionalit
 
 
 * TODO make the h2/h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
-** initial
+** DONE initial
 
 In the uploaded userscript,
 
@@ -42552,17 +42561,46 @@ should also trigger the "collapsing/uncollapsing" of all the h2 sections
 
 ** h2 still not working
 
+In the uploaded userscript,
+
+why is the following code for collapsing the h2 headers when clicking on the "mb-filter-status-display" container NOT
+working
+
 #+begin_example
                 // Clicking the global filter-status-display span toggles ALL h2 sections (like Ctrl+Click)
                 const isFilterStatusClick = e.target.closest('#mb-filter-status-display');
 #+end_example
 
+but the equivalent h3 code for h3 headers works
+
+#+begin_example
+                    // Allow clicks on the read-only status spans inside .mb-subtable-controls to pass through
+                    const isStatusSpan = e.target.closest('.mb-filter-status') || e.target.closest('.mb-sort-status');
+                    // Prevent triggering if clicking on interactive elements (buttons) or other parts of the controls bar
+                     if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
+                        (!isStatusSpan && e.target.closest('.mb-subtable-controls')) ||
+#+end_example
+
+Please fix
+
+** add also sort
+
+- please also implement, that clicking inside the h2 header row the
+
+#+begin_example
+<span id="mb-sort-status-display" class="mb-sort-status"
+#+end_example
+  
+should also trigger the "collapsing/uncollapsing" of all the h2 sections
+
 
 * TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter
+
 
 * TODO Is the check for invalid regexp really working
 
 * fix invalid filter regexp
+
 
 * tooltip for global "Clear all COLUMN filters" from
 
@@ -42575,6 +42613,7 @@ to
 #+begin_example
     clearColumnFiltersBtn.title = 'Globally clear all column-specific filter inputs';
 #+end_example
+
 
 * resize global filter input field (configurable) + the subtable specific one
 

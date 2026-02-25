@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.1+2026-02-25
+// @version      9.97.2+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -9727,20 +9727,24 @@
 
             // 2. Click event for the entire H2 header
             const toggleFn = (e) => {
-                // GUARD CLAUSE: Don't toggle if clicking on interactive elements (Filter input, Master Toggle links, Checkboxes)
+                // Detect clicks on the read-only filter-status-display span BEFORE the guard clause,
+                // so it is explicitly exempted from the filterContainer.contains() block below.
+                // This mirrors the h3 handler pattern (isStatusSpan / !isStatusSpan guard).
+                const isFilterStatusClick = e.target.closest('#mb-filter-status-display');
+
+                // GUARD CLAUSE: Don't toggle if clicking on interactive elements (Filter input, Master Toggle links, Checkboxes).
+                // isFilterStatusClick is exempted because #mb-filter-status-display lives inside filterContainer
+                // but is a read-only status label that should propagate the toggle, not block it.
                 if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
                     e.target.closest('.mb-master-toggle') ||
                     e.target.closest('.mb-subtable-filter-container') ||
                     e.target.classList.contains('mb-subtable-filter-toggle-icon') ||
-                    (filterContainer && filterContainer.contains(e.target))) {
+                    (!isFilterStatusClick && filterContainer && filterContainer.contains(e.target))) {
                     return;
                 }
 
                 e.preventDefault();
                 e.stopPropagation();
-
-                // Clicking the global filter-status-display span toggles ALL h2 sections (like Ctrl+Click)
-                const isFilterStatusClick = e.target.closest('#mb-filter-status-display');
 
                 const isExpanding = icon.textContent === '▲';
 

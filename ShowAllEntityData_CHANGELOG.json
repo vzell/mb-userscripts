@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.97.2",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "H2 click handler: clicking '#mb-filter-status-display' now correctly triggers collapse/uncollapse of ALL h2 sections — previously the guard clause blocked the click because '#mb-filter-status-display' is a child of 'filterContainer', causing 'filterContainer.contains(e.target)' to return early before 'isFilterStatusClick' was ever evaluated. Fix mirrors the h3 pattern: 'isFilterStatusClick' is now detected before the guard clause, and the 'filterContainer.contains()' check is wrapped with '!isFilterStatusClick' to explicitly exempt the read-only status span."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.1",
     "date": "2026-02-25",
     "sections": [
