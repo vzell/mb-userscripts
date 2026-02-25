@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.0+2026-02-25
+// @version      9.97.1+2026-02-25
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -9565,9 +9565,11 @@
                 }
 
                 h3.addEventListener('click', (e) => {
-                    // Prevent triggering if clicking on interactive elements (buttons)
+                    // Allow clicks on the read-only status spans inside .mb-subtable-controls to pass through
+                    const isStatusSpan = e.target.closest('.mb-filter-status') || e.target.closest('.mb-sort-status');
+                    // Prevent triggering if clicking on interactive elements (buttons) or other parts of the controls bar
                     if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
-                        e.target.closest('.mb-subtable-controls') ||
+                        (!isStatusSpan && e.target.closest('.mb-subtable-controls')) ||
                         e.target.closest('.mb-subtable-filter-container') ||
                         e.target.classList.contains('mb-subtable-filter-toggle-icon')) {
                         return;
@@ -9737,9 +9739,12 @@
                 e.preventDefault();
                 e.stopPropagation();
 
+                // Clicking the global filter-status-display span toggles ALL h2 sections (like Ctrl+Click)
+                const isFilterStatusClick = e.target.closest('#mb-filter-status-display');
+
                 const isExpanding = icon.textContent === '▲';
 
-                if (e.ctrlKey) {
+                if (isFilterStatusClick || e.ctrlKey) {
                     // Logic to toggle all peers in the same container (sidebar vs main)
                     const sidebar = document.getElementById('sidebar');
                     const isInsideSidebar = sidebar && sidebar.contains(h2);

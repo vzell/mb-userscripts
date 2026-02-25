@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.97.1",
+    "date": "2026-02-25",
+    "sections": [
+      {
+        "label": "✨ Enhancements",
+        "items": [
+          "H3 headers (multi-table mode): clicking the '.mb-filter-status' or '.mb-sort-status' status text spans inside '.mb-subtable-controls' now also toggles the sub-table collapse/uncollapse — button click functionality is unaffected",
+          "H2 headers: clicking the '#mb-filter-status-display' global filter-status span now triggers collapse/uncollapse of ALL h2 sections (same behaviour as Ctrl+Click on the h2 header)"
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.0",
     "date": "2026-02-25",
     "sections": [

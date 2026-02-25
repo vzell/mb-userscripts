@@ -42523,6 +42523,7 @@ inside the 'mb-subtable-controls', but don't touch the button click functionalit
 
 
 * TODO make the h2/h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
+** initial
 
 In the uploaded userscript,
 
@@ -42548,6 +42549,13 @@ inside the 'mb-subtable-controls', but don't touch the button click functionalit
 #+end_example
   
 should also trigger the "collapsing/uncollapsing" of all the h2 sections
+
+** h2 still not working
+
+#+begin_example
+                // Clicking the global filter-status-display span toggles ALL h2 sections (like Ctrl+Click)
+                const isFilterStatusClick = e.target.closest('#mb-filter-status-display');
+#+end_example
 
 
 * TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter
