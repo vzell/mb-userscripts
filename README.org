@@ -42326,10 +42326,7 @@ Please refactor
 
 also to the case of single table pages
 
-
-* Add an 🔍 icon
-
-Add an 🔍 icon (make it a toggle switch) in every h3 header row after the 
+- Add an 🔍 icon (make it a toggle switch) in every h3 header row after the 
 
 #+begin_example
 <span class="mb-row-count-stat">

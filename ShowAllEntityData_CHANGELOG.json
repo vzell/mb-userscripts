@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.94.0",
+    "date": "2026-02-25",
+    "sections": [
+      {
+        "label": "🚀 Improvements",
+        "items": [
+          "Refactored duplicate popup code: extracted shared showDownloadNotification() helper used by both showExportNotification() and triggerStandardDownload()",
+          "Synced modeLabel (Regexp / Case-sensitive / Exclude) feature to single-table pages — filter status now reads '✓ Regexp filter: N rows in Xms' etc. instead of the generic 'Filtered N rows'"
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.93.0",
     "date": "2026-02-24",
     "sections": [

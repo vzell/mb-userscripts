@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.93.0+2026-02-24
+// @version      9.96.0+2026-02-25
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -2952,17 +2952,20 @@
     }
 
     /**
-     * Show export notification popup
+     * Show a transient centered popup with a message and a Close button.
+     * The popup fades out on close (Escape key or button click).
+     * An optional status bar element is updated at the same time.
+     *
+     * @param {string}      message        - Text to display inside the popup body.
+     * @param {string|null} statusText     - When non-null, written to the #mb-info-display bar.
      */
-    function showExportNotification(format, filename, rowCount, totalRows = 0) {
-        const isFiltered = totalRows > rowCount;
-        const rowSummary = isFiltered
-            ? `${rowCount.toLocaleString()} of ${totalRows.toLocaleString()} rows (${totalRows - rowCount} filtered out)`
-            : `${rowCount.toLocaleString()} rows`;
-        const infoDisplay = document.getElementById('mb-info-display');
-        if (infoDisplay) {
-            infoDisplay.textContent = `✓ Exported ${rowSummary} to ${filename}`;
-            infoDisplay.style.color = 'green';
+    function showDownloadNotification(message, statusText = null) {
+        if (statusText !== null) {
+            const infoDisplay = document.getElementById('mb-info-display');
+            if (infoDisplay) {
+                infoDisplay.textContent = statusText;
+                infoDisplay.style.color = 'green';
+            }
         }
 
         const infoPopup = document.createElement('div');
@@ -2985,11 +2988,12 @@
         `;
 
         const msg = document.createElement('div');
-        msg.textContent = `${format} export complete: ${rowSummary}. Please monitor your browser for the file download.`;
+        msg.textContent = message;
         msg.style.marginBottom = '15px';
 
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Close';
+        closeBtn.type = 'button';
         closeBtn.style.cssText = `
             padding: 6px 12px;
             cursor: pointer;
@@ -3008,19 +3012,37 @@
             }, 300);
         };
 
-        closeBtn.addEventListener('click', closePopup);
+        const onEscape = (e) => { if (e.key === 'Escape') closePopup(); };
 
-        const onEscape = (e) => {
-            if (e.key === 'Escape') closePopup();
-        };
+        closeBtn.addEventListener('click', closePopup);
         document.addEventListener('keydown', onEscape);
 
         infoPopup.appendChild(msg);
         infoPopup.appendChild(closeBtn);
         document.body.appendChild(infoPopup);
 
-        // Focus the Close button
+        // Focus the Close button so keyboard users can dismiss immediately with Enter/Space
         setTimeout(() => closeBtn.focus(), 50);
+    }
+
+    /**
+     * Show export-complete notification popup and update the status bar.
+     *
+     * @param {string} format    - Export format label, e.g. 'CSV', 'JSON', 'Org-Mode'.
+     * @param {string} filename  - The filename that was written.
+     * @param {number} rowCount  - Number of rows exported.
+     * @param {number} totalRows - Total rows before filtering (0 = same as rowCount).
+     */
+    function showExportNotification(format, filename, rowCount, totalRows = 0) {
+        const isFiltered = totalRows > rowCount;
+        const rowSummary = isFiltered
+            ? `${rowCount.toLocaleString()} of ${totalRows.toLocaleString()} rows (${totalRows - rowCount} filtered out)`
+            : `${rowCount.toLocaleString()} rows`;
+
+        showDownloadNotification(
+            `${format} export complete: ${rowSummary}. Please monitor your browser for the file download.`,
+            `✓ Exported ${rowSummary} to ${filename}`
+        );
     }
 
     /**
@@ -7484,8 +7506,15 @@
                     }
                 });
             } else {
-                // Single table mode: show all filter info
-                filterStatusDisplay.textContent = `✓ Filtered ${rowCount} rows in ${filterDuration}ms${filterInfo}`;
+                // Single table mode: show modeLabel and all filter info
+                const singleActiveModeParts = [];
+                if (isRegExp)        singleActiveModeParts.push('Regexp');
+                if (isCaseSensitive) singleActiveModeParts.push('Case-sensitive');
+                if (isExclude)       singleActiveModeParts.push('Exclude');
+                const singleModeLabel = singleActiveModeParts.length > 0
+                    ? singleActiveModeParts.join(' ') + ' filter'
+                    : 'Global filter';
+                filterStatusDisplay.textContent = `✓ ${singleModeLabel}: ${rowCount} rows in ${filterDuration}ms${filterInfo}`;
                 filterStatusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
             }
         }
@@ -9810,6 +9839,13 @@
      * @param {string} url - The blob URL to download from
      * @param {string} filename - The filename to save as
      */
+    /**
+     * Trigger a browser file download for a Blob object-URL and show a notification popup.
+     *
+     * @param {string} url       - Object URL created via URL.createObjectURL().
+     * @param {string} filename  - Suggested save filename.
+     * @param {number} rowCount  - Number of rows saved (0 = unknown / not shown).
+     */
     function triggerStandardDownload(url, filename, rowCount = 0) {
         const a = document.createElement('a');
         a.href = url;
@@ -9821,69 +9857,10 @@
 
         Lib.debug('cache', `Data saved to ${filename}`);
 
-        // --- INFO POPUP TO ALERT USER (WITH FADE OUT) ---
-        const infoPopup = document.createElement('div');
-        infoPopup.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border: 1px solid #888;
-            border-radius: 6px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10000;
-            max-width: 400px;
-            text-align: center;
-            font-family: sans-serif;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        `;
-
-        const msg = document.createElement('div');
         const rowNote = rowCount > 0 ? ` ${rowCount.toLocaleString()} rows saved.` : '';
-        msg.textContent = `Saving of JSON table data to the filesystem initiated.${rowNote} Please monitor your browser for the file download.`;
-        msg.style.marginBottom = '15px';
-
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
-        closeBtn.style.cssText = `
-            padding: 6px 12px;
-            cursor: pointer;
-            border-radius: 4px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            font-size: 0.9em;
-        `;
-        closeBtn.type = 'button';
-
-        // Close function with fade out
-        const closePopup = () => {
-            infoPopup.style.opacity = '0';
-            // Remove from DOM after transition
-            setTimeout(() => {
-                if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
-                document.removeEventListener('keydown', onEscape);
-            }, 300); // match the CSS transition duration
-        };
-
-        // Button click closes popup
-        closeBtn.addEventListener('click', closePopup);
-
-        // Escape key closes popup
-        const onEscape = (e) => {
-            if (e.key === 'Escape') closePopup();
-        };
-        document.addEventListener('keydown', onEscape);
-
-        infoPopup.appendChild(msg);
-        infoPopup.appendChild(closeBtn);
-        document.body.appendChild(infoPopup);
-
-        // Focus the Close button so keyboard users can dismiss immediately with Enter/Space
-        setTimeout(() => closeBtn.focus(), 50);
+        showDownloadNotification(
+            `Saving of JSON table data to the filesystem initiated.${rowNote} Please monitor your browser for the file download.`
+        );
     }
 
     /**
