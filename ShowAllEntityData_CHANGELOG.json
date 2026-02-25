@@ -1,5 +1,22 @@
 [
   {
+    "version": "9.97.2",
+    "date": "2026-02-25",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "H3 row-count badge now shows '(globally_filtered of total)' when only the global filter is active (was showing '(globally_filtered)' without the total)",
+          "H3 row-count badge when subtable filter is also active now shows '(locally_filtered of globally_filtered)/total' (was '(locally_filtered of globally_filtered)' without the absolute total)",
+          "H2 row-count badge mirrors the same 3-tier format as the sum over all subtables when any subtable filter is active",
+          "🔴 Clear ALL filters button now also clears all sub-table specific filter input fields (title updated to 'Clear global/sub-table filters and ALL column filters in all sub-tables')",
+          "🎨 Toggle highlighting button now also removes/restores sub-table filter highlights in addition to global and column-filter highlights (title updated accordingly)",
+          "Sub-table clear button text changed from 'Clear ALL filters' to 'Clear all COLUMN filters' and title updated to 'Clear all COLUMN filters for this table'"
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.94.0",
     "date": "2026-02-25",
     "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.96.0+2026-02-25
+// @version      9.97.2+2026-02-25
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -2155,7 +2155,7 @@
         const clearBtn = document.createElement('button');
         clearBtn.className = 'mb-subtable-clear-btn';
         clearBtn.type = 'button';
-        clearBtn.title = 'Clear all column filters for this table';
+        clearBtn.title = 'Clear all COLUMN filters for this table';
         clearBtn.style.display = 'none'; // Initially hidden
 
         // Create red ✗ symbol
@@ -2166,7 +2166,7 @@
         xSymbol.style.fontWeight = 'bold';
 
         clearBtn.appendChild(xSymbol);
-        clearBtn.appendChild(document.createTextNode('Clear ALL filters'));
+        clearBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
 
         clearBtn.onclick = (e) => {
             e.preventDefault();
@@ -6006,7 +6006,7 @@
     unhighlightAllBtn.id = 'mb-toggle-filter-highlight-btn';
     unhighlightAllBtn.textContent = '🎨 Toggle highlighting';
     unhighlightAllBtn.style.cssText = `${uiFilterBarBtnCSS()} transition:background-color 0.3s; display:none;`;
-    unhighlightAllBtn.title = 'Toggle filter highlighting on/off (global filter and column filters)';
+    unhighlightAllBtn.title = 'Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)';
 
     /**
      * Update filter highlight button background color based on highlighting state
@@ -6028,9 +6028,12 @@
 
     unhighlightAllBtn.onclick = () => {
         if (filterHighlightEnabled) {
-            // Currently highlighted - save state and remove filter highlights only
+            // Currently highlighted - save state and remove filter/subtable highlights
             saveFilterHighlightState();
             document.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
+                .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+            // Also remove subtable-filter highlights
+            document.querySelectorAll('.mb-subtable-filter-highlight')
                 .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
 
             filterHighlightEnabled = false;
@@ -6086,11 +6089,19 @@
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.id = 'mb-clear-all-filters-btn';
     clearAllFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearAllFiltersBtn.title = 'Clear both global filter and all column filters';
+    clearAllFiltersBtn.title = 'Clear global/sub-table filters and ALL column filters in all sub-tables';
     clearAllFiltersBtn.onclick = () => {
         // Clear global filter
         filterInput.value = '';
         filterClear.click(); // This will trigger the clear handler
+
+        // Clear all sub-table specific filter fields
+        document.querySelectorAll('.mb-subtable-filter-container input[type="text"]').forEach(input => {
+            if (input.value) {
+                input.value = '';
+                input.dispatchEvent(new Event('input', { bubbles: false }));
+            }
+        });
 
         // Also call the main clearAllFilters function
         clearAllFilters();
@@ -6294,6 +6305,42 @@
         }
         .mb-col-filter-row th {
             padding: 2px 4px !important;
+        }
+        /* Sub-table specific filter container */
+        .mb-subtable-filter-container {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .mb-subtable-filter-container.visible {
+            display: inline-flex;
+        }
+        .mb-subtable-filter-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .mb-subtable-filter-toggle-icon {
+            cursor: pointer;
+            font-size: 0.9em;
+            vertical-align: middle;
+            margin-left: 6px;
+            user-select: none;
+            opacity: 0.7;
+            transition: opacity 0.15s;
+        }
+        .mb-subtable-filter-toggle-icon:hover {
+            opacity: 1.0;
+        }
+        .mb-subtable-filter-toggle-icon.active {
+            opacity: 1.0;
+            filter: drop-shadow(0 0 2px rgba(0,100,255,0.5));
+        }
+        .mb-subtable-filter-highlight {
+            background-color: #90ee90;
+            color: #000;
         }
     `;
     document.head.appendChild(style);
@@ -6826,8 +6873,8 @@
      * @param {number} filteredCount - Number of rows currently visible after filtering
      * @param {number} totalCount - Total number of rows in the table
      */
-    function updateH2Count(filteredCount, totalCount) {
-        Lib.debug('render', `Starting updateH2Count: filtered=${filteredCount}, total=${totalCount}`);
+    function updateH2Count(filteredCount, totalCount, absoluteTotal = null) {
+        Lib.debug('render', `Starting updateH2Count: filtered=${filteredCount}, total=${totalCount}, absoluteTotal=${absoluteTotal}`);
 
         const table = document.querySelector('table.tbl');
         if (!table) {
@@ -6897,7 +6944,13 @@
 
             const span = document.createElement('span');
             span.className = 'mb-row-count-stat';
-            const countText = (filteredCount === totalCount) ? `(${totalCount})` : `(${filteredCount} of ${totalCount})`;
+            let countText;
+            if (absoluteTotal !== null && absoluteTotal !== totalCount) {
+                // 3-tier: (locally of globally)/absoluteTotal
+                countText = `(${filteredCount} of ${totalCount})/${absoluteTotal}`;
+            } else {
+                countText = (filteredCount === totalCount) ? `(${totalCount})` : `(${filteredCount} of ${totalCount})`;
+            }
             span.textContent = countText;
 
             // Positioning Logic: Ensure the row count stays immediately after header text, before Master Toggle or Global Filter
@@ -7422,6 +7475,13 @@
                 }
             }
             updateH2Count(totalFiltered, totalAbsolute);
+
+            // Re-apply any active sub-table filters after global/column filter re-renders rows
+            reapplyAllSubTableFilters();
+
+            // After subtable filters ran, recalculate h2 count to reflect the
+            // 3-tier (locally / globally / absolute-total) format when needed.
+            updateH2CountFromSubtables();
         } else {
             const totalAbsolute = allRows.length;
             matchCtx.colFilters = getColFilters(document.querySelector('table.tbl'), isCaseSensitive, isRegExp);
@@ -8736,6 +8796,473 @@
     }
 
     /**
+     * Creates and returns a per-subtable filter container (toggle icon + filter UI).
+     *
+     * The returned object exposes:
+     *   - toggleIcon  : the 🔍 span that the caller inserts after mb-row-count-stat
+     *   - container   : the filter UI span (.mb-subtable-filter-container) that the caller appends
+     *
+     * The toggle icon starts in "off" state; clicking it shows/hides the container and
+     * wires up keyboard handling.  Each call produces entirely independent DOM nodes so
+     * that multiple subtables never share state.
+     *
+     * @param {string}          categoryName  - Human-readable subtable name (e.g. "Album")
+     * @param {HTMLTableElement} table         - The <table> this filter applies to
+     * @returns {{ toggleIcon: HTMLElement, container: HTMLElement }}
+     */
+    function createSubTableFilterContainer(categoryName, table) {
+        // Sanitize categoryName to a safe id fragment (strip non-alphanumeric)
+        const safeId = categoryName.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const pfx    = `mb-stf-${safeId}`;
+
+        // ── Toggle icon (🔍) ──────────────────────────────────────────────────
+        const toggleIcon = document.createElement('span');
+        toggleIcon.className = 'mb-subtable-filter-toggle-icon';
+        toggleIcon.textContent = '🔍';
+        toggleIcon.title = 'Toggle filter elements on/off';
+        toggleIcon.setAttribute('role', 'button');
+        toggleIcon.setAttribute('aria-label', `Toggle sub-table filter for "${categoryName}"`);
+
+        // ── Filter input wrapper ───────────────────────────────────────────────
+        const filterWrapper = document.createElement('span');
+        filterWrapper.className = 'mb-subtable-filter-wrapper';
+
+        const filterInput = document.createElement('input');
+        filterInput.id = `${pfx}-input`;
+        filterInput.type = 'text';
+        filterInput.placeholder = `Filter "${categoryName}"…`;
+        filterInput.title = `Filter rows in the "${categoryName}" sub-table`;
+        filterInput.style.cssText = 'font-size:1em; padding:2px 20px 2px 6px; border:2px solid rgb(204,204,204); border-radius:3px; width:320px; height:24px; box-sizing:border-box; transition:box-shadow 0.2s;';
+
+        const clearBtn = document.createElement('span');
+        clearBtn.id = `${pfx}-clear`;
+        clearBtn.title = `Clear filter for "${categoryName}"`;
+        clearBtn.textContent = '✕';
+        clearBtn.style.cssText = 'position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:0.6em; color:rgb(153,153,153); user-select:none;';
+
+        filterWrapper.appendChild(filterInput);
+        filterWrapper.appendChild(clearBtn);
+
+        // ── Case-sensitive checkbox ───────────────────────────────────────────
+        const caseCheckbox = document.createElement('input');
+        caseCheckbox.id = `${pfx}-case-checkbox`;
+        caseCheckbox.type = 'checkbox';
+        caseCheckbox.style.cssText = 'margin-right:2px; vertical-align:middle;';
+
+        const caseLabel = document.createElement('label');
+        caseLabel.id = `${pfx}-case-label`;
+        caseLabel.htmlFor = caseCheckbox.id;
+        caseLabel.title = 'Case Sensitive Filtering';
+        caseLabel.style.cssText = 'font-size:0.8em; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none; font-weight:normal; height:24px;';
+        caseLabel.appendChild(caseCheckbox);
+        caseLabel.appendChild(document.createTextNode('Cc'));
+
+        // ── RegExp checkbox ───────────────────────────────────────────────────
+        const rxCheckbox = document.createElement('input');
+        rxCheckbox.id = `${pfx}-rx-checkbox`;
+        rxCheckbox.type = 'checkbox';
+        rxCheckbox.style.cssText = 'margin-right:2px; vertical-align:middle;';
+
+        const rxLabel = document.createElement('label');
+        rxLabel.id = `${pfx}-rx-label`;
+        rxLabel.htmlFor = rxCheckbox.id;
+        rxLabel.title = 'RegExp Filtering';
+        rxLabel.style.cssText = 'font-size:0.8em; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none; font-weight:normal; height:24px;';
+        rxLabel.appendChild(rxCheckbox);
+        rxLabel.appendChild(document.createTextNode('Rx'));
+
+        // ── Exclude checkbox ──────────────────────────────────────────────────
+        const exCheckbox = document.createElement('input');
+        exCheckbox.id = `${pfx}-ex-checkbox`;
+        exCheckbox.type = 'checkbox';
+        exCheckbox.style.cssText = 'margin-right:2px; vertical-align:middle;';
+
+        const exLabel = document.createElement('label');
+        exLabel.id = `${pfx}-ex-label`;
+        exLabel.htmlFor = exCheckbox.id;
+        exLabel.title = `Exclude matches (Filter for "${categoryName}")`;
+        exLabel.style.cssText = 'font-size:0.8em; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none; font-weight:normal; height:24px;';
+        exLabel.appendChild(exCheckbox);
+        exLabel.appendChild(document.createTextNode('Ex'));
+
+        // ── Highlight toggle button ───────────────────────────────────────────
+        const highlightBtn = document.createElement('button');
+        highlightBtn.id = `${pfx}-toggle-filter-highlight-btn`;
+        highlightBtn.type = 'button';
+        highlightBtn.title = 'Toggle filter highlighting on/off (sub-table filter and column filters)';
+        highlightBtn.textContent = '🎨 Toggle highlighting';
+        highlightBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; border-radius:4px; background:rgb(240,240,240); border:1px solid rgb(204,204,204); cursor:pointer; vertical-align:middle; transition:background-color 0.3s; display:inline-block;';
+
+        // ── Container ─────────────────────────────────────────────────────────
+        const container = document.createElement('span');
+        container.className = 'mb-subtable-filter-container';
+        container.dataset.categoryName = categoryName;
+        container.appendChild(filterWrapper);
+        container.appendChild(caseLabel);
+        container.appendChild(rxLabel);
+        container.appendChild(exLabel);
+        container.appendChild(highlightBtn);
+
+        // ── State ─────────────────────────────────────────────────────────────
+        let highlightEnabled = true;
+
+        /**
+         * Updates the border/shadow of the filter input to reflect active state.
+         */
+        function updateInputStyle() {
+            filterInput.style.boxShadow  = filterInput.value ? '0 0 2px 2px rgba(0,128,0,0.6)' : '';
+            filterInput.style.borderColor = filterInput.value ? 'rgb(0,128,0)' : 'rgb(204,204,204)';
+        }
+
+        /**
+         * Updates the row-count badge in the h3 preceding this subtable.
+         *
+         * Three display modes:
+         *   No active filter  → (total)
+         *   Global filter only → (globally_filtered of total)
+         *   Subtable filter   → (locally_filtered of globally_filtered)/total
+         *
+         * "total" is the unfiltered row count stored in table.dataset.mbTotalRows at
+         * initial render time and never overwritten by subsequent filter passes.
+         * "globally_filtered" (denominator) = visible rows + rows hidden only by the
+         *   subtable filter (data-mb-stf-hidden).
+         * "locally_filtered" (numerator) = rows currently visible (not hidden by anything).
+         */
+        function updateSubTableRowCount() {
+            const h3 = table.previousElementSibling;
+            if (!h3) return;
+            const countStat = h3.querySelector('.mb-row-count-stat');
+            if (!countStat) return;
+
+            const allTbodyRows = Array.from(table.querySelectorAll('tbody tr'));
+
+            // Total rows in unfiltered subtable (stored at initial render)
+            const total = parseInt(table.dataset.mbTotalRows || '0', 10) || allTbodyRows.length;
+
+            // Denominator: rows visible before the subtable filter ran
+            // = currently visible + rows hidden only by this subtable filter
+            const denominator = allTbodyRows.filter(r =>
+                r.style.display !== 'none' || r.dataset.mbStfHidden
+            ).length;
+
+            // Numerator: rows currently visible (passes all filters)
+            const visible = allTbodyRows.filter(r => r.style.display !== 'none').length;
+
+            if (filterInput.value) {
+                // Subtable filter active: (locally of globally)/total
+                // When globally_filtered already equals total, omit the /total suffix
+                // to avoid redundant information (mirrors the h3 initial-render behaviour).
+                if (denominator === total) {
+                    countStat.textContent = `(${visible} of ${denominator})`;
+                } else {
+                    countStat.textContent = `(${visible} of ${denominator})/${total}`;
+                }
+            } else {
+                // No subtable filter active: (globally_filtered of total) or plain (total)
+                countStat.textContent = (denominator === total) ? `(${denominator})` : `(${denominator} of ${total})`;
+            }
+        }
+
+        /**
+         * Runs the subtable-specific filter against the currently visible rows
+         * of the associated table.  Rows that pass the filter are shown; those
+         * that fail are hidden.  Active filter-string matches are highlighted
+         * with the .mb-subtable-filter-highlight class.
+         */
+        function applySubFilter() {
+            const raw     = filterInput.value;
+            const useCase = caseCheckbox.checked;
+            const useRx   = rxCheckbox.checked;
+            const useEx   = exCheckbox.checked;
+
+            updateInputStyle();
+
+            if (!table) return;
+
+            // ── Step 1: Always restore rows that were hidden by a PREVIOUS subtable
+            //    filter run.  This is essential when the user edits (or deletes chars
+            //    from) the filter string: rows hidden by the old filter must be
+            //    re-evaluated against the new string.
+            //    We only restore rows that carry our own stf-hidden marker; rows
+            //    hidden by the global / column filters (no marker) are untouched.
+            table.querySelectorAll('tbody tr[data-mb-stf-hidden]').forEach(row => {
+                row.style.display = '';
+                delete row.dataset.mbStfHidden;
+            });
+
+            // ── Step 2: Always clear existing subtable highlights (all rows)
+            table.querySelectorAll('.mb-subtable-filter-highlight').forEach(n => {
+                n.replaceWith(document.createTextNode(n.textContent));
+            });
+
+            // Nothing to filter — we already restored rows above, so just return.
+            if (!raw) {
+                updateSubTableRowCount();
+                return;
+            }
+
+            // ── Step 3: Build matcher regex ───────────────────────────────────
+            let regex = null;
+            if (useRx) {
+                try {
+                    regex = new RegExp(`(${raw})`, useCase ? 'g' : 'gi');
+                    filterInput.style.borderColor = 'rgb(0,128,0)';
+                } catch (e) {
+                    filterInput.style.borderColor = 'red';
+                    return; // Invalid regexp – abort without hiding any rows
+                }
+            } else {
+                regex = new RegExp(`(${raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, useCase ? 'g' : 'gi');
+            }
+
+            const query = (useCase || useRx) ? raw : raw.toLowerCase();
+
+            // ── Step 4: Evaluate every row that is currently visible (i.e. not
+            //    hidden by the global / column filter — those rows have no stf-hidden
+            //    marker and their display is already 'none' from the outer filter).
+            Array.from(table.querySelectorAll('tbody tr')).forEach(row => {
+                // Skip rows hidden by global/column filter (they have no stf-hidden
+                // marker but their display is 'none').
+                if (row.style.display === 'none') return;
+
+                // ── Test the row ───────────────────────────────────────────────
+                let matchFound = false;
+                if (useRx) {
+                    try {
+                        matchFound = Array.from(row.cells).some(cell =>
+                            new RegExp(raw, useCase ? '' : 'i').test(cell.textContent || '')
+                        );
+                    } catch (e) {
+                        matchFound = false;
+                    }
+                } else {
+                    const text = Array.from(row.cells).map(c => c.textContent || '').join('\t');
+                    matchFound = useCase ? text.includes(query) : text.toLowerCase().includes(query);
+                }
+
+                const show = useEx ? !matchFound : matchFound;
+
+                if (!show) {
+                    // Mark and hide — our own marker distinguishes this from global/column hiding
+                    row.dataset.mbStfHidden = '1';
+                    row.style.display = 'none';
+                } else {
+                    // Row passes: apply highlight if enabled and not in exclude mode
+                    if (highlightEnabled && !useEx) {
+                        row.querySelectorAll('td').forEach(td => {
+                            // Merge any adjacent text-node fragments that were left by a
+                            // previous highlight cycle (each cleared span is replaced with a
+                            // new text node, splitting e.g. "band" into "b"+"and").
+                            // Without this, a multi-character pattern never matches any single
+                            // fragment and highlighting silently disappears after the first char.
+                            td.normalize();
+
+                            // Collect text nodes first (before mutating the DOM) to
+                            // avoid invalidating the TreeWalker mid-traversal.
+                            const walker = document.createTreeWalker(td, NodeFilter.SHOW_TEXT, {
+                                acceptNode: (n) => {
+                                    const tag = n.parentNode?.tagName?.toLowerCase();
+                                    return (tag === 'script' || tag === 'style')
+                                        ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+                                }
+                            }, false);
+                            let node;
+                            const hits = [];
+                            while ((node = walker.nextNode())) {
+                                let match = false;
+                                if (useRx) {
+                                    try { match = new RegExp(raw, useCase ? '' : 'i').test(node.nodeValue); }
+                                    catch (e) { /* ignore */ }
+                                } else {
+                                    match = useCase
+                                        ? node.nodeValue.includes(raw)
+                                        : node.nodeValue.toLowerCase().includes(query);
+                                }
+                                if (match) hits.push(node);
+                            }
+                            // Replace matching text nodes with highlight-wrapped spans.
+                            // Using a DocumentFragment avoids leaving orphaned wrapper
+                            // spans when the same cell is re-processed across filter runs.
+                            hits.forEach(textNode => {
+                                const frag = document.createDocumentFragment();
+                                const tmp  = document.createElement('span');
+                                tmp.innerHTML = textNode.nodeValue.replace(
+                                    regex,
+                                    '<span class="mb-subtable-filter-highlight">$1</span>'
+                                );
+                                while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+                                textNode.parentNode.replaceChild(frag, textNode);
+                            });
+                        });
+                    }
+                }
+            });
+
+            updateSubTableRowCount();
+            // Sync h2 badge with 3-tier subtable totals
+            if (typeof updateH2CountFromSubtables === 'function') updateH2CountFromSubtables();
+        }
+
+        /**
+         * Restores rows hidden by this subtable filter (data-mb-stf-hidden attribute)
+         * and removes all subtable-filter highlights.
+         * Does NOT affect rows hidden by global/column filters.
+         */
+        function clearSubFilter() {
+            if (!table) return;
+            // Restore rows our filter hid
+            table.querySelectorAll('tbody tr[data-mb-stf-hidden]').forEach(row => {
+                row.style.display = '';
+                delete row.dataset.mbStfHidden;
+            });
+            // Remove highlight spans — replaceWith a plain text node to keep content
+            table.querySelectorAll('.mb-subtable-filter-highlight').forEach(n => {
+                n.replaceWith(document.createTextNode(n.textContent));
+            });
+
+            updateInputStyle();      // ← reset green border / box-shadow
+            updateSubTableRowCount();
+            // Sync h2 badge with 3-tier subtable totals
+            if (typeof updateH2CountFromSubtables === 'function') updateH2CountFromSubtables();
+        }
+
+        // ── Event wiring ─────────────────────────────────────────────────────
+        const debouncedApply = debounce(applySubFilter, Lib.settings.sa_filter_debounce_delay || 300);
+        filterInput.addEventListener('input', debouncedApply);
+
+        [caseCheckbox, rxCheckbox, exCheckbox].forEach(cb => {
+            cb.addEventListener('change', applySubFilter);
+        });
+
+        clearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterInput.value = '';
+            clearSubFilter();
+        });
+
+        // Escape key: first press clears the input; second press blurs
+        filterInput.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            if (filterInput.value.trim() !== '') {
+                filterInput.value = '';
+                clearSubFilter();
+            } else {
+                filterInput.blur();
+            }
+        });
+
+        // Highlight toggle button
+        highlightBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            highlightEnabled = !highlightEnabled;
+            if (highlightEnabled) {
+                highlightBtn.style.backgroundColor = '';
+                highlightBtn.style.color = '';
+                // Re-apply filter to restore highlights
+                applySubFilter();
+                Lib.debug('highlight', `Sub-table filter highlighting ON for "${categoryName}"`);
+            } else {
+                highlightBtn.style.backgroundColor = '#90ee90';
+                highlightBtn.style.color = '#000';
+                // Remove highlights but keep rows hidden/shown as they are
+                if (table) {
+                    table.querySelectorAll('.mb-subtable-filter-highlight').forEach(n => {
+                        n.replaceWith(document.createTextNode(n.textContent));
+                    });
+                }
+                Lib.debug('highlight', `Sub-table filter highlighting OFF for "${categoryName}"`);
+            }
+        });
+
+        // ── Toggle-icon wiring ────────────────────────────────────────────────
+        toggleIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const isVisible = container.classList.contains('visible');
+            if (isVisible) {
+                container.classList.remove('visible');
+                toggleIcon.classList.remove('active');
+                // Clear the filter when closing
+                if (filterInput.value) {
+                    filterInput.value = '';
+                    clearSubFilter();
+                }
+                Lib.debug('filter', `Sub-table filter hidden for "${categoryName}"`);
+            } else {
+                container.classList.add('visible');
+                toggleIcon.classList.add('active');
+                setTimeout(() => filterInput.focus(), 50);
+                Lib.debug('filter', `Sub-table filter shown for "${categoryName}"`);
+            }
+        });
+
+        return { toggleIcon, container };
+    }
+
+    /**
+     * Recalculates and updates the h2 row-count badge from current DOM state of all
+     * subtables after global + subtable filters have been applied.
+     *
+     * Mirrors the 3-tier format used by updateSubTableRowCount():
+     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
+     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
+     *
+     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
+     */
+    function updateH2CountFromSubtables() {
+        const tables = Array.from(document.querySelectorAll('table.tbl'))
+            .filter(t => t.querySelector('.mb-col-filter-row'));
+
+        if (tables.length === 0) return;
+
+        const anySubtableFilterActive = Array.from(
+            document.querySelectorAll('.mb-subtable-filter-container.visible input[type="text"]')
+        ).some(inp => inp.value.trim() !== '');
+
+        if (!anySubtableFilterActive) return; // h2 already correct from updateH2Count()
+
+        let sumTotal    = 0;
+        let sumDenominator = 0;
+        let sumVisible  = 0;
+
+        tables.forEach(table => {
+            const total = parseInt(table.dataset.mbTotalRows || '0', 10);
+            const allRows = Array.from(table.querySelectorAll('tbody tr'));
+            const denominator = allRows.filter(r =>
+                r.style.display !== 'none' || r.dataset.mbStfHidden
+            ).length;
+            const visible = allRows.filter(r => r.style.display !== 'none').length;
+
+            sumTotal       += total || allRows.length;
+            sumDenominator += denominator;
+            sumVisible     += visible;
+        });
+
+        // Pass (locally, globally, absolute-total) to updateH2Count
+        updateH2Count(sumVisible, sumDenominator, sumTotal);
+    }
+
+    /**
+     * Re-applies all active subtable filters after a global/column filter run, so that
+     * rows newly made visible by global filter changes are still correctly filtered by
+     * their subtable filter.  Calls applySubFilter() via the container's stored closure.
+     *
+     * Called at the end of runFilter() for multi-table pages.
+     */
+    function reapplyAllSubTableFilters() {
+        document.querySelectorAll('.mb-subtable-filter-container.visible').forEach(container => {
+            // Find the input inside this container and dispatch an input event to re-run its filter
+            const input = container.querySelector('input[type="text"]');
+            if (input && input.value) {
+                input.dispatchEvent(new Event('input', { bubbles: false }));
+            }
+        });
+    }
+
+    /**
      * Renders multiple tables grouped by category (e.g., Official, Various Artists) with H3 headers
      * @param {Array} dataArray - Array of grouped data objects, each containing a label and rows
      * @param {boolean} isArtistMain - Whether this is the main artist page (affects rendering logic)
@@ -8963,6 +9490,21 @@
                 }
 
                 h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${h3DisplayName} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
+                // Store the unfiltered total row count for this subtable so that
+                // updateSubTableRowCount() can reference it after global/subtable filtering.
+                table.dataset.mbTotalRows = group.rows.length;
+
+                // ── Sub-table filter toggle icon + filter container ────────────────
+                const stfResult = createSubTableFilterContainer(categoryName, table);
+                // Insert toggle icon immediately after the mb-row-count-stat span
+                const rowCountStat = h3.querySelector('.mb-row-count-stat');
+                if (rowCountStat) {
+                    rowCountStat.after(stfResult.toggleIcon);
+                } else {
+                    h3.appendChild(stfResult.toggleIcon);
+                }
+                // Append the filter container (initially hidden) to the h3
+                h3.appendChild(stfResult.container);
 
                 // Add sub-table controls: Clear button and separate status displays
                 const subTableControls = document.createElement('span');
@@ -9025,7 +9567,9 @@
                 h3.addEventListener('click', (e) => {
                     // Prevent triggering if clicking on interactive elements (buttons)
                     if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
-                        e.target.closest('.mb-subtable-controls')) {
+                        e.target.closest('.mb-subtable-controls') ||
+                        e.target.closest('.mb-subtable-filter-container') ||
+                        e.target.classList.contains('mb-subtable-filter-toggle-icon')) {
                         return;
                     }
 
@@ -9184,6 +9728,8 @@
                 // GUARD CLAUSE: Don't toggle if clicking on interactive elements (Filter input, Master Toggle links, Checkboxes)
                 if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
                     e.target.closest('.mb-master-toggle') ||
+                    e.target.closest('.mb-subtable-filter-container') ||
+                    e.target.classList.contains('mb-subtable-filter-toggle-icon') ||
                     (filterContainer && filterContainer.contains(e.target))) {
                     return;
                 }
