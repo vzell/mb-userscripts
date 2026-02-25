@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.5+2026-02-26
+// @version      9.97.6+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -9733,16 +9733,26 @@
                 // the toggle rather than be silently blocked.
                 // This mirrors the h3 handler pattern (isStatusSpan / !isStatusSpan guard).
                 //
-                // Toggle semantics (both spans identical — normal header behaviour):
+                // Detect a click on the ".mb-master-toggle" text label ("all Types") BEFORE the guard.
+                // The interactive Show/Hide child <span>s each call e.stopPropagation() so they never
+                // reach this handler; only clicks on the surrounding text node (whose event target is
+                // the .mb-master-toggle element itself, not a child) arrive here.
+                // Text nodes are not event targets — e.target will be .mb-master-toggle when the user
+                // clicks the plain text, but will be the child <span> when clicking Show/Hide.
+                //
+                // Toggle semantics for all exempted areas (identical — normal header behaviour):
                 //   plain click  → toggle THIS h2 only
                 //   Ctrl+click   → toggle ALL h2 peers
+                const isMasterToggleLabelClick = e.target.classList.contains('mb-master-toggle');
                 const isStatusClick = e.target.closest('#mb-filter-status-display') ||
                                       e.target.closest('#mb-sort-status-display');
 
                 // GUARD CLAUSE: Don't toggle if clicking on interactive elements (Filter input, Master Toggle links, Checkboxes).
-                // isStatusClick spans are exempted: they are children of filterContainer but must not be blocked.
+                // isStatusClick spans and the master-toggle label text are exempted.
+                // Note: Show/Hide <span>s inside .mb-master-toggle already call stopPropagation()
+                //       so they never reach this handler — no additional guard needed for them.
                 if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
-                    e.target.closest('.mb-master-toggle') ||
+                    (!isMasterToggleLabelClick && e.target.closest('.mb-master-toggle')) ||
                     e.target.closest('.mb-subtable-filter-container') ||
                     e.target.classList.contains('mb-subtable-filter-toggle-icon') ||
                     (!isStatusClick && filterContainer && filterContainer.contains(e.target))) {

@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.97.6",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "✨ Enhancements",
+        "items": [
+          "H2 click handler: clicking the plain text label of '.mb-master-toggle' (the 'all Types' text node) now triggers collapse/uncollapse of the current h2 section on plain click, or ALL h2 peers on Ctrl+click — identical to clicking anywhere else on the h2 header. Implemented by detecting 'e.target.classList.contains(\"mb-master-toggle\")' (text-node clicks bubble to the container element, not a child span) and wrapping the '.mb-master-toggle' guard with '!isMasterToggleLabelClick'. The interactive Show/Hide child spans are unaffected — they already call stopPropagation() and never reach this handler."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.5",
     "date": "2026-02-26",
     "sections": [
