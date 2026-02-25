@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.2+2026-02-26
+// @version      9.97.3+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -9727,19 +9727,21 @@
 
             // 2. Click event for the entire H2 header
             const toggleFn = (e) => {
-                // Detect clicks on the read-only filter-status-display span BEFORE the guard clause,
-                // so it is explicitly exempted from the filterContainer.contains() block below.
+                // Detect clicks on the read-only status spans BEFORE the guard clause so they are
+                // explicitly exempted from the filterContainer.contains() block below.
+                // Covers both #mb-filter-status-display and #mb-sort-status-display — both live
+                // inside filterContainer but are read-only labels that should propagate the toggle.
                 // This mirrors the h3 handler pattern (isStatusSpan / !isStatusSpan guard).
-                const isFilterStatusClick = e.target.closest('#mb-filter-status-display');
+                const isStatusClick = e.target.closest('#mb-filter-status-display') ||
+                                      e.target.closest('#mb-sort-status-display');
 
                 // GUARD CLAUSE: Don't toggle if clicking on interactive elements (Filter input, Master Toggle links, Checkboxes).
-                // isFilterStatusClick is exempted because #mb-filter-status-display lives inside filterContainer
-                // but is a read-only status label that should propagate the toggle, not block it.
+                // isStatusClick spans are exempted: they are children of filterContainer but must not be blocked.
                 if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
                     e.target.closest('.mb-master-toggle') ||
                     e.target.closest('.mb-subtable-filter-container') ||
                     e.target.classList.contains('mb-subtable-filter-toggle-icon') ||
-                    (!isFilterStatusClick && filterContainer && filterContainer.contains(e.target))) {
+                    (!isStatusClick && filterContainer && filterContainer.contains(e.target))) {
                     return;
                 }
 
@@ -9748,7 +9750,7 @@
 
                 const isExpanding = icon.textContent === '▲';
 
-                if (isFilterStatusClick || e.ctrlKey) {
+                if (isStatusClick || e.ctrlKey) {
                     // Logic to toggle all peers in the same container (sidebar vs main)
                     const sidebar = document.getElementById('sidebar');
                     const isInsideSidebar = sidebar && sidebar.contains(h2);

@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.97.3",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "✨ Enhancements",
+        "items": [
+          "H2 click handler: clicking '#mb-sort-status-display' (sort status span) now also triggers collapse/uncollapse of ALL h2 sections, identical to the existing '#mb-filter-status-display' behaviour. Both spans are now detected together as 'isStatusClick' before the guard clause and jointly exempted from the 'filterContainer.contains()' block. The variable formerly named 'isFilterStatusClick' has been renamed to 'isStatusClick' to reflect the broader scope."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.2",
     "date": "2026-02-26",
     "sections": [
