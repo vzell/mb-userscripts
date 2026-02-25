@@ -1,0 +1,450 @@
+
+
+
+
+
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;">
+  <span class="mb-toggle-icon">▼
+  </span>Events
+  <span class="mb-row-count-stat">(1840 of 4130)
+  </span>
+  <span style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;">
+    <span class="mb-filter-wrapper" style="position: relative; display: inline-block;">
+      <input placeholder="Global Filter..." title="Enter global filter string" style="font-size: 1em; padding: 2px 20px 2px 6px; border: 2px solid rgb(204, 204, 204); border-radius: 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s; box-shadow: red 0px 0px 2px 2px;">
+      <span title="Clear global filter" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.6em; color: rgb(153, 153, 153); user-select: none;">✕
+      </span>
+    </span>
+    <label title="Case Sensitive Filtering" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;">
+      <input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc
+    </label>
+    <label title="RegExp Filtering" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;">
+      <input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx
+    </label>
+    <label title="Exclude matches (Global Filter)" style="font-size: 0.8em; cursor: pointer; font-weight: normal; display: flex; align-items: center; height: 24px; margin: 0px;">
+      <input type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex
+    </label>
+    <span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;">
+    </span>
+    <button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; transition: background-color 0.3s; display: none;">Prefilter
+    </button>
+    <button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global filter and column filters)" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; transition: background-color 0.3s; display: inline-block;">🎨 Toggle highlighting
+    </button>
+    <button title="Clear all column-specific filter inputs" style="font-size: 0.9em; padding: 2px 6px; cursor: pointer; display: none;">
+      <span style="color: red; font-size: 1em; font-weight: bold;">✗
+      </span>Clear all COLUMN filters
+    </button>
+    <button title="Clear both global filter and all column filters" style="font-size: 0.8em; padding: 2px 6px; cursor: pointer; display: inline-block;">
+      <span style="color: red; font-size: 1em; font-weight: bold;">✗
+      </span>Clear ALL filters
+    </button>
+    <span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;">
+      <span id="mb-filter-status-display" class="mb-filter-status" style="color: red;">✓ Filtered 500 rows in 1159ms [global:"M"]
+      </span>
+      <span id="mb-sort-status-display" class="mb-sort-status" style="color: green;">✓ Sorted by column "Time" ▲: 4130 rows in 874ms
+      </span>
+    </span>
+  </span>
+</h2>
+
+
+<h1>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+  <div id="mb-show-all-controls-container" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: 10px; vertical-align: middle; line-height: 1;">
+    <button type="button" title="Fetch all the table data from the MusicBrainz backend database" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(255, 204, 204); color: black;" class="">🧮 Show all Artists for Area
+    </button>
+    <button type="button" title="Save current table data to disk as Gzipped JSON (Ctrl+M, then s)" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(76, 175, 80); color: white; border: 1px solid rgb(69, 160, 73); display: inline-block; align-items: center; justify-content: center;">💾
+      <u>S
+      </u>ave to Disk
+    </button>
+    <button type="button" title="Load table data from disk (JSON file) (Ctrl+M, then l)" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(33, 150, 243); color: white; border: 1px solid rgb(11, 125, 218); display: inline-flex; align-items: center; justify-content: center;">📂
+      <u>L
+      </u>oad from Disk
+    </button>
+    <span class="mb-button-divider-after-load" style="color: rgb(153, 153, 153); margin: 0px 4px;"> |
+    </span>
+    <input type="file" accept=".gz,application/gzip" style="display: none;">
+    <button title="Stop the current data fetching process from the MusicBrainz backend database" style="display: none; font-size: 0.8em; padding: 2px 6px; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47); height: 24px; box-sizing: border-box; border-radius: 6px;" disabled="">Stopping...
+    </button>
+    <div id="mb-fetch-progress-container" style="display: none; width: 300px; height: 26px; background-color: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204); border-radius: 3px; overflow: hidden; position: relative; vertical-align: middle;">
+      <div id="mb-fetch-progress-bar" style="width: 0.111857%; height: 100%; transition: width 0.3s, background-color 0.3s; position: absolute; left: 0px; top: 0px; background-color: rgb(255, 204, 204);">
+      </div>
+      <div id="mb-fetch-progress-text" style="position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: black; z-index: 1; pointer-events: none; padding: 0px 10px; box-sizing: border-box; white-space: pre-line;">Loading page 4 of 3576... (400 rows)
+	Estimated remaining time: 5823.1s
+      </div>
+    </div>
+    <span style="font-size: 0.5em; color: rgb(102, 102, 102); display: flex; align-items: center; height: 24px;">
+    </span>
+    <button title="Auto-resize columns to optimal width (Ctrl+M, then r)" type="button" style="font-size: 0.9em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">↔️ Auto-
+      <u>R
+      </u>esize
+    </button>
+    <button title="Show/hide table columns (Ctrl+M, then v)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">👁️
+      <u>V
+      </u>isible Columns
+    </button>
+    <button title="Change table density (spacing) (Ctrl+M, then d)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">📏
+      <u>D
+      </u>ensity
+    </button>
+    <button title="Show table statistics (Ctrl+M, then t)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">📊 S
+      <u>t
+      </u>ats
+    </button>
+    <button title="Export visible rows and columns to various formats (Ctrl+M, then e)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">
+      <u>E
+      </u>xport 💾
+    </button>
+    <button id="mb-shortcuts-help-btn" title="Show keyboard shortcuts (or press ?)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;">🎹
+    </button>
+    <button type="button" title="Open settings manager to configure script behavior" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(96, 125, 139); color: white; border: 1px solid rgb(84, 110, 122); display: inline-flex; align-items: center; justify-content: center;">⚙️
+    </button>
+    <button id="mb-app-help-btn" title="Show application help and feature overview" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(120, 144, 156); color: white; border: 1px solid rgb(96, 125, 139); display: inline-flex; align-items: center; justify-content: center;">❓
+    </button>
+  </div>
+</h1>
+
+
+<p class="subheader">
+  <span class="prefix">~
+  </span>
+  <!-- -->Country
+  <span id="mb-status-sentinel" style="display: inline-block; width: 0px; height: 0px; overflow: hidden; vertical-align: middle;">
+  </span>
+  <div id="mb-status-displays-container" style="display: inline-flex; align-items: center; gap: 8px; line-height: 1; vertical-align: middle; margin-left: 103.475px;">
+    <span id="mb-global-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold;">Loaded 34 pages (3400 rows) from MusicBrainz backend database, Fetching time: 27.76s
+    </span>
+    <span id="mb-info-display" style="font-size: 0.8em; color: green; display: flex; align-items: center; height: 24px; font-weight: bold; margin-left: 10px;">✓ Auto-resized 12 visible columns in 123ms (drag column edges to adjust)
+    </span>
+  </div>
+</p>
+
+<p class="subheader">
+  <span class="prefix">~
+  </span>
+  <!-- -->Country
+</p>
+
+<h1>
+  <a href="/release/7840e80b-f42b-4ade-99df-dd722210485a">
+    <bdi>Greetings From Asbury Park, N.J.
+    </bdi>
+  </a>
+  <button type="button" title="Open settings manager to configure script behavior" style="font-size: 1em; padding: 4px 8px; cursor: pointer; height: auto; box-sizing: border-box; border-radius: 6px; background-color: rgb(96, 125, 139); color: white; border: 1px solid rgb(84, 110, 122); float: right; margin-left: 10px; transition: transform 0.1s, box-shadow 0.1s;">⚙️
+  </button>
+  <div id="mb-show-all-controls-container" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: 10px; vertical-align: middle; line-height: 1;">
+    <button type="button" title="Fetch all the table data from the MusicBrainz backend database" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(204, 255, 204); color: black;" class="">🧮 Show all Disc IDs for Release
+    </button>
+    <button type="button" title="Save current table data to disk as JSON" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(76, 175, 80); color: white; border: 1px solid rgb(69, 160, 73); display: inline-block; align-items: center; justify-content: center;">💾 Save to Disk
+    </button>
+    <button type="button" title="Load table data from disk (JSON file)" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(33, 150, 243); color: white; border: 1px solid rgb(11, 125, 218); display: inline-flex; align-items: center; justify-content: center;">📂 Load from Disk
+    </button>
+    <input type="file" accept=".json" style="display: none;"><h2></h2>
+    <button style="display: none; font-size: 0.8em; padding: 2px 6px; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47); height: 24px; box-sizing: border-box; border-radius: 6px;">Stop
+    </button>
+    <div id="mb-fetch-progress-container" style="display: none; width: 300px; height: 26px; background-color: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204); border-radius: 3px; overflow: hidden; position: relative; vertical-align: middle;">
+      <div id="mb-fetch-progress-bar" style="width: 100%; height: 100%; transition: width 0.3s, background-color 0.3s; position: absolute; left: 0px; top: 0px; background-color: rgb(204, 255, 204);">
+      </div>
+      <div id="mb-fetch-progress-text" style="position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: black; z-index: 1; pointer-events: none; padding: 0px 10px; box-sizing: border-box;">Estimated remaining time: 0.0s
+      </div>
+    </div>
+    <span style="font-size: 0.5em; color: rgb(102, 102, 102); display: flex; align-items: center; height: 24px;">
+    </span>
+    <button title="Auto-resize columns to optimal width (enables horizontal scrolling)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">↔️ Auto-Resize
+    </button>
+    <button title="Show/hide table columns" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">👁️ Visible Columns
+    </button>
+    <button title="Change table density (spacing)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">📏 Density
+    </button>
+    <button title="Show table statistics" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">📊 Stats
+    </button>
+    <button title="Show keyboard shortcuts (or press ?)" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">⌨️ Shortcuts
+    </button>
+    <button title="Export visible rows and columns to various formats" type="button" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; height: 24px; margin-left: 5px; border-radius: 6px; transition: transform 0.1s, box-shadow 0.1s; display: inline-flex; align-items: center; justify-content: center;">Export 💾
+    </button>
+  </div>
+</h1>
+
+
+<th style="cursor: default; padding: 4px 8px; font-size: 1em; line-height: 1.5;">
+  <span class="sort-icon-btn" title="Original sort order">⇅
+  </span> Country/Date
+  <span class="sort-icon-btn" title="Ascending sort order">▲
+  </span>
+  <span class="sort-icon-btn" title="Descending sort order">▼
+  </span>
+</th>
+
+
+<th style="cursor: default; padding: 4px 8px; font-size: 1em; line-height: 1.5;">
+  <span class="sort-icon-btn" title="Original sort order">⇅
+  </span> Country/Date
+  <span class="sort-icon-btn" title="Ascending sort order">▲
+  </span>
+  <span class="sort-icon-btn" title="Descending sort order">▼
+  </span>
+</th>
+
+
+<button type="button" title="Save current table data to disk as JSON" style="font-size: 0.8em; padding: 2px 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; border-radius: 6px; background-color: rgb(76, 175, 80); color: white; border: 1px solid rgb(69, 160, 73); display: inline-flex; align-items: center; justify-content: center;">💾 Save to Disk</button>
+
+
+<td>
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <a href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive" style="background-size: contain; background-image: url(&quot;//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250&quot;);">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60">
+    <bdi>
+      <span>
+	<span class="mb-global-filter-highlight">Gree
+	</span>tings From Asbury Park, N.J.
+      </span>
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Pitman pressing
+    </bdi>)
+  </span>
+</td>
+
+<td>
+  <span class="flag flag-US release-country">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">United States (US)
+    </a>
+  </span>
+</td>
+
+
+
+
+
+<span style="display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding-left: 6px; border-left: 1px solid rgb(204, 204, 204); vertical-align: middle; height: 24px;">
+  <input type="text" placeholder="Filter data load..." title="Filter rows while loading from disk" style="font-size: 0.8em; padding: 2px 4px; border: 1px solid rgb(204, 204, 204); border-radius: 3px; width: 150px; height: 24px; box-sizing: border-box;">
+  <label title="Case Sensitive (Load)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none;">
+    <input type="checkbox" style="margin-right: 2px;">Cc
+  </label>
+  <label title="RegExp (Load)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none;">
+    <input type="checkbox" style="margin-right: 2px;">Rx
+  </label>
+</span>
+
+
+<span style="display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding-left: 6px; border-left: 1px solid rgb(204, 204, 204); vertical-align: middle; height: 24px;">
+  <input type="text" placeholder="Filter data load..." title="Filter rows while loading from disk" style="font-size: 0.8em; padding: 2px 4px; border: 1px solid rgb(204, 204, 204); border-radius: 3px; width: 150px; height: 24px; box-sizing: border-box;">
+  <label title="Case Sensitive (Load)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none;">
+    <input type="checkbox" style="margin-right: 2px;">Cc
+  </label>
+  <label title="RegExp (Load)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none;">
+    <input type="checkbox" style="margin-right: 2px;">Rx
+  </label>
+</span>
+
+
+<tr class="subh">
+  <th>
+  </th>
+  <th>
+  </th>
+  <th colspan="4">engineering location for
+  </th>
+</tr>
+
+<tr>
+  <td>
+  </td>
+  <td colspan="4" style="padding:1em">
+    <a href="https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?direction=1&amp;link_type_id=693&amp;page=1">See all 9,127 relationships
+    </a>
+  </td>
+</tr>
+
+<tr>
+  <td>
+  </td>
+  <td>
+  </td>
+  <td colspan="4" style="padding: 1em; text-align: right;" class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO">
+    <a href="https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?direction=1&amp;link_type_id=693&amp;page=1">See all 9,127 relationships
+    </a>
+  </td>
+</tr>
+
+
+
+
+<h3 class="mb-toggle-h3" title="Collapse/Uncollapse table section">
+  <span class="mb-toggle-icon">▲
+  </span>recording location for
+  <span class="mb-row-count-stat">(100)
+  </span>
+  <button type="button" style="font-size: 0.6em; margin-left: 10px; padding: 1px 4px; cursor: pointer; vertical-align: middle;">Show all 9,127
+  </button>
+</h3>
+
+
+
+<div class="wrap-anywhere artistheader person-icon">
+  <h1>
+    <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">
+      <bdi>Bruce Springsteen
+      </bdi>
+    </a>
+    <div id="mb-show-all-controls-container" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: 10px; vertical-align: middle; line-height: 1;">
+      <button type="button" style="font-size: 0.5em; padding: 2px 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box;">Official artist RGs
+      </button>
+      <button type="button" style="font-size: 0.5em; padding: 2px 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box;">Non-official artist RGs
+      </button>
+      <button type="button" style="font-size: 0.5em; padding: 2px 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box;">Official various artists RGs
+      </button>
+      <button type="button" style="font-size: 0.5em; padding: 2px 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box;">Non-official various artists RGs
+      </button>
+      <button style="display: none; font-size: 0.5em; padding: 2px 6px; cursor: pointer; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47); height: 24px; box-sizing: border-box;">Stop
+      </button>
+      <span style="font-size: 0.5em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold;">
+      </span>
+      <div id="mb-fetch-progress-container" style="display: none; width: 300px; height: 26px; background-color: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204); border-radius: 3px; overflow: hidden; position: relative; vertical-align: middle;">
+	<div id="mb-fetch-progress-bar" style="width: 0%; height: 100%; transition: width 0.3s, background-color 0.3s; position: absolute; left: 0px; top: 0px;">
+	</div>
+	<div id="mb-fetch-progress-text" style="position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: black; z-index: 1; pointer-events: none; padding: 0px 10px; box-sizing: border-box;">
+	</div>
+      </div>
+      <span style="font-size: 0.5em; color: rgb(102, 102, 102); display: flex; align-items: center; height: 24px;">
+      </span>
+      <span style="font-size: 0.5em; color: rgb(102, 102, 102); display: flex; align-items: center; height: 24px;">
+      </span>
+    </div>
+  </h1>
+</div>
+
+
+<td>
+  <a href="/area/0eeb01c2-6e31-46ad-96b8-319749f731d2">
+    <bdi>Philadelphia
+    </bdi>
+  </a>,
+  <a href="/area/75d8fdcf-03e9-43d9-9399-131b8e118b0b">
+    <bdi>Pennsylvania
+    </bdi>
+  </a>,
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+</td>
+
+<td>
+  <a href="/area/e8e317a1-268c-4e46-9db1-f10af959ffca">
+    <bdi>Amsterdam
+    </bdi>
+  </a>,
+  <a href="/area/61d4a9f2-68f1-4cec-a25f-e8f953954459">
+    <bdi>Noord-Holland
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">North Holland
+      </i>
+    </bdi>)
+  </span>,
+  <span class="flag flag-NL">
+    <a href="/area/ef1b7cc0-cd26-36f4-8ea0-04d9623786c7">
+      <bdi>Netherlands
+      </bdi>
+    </a>
+  </span>,
+  <a href="/area/aee96acc-29ab-4f1b-b23d-52012b29c25b">
+    <bdi>Kingdom of the Netherlands
+    </bdi>
+  </a>
+</td>
+
+<td>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+</td>
+
+<td>
+  <a href="/area/a36544c1-cb40-4f44-9e0e-7a5a69e403a8">
+    <bdi>New Jersey
+    </bdi>
+  </a>,
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+</td>
+
+
+<td>
+  <a class="wrap-anywhere" href="/artist/c35dc9fa-01b3-4c5f-83d0-d7cede5563c8" title="?鉑飛 (guitarist with a missing surname in Joey Yung's album)">
+    <bdi>?鉑飛
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>guitarist with a missing surname in Joey Yung's album
+    </bdi>)
+  </span>
+</td>
+
+<td>German
+  <!-- -->
+  <!-- -->(
+  <span class="comment">primary
+  </span>)
+</td>
+
+<td>
+  <a class="wrap-anywhere" href="/release/9e630e98-055b-49aa-857b-981bb4e3c70f">
+    <bdi>A Town Hall Concert
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>sterero
+    </bdi>)
+  </span>
+</td>
+
+
+<td>
+  <span class="blank-icon">
+  </span>
+  <a class="wrap-anywhere" href="/event/26cead1c-a5fa-4677-873a-312412c6dc91">
+    <bdi>2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Southside Johnny &amp; The Asbury Jukes at The Stone Pony
+      </i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show
+    </bdi>)
+  </span>
+</td>
+
+
+<p class="subheader">
+  <span class="prefix">~
+  </span>
+  <!-- -->Person
+  <div id="mb-status-displays-container" style="display: inline-flex; align-items: center; gap: 8px; margin-left: 10px; line-height: 1;">
+    <span id="mb-global-status-display" style="font-size: 0.8em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold;">
+    </span>
+    <span id="mb-info-display" style="font-size: 0.7em; color: green; display: flex; align-items: center; height: 24px; font-weight: bold; margin-left: 10px;">✓ Loaded 2 rows from file mb-events-2026-02-16T16-39-21.json.gz, data version 1.0 from 2026-02-16T16:39:20.774Z | Active Pre-Filter: true
+    </span>
+  </div>
+</p>
