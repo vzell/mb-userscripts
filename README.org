@@ -42105,8 +42105,6 @@ Include a "Close" button and also "Escape" key closing of the popup.
 
 
 
-* TODO Is the check for invalid regexp really working
-
 
 * align button texts and make everything configurable (size, font, height, character to underline)
 
@@ -42119,23 +42117,6 @@ Include a "Close" button and also "Escape" key closing of the popup.
 
 
 * DONE Click outside should always close
-
-* TODO make the h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
-
-update the click handler on the h3 headerlines in muti table mode to toggle the collapse/uncollapse of the sections also
-when clicking on the following status text containers
-
-#+begin_example
-<span class="mb-filter-status" data-table-name="Promotion" data-table-index="1" style="color: green;">✓ Filtered 1 rows [Country/Date:"zw"]</span>
-#+end_example
-
-and
-
-#+begin_example
-<span class="mb-sort-status" data-table-name="Promotion" data-table-index="1" style="color: green;">✓ Sorted by column "Country/Date" ▼: 14 rows in 41ms</span>
-#+end_example
-
-inside the 'mb-subtable-controls', but don't touch the button click functionality in that outer container
 
 
 * Make all popup dialogs use the format of
@@ -42173,6 +42154,7 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 * DONE When dragging the config dialog and releasing it, becasue the mouse pointer is outsode of the popup window, it directly closes, although it remember ist size and position.
 * DONE Keyboard short cuts popup should be draggable
+
 * changelog popup should get focus when popupped
 
 The ChangeLog popup should get focus when popupped (the "Close" button a the bottom right corner is not needed, we have
@@ -42194,9 +42176,8 @@ to
 #+end_example
 
 
-* optional per sub-table "sub-table global filter" [] Cs [] Rx [] [] Ex
-
 * write special about it in the forum because of the 2 Action buttons
+
 
 * DONE keyboard shortcut and app help popups should have a sticky bottom with the help about "Click outside or press Escape to close"
 ** initial
@@ -42340,6 +42321,8 @@ Please refactor
 also to the case of single table pages
 
 
+* optional per sub-table "sub-table global filter" [] Cs [] Rx [] [] Ex
+
 * Add an 🔍 icon per subtable
 ** initial
 
@@ -42403,5 +42386,187 @@ There are bugs:
 
 ** bugs
 
-The row filtering is now technically correct, but counted number of rows NOT and alos the hightlighning is still not working per subtable when filtering i active
+In the uploaded user script
+
+the row filtering is now technically correct (either just on the subtables or together with a global filter), but the
+counted number of rows in is still not working per subtable when filtering on subtable level is active. There is also
+still a highlightning bug regarding the highlightning of the filter string coming from the subtable filter field. ONyl the first characzer ofa filter string is actually higlighted, starting from the second, the highlightning vanishes
+
+Take for example the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f and the following
+use case where a global filter and two subtables are involved:
+
+Starting point as an example let's take two different subgroups with header names "Album" and "Album + Compilation +
+Live", they are totatally distinct from each other (also the name suggests because of the string "Album" they have
+something in common, which they DO NOT)
+
+I also uploaded the two table data separately in two HTML files with the name coming from the group "Album.html" and "Album+Compilation+Live.html"
+
+| subtable category h3 header | initial row count without filtering | globale filter string empty                 | local subgroup table filter string | expected value |
+|-----------------------------+-------------------------------------+---------------------------------------------+------------------------------------+----------------|
+| Album                       |                                  21 | <span class="mb-row-count-stat">(21)</span> | "the": still displays 21           | 8 of 21        |
+| Album + Compilation + Live  |                                  33 | <span class="mb-row-count-stat">(32)</span> | "band": still displays 33          | 10 of 33       |
+
+So when subgroup table filter strings are involved, the row count never gets updated and it always show the initial rowcount per group (subtable)
+
+| subtable category h3 header | initial row count without filtering | globale filter string "of"                        | local subgroup table filter string | expected value |
+|-----------------------------+-------------------------------------+---------------------------------------------------+------------------------------------+----------------|
+| Album                       |                                  21 | <span class="mb-row-count-stat">(3 of 21)</span>  | "the": still displays 3 of 21      | 2 of 21        |
+| Album + Compilation + Live  |                                  33 | <span class="mb-row-count-stat">(12 of 21)</span> | "live": still displays 12 of 33    | 11 of 21       |
+
+** Still a bug left
+
+Still a bug left:
+
+After clearing the subtable filter filed, by deleting character by character from the filter string with the keyboard
+"Del"-key, the rowcount ist reflected correspondingly and also the green border vanishes when the filter string is
+completely empty.
+
+But when I do the same, emptying the filter field by either clicking the small "x" in the filter field, or pressing the
+"Escape"-key when inside the filter field, it gets EMPTIED but the filter field itself still has the green border active AS IF it is still active. Please fix
+
+** DONE couple glitches left
+
+21 - g:"of" - 3 of 21 - s:"the" - 2 of 3
+
+Some last glitches
+
+- the row counts on the h3 headers, when ONLY global filtering is active changes from
+
+#+begin_example
+<span class="mb-row-count-stat">(<total rows in subtable>)</span>
+#+end_example
+
+to
+
+#+begin_example
+<span class="mb-row-count-stat">(<globally filtered rows in subtable> of <total rows in subtable>)</span>
+#+end_example
+
+When I now add a subtable filter string it looks like
+
+#+begin_example
+<span class="mb-row-count-stat">(<locally filtered rows in subtable> of <globally filtered rows in subtable>)</span>
+#+end_example
+
+but it should be changed to also include the total rows in subtable
+
+#+begin_example
+<span class="mb-row-count-stat">(<locally filtered rows in subtable> of <globally filtered rows in subtable>)/<total rows in subtable></span>
+#+end_example
+
+Please also use the same format in the h2 '<span class="mb-row-count-stat">' but as the sum over all subtables 
+
+- the button
+
+#+begin_example
+<button id="mb-clear-all-filters-btn" title="Clear both global filter and all column filters" ...
+#+end_example
+
+should get a new 'title="Clear global/sub-table filters and ALL column filters in all sub-tables"'
+and should now also clear the sub-tables specific filter fields when pressed
+
+- the button
+
+#+begin_example
+<button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global filter and column filters)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: inline-block;">🎨 Toggle highlighting</button>
+#+end_example
+
+should get a new 'title="Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)"'
+and should now also toggle additionally the highlighning from the sub-table filters.
+
+- the button
+
+#+begin_example
+<button class="mb-subtable-clear-btn" type="button" title="Clear all column filters for this table",,,
+#+end_example
+
+should get a new 'title="Clear all COLUMN filters for this table"' and the button text should read 'Clear all COLUMN filters'
+
+** bug left
+
+- when loading data from disk by pressing the "Load from Disk"-button after the page entry, everything works as expected
+  regarding filtering with global and sub-table specific filtering. Especially when clicking the h3 header row (not the
+  specific elements in it which should trigger special actions like button, checkboxes or input fields) the
+  collapsing/uncollapsing of the corresponding h3 section is triggered. By the way please also implement, that clicking
+  the
+
+#+begin_example
+<span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter [global:"of"]</span>
+#+end_example
+  
+should also trigger the "collapsing/uncollapsing" of the section
+
+- now the bug: when already on the final rendered page and THEN loading data from disk by pressing the "Load from
+  Disk"-button the h3 header line does not respond anymore on the click trigger (also the buttons and filter filed
+  do). Please fix. Another hint: if I start the action of loading data from disk by pressing the "Load from
+  Disk"-button, and there was a previous global filtering string in action, after the loading and rendering of the
+  loaded data, all rows are rendered as they should, BUT the global filter STILL has the previous filter
+  string in its filter field, but effectively unused, so just a visual glitch. Please fix
+
+- While you're at it, update the click handler on the h3 headerlines in multi table mode to toggle the
+  collapse/uncollapse of the sections also when clicking on the following status text containers
+
+#+begin_example
+<span class="mb-filter-status" data-table-name="Promotion" data-table-index="1" style="color: green;">✓ Filtered 1 rows [Country/Date:"zw"]</span>
+#+end_example
+
+and
+
+#+begin_example
+<span class="mb-sort-status" data-table-name="Promotion" data-table-index="1" style="color: green;">✓ Sorted by column "Country/Date" ▼: 14 rows in 41ms</span>
+#+end_example
+
+inside the 'mb-subtable-controls', but don't touch the button click functionality in that outer container
+
+
+* Tests: "to" as column level filter on "Album" in the "Title" column
+
+
+* TODO make the h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
+
+In the uploaded userscript,
+
+update the click handler on the h3 headerlines in multi table mode to toggle the collapse/uncollapse of the sections also
+when clicking on the following status text containers
+
+#+begin_example
+<span class="mb-filter-status" data-table-name="Promotion" data-table-index="1" style="color: green;">✓ Filtered 1 rows [Country/Date:"zw"]</span>
+#+end_example
+
+and
+
+#+begin_example
+<span class="mb-sort-status" data-table-name="Promotion" data-table-index="1" style="color: green;">✓ Sorted by column "Country/Date" ▼: 14 rows in 41ms</span>
+#+end_example
+
+inside the 'mb-subtable-controls', but don't touch the button click functionality in that outer container
+
+
+* TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter
+
+* TODO Is the check for invalid regexp really working
+
+* fix invalid filter regexp
+
+#+begin_example
+
+#+end_example
+
+* tooltip for global "Clear all COLUMN filters" from
+
+#+begin_example
+    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
+#+end_example
+
+to
+
+#+begin_example
+    clearColumnFiltersBtn.title = 'Globally clear all column-specific filter inputs';
+#+end_example
+
+* resize global filter input field (configurable) + the subtable specific one
+
+
+* change tooltip text depending on single or mult table pages - maybe use "Globally" versus "Sub-table"
+
 
