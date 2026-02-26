@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.19+2026-02-26
+// @version      9.97.20+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -6264,14 +6264,20 @@
             (globalFilterActive || columnFiltersActive || stfFiltersActive)
                 ? 'inline-block' : 'none';
 
-        // Show/hide Clear all COLUMN filters button
+        // "Clear all COLUMN filters" — visible only when at least one column
+        // filter has text.  Not shown for a pure-STF or pure-global scenario.
         clearColumnFiltersBtn.style.display = columnFiltersActive ? 'inline-block' : 'none';
 
-        // Show/hide Clear ALL filters button
-        // Includes stfFiltersActive: the button must also appear when only a
-        // sub-table filter is active (no global or column filters set).
+        // "Clear ALL filters" visibility rules:
+        //   • Global filter active → always show (it clears the global field).
+        //   • STF only (no columns) → do NOT show; the per-subtable
+        //     mb-subtable-clear-btn already handles that case at the right level.
+        //   • Column only (no STF, no global) → do NOT show; clearColumnFiltersBtn
+        //     is sufficient for that case.
+        //   • Both STF and column active → show (one click clears both levels).
+        //   • Global + anything → show.
         clearAllFiltersBtn.style.display =
-            (globalFilterActive || columnFiltersActive || stfFiltersActive)
+            (globalFilterActive || (stfFiltersActive && columnFiltersActive))
                 ? 'inline-block' : 'none';
 
         // Update visibility for sub-table clear buttons and sub-table highlight buttons

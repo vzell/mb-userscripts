@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.97.20",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Global 'Clear all COLUMN filters' and 'Clear ALL filters' button visibility: tightened the rules so each button only appears when it is actually useful, avoiding duplicate/redundant controls. Previous behaviour showed both global buttons for any combination of active filters. Corrected rules (global filter aside): (1) STF filter only → neither global clear button is shown; the per-subtable mb-subtable-clear-btn in the h3 controls bar already handles that scope. (2) Column filter(s) only, no STF or global → only 'Clear all COLUMN filters' is shown; 'Clear ALL filters' is superfluous when there is nothing outside the column level to clear. (3) Both STF and column filters active → both 'Clear all COLUMN filters' and 'Clear ALL filters' are shown, because a one-click 'clear everything' action is now genuinely useful. (4) Global filter active (with or without STF/column) → 'Clear ALL filters' is always shown because it is the only button that clears the global field; 'Clear all COLUMN filters' additionally appears if any column filter is also active.",
+          "Implemented as a change to the clearAllFiltersBtn condition in updateFilterButtonsVisibility(): from (globalFilterActive || columnFiltersActive || stfFiltersActive) to (globalFilterActive || (stfFiltersActive && columnFiltersActive)). The clearColumnFiltersBtn condition (columnFiltersActive) is unchanged."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.19",
     "date": "2026-02-26",
     "sections": [
