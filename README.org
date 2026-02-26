@@ -42621,7 +42621,43 @@ should trigger the "collapsing/uncollapsing" of just the current h2 section when
 * TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter
 
 
-* TODO Is the check for invalid regexp really working
+* TODO Is the check for invalid regexp really working, I don't getn any eoor
+
+Is the check for invalid regexp really working in the following code
+
+#+begin_example
+    async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false, isExclude = false) {
+        if (!file) {
+            Lib.warn('cache', 'No file selected.');
+            return;
+        }
+
+        const filterQuery = (isCaseSensitive || isRegExp) ? filterQueryRaw : filterQueryRaw.toLowerCase();
+
+        // Clear previous status message
+        preFilterMsg.textContent = '';
+
+        let globalRegex = null;
+        if (filterQueryRaw && isRegExp) {
+            try {
+                globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
+            } catch (e) {
+                await Lib.showCustomAlert(
+                    'Invalid Regular Expression in load filter field. Load aborted.',
+                    '❌ Invalid Regex',
+                    loadFromDiskBtn
+                );
+                // Reset file input so change event fires again if they pick same file
+                fileInput.value = '';
+                return;
+            }
+        }
+
+        Lib.debug('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}${filterQueryRaw ? `, exclude: ${isExclude}` : ''}`);
+#+end_example
+
+I don't get any alert ? The same is true when using the "[x] Rx" checkbox toggle for filter expressions on the global filter or sub-table filters. Plese implement or fix
+
 
 * fix invalid filter regexp
 
@@ -42643,3 +42679,11 @@ to
 
 
 * change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
+
+* subtables
+
+- "Toggle highlight" button should only be visible when a filter string is present
+- when in regexp mode, remove the alert window, just add red border and "Invalid regexp" info message
+- change default colors of filter borders, and make them configurable:  orange for global filter, leave the colors as is for other filters
+- subtable "Clear ALL filters" button (onyl visible when filter is active)
+- runFilter async (is that a problem, async in genral ?)
