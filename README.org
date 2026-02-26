@@ -42113,7 +42113,7 @@ Include a "Close" button and also "Escape" key closing of the popup.
 * add version to app help, configuration and keybord shortcuts dialogs
 
 
-* why does the "Global Prefilter Highlight Color" starts out in black when clicking on the color chooser icon
+* DONE why does the "Global Prefilter Highlight Color" starts out in black when clicking on the color chooser icon
 
 In the uploaded library, 
 
@@ -42643,5 +42643,3 @@ to
 
 
 * change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
-
-
