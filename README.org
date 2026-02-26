@@ -42768,6 +42768,7 @@ OK, so the behaviour for the global filter is OK now, but the column specific fi
 table for a rendered page with multi tables) the first "Esc" clears the filter but it doesn't stay focused, so that I can start typing again 
 
 ** TODO midifier escape
+*** DONE initial
 
 Please implement one last final fix for the "focus state filter styling for column filter fields": When deleting
 backwards a filter sting in a column filter field, it should NOT be possible to actually delete the
@@ -42782,21 +42783,10 @@ Please also implement the following keyboard shortcuts and document them in the 
 
 Also document the previously implemented "focus state filter styling for column filter fields in the application helpfile "ShowAllEntityData_HELP.txt"
 
-*** If you want, next step could be:
+*** switch keys
 
-Shift+Esc to always blur
+Ctrl+Esc ==> Ctrl+Shift+Esc - browser/OS intercepts it
 
-Ctrl+Esc to clear all filters (global + columns)
-
-----------
-
-If you want next-level polish:
-
-restore same table index, not just first matching column
-
-allow Esc to clear all column filters in table with modifier
-
-visual feedback (“cleared”) animation
-
-
+ - Shift+Esc - same as pressing the "Clear all COLUMN filters"-button in the h2 header row (change the tooltip text accordingly that this is a global action and add the keyboard shortut prefix to the tooltip text)
+ - Ctrl+Shift+Esc - same as pressing the "Clear ALL filters"-button in the h2 header row (change the tooltip text accordingly that this is a global action and add the keyboard shortut prefix to the tooltip text)
 

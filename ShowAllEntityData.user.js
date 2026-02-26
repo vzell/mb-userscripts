@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.13+2026-02-26
+// @version      9.97.14+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3730,6 +3730,8 @@
                     { keys: getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G'), desc: 'Focus global filter' },
                     { keys: getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C'), desc: 'Focus first column filter (cycle through tables)' },
                     { keys: getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G'), desc: 'Clear all filters' },
+                    { keys: 'Shift+Esc', desc: 'Clear all COLUMN filters (global action)' },
+                    { keys: 'Ctrl+Esc', desc: 'Clear ALL filters — global + column (global action)' },
                     { keys: 'Escape', desc: 'Clear focused filter (press twice to blur)' }
                 ]
             },
@@ -4203,8 +4205,47 @@
                 }
             }
 
-            // Escape: Clear focused filter (first press) or blur (second press)
-            if (e.key === 'Escape' &&
+            // Shift+Esc: clear all COLUMN filters (equivalent to clicking the
+            // "Clear all COLUMN filters" button in the controls bar — global action)
+            if (e.key === 'Escape' && e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                const clearColBtn = document.getElementById('mb-clear-column-filters-btn');
+                if (clearColBtn) {
+                    clearColBtn.click();
+                    Lib.debug('shortcuts', 'All column filters cleared via Shift+Esc');
+                } else {
+                    // Fallback: clear directly (button may be hidden)
+                    document.querySelectorAll('.mb-col-filter-input').forEach(inp => {
+                        inp.value = '';
+                        inp.style.backgroundColor = '';
+                    });
+                    if (typeof runFilter === 'function') runFilter();
+                    Lib.debug('shortcuts', 'All column filters cleared via Shift+Esc (direct fallback)');
+                }
+            }
+
+            // Ctrl+Esc: clear ALL filters — global filter + sub-table filters + all
+            // column filters (equivalent to clicking "Clear ALL filters" button)
+            if (e.key === 'Escape' && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                const clearAllBtn = document.getElementById('mb-clear-all-filters-btn');
+                if (clearAllBtn) {
+                    clearAllBtn.click();
+                    Lib.debug('shortcuts', 'All filters cleared via Ctrl+Esc');
+                } else {
+                    // Fallback: clear directly (button may be hidden)
+                    clearAllFilters();
+                    Lib.debug('shortcuts', 'All filters cleared via Ctrl+Esc (direct fallback)');
+                }
+            }
+
+            // Plain Escape (no modifier except possibly handled above):
+            // Clear focused filter (first press) or blur (second press).
+            // The Shift+Esc and Ctrl+Esc cases above have already returned via
+            // stopPropagation, so this block only fires for unmodified Escape.
+            if (e.key === 'Escape' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey &&
                 (e.target.matches('.mb-col-filter-input') ||
                  e.target.id === 'mb-global-filter-input')) {
                 if (
@@ -6094,7 +6135,7 @@
     clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
     clearColumnFiltersBtn.id = 'mb-clear-column-filters-btn';
     clearColumnFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
+    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs — global action (Shift+Esc)';
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
         document.querySelectorAll('.mb-col-filter-input').forEach(input => {
@@ -6124,7 +6165,7 @@
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.id = 'mb-clear-all-filters-btn';
     clearAllFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearAllFiltersBtn.title = 'Clear global/sub-table filters and ALL column filters in all sub-tables';
+    clearAllFiltersBtn.title = 'Clear global/sub-table filters and ALL column filters in all sub-tables — global action (Ctrl+Esc)';
     clearAllFiltersBtn.onclick = () => {
         // Clear global filter
         filterInput.value = '';
@@ -7325,6 +7366,108 @@
     }
 
     /**
+     * keydown guard that prevents keyboard actions from destroying the decorative
+     * focus prefix inside a column filter input.  Attach as a 'keydown' listener
+     * on each .mb-col-filter-input element while it has focus.
+     *
+     * Rules enforced:
+     *  • Backspace  — blocked when the cursor (or selection start) is at or before
+     *                 the end of the prefix, so the prefix characters can never be
+     *                 consumed by backwards deletion.
+     *  • Delete     — blocked when the selection end is within or before the prefix
+     *                 range, so forward deletion cannot eat prefix characters either.
+     *  • ArrowLeft  — clamped: if moving left would place the caret inside the
+     *                 prefix the caret is pinned just after the prefix instead.
+     *                 Shift+ArrowLeft (extend selection leftward) is clamped the
+     *                 same way so the prefix cannot be included in a selection.
+     *  • Home       — repositioned to just after the prefix rather than column 0
+     *                 (Shift+Home likewise, to prevent selecting over the prefix).
+     *  • Ctrl+A     — rewritten to select only the user content (after the prefix).
+     *
+     * @param {HTMLInputElement} input - The column filter input element.
+     * @param {KeyboardEvent}    e     - The keydown event.
+     */
+    function guardColFilterPrefixKeydown(input, e) {
+        const prefix = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
+        const pfxLen = prefix.length;
+
+        // Skip entirely when the input doesn't currently carry the prefix
+        // (this is a safety guard; the listener is only active while focused,
+        // so applyColFilterFocusStyle should always have set the prefix already).
+        if (!input.value.startsWith(prefix)) return;
+
+        const selStart = input.selectionStart;
+        const selEnd   = input.selectionEnd;
+
+        switch (e.key) {
+            case 'Backspace': {
+                // Block when cursor or selection start is within/at the prefix boundary
+                if (selStart <= pfxLen) {
+                    e.preventDefault();
+                    // Ensure caret is placed right after the prefix
+                    input.setSelectionRange(pfxLen, pfxLen);
+                }
+                break;
+            }
+
+            case 'Delete': {
+                // Block when the selection could consume prefix characters
+                if (selEnd <= pfxLen) {
+                    e.preventDefault();
+                    input.setSelectionRange(pfxLen, pfxLen);
+                } else if (selStart < pfxLen) {
+                    // Partial overlap: allow the Delete but pin the selection start
+                    e.preventDefault();
+                    // Remove only the portion after the prefix
+                    const after = input.value.slice(pfxLen);
+                    const deleteLen = selEnd - pfxLen;
+                    input.value = prefix + after.slice(deleteLen);
+                    input.setSelectionRange(pfxLen, pfxLen);
+                }
+                break;
+            }
+
+            case 'ArrowLeft': {
+                const newPos = e.shiftKey ? selStart - 1 : selEnd - 1;
+                if (newPos < pfxLen) {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        // Extend selection only to the prefix boundary
+                        input.setSelectionRange(pfxLen, selEnd);
+                    } else {
+                        input.setSelectionRange(pfxLen, pfxLen);
+                    }
+                }
+                break;
+            }
+
+            case 'Home': {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    // Shift+Home: extend selection back to just after prefix
+                    input.setSelectionRange(pfxLen, selEnd);
+                } else {
+                    input.setSelectionRange(pfxLen, pfxLen);
+                }
+                break;
+            }
+
+            case 'a':
+            case 'A': {
+                // Ctrl+A / Cmd+A: select only the user-editable content
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    input.setSelectionRange(pfxLen, input.value.length);
+                }
+                break;
+            }
+
+            default:
+                break;
+        }
+    }
+
+    /**
      * Adds a filter row beneath the table header with input fields for per-column filtering
      * @param {HTMLTableElement} table - The table to add column filters to
      */
@@ -7382,6 +7525,9 @@
 
             // Focus: prepend search-icon prefix and tint the background
             input.addEventListener('focus', () => applyColFilterFocusStyle(input));
+
+            // Keydown: prevent Backspace/Delete/ArrowLeft from consuming the prefix
+            input.addEventListener('keydown', (e) => guardColFilterPrefixKeydown(input, e));
 
             // Blur: strip prefix and clear the background tint so the stored
             // value is always the clean filter string (no visual artefacts)

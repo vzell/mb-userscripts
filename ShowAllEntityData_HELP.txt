@@ -55,8 +55,31 @@ FILTERING
 • Ctrl-C  — focus first column filter; repeated presses cycle through tables
             (configurable)
 • Ctrl-Shift-G — clear all active filters (configurable)
+• Shift-Esc    — clear all COLUMN filters only (global, works from anywhere)
+• Ctrl-Esc     — clear ALL filters: global filter + all column filters
+                 (global, works from anywhere)
 • Escape  — first press clears the focused filter, second press removes focus
 • 🎨 Toggle highlighting — toggle highlight colours on/off for active filters
+
+COLUMN FILTER FOCUS INDICATORS
+--------------------------------
+When a column filter field is focused (via Ctrl-C, Tab, or mouse click):
+• A configurable search-icon prefix (default "🔍 ") is prepended to the field
+  to make it immediately obvious which column is being edited.  The prefix is
+  purely decorative: it is never included in the actual filter string.
+• The field background turns light yellow (configurable colour
+  "Column Filter Focus Background", default #fffde7).
+• The prefix cannot be deleted or selected — Backspace, Delete, ArrowLeft,
+  and Home are clamped so the cursor stays at or after the prefix.  Ctrl+A
+  selects only the user-editable text after the prefix.
+When the field loses focus:
+• The prefix is always removed from the stored value.
+• If the user entered a filter string the background switches to a persistent
+  "active" colour (configurable "Column Filter Active Background", default
+  #fff9c4), providing a visual overview of which columns have active filters.
+• If the field was cleared the background is removed entirely.
+Both colours and the prefix string are configurable in ⚙️ Settings →
+🎨 FILTER HIGHLIGHT COLORS.
 
 PRE-FILTER (Load from Disk)
 ---------------------------
@@ -92,6 +115,9 @@ KEYBOARD SHORTCUTS  (all configurable in ⚙️ → Keyboard Shortcuts section)
   Ctrl+G           Focus global filter
   Ctrl+C           Focus first column filter (cycles through tables)
   Ctrl+Shift+G     Clear all filters
+  Shift+Esc        Clear all COLUMN filters only (global — works from anywhere)
+  Ctrl+Esc         Clear ALL filters: global filter + all column filters
+                   (global — works from anywhere)
   Ctrl+S           Save to Disk
   Ctrl+L           Load from Disk dialog
   Ctrl+E           Open Export menu
@@ -103,6 +129,7 @@ KEYBOARD SHORTCUTS  (all configurable in ⚙️ → Keyboard Shortcuts section)
   Ctrl+3           Toggle all h3 type headers
   Ctrl+,           Open Settings dialog
   Escape           Clear focused filter / close open menus
+                   (first press clears text, second press removes focus)
 
 PREFIX-MODE SHORTCUTS  (configurable prefix, default: Ctrl+M)
 --------------------------------------------------------------
@@ -197,6 +224,8 @@ SETTINGS (⚙️ or Ctrl+,)
 All options are configurable via the Settings Manager:
 • Enable / disable any UI feature (export, stats, density, column resize, …)
 • Configure highlight colours for pre-filter, global filter, column filters
+• Configure column filter focus/active background colours and the focus prefix
+  string (🎨 FILTER HIGHLIGHT COLORS section)
 • Set the high-page-count warning threshold
 • Set the large-dataset render warning threshold
 • Configure load filter history limit

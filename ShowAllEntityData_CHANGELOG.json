@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.97.14",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "✨ Features",
+        "items": [
+          "Column filter prefix guard: while a column filter field has focus, Backspace and Delete cannot consume the decorative focus prefix (sa_col_filter_focus_prefix). The cursor is clamped so it cannot move into the prefix region. ArrowLeft and Shift+ArrowLeft stop at the first character after the prefix. Home / Shift+Home reposition to just after the prefix rather than column 0. Ctrl+A selects only the user-editable text after the prefix.",
+          "New keyboard shortcut Shift+Esc: clears all COLUMN filters across all tables (global action — fires regardless of which element currently has focus). Equivalent to clicking the 'Clear all COLUMN filters' button.",
+          "New keyboard shortcut Ctrl+Esc: clears ALL filters — global filter, all sub-table filters, and all column filters (global action). Equivalent to clicking the 'Clear ALL filters' button.",
+          "Button tooltips updated: 'Clear all COLUMN filters' now shows '— global action (Shift+Esc)' and 'Clear ALL filters' shows '— global action (Ctrl+Esc)' so users discover the shortcuts via hover.",
+          "Keyboard shortcuts help dialog: Shift+Esc and Ctrl+Esc entries added to the 'Filter & Search' section.",
+          "ShowAllEntityData_HELP.txt updated: new 'COLUMN FILTER FOCUS INDICATORS' section documents the focus prefix, clamping behaviour, and the focus/active background colours. KEYBOARD SHORTCUTS section updated with Shift+Esc, Ctrl+Esc, and an expanded Escape entry. SETTINGS section notes the new colour/prefix settings."
+        ]
+      },
+      {
+        "label": "🔧 Code Quality",
+        "items": [
+          "Added guardColFilterPrefixKeydown(input, e) helper function. Handles Backspace, Delete, ArrowLeft, Home, and Ctrl+A via a switch statement with precise selectionStart/selectionEnd arithmetic. Wired as a 'keydown' listener on every .mb-col-filter-input element created by addColumnFilterRow.",
+          "Plain-Escape handler narrowed with !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey guard so it never fires when Shift+Esc or Ctrl+Esc are pressed. Shift+Esc and Ctrl+Esc handlers placed before the plain-Escape block and each call stopPropagation() to prevent fall-through."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.13",
     "date": "2026-02-26",
     "sections": [
