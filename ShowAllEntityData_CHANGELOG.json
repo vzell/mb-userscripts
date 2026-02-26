@@ -1,5 +1,20 @@
 [
   {
+    "version": "9.97.11",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🔧 Code Quality",
+        "items": [
+          "Replaced all fragile querySelector/querySelectorAll UI-element lookups that matched on textContent.includes(), title*=, or placeholder*= with direct document.getElementById() calls — O(1), unambiguous, and immune to label/title text changes.",
+          "Added missing id attributes to three buttons that were previously found only by text search: Export button (mb-export-btn), Statistics button (mb-stats-btn), Density button (mb-density-btn). Save to Disk (mb-save-to-disk-btn), Load from Disk (mb-load-from-disk-btn), and the Global Filter input (mb-global-filter-input) already had IDs; their call sites were updated to use getElementById.",
+          "Updated call sites: Export existingBtn guard, Export Ctrl+E shortcut, openExportMenu(); Statistics existingBtn guard, Statistics Ctrl+I shortcut (collapsed previous two-step fallback selector into one getElementById call); Density existingBtn guard, Density Ctrl+D shortcut, openDensityMenu(); clearAllFilters() global-filter input clear; Ctrl+G focus-global-filter shortcut; showStatsPanel() filter-status read; saveFilterHighlightState() global-filter read; Ctrl+S save shortcut; Ctrl+L load shortcut; ctrlMFunctionMap 'l' entry.",
+          "Escape-key event guard for the global filter changed from e.target.matches('[placeholder*=...]') to e.target.id === 'mb-global-filter-input' for consistency with the new ID-first pattern."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.10",
     "date": "2026-02-26",
     "sections": [

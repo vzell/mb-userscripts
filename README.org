@@ -42729,11 +42729,26 @@ Why does the following change
 moves the buttons shortcuts, settings and application help from the right of the "Export" button to the left of the "Resize" button
 
 
-* TODO change all "const settingsBtn = controlsContainer.querySelector('button[title*="Open settings manager"]');"
+* TODO querySelector -> document.getElementById('<ID>');
 
-to find by ID
+change all "querySelector" which use "textContent", "title" etc. searches in UI elements 
+
+#+begin_example
+const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
+const settingsBtn = controlsContainer.querySelector('button[title*="Open settings manager"]');
+#+end_example
+
+to the lookup by ID approach
+
+#+begin_example
+document.getElementById('<unique ID>');
+#+end_example
+
+Please add missing IDs to UI elements when neccessary
 
 
 * document test suite after userscript and library changes
 ** library
 ** userscript
+
+* when entering the column level filter fieldds with "Ctrl-C" add the dsearchicon and make the background of the filter field light yellow. Remove the both when leavin the filter field

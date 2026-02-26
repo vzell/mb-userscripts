@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.10+2026-02-26
+// @version      9.97.11+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3056,13 +3056,14 @@
         }
 
         // Check if button already exists
-        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
+        const existingBtn = document.getElementById('mb-export-btn');
         if (existingBtn) {
             Lib.debug('ui', 'Export button already exists, skipping');
             return;
         }
 
         const exportBtn = document.createElement('button');
+        exportBtn.id = 'mb-export-btn';
         exportBtn.innerHTML = makeButtonHTML('Export', 'E', '💾');
         exportBtn.title = `Export visible rows and columns to various formats (${getPrefixDisplay()}, then E)`;
         exportBtn.style.cssText = uiActionBtnBaseCSS();
@@ -3248,7 +3249,7 @@
      */
     function clearAllFilters() {
         // Clear global filter
-        const filterInput = document.querySelector('input[placeholder*="Global Filter"]');
+        const filterInput = document.getElementById('mb-global-filter-input');
         if (filterInput) {
             filterInput.value = '';
         }
@@ -3974,7 +3975,7 @@
             // Focus global filter
             if (isShortcutEvent(e, 'sa_shortcut_focus_global_filter', 'Ctrl+G')) {
                 e.preventDefault();
-                const filterInput = document.querySelector('input[placeholder*="Global Filter"]');
+                const filterInput = document.getElementById('mb-global-filter-input');
                 if (filterInput) {
                     filterInput.focus();
                     filterInput.select();
@@ -4038,7 +4039,7 @@
             // Open export menu
             if (isShortcutEvent(e, 'sa_shortcut_open_export', 'Ctrl+E')) {
                 e.preventDefault();
-                const exportBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
+                const exportBtn = document.getElementById('mb-export-btn');
                 if (exportBtn) {
                     exportBtn.click();
                     Lib.debug('shortcuts', 'Export menu triggered via ' + getShortcutDisplay('sa_shortcut_open_export', 'Ctrl+E'));
@@ -4050,7 +4051,7 @@
             // Save to disk (JSON)
             if (isShortcutEvent(e, 'sa_shortcut_save_to_disk', 'Ctrl+S')) {
                 e.preventDefault();
-                const saveBtn = document.querySelector('button[title*="Save current table data"]');
+                const saveBtn = document.getElementById('mb-save-to-disk-btn');
                 if (saveBtn) {
                     saveBtn.click();
                     Lib.debug('shortcuts', 'Save to disk triggered via ' + getShortcutDisplay('sa_shortcut_save_to_disk', 'Ctrl+S'));
@@ -4062,7 +4063,7 @@
             // Load from disk
             if (isShortcutEvent(e, 'sa_shortcut_load_from_disk', 'Ctrl+L')) {
                 e.preventDefault();
-                const loadBtn = document.querySelector('button[title*="Load table data from disk"]');
+                const loadBtn = document.getElementById('mb-load-from-disk-btn');
                 if (loadBtn) {
                     loadBtn.click();
                     Lib.debug('shortcuts', 'Load from disk triggered via ' + getShortcutDisplay('sa_shortcut_load_from_disk', 'Ctrl+L'));
@@ -4086,7 +4087,7 @@
             // Open Density menu
             if (isShortcutEvent(e, 'sa_shortcut_open_density', 'Ctrl+D')) {
                 e.preventDefault();
-                const densityBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Density'));
+                const densityBtn = document.getElementById('mb-density-btn');
                 if (densityBtn) {
                     densityBtn.click();
                     Lib.debug('shortcuts', 'Density menu opened via ' + getShortcutDisplay('sa_shortcut_open_density', 'Ctrl+D'));
@@ -4151,10 +4152,7 @@
             // Open Statistics panel (configurable, default Ctrl+I)
             if (isShortcutEvent(e, 'sa_shortcut_open_statistics', 'Ctrl+I')) {
                 e.preventDefault();
-                const statsBtn = document.querySelector('#mb-show-all-controls-container button[id="mb-stats-btn"], #mb-show-all-controls-container button');
-                // Prefer finding the Statistics button by its emoji text
-                const statsBtnEl = Array.from(document.querySelectorAll('button'))
-                    .find(btn => btn.textContent.includes('Statistics'));
+                const statsBtnEl = document.getElementById('mb-stats-btn');
                 if (statsBtnEl) {
                     statsBtnEl.click();
                     Lib.debug('shortcuts', 'Statistics panel opened via ' + getShortcutDisplay('sa_shortcut_open_statistics', 'Ctrl+I'));
@@ -4184,7 +4182,7 @@
             // Escape: Clear focused filter (first press) or blur (second press)
             if (e.key === 'Escape' &&
                 (e.target.matches('.mb-col-filter-input') ||
-                 e.target.matches('input[placeholder*="Global Filter"]'))) {
+                 e.target.id === 'mb-global-filter-input')) {
                 if (
                     e.target.classList.contains('mb-col-filter-input') ||
                     (e.target.placeholder && e.target.placeholder.includes('Global Filter'))
@@ -4304,7 +4302,7 @@
         const memoryKB = Math.round(totalRowCount * avgRowSize / 1024);
 
         // Get filter status
-        const globalFilterInput = document.querySelector('input[placeholder*="Global Filter"]');
+        const globalFilterInput = document.getElementById('mb-global-filter-input');
         const globalFilter = globalFilterInput?.value || '';
         const columnFilters = Array.from(document.querySelectorAll('.mb-col-filter-input'))
             .filter(inp => inp.value)
@@ -4426,13 +4424,14 @@
         }
 
         // Check if button already exists
-        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Statistics'));
+        const existingBtn = document.getElementById('mb-stats-btn');
         if (existingBtn) {
             Lib.debug('ui', 'Statistics button already exists, skipping');
             return;
         }
 
         const statsBtn = document.createElement('button');
+        statsBtn.id = 'mb-stats-btn';
         statsBtn.innerHTML = makeButtonHTML('Statistics', 'i', '📊');
         statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then I)`;
         statsBtn.style.cssText = uiActionBtnBaseCSS();
@@ -4525,7 +4524,7 @@
         }
 
         // Check if button already exists
-        const existingBtn = Array.from(controlsContainer.querySelectorAll('button')).find(btn => btn.textContent.includes('Density'));
+        const existingBtn = document.getElementById('mb-density-btn');
         if (existingBtn) {
             Lib.debug('ui', 'Density control button already exists, skipping');
             return;
@@ -4533,6 +4532,7 @@
 
         // Create button
         const densityBtn = document.createElement('button');
+        densityBtn.id = 'mb-density-btn';
         densityBtn.innerHTML = makeButtonHTML('Density', 'D', '📏');
         densityBtn.title = `Change table density (spacing) (${getPrefixDisplay()}, then D)`;
         densityBtn.style.cssText = uiActionBtnBaseCSS();
@@ -7105,7 +7105,7 @@
      */
     function saveFilterHighlightState() {
         // Save global filter parameters
-        const globalFilterInput = document.querySelector('input[placeholder*="Global Filter"]');
+        const globalFilterInput = document.getElementById('mb-global-filter-input');
         const globalQuery = globalFilterInput ? globalFilterInput.value.trim() : '';
 
         // Save column filter parameters
@@ -10809,7 +10809,7 @@
      * Used as the Ctrl+M + "e" prefix-mode shortcut target.
      */
     function openExportMenu() {
-        const exportBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Export'));
+        const exportBtn = document.getElementById('mb-export-btn');
         if (exportBtn) {
             exportBtn.click();
         }
@@ -10831,7 +10831,7 @@
      * Used as the Ctrl+M + "d" prefix-mode shortcut target.
      */
     function openDensityMenu() {
-        const densityBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Density'));
+        const densityBtn = document.getElementById('mb-density-btn');
         if (densityBtn) {
             densityBtn.click();
         }
@@ -10840,7 +10840,7 @@
     // Populate prefix-mode function mapping after all functions are defined
     ctrlMFunctionMap = {
         's': { fn: saveTableDataToDisk, description: 'Save to Disk' },
-        'l': { fn: () => showLoadFilterDialog(document.querySelector('button[title*="Load table data from disk"]')), description: 'Load from Disk' },
+        'l': { fn: () => showLoadFilterDialog(document.getElementById('mb-load-from-disk-btn')), description: 'Load from Disk' },
         'r': { fn: toggleAutoResizeColumns, description: 'Auto Resize Columns' },
         'v': { fn: openVisibleColumnsMenu, description: 'Open Visible Columns Menu' },
         'd': { fn: openDensityMenu, description: 'Open Density Menu' },
