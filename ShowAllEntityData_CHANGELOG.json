@@ -1,5 +1,52 @@
 [
   {
+    "version": "9.97.16",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Column filter ✕ button: clicking the small clear icon now correctly re-focuses the filter field and restores the decorative focus prefix (sa_col_filter_focus_prefix), exactly matching the behaviour of pressing Escape the first time while the field has focus. Previously the browser fired blur before onclick, stripping the prefix before the handler ran, so the field always ended up empty and blurred regardless of previous state.",
+          "Sub-table filter — 'Clear all filters' button now also appears when the sub-table (STF) filter input is active (not only when column-level filters are active). Previously the button was driven exclusively by column filter state, so typing in the STF input left the button hidden.",
+          "Sub-table filter — 'Toggle highlighting' button now also appears as soon as the STF input receives any text, matching the behaviour that was already in place for column filters.",
+          "Sub-table filter — clicking 'Clear all filters' (formerly 'Clear all COLUMN filters') while the STF input is active now also clears the STF field and immediately restores all rows that were hidden by it (data-mb-stf-hidden), removes STF highlight spans, and resets the input border/shadow. Previously only column inputs were cleared, leaving the STF filter visually active with no way to dismiss it via that button.",
+          "applySubFilter and clearSubFilter now call updateFilterButtonsVisibility() on completion so the per-subtable 'Clear all filters' and 'Toggle highlighting' buttons update their visibility in real time as the user types or clears the STF field — without requiring a subsequent column-filter interaction or a full runFilter() pass."
+        ]
+      },
+      {
+        "label": "🔧 Code Quality",
+        "items": [
+          "createSubTableHighlightButton (standalone helper introduced in 9.97.15) now also calls runFilter() in its ON branch so that column-filter highlights are also restored, not only sub-table-filter highlights.",
+          "Per-subtable 'Clear all filters' button: label shortened from 'Clear all COLUMN filters' to 'Clear all filters' and tooltip updated to 'Clear all filters for this sub-table (column filters and sub-table filter)' to reflect the extended scope."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.97.15",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Column filter ✕ button: clicking the clear icon when the field is focused no longer erases the decorative focus prefix. The handler now checks whether the prefix is present before clearing, retaining it and repositioning the cursor so the interaction is identical to pressing Escape once.",
+          "Sub-table 'Clear all COLUMN filters' button visibility: the empty-check now uses stripColFilterPrefix() instead of a raw .trim() !== '' test, so a focused-but-empty column filter field (which carries the decorative '🔍 ' prefix) is no longer incorrectly counted as an active filter.",
+          "Keyboard shortcut Ctrl+Esc changed to Ctrl+Shift+Esc throughout the script and in ShowAllEntityData_HELP.txt. The previous binding was intercepted by the operating system on several platforms, making the shortcut unreachable."
+        ]
+      },
+      {
+        "label": "✨ Features",
+        "items": [
+          "Per-subtable 'Toggle highlighting' button: moved out of the collapsible STF filter panel and into the persistent .mb-subtable-controls bar (next to 'Clear all COLUMN filters') so it remains accessible even when the STF panel is closed. Button starts hidden and is shown/hidden by updateFilterButtonsVisibility() whenever any filter (STF or column) is active for that sub-table.",
+          "Per-subtable 'Toggle highlighting' button: the OFF branch now strips both .mb-subtable-filter-highlight AND .mb-column-filter-highlight spans from table rows, not only sub-table filter highlights. The ON branch calls runFilter() (in addition to applySubFilter) to restore column-filter highlights.",
+          "New helper function createSubTableHighlightButton(table, categoryName): creates a stateful 'Toggle highlighting' button for the two defensive code-paths in renderGroupedTable where .mb-subtable-controls is rebuilt from scratch (reuse-existing-table branch and missing-controls-during-filtering branch).",
+          "createSubTableFilterContainer() JSDoc return type updated to {{ toggleIcon, container, highlightBtn }} to reflect the newly exported highlightBtn.",
+          "Ctrl+Shift+Esc shortcut registered in the keyboard shortcuts reference dialog and button tooltip updated accordingly."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.14",
     "date": "2026-02-26",
     "sections": [

@@ -56,7 +56,7 @@ FILTERING
             (configurable)
 • Ctrl-Shift-G — clear all active filters (configurable)
 • Shift-Esc    — clear all COLUMN filters only (global, works from anywhere)
-• Ctrl-Esc     — clear ALL filters: global filter + all column filters
+• Ctrl-Shift-Esc — clear ALL filters: global filter + all column filters
                  (global, works from anywhere)
 • Escape  — first press clears the focused filter, second press removes focus
 • 🎨 Toggle highlighting — toggle highlight colours on/off for active filters
@@ -116,7 +116,7 @@ KEYBOARD SHORTCUTS  (all configurable in ⚙️ → Keyboard Shortcuts section)
   Ctrl+C           Focus first column filter (cycles through tables)
   Ctrl+Shift+G     Clear all filters
   Shift+Esc        Clear all COLUMN filters only (global — works from anywhere)
-  Ctrl+Esc         Clear ALL filters: global filter + all column filters
+  Ctrl+Shift+Esc   Clear ALL filters: global filter + all column filters
                    (global — works from anywhere)
   Ctrl+S           Save to Disk
   Ctrl+L           Load from Disk dialog

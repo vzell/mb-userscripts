@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.14+2026-02-26
+// @version      9.97.16+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2177,7 +2177,7 @@
         const clearBtn = document.createElement('button');
         clearBtn.className = 'mb-subtable-clear-btn';
         clearBtn.type = 'button';
-        clearBtn.title = 'Clear all COLUMN filters for this table';
+        clearBtn.title = 'Clear all filters for this sub-table (column filters and sub-table filter)';
         clearBtn.style.display = 'none'; // Initially hidden
 
         // Create red ✗ symbol
@@ -2188,7 +2188,7 @@
         xSymbol.style.fontWeight = 'bold';
 
         clearBtn.appendChild(xSymbol);
-        clearBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
+        clearBtn.appendChild(document.createTextNode('Clear all filters'));
 
         clearBtn.onclick = (e) => {
             e.preventDefault();
@@ -2197,6 +2197,59 @@
         };
 
         return clearBtn;
+    }
+
+    /**
+     * Create a standalone "Toggle highlighting" button for a sub-table.
+     * Used in defensive code-paths where the full createSubTableFilterContainer()
+     * closure is not available (e.g. when .mb-subtable-controls was missing and
+     * must be rebuilt).  The button derives its id from the sanitised category
+     * name so updateFilterButtonsVisibility() can locate it via
+     * [id$="-toggle-filter-highlight-btn"].
+     *
+     * Toggle behaviour (stateful via the button's dataset):
+     *   ON  → call runFilter() to re-apply all column-filter highlights.
+     *   OFF → strip .mb-subtable-filter-highlight + .mb-column-filter-highlight
+     *         from the associated table rows.
+     *
+     * @param {HTMLTableElement} table
+     * @param {string}           categoryName
+     * @returns {HTMLButtonElement}
+     */
+    function createSubTableHighlightButton(table, categoryName) {
+        const safeId = categoryName.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const btn = document.createElement('button');
+        btn.id = `mb-stf-${safeId}-toggle-filter-highlight-btn`;
+        btn.type = 'button';
+        btn.title = 'Toggle filter highlighting on/off (sub-table filter and column filters)';
+        btn.textContent = '🎨 Toggle highlighting';
+        // Initially hidden — shown by updateFilterButtonsVisibility() when active.
+        btn.style.cssText = 'font-size:0.8em; padding:2px 6px; border-radius:4px; background:rgb(240,240,240); border:1px solid rgb(204,204,204); cursor:pointer; vertical-align:middle; transition:background-color 0.3s; display:none;';
+        btn.dataset.highlightEnabled = 'true';
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const enabled = btn.dataset.highlightEnabled !== 'false';
+            if (enabled) {
+                // Currently ON → switch OFF
+                btn.dataset.highlightEnabled = 'false';
+                btn.style.backgroundColor = '#90ee90';
+                btn.style.color = '#000';
+                if (table) {
+                    table.querySelectorAll(
+                        '.mb-subtable-filter-highlight, .mb-column-filter-highlight'
+                    ).forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+                }
+            } else {
+                // Currently OFF → switch ON
+                btn.dataset.highlightEnabled = 'true';
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+                if (typeof runFilter === 'function') runFilter();
+            }
+        });
+
+        return btn;
     }
 
     /**
@@ -3731,7 +3784,7 @@
                     { keys: getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C'), desc: 'Focus first column filter (cycle through tables)' },
                     { keys: getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G'), desc: 'Clear all filters' },
                     { keys: 'Shift+Esc', desc: 'Clear all COLUMN filters (global action)' },
-                    { keys: 'Ctrl+Esc', desc: 'Clear ALL filters — global + column (global action)' },
+                    { keys: 'Ctrl+Shift+Esc', desc: 'Clear ALL filters — global + column (global action)' },
                     { keys: 'Escape', desc: 'Clear focused filter (press twice to blur)' }
                 ]
             },
@@ -4225,25 +4278,25 @@
                 }
             }
 
-            // Ctrl+Esc: clear ALL filters — global filter + sub-table filters + all
+            // Ctrl+Shift+Esc: clear ALL filters — global filter + sub-table filters + all
             // column filters (equivalent to clicking "Clear ALL filters" button)
-            if (e.key === 'Escape' && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+            if (e.key === 'Escape' && (e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey) {
                 e.preventDefault();
                 e.stopPropagation();
                 const clearAllBtn = document.getElementById('mb-clear-all-filters-btn');
                 if (clearAllBtn) {
                     clearAllBtn.click();
-                    Lib.debug('shortcuts', 'All filters cleared via Ctrl+Esc');
+                    Lib.debug('shortcuts', 'All filters cleared via Ctrl+Shift+Esc');
                 } else {
                     // Fallback: clear directly (button may be hidden)
                     clearAllFilters();
-                    Lib.debug('shortcuts', 'All filters cleared via Ctrl+Esc (direct fallback)');
+                    Lib.debug('shortcuts', 'All filters cleared via Ctrl+Shift+Esc (direct fallback)');
                 }
             }
 
             // Plain Escape (no modifier except possibly handled above):
             // Clear focused filter (first press) or blur (second press).
-            // The Shift+Esc and Ctrl+Esc cases above have already returned via
+            // The Shift+Esc and Ctrl+Shift+Esc cases above have already returned via
             // stopPropagation, so this block only fires for unmodified Escape.
             if (e.key === 'Escape' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey &&
                 (e.target.matches('.mb-col-filter-input') ||
@@ -6165,7 +6218,7 @@
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.id = 'mb-clear-all-filters-btn';
     clearAllFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearAllFiltersBtn.title = 'Clear global/sub-table filters and ALL column filters in all sub-tables — global action (Ctrl+Esc)';
+    clearAllFiltersBtn.title = 'Clear global/sub-table filters and ALL column filters in all sub-tables — global action (Ctrl+Shift+Esc)';
     clearAllFiltersBtn.onclick = () => {
         // Clear global filter
         filterInput.value = '';
@@ -6207,17 +6260,35 @@
         // Show/hide Clear ALL filters button
         clearAllFiltersBtn.style.display = (globalFilterActive || columnFiltersActive) ? 'inline-block' : 'none';
 
-        // Update visibility for sub-table clear buttons
+        // Update visibility for sub-table clear buttons and sub-table highlight buttons
         document.querySelectorAll('.mb-subtable-clear-btn').forEach(btn => {
             // Find the associated table
             const h3 = btn.closest('.mb-subtable-controls')?.parentElement;
             if (h3) {
                 const table = h3.nextElementSibling;
                 if (table && table.tagName === 'TABLE') {
-                    // Check if this table has any active column filters
+                    // Check if this table has any active column filters.
+                    // Use stripColFilterPrefix so a focused-but-empty field (which carries
+                    // only the decorative prefix "🔍 ") is NOT treated as having a filter.
                     const tableColFilters = table.querySelectorAll('.mb-col-filter-input');
-                    const tableHasFilters = Array.from(tableColFilters).some(input => input.value.trim() !== '');
-                    btn.style.display = tableHasFilters ? 'inline-block' : 'none';
+                    const tableHasColFilters = Array.from(tableColFilters).some(
+                        input => stripColFilterPrefix(input.value).trim() !== ''
+                    );
+
+                    // Also consider the sub-table filter input active state.
+                    const stfInput = h3.querySelector('.mb-subtable-filter-container input[type="text"]');
+                    const stfActive = stfInput ? stfInput.value.trim() !== '' : false;
+
+                    // Show the "Clear all filters" button whenever ANY filter (column or
+                    // sub-table) is active for this table.
+                    const anyFilterActive = tableHasColFilters || stfActive;
+                    btn.style.display = anyFilterActive ? 'inline-block' : 'none';
+
+                    // Drive the per-subtable highlight-toggle button with the same condition.
+                    const highlightBtn = h3.querySelector('[id$="-toggle-filter-highlight-btn"]');
+                    if (highlightBtn) {
+                        highlightBtn.style.display = anyFilterActive ? 'inline-block' : 'none';
+                    }
                 }
             }
         });
@@ -6257,6 +6328,29 @@
             input.value = '';
             input.style.backgroundColor = '';
         });
+
+        // Also clear the sub-table (STF) filter input for this table and restore
+        // any rows it was hiding, so that clicking the button while only the STF
+        // is active produces a complete reset without leaving orphaned stf-hidden rows.
+        const h3stf = table.previousElementSibling;
+        if (h3stf && h3stf.classList.contains('mb-toggle-h3')) {
+            const stfInput = h3stf.querySelector('.mb-subtable-filter-container input[type="text"]');
+            if (stfInput && stfInput.value.trim() !== '') {
+                stfInput.value = '';
+                // Restore rows hidden by the stf filter
+                table.querySelectorAll('tbody tr[data-mb-stf-hidden]').forEach(row => {
+                    row.style.display = '';
+                    delete row.dataset.mbStfHidden;
+                });
+                // Remove stf highlight spans
+                table.querySelectorAll('.mb-subtable-filter-highlight').forEach(n => {
+                    n.replaceWith(document.createTextNode(n.textContent));
+                });
+                // Reset stf input visual state
+                stfInput.style.boxShadow   = '';
+                stfInput.style.borderColor = 'rgb(204,204,204)';
+            }
+        }
 
         // Re-run filter to update display
         if (typeof runFilter === 'function') {
@@ -7508,8 +7602,21 @@
             clear.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                // Clicking ✕ is identical to pressing Escape the first time while
+                // the field is focused: clear any user-entered text, keep the field
+                // focused with the decorative prefix in place.
+                //
+                // The blur event fires before onclick (because the click moves focus
+                // away from the input), so by the time we arrive here the prefix has
+                // already been stripped by removeColFilterFocusStyle.  We therefore:
+                //   1. Clear the value (no prefix at this point).
+                //   2. Re-focus the input — this synchronously triggers the 'focus'
+                //      listener which calls applyColFilterFocusStyle, restoring the
+                //      prefix and the focus-background tint.
+                //   3. Run the filter immediately.
                 input.value = '';
-                runFilter(); // Immediate for explicit clear action
+                input.focus(); // → applyColFilterFocusStyle adds prefix + focus bg
+                runFilter();
             };
 
             // Use debounced version for typing in column filters
@@ -9046,7 +9153,7 @@
      *
      * @param {string}          categoryName  - Human-readable subtable name (e.g. "Album")
      * @param {HTMLTableElement} table         - The <table> this filter applies to
-     * @returns {{ toggleIcon: HTMLElement, container: HTMLElement }}
+     * @returns {{ toggleIcon: HTMLElement, container: HTMLElement, highlightBtn: HTMLButtonElement }}
      */
     function createSubTableFilterContainer(categoryName, table) {
         // Sanitize categoryName to a safe id fragment (strip non-alphanumeric)
@@ -9129,7 +9236,9 @@
         highlightBtn.type = 'button';
         highlightBtn.title = 'Toggle filter highlighting on/off (sub-table filter and column filters)';
         highlightBtn.textContent = '🎨 Toggle highlighting';
-        highlightBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; border-radius:4px; background:rgb(240,240,240); border:1px solid rgb(204,204,204); cursor:pointer; vertical-align:middle; transition:background-color 0.3s; display:inline-block;';
+        // Initially hidden — shown by updateFilterButtonsVisibility() as soon as any
+        // filter (subtable input or column filter) is active for this subtable.
+        highlightBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; border-radius:4px; background:rgb(240,240,240); border:1px solid rgb(204,204,204); cursor:pointer; vertical-align:middle; transition:background-color 0.3s; display:none;';
 
         // ── Container ─────────────────────────────────────────────────────────
         const container = document.createElement('span');
@@ -9139,7 +9248,9 @@
         container.appendChild(caseLabel);
         container.appendChild(rxLabel);
         container.appendChild(exLabel);
-        container.appendChild(highlightBtn);
+        // NOTE: highlightBtn is intentionally NOT appended to the container here;
+        // it lives in subTableControls so it remains visible even when the
+        // subtable-filter panel is collapsed and only column filters are active.
 
         // ── State ─────────────────────────────────────────────────────────────
         let highlightEnabled = true;
@@ -9339,6 +9450,11 @@
             updateSubTableRowCount();
             // Sync h2 badge with 3-tier subtable totals
             if (typeof updateH2CountFromSubtables === 'function') updateH2CountFromSubtables();
+            // Show/hide the per-subtable "Clear all filters" and "Toggle highlighting"
+            // buttons based on whether the STF input (or any column filter) is now active.
+            if (typeof window.updateFilterButtonsVisibility === 'function') {
+                window.updateFilterButtonsVisibility();
+            }
         }
 
         /**
@@ -9362,6 +9478,10 @@
             updateSubTableRowCount();
             // Sync h2 badge with 3-tier subtable totals
             if (typeof updateH2CountFromSubtables === 'function') updateH2CountFromSubtables();
+            // Update per-subtable button visibility now that the STF is empty
+            if (typeof window.updateFilterButtonsVisibility === 'function') {
+                window.updateFilterButtonsVisibility();
+            }
         }
 
         // ── Event wiring ─────────────────────────────────────────────────────
@@ -9399,15 +9519,19 @@
             if (highlightEnabled) {
                 highlightBtn.style.backgroundColor = '';
                 highlightBtn.style.color = '';
-                // Re-apply filter to restore highlights
+                // Re-apply sub-table filter highlights
                 applySubFilter();
+                // Re-apply column filter highlights for this table (via runFilter)
+                if (typeof runFilter === 'function') runFilter();
                 Lib.debug('highlight', `Sub-table filter highlighting ON for "${categoryName}"`);
             } else {
                 highlightBtn.style.backgroundColor = '#90ee90';
                 highlightBtn.style.color = '#000';
-                // Remove highlights but keep rows hidden/shown as they are
+                // Remove ALL filter highlights from this table (subtable + column)
                 if (table) {
-                    table.querySelectorAll('.mb-subtable-filter-highlight').forEach(n => {
+                    table.querySelectorAll(
+                        '.mb-subtable-filter-highlight, .mb-column-filter-highlight'
+                    ).forEach(n => {
                         n.replaceWith(document.createTextNode(n.textContent));
                     });
                 }
@@ -9437,7 +9561,7 @@
             }
         });
 
-        return { toggleIcon, container };
+        return { toggleIcon, container, highlightBtn };
     }
 
     /**
@@ -9642,6 +9766,7 @@
                     subTableControls.className = 'mb-subtable-controls';
 
                     const clearSubBtn = createClearColumnFiltersButton(table, categoryName);
+                    const highlightSubBtn = createSubTableHighlightButton(table, categoryName);
 
                     const subFilterStatus = document.createElement('span');
                     subFilterStatus.className = 'mb-filter-status';
@@ -9654,6 +9779,7 @@
                     subSortStatus.dataset.tableIndex = index.toString();
 
                     subTableControls.appendChild(clearSubBtn);
+                    subTableControls.appendChild(highlightSubBtn);
                     subTableControls.appendChild(subFilterStatus);
                     subTableControls.appendChild(subSortStatus);
                     h3.appendChild(subTableControls);
@@ -9763,11 +9889,10 @@
                 subSortStatus.dataset.tableIndex = index.toString();
 
                 subTableControls.appendChild(clearSubBtn);
+                subTableControls.appendChild(stfResult.highlightBtn);
                 subTableControls.appendChild(subFilterStatus);
                 subTableControls.appendChild(subSortStatus);
                 h3.appendChild(subTableControls);
-
-                // Placement Logic: If targetHeader exists, insert after it/previous element. Otherwise, append to container.
                 if (lastInsertedElement) {
                     lastInsertedElement.after(h3);
                     h3.after(table);
@@ -9863,6 +9988,7 @@
                     subTableControls.className = 'mb-subtable-controls';
 
                     const clearSubBtn = createClearColumnFiltersButton(table, categoryName);
+                    const highlightSubBtn = createSubTableHighlightButton(table, categoryName);
 
                     const subFilterStatus = document.createElement('span');
                     subFilterStatus.className = 'mb-filter-status';
@@ -9875,6 +10001,7 @@
                     subSortStatus.dataset.tableIndex = index.toString();
 
                     subTableControls.appendChild(clearSubBtn);
+                    subTableControls.appendChild(highlightSubBtn);
                     subTableControls.appendChild(subFilterStatus);
                     subTableControls.appendChild(subSortStatus);
                     h3.appendChild(subTableControls);

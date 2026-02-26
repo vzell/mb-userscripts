@@ -42798,6 +42798,7 @@ Also document the previously implemented "focus state filter styling for column 
 
 ** TODO Clicking the "x" - bug
 ** TODO switch keys
+*** initial
 
 In the uploaded script,
 
@@ -42815,7 +42816,7 @@ should not be visible anymore when there is NO filter string at all in any colum
 Current behaviour is,
 
 - as soon as the enduser types in something in one or many columns, the button appears ==> GOOD
-- as soon as all columns have been cleared somehow per sub-tablem the button should disappear (DOES NOT WORK yet)
+- as soon as all columns have been cleared somehow per sub-table the button should disappear (DOES NOT WORK yet)
 
 2.) the sub-table button "Toggle highlightning"
 
@@ -42829,4 +42830,13 @@ Current behaviour is,
 
 3.) the current "Ctrl+Esc" key combination is intercepted by the OS, please change it to "Ctrl+Shift+Esc" in the whole source code and applicatin help fiel "ShowAllEntityData_HELP.txt"
 
+*** bugs
 
+1.) when clicking the small "x" in a column filter field, it actually should just erase the input text if present and
+leave the filter field focused right after the "sa_col_filter_focus_prefix" string (so basically what the "Escape"-key
+press would do when inside the filter field). Right now it erases and blurs.
+
+2.) when entering a filter expression in the sub-table filter field, the rows get highlighted, but BOTH the "Clear all
+COLUMN filters for this table" and the "Toggle highlightning" button should also appear, like they do if we enter a column level filter expression
+
+Also please provide always changelog entries in the uploaded file "ShowAllEntityData_CHANGELOG.json". You already missed that the last time, please reapply.
