@@ -42687,3 +42687,41 @@ to
 - change default colors of filter borders, and make them configurable:  orange for global filter, leave the colors as is for other filters
 - subtable "Clear ALL filters" button (onyl visible when filter is active)
 - runFilter async (is that a problem, async in genral ?)
+
+* why button movement
+
+In the uploaded userscript,
+
+Why does the following change
+
+#+begin_example
+@@ -5666,7 +5666,7 @@
+     settingsBtn.id = 'mb-settings-btn';
+     settingsBtn.textContent = '⚙️';
+     settingsBtn.type = 'button';
+-    settingsBtn.title = `Open settings manager to configure script behavior (${getPrefixDisplay()}, then ,)`;
++    settingsBtn.title = `Open userscript settings manager to configure script behavior (${getPrefixDisplay()}, then ,)`;
+     settingsBtn.onclick = () => {
+         console.log('Settings button clicked');
+         console.log('Lib object:', Lib);
+@@ -5692,7 +5692,7 @@
+         const links = document.querySelectorAll('a[href="#"]');
+         let settingsLink = null;
+         for (const link of links) {
+-            if (link.textContent.includes('Settings Manager') || link.textContent.includes('⚙️')) {
++            if (link.textContent.includes('Userscript Settings Manager') || link.textContent.includes('⚙️')) {
+                 settingsLink = link;
+                 break;
+             }
+@@ -5702,7 +5702,7 @@
+             settingsLink.click();
+         } else {
+             console.error('No settings access method available');
+-            alert('Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager');
++            alert('Settings interface not available. Please use the menu: Editing → ⚙️ Userscript Settings Manager');
+         }
+     };
+#+end_example
+
+moves the buttons shortcuts, settings and application help from the right of the "Export" button to the left of the "Resize" button
+

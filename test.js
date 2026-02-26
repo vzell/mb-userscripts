@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.84.0+2026-02-23
+// @version      9.97.9+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -25,6 +25,7 @@
 // @match        *://*.musicbrainz.org/instrument/*
 // @match        *://*.musicbrainz.org/event/*
 // @match        *://*.musicbrainz.org/search?query=*
+// @connect      raw.githubusercontent.com
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_setValue
@@ -38,405 +39,33 @@
  * VZ: MusicBrainz - Show All Entity Data In A Consolidated View
  *
  * A userscript which accumulates paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events,
- * Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting.
+ * Recordings, Releases, Works, etc.) into a single view with real-time multi-column sorting and filtering.
  *
- * This script has been created by giving the right facts and asking the right questions to Gemini.
- * When Gemini gots stuck, I asked ChatGPT for help, until I got everything right.
+ * This script has been created by giving the right facts and asking the right questions initially to Gemini. When
+ * Gemini gots stuck, I asked ChatGPT for help, until I got everything right. Later when the script increased in size I
+ * switched to Claude and only now and then asked the other tow for help.
  *
  * NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome and Firefox.
  */
 
-// CHANGELOG
-let changelog = [
-    {version: '9.84.0+2026-02-23', description: 'Fix alignment of button text when underline characters are present.'},
-    {version: '9.83.0+2026-02-23', description: 'Add missing keyboard shortcuts to tooltips.'},
-    {version: '9.82.0+2026-02-23', description: 'Three enhancements: (1) Export/Save dialogs now show row counts; export popups display "N rows exported" and when rows are filtered-out also "of M total"; Save to Disk popup shows "N rows saved"; all three export functions (CSV/JSON/Org-Mode) now count skipped rows; showExportNotification gains optional totalRows parameter; triggerStandardDownload gains rowCount parameter and call-site updated. (2) All tooltip texts: hardcoded lowercase shortcut letters in (${getPrefixDisplay()}, then x) hints uppercased: v→V, e→E, t→I (stats special case per spec), d→D, r→R (3 occurrences), s→S, l→L. (3) Action button tooltips: appended (${getPrefixDisplay()}, then N) hint for each button that has a Ctrl-M+digit shortcut (buttons 1–9).'},
-    {version: '9.81.0+2026-02-23', description: 'Refactor: Replace fragile text/title-based button lookups with stable ID-based lookups. Assigned mb-visible-btn to the Visible Columns toggle button (addColumnVisibilityToggle) and mb-resize-btn to the Auto-Resize button (addAutoResizeButton). All querySelector/Array.find lookups that previously matched on textContent or title attribute replaced with document.getElementById calls: duplicate-guard in addColumnVisibilityToggle, duplicate-guard and divider-guard in addAutoResizeButton, updateResizeButtonState, toggleAutoResizeColumns, openVisibleColumnsMenu, and the Ctrl+V shortcut handler. Consistent with existing mb- ID naming convention.'},
-    {version: '9.80.0+2026-02-23', description: 'Three fixes/renames: (1) Enter key on focused "Select All" / "Deselect All" / "Choose current configuration" buttons inside the Visible menu now fires the button\'s click handler before closing; previously Enter always just closed the menu regardless of which element had focus. (2) Button renames: "Auto-Resize" → "Resize" (R underlined), "Restore Width" → "Restore" (R underlined), "Visible Columns" → "Visible" (V underlined), "Stats" → "Statistics" (i underlined). All occurrences updated: button innerHTML, textContent finders, APP_HELP_TEXT, showShortcutsHelp sections, ctrlMFunctionMap descriptions, and debug log strings.'},
-    {version: '9.79.0+2026-02-22', description: '"Tab", "Shift-Tab" and "cursor up/down" key cycling now works.'},
-    {version: '9.78.0+2026-02-22', description: 'Help-text rewrite.'},
-    {version: '9.77.0+2026-02-22', description: 'Two fixes: (1) Column Visibility menu Tab focus-trap now actually works: the menuKeyHandler was registered as a bubbling listener on document, but browsers resolve Tab focus-movement at target phase — before bubbling — so the e.preventDefault() call was always too late. Fixed by registering with useCapture=true (document.addEventListener(\'keydown\', menuKeyHandler, true)); the handler\'s menu.style.display guard prevents any side-effects when the menu is closed. (2) Ctrl-M tooltip "Functions" list no longer sorted alphabetically; entries are now rendered in ctrlMFunctionMap insertion order (s, l, r, v, d, t, e, k, ,, h — matching the logical grouping in the map literal) by replacing the .sort() call with a plain Object.entries() iteration.'},
-    {version: '9.76.0+2026-02-22', description: 'Five fixes/enhancements: (1) Column Visibility menu Tab-key now traps focus inside the menu — Tab cycles forward through checkboxes → "Select All" → "Deselect All" → "Choose current configuration" → back to first checkbox; Shift+Tab reverses; previously Tab escaped to unrelated page UI. (2) Ctrl+T wired as a direct shortcut to open the Statistics panel (sa_shortcut_open_statistics, matching the existing configSchema entry and shortcuts-help label). (3) Ctrl+K hard-wired as a direct shortcut to show the keyboard-shortcuts help dialog; entry added to the "Help" section in showShortcutsHelp(). (4) Initial page load: #headerid-query input is blurred so keyboard shortcuts are immediately reachable without clicking away. (5) Final page render: #mb-global-filter-input is auto-focused (150 ms after render completes) so users can type a filter query immediately.'},
-    {version: '9.75.0+2026-02-22', description: 'Four fixes: (1) Prefix-mode shortcuts help key changed from "?" to "k" throughout (ctrlMFunctionMap, debug log strings, showShortcutsHelp Help section) — "?" / "/" remain as direct (non-prefix) shortcuts to open the help dialog. (2) CSV export fix: in the original code exportTableToCSV called showExportNotification("CSV", filename, ...) before const filename was declared, causing a TDZ ReferenceError that silently aborted the export; now the single call is correctly placed after filename is defined, matching the pattern used by exportTableToJSON and exportTableToOrgMode. (3) Ctrl+M + h (App Help) and Ctrl+M + , (Settings) were already added to ctrlMFunctionMap in v9.74 but are included here for completeness. (4) VZ_MBLibrary v2.8: buildShortcutString now uppercases captured alphabetic keys so the config dialog and shortcuts popup display "Ctrl+M" instead of "Ctrl+m".'},
-    {version: '9.74.0+2026-02-22', description: 'Three improvements: (1) Ctrl-M prefix shortcuts now cover all four always-visible buttons from page entry: added h=App Help and ","=Settings to ctrlMFunctionMap (alongside existing l=Load, ?=Shortcuts Help); tooltip debug message and showShortcutsHelp "Help" section updated accordingly. (2) Export refactor: exportTableToCSV\'s duplicate inline notification popup removed — it now calls showExportNotification("CSV", filename, rowsExported) like JSON and Org-Mode, making all three export formats share a single popup implementation. (3) triggerStandardDownload (used by saveTableDataToDisk) now auto-focuses the Close button via setTimeout so keyboard users can dismiss it with Enter/Space immediately after it appears (Escape was already handled).'},
-    {version: '9.73.0+2026-02-22', description: 'Configurable keyboard shortcuts: 12 new keyboard_shortcut entries added to the "🎹 KEYBOARD SHORTCUTS" configSchema section (sa_shortcut_open_settings, sa_shortcut_focus_global_filter, sa_shortcut_focus_column_filter, sa_shortcut_clear_filters, sa_shortcut_open_export, sa_shortcut_save_to_disk, sa_shortcut_load_from_disk, sa_shortcut_open_visible_columns, sa_shortcut_open_density, sa_shortcut_toggle_h2, sa_shortcut_toggle_h3, sa_shortcut_auto_resize). Two new helpers: isShortcutEvent(e, settingKey, fallback) mirrors isPrefixKeyEvent logic against an arbitrary setting; getShortcutDisplay(settingKey, fallback) returns the configured string for UI display. initKeyboardShortcuts() fully refactored: every hardcoded (ctrlKey||metaKey)&&key==="x" guard replaced by isShortcutEvent() calls. New sa_shortcut_auto_resize handler added (default Ctrl+R) that triggers toggleAutoResizeColumns directly in addition to the existing prefix-mode sub-key. showShortcutsHelp() sections array updated: all configurable shortcut keys now shown via getShortcutDisplay() so the help dialog reflects the user\'s live configuration.'},
-    {version: '9.72.0+2026-02-22', description: 'Feature: Fully implemented "🖌️ UI APPEARANCE" config section — replaces all hardcoded inline styles on every interactive UI element with 12 condensed pipe-separated settings. New config keys: sa_ui_action_btn_style (fontSize|padding|height|borderRadius — applied to all h1 action-bar buttons: show-all, 🎹, ⚙️, ❓, visible-columns, export, stats, density, auto-resize), sa_ui_save_btn_style (bg|color|border|bgHover), sa_ui_load_btn_style (bg|color|border|bgHover), sa_ui_stop_btn_style (bg|color|border), sa_ui_settings_btn_style (bg|color|border), sa_ui_help_btn_style (bg|color|border), sa_ui_button_divider_style (color|margin — all " | " separators), sa_ui_global_filter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_prefilter_input_style (fontSize|padding|border|borderRadius|width|height), sa_ui_column_filter_input_style (fontSize|padding — injected into the dynamic CSS block for .mb-col-filter-input), sa_ui_subtable_btn_style (fontSize|padding|borderRadius|bg|border|bgHover — injected for .mb-subtable-clear-btn and .mb-show-all-subtable-btn), sa_ui_filter_bar_btn_style (fontSize|padding|borderRadius|bg|border — prefilter toggle, highlight toggle, clear-column, clear-all buttons), sa_ui_checkbox_style (fontSize|marginRight — all Cc/Rx/Ex checkbox inputs and their labels). Corresponding CSS helper functions added: uiActionBtnBaseCSS, uiSaveBtnCSS, uiLoadBtnCSS, uiStopBtnCSS, uiSettingsBtnCSS, uiHelpBtnCSS, uiButtonDividerCSS, uiGlobalFilterInputCSS, uiPrefilterInputCSS, uiColumnFilterInputVals, uiSubtableBtnVals, uiFilterBarBtnCSS, uiCheckboxVals, uiCheckboxLabelCSS, uiCheckboxInputCSS. Also: added unique mb- IDs to all previously anonymous elements (mb-save-to-disk-btn, mb-load-from-disk-btn, mb-stop-btn, mb-settings-btn, mb-file-input, mb-prefilter-container, mb-prefilter-input, mb-prefilter-case/rx/exclude-label/checkbox, mb-filter-container, mb-global-filter-wrapper, mb-global-filter-input, mb-global-filter-clear, mb-global-filter-case/rx/exclude-label/checkbox, mb-button-divider-initial). Fixed typo: preFilterInput font-size was "1.oem" → corrected to "1em" via config default. Save/Load buttons gain hover effects via onmouseover/onmouseout.'},
-    {version: '9.71.0+2026-02-22', description: 'Feature: New ColumnDataExtractor extractor extractFormatTypes for release-group, label, and series pages. Strips leading numeric quantity factors (e.g. "8×", "2x") from each media-type token in a "Format" cell and converts the " + " separator between distinct types to ", ". Examples: "8×12\\" Vinyl" → "12\\" Vinyl", "2xCD-R + DVD" → "CD-R, DVD". Registered as { sourceColumn: \'Format\', extractor: \'extractFormatTypes\', syntheticColumns: [\'Format Types\'] } in the columnExtractors of releasegroup-releases, label-releases, and series-releases pageDefinitions.'},
-    {version: '9.70.0+2026-02-22', description: 'Refactor + Feature: Introduced ColumnDataExtractor — a named-function registry that decouples column extraction and transformation logic from the main fetch/render pipeline. (1) New singleton object ColumnDataExtractor with four named extractors: splitCountryDate (Country/Date → Country + Date), splitLocation (Location → Place + Area + Country), splitArea (Area → MB-Area + Country), and sumTracks (Tracks "9 + 7 + 8" → Total Tracks integer sum). Each extractor has the contract fn(sourceCell: HTMLTableCellElement): HTMLTableCellElement[] and is entirely self-contained. (2) New helper function buildActiveColumnExtractors(def) converts an activeDefinition into a runtime array of {sourceColumn, extractor, syntheticColumns, colIdx} descriptors; translates legacy splitCD/splitLocation/splitArea boolean flags transparently for any future definitions that still use them. (3) All pageDefinitions migrated from the boolean split* flags to the canonical columnExtractors:[{sourceColumn, extractor, syntheticColumns}] array in features; the old splitCD: false entry was removed. (5) Module-level typesWithSplitCD/Location/Area arrays removed; replaced by activeColumnExtractors (single unified list). startFetchingProcess now calls buildActiveColumnExtractors() instead of setting three separate flag arrays. (6) Header scanning loop rewritten: colIdx reset before each page, single forEach over activeColumnExtractors replaces three separate if-blocks. cleanupHeaders synthetic-header injection unified into one forEach. Row-processing split section replaced by: (a) call each extractor before deleteCell (indices still valid), (b) deleteCell excluded columns, (c) append all synthetic cells in declaration order. All legacy inline code (~80 lines) removed.'},
-    {version: '9.65.0+2026-02-22', description: 'Five UX enhancements: (1) Action buttons: superscript mnemonics ¹²³⁴… appended after the 🧮 emoji on every action button to remind the user of the Ctrl-M+1/2/3/… shortcut invocations; applies to both "Show all" and pre-existing 🧮-prefixed buttons (e.g. artist RG split buttons). (2) Shortcuts popup (mb-shortcuts-help): restructured with a sticky flex title-bar (header + ✕ button) and a separate scrollable content area (overflow-y:auto; max-height:82vh) so the dialog never overflows the viewport when many shortcut sections are present. (3) Stats panel (mb-stats-panel): added "Sub-Tables: N table(s)" as the first row in the statistics grid so the user can immediately see how many independent sub-tables exist on multi-table pages. (4) Multi-table pages — single sub-table auto-expand: when renderGroupedTable produces exactly one group (dataArray.length === 1) the resulting table is unconditionally shown (shouldStayOpen = true) instead of starting collapsed, independent of the category name or sa_auto_expand threshold. (5) Progress-bar de-duplication: removed the redundant "Loading page N of M…" text update on globalStatusDisplay during page fetching; the inline progress bar (mb-fetch-progress-label inside mb-fetch-progress-outer) already carries the identical information, so showing it twice in the subheader was unnecessary noise.'},
-    {version: '9.64.0+2026-02-21', description: 'Progress bar label text reformatted: "Loading page N of M... K rows — estimated X.Xs remaining" changed to the more compact "Loading page N of M... (K rows) - est. X.Xs". Parentheses around row count, em-dash replaced by hyphen-minus, "estimated … remaining" shortened to "est. …".'},
-    {version: '9.63.0+2026-02-21', description: 'configSchema: all 6 sa_popup_* entries changed from type:"text" to type:"popup_dialog" and each gains a fields:[...] array naming every pipe-separated parameter (e.g. ["bg","border","borderRadius","padding","boxShadow","zIndex","fontFamily","minWidth","maxWidth"] for sa_popup_dialog_style).'},
-    {version: '9.62.0+2026-02-21', description: 'Two fixes: (1) Prefilter toggle button text after disk-load now always includes total row count from the file. For "Exclude matches" mode the text is "🎨 N out of T row(s) excluded: \\"query\\""; for normal (keep-matches) mode it is "🎨 N out of T row(s) prefiltered: \\"query\\"". updatePrefilterToggleButton gains two new parameters: totalRows (number, default 0) and isExclude (boolean, default false); call site in loadTableDataFromDisk passes data.rowCount and the local isExclude flag. (2) Progress bar outer element (mb-fetch-progress-outer) min-width raised from 260px to 420px and max-width from 500px to 750px so the long label text "Loading page N of M... K rows — estimated X.Xs remaining" is no longer clipped at either end.'},
-    {version: '9.61.0+2026-02-21', description: 'Three changes: (1) Progress bar text: fetchProgressLabel now shows the full message "Loading page N of M... K rows — estimated X.Xs remaining" (was "N/M — K rows — est. X.Xs"); bar outer width changed from fixed 380px to auto/min-260px/max-500px so the label always fits. (2) Load dialog "Exclude Matches" checkbox (id="sa-load-exclude"): added as a third option in the checkbox row after "Regular Expression". When checked, rows that match the filter expression are EXCLUDED during disk-load instead of kept; rows that do not match are kept. Wired end-to-end: dialog reads #sa-load-exclude → syncs to preFilterExcludeCheckbox in confirmLoad → fileInput.onchange reads preFilterExcludeCheckbox.checked → passes isExclude to loadTableDataFromDisk (new 5th param, default false) → rowMatchesFilter inverts its result when isExclude=true. (3) Load dialog input placeholder renamed from "Search expression..." to "Filter expression...".'},
-    {version: '9.60.0+2026-02-21', description: 'Three enhancements: (1) Progress bar text moved inside the bar: replaced the native <progress> element with a custom CSS bar (span#mb-fetch-progress-outer, 220px × 20px) containing a fill div (span#mb-fetch-progress-fill, width animated via CSS transition) and a centered label (span#mb-fetch-progress-label) absolutely positioned over the fill. Label text "3/12 — 847 rows — est. 4.2s" is always readable via mix-blend-mode:difference + filter:invert(1). Fill colour transitions red→orange→green at 0%/50%/100% progress. (2) Rendering time appended to globalStatusDisplay final text: "Loaded N pages (M rows) from MusicBrainz backend database, Fetching time: X.XXs, Rendering time: Y.YYs". (3) New config setting sa_render_warning_threshold (default 10000, Performance Settings section): after the existing large-dataset save-or-render dialog, if the final row count exceeds this threshold a showCustomConfirm dialog warns the user that rendering may be slow and offers Proceed / Cancel. Cancel aborts rendering, sets a descriptive status message, and hides the progress bar. 0 disables the warning.'},
-    {version: '9.59.0+2026-02-21', description: 'Enhancement + rename: (1) Inline fetch progress bar added to the h1 controls line, positioned after the ❓ help button. A <progress> element (120px wide, accent-color green) plus a compact label (e.g. "3/12 — 847 rows — est. 4.2s") are wrapped in a span#mb-fetch-progress-wrap that is shown at fetch start and hidden at all exit paths (success, Stop button, render-large-dataset cancel, save-to-disk-only, and error). The bar fills red→orange→green as the page fraction crosses 0%, 50%, and 100%. The existing globalStatusDisplay in the subheader continues to show the full progress text unchanged. (2) Renamed "Clear all COLUMN filters" button label in createClearColumnFiltersButton (used in all h3 sub-table headers on multi-table pages) to "Clear ALL filters" to better reflect its scope and be more concise.'},
-    {version: '9.58.0+2026-02-21', description: 'Bug fix: Multi-sort column tints lost on body cells of already-sorted tables when a second multi-sort is activated on another table (multi-table pages only). Root cause: renderGroupedTable has three branches — (a) query+existingTable: reuse tbody, no makeTableSortableUnified call; (b) !query new table: full init including makeTableSortableUnified; (c) else: filter re-run on existing table, no makeTableSortableUnified. Tints were re-applied via the trailing block inside makeTableSortableUnified, so only branch (b) ever re-applied tints after a tbody replacement. Branch (a) always fires on runFilter()-triggered re-renders (query=\'re-run\'), so any previously tinted table A lost its body tints when table B\'s sort triggered a runFilter() cycle. Header tints survived because thead is not replaced by tbody.innerHTML=\'\'. Fix: added explicit tint re-application immediately after the rows-append block in branch (a), keyed by the same ${categoryName}_${index} sortKey that was registered in multiSortTintRegistry at initial makeTableSortableUnified call time. The fix was implemented in the previous session but the file was not saved to outputs — this version corrects that.'},
-    {version: '9.57.0+2026-02-20', description: 'Bug fixes (4 items) for multi-sort column tinting introduced in 9.56.0: (1) Tints not clearing on ⇅ click: root cause was that tint application ran before runFilter() replaced tbody content with fresh unclassed rows, so the re-paint was lost. Fixed by moving applyMultiSortColumnTints() / clearMultiSortColumnTints() to AFTER runFilter() in the async sort block. For single-table pages renderFinalTable() is also now hooked to re-apply tints via a new multiSortTintRegistry Map (sortKey → {applyTints, clearTints}), ensuring tints persist across every filter/sort re-render. (2) Tints not appearing on tbody cells (only header) on first Ctrl+Click or Ctrl+same-column: same root cause as (1) — premature application before DOM was replaced. (3) Value-group run-length coloring: applyMultiSortColumnTints() now walks tbody rows per sorted column and alternates between two shades of the column hue (light \'a\' / darker \'b\') each time the cell text value changes. Equal-value runs share the same shade; each value boundary flips to the other shade. CSS updated from 8 flat classes to 16 two-shade pairs (mb-mscol-Na / mb-mscol-Nb) plus 8 header classes. (4) mb-sort-status alignment: .mb-subtable-controls changed from align-items:center to align-items:baseline with vertical-align:middle on each child span so sort-only text aligns with the h3 header baseline even when no filter status text is present.'},
-    {version: '9.56.0+2026-02-20', description: 'Enhancement: Visual column-group tinting for multi-column sort mode. When two or more columns are in the multi-sort chain each sorted column gets a distinct pastel tint applied to every body cell (td) and its header cell (th) in that column: amber (priority 1), sky-blue (2), mint (3), mauve (4), peach (5), teal (6), lavender (7), vanilla (8). Tints use rgba semi-transparency so the existing even/odd zebra-stripe row backgrounds remain visible underneath. A slightly more opaque variant is used for header cells so the priority is visually anchored. Tints are applied/updated by a new applyMultiSortColumnTints() helper and fully removed by clearMultiSortColumnTints() — which is called on: plain click (entering single-sort mode), ⇅ click (restoring original order), and in the single-column visual update branch. Tints are also re-applied on every runFilter() re-render via the existing trailing updateMultiSortVisuals block. Works independently per table on both single-table and multi-table pages.'},
-    {version: '9.55.0+2026-02-20', description: 'Enhancement: Multi-column sort lifted to all page types. Previously Ctrl+Click multi-sort was restricted to single-table pages; multi-table pages only supported single-column sort per sub-table. Now every sub-table on a multi-table page is independently multi-sortable with the same full feature set: (1) Ctrl+Click ▲/▼ adds/updates/removes a column from that sub-table\'s own multi-sort chain; (2) auto-seeding from existing single-sort state works per sub-table; (3) plain click clears the chain for that sub-table and returns to single-sort; (4) ⇅ restores original order and clears the chain; (5) superscript priority numbers (¹²³…) are rendered on the active icons; (6) the h3 .mb-sort-status span shows "Multi-sorted by: …" text matching the single-table display. All isMultiTable guards removed from: sort-state update, debug log, visual update, isRestore determination, compareFn selection, status display, and the trailing updateMultiSortVisuals call. Tooltips unified across both page types.'},
-    {version: '9.54.0+2026-02-20', description: 'Enhancement: Multi-column sort UX — auto-seed chain from existing single-sort. Previously, starting a multi-sort session required Ctrl+clicking the already-sorted column first to add it to the chain before adding further columns. Now, when the user Ctrl+clicks any sort icon on a column that is NOT the currently sorted one, the existing single-sort column is automatically promoted as priority 1 in the multi-sort chain, and the newly Ctrl+clicked column is added as priority 2. If the user Ctrl+clicks the same column that is already sorted, behaviour is unchanged (normal add/update/remove cycle). Plain clicks still clear the chain and enter single-sort mode as before.'},
-    {version: '9.53.0+2026-02-20', description: 'Refactor + Enhancement (3 items): (1) showCustomAlert and showCustomConfirm merged into a single showCustomDialog(message, title, triggerButton, mode) function (mode: "alert"|"confirm"). Both original functions remain as thin wrappers so all call sites are unchanged. (2) All visual parameters of the custom popup dialog are now fully configurable via 6 new condensed pipe-separated config strings in a new "🪟 CUSTOM POPUP UI" section of configSchema: sa_popup_dialog_style, sa_popup_header_style, sa_popup_message_style, sa_popup_ok_btn_style, sa_popup_cancel_btn_style, sa_popup_btn_gap. Helper functions parseCondensedStyle / popupDialogCSS / popupHeaderCSS / popupMessageCSS / popupOkBtnCSS / popupCancelBtnCSS extract the values at render time so changes in settings take effect immediately. (3) Default values increase readability: header font-size 1.3em→1.5em, message font-size 1.05em→1.2em / line-height 1.6→1.7 / color #555→#444, border-radius 8px→10px, padding 24px→28px, max-width 550px→600px. A new stub section "🖌️ UI APPEARANCE (future)" documents the planned extension point for configuring all other UI elements (action buttons, filter inputs, subtable controls, checkboxes, etc.) via the same condensed-string pattern.'},
-    {version: '9.52.0+2026-02-20', description: 'UI Fix (3 items): (1) mb-subtable-clear-btn is now always rendered to the left of span.mb-filter-status in all three subtable-controls construction sites (new-h3, reuse-existing-h3, and filter-time branches). (2) Buttons mb-toggle-prefilter-btn, mb-toggle-filter-highlight-btn, mb-clear-column-filters-btn (new ID), and mb-clear-all-filters-btn (new ID) now share the same rounded-corner visual style as mb-subtable-clear-btn (border-radius:4px, background:#f0f0f0, border:1px solid #ccc, vertical-align:middle) while preserving their individual font-size and display values. (3) Added unique IDs mb-clear-column-filters-btn and mb-clear-all-filters-btn to the two previously ID-less filter clear buttons.'},
-    {version: '9.51.0+2026-02-20', description: 'UI Fix (3 items): (1) "Show all <n>" sub-table overflow button: added class mb-show-all-subtable-btn (styled like mb-subtable-clear-btn), and moved it to the beginning of span.mb-subtable-controls so it appears visually where the controls span starts. (2) Stop button repositioned in the h1 controls bar: now appears right before the first divider (mb-button-divider-initial), between the action buttons and Save/Load group. Also added type="button" and consistent inline-flex styling. (3) Ctrl-M + o keyboard shortcut: activates the Stop button, but ONLY while the Stop button is visible (i.e. during an active fetch). The shortcut is registered when the button becomes visible and deregistered when it is hidden again.'},
-    {version: '9.50.0+2026-02-20', description: 'Bug fix: Invalid CSS selector prevented to read the state of the global filter input. So the highlight toggle button and the keyboard shortcut Ctrl-Shift-G were not working.'},
-    {version: '9.49.0+2026-02-19', description: 'Removed "info" logging for upcoming release.'},
-    {version: '9.48.0+2026-02-19', description: 'Feature: Multi-column sorting for single-table page types. (1) New createMultiColumnComparator(sortColumns, headers) function inserted alongside createSortComparator. (2) makeTableSortableUnified rewritten: state now carries a multiSortColumns:[{colIndex,direction}] array alongside lastSortIndex/sortState. Interaction model: plain click on any sort icon → single-sort mode (clears multiSortColumns, sorts by that column alone); Ctrl+Click on ▲ or ▼ → adds the column to multiSortColumns (or updates direction / removes it if already present); clicking ⇅ always restores original order and clears multiSortColumns regardless of Ctrl. Visual feedback: active icons in multi-sort mode are annotated with superscript priority numbers (¹²³…) via updateMultiSortVisuals(). Sort-status display shows "Multi-sorted by: \"Col1\"▲, \"Col2\"▼ (N rows in Xms)". Multi-table pages are unaffected (still single-column only). Tooltips updated to reflect Ctrl+Click behaviour. Removed stale progressBar/progressText/progressContainer references that were cleaned up in 9.45.0.'},
-    {version: '9.47.0+2026-02-19', description: 'UI Fix: On multi-table pages the h3 sub-table control order is corrected. Previously: clearBtn → filterStatus → sortStatus → showAllBtn. Now: filterStatus → sortStatus → clearBtn → showAllBtn — status text appears immediately after the row-count, action buttons are grouped at the end. Fixed in both the new-h3 and the reuse-existing-h3 branches of renderGroupedTable.'},
-    {version: '9.46.0+2026-02-19', description: 'Bug fixes: (1) Sort debug log now includes the direction icon (▲/▼/⇅) before the column index, matching the sort-status-display text. (2) Filter status display in single-table mode no longer queries tbody tr count from the DOM after an async chunked render (which only has 500 rows inserted at that point); it now uses filteredRows.length from the in-memory array, giving the correct total immediately. (3) Same fix eliminates the mismatch between the H2 row-count span (correct) and the filter-status-display (was wrong) when a global filter is active after sorting.'},
-    {version: '9.45.0+2026-02-19', description: 'UI Polish: (1) Fixed vertical alignment of mb-global-status-display and mb-info-display — both now use display:inline/font-size:0.95em and rely on the parent inline-flex align-items:center instead of carrying their own height/flex context; margin-left on infoDisplay removed since parent gap handles spacing. (2) Removed mb-fetch-progress-container (and its bar/text children) and the never-used timerDisplay span from the h1 controls bar; live per-page fetch progress is now shown in globalStatusDisplay in the subheader instead. (3) Button-group separators: initialDivider (Show-all → Save/Load) is no longer removed by ensureSettingsButtonIsLast so it persists after load; a new mb-button-divider-before-shortcuts span is inserted before 🎹 at initial setup and kept pinned immediately before 🎹 by ensureSettingsButtonIsLast on every subsequent button addition, covering both the Load→🎹 (initial page) and Export→🎹 (after-load) cases.'},
-    {version: '9.44.0+2026-02-19', description: 'UI Fix: statusDisplaysContainer is now injected inline into the existing <p class="subheader"> line (present on all non-search pages) so it sits on the same line as the subheader text (e.g. "~Country"). Its left edge is dynamically aligned to the first action button via getBoundingClientRect(); if the subheader text already reaches or passes that point a fixed 10px gap is used instead. On search pages (no subheader) it falls back to a dedicated block line below the h1. A resize listener keeps alignment correct in both modes.'},
-    {version: '9.43.0+2026-02-19', description: 'UI Enhancement: statusDisplaysContainer is now always rendered as a block div directly below the h1 header row. Its left edge is dynamically aligned with the first "Show all" action button using getBoundingClientRect() so it tracks any entity-name length. A resize listener keeps alignment correct when the viewport changes. Removed the three separate per-page-type placement branches (search / subheader / fallback) in favour of a single universal strategy.'},
-    {version: '9.42.0+2026-02-19', description: 'Refactor: Extract getColFilters() and testRowMatch() helpers to eliminate duplicated row-matching logic shared between multi-table and single-table branches of runFilter().'},
-    {version: '9.41.0+2026-02-19', description: 'Add new global filter exclusion checkbox.'},
-    {version: '9.40.0+2026-02-19', description: 'Enhancement: Configurable keyboard shortcut prefix. (1) New configSchema section "🎹 KEYBOARD SHORTCUTS" with sa_keyboard_shortcut_prefix setting (default: "Ctrl+M", type: keyboard_shortcut). Accepts any combination like "Ctrl+.", "Alt+X", "Ctrl+Shift+,". (2) Added helper functions parsePrefixShortcut(), getPrefixDisplay(), isPrefixKeyEvent() to centralise prefix parsing and matching. "Ctrl" in the config always matches both Ctrl and Meta/Cmd for cross-platform compatibility. (3) Refactored keydown handler: hardcoded (e.ctrlKey||e.metaKey)&&e.key===\'m\' replaced by isPrefixKeyEvent(e). (4) All button tooltips, tooltip overlay header, shortcuts-help dialog entry, debug log messages, and APP_HELP_TEXT now reflect the configured prefix dynamically via getPrefixDisplay().' },
-    {version: '9.39.0+2026-02-19', description: 'Added ❓ application help button (always visible, right of ⚙️): opens a scrollable popup dialog presenting a full feature overview of the script, closeable via "Close" button or Escape key.' },
-    {version: '9.38.0+2026-02-19', description: 'Fix & Enhancement: (1) "Page Reloaded" popup now positioned below the triggering "Show all" action button after final page render, consistent with other dialogs. (2) "📂 Load Table Data" dialog repositioned below the "📂 Load from Disk" button; added Alt-L shortcut to confirm/load from within the dialog. (3) Fixed OK button focus and Tab keyboard navigation in all custom popup dialogs: removed outline:none from buttons so focus outline is visible, ensuring keyboard navigation between OK and Cancel works. (4) Renamed "⌨️ Shortcuts" button to "🎹"; button is now visible immediately on page entry (before action button click), positioned left of the ⚙️ settings button.' },
-    {version: '9.37.0+2026-02-19', description: 'The "Load from Disk" option now defaults to Gzipped files (*.gz).' },
-    {version: '9.36.0+2026-02-19', description: 'Reordered source code: configuration and pageType definitions at the beginning of the file.' },
-    {version: '9.35.0+2026-02-18', description: 'Enhancement: Replaced three native browser dialogs with custom styled implementations. (1) Page reload alert: custom dialog when MusicBrainz page is reloaded for filter stability. (2) High page count warning: custom confirm dialog instead of native when entity has more pages than configured threshold - user can proceed or cancel with keyboard support (Enter=proceed, Escape=cancel). (3) Page type mismatch: custom confirm dialog when loading file from different page type with clear warning and user choice. (4) Invalid regex alert: custom alert for invalid regex pattern in load filter. All custom dialogs match userscript styling (white background, button styling, centered, shadow, z-index 10001), support keyboard shortcuts (Enter=OK, Escape=Cancel), and auto-focus OK button for accessibility.'},
-    {version: '9.34.0+2026-02-18', description: 'Enhancement: Comprehensive Ctrl-M Emacs-style keybinding system with tooltip. (1) Press Ctrl-M and release to enter mode, then press key: 1-9 select action buttons, a-z select additional buttons (up to 35). (2) Function shortcuts: r=Auto-Resize, t=Stats Panel, s=Save to Disk, d=Density, v=Visible Columns, e=Export, l=Load from Disk, ?=Show Help. (3) Configurable tooltip (default enabled) displays all available shortcuts when Ctrl-M is pressed, positioned in upper right of content div without overlapping sidebar. (4) Underlined keyboard shortcuts in button text for visual reference. (5) Tooltip auto-hides when mode exits (Escape, timeout, or selection). (6) Extended key support (1-9, a-z, A-Z, ,;.:-_+*<>#\'?!%&/()=) for future extensions.'},
-    {version: '9.33.1+2026-02-17', description: 'Enhancement: Added action shortcuts and h3 Ctrl+Click functionality. (1) Ctrl+M: Triggers the first "Show all" action button on the page - useful for pages with multiple action buttons (chooses first one). (2) h3 Headers: Added Ctrl+Click support to toggle ALL h3 headers (types) simultaneously, matching h2 functionality. Regular click still toggles individual h3. Updated tooltip: "Click to Collapse/Uncollapse table section (Ctrl+Click to toggle all types)". (3) Added Ctrl+M to shortcuts help dialog.'},
-    {version: '9.33.0+2026-02-17', description: 'Major Enhancement: Extended keyboard shortcuts and smart button visibility. (1) "Visible Columns": Added "Choose <u>c</u>urrent configuration" button with Alt-C shortcut. (2) Collapse shortcuts: Ctrl-2 toggles all h2 headers, Ctrl-3 toggles all h3 headers (types) - mimics existing Ctrl-click and Show/Hide all functionality. (3) Smart button visibility: "Toggle highlighting", "Clear all COLUMN filters", and "Clear ALL filters" buttons now only appear when filters are actually active. (4) Updated Shortcuts help with comprehensive sections for all menu-specific and global shortcuts including new View & Layout section.'},
-    {version: '9.32.0+2026-02-17', description: 'Enhancement: Extended keyboard navigation for menus. (1) "Visible Columns": Added Ctrl+V to open menu, Tab cycles through checkboxes and buttons, Alt-S triggers "Select All", Alt-D triggers "Deselect All" (only when menu open). Buttons now show underlined letters (<u>S</u>elect All, <u>D</u>eselect All). (2) "Density": Added Ctrl+D to open menu. (3) "Export": Close button in export complete popup now auto-focused for quick dismissal with Enter or Space.'},
-    {version: '9.31.0+2026-02-17', description: 'Enhancement: Added keyboard navigation to pull-down menus. (1) "Visible Columns": Up/Down to navigate checkboxes, Space/Shift to toggle selection, Enter to close. Auto-focus first checkbox on open. (2) "Density": Up/Down to navigate options with immediate table preview, Enter to apply and close. Auto-focus current density on open. (3) "Export": Up/Down to navigate formats, Enter to execute and close. Auto-focus first option on open. All menus now have visual focus indicators and support keyboard-only operation.'},
-    {version: '9.30.0+2026-02-17', description: 'Fix: "Collapsable Sidebar" and "Auto-Resize Columns" feature break "Stick Table Headers" feature.'},
-    {version: '9.26.1+2026-02-16', description: 'Fix & Enhancement: (1) Removed redundant "Unhighlight prefilter" button (functionality now in dynamic prefilter toggle button). (2) Fixed "Toggle highlighting" button restore functionality - now correctly restores filter highlights by re-running runFilter() instead of manual highlight re-application. (3) Added 🎨 emoji to dynamic prefilter button text (e.g., "🎨 2 rows prefiltered: \'Westfalenhalle\'").'},
-    {version: '9.26.0+2026-02-16', description: 'Major Enhancement - Split Toggle Functionality: (1) Created separate prefilter toggle button that only appears when data is loaded from disk with a prefilter. Shows dynamic text like "2 rows prefiltered: \'Westfalenhalle\'" and only toggles prefilter highlighting. (2) "Toggle highlighting" button now only toggles global filter and column filter highlighting, not prefilter. (3) Separate tracking for prefilter and filter highlight states with independent save/restore functions. (4) Both buttons change background color to their respective highlight colors when highlighting is disabled.'},
-    {version: '9.25.0+2026-02-16', description: 'Major Enhancement: (1) "Unhighlight all" button renamed to "Toggle highlighting" with toggle functionality - click once to remove all highlights, click again to restore them. (2) Prefilter information now displayed in button text instead of separate span (e.g., "2 rows prefiltered: \'Westfalenhalle\'"). (3) Button changes background color to highlight color when highlighting is disabled, providing visual feedback. (4) Improved highlight save/restore using re-application of highlighting parameters rather than DOM manipulation.'},
-    {version: '9.24.2+2026-02-16', description: 'Fix: Prefiltering when loading from disk now works correctly. Updated fileInput.onchange handler to read filter parameters (query, case sensitivity, regex) from UI elements before calling loadTableDataFromDisk().'},
-    {version: '9.24.1+2026-02-16', description: 'Fix: Resolved "Cannot access settingsBtn before initialization" error by moving settingsBtn declaration before its first usage in controlsContainer.'},
-    {version: '9.24.0+2026-02-16', description: 'UI Enhancement: (1) Clear column filter buttons now render ✗ symbol in red for better visibility - refactored into createClearColumnFiltersButton() helper function to avoid code duplication. (2) Settings button (⚙️) relocated: initially appears after Load from Disk button, then always as last button after data is loaded. (3) Added dividers " | " between button groups: initially between action buttons and Save to Disk; after data load between Load from Disk and Auto-Resize.'},
-    {version: '9.23.0+2026-02-16', description: 'UI Restructuring: Moved global status display and info display from h1 header to subheader area. Now appears one line below h1 header inside <p class="subheader"> after entity link (for all page types except search). For search pages, displays immediately below h1. Aligns with controls container for consistent layout.'},
-    {version: '9.22.0+2026-02-16', description: 'Enhancement: Added dedicated infoDisplay area for general status messages (Auto-resize, Density, Export, Load operations) separate from filtering/sorting status. These messages no longer overwrite filter/sort status and appear in their own display area after the global status display.'},
-    {version: '9.21.1+2026-02-16', description: 'Fix: Escape key two-press behavior in filter fields now works correctly. Removed conflicting old Escape handlers that were immediately clearing and blurring the field. First press now properly clears and keeps focus, second press blurs as intended.'},
-    {version: '9.21.0+2026-02-16', description: 'UI Enhancements: (1) Escape key in filter fields: first press clears field but keeps focus, second press removes focus. (2) Shortcuts help dialog redesigned with modern white background, organized sections, and better readability - no more dark overlay. (3) Added "Click outside or press Escape to close" text to Shortcuts, Density, and Export menus for consistency.'},
-    {version: '9.20.2+2026-02-16', description: 'Enhancement: (1) Ctrl-C now intelligently skips checkbox columns and number columns (#), focusing on the first actual data column filter. (2) All Ctrl/Cmd keyboard shortcuts now work even when typing in input fields, enabling seamless cycling between filter fields without losing focus. Only ? and / shortcuts require not typing in input fields.'},
-    {version: '9.20.1+2026-02-16', description: 'Fix: Ctrl-C keyboard shortcut now works correctly - fixed incorrect CSS class selector (was mb-filter-row, should be mb-col-filter-row). Automatically skips checkbox columns and focuses on first actual filter input field.'},
-    {version: '9.20.0+2026-02-16', description: 'Enhancement: (1) Added Ctrl-C keyboard shortcut to focus first column filter field. On multi-table pages, repeatedly pressing Ctrl-C cycles through all tables. (2) Export button dropdown menu now uses same styling as Density button for consistency - includes header and descriptive text for each format.'},
-    {version: '9.19.0+2026-02-16', description: 'Fix: Fixed button duplication bug when loading data from disk. Buttons from Auto-Resize to Export in the h1 header line are no longer doubled after data load finishes. All button-adding functions now check for existing buttons before creating new ones.'},
-    {version: '9.18.0+2026-02-15', description: 'Major enhancements: (1) Settings button now works by triggering menu link. (2) Export button renamed to "Export" with dropdown menu offering CSV, JSON, and Emacs Org-Mode formats. (3) Save to Disk now uses gzip compression (.json.gz) for ~60-80% file size reduction with minimal performance cost. Load from Disk automatically detects and decompresses .gz files. Added pako library for compression.'},
-    {version: '9.17.1+2026-02-15', description: 'Fix: Moved ⚙️ Settings button to h1 header (entity name header) instead of h2 header as originally intended. Button floats right and remains at far right edge when window resizes.'},
-    {version: '9.17.0+2026-02-15', description: 'Fix: ⚙️ Settings button now properly positioned at far right of h2 header with float:right (responsive to window size). Fixed Ctrl-F shortcut to properly focus global filter. Fixed Stats panel to show correct statistics across all tables (Total/Visible/Hidden Columns, Filtered Out rows, Global Filter value).'},
-    {version: '9.16.0+2026-02-15', description: 'UI Polish: Added tooltips to unhighlight buttons, clear filter buttons, and all Show all/RG/release buttons. Added global ⚙️ Settings button in h2 header (right-aligned) to open settings manager dialog.'},
-    {version: '9.15.0+2026-02-15', description: 'Fix: Sub-table status displays (filter/sort) now properly appear in h3 headers on multi-table pages (like release-group pages). Previously only showed on initial render, not when filtering. Global filter status now displays correctly in h2 header for all multi-table page types.'},
-    {version: '9.14.0+2026-02-15', description: 'Enhancement: "Visible Columns" button now displays in red when not all columns are visible, providing visual feedback about hidden columns.'},
-    {version: '9.13.0+2026-02-15', description: 'Fix: Hiding/showing columns after Auto-Resize now properly updates column widths and table layout. Previously caused text wrapping and misalignment. Hidden columns now properly removed from width calculation, shown columns re-measured. Status message now shows correct visible column count (not summed across tables).'},
-    {version: '9.12.0+2026-02-15', description: 'Fix: Auto-Resize now properly handles hidden columns from Visible Columns feature. Previously caused rendering glitches where content spread across wrong columns. Now skips hidden columns entirely during measurement and sizing.'},
-    {version: '9.11.0+2026-02-15', description: 'Fix: Auto-Resize now includes sorting symbol widths (⇅, ▲, ▼) in column header measurement. Previously columns with short data could be sized too narrow, cutting off header content.'},
-    {version: '9.10.0+2026-02-15', description: 'Fix: Column visibility menu now auto-sizes to content without scrollbars. Status display font sizes adjusted to better correspond with h2/h3 header text heights.'},
-    {version: '9.9.0+2026-02-15', description: 'Enhancement: Column visibility menu now has a draggable header and additional separator with close instructions.'},
-    {version: '9.8.0+2026-02-15', description: 'Enhancement: Separate sorting and filtering status displays with different fonts for clarity. Applied to both single-table and multi-table pages.'},
-    {version: '9.7.0+2026-02-15', description: 'Add: Sub-table specific status displays and clear filter buttons in h3 headers on multi-table pages.'},
-    {version: '9.6.0+2026-02-15', description: 'Fix: Add toggle column visibility to ALL tables on multitable pages.'},
-    {version: '9.5.0+2026-02-15', description: 'Reintroduce browser native "confirm" instead of modal dialog, otherwise execution hangs.'},
-    {version: '9.4.0+2026-02-15', description: 'Reorderd action buttons in a more logic workflow.'},
-    {version: '9.3.0+2026-02-15', description: 'Fix: Better sidebar toggling to get more real estate for data container when sidebar is collapsed.'},
-    {version: '9.2.0+2026-02-15', description: 'Fix: Status display now correctly shows sorting/filtering results with table name and column info. Fixed ReferenceError that caused "Sort failed" and "Filtering..." to persist incorrectly.'},
-    {version: '9.1.0+2026-02-15', description: 'Add new clear all filter button, global AND column level.'},
-    {version: '9.0.0+2026-02-15', description: 'New status display handling, global and sorting/filtering related.'},
-    {version: '8.0.0+2026-02-15', description: 'Function descriptions throughout.'},
-    {version: '7.4.0+2026-02-14', description: 'New configuration dialog with sections and dividers. Make all UI features opinionated.'},
-    {version: '7.3.2+2026-02-14', description: 'Fix: Resize handles now persist after clicking "Restore Width" button. Previously handles were removed during restore and not re-added, preventing further manual resizing. Now handles are automatically restored so users can continue resizing columns after restoration.'},
-    {version: '7.3.1+2026-02-14', description: 'Fix: Manual column resizing now works correctly on initial page load. Fixed undefined variable bug that prevented drag-to-resize from functioning when resize handles were added automatically.'},
-    {version: '7.3.0+2026-02-14', description: 'Enhancement: Manual column resizing now enabled immediately on page render - no need to click Auto-Resize first. Button labels improved: "👁️ Visible Columns" (was "Columns"), "Export 💾" (was "Export CSV"). Users can now drag column edges to resize as soon as table loads.'},
-    {version: '7.2.0+2026-02-14', description: 'Feature: Added manual column resizing - drag column edges with mouse to adjust widths (like Excel/Sheets). Resize handles appear after auto-resize or when manually adjusting. Button changes to "Restore Width" during manual resizing. Restore button restores both auto-resized and manually adjusted columns to original state. Visual feedback with hover highlights and green active indicator.'},
-    {version: '7.1.1+2026-02-14', description: 'Fix: Auto-Resize Columns now accurately measures cells with images, icons, and links. Previously used text-only measurement which caused columns with flag icons (like Country/Date) to be artificially wider. Now clones actual cell content preserving HTML structure for precise width calculation.'},
-    {version: '7.1.0+2026-02-14', description: 'Enhancement: Auto-Resize Columns now has toggle functionality - click once to resize, click again to restore original widths. Button changes to "↔️ Restore Width" when active with green highlight. Original table state is preserved and fully restored including colgroup, table layout, and scroll settings.'},
-    {version: '7.0.0+2026-02-13', description: 'Feature: Added Auto-Resize Columns - automatically calculates optimal column widths to prevent text wrapping. Click "↔️ Auto-Resize" to fit each column to its content. Enables horizontal scrolling in content area while keeping sidebar fixed. Perfect for wide tables with many columns.'},
-    {version: '6.9.0+2026-02-13', description: 'Feature: Added Table Density Control - choose between Compact (fit more rows), Normal (balanced), or Comfortable (easier reading) spacing options using "📏 Density" button. Adjusts padding, font size, and line height for optimal viewing based on personal preference.'},
-    {version: '6.8.0+2026-02-13', description: 'Feature: Added Quick Stats Panel - displays table statistics including row counts, column counts, filter status, memory usage, and more. Click "📊 Stats" button or any visible/hidden item counts. Perfect for understanding data at a glance.'},
-    {version: '6.7.0+2026-02-13', description: 'Feature: Added keyboard shortcuts for power users - Ctrl+F (focus filter), Ctrl+Shift+F (clear filters), Ctrl+E (export CSV), Ctrl+S (save), Ctrl+L (load), Escape (clear focused filter), ?/slash (show help). Includes "⌨️ Shortcuts" help button.'},
-    {version: '6.6.0+2026-02-13', description: 'Feature: Added CSV export - export visible rows and columns to CSV file using the "📥 Export CSV" button. Automatically generates filename with timestamp and page type. Perfect for using data in Excel, Google Sheets, or other applications.'},
-    {version: '6.5.0+2026-02-13', description: 'UI: Added column visibility toggle - users can now show/hide individual columns using the "👁️ Columns" button. Includes Select All/Deselect All options for quick control. Perfect for customizing view and focusing on relevant data.'},
-    {version: '6.4.0+2026-02-13', description: 'UI: Added sticky table headers - column headers and filter row remain visible while scrolling through large tables. Improves usability when working with thousands of rows.'},
-    {version: '6.3.0+2026-02-13', description: 'Performance: Optimized table sorting with async chunked merge sort algorithm for large tables (>5000 rows). Added progress bar for sorts over 10k rows. Improved sort timing display with color-coded indicators. Better numeric column detection.'},
-    {version: '6.2.0+2026-02-13', description: 'Performance: Added debounced filtering with configurable delay (default 300ms) to prevent UI freezing with large tables. Added filter timing display in status line showing execution time with color-coded performance indicators.'},
-    {version: '6.1.0+2026-02-13', description: 'Fixed Regexp filtering with column filter when decorating symbols like "▶" are in front.'},
-    {version: '6.0.0+2026-02-13', description: 'Fixed Regexp filtering with global filter not take into account each column separately.'},
-    {version: '5.0.0+2026-02-13', description: 'Implemented a chunked renderer with progess updates when a configurable number of fetched rows is exceeded.'},
-    {version: '4.5.0+2026-02-13', description: 'Add large dataset handling by directly offering for saving to disk instead of rendering.'},
-    {version: '4.4.2+2026-02-13', description: 'Add popup dialog to enter prefilter string instead of showing it on the main page all the time.'},
-    {version: '4.4.1+2026-02-12', description: 'Add highlightning of pre-filter expression.'},
-    {version: '4.4.0+2026-02-12', description: 'Add "pre filter when loading" functionality.'},
-    {version: '4.3.1+2026-02-12', description: 'Fix: Remove duplicate filter row when loading from disk. Fix: Restore alternating even/odd row backgrounds.'},
-    {version: '4.3.0+2026-02-12', description: 'Add offline storage/cache feature: Save table data to disk and load from disk to avoid re-fetching from MusicBrainz.'},
-    {version: '4.2.0+2026-02-11', description: 'Refactor removing columns with a removalMap object.'},
-    {version: '4.1.0+2026-02-11', description: 'Pass a function to the library constructor that dynamically checks the debug logging flag.'},
-    {version: '4.0.0+2026-02-11', description: 'Userscript renamed to better reflect current functionality.'},
-    {version: '3.3.0+2026-02-11', description: 'Fix broken Aliases pages resulting in column misalignment.'},
-    {version: '3.2.0+2026-02-10', description: 'Fix Artist-Aliases pages not rendering the "Artist credits" table with sorting/filtering.'},
-    {version: '3.1.0+2026-02-10', description: 'Fix overflow tables for Area-Releases pages in the case of Relationship subtable.'},
-    {version: '3.0.0+2026-02-10', description: 'Add support for Area-Releases pages with multiple different initial table data.'},
-    {version: '2.7.0+2026-02-09', description: 'Transform search results paragraph into collapsible H2 header.'},
-    {version: '2.6.0+2026-02-08', description: 'Add "Area splitting".'},
-    {version: '2.5.1+2026-02-08', description: 'Fix URL construction to preserve query parameters (fixes Search pages). Added extra debugging for table detection.'},
-    {version: '2.5.0+2026-02-08', description: 'Fix support for Search pages: target .pageselector-results instead of h2 for row counts/filters.'},
-    {version: '2.4.0+2026-02-07', description: 'Fix detection of filtered MusicBrainz pages (link_type_id) to allow proper pagination instead of treating them as overview pages (e.g. Artist-Relationships.'},
-    {version: '2.3.0+2026-02-05', description: 'Handle multitable pages of type "non_paginated" like Place-Performances.'},
-    {version: '2.2.1+2026-02-04', description: 'Refactor column removal in final rendered table. Supports now "Release events" column from jesus2099 Super Mind Control script.'},
-    {version: '2.2.0+2026-02-04', description: 'Support for "Show all Performances for Recordings".'},
-    {version: '2.1.0+2026-02-04', description: 'Refactor the single- and multi-table on one page sorting functions.'},
-    {version: '2.0.0+2026-02-03', description: 'Refactor the pageType detection.'},
-    {version: '1.8.0+2026-02-03', description: 'Add support for RegExp filtering with an additional "Rx" checkbox.'},
-    {version: '1.7.0+2026-02-02', description: 'Make sidebar collapse conditional on setting and only init after process completion.'},
-    {version: '1.6.2+2026-02-02', description: 'Fix pageType Recording-Releases (button text was wrong).'},
-    {version: '1.6.1+2026-02-02', description: 'Expose loggerInterface.prefix with getter/setter.'},
-    {version: '1.6.0+2026-02-02', description: 'Add color picker for variables which represent a color.'},
-    {version: '1.5.0+2026-02-01', description: 'Refactored settings, logging and changelog handling to a library.'},
-    {version: '1.4.0+2026-02-01', description: 'Refactored settings to a schema-driven framework.'},
-    {version: '1.3.0+2026-01-30', description: 'Implemented Ctrl+Click on headers to toggle all headers within the same container (sidebar vs main content).'},
-    {version: '1.2.0+2026-01-30', description: 'Added collapsable sidebar functionality with a handle on the vertical line.'},
-    {version: '1.1.0+2026-01-30', description: 'Increased the size of the filter input boxes and text. Several other small UI improvements.'},
-    {version: '1.0.0+2026-01-30', description: 'Support "Official" and "Various Artists" on Artis-Releases pages.'},
-    {version: '0.9.4+2026-01-29', description: 'Modernized logging framework with colors, icons, and structured levels.'},
-    {version: '0.9.3+2026-01-29', description: 'Added visual progress bar with centered estimated time and dynamic coloring.'},
-    {version: '0.9.2+2026-01-29', description: 'Show busy cursor for long running sort operations (> 1000 table rows)'},
-    {version: '0.9.1+2026-01-29', description: 'Added "Esc" key handling for clearing the filter fields when focused; Added "ChangeLog" userscript manager menu entry.'},
-    {version: '0.9.0+2026-01-28', description: '1st official release version.'}
-];
-
-// APPLICATION HELP TEXT
-const APP_HELP_TEXT = `\
-VZ: MusicBrainz — Show All Entity Data In A Consolidated View
-=============================================================
-
-PURPOSE
--------
-Consolidates paginated and non-paginated MusicBrainz table lists (Events,
-Recordings, Releases, Works, Artists, Labels, Release Groups, and more) into a
-single scrollable, filterable, sortable view.
-
-SUPPORTED PAGES
----------------
-• Artist:   Release Groups, Releases, Recordings, Works, Events, Aliases,
-            Relationships (including filtered link_type_id pages)
-• Release Group, Release, Recording, Work, Label, Series, Place, Area,
-  Instrument, Event pages — all supported sub-tabs
-• Search result pages (all entity types)
-
-GETTING STARTED
----------------
-1. Navigate to any supported MusicBrainz entity page (e.g. an Artist's
-   Recordings tab).
-2. Click the "Show all …" action button in the controls bar to start fetching
-   all pages from the MusicBrainz database.
-3. A real-time progress bar (light-red → orange → light-green) tracks the
-   fetch.  Click "Stop" at any time to abort; or press the prefix key then "o"
-   while the Stop button is visible.
-4. When complete, the consolidated table appears with filtering, sorting, and
-   all UI features active.  The global filter is auto-focused so you can start
-   typing immediately.
-
-ACTION BUTTONS
---------------
-• 💾 Save to Disk    — save the current dataset as a compressed .json.gz file
-                       (~60–80% smaller than plain JSON)
-• 📂 Load from Disk  — load a previously saved dataset with an optional
-                       pre-filter; Alt-L inside the dialog to confirm
-• ↔️ Resize          — fit all columns to their content (toggle to restore)
-• 📊 Statistics       — show a statistics panel (row/column counts, memory, …)
-• 📏 Density         — choose Compact / Normal / Comfortable row spacing
-• 👁️ Visible         — show/hide individual table columns; Alt-S / Alt-D to
-                       select/deselect all; navigate with ↑/↓ / Tab / Shift-Tab
-• Export 💾          — export visible data as CSV, JSON, or Emacs Org-Mode
-• 🎹                 — show keyboard shortcuts reference (or press ? / /)
-• ⚙️                 — open the Settings Manager to configure all options
-• ❓                 — show this help dialog
-
-FILTERING
----------
-• Global Filter — large input box at the top filters all columns at once
-• Column Filters — per-column filter row below the table header
-• Both support plain text, case-sensitive (Cc checkbox), regexp (Rx checkbox),
-  and exclude-matches (Ex checkbox) mode — tick Ex to hide rows that match
-  instead of keeping them
-• Ctrl-G  — focus global filter field (configurable)
-• Ctrl-C  — focus first column filter; repeated presses cycle through tables
-            (configurable)
-• Ctrl-Shift-G — clear all active filters (configurable)
-• Escape  — first press clears the focused filter, second press removes focus
-• 🎨 Toggle highlighting — toggle highlight colours on/off for active filters
-
-PRE-FILTER (Load from Disk)
----------------------------
-• Enter a filter expression in the "Filter expression…" field of the Load
-  dialog before loading to import only matching rows — useful for large files
-• Cc / Rx / Exclude Matches checkboxes apply to the pre-filter as well
-• The last N expressions (configurable) are saved in a ▼ dropdown
-• Pre-filtered rows are highlighted with 🎨; toggle highlighting with the
-  dynamic prefilter button that appears in the filter bar
-
-SORTING
--------
-• Click any column header (⇅) to sort ascending; click again for descending;
-  click the ⇅ icon again to restore original order
-• Visual indicator changes to ▲ / ▼ on the active sort column
-• Multi-column sort: Ctrl+Click ▲ or ▼ to add a column to the sort chain;
-  superscript numbers (¹²³…) show each column's priority; plain click returns
-  to single-column mode
-• Large tables use an async chunked merge-sort
-
-COLLAPSING / EXPANDING
------------------------
-• Click an h2 header to collapse/expand its table section
-• Ctrl-Click an h2 to toggle all h2 headers simultaneously (or use Ctrl-2)
-• Click an h3 header to collapse/expand its type group
-• Ctrl-Click an h3 to toggle all h3 headers simultaneously (or use Ctrl-3)
-• Show All / Hide All links available per section
-
-KEYBOARD SHORTCUTS  (all configurable in ⚙️ → Keyboard Shortcuts section)
---------------------------------------------------------------------------
-  ? or /           Show keyboard shortcuts reference
-  Ctrl+K           Show keyboard shortcuts reference (direct, not configurable)
-  Ctrl+G           Focus global filter
-  Ctrl+C           Focus first column filter (cycles through tables)
-  Ctrl+Shift+G     Clear all filters
-  Ctrl+S           Save to Disk
-  Ctrl+L           Load from Disk dialog
-  Ctrl+E           Open Export menu
-  Ctrl+R           Toggle Resize Columns
-  Ctrl+D           Open Density menu
-  Ctrl+V           Open Visible menu
-  Ctrl+I           Open Statistics panel
-  Ctrl+2           Toggle all h2 section headers
-  Ctrl+3           Toggle all h3 type headers
-  Ctrl+,           Open Settings dialog
-  Escape           Clear focused filter / close open menus
-
-PREFIX-MODE SHORTCUTS  (configurable prefix, default: Ctrl+M)
---------------------------------------------------------------
-  Press the prefix key, release, then press:
-    s   Save to Disk
-    l   Load from Disk
-    r   Toggle Resize Columns
-    v   Open Visible menu
-    d   Open Density menu
-    t   Show Statistics panel
-    e   Open Export menu
-    k   Show keyboard shortcuts reference
-    ,   Open Settings dialog
-    h   Show App Help (this dialog)
-    o   Activate Stop button (only while a fetch is running)
-    1–9 / a–z  Trigger the corresponding action button by mnemonic index
-
-  The prefix key can be changed in ⚙️ Settings → "🎹 KEYBOARD SHORTCUTS"
-  to any combination such as "Ctrl+.", "Alt+X", "Ctrl+Shift+,".
-
-VISIBLE MENU (keyboard navigation when open)
------------------------------------------------------
-  ↑ / ↓ or Tab / Shift-Tab  Navigate items (checkboxes and buttons)
-  Space                       Toggle focused checkbox
-  Alt+S                       Select All
-  Alt+D                       Deselect All
-  Alt+C                       Choose current configuration (close menu)
-  Enter / Escape              Close menu
-
-DENSITY MENU (keyboard navigation when open)
---------------------------------------------
-  ↑ / ↓     Navigate options (live preview)
-  Enter      Apply and close
-  Escape     Close menu
-
-EXPORT MENU (keyboard navigation when open)
--------------------------------------------
-  ↑ / ↓     Navigate formats
-  Enter      Execute export and close
-  Escape     Close menu
-
-SAVE & LOAD (Offline Cache)
-----------------------------
-• Datasets are saved as gzip-compressed JSON (.json.gz) — ~60–80% smaller
-  than plain JSON.
-• When loading, enter an optional pre-filter expression (plain text, RegExp,
-  or Exclude-Matches mode) to import only the rows you need.
-• Load filter history (last N expressions, configurable) is accessible via the
-  ▼ dropdown in the Load dialog.
-• Pre-filtered rows are highlighted with 🎨; toggle highlighting with the
-  dynamic prefilter button.
-
-COLUMN MANAGEMENT
------------------
-• 👁️ Visible menu — check/uncheck any column; Select All (Alt-S) /
-  Deselect All (Alt-D); button turns red when any column is hidden
-• Manual resize — drag column-header edges with the mouse at any time
-• Resize — calculates optimal widths for content including images/icons;
-  acts as a toggle (restores original widths on second click)
-• Synthetic columns — some page types add computed columns alongside the raw
-  data (e.g. "Country" + "Date" split from a combined "Country/Date" cell on
-  release pages; "Format Types" strips quantity prefixes like "8×" from the
-  Format column on release-group, label, and series pages)
-
-DENSITY CONTROL
----------------
-  Compact     — tighter padding, smaller font, more rows visible
-  Normal      — default MusicBrainz-like spacing
-  Comfortable — larger padding for easier reading
-  Navigate with ↑/↓ in the menu for an immediate live preview; Enter to apply
-
-EXPORT
-------
-  CSV            — comma-separated, compatible with Excel / Google Sheets
-  JSON           — structured JSON array of visible rows
-  Emacs Org-Mode — pipe-delimited Org table format
-
-PROGRESS BAR
-------------
-• The inline progress bar in the controls line transitions from light red →
-  light orange → light green as pages are fetched (0 % / 50 % / 100 %).
-• The action button for the current load changes colour in sync.
-• A time estimate ("est. X.Xs left") is shown inside the bar.
-
-STATISTICS PANEL (📊 or Ctrl+I)
---------------------------------
-• Shows: sub-table count, total rows, visible rows, column count, multi-sort
-  chain, estimated memory, and per-category row counts on multi-table pages.
-
-SETTINGS (⚙️ or Ctrl+,)
-------------------------
-All options are configurable via the Settings Manager:
-• Enable / disable any UI feature (export, stats, density, column resize, …)
-• Configure highlight colours for pre-filter, global filter, column filters
-• Set the high-page-count warning threshold
-• Set the large-dataset render warning threshold
-• Configure load filter history limit
-• Enable collapsible sidebar (experimental)
-• Optional column removal (Tagger, Rating, Relationships, Performance, …)
-• 12 configurable direct keyboard shortcuts (see ⚙️ → 🎹 KEYBOARD SHORTCUTS)
-• Configurable prefix shortcut key (default Ctrl+M)
-• Toggle the prefix-mode tooltip overlay on/off
-• Full UI appearance customisation (button sizes, colours, filter input sizes)
-
-SIDEBAR
--------
-• The page sidebar can be optionally collapsed (experimental setting) to give
-  more horizontal space to the data table.
-• Sticky table headers remain visible while scrolling through large tables
-  (can be disabled in Settings).
-
-MULTI-TABLE PAGES
------------------
-• On pages like Artist-Relationships or Release-Group releases the data is
-  split into independent sub-tables per category, each with its own filter,
-  sort chain, clear button, and optional "Show all N" overflow expander.
-• A single sub-table is auto-expanded on load.
-• Ctrl+Click sort applies independently per sub-table.
-
-PAGE RELOAD NOTICE
-------------------
-When MusicBrainz applies a URL filter that would interfere with pagination,
-the script automatically reloads the page to strip the filter.  After reload
-an ⚠️ Page Reloaded notice appears and automatically re-clicks the "Show all"
-button after 2 seconds (or immediately when you click OK / press Enter).
-Press Escape on that notice to cancel the auto-action.
-`;
-
 (function() {
     'use strict';
 
-    //--------------------------------------------------------------------------------
+    const SCRIPT_BASE_NAME = "ShowAllEntityData";
+    // SCRIPT_ID is derived from SCRIPT_BASE_NAME: CamelCase → kebab-case, lower-cased, prepend "vz-mb-"
+    const SCRIPT_ID = 'vz-mb-' + SCRIPT_BASE_NAME.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : SCRIPT_BASE_NAME;
 
-    const SCRIPT_ID = "vzell-mb-show-all-entities";
-    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
+    // Remote URLs for changelog and help text.
+    // The changelog is fetched and the GM menu item registered by VZ_MBLibrary
+    // (via remoteConfig passed to the constructor below).
+    // The help URL is only used lazily by showAppHelp() via Lib.fetchCachedText().
+    const REMOTE_BASE          = 'https://raw.githubusercontent.com/vzell/mb-userscripts/master/';
+    const REMOTE_HELP_URL      = REMOTE_BASE + SCRIPT_BASE_NAME + '_HELP.txt';
+    const REMOTE_CHANGELOG_URL = REMOTE_BASE + SCRIPT_BASE_NAME + '_CHANGELOG.json';
+    const REMOTE_CACHE_TTL_MS  = 60 * 60 * 1000; // 1 hour
+    const CACHE_KEY_HELP       = SCRIPT_BASE_NAME.toLowerCase() + '-remote-help-text';
+    const CACHE_KEY_CHANGELOG  = SCRIPT_BASE_NAME.toLowerCase() + '-remote-changelog';
 
     // CONFIG SCHEMA
     const configSchema = {
@@ -654,7 +283,7 @@ Press Escape on that notice to cancel the auto-action.
         sa_pre_filter_highlight_color: {
             label: "Global Prefilter Highlight Color",
             type: "color_picker",
-            default: "green",
+            default: "#008000",
             description: "Text color for global prefilter matches"
         },
 
@@ -818,7 +447,7 @@ Press Escape on that notice to cancel the auto-action.
             label: 'Enable Export',
             type: 'checkbox',
             default: true,
-            description: 'Show/hide the "Export 💾" button for exporting data to different formats (CSV/JSON/Org-Mode)'
+            description: 'Show/hide the "💾 Export" button for exporting data to different formats (CSV/JSON/Org-Mode)'
         },
 
         sa_enable_sticky_headers: {
@@ -826,69 +455,6 @@ Press Escape on that notice to cancel the auto-action.
             type: 'checkbox',
             default: true,
             description: 'Keep table headers visible when scrolling'
-        },
-
-        // ============================================================
-        // CUSTOM POPUP UI SECTION
-        // Condensed config string format:
-        //   dialog:   bg|border|borderRadius|padding|shadow|zIndex|fontFamily|minWidth|maxWidth
-        //   header:   fontWeight|fontSize|marginBottom|paddingBottom|borderBottom|color
-        //   message:  marginBottom|lineHeight|color|fontSize
-        //   okBtn:    padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
-        //   cancelBtn:padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
-        //   btnGap:   gap
-        // ============================================================
-        divider_popup_ui: {
-            type: 'divider',
-            label: '🪟 POPUP UI STYLES'
-        },
-
-        sa_popup_dialog_style: {
-            label: 'Popup dialog container style',
-            type: 'popup_dialog',
-            fields: ['bg', 'border', 'borderRadius', 'padding', 'boxShadow', 'zIndex', 'fontFamily', 'minWidth', 'maxWidth'],
-            default: 'white|1px solid #ccc|10px|28px|0 8px 32px rgba(0,0,0,0.2)|10001|-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif|380px|600px',
-            description: 'Condensed style for the popup dialog container: bg|border|borderRadius|padding|boxShadow|zIndex|fontFamily|minWidth|maxWidth'
-        },
-
-        sa_popup_header_style: {
-            label: 'Popup header style',
-            type: 'popup_dialog',
-            fields: ['fontWeight', 'fontSize', 'marginBottom', 'paddingBottom', 'borderBottom', 'color'],
-            default: '700|1.5em|18px|14px|2px solid #ddd|#222',
-            description: 'Condensed style for the popup header: fontWeight|fontSize|marginBottom|paddingBottom|borderBottom|color'
-        },
-
-        sa_popup_message_style: {
-            label: 'Popup message style',
-            type: 'popup_dialog',
-            fields: ['marginBottom', 'lineHeight', 'color', 'fontSize'],
-            default: '24px|1.7|#444|1.2em',
-            description: 'Condensed style for the popup message: marginBottom|lineHeight|color|fontSize'
-        },
-
-        sa_popup_ok_btn_style: {
-            label: 'Popup OK button style',
-            type: 'popup_dialog',
-            fields: ['padding', 'bg', 'color', 'border', 'borderRadius', 'fontSize', 'fontWeight', 'bgHover'],
-            default: '10px 22px|#4CAF50|white|1px solid #45a049|5px|1.1em|600|#45a049',
-            description: 'Condensed style for the OK button: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover'
-        },
-
-        sa_popup_cancel_btn_style: {
-            label: 'Popup Cancel button style',
-            type: 'popup_dialog',
-            fields: ['padding', 'bg', 'color', 'border', 'borderRadius', 'fontSize', 'fontWeight', 'bgHover'],
-            default: '10px 22px|#f0f0f0|#333|1px solid #ccc|5px|1.1em|500|#e0e0e0',
-            description: 'Condensed style for the Cancel button: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover'
-        },
-
-        sa_popup_btn_gap: {
-            label: 'Popup button gap',
-            type: 'popup_dialog',
-            fields: ['gap'],
-            default: '12px',
-            description: 'Gap between buttons in the popup dialog button row'
         },
 
         // ============================================================
@@ -1021,11 +587,17 @@ Press Escape on that notice to cancel the auto-action.
     // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
     // Use a ref object to avoid circular dependency during initialization
     const settings = {};
+    const remoteConfig = {
+        changelogUrl:      REMOTE_CHANGELOG_URL,
+        cacheKeyChangelog: CACHE_KEY_CHANGELOG,
+        cacheTtlMs:        REMOTE_CACHE_TTL_MS
+    };
+
     const Lib = (typeof VZ_MBLibrary !== 'undefined')
-          ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, () => {
+          ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, null, () => {
               // Dynamic check: returns current value of debug setting
               return settings.sa_enable_debug_logging ?? false;
-          })
+          }, remoteConfig)
           : {
               settings: {},
               info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
@@ -1679,10 +1251,10 @@ Press Escape on that notice to cancel the auto-action.
             // Root artist page (Official/Non-Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
-                { label: '🧮 Official artist RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official artist RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official various artists RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official various artists RGs', params: { all: '1', va: '1' } }
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
             ],
             tableMode: 'multi' // native tables, h3 headers
         },
@@ -1691,8 +1263,8 @@ Press Escape on that notice to cancel the auto-action.
             // Artist Releases page (Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
             buttons: [
-                { label: '🧮 Official artist releases', params: { va: '0' } },
-                { label: '🧮 Various artist releases', params: { va: '1' } }
+                { label: '🧮 Official releases', params: { va: '0' } },
+                { label: '🧮 VA releases', params: { va: '1' } }
             ],
             features: {
                 columnExtractors: [
@@ -2023,7 +1595,7 @@ Press Escape on that notice to cancel the auto-action.
                 if (typeof Lib !== 'undefined' && Lib.debug) {
                     Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode`);
                 } else {
-                    console.log(`[ShowAllEntityData] Exited ${getPrefixDisplay()} mode`);
+                    console.log(`[VZ-${SCRIPT_BASE_NAME}] Exited ${getPrefixDisplay()} mode`);
                 }
                 return;
             }
@@ -2064,10 +1636,10 @@ Press Escape on that notice to cancel the auto-action.
                 Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
                 if (buttonKeys.length > 0) {
-                    console.log(`[ShowAllEntityData] Entered ${getPrefixDisplay()} mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
+                    console.log(`[VZ-${SCRIPT_BASE_NAME}] Entered ${getPrefixDisplay()} mode. ${actionButtons.length} action button(s): ${buttonKeys.join(', ')}`);
                     actionButtons.forEach((btn, idx) => {
                         const key = buttonKeys[idx] || '?';
-                        console.log(`[ShowAllEntityData]   ${key}: ${btn.textContent.trim()}`);
+                        console.log(`[VZ-${SCRIPT_BASE_NAME}]   ${key}: ${btn.textContent.trim()}`);
                     });
                 }
                 console.log('[ShowAllEntityData] Function shortcuts: r=Resize, i=Statistics, s=Save, d=Density, v=Visible, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
@@ -2109,13 +1681,13 @@ Press Escape on that notice to cancel the auto-action.
                     if (typeof Lib !== 'undefined' && Lib.debug) {
                         Lib.debug('shortcuts', `Function "${funcEntry.description}" triggered via ${getPrefixDisplay()} then '${keyOriginal}'`);
                     } else {
-                        console.log(`[ShowAllEntityData] Function "${funcEntry.description}" triggered`);
+                        console.log(`[VZ-${SCRIPT_BASE_NAME}] Function "${funcEntry.description}" triggered`);
                     }
                 } else {
                     if (typeof Lib !== 'undefined' && Lib.warn) {
                         Lib.warn('shortcuts', `Function "${funcEntry.description}" not available`);
                     } else {
-                        console.warn(`[ShowAllEntityData] Function not available`);
+                        console.warn(`[VZ-${SCRIPT_BASE_NAME}] Function not available`);
                     }
                 }
                 ctrlMModeActive = false;
@@ -2142,13 +1714,13 @@ Press Escape on that notice to cancel the auto-action.
                     if (typeof Lib !== 'undefined' && Lib.debug) {
                         Lib.debug('shortcuts', `Action button ${buttonIndex + 1} selected via ${getPrefixDisplay()} then '${keyOriginal}': "${selectedButton.textContent.trim()}"`);
                     } else {
-                        console.log(`[ShowAllEntityData] Action button ${buttonIndex + 1} clicked: "${selectedButton.textContent.trim()}"`);
+                        console.log(`[VZ-${SCRIPT_BASE_NAME}] Action button ${buttonIndex + 1} clicked: "${selectedButton.textContent.trim()}"`);
                     }
                 } else {
                     if (typeof Lib !== 'undefined' && Lib.warn) {
                         Lib.warn('shortcuts', `No action button at position ${buttonIndex + 1} (${actionButtons.length} available)`);
                     } else {
-                        console.warn(`[ShowAllEntityData] No action button at position ${buttonIndex + 1}`);
+                        console.warn(`[VZ-${SCRIPT_BASE_NAME}] No action button at position ${buttonIndex + 1}`);
                     }
                 }
             }
@@ -2168,7 +1740,7 @@ Press Escape on that notice to cancel the auto-action.
             if (typeof Lib !== 'undefined' && Lib.debug) {
                 Lib.debug('shortcuts', `Exited ${getPrefixDisplay()} mode (Escape pressed)`);
             } else {
-                console.log(`[ShowAllEntityData] Exited ${getPrefixDisplay()} mode`);
+                console.log(`[VZ-${SCRIPT_BASE_NAME}] Exited ${getPrefixDisplay()} mode`);
             }
             return;
         }
@@ -2583,7 +2155,7 @@ Press Escape on that notice to cancel the auto-action.
         const clearBtn = document.createElement('button');
         clearBtn.className = 'mb-subtable-clear-btn';
         clearBtn.type = 'button';
-        clearBtn.title = 'Clear all column filters for this table';
+        clearBtn.title = 'Clear all COLUMN filters for this table';
         clearBtn.style.display = 'none'; // Initially hidden
 
         // Create red ✗ symbol
@@ -2594,7 +2166,7 @@ Press Escape on that notice to cancel the auto-action.
         xSymbol.style.fontWeight = 'bold';
 
         clearBtn.appendChild(xSymbol);
-        clearBtn.appendChild(document.createTextNode('Clear ALL filters'));
+        clearBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
 
         clearBtn.onclick = (e) => {
             e.preventDefault();
@@ -2687,7 +2259,7 @@ Press Escape on that notice to cancel the auto-action.
         // Create toggle button
         const toggleBtn = document.createElement('button');
         toggleBtn.id = 'mb-visible-btn';
-        toggleBtn.innerHTML = '<span>👁️ <span style="text-decoration:underline">V</span>isible</span>';
+        toggleBtn.innerHTML = makeButtonHTML('Visible', 'V', '👁️');
         toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then V)`;
         toggleBtn.style.cssText = uiActionBtnBaseCSS();
         toggleBtn.type = 'button';
@@ -2859,7 +2431,7 @@ Press Escape on that notice to cancel the auto-action.
         let chooseConfigBtnRef = null;
 
         const selectAllBtn = document.createElement('button');
-        selectAllBtn.innerHTML = '<span><span style="text-decoration:underline">S</span>elect All</span>';
+        selectAllBtn.innerHTML = makeButtonHTML('Select All', 'S');
         selectAllBtn.style.cssText = menuBtnBase + 'flex:1;';
         selectAllBtn.type = 'button';
         selectAllBtn.tabIndex = 0;
@@ -2879,7 +2451,7 @@ Press Escape on that notice to cancel the auto-action.
         };
 
         const deselectAllBtn = document.createElement('button');
-        deselectAllBtn.innerHTML = '<span><span style="text-decoration:underline">D</span>eselect All</span>';
+        deselectAllBtn.innerHTML = makeButtonHTML('Deselect All', 'D');
         deselectAllBtn.style.cssText = menuBtnBase + 'flex:1;';
         deselectAllBtn.type = 'button';
         deselectAllBtn.tabIndex = 0;
@@ -2904,7 +2476,7 @@ Press Escape on that notice to cancel the auto-action.
         // Add "Choose current configuration" button
         const chooseConfigBtn = document.createElement('button');
         chooseConfigBtnRef = chooseConfigBtn;   // resolve forward reference
-        chooseConfigBtn.innerHTML = '<span>Choose <span style="text-decoration:underline">c</span>urrent configuration</span>';
+        chooseConfigBtn.innerHTML = makeButtonHTML('Choose current configuration', 'c');
         chooseConfigBtn.style.cssText = menuBtnBase + 'width:100%; margin-top:5px;';
         chooseConfigBtn.type = 'button';
         chooseConfigBtn.tabIndex = 0;
@@ -3380,17 +2952,20 @@ Press Escape on that notice to cancel the auto-action.
     }
 
     /**
-     * Show export notification popup
+     * Show a transient centered popup with a message and a Close button.
+     * The popup fades out on close (Escape key or button click).
+     * An optional status bar element is updated at the same time.
+     *
+     * @param {string}      message        - Text to display inside the popup body.
+     * @param {string|null} statusText     - When non-null, written to the #mb-info-display bar.
      */
-    function showExportNotification(format, filename, rowCount, totalRows = 0) {
-        const isFiltered = totalRows > rowCount;
-        const rowSummary = isFiltered
-            ? `${rowCount.toLocaleString()} of ${totalRows.toLocaleString()} rows (${totalRows - rowCount} filtered out)`
-            : `${rowCount.toLocaleString()} rows`;
-        const infoDisplay = document.getElementById('mb-info-display');
-        if (infoDisplay) {
-            infoDisplay.textContent = `✓ Exported ${rowSummary} to ${filename}`;
-            infoDisplay.style.color = 'green';
+    function showDownloadNotification(message, statusText = null) {
+        if (statusText !== null) {
+            const infoDisplay = document.getElementById('mb-info-display');
+            if (infoDisplay) {
+                infoDisplay.textContent = statusText;
+                infoDisplay.style.color = 'green';
+            }
         }
 
         const infoPopup = document.createElement('div');
@@ -3413,11 +2988,12 @@ Press Escape on that notice to cancel the auto-action.
         `;
 
         const msg = document.createElement('div');
-        msg.textContent = `${format} export complete: ${rowSummary}. Please monitor your browser for the file download.`;
+        msg.textContent = message;
         msg.style.marginBottom = '15px';
 
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Close';
+        closeBtn.type = 'button';
         closeBtn.style.cssText = `
             padding: 6px 12px;
             cursor: pointer;
@@ -3436,19 +3012,37 @@ Press Escape on that notice to cancel the auto-action.
             }, 300);
         };
 
-        closeBtn.addEventListener('click', closePopup);
+        const onEscape = (e) => { if (e.key === 'Escape') closePopup(); };
 
-        const onEscape = (e) => {
-            if (e.key === 'Escape') closePopup();
-        };
+        closeBtn.addEventListener('click', closePopup);
         document.addEventListener('keydown', onEscape);
 
         infoPopup.appendChild(msg);
         infoPopup.appendChild(closeBtn);
         document.body.appendChild(infoPopup);
 
-        // Focus the Close button
+        // Focus the Close button so keyboard users can dismiss immediately with Enter/Space
         setTimeout(() => closeBtn.focus(), 50);
+    }
+
+    /**
+     * Show export-complete notification popup and update the status bar.
+     *
+     * @param {string} format    - Export format label, e.g. 'CSV', 'JSON', 'Org-Mode'.
+     * @param {string} filename  - The filename that was written.
+     * @param {number} rowCount  - Number of rows exported.
+     * @param {number} totalRows - Total rows before filtering (0 = same as rowCount).
+     */
+    function showExportNotification(format, filename, rowCount, totalRows = 0) {
+        const isFiltered = totalRows > rowCount;
+        const rowSummary = isFiltered
+            ? `${rowCount.toLocaleString()} of ${totalRows.toLocaleString()} rows (${totalRows - rowCount} filtered out)`
+            : `${rowCount.toLocaleString()} rows`;
+
+        showDownloadNotification(
+            `${format} export complete: ${rowSummary}. Please monitor your browser for the file download.`,
+            `✓ Exported ${rowSummary} to ${filename}`
+        );
     }
 
     /**
@@ -3469,7 +3063,7 @@ Press Escape on that notice to cancel the auto-action.
         }
 
         const exportBtn = document.createElement('button');
-        exportBtn.innerHTML = '<span><span style="text-decoration:underline">E</span>xport 💾</span>';
+        exportBtn.innerHTML = makeButtonHTML('Export', 'E', '💾');
         exportBtn.title = `Export visible rows and columns to various formats (${getPrefixDisplay()}, then E)`;
         exportBtn.style.cssText = uiActionBtnBaseCSS();
         exportBtn.type = 'button';
@@ -3708,6 +3302,32 @@ Press Escape on that notice to cancel the auto-action.
      * Base CSS shared by every button in the h1 action bar.
      * Config: sa_ui_action_btn_style — fontSize|padding|height|borderRadius
      */
+
+    /**
+     * Build the innerHTML for a button that has one underlined accelerator character.
+     *
+     * @param {string}      text          - Full visible button label, e.g. "Save to Disk".
+     * @param {string}      underlineChar - Single character inside `text` to underline
+     *                                     (first occurrence is used), e.g. "S".
+     * @param {string|null} [icon]        - Optional leading emoji/icon, e.g. "💾".
+     *                                     When supplied it is prepended with a space separator.
+     * @returns {string} HTML string of the form
+     *   <span>[icon ]before<span style="text-decoration:underline">char</span>after</span>
+     */
+    function makeButtonHTML(text, underlineChar, icon) {
+        const idx = text.indexOf(underlineChar);
+        let label;
+        if (idx === -1) {
+            label = text;
+        } else {
+            label = text.slice(0, idx) +
+                '<span style="text-decoration:underline">' + underlineChar + '</span>' +
+                text.slice(idx + underlineChar.length);
+        }
+        const content = icon ? icon + ' ' + label : label;
+        return '<span>' + content + '</span>';
+    }
+
     function uiActionBtnBaseCSS() {
         const defaults = '0.8em|2px 8px|24px|6px';
         const [fontSize, padding, height, borderRadius] =
@@ -3778,7 +3398,9 @@ Press Escape on that notice to cancel the auto-action.
         const defaults = '#78909C|white|1px solid #607D8B';
         const [bg, color, border] =
             parseCondensedStyle(Lib.settings.sa_ui_help_btn_style, defaults);
-        return `${uiActionBtnBaseCSS()} background-color:${bg}; color:${color}; border:${border};`;
+        // user-select:none prevents some browsers from rendering a text-insertion
+        // caret inside the button when the ❓ emoji is treated as a selectable glyph.
+        return `${uiActionBtnBaseCSS()} background-color:${bg}; color:${color}; border:${border}; user-select:none; -webkit-user-select:none;`;
     }
 
     /**
@@ -3879,283 +3501,200 @@ Press Escape on that notice to cancel the auto-action.
         return `margin-right:${marginRight}; vertical-align:middle;`;
     }
 
-    /**
-     * Build a CSS object for the popup dialog container from the condensed config string.
-     * Format: bg|border|borderRadius|padding|boxShadow|zIndex|fontFamily|minWidth|maxWidth
-     */
-    function popupDialogCSS() {
-        const defaults = 'white|1px solid #ccc|10px|28px|0 8px 32px rgba(0,0,0,0.2)|10001|-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif|380px|600px';
-        const [bg, border, borderRadius, padding, boxShadow, zIndex, fontFamily, minWidth, maxWidth] =
-            parseCondensedStyle(Lib.settings.sa_popup_dialog_style, defaults);
-        return `position:fixed; background:${bg}; border:${border}; border-radius:${borderRadius}; padding:${padding}; box-shadow:${boxShadow}; z-index:${zIndex}; font-family:${fontFamily}; min-width:${minWidth}; max-width:${maxWidth};`;
-    }
+    // ── NOTE: Custom popup dialogs are now provided by VZ_MBLibrary via
+    // Lib.showCustomAlert() and Lib.showCustomConfirm(). The former local
+    // implementations (showCustomDialog, showCustomAlert, showCustomConfirm) and
+    // their associated CSS helpers (popupDialogCSS, popupHeaderCSS, …) have been
+    // removed. The configSchema entries under "🪟 POPUP UI STYLES" have also been
+    // removed as they are no longer needed.
 
     /**
-     * Build a CSS object for the popup header from the condensed config string.
-     * Format: fontWeight|fontSize|marginBottom|paddingBottom|borderBottom|color
-     */
-    function popupHeaderCSS() {
-        const defaults = '700|1.5em|18px|14px|2px solid #ddd|#222';
-        const [fontWeight, fontSize, marginBottom, paddingBottom, borderBottom, color] =
-            parseCondensedStyle(Lib.settings.sa_popup_header_style, defaults);
-        return `font-weight:${fontWeight}; font-size:${fontSize}; margin-bottom:${marginBottom}; padding-bottom:${paddingBottom}; border-bottom:${borderBottom}; color:${color};`;
-    }
-
-    /**
-     * Build a CSS object for the popup message from the condensed config string.
-     * Format: marginBottom|lineHeight|color|fontSize
-     */
-    function popupMessageCSS() {
-        const defaults = '24px|1.7|#444|1.2em';
-        const [marginBottom, lineHeight, color, fontSize] =
-            parseCondensedStyle(Lib.settings.sa_popup_message_style, defaults);
-        return `margin-bottom:${marginBottom}; line-height:${lineHeight}; color:${color}; font-size:${fontSize}; word-wrap:break-word;`;
-    }
-
-    /**
-     * Build CSS + hover color for the OK button from the condensed config string.
-     * Format: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
-     * @returns {{ css: string, hoverBg: string, normalBg: string }}
-     */
-    function popupOkBtnCSS() {
-        const defaults = '10px 22px|#4CAF50|white|1px solid #45a049|5px|1.1em|600|#45a049';
-        const [padding, bg, color, border, borderRadius, fontSize, fontWeight, bgHover] =
-            parseCondensedStyle(Lib.settings.sa_popup_ok_btn_style, defaults);
-        return {
-            css: `padding:${padding}; background-color:${bg}; color:${color}; border:${border}; border-radius:${borderRadius}; font-size:${fontSize}; font-weight:${fontWeight}; cursor:pointer; transition:background-color 0.2s;`,
-            normalBg: bg,
-            hoverBg: bgHover
-        };
-    }
-
-    /**
-     * Build CSS + hover color for the Cancel button from the condensed config string.
-     * Format: padding|bg|color|border|borderRadius|fontSize|fontWeight|bgHover
-     * @returns {{ css: string, hoverBg: string, normalBg: string }}
-     */
-    function popupCancelBtnCSS() {
-        const defaults = '10px 22px|#f0f0f0|#333|1px solid #ccc|5px|1.1em|500|#e0e0e0';
-        const [padding, bg, color, border, borderRadius, fontSize, fontWeight, bgHover] =
-            parseCondensedStyle(Lib.settings.sa_popup_cancel_btn_style, defaults);
-        return {
-            css: `padding:${padding}; background-color:${bg}; color:${color}; border:${border}; border-radius:${borderRadius}; font-size:${fontSize}; font-weight:${fontWeight}; cursor:pointer; transition:background-color 0.2s;`,
-            normalBg: bg,
-            hoverBg: bgHover
-        };
-    }
-
-    // ── End UI Appearance CSS helpers ────────────────────────────────────────────
-
-    /**
-     * Unified custom dialog — replaces the old showCustomAlert and showCustomConfirm.
+     * Creates a reusable, draggable info-dialog shell shared by all lightweight popup
+     * info dialogs (Keyboard Shortcuts, Application Help, …).
      *
-     * @param {string}      message       - The body text (supports \n → <br> if isConfirm)
-     * @param {string}      [title]       - Dialog header text
-     * @param {HTMLElement} [triggerButton] - Element used to position the dialog below
-     * @param {'alert'|'confirm'} [mode]  - 'alert' shows only OK; 'confirm' shows Cancel + OK
-     * @returns {Promise<void|boolean>}   - alert: resolves undefined; confirm: resolves true/false
+     * Built-in features
+     *  - Draggable title bar with title text, optional extra controls, and a ✕ close button
+     *  - Focusable scrollable content area: ↑ ↓ PageUp PageDown Home End work natively
+     *    while the mouse hovers over the area (mouseenter auto-focuses it)
+     *  - Sticky close-hint footer ("Click outside or press Escape to close")
+     *  - Escape-key and click-outside close handlers — all document listeners cleaned up
+     *    on close so there are no lingering event handlers
+     *  - Toggle behaviour: if a dialog with the same id already exists it is removed
+     *    and null is returned — the caller should just return at that point
+     *
+     * @param {Object}          opts
+     * @param {string}          opts.id               Unique element id for the dialog div
+     * @param {string}          opts.title            Title text shown in the header bar
+     * @param {string}         [opts.width]           Explicit CSS width (overrides min/max-width)
+     * @param {string}         [opts.minWidth='450px'] CSS min-width
+     * @param {string}         [opts.maxWidth='580px'] CSS max-width
+     * @param {string}         [opts.maxHeight='82vh'] CSS max-height
+     * @param {string}         [opts.borderRadius='8px'] CSS border-radius
+     * @param {number}         [opts.zIndex=10000]    CSS z-index
+     * @param {boolean}        [opts.centerV=true]    true → vertically centred (translate -50%,-50%);
+     *                                                false → top:60px (below page header)
+     * @param {HTMLElement[]}  [opts.titleBarExtras]  Elements inserted left of the ✕ button
+     * @returns {{ dialog: HTMLElement, scrollArea: HTMLElement, close: Function,
+     *             titleBarRight: HTMLElement } | null}
+     *   Returns null when the dialog was toggled closed (existing instance removed).
      */
-    function showCustomDialog(message, title = 'Notice', triggerButton = null, mode = 'alert') {
-        return new Promise((resolve) => {
-            const isConfirm = mode === 'confirm';
+    function createInfoDialog(opts) {
+        const existing = document.getElementById(opts.id);
+        if (existing) { existing.remove(); return null; }
 
-            const dialogDiv = document.createElement('div');
-            dialogDiv.style.cssText = popupDialogCSS();
+        const r  = opts.borderRadius || '8px';
+        const cV = opts.centerV !== false;
 
-            // Header
-            const headerDiv = document.createElement('div');
-            headerDiv.style.cssText = popupHeaderCSS();
-            headerDiv.textContent = title;
-            dialogDiv.appendChild(headerDiv);
+        const dialog = document.createElement('div');
+        dialog.id = opts.id;
+        dialog.style.cssText = `
+            position: fixed;
+            top: ${cV ? '50%' : '60px'};
+            left: 50%;
+            transform: ${cV ? 'translate(-50%, -50%)' : 'translateX(-50%)'};
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: ${r};
+            padding: 0;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            z-index: ${opts.zIndex || 10000};
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            ${opts.width
+                ? `width: ${opts.width};`
+                : `min-width: ${opts.minWidth || '450px'}; max-width: ${opts.maxWidth || '580px'};`}
+            max-height: ${opts.maxHeight || '82vh'};
+            display: flex;
+            flex-direction: column;
+        `;
 
-            // Message
-            const msgDiv = document.createElement('div');
-            msgDiv.style.cssText = popupMessageCSS();
-            if (isConfirm) {
-                msgDiv.innerHTML = message.replace(/\n/g, '<br>');
-            } else {
-                msgDiv.textContent = message;
-            }
-            dialogDiv.appendChild(msgDiv);
+        // ── Title bar ──────────────────────────────────────────────────────────
+        const titleBar = document.createElement('div');
+        titleBar.style.cssText = `
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px 12px;
+            border-bottom: 2px solid #ddd;
+            cursor: move;
+            user-select: none;
+            flex-shrink: 0;
+            border-radius: ${r} ${r} 0 0;
+            background: #f8f8f8;
+        `;
 
-            // Button container
-            const btnGap = (Lib.settings.sa_popup_btn_gap || '12px').trim();
-            const btnContainer = document.createElement('div');
-            btnContainer.style.cssText = `display:flex; justify-content:flex-end; gap:${btnGap};`;
+        const titleEl = document.createElement('span');
+        titleEl.textContent = opts.title;
+        titleEl.style.cssText = 'font-weight: 700; font-size: 1.15em; color: #222;';
+        titleBar.appendChild(titleEl);
 
-            let cancelBtn = null;
+        const titleBarRight = document.createElement('div');
+        titleBarRight.style.cssText = 'display: flex; align-items: center; gap: 12px; flex-shrink: 0;';
+        (opts.titleBarExtras || []).forEach(el => titleBarRight.appendChild(el));
 
-            if (isConfirm) {
-                // Cancel button
-                cancelBtn = document.createElement('button');
-                cancelBtn.textContent = 'Cancel';
-                const cancelStyle = popupCancelBtnCSS();
-                cancelBtn.style.cssText = cancelStyle.css;
-                cancelBtn.onmouseover = () => { cancelBtn.style.backgroundColor = cancelStyle.hoverBg; };
-                cancelBtn.onmouseout  = () => { cancelBtn.style.backgroundColor = cancelStyle.normalBg; };
-                cancelBtn.onclick = () => {
-                    dialogDiv.remove();
-                    document.removeEventListener('keydown', keyHandler);
-                    resolve(false);
-                };
-                btnContainer.appendChild(cancelBtn);
-            }
+        const closeX = document.createElement('button');
+        closeX.textContent = '✕';
+        closeX.title = 'Close (Escape)';
+        closeX.style.cssText = `
+            background: none; border: none; font-size: 1.2em; cursor: pointer;
+            color: #666; padding: 0 4px; line-height: 1;
+            user-select: none; -webkit-user-select: none;
+        `;
+        titleBarRight.appendChild(closeX);
+        titleBar.appendChild(titleBarRight);
+        dialog.appendChild(titleBar);
 
-            // OK button
-            const okBtn = document.createElement('button');
-            okBtn.textContent = 'OK';
-            const okStyle = popupOkBtnCSS();
-            okBtn.style.cssText = okStyle.css;
-            okBtn.onmouseover = () => { okBtn.style.backgroundColor = okStyle.hoverBg; };
-            okBtn.onmouseout  = () => { okBtn.style.backgroundColor = okStyle.normalBg; };
-            okBtn.onclick = () => {
-                dialogDiv.remove();
-                document.removeEventListener('keydown', keyHandler);
-                resolve(isConfirm ? true : undefined);
-            };
-            btnContainer.appendChild(okBtn);
+        // ── Scrollable content area ────────────────────────────────────────────
+        // tabIndex=0 makes the div a focusable keyboard target so scroll keys
+        // (↑ ↓ PageUp PageDown Home End) are delivered to it by the browser natively.
+        // mouseenter auto-focuses it so hovering the mouse is enough to activate scrolling.
+        const scrollArea = document.createElement('div');
+        scrollArea.tabIndex = 0;
+        scrollArea.style.cssText = 'overflow-y: auto; flex: 1; outline: none;';
+        scrollArea.addEventListener('mouseenter', () => scrollArea.focus());
+        dialog.appendChild(scrollArea);
 
-            dialogDiv.appendChild(btnContainer);
-            document.body.appendChild(dialogDiv);
+        // ── Sticky close-hint footer ───────────────────────────────────────────
+        const closeFooter = document.createElement('div');
+        closeFooter.style.cssText = `
+            flex-shrink: 0;
+            border-top: 1px solid #eee;
+            padding: 8px 20px 12px;
+            border-radius: 0 0 ${r} ${r};
+        `;
+        const closeHint = document.createElement('div');
+        closeHint.textContent = 'Click outside or press Escape to close';
+        closeHint.style.cssText = 'font-size: 0.85em; color: #999; text-align: center; font-style: italic;';
+        closeFooter.appendChild(closeHint);
+        dialog.appendChild(closeFooter);
 
-            // Position below trigger button or center screen
-            setTimeout(() => {
-                if (triggerButton) {
-                    const btnRect = triggerButton.getBoundingClientRect();
-                    const dialogRect = dialogDiv.getBoundingClientRect();
-                    let top  = btnRect.bottom + 10;
-                    let left = btnRect.left;
+        document.body.appendChild(dialog);
 
-                    if (top + dialogRect.height > window.innerHeight) {
-                        top = btnRect.top - dialogRect.height - 10;
-                    }
-                    if (left + dialogRect.width > window.innerWidth) {
-                        left = window.innerWidth - dialogRect.width - 10;
-                    }
-                    if (left < 0) left = 10;
+        // ── Close / listener cleanup ───────────────────────────────────────────
+        const closeDialog = () => {
+            dialog.remove();
+            document.removeEventListener('keydown',   onKeyDown);
+            document.removeEventListener('click',     onClickOutside);
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup',   onMouseUp);
+        };
 
-                    dialogDiv.style.left = left + 'px';
-                    dialogDiv.style.top  = top  + 'px';
-                } else {
-                    dialogDiv.style.left      = '50%';
-                    dialogDiv.style.top       = '50%';
-                    dialogDiv.style.transform = 'translate(-50%, -50%)';
-                }
+        closeX.onclick = closeDialog;
 
-                okBtn.focus();
-            }, 0);
+        const onKeyDown = (e) => {
+            if (e.key === 'Escape') { e.preventDefault(); closeDialog(); }
+        };
+        document.addEventListener('keydown', onKeyDown);
 
-            // Keyboard handler
-            const keyHandler = (e) => {
-                if (e.key === 'Escape') {
-                    e.preventDefault();
-                    if (isConfirm && cancelBtn) {
-                        cancelBtn.click();
-                    } else {
-                        okBtn.click();
-                    }
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    okBtn.click();
-                } else if (e.key === 'Tab' && isConfirm && cancelBtn) {
-                    e.preventDefault();
-                    if (document.activeElement === cancelBtn) {
-                        okBtn.focus();
-                    } else {
-                        cancelBtn.focus();
-                    }
-                }
-            };
-            document.addEventListener('keydown', keyHandler);
+        // Delay 100 ms so the click that opened the dialog doesn't immediately close it
+        const onClickOutside = (e) => { if (!dialog.contains(e.target)) closeDialog(); };
+        setTimeout(() => document.addEventListener('click', onClickOutside), 100);
+
+        // ── Dragging ───────────────────────────────────────────────────────────
+        let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
+
+        titleBar.addEventListener('mousedown', (e) => {
+            // Do not start dragging when the click target is a button or link
+            // (covers the ✕ close button and any extra controls like Force-refresh)
+            if (e.target.closest('button, a')) return;
+            isDragging = true;
+            const rect = dialog.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+            // Snap out of CSS-transform centred positioning to absolute pixel coordinates
+            dialog.style.transform = 'none';
+            dialog.style.left = rect.left + 'px';
+            dialog.style.top  = rect.top  + 'px';
         });
-    }
 
-    /**
-     * Convenience wrapper: alert-style dialog (single OK button).
-     * @param {string} message
-     * @param {string} [title]
-     * @param {HTMLElement} [triggerButton]
-     * @returns {Promise<void>}
-     */
-    function showCustomAlert(message, title = 'Notice', triggerButton = null) {
-        return showCustomDialog(message, title, triggerButton, 'alert');
-    }
+        const onMouseMove = (e) => {
+            if (!isDragging) return;
+            dialog.style.left = (e.clientX - dragOffsetX) + 'px';
+            dialog.style.top  = (e.clientY - dragOffsetY) + 'px';
+        };
+        const onMouseUp = () => { isDragging = false; };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup',   onMouseUp);
 
-    /**
-     * Convenience wrapper: confirm-style dialog (Cancel + OK buttons).
-     * @param {string} message
-     * @param {string} [title]
-     * @param {HTMLElement} [triggerButton]
-     * @returns {Promise<boolean>}
-     */
-    function showCustomConfirm(message, title = 'Confirm', triggerButton = null) {
-        return showCustomDialog(message, title, triggerButton, 'confirm');
+        return { dialog, scrollArea, close: closeDialog, titleBarRight };
     }
 
     /**
      * Show keyboard shortcuts help dialog
      */
     function showShortcutsHelp() {
-        const existing = document.getElementById('mb-shortcuts-help');
-        if (existing) {
-            existing.remove();
-            return;
-        }
+        const result = createInfoDialog({
+            id:           'mb-shortcuts-help',
+            title:        '🎹 Keyboard Shortcuts',
+            minWidth:     '450px',
+            maxWidth:     '580px',
+            maxHeight:    '82vh',
+            borderRadius: '8px',
+            zIndex:       10000,
+        });
+        if (!result) return; // toggled closed
 
-        const helpDiv = document.createElement('div');
-        helpDiv.id = 'mb-shortcuts-help';
-        helpDiv.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 0;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-            z-index: 10000;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            min-width: 450px;
-            max-width: 580px;
-            max-height: 82vh;
-            display: flex;
-            flex-direction: column;
-        `;
-
-        // Create sticky header bar (title + close button)
-        const headerBar = document.createElement('div');
-        headerBar.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:16px 20px 12px; border-bottom:2px solid #ddd; flex-shrink:0; border-radius:8px 8px 0 0; background:#f8f8f8; position:relative;';
-
-        // Create header
-        const header = document.createElement('div');
-        header.style.cssText = 'font-weight: 600; font-size: 1.2em; color: #333;';
-        header.textContent = '🎹 Keyboard Shortcuts';
-        headerBar.appendChild(header);
-
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = '✕';
-        closeBtn.title = 'Close';
-        closeBtn.style.cssText = `
-            background: transparent;
-            border: none;
-            color: #999;
-            padding: 4px 8px;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 1.2em;
-            transition: all 0.2s;
-            line-height: 1;
-        `;
-        closeBtn.onmouseover = () => { closeBtn.style.background = '#f5f5f5'; closeBtn.style.color = '#333'; };
-        closeBtn.onmouseout  = () => { closeBtn.style.background = 'transparent'; closeBtn.style.color = '#999'; };
-        closeBtn.onclick = () => helpDiv.remove();
-        headerBar.appendChild(closeBtn);
-        helpDiv.appendChild(headerBar);
-
-        // Scrollable content area
-        const scrollArea = document.createElement('div');
-        scrollArea.style.cssText = 'overflow-y: auto; flex: 1; padding: 16px 20px;';
+        const { scrollArea } = result;
+        scrollArea.style.padding = '16px 20px';
 
         // Create shortcuts sections.
         // Configurable entries read the live setting via getShortcutDisplay() so the
@@ -4270,122 +3809,53 @@ Press Escape on that notice to cancel the auto-action.
             scrollArea.appendChild(sectionDiv);
         });
 
-        // Add note
+        // Note at the bottom of the scrollable area
         const note = document.createElement('div');
         note.style.cssText = 'margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.85em; color: #666; font-style: italic;';
         note.innerHTML = '<strong>Note:</strong> Ctrl shortcuts work everywhere, even in input fields.<br>? and / only work when not typing in input fields.';
         scrollArea.appendChild(note);
-
-        // Add close instruction text
-        const closeText = document.createElement('div');
-        closeText.textContent = 'Click outside or press Escape to close';
-        closeText.style.cssText = 'font-size: 0.85em; color: #999; text-align: center; font-style: italic; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;';
-        scrollArea.appendChild(closeText);
-
-        helpDiv.appendChild(scrollArea);
-        document.body.appendChild(helpDiv);
-
-        // Close on Escape
-        const closeOnEscape = (e) => {
-            if (e.key === 'Escape') {
-                helpDiv.remove();
-                document.removeEventListener('keydown', closeOnEscape);
-            }
-        };
-        document.addEventListener('keydown', closeOnEscape);
-
-        // Close on click outside (after a short delay to prevent immediate close)
-        setTimeout(() => {
-            const closeOnClickOutside = (e) => {
-                if (!helpDiv.contains(e.target)) {
-                    helpDiv.remove();
-                    document.removeEventListener('click', closeOnClickOutside);
-                }
-            };
-            document.addEventListener('click', closeOnClickOutside);
-        }, 100);
 
         Lib.debug('shortcuts', 'Keyboard shortcuts help displayed');
     }
 
     /**
      * Show application help dialog
-     * Displays the full feature overview from APP_HELP_TEXT in a scrollable popup
+     * Displays the full feature overview (fetched from GitHub) in a scrollable popup.
+     * Shows a loading spinner while fetching; uses GM cache (TTL 1 h) to avoid redundant
+     * network requests.  Falls back to a Retry button if both fetch and cache miss.
      */
-    function showAppHelp() {
-        const existing = document.getElementById('mb-app-help-dialog');
-        if (existing) {
-            existing.remove();
-            return;
-        }
-
-        const dialog = document.createElement('div');
-        dialog.id = 'mb-app-help-dialog';
-        dialog.style.cssText = `
-            position: fixed;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 0;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.25);
-            z-index: 10002;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            width: min(720px, 94vw);
-            max-height: 82vh;
-            display: flex;
-            flex-direction: column;
+    async function showAppHelp() {
+        // Build the Force-refresh link first so it can be injected as a titleBarExtra
+        const refreshLink = document.createElement('a');
+        refreshLink.textContent = '🔄 Force refresh';
+        refreshLink.title = 'Bypass cache and download the latest help text from GitHub';
+        refreshLink.style.cssText = `
+            font-size: 0.82em; font-weight: 600; color: #0066cc;
+            cursor: pointer; text-decoration: none;
+            user-select: none; white-space: nowrap;
         `;
 
-        // Draggable title bar
-        const titleBar = document.createElement('div');
-        titleBar.style.cssText = `
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 20px 12px;
-            border-bottom: 2px solid #ddd;
-            cursor: move;
-            user-select: none;
-            flex-shrink: 0;
-            border-radius: 10px 10px 0 0;
-            background: #f8f8f8;
-        `;
+        const result = createInfoDialog({
+            id:             'mb-app-help-dialog',
+            title:          '❓ Application Help & Feature Overview',
+            width:          'min(720px, 94vw)',
+            maxHeight:      '82vh',
+            borderRadius:   '10px',
+            zIndex:         10002,
+            centerV:        false,        // position below page header at top:60px
+            titleBarExtras: [refreshLink],
+        });
+        if (!result) return; // toggled closed
 
-        const titleText = document.createElement('span');
-        titleText.textContent = '❓ Application Help & Feature Overview';
-        titleText.style.cssText = 'font-weight: 700; font-size: 1.15em; color: #222;';
-        titleBar.appendChild(titleText);
+        const { dialog, scrollArea: contentArea, close: closeDialog } = result;
+        Object.assign(contentArea.style, {
+            padding:    '20px 24px',
+            fontSize:   Lib.libPrefs.lib_content_font_size,
+            fontFamily: Lib.libPrefs.lib_content_font_family,
+            lineHeight: '1.65',
+            color:      '#333',
+        });
 
-        const closeX = document.createElement('button');
-        closeX.textContent = '✕';
-        closeX.title = 'Close (Escape)';
-        closeX.style.cssText = `
-            background: none;
-            border: none;
-            font-size: 1.2em;
-            cursor: pointer;
-            color: #666;
-            padding: 0 4px;
-            line-height: 1;
-        `;
-        titleBar.appendChild(closeX);
-        dialog.appendChild(titleBar);
-
-        // Scrollable content area
-        const contentArea = document.createElement('div');
-        contentArea.style.cssText = `
-            overflow-y: auto;
-            padding: 20px 24px;
-            flex: 1;
-            font-size: 0.92em;
-            line-height: 1.65;
-            color: #333;
-        `;
-
-        // Render APP_HELP_TEXT as HTML with basic formatting
         const pre = document.createElement('pre');
         pre.style.cssText = `
             margin: 0;
@@ -4395,82 +3865,80 @@ Press Escape on that notice to cancel the auto-action.
             font-size: 0.97em;
             line-height: 1.65;
         `;
-        pre.textContent = typeof APP_HELP_TEXT !== 'undefined' ? APP_HELP_TEXT : '(Help text not available)';
-        contentArea.appendChild(pre);
-        dialog.appendChild(contentArea);
 
-        // Footer with Close button
-        const footer = document.createElement('div');
-        footer.style.cssText = `
-            display: flex;
-            justify-content: flex-end;
-            padding: 12px 20px;
-            border-top: 1px solid #eee;
-            flex-shrink: 0;
-            background: #f8f8f8;
-            border-radius: 0 0 10px 10px;
-        `;
+        // Loading indicator shown while fetch is in progress
+        const loadingEl = document.createElement('div');
+        loadingEl.style.cssText = 'text-align:center; padding: 40px 0; color: #888; font-size: 1em;';
+        loadingEl.textContent = '⏳ Loading help text…';
+        contentArea.appendChild(loadingEl);
 
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
-        closeBtn.style.cssText = `
-            padding: 8px 24px;
-            background-color: #607D8B;
-            color: white;
-            border: 1px solid #546E7A;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        `;
-        closeBtn.onmouseover = () => { closeBtn.style.backgroundColor = '#546E7A'; };
-        closeBtn.onmouseout = () => { closeBtn.style.backgroundColor = '#607D8B'; };
-        footer.appendChild(closeBtn);
-        dialog.appendChild(footer);
+        // ── Fetch help text (with cache) and render ───────────────────────────
+        /**
+         * Render the fetched text or an error/retry UI inside contentArea.
+         * @param {boolean} [forceRefresh=false] - When true, bypass cache and fetch fresh from GitHub.
+         */
+        async function loadAndRender(forceRefresh = false) {
+            loadingEl.textContent = forceRefresh ? '⏳ Force-fetching latest help text…' : '⏳ Loading help text…';
+            loadingEl.style.color = '#888';
 
-        document.body.appendChild(dialog);
+            Lib.info('ui', `Application help: fetching from ${REMOTE_HELP_URL} (forceRefresh=${forceRefresh})`);
 
-        const closeDialog = () => {
-            dialog.remove();
-            document.removeEventListener('keydown', keyHandler);
-        };
+            const { data, fromCache, error } = await Lib.fetchCachedText(REMOTE_HELP_URL, CACHE_KEY_HELP, REMOTE_CACHE_TTL_MS, forceRefresh);
 
-        closeBtn.onclick = closeDialog;
-        closeX.onclick = closeDialog;
+            // Remove loading indicator and any existing content
+            if (contentArea.contains(loadingEl)) contentArea.removeChild(loadingEl);
+            if (contentArea.contains(pre))       contentArea.removeChild(pre);
 
-        const keyHandler = (e) => {
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                closeDialog();
+            if (data) {
+                pre.textContent = data;
+                if (fromCache && error) {
+                    // Stale cache — add a subtle warning banner
+                    const warn = document.createElement('div');
+                    warn.style.cssText = 'background:#fff3cd; border:1px solid #ffc107; border-radius:4px; padding:6px 10px; margin-bottom:12px; font-size:0.88em; color:#856404;';
+                    warn.textContent = `⚠️ ${error} — content may be outdated.`;
+                    contentArea.appendChild(warn);
+                }
+                contentArea.appendChild(pre);
+                const sourceLabel = fromCache ? '📦 cache' : '🌐 network (fresh)';
+                Lib.info('ui', `Application help displayed: ${data.length} bytes, source=${sourceLabel}${error ? ' (stale, ' + error + ')' : ''}`);
+            } else {
+                // Both fetch and cache failed — show error with Retry button
+                const errEl = document.createElement('div');
+                errEl.style.cssText = 'text-align:center; padding:30px; color:#c62828;';
+                errEl.innerHTML = `<div style="font-size:1.1em; margin-bottom:12px;">⚠️ Could not load help text</div>
+<div style="color:#555; margin-bottom:18px; font-size:0.9em;">${error}</div>`;
+                const retryBtn = document.createElement('button');
+                retryBtn.textContent = '↺ Retry';
+                retryBtn.style.cssText = 'padding:7px 20px; border-radius:6px; border:1px solid #888; cursor:pointer; background:#eee; font-size:0.95em;';
+                retryBtn.onclick = () => {
+                    contentArea.innerHTML = '';
+                    contentArea.appendChild(loadingEl);
+                    loadAndRender();
+                };
+                errEl.appendChild(retryBtn);
+                contentArea.appendChild(errEl);
+                Lib.warn('ui', `Application help unavailable: ${error}`);
             }
-        };
-        document.addEventListener('keydown', keyHandler);
+        }
 
-        // Make draggable
-        let isDragging = false;
-        let dragOffsetX = 0, dragOffsetY = 0;
-        titleBar.addEventListener('mousedown', (e) => {
-            if (e.target === closeX) return;
-            isDragging = true;
-            const rect = dialog.getBoundingClientRect();
-            dragOffsetX = e.clientX - rect.left;
-            dragOffsetY = e.clientY - rect.top;
-            dialog.style.transform = 'none';
-            dialog.style.left = rect.left + 'px';
-            dialog.style.top = rect.top + 'px';
+        // Wire Force refresh link
+        refreshLink.addEventListener('click', async () => {
+            refreshLink.textContent = '⏳ Refreshing…';
+            refreshLink.style.pointerEvents = 'none';
+            refreshLink.style.color = '#888';
+            contentArea.innerHTML = '';
+            contentArea.appendChild(loadingEl);
+            await loadAndRender(true);
+            refreshLink.textContent = '✅ Refreshed';
+            setTimeout(() => {
+                refreshLink.textContent = '🔄 Force refresh';
+                refreshLink.style.pointerEvents = '';
+                refreshLink.style.color = '#0066cc';
+            }, 2500);
         });
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            dialog.style.left = (e.clientX - dragOffsetX) + 'px';
-            dialog.style.top = (e.clientY - dragOffsetY) + 'px';
-        });
-        document.addEventListener('mouseup', () => { isDragging = false; });
 
-        // Focus Close button for immediate keyboard access
-        setTimeout(() => closeBtn.focus(), 0);
-
-        Lib.debug('ui', 'Application help dialog displayed');
+        Lib.info('ui', 'Application help dialog opened');
+        loadAndRender();
     }
 
     /**
@@ -4965,7 +4433,7 @@ Press Escape on that notice to cancel the auto-action.
         }
 
         const statsBtn = document.createElement('button');
-        statsBtn.innerHTML = '<span>📊 Stat<span style="text-decoration:underline">i</span>stics</span>';
+        statsBtn.innerHTML = makeButtonHTML('Statistics', 'i', '📊');
         statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then I)`;
         statsBtn.style.cssText = uiActionBtnBaseCSS();
         statsBtn.type = 'button';
@@ -5065,7 +4533,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // Create button
         const densityBtn = document.createElement('button');
-        densityBtn.innerHTML = '<span>📏 <span style="text-decoration:underline">D</span>ensity</span>';
+        densityBtn.innerHTML = makeButtonHTML('Density', 'D', '📏');
         densityBtn.title = `Change table density (spacing) (${getPrefixDisplay()}, then D)`;
         densityBtn.style.cssText = uiActionBtnBaseCSS();
         densityBtn.type = 'button';
@@ -5434,12 +4902,12 @@ Press Escape on that notice to cancel the auto-action.
         if (!resizeBtn) return;
 
         if (isResized) {
-            resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>estore</span>';
+            resizeBtn.innerHTML = makeButtonHTML('Restore', 'R', '↔️');
             resizeBtn.title = `Restore original column widths (click to toggle / ${getPrefixDisplay()}, then R)`;
             resizeBtn.style.background = '#e8f5e9';
             resizeBtn.style.borderColor = '#4CAF50';
         } else {
-            resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>esize</span>';
+            resizeBtn.innerHTML = makeButtonHTML('Resize', 'R', '↔️');
             resizeBtn.title = `Auto-resize columns to optimal width (click to toggle / ${getPrefixDisplay()}, then R)`;
             resizeBtn.style.background = '';
             resizeBtn.style.borderColor = '';
@@ -5839,7 +5307,7 @@ Press Escape on that notice to cancel the auto-action.
 
         const resizeBtn = document.createElement('button');
         resizeBtn.id = 'mb-resize-btn';
-        resizeBtn.innerHTML = '<span>↔️ <span style="text-decoration:underline">R</span>esize</span>';
+        resizeBtn.innerHTML = makeButtonHTML('Resize', 'R', '↔️');
         resizeBtn.title = `Auto-resize columns to optimal width (${getPrefixDisplay()}, then R)`;
         resizeBtn.style.cssText = uiActionBtnBaseCSS();
         resizeBtn.type = 'button';
@@ -6049,7 +5517,7 @@ Press Escape on that notice to cancel the auto-action.
                           document.querySelector('#content h1') || // Often catches search result headers
                           document.querySelector('h1');
 
-    if (pageType) Lib.prefix = `[VZ-ShowAllEntities: ${pageType}]`;
+    if (pageType) Lib.prefix = `[VZ-${SCRIPT_BASE_NAME}: ${pageType}]`;
     Lib.debug('init', 'Initializing script for path:', path);
 
     if (!pageType || !headerContainer) {
@@ -6107,18 +5575,18 @@ Press Escape on that notice to cancel the auto-action.
         if (conf.label.includes('Show all')) {
             // Extract entity types from label (e.g., "Show all Releases for ReleaseGroup")
             eb.title = `Fetch all the table data from the MusicBrainz backend database`;
-        } else if (conf.label.includes('Official artist RGs')) {
+        } else if (conf.label.includes('Official RGs')) {
             eb.title = 'Fetch all official artist release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Non-official artist RGs')) {
+        } else if (conf.label.includes('Non-official RGs')) {
             eb.title = 'Fetch all non-official artist release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Official various artists RGs')) {
+        } else if (conf.label.includes('Official VA RGs')) {
             eb.title = 'Fetch all official various artists release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Non-official various artists RGs')) {
+        } else if (conf.label.includes('Non-official VA RGs')) {
             eb.title = 'Fetch all non-official various artists release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Official artist releases')) {
+        } else if (conf.label.includes('Official releases')) {
             eb.title = 'Fetch all official artist releases from the MusicBrainz backend database';
-        } else if (conf.label.includes('Various artist releases')) {
-            eb.title = 'Fetch all various artist releases from the MusicBrainz backend database';
+        } else if (conf.label.includes('VA releases')) {
+            eb.title = 'Fetch all various artists releases from the MusicBrainz backend database';
         }
 
         // Append Ctrl-M + N prefix-mode shortcut hint to tooltip (buttons 1–9 only)
@@ -6143,7 +5611,7 @@ Press Escape on that notice to cancel the auto-action.
     // Add Save to Disk button
     const saveToDiskBtn = document.createElement('button');
     saveToDiskBtn.id = 'mb-save-to-disk-btn';
-    saveToDiskBtn.innerHTML = '<span>💾 <span style="text-decoration:underline">S</span>ave to Disk</span>';
+    saveToDiskBtn.innerHTML = makeButtonHTML('Save to Disk', 'S', '💾');
     const _saveStyle = uiSaveBtnCSS();
     saveToDiskBtn.style.cssText = _saveStyle.css;
     saveToDiskBtn.onmouseover = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.hoverBg; };
@@ -6160,7 +5628,7 @@ Press Escape on that notice to cancel the auto-action.
     // Add Load from Disk button with hidden file input
     const loadFromDiskBtn = document.createElement('button');
     loadFromDiskBtn.id = 'mb-load-from-disk-btn';
-    loadFromDiskBtn.innerHTML = '<span>📂 <span style="text-decoration:underline">L</span>oad from Disk</span>';
+    loadFromDiskBtn.innerHTML = makeButtonHTML('Load from Disk', 'L', '📂');
     const _loadStyle = uiLoadBtnCSS();
     loadFromDiskBtn.style.cssText = _loadStyle.css;
     loadFromDiskBtn.onmouseover = () => { loadFromDiskBtn.style.backgroundColor = _loadStyle.hoverBg; };
@@ -6380,7 +5848,7 @@ Press Escape on that notice to cancel the auto-action.
 
     const stopBtn = document.createElement('button');
     stopBtn.id = 'mb-stop-btn';
-    stopBtn.innerHTML = '<span>St<span style="text-decoration:underline">o</span>p</span>';
+    stopBtn.innerHTML = makeButtonHTML('Stop', 'o');
     stopBtn.type = 'button';
     stopBtn.style.cssText = uiStopBtnCSS();
     stopBtn.title = 'Stop the current data fetching process from the MusicBrainz backend database';
@@ -6408,7 +5876,7 @@ Press Escape on that notice to cancel the auto-action.
 
     const filterInput = document.createElement('input');
     filterInput.id = 'mb-global-filter-input';
-    filterInput.placeholder = `Global Filter...`;
+    filterInput.placeholder = `🔍 Global Filter...`;
     filterInput.title = 'Enter global filter string';
     filterInput.style.cssText = uiGlobalFilterInputCSS();
 
@@ -6538,7 +6006,7 @@ Press Escape on that notice to cancel the auto-action.
     unhighlightAllBtn.id = 'mb-toggle-filter-highlight-btn';
     unhighlightAllBtn.textContent = '🎨 Toggle highlighting';
     unhighlightAllBtn.style.cssText = `${uiFilterBarBtnCSS()} transition:background-color 0.3s; display:none;`;
-    unhighlightAllBtn.title = 'Toggle filter highlighting on/off (global filter and column filters)';
+    unhighlightAllBtn.title = 'Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)';
 
     /**
      * Update filter highlight button background color based on highlighting state
@@ -6560,9 +6028,12 @@ Press Escape on that notice to cancel the auto-action.
 
     unhighlightAllBtn.onclick = () => {
         if (filterHighlightEnabled) {
-            // Currently highlighted - save state and remove filter highlights only
+            // Currently highlighted - save state and remove filter/subtable highlights
             saveFilterHighlightState();
             document.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
+                .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+            // Also remove subtable-filter highlights
+            document.querySelectorAll('.mb-subtable-filter-highlight')
                 .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
 
             filterHighlightEnabled = false;
@@ -6618,11 +6089,19 @@ Press Escape on that notice to cancel the auto-action.
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.id = 'mb-clear-all-filters-btn';
     clearAllFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearAllFiltersBtn.title = 'Clear both global filter and all column filters';
+    clearAllFiltersBtn.title = 'Clear global/sub-table filters and ALL column filters in all sub-tables';
     clearAllFiltersBtn.onclick = () => {
         // Clear global filter
         filterInput.value = '';
         filterClear.click(); // This will trigger the clear handler
+
+        // Clear all sub-table specific filter fields
+        document.querySelectorAll('.mb-subtable-filter-container input[type="text"]').forEach(input => {
+            if (input.value) {
+                input.value = '';
+                input.dispatchEvent(new Event('input', { bubbles: false }));
+            }
+        });
 
         // Also call the main clearAllFilters function
         clearAllFilters();
@@ -6827,6 +6306,42 @@ Press Escape on that notice to cancel the auto-action.
         .mb-col-filter-row th {
             padding: 2px 4px !important;
         }
+        /* Sub-table specific filter container */
+        .mb-subtable-filter-container {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .mb-subtable-filter-container.visible {
+            display: inline-flex;
+        }
+        .mb-subtable-filter-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .mb-subtable-filter-toggle-icon {
+            cursor: pointer;
+            font-size: 0.9em;
+            vertical-align: middle;
+            margin-left: 6px;
+            user-select: none;
+            opacity: 0.7;
+            transition: opacity 0.15s;
+        }
+        .mb-subtable-filter-toggle-icon:hover {
+            opacity: 1.0;
+        }
+        .mb-subtable-filter-toggle-icon.active {
+            opacity: 1.0;
+            filter: drop-shadow(0 0 2px rgba(0,100,255,0.5));
+        }
+        .mb-subtable-filter-highlight {
+            background-color: #90ee90;
+            color: #000;
+        }
     `;
     document.head.appendChild(style);
 
@@ -6848,7 +6363,7 @@ Press Escape on that notice to cancel the auto-action.
     // Show deferred "Page Reloaded" dialog now that action buttons are in the DOM
     if (reloadFlag) {
         const firstActionBtn = allActionButtons.length > 0 ? allActionButtons[0] : null;
-        showCustomAlert(
+        Lib.showCustomAlert(
             'The underlying MusicBrainz page has been reloaded to ensure filter stability. Please click the desired "Show all" button again to start the process.',
             '⚠️ Page Reloaded',
             firstActionBtn
@@ -6992,7 +6507,7 @@ Press Escape on that notice to cancel the auto-action.
             </div>
 
             <div style="display:flex; gap:12px;">
-                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span style="text-decoration:underline">L</span>oad Data</button>
+                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">${makeButtonHTML('Load Data', 'L')}</button>
                 <button id="sa-load-cancel" style="flex:1; padding:10px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancel</button>
             </div>
         `;
@@ -7358,8 +6873,8 @@ Press Escape on that notice to cancel the auto-action.
      * @param {number} filteredCount - Number of rows currently visible after filtering
      * @param {number} totalCount - Total number of rows in the table
      */
-    function updateH2Count(filteredCount, totalCount) {
-        Lib.debug('render', `Starting updateH2Count: filtered=${filteredCount}, total=${totalCount}`);
+    function updateH2Count(filteredCount, totalCount, absoluteTotal = null) {
+        Lib.debug('render', `Starting updateH2Count: filtered=${filteredCount}, total=${totalCount}, absoluteTotal=${absoluteTotal}`);
 
         const table = document.querySelector('table.tbl');
         if (!table) {
@@ -7429,7 +6944,13 @@ Press Escape on that notice to cancel the auto-action.
 
             const span = document.createElement('span');
             span.className = 'mb-row-count-stat';
-            const countText = (filteredCount === totalCount) ? `(${totalCount})` : `(${filteredCount} of ${totalCount})`;
+            let countText;
+            if (absoluteTotal !== null && absoluteTotal !== totalCount) {
+                // 3-tier: (locally of globally)/absoluteTotal
+                countText = `(${filteredCount} of ${totalCount})/${absoluteTotal}`;
+            } else {
+                countText = (filteredCount === totalCount) ? `(${totalCount})` : `(${filteredCount} of ${totalCount})`;
+            }
             span.textContent = countText;
 
             // Positioning Logic: Ensure the row count stays immediately after header text, before Master Toggle or Global Filter
@@ -7954,6 +7475,13 @@ Press Escape on that notice to cancel the auto-action.
                 }
             }
             updateH2Count(totalFiltered, totalAbsolute);
+
+            // Re-apply any active sub-table filters after global/column filter re-renders rows
+            reapplyAllSubTableFilters();
+
+            // After subtable filters ran, recalculate h2 count to reflect the
+            // 3-tier (locally / globally / absolute-total) format when needed.
+            updateH2CountFromSubtables();
         } else {
             const totalAbsolute = allRows.length;
             matchCtx.colFilters = getColFilters(document.querySelector('table.tbl'), isCaseSensitive, isRegExp);
@@ -7993,7 +7521,17 @@ Press Escape on that notice to cancel the auto-action.
             // On single-table pages: show all filter info
             if (activeDefinition.tableMode === 'multi') {
                 const globalFilterInfo = globalQuery ? ` [global:"${globalQuery}"]` : '';
-                filterStatusDisplay.textContent = `✓ Global filter${globalFilterInfo}`;
+
+                // Build a label that reflects the active filter modes
+                const activeModeParts = [];
+                if (isRegExp)        activeModeParts.push('Regexp');
+                if (isCaseSensitive) activeModeParts.push('Case-sensitive');
+                if (isExclude)       activeModeParts.push('Exclude');
+                const modeLabel = activeModeParts.length > 0
+                    ? activeModeParts.join(' ') + ' filter'
+                    : 'Global filter';
+
+                filterStatusDisplay.textContent = `✓ ${modeLabel}${globalFilterInfo}`;
                 filterStatusDisplay.style.color = 'green';
 
                 // Update each sub-table filter status display with its specific info
@@ -8028,8 +7566,15 @@ Press Escape on that notice to cancel the auto-action.
                     }
                 });
             } else {
-                // Single table mode: show all filter info
-                filterStatusDisplay.textContent = `✓ Filtered ${rowCount} rows in ${filterDuration}ms${filterInfo}`;
+                // Single table mode: show modeLabel and all filter info
+                const singleActiveModeParts = [];
+                if (isRegExp)        singleActiveModeParts.push('Regexp');
+                if (isCaseSensitive) singleActiveModeParts.push('Case-sensitive');
+                if (isExclude)       singleActiveModeParts.push('Exclude');
+                const singleModeLabel = singleActiveModeParts.length > 0
+                    ? singleActiveModeParts.join(' ') + ' filter'
+                    : 'Global filter';
+                filterStatusDisplay.textContent = `✓ ${singleModeLabel}: ${rowCount} rows in ${filterDuration}ms${filterInfo}`;
                 filterStatusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
             }
         }
@@ -8467,7 +8012,7 @@ Press Escape on that notice to cancel the auto-action.
 
         // If page count is above threshold, show modal
         if (maxPage > maxThreshold) {
-            const proceedConfirmed = await showCustomConfirm(
+            const proceedConfirmed = await Lib.showCustomConfirm(
                 `Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.\n\nProceed?`,
                 '⚠️ High Page Count',
                 activeBtn
@@ -8974,7 +8519,7 @@ Press Escape on that notice to cancel the auto-action.
             // before rendering to let the user bail out of a potentially slow operation.
             const renderWarnThreshold = Lib.settings.sa_render_warning_threshold ?? 10000;
             if (renderWarnThreshold > 0 && totalRows > renderWarnThreshold) {
-                const proceed = await showCustomConfirm(
+                const proceed = await Lib.showCustomConfirm(
                     `You are about to render ${totalRows.toLocaleString()} rows into the page.\n\n` +
                     `This is above your configured warning threshold of ${renderWarnThreshold.toLocaleString()} rows ` +
                     `and may cause the browser to become slow or unresponsive during rendering.\n\n` +
@@ -9251,6 +8796,473 @@ Press Escape on that notice to cancel the auto-action.
     }
 
     /**
+     * Creates and returns a per-subtable filter container (toggle icon + filter UI).
+     *
+     * The returned object exposes:
+     *   - toggleIcon  : the 🔍 span that the caller inserts after mb-row-count-stat
+     *   - container   : the filter UI span (.mb-subtable-filter-container) that the caller appends
+     *
+     * The toggle icon starts in "off" state; clicking it shows/hides the container and
+     * wires up keyboard handling.  Each call produces entirely independent DOM nodes so
+     * that multiple subtables never share state.
+     *
+     * @param {string}          categoryName  - Human-readable subtable name (e.g. "Album")
+     * @param {HTMLTableElement} table         - The <table> this filter applies to
+     * @returns {{ toggleIcon: HTMLElement, container: HTMLElement }}
+     */
+    function createSubTableFilterContainer(categoryName, table) {
+        // Sanitize categoryName to a safe id fragment (strip non-alphanumeric)
+        const safeId = categoryName.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const pfx    = `mb-stf-${safeId}`;
+
+        // ── Toggle icon (🔍) ──────────────────────────────────────────────────
+        const toggleIcon = document.createElement('span');
+        toggleIcon.className = 'mb-subtable-filter-toggle-icon';
+        toggleIcon.textContent = '🔍';
+        toggleIcon.title = 'Toggle filter elements on/off';
+        toggleIcon.setAttribute('role', 'button');
+        toggleIcon.setAttribute('aria-label', `Toggle sub-table filter for "${categoryName}"`);
+
+        // ── Filter input wrapper ───────────────────────────────────────────────
+        const filterWrapper = document.createElement('span');
+        filterWrapper.className = 'mb-subtable-filter-wrapper';
+
+        const filterInput = document.createElement('input');
+        filterInput.id = `${pfx}-input`;
+        filterInput.type = 'text';
+        filterInput.placeholder = `Filter "${categoryName}"…`;
+        filterInput.title = `Filter rows in the "${categoryName}" sub-table`;
+        filterInput.style.cssText = 'font-size:1em; padding:2px 20px 2px 6px; border:2px solid rgb(204,204,204); border-radius:3px; width:320px; height:24px; box-sizing:border-box; transition:box-shadow 0.2s;';
+
+        const clearBtn = document.createElement('span');
+        clearBtn.id = `${pfx}-clear`;
+        clearBtn.title = `Clear filter for "${categoryName}"`;
+        clearBtn.textContent = '✕';
+        clearBtn.style.cssText = 'position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:0.6em; color:rgb(153,153,153); user-select:none;';
+
+        filterWrapper.appendChild(filterInput);
+        filterWrapper.appendChild(clearBtn);
+
+        // ── Case-sensitive checkbox ───────────────────────────────────────────
+        const caseCheckbox = document.createElement('input');
+        caseCheckbox.id = `${pfx}-case-checkbox`;
+        caseCheckbox.type = 'checkbox';
+        caseCheckbox.style.cssText = 'margin-right:2px; vertical-align:middle;';
+
+        const caseLabel = document.createElement('label');
+        caseLabel.id = `${pfx}-case-label`;
+        caseLabel.htmlFor = caseCheckbox.id;
+        caseLabel.title = 'Case Sensitive Filtering';
+        caseLabel.style.cssText = 'font-size:0.8em; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none; font-weight:normal; height:24px;';
+        caseLabel.appendChild(caseCheckbox);
+        caseLabel.appendChild(document.createTextNode('Cc'));
+
+        // ── RegExp checkbox ───────────────────────────────────────────────────
+        const rxCheckbox = document.createElement('input');
+        rxCheckbox.id = `${pfx}-rx-checkbox`;
+        rxCheckbox.type = 'checkbox';
+        rxCheckbox.style.cssText = 'margin-right:2px; vertical-align:middle;';
+
+        const rxLabel = document.createElement('label');
+        rxLabel.id = `${pfx}-rx-label`;
+        rxLabel.htmlFor = rxCheckbox.id;
+        rxLabel.title = 'RegExp Filtering';
+        rxLabel.style.cssText = 'font-size:0.8em; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none; font-weight:normal; height:24px;';
+        rxLabel.appendChild(rxCheckbox);
+        rxLabel.appendChild(document.createTextNode('Rx'));
+
+        // ── Exclude checkbox ──────────────────────────────────────────────────
+        const exCheckbox = document.createElement('input');
+        exCheckbox.id = `${pfx}-ex-checkbox`;
+        exCheckbox.type = 'checkbox';
+        exCheckbox.style.cssText = 'margin-right:2px; vertical-align:middle;';
+
+        const exLabel = document.createElement('label');
+        exLabel.id = `${pfx}-ex-label`;
+        exLabel.htmlFor = exCheckbox.id;
+        exLabel.title = `Exclude matches (Filter for "${categoryName}")`;
+        exLabel.style.cssText = 'font-size:0.8em; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none; font-weight:normal; height:24px;';
+        exLabel.appendChild(exCheckbox);
+        exLabel.appendChild(document.createTextNode('Ex'));
+
+        // ── Highlight toggle button ───────────────────────────────────────────
+        const highlightBtn = document.createElement('button');
+        highlightBtn.id = `${pfx}-toggle-filter-highlight-btn`;
+        highlightBtn.type = 'button';
+        highlightBtn.title = 'Toggle filter highlighting on/off (sub-table filter and column filters)';
+        highlightBtn.textContent = '🎨 Toggle highlighting';
+        highlightBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; border-radius:4px; background:rgb(240,240,240); border:1px solid rgb(204,204,204); cursor:pointer; vertical-align:middle; transition:background-color 0.3s; display:inline-block;';
+
+        // ── Container ─────────────────────────────────────────────────────────
+        const container = document.createElement('span');
+        container.className = 'mb-subtable-filter-container';
+        container.dataset.categoryName = categoryName;
+        container.appendChild(filterWrapper);
+        container.appendChild(caseLabel);
+        container.appendChild(rxLabel);
+        container.appendChild(exLabel);
+        container.appendChild(highlightBtn);
+
+        // ── State ─────────────────────────────────────────────────────────────
+        let highlightEnabled = true;
+
+        /**
+         * Updates the border/shadow of the filter input to reflect active state.
+         */
+        function updateInputStyle() {
+            filterInput.style.boxShadow  = filterInput.value ? '0 0 2px 2px rgba(0,128,0,0.6)' : '';
+            filterInput.style.borderColor = filterInput.value ? 'rgb(0,128,0)' : 'rgb(204,204,204)';
+        }
+
+        /**
+         * Updates the row-count badge in the h3 preceding this subtable.
+         *
+         * Three display modes:
+         *   No active filter  → (total)
+         *   Global filter only → (globally_filtered of total)
+         *   Subtable filter   → (locally_filtered of globally_filtered)/total
+         *
+         * "total" is the unfiltered row count stored in table.dataset.mbTotalRows at
+         * initial render time and never overwritten by subsequent filter passes.
+         * "globally_filtered" (denominator) = visible rows + rows hidden only by the
+         *   subtable filter (data-mb-stf-hidden).
+         * "locally_filtered" (numerator) = rows currently visible (not hidden by anything).
+         */
+        function updateSubTableRowCount() {
+            const h3 = table.previousElementSibling;
+            if (!h3) return;
+            const countStat = h3.querySelector('.mb-row-count-stat');
+            if (!countStat) return;
+
+            const allTbodyRows = Array.from(table.querySelectorAll('tbody tr'));
+
+            // Total rows in unfiltered subtable (stored at initial render)
+            const total = parseInt(table.dataset.mbTotalRows || '0', 10) || allTbodyRows.length;
+
+            // Denominator: rows visible before the subtable filter ran
+            // = currently visible + rows hidden only by this subtable filter
+            const denominator = allTbodyRows.filter(r =>
+                r.style.display !== 'none' || r.dataset.mbStfHidden
+            ).length;
+
+            // Numerator: rows currently visible (passes all filters)
+            const visible = allTbodyRows.filter(r => r.style.display !== 'none').length;
+
+            if (filterInput.value) {
+                // Subtable filter active: (locally of globally)/total
+                // When globally_filtered already equals total, omit the /total suffix
+                // to avoid redundant information (mirrors the h3 initial-render behaviour).
+                if (denominator === total) {
+                    countStat.textContent = `(${visible} of ${denominator})`;
+                } else {
+                    countStat.textContent = `(${visible} of ${denominator})/${total}`;
+                }
+            } else {
+                // No subtable filter active: (globally_filtered of total) or plain (total)
+                countStat.textContent = (denominator === total) ? `(${denominator})` : `(${denominator} of ${total})`;
+            }
+        }
+
+        /**
+         * Runs the subtable-specific filter against the currently visible rows
+         * of the associated table.  Rows that pass the filter are shown; those
+         * that fail are hidden.  Active filter-string matches are highlighted
+         * with the .mb-subtable-filter-highlight class.
+         */
+        function applySubFilter() {
+            const raw     = filterInput.value;
+            const useCase = caseCheckbox.checked;
+            const useRx   = rxCheckbox.checked;
+            const useEx   = exCheckbox.checked;
+
+            updateInputStyle();
+
+            if (!table) return;
+
+            // ── Step 1: Always restore rows that were hidden by a PREVIOUS subtable
+            //    filter run.  This is essential when the user edits (or deletes chars
+            //    from) the filter string: rows hidden by the old filter must be
+            //    re-evaluated against the new string.
+            //    We only restore rows that carry our own stf-hidden marker; rows
+            //    hidden by the global / column filters (no marker) are untouched.
+            table.querySelectorAll('tbody tr[data-mb-stf-hidden]').forEach(row => {
+                row.style.display = '';
+                delete row.dataset.mbStfHidden;
+            });
+
+            // ── Step 2: Always clear existing subtable highlights (all rows)
+            table.querySelectorAll('.mb-subtable-filter-highlight').forEach(n => {
+                n.replaceWith(document.createTextNode(n.textContent));
+            });
+
+            // Nothing to filter — we already restored rows above, so just return.
+            if (!raw) {
+                updateSubTableRowCount();
+                return;
+            }
+
+            // ── Step 3: Build matcher regex ───────────────────────────────────
+            let regex = null;
+            if (useRx) {
+                try {
+                    regex = new RegExp(`(${raw})`, useCase ? 'g' : 'gi');
+                    filterInput.style.borderColor = 'rgb(0,128,0)';
+                } catch (e) {
+                    filterInput.style.borderColor = 'red';
+                    return; // Invalid regexp – abort without hiding any rows
+                }
+            } else {
+                regex = new RegExp(`(${raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, useCase ? 'g' : 'gi');
+            }
+
+            const query = (useCase || useRx) ? raw : raw.toLowerCase();
+
+            // ── Step 4: Evaluate every row that is currently visible (i.e. not
+            //    hidden by the global / column filter — those rows have no stf-hidden
+            //    marker and their display is already 'none' from the outer filter).
+            Array.from(table.querySelectorAll('tbody tr')).forEach(row => {
+                // Skip rows hidden by global/column filter (they have no stf-hidden
+                // marker but their display is 'none').
+                if (row.style.display === 'none') return;
+
+                // ── Test the row ───────────────────────────────────────────────
+                let matchFound = false;
+                if (useRx) {
+                    try {
+                        matchFound = Array.from(row.cells).some(cell =>
+                            new RegExp(raw, useCase ? '' : 'i').test(cell.textContent || '')
+                        );
+                    } catch (e) {
+                        matchFound = false;
+                    }
+                } else {
+                    const text = Array.from(row.cells).map(c => c.textContent || '').join('\t');
+                    matchFound = useCase ? text.includes(query) : text.toLowerCase().includes(query);
+                }
+
+                const show = useEx ? !matchFound : matchFound;
+
+                if (!show) {
+                    // Mark and hide — our own marker distinguishes this from global/column hiding
+                    row.dataset.mbStfHidden = '1';
+                    row.style.display = 'none';
+                } else {
+                    // Row passes: apply highlight if enabled and not in exclude mode
+                    if (highlightEnabled && !useEx) {
+                        row.querySelectorAll('td').forEach(td => {
+                            // Merge any adjacent text-node fragments that were left by a
+                            // previous highlight cycle (each cleared span is replaced with a
+                            // new text node, splitting e.g. "band" into "b"+"and").
+                            // Without this, a multi-character pattern never matches any single
+                            // fragment and highlighting silently disappears after the first char.
+                            td.normalize();
+
+                            // Collect text nodes first (before mutating the DOM) to
+                            // avoid invalidating the TreeWalker mid-traversal.
+                            const walker = document.createTreeWalker(td, NodeFilter.SHOW_TEXT, {
+                                acceptNode: (n) => {
+                                    const tag = n.parentNode?.tagName?.toLowerCase();
+                                    return (tag === 'script' || tag === 'style')
+                                        ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+                                }
+                            }, false);
+                            let node;
+                            const hits = [];
+                            while ((node = walker.nextNode())) {
+                                let match = false;
+                                if (useRx) {
+                                    try { match = new RegExp(raw, useCase ? '' : 'i').test(node.nodeValue); }
+                                    catch (e) { /* ignore */ }
+                                } else {
+                                    match = useCase
+                                        ? node.nodeValue.includes(raw)
+                                        : node.nodeValue.toLowerCase().includes(query);
+                                }
+                                if (match) hits.push(node);
+                            }
+                            // Replace matching text nodes with highlight-wrapped spans.
+                            // Using a DocumentFragment avoids leaving orphaned wrapper
+                            // spans when the same cell is re-processed across filter runs.
+                            hits.forEach(textNode => {
+                                const frag = document.createDocumentFragment();
+                                const tmp  = document.createElement('span');
+                                tmp.innerHTML = textNode.nodeValue.replace(
+                                    regex,
+                                    '<span class="mb-subtable-filter-highlight">$1</span>'
+                                );
+                                while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+                                textNode.parentNode.replaceChild(frag, textNode);
+                            });
+                        });
+                    }
+                }
+            });
+
+            updateSubTableRowCount();
+            // Sync h2 badge with 3-tier subtable totals
+            if (typeof updateH2CountFromSubtables === 'function') updateH2CountFromSubtables();
+        }
+
+        /**
+         * Restores rows hidden by this subtable filter (data-mb-stf-hidden attribute)
+         * and removes all subtable-filter highlights.
+         * Does NOT affect rows hidden by global/column filters.
+         */
+        function clearSubFilter() {
+            if (!table) return;
+            // Restore rows our filter hid
+            table.querySelectorAll('tbody tr[data-mb-stf-hidden]').forEach(row => {
+                row.style.display = '';
+                delete row.dataset.mbStfHidden;
+            });
+            // Remove highlight spans — replaceWith a plain text node to keep content
+            table.querySelectorAll('.mb-subtable-filter-highlight').forEach(n => {
+                n.replaceWith(document.createTextNode(n.textContent));
+            });
+
+            updateInputStyle();      // ← reset green border / box-shadow
+            updateSubTableRowCount();
+            // Sync h2 badge with 3-tier subtable totals
+            if (typeof updateH2CountFromSubtables === 'function') updateH2CountFromSubtables();
+        }
+
+        // ── Event wiring ─────────────────────────────────────────────────────
+        const debouncedApply = debounce(applySubFilter, Lib.settings.sa_filter_debounce_delay || 300);
+        filterInput.addEventListener('input', debouncedApply);
+
+        [caseCheckbox, rxCheckbox, exCheckbox].forEach(cb => {
+            cb.addEventListener('change', applySubFilter);
+        });
+
+        clearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterInput.value = '';
+            clearSubFilter();
+        });
+
+        // Escape key: first press clears the input; second press blurs
+        filterInput.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            if (filterInput.value.trim() !== '') {
+                filterInput.value = '';
+                clearSubFilter();
+            } else {
+                filterInput.blur();
+            }
+        });
+
+        // Highlight toggle button
+        highlightBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            highlightEnabled = !highlightEnabled;
+            if (highlightEnabled) {
+                highlightBtn.style.backgroundColor = '';
+                highlightBtn.style.color = '';
+                // Re-apply filter to restore highlights
+                applySubFilter();
+                Lib.debug('highlight', `Sub-table filter highlighting ON for "${categoryName}"`);
+            } else {
+                highlightBtn.style.backgroundColor = '#90ee90';
+                highlightBtn.style.color = '#000';
+                // Remove highlights but keep rows hidden/shown as they are
+                if (table) {
+                    table.querySelectorAll('.mb-subtable-filter-highlight').forEach(n => {
+                        n.replaceWith(document.createTextNode(n.textContent));
+                    });
+                }
+                Lib.debug('highlight', `Sub-table filter highlighting OFF for "${categoryName}"`);
+            }
+        });
+
+        // ── Toggle-icon wiring ────────────────────────────────────────────────
+        toggleIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const isVisible = container.classList.contains('visible');
+            if (isVisible) {
+                container.classList.remove('visible');
+                toggleIcon.classList.remove('active');
+                // Clear the filter when closing
+                if (filterInput.value) {
+                    filterInput.value = '';
+                    clearSubFilter();
+                }
+                Lib.debug('filter', `Sub-table filter hidden for "${categoryName}"`);
+            } else {
+                container.classList.add('visible');
+                toggleIcon.classList.add('active');
+                setTimeout(() => filterInput.focus(), 50);
+                Lib.debug('filter', `Sub-table filter shown for "${categoryName}"`);
+            }
+        });
+
+        return { toggleIcon, container };
+    }
+
+    /**
+     * Recalculates and updates the h2 row-count badge from current DOM state of all
+     * subtables after global + subtable filters have been applied.
+     *
+     * Mirrors the 3-tier format used by updateSubTableRowCount():
+     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
+     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
+     *
+     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
+     */
+    function updateH2CountFromSubtables() {
+        const tables = Array.from(document.querySelectorAll('table.tbl'))
+            .filter(t => t.querySelector('.mb-col-filter-row'));
+
+        if (tables.length === 0) return;
+
+        const anySubtableFilterActive = Array.from(
+            document.querySelectorAll('.mb-subtable-filter-container.visible input[type="text"]')
+        ).some(inp => inp.value.trim() !== '');
+
+        if (!anySubtableFilterActive) return; // h2 already correct from updateH2Count()
+
+        let sumTotal    = 0;
+        let sumDenominator = 0;
+        let sumVisible  = 0;
+
+        tables.forEach(table => {
+            const total = parseInt(table.dataset.mbTotalRows || '0', 10);
+            const allRows = Array.from(table.querySelectorAll('tbody tr'));
+            const denominator = allRows.filter(r =>
+                r.style.display !== 'none' || r.dataset.mbStfHidden
+            ).length;
+            const visible = allRows.filter(r => r.style.display !== 'none').length;
+
+            sumTotal       += total || allRows.length;
+            sumDenominator += denominator;
+            sumVisible     += visible;
+        });
+
+        // Pass (locally, globally, absolute-total) to updateH2Count
+        updateH2Count(sumVisible, sumDenominator, sumTotal);
+    }
+
+    /**
+     * Re-applies all active subtable filters after a global/column filter run, so that
+     * rows newly made visible by global filter changes are still correctly filtered by
+     * their subtable filter.  Calls applySubFilter() via the container's stored closure.
+     *
+     * Called at the end of runFilter() for multi-table pages.
+     */
+    function reapplyAllSubTableFilters() {
+        document.querySelectorAll('.mb-subtable-filter-container.visible').forEach(container => {
+            // Find the input inside this container and dispatch an input event to re-run its filter
+            const input = container.querySelector('input[type="text"]');
+            if (input && input.value) {
+                input.dispatchEvent(new Event('input', { bubbles: false }));
+            }
+        });
+    }
+
+    /**
      * Renders multiple tables grouped by category (e.g., Official, Various Artists) with H3 headers
      * @param {Array} dataArray - Array of grouped data objects, each containing a label and rows
      * @param {boolean} isArtistMain - Whether this is the main artist page (affects rendering logic)
@@ -9478,6 +9490,21 @@ Press Escape on that notice to cancel the auto-action.
                 }
 
                 h3.innerHTML = `<span class="mb-toggle-icon">${shouldStayOpen ? '▼' : '▲'}</span>${h3DisplayName} <span class="mb-row-count-stat">(${group.rows.length})</span>`;
+                // Store the unfiltered total row count for this subtable so that
+                // updateSubTableRowCount() can reference it after global/subtable filtering.
+                table.dataset.mbTotalRows = group.rows.length;
+
+                // ── Sub-table filter toggle icon + filter container ────────────────
+                const stfResult = createSubTableFilterContainer(categoryName, table);
+                // Insert toggle icon immediately after the mb-row-count-stat span
+                const rowCountStat = h3.querySelector('.mb-row-count-stat');
+                if (rowCountStat) {
+                    rowCountStat.after(stfResult.toggleIcon);
+                } else {
+                    h3.appendChild(stfResult.toggleIcon);
+                }
+                // Append the filter container (initially hidden) to the h3
+                h3.appendChild(stfResult.container);
 
                 // Add sub-table controls: Clear button and separate status displays
                 const subTableControls = document.createElement('span');
@@ -9538,9 +9565,13 @@ Press Escape on that notice to cancel the auto-action.
                 }
 
                 h3.addEventListener('click', (e) => {
-                    // Prevent triggering if clicking on interactive elements (buttons)
+                    // Allow clicks on the read-only status spans inside .mb-subtable-controls to pass through
+                    const isStatusSpan = e.target.closest('.mb-filter-status') || e.target.closest('.mb-sort-status');
+                    // Prevent triggering if clicking on interactive elements (buttons) or other parts of the controls bar
                     if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
-                        e.target.closest('.mb-subtable-controls')) {
+                        (!isStatusSpan && e.target.closest('.mb-subtable-controls')) ||
+                        e.target.closest('.mb-subtable-filter-container') ||
+                        e.target.classList.contains('mb-subtable-filter-toggle-icon')) {
                         return;
                     }
 
@@ -9628,6 +9659,21 @@ Press Escape on that notice to cancel the auto-action.
         // Capture all H2s currently in the document to allow peer filtering later
         const allH2s = Array.from(document.querySelectorAll('h2'));
 
+        // Strip any stale processed state from a previous invocation (e.g. after "Load from Disk"
+        // on an already-rendered page).  The h2 DOM nodes are reused across re-renders, so their
+        // mb-h2-processed marker, injected toggle icon, and old click handler must be reset before
+        // we re-register everything with fresh contentNodes closures.
+        allH2s.forEach(h2 => {
+            h2.classList.remove('mb-h2-processed', 'mb-toggle-h2');
+            const oldIcon = h2.querySelector(':scope > .mb-toggle-icon');
+            if (oldIcon) oldIcon.remove();
+            if (h2._mbClickHandler) {
+                h2.removeEventListener('click', h2._mbClickHandler);
+                h2._mbClickHandler = null;
+            }
+            h2._mbToggle = null;
+        });
+
         allH2s.forEach(h2 => {
             if (h2.classList.contains('mb-h2-processed')) return;
             h2.classList.add('mb-h2-processed', 'mb-toggle-h2');
@@ -9696,10 +9742,35 @@ Press Escape on that notice to cancel the auto-action.
 
             // 2. Click event for the entire H2 header
             const toggleFn = (e) => {
-                // GUARD CLAUSE: Don't toggle if clicking on interactive elements (Filter input, Master Toggle links, Checkboxes)
+                // Detect clicks on the read-only status spans BEFORE the guard clause so they are
+                // explicitly exempted from the filterContainer.contains() block below.
+                // Both spans live inside filterContainer but are read-only labels that must propagate
+                // the toggle rather than be silently blocked.
+                // This mirrors the h3 handler pattern (isStatusSpan / !isStatusSpan guard).
+                //
+                // Detect a click on the ".mb-master-toggle" text label ("all Types") BEFORE the guard.
+                // The interactive Show/Hide child <span>s each call e.stopPropagation() so they never
+                // reach this handler; only clicks on the surrounding text node (whose event target is
+                // the .mb-master-toggle element itself, not a child) arrive here.
+                // Text nodes are not event targets — e.target will be .mb-master-toggle when the user
+                // clicks the plain text, but will be the child <span> when clicking Show/Hide.
+                //
+                // Toggle semantics for all exempted areas (identical — normal header behaviour):
+                //   plain click  → toggle THIS h2 only
+                //   Ctrl+click   → toggle ALL h2 peers
+                const isMasterToggleLabelClick = e.target.classList.contains('mb-master-toggle');
+                const isStatusClick = e.target.closest('#mb-filter-status-display') ||
+                                      e.target.closest('#mb-sort-status-display');
+
+                // GUARD CLAUSE: Don't toggle if clicking on interactive elements (Filter input, Master Toggle links, Checkboxes).
+                // isStatusClick spans and the master-toggle label text are exempted.
+                // Note: Show/Hide <span>s inside .mb-master-toggle already call stopPropagation()
+                //       so they never reach this handler — no additional guard needed for them.
                 if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) ||
-                    e.target.closest('.mb-master-toggle') ||
-                    (filterContainer && filterContainer.contains(e.target))) {
+                    (!isMasterToggleLabelClick && e.target.closest('.mb-master-toggle')) ||
+                    e.target.closest('.mb-subtable-filter-container') ||
+                    e.target.classList.contains('mb-subtable-filter-toggle-icon') ||
+                    (!isStatusClick && filterContainer && filterContainer.contains(e.target))) {
                     return;
                 }
 
@@ -9708,6 +9779,8 @@ Press Escape on that notice to cancel the auto-action.
 
                 const isExpanding = icon.textContent === '▲';
 
+                // All-toggle when Ctrl is held (anywhere on the h2 header).
+                // Plain clicks — including on either status span — toggle only this h2.
                 if (e.ctrlKey) {
                     // Logic to toggle all peers in the same container (sidebar vs main)
                     const sidebar = document.getElementById('sidebar');
@@ -9729,7 +9802,10 @@ Press Escape on that notice to cancel the auto-action.
                 }
             };
 
-            // Attach event listener directly to the H2 container
+            // Attach event listener directly to the H2 container.
+            // Store the reference on the element so makeH2sCollapsible() can remove it on
+            // the next invocation (e.g. after "Load from Disk" on an already-rendered page).
+            h2._mbClickHandler = toggleFn;
             h2.addEventListener('click', toggleFn);
         });
     }
@@ -10354,6 +10430,13 @@ Press Escape on that notice to cancel the auto-action.
      * @param {string} url - The blob URL to download from
      * @param {string} filename - The filename to save as
      */
+    /**
+     * Trigger a browser file download for a Blob object-URL and show a notification popup.
+     *
+     * @param {string} url       - Object URL created via URL.createObjectURL().
+     * @param {string} filename  - Suggested save filename.
+     * @param {number} rowCount  - Number of rows saved (0 = unknown / not shown).
+     */
     function triggerStandardDownload(url, filename, rowCount = 0) {
         const a = document.createElement('a');
         a.href = url;
@@ -10365,67 +10448,10 @@ Press Escape on that notice to cancel the auto-action.
 
         Lib.debug('cache', `Data saved to ${filename}`);
 
-        // --- INFO POPUP TO ALERT USER (WITH FADE OUT) ---
-        const infoPopup = document.createElement('div');
-        infoPopup.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border: 1px solid #888;
-            border-radius: 6px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10000;
-            max-width: 400px;
-            text-align: center;
-            font-family: sans-serif;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        `;
-
-        const msg = document.createElement('div');
         const rowNote = rowCount > 0 ? ` ${rowCount.toLocaleString()} rows saved.` : '';
-        msg.textContent = `Saving of JSON table data to the filesystem initiated.${rowNote} Please monitor your browser for the file download.`;
-        msg.style.marginBottom = '15px';
-
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
-        closeBtn.style.cssText = `
-            padding: 6px 12px;
-            cursor: pointer;
-            border-radius: 4px;
-            border: 1px solid #555;
-            background-color: #f0f0f0;
-        `;
-        closeBtn.type = 'button';
-
-        // Close function with fade out
-        const closePopup = () => {
-            infoPopup.style.opacity = '0';
-            // Remove from DOM after transition
-            setTimeout(() => {
-                if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
-                document.removeEventListener('keydown', onEscape);
-            }, 300); // match the CSS transition duration
-        };
-
-        // Button click closes popup
-        closeBtn.addEventListener('click', closePopup);
-
-        // Escape key closes popup
-        const onEscape = (e) => {
-            if (e.key === 'Escape') closePopup();
-        };
-        document.addEventListener('keydown', onEscape);
-
-        infoPopup.appendChild(msg);
-        infoPopup.appendChild(closeBtn);
-        document.body.appendChild(infoPopup);
-
-        // Focus the Close button so keyboard users can dismiss immediately with Enter/Space
-        setTimeout(() => closeBtn.focus(), 50);
+        showDownloadNotification(
+            `Saving of JSON table data to the filesystem initiated.${rowNote} Please monitor your browser for the file download.`
+        );
     }
 
     /**
@@ -10452,7 +10478,7 @@ Press Escape on that notice to cancel the auto-action.
             try {
                 globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
             } catch (e) {
-                await showCustomAlert(
+                await Lib.showCustomAlert(
                     'Invalid Regular Expression in load filter field. Load aborted.',
                     '❌ Invalid Regex',
                     loadFromDiskBtn
@@ -10492,7 +10518,7 @@ Press Escape on that notice to cancel the auto-action.
 
                 // Validation: Check if the file matches the current page type
                 if (data.pageType !== pageType) {
-                    const loadAnywayConfirmed = await showCustomConfirm(
+                    const loadAnywayConfirmed = await Lib.showCustomConfirm(
                         `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
                         '⚠️ Page Type Mismatch',
                         loadFromDiskBtn
@@ -10645,6 +10671,50 @@ Press Escape on that notice to cancel the auto-action.
 
                 finalCleanup();
                 makeH2sCollapsible();
+
+                // Reset global filter to a clean state after every disk load.
+                // If the page was already rendered with an active filter before the load,
+                // the filterInput still holds the old value; the newly loaded rows are not
+                // affected by it until the user interacts with the filter widget.  Clear the
+                // value now and immediately re-run the filter so:
+                //   (a) the loaded rows are all visible (no stale filter applied),
+                //   (b) filter-status / sort-status displays are cleared,
+                //   (c) "Toggle highlighting" and "Clear ALL filters" buttons are hidden.
+                filterInput.value = '';
+                filterInput.style.boxShadow = '';
+                filterStatusDisplay.textContent = '';
+                sortStatusDisplay.textContent = '';
+                if (typeof runFilter === 'function') {
+                    runFilter();
+                }
+                if (typeof window.updateFilterButtonsVisibility === 'function') {
+                    window.updateFilterButtonsVisibility();
+                }
+
+                // Reset all sort state after every disk load.
+                // If the page was already rendered with active column sorts (including
+                // multi-column sorts with cell tints), the sort-icon highlights and tinted
+                // cells persist in the DOM after re-render because makeTableSortableUnified()
+                // only adds new sort buttons — it does not undo previously applied DOM state.
+                // Steps:
+                //   (a) call clearTints() from the tint registry for every known sortKey to
+                //       remove multi-sort background colours from data cells,
+                //   (b) strip .sort-icon-active from all sort icon buttons,
+                //   (c) reset every sort-state entry in multiTableSortStates to neutral,
+                //   (d) clear per-h3 sort status spans,
+                //   (e) clear both Maps so stale keys from the previous render don't accumulate.
+                multiSortTintRegistry.forEach(({ clearTints }) => {
+                    try { clearTints(); } catch (_) { /* ignore if table no longer in DOM */ }
+                });
+                document.querySelectorAll('.sort-icon-btn').forEach(btn => {
+                    btn.classList.remove('sort-icon-active');
+                });
+                document.querySelectorAll('.mb-sort-status').forEach(el => {
+                    el.textContent = '';
+                });
+                multiTableSortStates.clear();
+                multiSortTintRegistry.clear();
+
                 if (Lib.settings.sa_enable_sticky_headers) {
                     applyStickyHeaders();
                 }

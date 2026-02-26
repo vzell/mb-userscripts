@@ -2185,7 +2185,7 @@
         const controlsContainer = document.getElementById('mb-show-all-controls-container');
         if (!controlsContainer) return;
 
-        const settingsBtn = controlsContainer.querySelector('button[title*="Open settings manager"]');
+        const settingsBtn = document.getElementById('mb-settings-btn');
         if (!settingsBtn) return;
 
         // Move settings button to the end if it's not already
@@ -4248,7 +4248,7 @@
         helpBtn.onclick = showShortcutsHelp;
 
         // Insert before the settings button so 🎹 stays to its left
-        const settingsBtn = controlsContainer.querySelector('button[title*="Open settings manager"]');
+        const settingsBtn = document.getElementById('mb-settings-btn');
         if (settingsBtn) {
             controlsContainer.insertBefore(helpBtn, settingsBtn);
         } else {
