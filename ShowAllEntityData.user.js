@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.6+2026-02-26
+// @version      9.97.7+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -9659,6 +9659,21 @@
         // Capture all H2s currently in the document to allow peer filtering later
         const allH2s = Array.from(document.querySelectorAll('h2'));
 
+        // Strip any stale processed state from a previous invocation (e.g. after "Load from Disk"
+        // on an already-rendered page).  The h2 DOM nodes are reused across re-renders, so their
+        // mb-h2-processed marker, injected toggle icon, and old click handler must be reset before
+        // we re-register everything with fresh contentNodes closures.
+        allH2s.forEach(h2 => {
+            h2.classList.remove('mb-h2-processed', 'mb-toggle-h2');
+            const oldIcon = h2.querySelector(':scope > .mb-toggle-icon');
+            if (oldIcon) oldIcon.remove();
+            if (h2._mbClickHandler) {
+                h2.removeEventListener('click', h2._mbClickHandler);
+                h2._mbClickHandler = null;
+            }
+            h2._mbToggle = null;
+        });
+
         allH2s.forEach(h2 => {
             if (h2.classList.contains('mb-h2-processed')) return;
             h2.classList.add('mb-h2-processed', 'mb-toggle-h2');
@@ -9787,7 +9802,10 @@
                 }
             };
 
-            // Attach event listener directly to the H2 container
+            // Attach event listener directly to the H2 container.
+            // Store the reference on the element so makeH2sCollapsible() can remove it on
+            // the next invocation (e.g. after "Load from Disk" on an already-rendered page).
+            h2._mbClickHandler = toggleFn;
             h2.addEventListener('click', toggleFn);
         });
     }
@@ -10653,6 +10671,26 @@
 
                 finalCleanup();
                 makeH2sCollapsible();
+
+                // Reset global filter to a clean state after every disk load.
+                // If the page was already rendered with an active filter before the load,
+                // the filterInput still holds the old value; the newly loaded rows are not
+                // affected by it until the user interacts with the filter widget.  Clear the
+                // value now and immediately re-run the filter so:
+                //   (a) the loaded rows are all visible (no stale filter applied),
+                //   (b) filter-status / sort-status displays are cleared,
+                //   (c) "Toggle highlighting" and "Clear ALL filters" buttons are hidden.
+                filterInput.value = '';
+                filterInput.style.boxShadow = '';
+                filterStatusDisplay.textContent = '';
+                sortStatusDisplay.textContent = '';
+                if (typeof runFilter === 'function') {
+                    runFilter();
+                }
+                if (typeof window.updateFilterButtonsVisibility === 'function') {
+                    window.updateFilterButtonsVisibility();
+                }
+
                 if (Lib.settings.sa_enable_sticky_headers) {
                     applyStickyHeaders();
                 }

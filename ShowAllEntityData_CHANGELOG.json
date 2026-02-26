@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.97.7",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Load from Disk (re-load on already-rendered page) — filter state not reset: after loading, the global filterInput still held the previous filter value but runFilter() was never called, so newly loaded rows were not affected by the stale filter. 'Toggle highlighting' and 'Clear ALL filters' buttons also showed incorrect visibility. Fixed by clearing filterInput.value, filterStatusDisplay, sortStatusDisplay and calling runFilter() + updateFilterButtonsVisibility() immediately after makeH2sCollapsible().",
+          "Load from Disk (re-load on already-rendered page) — h2 click handler broken: makeH2sCollapsible() skipped all h2 elements on the second invocation because they still carried the 'mb-h2-processed' marker from the first render. The h2 DOM nodes are reused across re-renders (only h3s/tables are replaced), so their contentNodes closure and click handler became stale after the first disk load. Fixed by stripping 'mb-h2-processed', 'mb-toggle-h2', the injected toggle icon, and the stored click-handler reference (h2._mbClickHandler / h2._mbToggle) at the top of makeH2sCollapsible() before the registration loop, and by storing each new handler on h2._mbClickHandler so it can be cleanly removed on the next invocation."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.6",
     "date": "2026-02-26",
     "sections": [
