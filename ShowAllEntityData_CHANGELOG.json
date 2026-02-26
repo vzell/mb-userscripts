@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.97.9",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Settings — 'Global Prefilter Highlight Color' picker opened at black: the schema default was the CSS named color \"green\". iro.js v5 does not accept CSS named color names as its color initialisation option and silently falls back to #000000, causing the picker wheel to open positioned at black. Fixed by changing the default to \"#008000\" (the hex equivalent of CSS green) so iro.js always receives a valid hex string. The library (VZ_MBLibrary 3.13.1) also adds a cssColorToHex() normalisation helper as a defensive backstop for any future named-color values."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.8",
     "date": "2026-02-26",
     "sections": [

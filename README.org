@@ -42329,9 +42329,8 @@ Please refactor
 
 also to the case of single table pages
 
-
 * DONE optional per sub-table "sub-table global filter" [] Cs [] Rx [] [] Ex
-* TODO Add an 🔍 icon per subtable
+* DONE Add an 🔍 icon per subtable
 ** initial
 
 Add an 🔍 icon (make it a toggle switch) in every h3 header row after the 
@@ -42490,7 +42489,7 @@ and should now also toggle additionally the highlighning from the sub-table filt
 
 should get a new 'title="Clear all COLUMN filters for this table"' and the button text should read 'Clear all COLUMN filters'
 
-** TODO bug left - h3 header collapse when loading from disk NOT working
+** DONE bug left - h3 header collapse when loading from disk NOT working
 
 - when loading data from disk by pressing the "Load from Disk"-button after the page entry, everything works as expected
   regarding filtering with global and sub-table specific filtering. Especially when clicking the h3 header row (not the
@@ -42514,7 +42513,8 @@ should get a new 'title="Clear all COLUMN filters for this table"' and the butto
   Disk"-button when there were sortings on sub-tables active, the sort direction icons are still highlighted (even multi
   columns sort with colorized data cells for better visualization). This should also be reset, like what we did before with resetting the filte stuff
   
-Why is this
+
+* Why is this
 
 #+begin_example
 <span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span>

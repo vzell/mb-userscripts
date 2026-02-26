@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.8+2026-02-26
+// @version      9.97.9+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -283,7 +283,7 @@
         sa_pre_filter_highlight_color: {
             label: "Global Prefilter Highlight Color",
             type: "color_picker",
-            default: "green",
+            default: "#008000",
             description: "Text color for global prefilter matches"
         },
 
