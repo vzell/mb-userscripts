@@ -42601,7 +42601,6 @@ Is the check for invalid regexp really working in the following code
 
 I don't get any alert ? The same is true when using the "[x] Rx" checkbox toggle for filter expressions on the global filter or sub-table filters. Plese implement or fix
 
-
 * fix invalid filter regexp
 
 
@@ -42617,11 +42616,10 @@ to
     clearColumnFiltersBtn.title = 'Globally clear all column-specific filter inputs';
 #+end_example
 
+* change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
+
 
 * TODO resize global filter input field (configurable) + the subtable specific one
-
-
-* change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
 
 
 * DONE subtables
@@ -42867,9 +42865,26 @@ Also the the global "Toggle highlight" button just erases the hightlightning the
 
 
 
-* TODO rename "Toggle filter elements on/off for this section"
+* DONE rename "Toggle filter elements on/off for this section"
 
 rename tooltip "Toggle filter elements on/off" to "Toggle filter elements on/off for this section"
 
-* TODO the global "Clear ALL filters" should only appear when at least one global or sub-table filter is in effect
+
+* TODO 
+
+In the uploaded userscript,
+
+1.) the global "Clear ALL filters" button should only appear when at least the global or one sub-table filter is in effect
+
+2.) for the sub-table filtering two buttons should change their logic
+
+when starting from a fresh rendered final page
+
+- when entering a column level filter alone, the "Clear all filters" button appears, but it should instead be the "Clear all COLUMN filters" button
+- when entering a sub-table level filter alone, the "Clear all filters" button should appear ALONE, right now both the "Clear all filters" and the "Clear all COLUMN filters" buttons appear
+- when pressing the "Clear all COLUMN filters" button, the filters are cleared (as they should), but the button should also disaoeare, as there are NO more filters to clear
+
+Now lets take the global filtering (in the h2 header) state into account
+
+- the global "Clear ALL filters" should only appear when at least one global or sub-table filter is in effect (right now it doesn't show up when at least one sub-table filter is in effect)
 

@@ -9193,7 +9193,7 @@
         const toggleIcon = document.createElement('span');
         toggleIcon.className = 'mb-subtable-filter-toggle-icon';
         toggleIcon.textContent = '🔍';
-        toggleIcon.title = 'Toggle filter elements on/off';
+        toggleIcon.title = 'Toggle filter elements on/off for this section';
         toggleIcon.setAttribute('role', 'button');
         toggleIcon.setAttribute('aria-label', `Toggle sub-table filter for "${categoryName}"`);
 
