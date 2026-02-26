@@ -42605,7 +42605,7 @@ I don't get any alert ? The same is true when using the "[x] Rx" checkbox toggle
 * fix invalid filter regexp
 
 
-* tooltip for global "Clear all COLUMN filters" from
+* TODO tooltip for global "Clear all COLUMN filters" from
 
 #+begin_example
     clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
@@ -42618,7 +42618,7 @@ to
 #+end_example
 
 
-* resize global filter input field (configurable) + the subtable specific one
+* TODO resize global filter input field (configurable) + the subtable specific one
 
 
 * change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
@@ -42627,10 +42627,23 @@ to
 * TODO subtables
 
 - "Toggle highlight" button should only be visible when a filter string is present
+
+* TODO subtables
+
 - when in regexp mode, remove the alert window, just add red border and "Invalid regexp" info message
 - change default colors of filter borders, and make them configurable:  orange for global filter, leave the colors as is for other filters
 - subtable "Clear ALL filters" button (onyl visible when filter is active)
 - runFilter async (is that a problem, async in general ?)
+
+          "Global 'Toggle highlighting' button: now visible only when a filter string is present (global or column) — previously it appeared/disappeared based on DOM highlight spans, which could show it when no filter was active. updateFilterButtonsVisibility() updated to use the same (globalFilterActive || columnFiltersActive) condition as the 'Clear ALL filters' button.",
+          "Sub-table 'Toggle highlighting' button: now starts hidden and only becomes visible while a filter string is present in the sub-table input (controlled by updateInputStyle()).",
+          "Sub-table 'Clear ALL filters' button (new): a '✕ Clear ALL filters' button is added to every sub-table filter container, visible only when the sub-table filter input has a value. Clicking it clears the sub-table filter text, restores hidden rows and highlights, clears all column filter inputs for that specific table, and re-runs the global filter.",
+          "Global filter active border: changed from red to orange (configurable). New setting 'sa_global_filter_active_border_color' (default #FFA500) controls the border and glow colour of the global filter input when a filter string is active.",
+          "Sub-table filter active border: now configurable. New setting 'sa_subtable_filter_active_border_color' (default #008000, green) controls the border and glow colour of sub-table filter inputs when active. Both new settings appear in the 🎨 FILTER HIGHLIGHT COLORS settings section."
+
+ "label": "🐛 Bug Fixes",
+        "items": [
+          "Regexp invalid — no alert, just inline message: removed Lib.showCustomAlert() calls from runFilter() and applySubFilter() on invalid regex (introduced in 9.97.10). Alerts interrupted the typing flow; the red border + inline status message in the filter-status span is sufficient feedback. Both functions reverted from async to sync. The load dialog confirmLoad() alert (also 9.97.10) is retained as it validates before opening the OS file picker."
 
 
 * DONE why button movement
@@ -42692,6 +42705,7 @@ Please add missing IDs to UI elements when neccessary
 * document test suite after userscript and library changes
 ** library
 ** userscript
+
 
 * DONE focus state filter styling - search icon "🔍" and make the background of the filter field light yellow
 ** initial
@@ -42767,8 +42781,7 @@ Field is already empty: The user wants to leave the field (release focus/blur).
 OK, so the behaviour for the global filter is OK now, but the column specific filters (remember they also exist in each
 table for a rendered page with multi tables) the first "Esc" clears the filter but it doesn't stay focused, so that I can start typing again 
 
-** TODO midifier escape
-*** DONE initial
+** DONE initial
 
 Please implement one last final fix for the "focus state filter styling for column filter fields": When deleting
 backwards a filter sting in a column filter field, it should NOT be possible to actually delete the
@@ -42783,10 +42796,37 @@ Please also implement the following keyboard shortcuts and document them in the 
 
 Also document the previously implemented "focus state filter styling for column filter fields in the application helpfile "ShowAllEntityData_HELP.txt"
 
-*** switch keys
+** TODO Clicking the "x" - bug
+** TODO switch keys
 
-Ctrl+Esc ==> Ctrl+Shift+Esc - browser/OS intercepts it
+In the uploaded script,
 
- - Shift+Esc - same as pressing the "Clear all COLUMN filters"-button in the h2 header row (change the tooltip text accordingly that this is a global action and add the keyboard shortut prefix to the tooltip text)
- - Ctrl+Shift+Esc - same as pressing the "Clear ALL filters"-button in the h2 header row (change the tooltip text accordingly that this is a global action and add the keyboard shortut prefix to the tooltip text)
+1.) when clicking the small "x" in a column filter field, it erases not only the user input text but also the
+"sa_col_filter_focus_prefix" string. This should NOT happen, clicking the "x" should be the same action like pressing
+the "Escape" key the first time, when inside a filter field
+
+2.) the sub-table button "Clear all COLUMN filters"
+
+#+begin_example
+<button class="mb-subtable-clear-btn" type="button" title="Clear all COLUMN filters for this table"
+#+end_example
+
+should not be visible anymore when there is NO filter string at all in any column of a sub-table.
+Current behaviour is,
+
+- as soon as the enduser types in something in one or many columns, the button appears ==> GOOD
+- as soon as all columns have been cleared somehow per sub-tablem the button should disappear (DOES NOT WORK yet)
+
+2.) the sub-table button "Toggle highlightning"
+
+#+begin_example
+<button id="mb-stf-recording_location_for-toggle-filter-highlight-btn" type="button" title="Toggle filter highlighting on/off (sub-table filter and column filters)"
+#+end_example
+
+- should appear as soon as the enduser types in something in one or many columns (currently when the "<span class="mb-subtable-filter-toggle-icon active" hasn't been pressed yet, that doesn't happen)
+- should not be visible anymore when there is NO filter string at all in any column of a sub-table, so the same behaviour like the "Clear all COLUMN filters" button
+- should not only toggle filter strings coming from the sub-table filter field (thats the current behaviour), but also highlight filter strings coming from column level filter fields
+
+3.) the current "Ctrl+Esc" key combination is intercepted by the OS, please change it to "Ctrl+Shift+Esc" in the whole source code and applicatin help fiel "ShowAllEntityData_HELP.txt"
+
 
