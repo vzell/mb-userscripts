@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.18+2026-02-26
+// @version      9.97.19+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -6268,7 +6268,11 @@
         clearColumnFiltersBtn.style.display = columnFiltersActive ? 'inline-block' : 'none';
 
         // Show/hide Clear ALL filters button
-        clearAllFiltersBtn.style.display = (globalFilterActive || columnFiltersActive) ? 'inline-block' : 'none';
+        // Includes stfFiltersActive: the button must also appear when only a
+        // sub-table filter is active (no global or column filters set).
+        clearAllFiltersBtn.style.display =
+            (globalFilterActive || columnFiltersActive || stfFiltersActive)
+                ? 'inline-block' : 'none';
 
         // Update visibility for sub-table clear buttons and sub-table highlight buttons
         document.querySelectorAll('.mb-subtable-clear-btn').forEach(btn => {
@@ -7306,13 +7310,22 @@
             }
         });
 
+        // Also capture active STF (sub-table) filter queries so that
+        // restoreFilterHighlightState() knows there is something to restore
+        // even when no global or column filters are set.
+        const stfFilters = [];
+        document.querySelectorAll('.mb-subtable-filter-container input[type="text"]').forEach(inp => {
+            if (inp.value.trim()) stfFilters.push(inp.value.trim());
+        });
+
         savedFilterHighlights = {
             globalFilter: globalQuery ? { query: globalQuery } : null,
             columnFilters: columnFilters,
-            hasContent: !!(globalQuery || columnFilters.length > 0)
+            stfFilters: stfFilters,
+            hasContent: !!(globalQuery || columnFilters.length > 0 || stfFilters.length > 0)
         };
 
-        Lib.debug('highlight', `Saved filter highlight state: global=${!!globalQuery}, columns=${columnFilters.length}`);
+        Lib.debug('highlight', `Saved filter highlight state: global=${!!globalQuery}, columns=${columnFilters.length}, stf=${stfFilters.length}`);
     }
 
     /**

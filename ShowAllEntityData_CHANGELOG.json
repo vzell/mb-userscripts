@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.97.19",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Global 'Clear ALL filters' button: was not appearing when only a sub-table (STF) filter was active. The visibility condition in updateFilterButtonsVisibility() was (globalFilterActive || columnFiltersActive) — it included stfFiltersActive in the 'Toggle highlighting' check introduced in 9.97.17 but never added it to the 'Clear ALL filters' check. Fixed by adding stfFiltersActive to the condition so the button now appears whenever any filter at any level (global, sub-table, or column) is active.",
+          "Global 'Toggle highlighting' button — second click (restore highlights) did nothing when only a sub-table filter was active. saveFilterHighlightState() only inspected the global filter input and column filter inputs when computing hasContent. Because neither had a value, hasContent was always false for a pure-STF-filter scenario. restoreFilterHighlightState() guards its runFilter() call behind if (!savedFilterHighlights.hasContent) return, so it exited immediately and STF highlights were never restored. Fixed by also querying all .mb-subtable-filter-container input[type=\"text\"] elements in saveFilterHighlightState() and including any non-empty STF values in the stfFilters array and in the hasContent boolean. The existing restoreFilterHighlightState() path (calling runFilter() which calls reapplyAllSubTableFilters()) already handles re-applying STF highlights correctly once hasContent is true."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.18",
     "date": "2026-02-26",
     "sections": [
