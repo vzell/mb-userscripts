@@ -1,5 +1,19 @@
 [
   {
+    "version": "9.97.21",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Per-subtable clear button (mb-subtable-clear-btn) now dynamically relabels itself: shows 'Clear all COLUMN filters' when only column filters are active (no STF), and 'Clear all filters' when the STF is active (with or without column filters). Achieved by wrapping the button text in a named span (.mb-subtable-clear-btn-label) and updating it in updateFilterButtonsVisibility(). The button title is updated in sync.",
+          "In-panel 'Clear all COLUMN filters' button (clearAllStfBtn / .mb-stf-clear-col-btn) inside each STF filter panel: visibility management moved from updateInputStyle() to updateFilterButtonsVisibility(). It now appears only when BOTH the STF input AND at least one column filter are active. Consequence: (a) when only the STF filter is active the button no longer appears, leaving the per-subtable mb-subtable-clear-btn as the sole control; (b) after the user clicks it to clear column filters, runFilter() → updateFilterButtonsVisibility() is called and the button disappears immediately because no column filters remain. The element is given class mb-stf-clear-col-btn so updateFilterButtonsVisibility() can locate it via h3.querySelector('.').",
+          "Global 'Clear ALL filters' button (mb-clear-all-filters-btn): condition changed from (globalFilterActive || (stfFiltersActive && columnFiltersActive)) to (globalFilterActive || stfFiltersActive). The button now correctly appears whenever any global or per-subtable (STF) filter is active, not only when both STF and column filters are simultaneously active."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.20",
     "date": "2026-02-26",
     "sections": [

@@ -42870,7 +42870,7 @@ Also the the global "Toggle highlight" button just erases the hightlightning the
 rename tooltip "Toggle filter elements on/off" to "Toggle filter elements on/off for this section"
 
 
-* TODO 
+* DONE fix global and sub-table combined filter logic
 
 In the uploaded userscript,
 

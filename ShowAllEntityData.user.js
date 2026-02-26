@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.20+2026-02-26
+// @version      9.97.21+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2187,8 +2187,12 @@
         xSymbol.style.fontSize = '1.0em';
         xSymbol.style.fontWeight = 'bold';
 
+        const clearBtnLabel = document.createElement('span');
+        clearBtnLabel.className = 'mb-subtable-clear-btn-label';
+        clearBtnLabel.textContent = 'Clear all filters'; // updated dynamically by updateFilterButtonsVisibility()
+
         clearBtn.appendChild(xSymbol);
-        clearBtn.appendChild(document.createTextNode('Clear all filters'));
+        clearBtn.appendChild(clearBtnLabel);
 
         clearBtn.onclick = (e) => {
             e.preventDefault();
@@ -6238,7 +6242,23 @@
     filterContainer.appendChild(clearAllFiltersBtn);
 
     /**
-     * Update visibility of filter-related buttons based on whether filters are active
+     * Update visibility of filter-related buttons based on whether filters are active.
+     *
+     * Global bar buttons:
+     *   clearColumnFiltersBtn — visible whenever at least one column filter is active.
+     *   clearAllFiltersBtn    — visible whenever the global filter OR at least one
+     *                           sub-table (STF) filter is active.
+     *
+     * Per-subtable buttons (re-evaluated for every .mb-subtable-clear-btn):
+     *   .mb-subtable-clear-btn  — shown when ANY filter (column or STF) is active for
+     *                             that sub-table; its label is set dynamically:
+     *                             • STF active (alone or with columns) → "Clear all filters"
+     *                             • column-only active (no STF)        → "Clear all COLUMN filters"
+     *   .mb-stf-clear-col-btn   — shown only when BOTH the STF input AND at least one
+     *                             column filter are active for this sub-table, giving the
+     *                             user a way to clear just the column level while keeping
+     *                             the STF filter.  Disappears as soon as column filters
+     *                             are gone (via updateFilterButtonsVisibility after runFilter).
      */
     function updateFilterButtonsVisibility() {
         // Check if global filter has value
@@ -6268,48 +6288,66 @@
         // filter has text.  Not shown for a pure-STF or pure-global scenario.
         clearColumnFiltersBtn.style.display = columnFiltersActive ? 'inline-block' : 'none';
 
-        // "Clear ALL filters" visibility rules:
-        //   • Global filter active → always show (it clears the global field).
-        //   • STF only (no columns) → do NOT show; the per-subtable
-        //     mb-subtable-clear-btn already handles that case at the right level.
-        //   • Column only (no STF, no global) → do NOT show; clearColumnFiltersBtn
-        //     is sufficient for that case.
-        //   • Both STF and column active → show (one click clears both levels).
-        //   • Global + anything → show.
+        // "Clear ALL filters" — visible when the global filter OR at least one STF
+        // filter is active.  Column-only active is already covered by
+        // clearColumnFiltersBtn; this button is not needed in that case.
         clearAllFiltersBtn.style.display =
-            (globalFilterActive || (stfFiltersActive && columnFiltersActive))
+            (globalFilterActive || stfFiltersActive)
                 ? 'inline-block' : 'none';
 
-        // Update visibility for sub-table clear buttons and sub-table highlight buttons
+        // Update visibility, labels, and in-panel clear button for per-subtable controls.
         document.querySelectorAll('.mb-subtable-clear-btn').forEach(btn => {
-            // Find the associated table
+            // Find the associated h3 and table
             const h3 = btn.closest('.mb-subtable-controls')?.parentElement;
-            if (h3) {
-                const table = h3.nextElementSibling;
-                if (table && table.tagName === 'TABLE') {
-                    // Check if this table has any active column filters.
-                    // Use stripColFilterPrefix so a focused-but-empty field (which carries
-                    // only the decorative prefix "🔍 ") is NOT treated as having a filter.
-                    const tableColFilters = table.querySelectorAll('.mb-col-filter-input');
-                    const tableHasColFilters = Array.from(tableColFilters).some(
-                        input => stripColFilterPrefix(input.value).trim() !== ''
-                    );
+            if (!h3) return;
 
-                    // Also consider the sub-table filter input active state.
-                    const stfInput = h3.querySelector('.mb-subtable-filter-container input[type="text"]');
-                    const stfActive = stfInput ? stfInput.value.trim() !== '' : false;
+            const table = h3.nextElementSibling;
+            if (!table || table.tagName !== 'TABLE') return;
 
-                    // Show the "Clear all filters" button whenever ANY filter (column or
-                    // sub-table) is active for this table.
-                    const anyFilterActive = tableHasColFilters || stfActive;
-                    btn.style.display = anyFilterActive ? 'inline-block' : 'none';
+            // Check if this table has any active column filters.
+            // Use stripColFilterPrefix so a focused-but-empty field (which carries
+            // only the decorative prefix "🔍 ") is NOT treated as having a filter.
+            const tableColFilters = table.querySelectorAll('.mb-col-filter-input');
+            const tableHasColFilters = Array.from(tableColFilters).some(
+                input => stripColFilterPrefix(input.value).trim() !== ''
+            );
 
-                    // Drive the per-subtable highlight-toggle button with the same condition.
-                    const highlightBtn = h3.querySelector('[id$="-toggle-filter-highlight-btn"]');
-                    if (highlightBtn) {
-                        highlightBtn.style.display = anyFilterActive ? 'inline-block' : 'none';
-                    }
+            // Also consider the sub-table filter input active state.
+            const stfInput = h3.querySelector('.mb-subtable-filter-container input[type="text"]');
+            const stfActive = stfInput ? stfInput.value.trim() !== '' : false;
+
+            // Show the clear button whenever ANY filter (column or sub-table) is
+            // active for this table; hide it when nothing remains to clear.
+            const anyFilterActive = tableHasColFilters || stfActive;
+            btn.style.display = anyFilterActive ? 'inline-block' : 'none';
+
+            // Dynamically relabel the button so it accurately describes what it clears:
+            //   STF active (alone or with columns) → "Clear all filters"
+            //   column-only active (no STF)        → "Clear all COLUMN filters"
+            const labelSpan = btn.querySelector('.mb-subtable-clear-btn-label');
+            if (labelSpan) {
+                if (stfActive) {
+                    labelSpan.textContent = 'Clear all filters';
+                    btn.title = 'Clear all filters for this sub-table (column filters and sub-table filter)';
+                } else {
+                    labelSpan.textContent = 'Clear all COLUMN filters';
+                    btn.title = 'Clear all COLUMN filters for this sub-table';
                 }
+            }
+
+            // Drive the per-subtable highlight-toggle button with the same condition.
+            const highlightBtn = h3.querySelector('[id$="-toggle-filter-highlight-btn"]');
+            if (highlightBtn) {
+                highlightBtn.style.display = anyFilterActive ? 'inline-block' : 'none';
+            }
+
+            // Drive the in-panel "Clear all COLUMN filters" button (.mb-stf-clear-col-btn):
+            // shown only when BOTH STF AND column filters are active, so the user can
+            // clear just the column level while keeping the STF.  Disappears as soon as
+            // column filters are cleared (updateFilterButtonsVisibility is called by runFilter).
+            const clearColStfBtn = h3.querySelector('.mb-stf-clear-col-btn');
+            if (clearColStfBtn) {
+                clearColStfBtn.style.display = (stfActive && tableHasColFilters) ? 'inline-block' : 'none';
             }
         });
     }
@@ -9265,6 +9303,7 @@
         // left untouched so the sub-table filter keeps filtering.
         const clearAllStfBtn = document.createElement('button');
         clearAllStfBtn.id = `${pfx}-clear-all-btn`;
+        clearAllStfBtn.className = 'mb-stf-clear-col-btn';
         clearAllStfBtn.type = 'button';
         clearAllStfBtn.title = 'Clear all COLUMN filters for this sub-table (sub-table filter is kept)';
         // Create red ✗ symbol
@@ -9308,8 +9347,9 @@
         function updateInputStyle() {
             filterInput.style.boxShadow  = filterInput.value ? '0 0 2px 2px rgba(0,128,0,0.6)' : '';
             filterInput.style.borderColor = filterInput.value ? 'rgb(0,128,0)' : 'rgb(204,204,204)';
-            // Show/hide the in-panel "Clear ALL" button based on STF input content
-            clearAllStfBtn.style.display = filterInput.value.trim() !== '' ? 'inline-block' : 'none';
+            // NOTE: clearAllStfBtn visibility is intentionally NOT managed here.
+            // It is controlled by updateFilterButtonsVisibility() which shows it only
+            // when BOTH the STF input AND at least one column filter are active.
         }
 
         /**
