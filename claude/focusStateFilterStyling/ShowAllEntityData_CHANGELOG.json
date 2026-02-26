@@ -1,26 +1,5 @@
 [
   {
-    "version": "9.97.13",
-    "date": "2026-02-26",
-    "sections": [
-      {
-        "label": "✨ Features",
-        "items": [
-          "Column filter active-state indicator: when a column filter field loses focus and still contains a filter string, the background colour is now kept (switching from the focus colour to a dedicated 'active' colour, default #fff9c4) rather than cleared. This gives a persistent visual indication of which columns currently have an active filter. The background is only removed on blur when the field is empty.",
-          "New configurable setting 'Column Filter Active Background' (sa_col_filter_active_bg, default #fff9c4) added to the Settings Manager in the '🎨 FILTER HIGHLIGHT COLORS' section.",
-          "Column filter focus prefix is now configurable: the hard-coded '🔍 ' string has been moved from the module-level constant COL_FILTER_FOCUS_PREFIX into the Settings Manager as 'Column Filter Focus Prefix' (sa_col_filter_focus_prefix, default '🔍 '). It can be set to any string, including empty."
-        ]
-      },
-      {
-        "label": "🔧 Code Quality",
-        "items": [
-          "Removed module-level constant COL_FILTER_FOCUS_PREFIX. All three helper functions (stripColFilterPrefix, applyColFilterFocusStyle, removeColFilterFocusStyle) and the Escape-key handler now read Lib.settings.sa_col_filter_focus_prefix at call time (with '🔍 ' as a ?? fallback), so prefix changes in Settings take effect immediately without a page reload.",
-          "removeColFilterFocusStyle updated: after stripping the prefix it checks whether the remaining value is empty; if so it clears backgroundColor, otherwise it applies sa_col_filter_active_bg to persist the active-filter visual."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.97.12",
     "date": "2026-02-26",
     "sections": [

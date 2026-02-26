@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.13+2026-02-26
+// @version      9.97.12+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -67,6 +67,10 @@
     const CACHE_KEY_HELP       = SCRIPT_BASE_NAME.toLowerCase() + '-remote-help-text';
     const CACHE_KEY_CHANGELOG  = SCRIPT_BASE_NAME.toLowerCase() + '-remote-changelog';
 
+
+    // Visual prefix prepended to a column-filter input while it has focus.
+    // Stripped before the value is used as an actual filter string.
+    const COL_FILTER_FOCUS_PREFIX = '🔍 ';
 
     // CONFIG SCHEMA
     const configSchema = {
@@ -328,20 +332,6 @@
             type: "color_picker",
             default: "#fffde7",
             description: "Background color of a column filter input while it has keyboard focus"
-        },
-
-        sa_col_filter_active_bg: {
-            label: "Column Filter Active Background",
-            type: "color_picker",
-            default: "#fff9c4",
-            description: "Background color kept on a column filter input after losing focus when it still contains a filter string"
-        },
-
-        sa_col_filter_focus_prefix: {
-            label: "Column Filter Focus Prefix",
-            type: "text",
-            default: "🔍 ",
-            description: "Decorative prefix prepended to a column filter field while it has focus (stripped before the value is used as a filter string)"
         },
 
         // ============================================================
@@ -4232,9 +4222,8 @@
                         // First press → clear user content but keep focus
                         if (isColumn) {
                             // Retain the focus prefix; position cursor right after it
-                            const _pfx = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
-                            e.target.value = _pfx;
-                            e.target.setSelectionRange(_pfx.length, _pfx.length);
+                            e.target.value = COL_FILTER_FOCUS_PREFIX;
+                            e.target.setSelectionRange(COL_FILTER_FOCUS_PREFIX.length, COL_FILTER_FOCUS_PREFIX.length);
                         } else {
                             e.target.value = '';
                             e.target.setSelectionRange(0, 0);
@@ -7273,15 +7262,16 @@
     // ── Column filter focus-mode visual helpers ──────────────────────────────
 
     /**
-     * Strip the decorative focus prefix (sa_col_filter_focus_prefix setting) from a raw
+     * Strip the decorative focus prefix (COL_FILTER_FOCUS_PREFIX) from a raw
      * column-filter input value, returning only the user-supplied filter string.
      *
-     * @param {string} value - Raw HTMLInputElement.value (may begin with the configured prefix)
+     * @param {string} value - Raw HTMLInputElement.value (may begin with COL_FILTER_FOCUS_PREFIX)
      * @returns {string} The filter string without the decorative prefix.
      */
     function stripColFilterPrefix(value) {
-        const prefix = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
-        return value.startsWith(prefix) ? value.slice(prefix.length) : value;
+        return value.startsWith(COL_FILTER_FOCUS_PREFIX)
+            ? value.slice(COL_FILTER_FOCUS_PREFIX.length)
+            : value;
     }
 
     /**
@@ -7292,36 +7282,27 @@
      * @param {HTMLInputElement} input
      */
     function applyColFilterFocusStyle(input) {
-        const prefix = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
-        if (!input.value.startsWith(prefix)) {
+        if (!input.value.startsWith(COL_FILTER_FOCUS_PREFIX)) {
             const existing = input.value;
-            input.value = prefix + existing;
+            input.value = COL_FILTER_FOCUS_PREFIX + existing;
             // Place cursor after prefix (at the end of any pre-existing text)
-            const pos = prefix.length + existing.length;
+            const pos = COL_FILTER_FOCUS_PREFIX.length + existing.length;
             input.setSelectionRange(pos, pos);
         }
         input.style.backgroundColor = Lib.settings.sa_col_filter_focus_bg || '#fffde7';
     }
 
     /**
-     * Remove the focus-mode visual state from a column filter input on blur:
-     * always strip the decorative prefix so the stored value is the clean filter
-     * string.  The background tint is only cleared when the field is empty — if
-     * the user has typed an actual filter string the "active" background colour
-     * (sa_col_filter_active_bg) is kept as a persistent visual indicator that
-     * this column has an active filter.
+     * Remove the focus-mode visual state from a column filter input:
+     * strip the prefix from the stored value and clear the background tint.
+     * This is intended to be called from a 'blur' event listener so that
+     * the persisted value is always the clean, prefix-free filter string.
      *
      * @param {HTMLInputElement} input
      */
     function removeColFilterFocusStyle(input) {
         input.value = stripColFilterPrefix(input.value);
-        if (input.value.trim() === '') {
-            // No filter content — clear the background entirely
-            input.style.backgroundColor = '';
-        } else {
-            // Filter content present — switch to the "active" background colour
-            input.style.backgroundColor = Lib.settings.sa_col_filter_active_bg || '#fff9c4';
-        }
+        input.style.backgroundColor = '';
     }
 
     /**
