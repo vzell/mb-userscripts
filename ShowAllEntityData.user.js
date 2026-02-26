@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.16+2026-02-26
+// @version      9.97.18+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -6244,15 +6244,25 @@
         // Check if global filter has value
         const globalFilterActive = filterInput.value.trim() !== '';
 
-        // Check if any column filters have values
+        // Check if any column filters have values.
+        // Use stripColFilterPrefix so a focused-but-empty field carrying the decorative
+        // prefix is not counted as active.
         const columnFilters = document.querySelectorAll('.mb-col-filter-input');
-        const columnFiltersActive = Array.from(columnFilters).some(input => input.value.trim() !== '');
+        const columnFiltersActive = Array.from(columnFilters).some(
+            inp => stripColFilterPrefix(inp.value).trim() !== ''
+        );
 
-        // Check if there are any highlights present
-        const highlightsPresent = document.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight').length > 0;
+        // Check if any sub-table (STF) filter inputs have values.
+        const stfFilters = document.querySelectorAll('.mb-subtable-filter-container input[type="text"]');
+        const stfFiltersActive = Array.from(stfFilters).some(inp => inp.value.trim() !== '');
 
-        // Show/hide Toggle highlighting button
-        unhighlightAllBtn.style.display = highlightsPresent ? 'inline-block' : 'none';
+        // Global "Toggle highlighting" button: visible whenever ANY filter string is
+        // present (global, sub-table, or column) — regardless of whether highlight
+        // spans are currently in the DOM (spans may be absent when highlighting is
+        // toggled OFF, but the button must still be reachable to turn it back ON).
+        unhighlightAllBtn.style.display =
+            (globalFilterActive || columnFiltersActive || stfFiltersActive)
+                ? 'inline-block' : 'none';
 
         // Show/hide Clear all COLUMN filters button
         clearColumnFiltersBtn.style.display = columnFiltersActive ? 'inline-block' : 'none';
@@ -9153,7 +9163,7 @@
      *
      * @param {string}          categoryName  - Human-readable subtable name (e.g. "Album")
      * @param {HTMLTableElement} table         - The <table> this filter applies to
-     * @returns {{ toggleIcon: HTMLElement, container: HTMLElement, highlightBtn: HTMLButtonElement }}
+     * @returns {{ toggleIcon: HTMLElement, container: HTMLElement, highlightBtn: HTMLButtonElement, clearAllStfBtn: HTMLButtonElement }}
      */
     function createSubTableFilterContainer(categoryName, table) {
         // Sanitize categoryName to a safe id fragment (strip non-alphanumeric)
@@ -9230,6 +9240,23 @@
         exLabel.appendChild(exCheckbox);
         exLabel.appendChild(document.createTextNode('Ex'));
 
+        // ── "Clear ALL COLUMN filters" button (inside STF panel) ────────────────
+        // Visible only while the STF input contains text.  Clicking it clears only
+        // the column-level filter inputs for this table — the STF input itself is
+        // left untouched so the sub-table filter keeps filtering.
+        const clearAllStfBtn = document.createElement('button');
+        clearAllStfBtn.id = `${pfx}-clear-all-btn`;
+        clearAllStfBtn.type = 'button';
+        clearAllStfBtn.title = 'Clear all COLUMN filters for this sub-table (sub-table filter is kept)';
+        // Create red ✗ symbol
+        const _xSym = document.createElement('span');
+        _xSym.textContent = '✗ ';
+        _xSym.style.cssText = 'color:red; font-size:1em; font-weight:bold;';
+        clearAllStfBtn.appendChild(_xSym);
+        clearAllStfBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
+        // Initially hidden — shown by updateInputStyle() when STF input has text
+        clearAllStfBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; border-radius:4px; background:rgb(240,240,240); border:1px solid rgb(204,204,204); cursor:pointer; vertical-align:middle; display:none;';
+
         // ── Highlight toggle button ───────────────────────────────────────────
         const highlightBtn = document.createElement('button');
         highlightBtn.id = `${pfx}-toggle-filter-highlight-btn`;
@@ -9251,6 +9278,7 @@
         // NOTE: highlightBtn is intentionally NOT appended to the container here;
         // it lives in subTableControls so it remains visible even when the
         // subtable-filter panel is collapsed and only column filters are active.
+        container.appendChild(clearAllStfBtn); // inside the collapsible panel
 
         // ── State ─────────────────────────────────────────────────────────────
         let highlightEnabled = true;
@@ -9261,6 +9289,8 @@
         function updateInputStyle() {
             filterInput.style.boxShadow  = filterInput.value ? '0 0 2px 2px rgba(0,128,0,0.6)' : '';
             filterInput.style.borderColor = filterInput.value ? 'rgb(0,128,0)' : 'rgb(204,204,204)';
+            // Show/hide the in-panel "Clear ALL" button based on STF input content
+            clearAllStfBtn.style.display = filterInput.value.trim() !== '' ? 'inline-block' : 'none';
         }
 
         /**
@@ -9484,6 +9514,24 @@
             }
         }
 
+        // ── "Clear ALL COLUMN filters" button handler ────────────────────────────
+        clearAllStfBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Clear only column-level filter inputs for this table.
+            // The STF input is intentionally left alone so the sub-table filter
+            // continues to filter rows while the column filters are wiped.
+            if (table) {
+                table.querySelectorAll('.mb-col-filter-input').forEach(inp => {
+                    inp.value = '';
+                    inp.style.backgroundColor = '';
+                    inp.style.boxShadow = '';
+                });
+            }
+            // Re-run the global filter so column-filter row visibility is refreshed.
+            if (typeof runFilter === 'function') runFilter();
+            Lib.debug('filter', `STF in-panel "Clear all COLUMN filters" clicked for "${categoryName}": column filters cleared, STF kept`);
+        });
+
         // ── Event wiring ─────────────────────────────────────────────────────
         const debouncedApply = debounce(applySubFilter, Lib.settings.sa_filter_debounce_delay || 300);
         filterInput.addEventListener('input', debouncedApply);
@@ -9561,7 +9609,7 @@
             }
         });
 
-        return { toggleIcon, container, highlightBtn };
+        return { toggleIcon, container, highlightBtn, clearAllStfBtn };
     }
 
     /**

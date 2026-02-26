@@ -42624,27 +42624,29 @@ to
 * change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
 
 
-* TODO subtables
+* DONE subtables
 
 - "Toggle highlight" button should only be visible when a filter string is present
+- subtable "Clear ALL filters" button (onyl visible when filter is active)
+- "Sub-table 'Toggle highlighting' button: now starts hidden and only becomes visible while a filter string is present in the sub-table input (controlled by updateInputStyle()).",
+
 
 * TODO subtables
 
 - when in regexp mode, remove the alert window, just add red border and "Invalid regexp" info message
+  "Regexp invalid — no alert, just inline message: removed Lib.showCustomAlert() calls from runFilter() and applySubFilter() on invalid regex (introduced in 9.97.10). Alerts interrupted the typing flow; the red border + inline status message in the filter-status span is sufficient feedback. Both functions reverted from async to sync. The load dialog confirmLoad() alert (also 9.97.10) is retained as it validates before opening the OS file picker."
+
 - change default colors of filter borders, and make them configurable:  orange for global filter, leave the colors as is for other filters
-- subtable "Clear ALL filters" button (onyl visible when filter is active)
+  "Sub-table filter active border: now configurable. New setting 'sa_subtable_filter_active_border_color' (default #008000, green) controls the border and glow colour of sub-table filter inputs when active. Both new settings appear in the 🎨 FILTER HIGHLIGHT COLORS settings section."
+  "Global filter active border: changed from red to orange (configurable). New setting 'sa_global_filter_active_border_color' (default #FFA500) controls the border and glow colour of the global filter input when a filter string is active.",
+
 - runFilter async (is that a problem, async in general ?)
 
-          "Global 'Toggle highlighting' button: now visible only when a filter string is present (global or column) — previously it appeared/disappeared based on DOM highlight spans, which could show it when no filter was active. updateFilterButtonsVisibility() updated to use the same (globalFilterActive || columnFiltersActive) condition as the 'Clear ALL filters' button.",
-          "Sub-table 'Toggle highlighting' button: now starts hidden and only becomes visible while a filter string is present in the sub-table input (controlled by updateInputStyle()).",
-          "Sub-table 'Clear ALL filters' button (new): a '✕ Clear ALL filters' button is added to every sub-table filter container, visible only when the sub-table filter input has a value. Clicking it clears the sub-table filter text, restores hidden rows and highlights, clears all column filter inputs for that specific table, and re-runs the global filter.",
-          "Global filter active border: changed from red to orange (configurable). New setting 'sa_global_filter_active_border_color' (default #FFA500) controls the border and glow colour of the global filter input when a filter string is active.",
-          "Sub-table filter active border: now configurable. New setting 'sa_subtable_filter_active_border_color' (default #008000, green) controls the border and glow colour of sub-table filter inputs when active. Both new settings appear in the 🎨 FILTER HIGHLIGHT COLORS settings section."
+* One bug left
 
- "label": "🐛 Bug Fixes",
-        "items": [
-          "Regexp invalid — no alert, just inline message: removed Lib.showCustomAlert() calls from runFilter() and applySubFilter() on invalid regex (introduced in 9.97.10). Alerts interrupted the typing flow; the red border + inline status message in the filter-status span is sufficient feedback. Both functions reverted from async to sync. The load dialog confirmLoad() alert (also 9.97.10) is retained as it validates before opening the OS file picker."
-
+1.) when ONLY a sub-table filter string is added, ONLY the sub-table level "Clear all filters" should be present (right now both the "Clear all filters" and the "Clear all COLUMN filters" buttons appear)
+2.) when ONLY one or more column level filters are added, and NO sub-table filter is present, ONLY the "Clear all COLUMN filters" should be present (right now both the "Clear all filters" and the "Clear all COLUMN filters" buttons appear)
+3.) when BOTH filters are present, then BOTH buttons should be present to
 
 * DONE why button movement
 
@@ -42683,7 +42685,6 @@ Why does the following change
 
 moves the buttons shortcuts, settings and application help from the right of the "Export" button to the left of the "Resize" button
 
-
 * DONE querySelector -> document.getElementById('<ID>');
 
 change all "querySelector" which use "textContent", "title" etc. searches in UI elements 
@@ -42701,14 +42702,8 @@ document.getElementById('<unique ID>');
 
 Please add missing IDs to UI elements when neccessary
 
-
-* document test suite after userscript and library changes
-** library
-** userscript
-
-
 * DONE focus state filter styling - search icon "🔍" and make the background of the filter field light yellow
-** initial
+** DONE initial
 
 In the uploaded userscript,
 
@@ -42723,7 +42718,7 @@ focus. Repeat this procedure for every column level filter field on the page.
 When loading data from disk with "Load from Disk" -button, remember to also clear these visual artefacts if they were
 present before.
 
-** one more feature
+** DONE one more feature
 
 It works like a charm.
 
@@ -42741,8 +42736,7 @@ const COL_FILTER_FOCUS_PREFIX = '🔍 ';
 
 a configurable item in the "const configSchema" variable.
 
-
-* TODO "Esc" handling in filter field
+* DONE "Esc" handling in filter field
 ** DONE initial
 
 In the uploaded script,
@@ -42796,9 +42790,9 @@ Please also implement the following keyboard shortcuts and document them in the 
 
 Also document the previously implemented "focus state filter styling for column filter fields in the application helpfile "ShowAllEntityData_HELP.txt"
 
-** TODO Clicking the "x" - bug
-** TODO switch keys
-*** initial
+** DONE Clicking the "x" - bug
+** DONE switch keys
+*** DONE initial
 
 In the uploaded script,
 
@@ -42830,7 +42824,7 @@ Current behaviour is,
 
 3.) the current "Ctrl+Esc" key combination is intercepted by the OS, please change it to "Ctrl+Shift+Esc" in the whole source code and applicatin help fiel "ShowAllEntityData_HELP.txt"
 
-*** bugs
+*** DONE bugs
 
 1.) when clicking the small "x" in a column filter field, it actually should just erase the input text if present and
 leave the filter field focused right after the "sa_col_filter_focus_prefix" string (so basically what the "Escape"-key
@@ -42840,3 +42834,42 @@ press would do when inside the filter field). Right now it erases and blurs.
 COLUMN filters for this table" and the "Toggle highlightning" button should also appear, like they do if we enter a column level filter expression
 
 Also please provide always changelog entries in the uploaded file "ShowAllEntityData_CHANGELOG.json". You already missed that the last time, please reapply.
+
+* document test suite after userscript and library changes
+** library
+** userscript
+
+
+* DONE "Global 'Toggle highlighting' button
+** DONE initial
+
+1.) "Global 'Toggle highlighting' button
+
+- it gets visible when entering either a global filter string, or a column filter string, BUT NOT when entering a sub-table level filter string 
+- it should only be visible when a filter string is present (global, sub-table, or column). When starting fresh on a
+  final rendered page and adding a filter string on the column level, it appears, but it doesn't vanish when the column
+  filter is cleared again, so when effectively NO filter is set on ANY level
+
+2.) a "Sub-table 'Clear ALL COLUMNS filters' button should be added to every sub-table filter container, visible only when the
+sub-table filter input has a value. Clicking it should clear the sub-table columns filter texts onyl,
+
+** DONE wrong question
+
+Actually my input last time was wrong, what I meant was
+
+2.) a "Sub-table 'Clear ALL COLUMNS filters' button should be added to every sub-table filter container, visible only when the
+sub-table filter input has a value. Clicking it should clear the sub-table columns filter texts onyl,
+
+** DONE bug
+
+When starting fresh on a final rendered page and adding a filter string on the sub-table level, ONLY the global "Toggle highlight" button appears, but not the global "Clear filter" buttons.
+Also the the global "Toggle highlight" button just erases the hightlightning the first time it is clicked, but doesn't toggle it back on.
+
+
+
+* TODO rename "Toggle filter elements on/off for this section"
+
+rename tooltip "Toggle filter elements on/off" to "Toggle filter elements on/off for this section"
+
+* TODO the global "Clear ALL filters" should only appear when at least one global or sub-table filter is in effect
+

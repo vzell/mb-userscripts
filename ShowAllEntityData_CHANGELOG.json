@@ -1,5 +1,45 @@
 [
   {
+    "version": "9.97.18",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "In-panel 'Clear ALL COLUMN filters' button (introduced in 9.97.17): corrected behaviour — the button now clears only the column-level filter inputs for that specific sub-table. The STF (sub-table filter) input is intentionally left untouched so the sub-table filter continues to be active while the column filters are wiped. Previously the button also cleared the STF input and restored STF-hidden rows, which was the wrong scope for this action.",
+          "Button title updated from 'Clear sub-table filter AND all column filters for this table' to 'Clear all COLUMN filters for this sub-table (sub-table filter is kept)' to accurately describe the corrected behaviour.",
+          "Button label updated from 'Clear ALL' to 'Clear all COLUMN filters' to clearly distinguish this in-panel button from the external 'Clear all filters' button in the sub-table controls bar."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.97.17",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Global 'Toggle highlighting' button: visibility is now driven by active filter *strings* rather than DOM highlight span presence. Previously the button was shown only when `.mb-global-filter-highlight` or `.mb-column-filter-highlight` spans existed in the DOM; this caused two failure modes: (1) the button never appeared when only a sub-table (STF) filter was active (those use `.mb-subtable-filter-highlight` spans which were not checked), and (2) after the user toggled highlighting OFF the spans were removed from the DOM, making the button vanish even though filters were still active — leaving no way to re-enable highlighting without retyping the filter. The button now appears whenever any filter string is non-empty (global, any STF, or any column) and disappears as soon as all filter fields are empty.",
+          "Global 'Toggle highlighting' button: the column-filter active check now uses `stripColFilterPrefix()` consistently, so a focused-but-empty column filter field carrying only the decorative '🔍 ' prefix is no longer incorrectly counted as an active filter."
+        ]
+      },
+      {
+        "label": "✨ Features",
+        "items": [
+          "New in-panel 'Clear ALL' button added to every sub-table filter container (the collapsible panel opened by clicking the 🔍 toggle icon). The button is placed after the Cc/Rx/Ex option row, is initially hidden, and appears as soon as the STF input contains any text. Clicking it: (1) clears the STF input text, (2) calls clearSubFilter() to restore any rows hidden by the STF filter and remove STF highlight spans, (3) clears all column-level filter inputs for that specific table (value, background, and box-shadow), and (4) calls runFilter() so that the global/column filter view is fully refreshed. This gives users a one-click 'reset everything for this sub-table' action while keeping the STF panel open and focused."
+        ]
+      },
+      {
+        "label": "🔧 Code Quality",
+        "items": [
+          "updateInputStyle() (inner function of createSubTableFilterContainer) now also controls the visibility of the new in-panel 'Clear ALL' button: shows it when filterInput.value is non-empty, hides it otherwise. Because updateInputStyle() is called by both applySubFilter() and clearSubFilter(), the button's visibility is always in sync with the STF input state without additional event listeners.",
+          "createSubTableFilterContainer() @returns JSDoc updated to include the newly exported clearAllStfBtn member."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.16",
     "date": "2026-02-26",
     "sections": [
