@@ -41247,11 +41247,9 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 * TODO Checks for unused variables and functions
 ** question
 
-In the uploaded userscript and library check for all unused variables and function definitions
+In the uploaded userscript and library
+check for all unused variables and function definitions, create a report and fix
  
-- Check for obvious code which could make it into a functions without breaking the rest of the big userscript
-- check for code blocks which could easily be refactored to make the code more clear
-
 ** answer
 *** gemini
 
@@ -41460,12 +41458,6 @@ function splitCountryDateCell(newRow, countryDateIdx) {
 Doing this for Location and Area as well would shave hundreds of lines of visual noise off startFetchingProcess and make the primary data-collection loop much easier to follow.
 #+end_example
 
-* TODO generic refactoring
-
-In the uploaded script, the code has been grown over time and is now more or less unmaintanble.  What are the best
-options to refactor the code, given it's logic but without breaking stuff, Which approach ist the best regarding best
-practices and best patterns
-
 * Reorder functions
 ** question
 
@@ -41522,6 +41514,15 @@ The reorganized code is functionally identical to the original but much more rea
 
 *** gemini
 
+
+* TODO generic refactoring
+
+In the uploaded script, the code has been grown over time and is now more or less unmaintanble.  What are the best
+options to refactor the code, given it's logic but without breaking stuff, Which approach ist the best regarding best
+practices and best patterns
+
+- Check for obvious code which could make it into a functions without breaking the rest of the big userscript
+- check for code blocks which could easily be refactored to make the code more clear
 
 * TODO posting to MusicBrainz forum
 ** <2026-01-28 Wed 09:05>
@@ -42680,6 +42681,7 @@ to
 
 * change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
 
+
 * subtables
 
 - "Toggle highlight" button should only be visible when a filter string is present
@@ -42688,7 +42690,8 @@ to
 - subtable "Clear ALL filters" button (onyl visible when filter is active)
 - runFilter async (is that a problem, async in genral ?)
 
-* why button movement
+
+* DONE why button movement
 
 In the uploaded userscript,
 
@@ -42725,3 +42728,12 @@ Why does the following change
 
 moves the buttons shortcuts, settings and application help from the right of the "Export" button to the left of the "Resize" button
 
+
+* TODO change all "const settingsBtn = controlsContainer.querySelector('button[title*="Open settings manager"]');"
+
+to find by ID
+
+
+* document test suite after userscript and library changes
+** library
+** userscript
