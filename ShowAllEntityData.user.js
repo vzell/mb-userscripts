@@ -3,7 +3,7 @@
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      9.97.9+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
-// @author       Gemini (directed by vzell)
+// @author       vzell
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
@@ -42,10 +42,10 @@
  * Recordings, Releases, Works, etc.) into a single view with real-time multi-column sorting and filtering.
  *
  * This script has been created by giving the right facts and asking the right questions initially to Gemini. When
- * Gemini gots stuck, I asked ChatGPT for help, until I got everything right. Later when the script increased in size I
- * switched to Claude and only now and then asked the other tow for help.
+ * Gemini gots stuck, I asked ChatGPT for help, until I got everything right. Later when the script increased in size
+ * and evolved, I switched to Claude and only now and then asked the other two for help.
  *
- * NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome and Firefox.
+ * NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome, Firefox, Opera and Brave.
  */
 
 (function() {
@@ -5666,7 +5666,7 @@
     settingsBtn.id = 'mb-settings-btn';
     settingsBtn.textContent = '⚙️';
     settingsBtn.type = 'button';
-    settingsBtn.title = `Open settings manager to configure script behavior (${getPrefixDisplay()}, then ,)`;
+    settingsBtn.title = `Open userscript settings manager to configure script behavior (${getPrefixDisplay()}, then ,)`;
     settingsBtn.onclick = () => {
         console.log('Settings button clicked');
         console.log('Lib object:', Lib);
@@ -5692,7 +5692,7 @@
         const links = document.querySelectorAll('a[href="#"]');
         let settingsLink = null;
         for (const link of links) {
-            if (link.textContent.includes('Settings Manager') || link.textContent.includes('⚙️')) {
+            if (link.textContent.includes('Userscript Settings Manager') || link.textContent.includes('⚙️')) {
                 settingsLink = link;
                 break;
             }
@@ -5702,7 +5702,7 @@
             settingsLink.click();
         } else {
             console.error('No settings access method available');
-            alert('Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager');
+            alert('Settings interface not available. Please use the menu: Editing → ⚙️ Userscript Settings Manager');
         }
     };
 
