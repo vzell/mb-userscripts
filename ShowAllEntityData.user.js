@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.7+2026-02-26
+// @version      9.97.8+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -10690,6 +10690,30 @@
                 if (typeof window.updateFilterButtonsVisibility === 'function') {
                     window.updateFilterButtonsVisibility();
                 }
+
+                // Reset all sort state after every disk load.
+                // If the page was already rendered with active column sorts (including
+                // multi-column sorts with cell tints), the sort-icon highlights and tinted
+                // cells persist in the DOM after re-render because makeTableSortableUnified()
+                // only adds new sort buttons — it does not undo previously applied DOM state.
+                // Steps:
+                //   (a) call clearTints() from the tint registry for every known sortKey to
+                //       remove multi-sort background colours from data cells,
+                //   (b) strip .sort-icon-active from all sort icon buttons,
+                //   (c) reset every sort-state entry in multiTableSortStates to neutral,
+                //   (d) clear per-h3 sort status spans,
+                //   (e) clear both Maps so stale keys from the previous render don't accumulate.
+                multiSortTintRegistry.forEach(({ clearTints }) => {
+                    try { clearTints(); } catch (_) { /* ignore if table no longer in DOM */ }
+                });
+                document.querySelectorAll('.sort-icon-btn').forEach(btn => {
+                    btn.classList.remove('sort-icon-active');
+                });
+                document.querySelectorAll('.mb-sort-status').forEach(el => {
+                    el.textContent = '';
+                });
+                multiTableSortStates.clear();
+                multiSortTintRegistry.clear();
 
                 if (Lib.settings.sa_enable_sticky_headers) {
                     applyStickyHeaders();

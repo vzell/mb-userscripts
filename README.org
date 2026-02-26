@@ -42512,7 +42512,7 @@ should get a new 'title="Clear all COLUMN filters for this table"' and the butto
 
 - now the last bug: when already on the final rendered page and THEN loading data from disk by pressing the "Load from
   Disk"-button when there were sortings on sub-tables active, the sort direction icons are still highlighted (even multi
-  columns sort with colorized data cells for better visualization)
+  columns sort with colorized data cells for better visualization). This should also be reset, like what we did before with resetting the filte stuff
   
 Why is this
 

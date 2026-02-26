@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.97.8",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Load from Disk (re-load on already-rendered page) — sort state not reset: after loading, previously active column sorts (including multi-column sorts with coloured cell tints and highlighted sort-icon buttons) remained visible in the DOM. Fixed by adding a full sort reset in loadTableDataFromDisk() after makeH2sCollapsible(), mirroring the existing filter reset introduced in 9.97.7: (a) clearTints() is called for every entry in multiSortTintRegistry to remove multi-sort cell background colours, (b) .sort-icon-active is stripped from all sort-icon buttons, (c) all per-h3 .mb-sort-status spans are cleared, (d) multiTableSortStates and multiSortTintRegistry are both cleared so stale keys from the previous render do not accumulate."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.7",
     "date": "2026-02-26",
     "sections": [
