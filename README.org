@@ -41006,64 +41006,6 @@ Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': await is only v
 
 Otherwise the the script woudn't even load
 
-* TODO "Esc" handling in filter field
-** initial
-
-In the uploaded script,
-
-when the focus is inside a filter field, pressing "Esc" once should empty the filter but leave the focus IN the filter
-field, so that we can enter characters by the keyboard for example), but when the cursor is at the beginning of the
-filter field (so basically there is no filter condition at all typed in, or the filter field was just made empty)
-pressing "Esc" should finally release the focus from the filter field.
-
-Rigth now the filter is emptied and the focus is released unconditionally.
-
-** 1
-
-the filters actually get cleared, if something has been typed in before as in the previous implementation, but the focus
-is NOT retained in such a way, that I can start typing right away. I have to artifically click again inside the now empty filter field to gain focus again
-
-** chatgpt
-
-In the uploaded script,
-
-when the focus is inside a filter field, pressing "Esc" once should empty the filter but leave the focus IN the filter
-field, so that we can enter characters by the keyboard for example), but when the cursor is at the beginning of the
-filter field (so basically there is no filter condition at all typed in, or the filter field was just made empty)
-pressing "Esc" should finally release the focus from the filter field.
-
-Rigth now the filter is emptied and the focus is released unconditionally.
-
-So, distinguish between two states when "Esc" is pressed:
-
-Field is not empty: Clear the text but stay inside (keep focus).
-
-Field is already empty: The user wants to leave the field (release focus/blur).
-
-** global ok
-
-OK, so the behaviour for the global filter is OK now, but the column specific filters (remember they also exist in each
-table for a rendered page with multi tables) the first "Esc" clears the filter but it doesn't stay focused, so that I can start typing again 
-
-** TODO midifier escape
-
-If you want, next step could be:
-
-Shift+Esc to always blur
-
-Ctrl+Esc to clear all filters (global + columns)
-
-----------
-
-If you want next-level polish:
-
-restore same table index, not just first matching column
-
-allow Esc to clear all column filters in table with modifier
-
-visual feedback (“cleared”) animation
-
-
 
 * TODO make the whole sidebar vanish to the right side of the browser window
 ** DONE sidebar
@@ -42622,7 +42564,7 @@ should trigger the "collapsing/uncollapsing" of just the current h2 section when
 * TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter
 
 
-* TODO Is the check for invalid regexp really working, I don't getn any eoor
+* TODO Is the check for invalid regexp really working, I don't get any error
 
 Is the check for invalid regexp really working in the following code
 
@@ -42729,7 +42671,7 @@ Why does the following change
 moves the buttons shortcuts, settings and application help from the right of the "Export" button to the left of the "Resize" button
 
 
-* TODO querySelector -> document.getElementById('<ID>');
+* DONE querySelector -> document.getElementById('<ID>');
 
 change all "querySelector" which use "textContent", "title" etc. searches in UI elements 
 
@@ -42751,4 +42693,96 @@ Please add missing IDs to UI elements when neccessary
 ** library
 ** userscript
 
-* when entering the column level filter fieldds with "Ctrl-C" add the dsearchicon and make the background of the filter field light yellow. Remove the both when leavin the filter field
+* focus state filter styling - search icon "🔍" and make the background of the filter field light yellow
+** initial
+
+In the uploaded userscript,
+
+when entering the column level filter fields with "Ctrl-C" add the search icon "🔍 " character + a blank at the
+beginning of the filter field (but ignore them otherwise for the actual filter string which the user will maybe enter in
+the filter field ) and make the background of the filter field light yellow by default (add a new configurable variable
+for the color in the "const configSchema" variable). Remove both the background color and the two characters "🔍 " when
+leaving the filter field either by tabbing to the next column (or by clicking with the mouse outside somewhere alos, or
+by using a keyboard short cut which releases the focus), so basically when ever the filter field looses it's
+focus. Repeat this procedure for every column level filter field on the page.
+
+When loading data from disk with "Load from Disk" -button, remember to also clear these visual artefacts if they were
+present before.
+
+** one more feature
+
+It works like a charm.
+
+Please add one more feature: Only remove the background colour from the column filter field when the user actuall hasn't
+entered any data, or when leaving the field and the user has deleted by the keboad all previous inputet data. The "🔍 "
+should, as it is now, always be removed when the filter field losses the focs. So the end outcome would be, if the
+end-user had entered filter stings in multiple column filter fields, the end-user has a nice visualization which columns
+actually have filter stings added.
+
+Also make the current
+
+#+begin_example
+const COL_FILTER_FOCUS_PREFIX = '🔍 ';
+#+end_example
+
+a configurable item in the "const configSchema" variable.
+
+* TODO "Esc" handling in filter field
+** DONE initial
+
+In the uploaded script,
+
+when the focus is inside a filter field, pressing "Esc" once should empty the filter but leave the focus IN the filter
+field, so that we can enter characters by the keyboard for example), but when the cursor is at the beginning of the
+filter field (so basically there is no filter condition at all typed in, or the filter field was just made empty)
+pressing "Esc" should finally release the focus from the filter field.
+
+Rigth now the filter is emptied and the focus is released unconditionally.
+
+** DONE 1
+
+the filters actually get cleared, if something has been typed in before as in the previous implementation, but the focus
+is NOT retained in such a way, that I can start typing right away. I have to artifically click again inside the now empty filter field to gain focus again
+
+** DONE chatgpt
+
+In the uploaded script,
+
+when the focus is inside a filter field, pressing "Esc" once should empty the filter but leave the focus IN the filter
+field, so that we can enter characters by the keyboard for example), but when the cursor is at the beginning of the
+filter field (so basically there is no filter condition at all typed in, or the filter field was just made empty)
+pressing "Esc" should finally release the focus from the filter field.
+
+Rigth now the filter is emptied and the focus is released unconditionally.
+
+So, distinguish between two states when "Esc" is pressed:
+
+Field is not empty: Clear the text but stay inside (keep focus).
+
+Field is already empty: The user wants to leave the field (release focus/blur).
+
+** DONE global ok
+
+OK, so the behaviour for the global filter is OK now, but the column specific filters (remember they also exist in each
+table for a rendered page with multi tables) the first "Esc" clears the filter but it doesn't stay focused, so that I can start typing again 
+
+** TODO midifier escape
+
+If you want, next step could be:
+
+Shift+Esc to always blur
+
+Ctrl+Esc to clear all filters (global + columns)
+
+----------
+
+If you want next-level polish:
+
+restore same table index, not just first matching column
+
+allow Esc to clear all column filters in table with modifier
+
+visual feedback (“cleared”) animation
+
+
+

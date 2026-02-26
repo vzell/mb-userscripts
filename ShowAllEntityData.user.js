@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.11+2026-02-26
+// @version      9.97.12+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -66,6 +66,11 @@
     const REMOTE_CACHE_TTL_MS  = 60 * 60 * 1000; // 1 hour
     const CACHE_KEY_HELP       = SCRIPT_BASE_NAME.toLowerCase() + '-remote-help-text';
     const CACHE_KEY_CHANGELOG  = SCRIPT_BASE_NAME.toLowerCase() + '-remote-changelog';
+
+
+    // Visual prefix prepended to a column-filter input while it has focus.
+    // Stripped before the value is used as an actual filter string.
+    const COL_FILTER_FOCUS_PREFIX = '🔍 ';
 
     // CONFIG SCHEMA
     const configSchema = {
@@ -320,6 +325,13 @@
             type: "color_picker",
             default: "#add8e6",
             description: "Background color for column filter matches"
+        },
+
+        sa_col_filter_focus_bg: {
+            label: "Column Filter Focus Background",
+            type: "color_picker",
+            default: "#fffde7",
+            description: "Background color of a column filter input while it has keyboard focus"
         },
 
         // ============================================================
@@ -3257,6 +3269,7 @@
         // Clear all column filters
         document.querySelectorAll('.mb-col-filter-input').forEach(input => {
             input.value = '';
+            input.style.backgroundColor = '';
         });
 
         // Re-run filter to update display
@@ -4020,7 +4033,8 @@
 
                     if (targetInput) {
                         targetInput.focus();
-                        targetInput.select();
+                        // No .select() here: the focus handler (applyColFilterFocusStyle)
+                        // prepends the search prefix and positions the cursor after it.
                         Lib.debug('shortcuts', `First column filter focused via ${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')} (table ${currentTableIndex + 1}/${tables.length})`);
                     } else {
                         Lib.warn('shortcuts', `No suitable column filter input found in table ${currentTableIndex + 1}`);
@@ -4194,15 +4208,27 @@
                     const isColumn = e.target.classList.contains('mb-col-filter-input');
                     const filterType = isColumn ? 'Column' : 'Global';
 
-                    if (e.target.value.trim() === '') {
-                        // Second press → blur
+                    // For column filters, consider the field "empty" when only the
+                    // focus prefix remains (no actual user-entered filter content).
+                    const effectiveValue = isColumn
+                        ? stripColFilterPrefix(e.target.value).trim()
+                        : e.target.value.trim();
+
+                    if (effectiveValue === '') {
+                        // Second press → blur (blur handler strips prefix and clears bg)
                         e.target.blur();
                         Lib.debug('shortcuts', `${filterType} filter blurred via Escape (second press)`);
                     } else {
-                        // First press → clear and keep focus
-                        e.target.value = '';
+                        // First press → clear user content but keep focus
+                        if (isColumn) {
+                            // Retain the focus prefix; position cursor right after it
+                            e.target.value = COL_FILTER_FOCUS_PREFIX;
+                            e.target.setSelectionRange(COL_FILTER_FOCUS_PREFIX.length, COL_FILTER_FOCUS_PREFIX.length);
+                        } else {
+                            e.target.value = '';
+                            e.target.setSelectionRange(0, 0);
+                        }
                         runFilter();
-                        e.target.setSelectionRange(0, 0);
                         Lib.debug('shortcuts', `${filterType} filter cleared via Escape (first press, focus kept)`);
                     }
 
@@ -4305,7 +4331,7 @@
         const globalFilterInput = document.getElementById('mb-global-filter-input');
         const globalFilter = globalFilterInput?.value || '';
         const columnFilters = Array.from(document.querySelectorAll('.mb-col-filter-input'))
-            .filter(inp => inp.value)
+            .filter(inp => stripColFilterPrefix(inp.value))
             .length;
 
         // Calculate percentages
@@ -6062,6 +6088,7 @@
         // Clear all column filters only
         document.querySelectorAll('.mb-col-filter-input').forEach(input => {
             input.value = '';
+            input.style.backgroundColor = '';
         });
 
         // Re-run filter to update display
@@ -6176,6 +6203,7 @@
         // Clear all column filter inputs in this specific table
         table.querySelectorAll('.mb-col-filter-input').forEach(input => {
             input.value = '';
+            input.style.backgroundColor = '';
         });
 
         // Re-run filter to update display
@@ -7111,10 +7139,11 @@
         // Save column filter parameters
         const columnFilters = [];
         document.querySelectorAll('.mb-col-filter-input').forEach((input, index) => {
-            if (input.value.trim()) {
+            const filterVal = stripColFilterPrefix(input.value).trim();
+            if (filterVal) {
                 columnFilters.push({
                     index: index,
-                    query: input.value.trim(),
+                    query: filterVal,
                     caseSensitive: false, // Column filters don't have case sensitivity toggle
                     isRegex: false
                 });
@@ -7230,6 +7259,52 @@
         });
     }
 
+    // ── Column filter focus-mode visual helpers ──────────────────────────────
+
+    /**
+     * Strip the decorative focus prefix (COL_FILTER_FOCUS_PREFIX) from a raw
+     * column-filter input value, returning only the user-supplied filter string.
+     *
+     * @param {string} value - Raw HTMLInputElement.value (may begin with COL_FILTER_FOCUS_PREFIX)
+     * @returns {string} The filter string without the decorative prefix.
+     */
+    function stripColFilterPrefix(value) {
+        return value.startsWith(COL_FILTER_FOCUS_PREFIX)
+            ? value.slice(COL_FILTER_FOCUS_PREFIX.length)
+            : value;
+    }
+
+    /**
+     * Apply the focus-mode visual state to a column filter input:
+     * prepend the search-icon prefix (if absent) and tint the background.
+     * Positions the text cursor right after the prefix so the user can type immediately.
+     *
+     * @param {HTMLInputElement} input
+     */
+    function applyColFilterFocusStyle(input) {
+        if (!input.value.startsWith(COL_FILTER_FOCUS_PREFIX)) {
+            const existing = input.value;
+            input.value = COL_FILTER_FOCUS_PREFIX + existing;
+            // Place cursor after prefix (at the end of any pre-existing text)
+            const pos = COL_FILTER_FOCUS_PREFIX.length + existing.length;
+            input.setSelectionRange(pos, pos);
+        }
+        input.style.backgroundColor = Lib.settings.sa_col_filter_focus_bg || '#fffde7';
+    }
+
+    /**
+     * Remove the focus-mode visual state from a column filter input:
+     * strip the prefix from the stored value and clear the background tint.
+     * This is intended to be called from a 'blur' event listener so that
+     * the persisted value is always the clean, prefix-free filter string.
+     *
+     * @param {HTMLInputElement} input
+     */
+    function removeColFilterFocusStyle(input) {
+        input.value = stripColFilterPrefix(input.value);
+        input.style.backgroundColor = '';
+    }
+
     /**
      * Adds a filter row beneath the table header with input fields for per-column filtering
      * @param {HTMLTableElement} table - The table to add column filters to
@@ -7277,7 +7352,7 @@
 
             // Use debounced version for typing in column filters
             const debouncedColumnFilter = debounce(() => {
-                Lib.debug('filter', `Column filter updated on column ${idx}: "${input.value}"`);
+                Lib.debug('filter', `Column filter updated on column ${idx}: "${stripColFilterPrefix(input.value)}"`);
                 runFilter();
             }, Lib.settings.sa_filter_debounce_delay || 300);
 
@@ -7285,6 +7360,13 @@
                 e.stopPropagation();
                 debouncedColumnFilter();
             });
+
+            // Focus: prepend search-icon prefix and tint the background
+            input.addEventListener('focus', () => applyColFilterFocusStyle(input));
+
+            // Blur: strip prefix and clear the background tint so the stored
+            // value is always the clean filter string (no visual artefacts)
+            input.addEventListener('blur', () => removeColFilterFocusStyle(input));
 
             wrapper.appendChild(input);
             wrapper.appendChild(clear);
@@ -7307,8 +7389,9 @@
         if (!table) return [];
         return Array.from(table.querySelectorAll('.mb-col-filter-input'))
             .map(inp => {
-                inp.style.boxShadow = inp.value ? '0 0 2px 2px green' : '';
-                return { raw: inp.value, idx: parseInt(inp.dataset.colIdx, 10) };
+                const raw = stripColFilterPrefix(inp.value);
+                inp.style.boxShadow = raw ? '0 0 2px 2px green' : '';
+                return { raw, idx: parseInt(inp.dataset.colIdx, 10) };
             })
             .map(f => ({ val: (isCaseSensitive || isRegExp) ? f.raw : f.raw.toLowerCase(), idx: f.idx }))
             .filter(f => f.val);
@@ -7507,7 +7590,7 @@
 
             // Count active column filters
             const activeColFilters = document.querySelectorAll('.mb-col-filter-input');
-            const activeColCount = Array.from(activeColFilters).filter(inp => inp.value).length;
+            const activeColCount = Array.from(activeColFilters).filter(inp => stripColFilterPrefix(inp.value)).length;
             if (activeColCount > 0) {
                 filterParts.push(`${activeColCount} column filter${activeColCount > 1 ? 's' : ''}`);
             }
@@ -7542,7 +7625,7 @@
                         if (subFilterStatus) {
                             // Count active column filters in this specific table
                             const tableColFilters = Array.from(table.querySelectorAll('.mb-col-filter-input'))
-                                .filter(inp => inp.value);
+                                .filter(inp => stripColFilterPrefix(inp.value));
 
                             const group = filteredArray[tableIdx];
                             const rowsInTable = group ? group.rows.length : 0;
@@ -7552,7 +7635,7 @@
                                     const colIdx = parseInt(inp.dataset.colIdx, 10);
                                     const headers = table.querySelectorAll('thead tr:first-child th');
                                     const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼]/g, '').trim() : `Col ${colIdx}`;
-                                    return `${colName}:"${inp.value}"`;
+                                    return `${colName}:"${stripColFilterPrefix(inp.value)}"`;
                                 }).join(', ');
                                 subFilterStatus.textContent = `✓ Filtered ${rowsInTable} rows [${colFilterInfo}]`;
                                 subFilterStatus.style.color = 'green';
@@ -7970,6 +8053,7 @@
         document.querySelectorAll('.mb-col-filter-input').forEach(inp => {
             inp.value = '';
             inp.style.boxShadow = '';
+            inp.style.backgroundColor = '';
         });
 
         // Reset all buttons back to original grey background
@@ -10525,7 +10609,14 @@
 
                 Lib.debug('cache', `Loaded data version ${data.version} from ${data.timestampReadable} (File total: ${data.rowCount} rows)`);
 
-                // Prepare the page for re-hydration
+                // Prepare the page for re-hydration.
+                // First, strip any focus-mode prefix and background tint from column
+                // filter inputs that may still be in the DOM (e.g. if a field had
+                // focus when the Load dialog was confirmed).
+                document.querySelectorAll('.mb-col-filter-input').forEach(inp => {
+                    inp.value = '';
+                    inp.style.backgroundColor = '';
+                });
                 performClutterCleanup();
                 cleanupAfterInitialLoad();
 

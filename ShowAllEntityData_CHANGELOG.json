@@ -1,5 +1,30 @@
 [
   {
+    "version": "9.97.12",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "✨ Features",
+        "items": [
+          "Column filter focus indicators: when a column-level filter field receives focus (via Ctrl+C, Tab, or mouse click) a search icon prefix '🔍 ' is prepended to the field and the background turns light yellow (configurable). Both visuals are removed the moment the field loses focus — the stored value is always the clean filter string without any decorative prefix.",
+          "New configurable setting 'Column Filter Focus Background' (sa_col_filter_focus_bg, default #fffde7) added to the '🎨 FILTER HIGHLIGHT COLORS' section of the Settings Manager.",
+          "Ctrl+C focus behaviour: the cursor is positioned right after the search-icon prefix so the user can start typing immediately. The previous .select() call that selected the entire field content (including the prefix) has been removed.",
+          "Escape key handler is now prefix-aware: a column filter field is considered empty when only the focus prefix remains (no actual filter text), so the first Escape press clears the user-entered text but restores the prefix (field stays focused), and the second Escape blurs the field (triggering the blur handler which strips the prefix). The global filter field behaviour is unchanged.",
+          "Load from Disk: any column filter inputs still in the DOM when the load is confirmed are explicitly cleared (value and background) before the DOM is rebuilt, guaranteeing no focus-mode artefacts survive into the freshly rendered table."
+        ]
+      },
+      {
+        "label": "🔧 Code Quality",
+        "items": [
+          "Added module-level constant COL_FILTER_FOCUS_PREFIX = '🔍 ' as the single source of truth for the decorative prefix string.",
+          "Added three helper functions: stripColFilterPrefix(value) strips the prefix before a value is used as a filter string; applyColFilterFocusStyle(input) adds the prefix and bg on focus; removeColFilterFocusStyle(input) strips the prefix and clears the bg on blur.",
+          "All code paths that read .mb-col-filter-input values for filtering or status display (getColFilters, runFilter active-count, sub-table filter status, showStatsPanel, saveFilterHighlightState) now call stripColFilterPrefix() so the prefix is never treated as part of the filter expression.",
+          "All code paths that programmatically clear column filter inputs (clearAllFilters, clearColumnFiltersBtn onclick, clearSubTableColumnFilters, startFetchingProcess reset loop) now also clear input.style.backgroundColor so no yellow tint lingers after a programmatic clear."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.11",
     "date": "2026-02-26",
     "sections": [
