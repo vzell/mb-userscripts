@@ -42599,7 +42599,16 @@ Is the check for invalid regexp really working in the following code
         Lib.debug('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}${filterQueryRaw ? `, exclude: ${isExclude}` : ''}`);
 #+end_example
 
-I don't get any alert ? The same is true when using the "[x] Rx" checkbox toggle for filter expressions on the global filter or sub-table filters. Plese implement or fix
+I don't get any alert ?
+
+I think the regex is only validated inside loadTableDataFromDisk() after the dialog had already closed and the file
+picker had opened — the user had no way to correct the pattern without cancelling the file picker and re-opening the
+load dialog. please fix by validating the pattern synchronously in confirmLoad() before closing the dialog; show an
+alert with the error message, the input border should turn red, and the dialog shouold stay open for correction. confirmLoad()
+probably needs to be changed from sync to async for this.
+
+
+The same is true when using the "[x] Rx" checkbox toggle for filter expressions on the global filter or sub-table filters. Plese implement or fix
 
 * fix invalid filter regexp
 
@@ -42616,10 +42625,9 @@ to
     clearColumnFiltersBtn.title = 'Globally clear all column-specific filter inputs';
 #+end_example
 
+
 * change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
 
-
-* TODO resize global filter input field (configurable) + the subtable specific one
 
 
 * DONE subtables
@@ -42634,13 +42642,10 @@ to
 - when in regexp mode, remove the alert window, just add red border and "Invalid regexp" info message
   "Regexp invalid — no alert, just inline message: removed Lib.showCustomAlert() calls from runFilter() and applySubFilter() on invalid regex (introduced in 9.97.10). Alerts interrupted the typing flow; the red border + inline status message in the filter-status span is sufficient feedback. Both functions reverted from async to sync. The load dialog confirmLoad() alert (also 9.97.10) is retained as it validates before opening the OS file picker."
 
-- change default colors of filter borders, and make them configurable:  orange for global filter, leave the colors as is for other filters
-  "Sub-table filter active border: now configurable. New setting 'sa_subtable_filter_active_border_color' (default #008000, green) controls the border and glow colour of sub-table filter inputs when active. Both new settings appear in the 🎨 FILTER HIGHLIGHT COLORS settings section."
-  "Global filter active border: changed from red to orange (configurable). New setting 'sa_global_filter_active_border_color' (default #FFA500) controls the border and glow colour of the global filter input when a filter string is active.",
 
 - runFilter async (is that a problem, async in general ?)
 
-* One bug left
+* DONE One bug left
 
 1.) when ONLY a sub-table filter string is added, ONLY the sub-table level "Clear all filters" should be present (right now both the "Clear all filters" and the "Clear all COLUMN filters" buttons appear)
 2.) when ONLY one or more column level filters are added, and NO sub-table filter is present, ONLY the "Clear all COLUMN filters" should be present (right now both the "Clear all filters" and the "Clear all COLUMN filters" buttons appear)
@@ -42832,12 +42837,6 @@ press would do when inside the filter field). Right now it erases and blurs.
 COLUMN filters for this table" and the "Toggle highlightning" button should also appear, like they do if we enter a column level filter expression
 
 Also please provide always changelog entries in the uploaded file "ShowAllEntityData_CHANGELOG.json". You already missed that the last time, please reapply.
-
-* document test suite after userscript and library changes
-** library
-** userscript
-
-
 * DONE "Global 'Toggle highlighting' button
 ** DONE initial
 
@@ -42864,11 +42863,9 @@ When starting fresh on a final rendered page and adding a filter string on the s
 Also the the global "Toggle highlight" button just erases the hightlightning the first time it is clicked, but doesn't toggle it back on.
 
 
-
 * DONE rename "Toggle filter elements on/off for this section"
 
 rename tooltip "Toggle filter elements on/off" to "Toggle filter elements on/off for this section"
-
 
 * DONE fix global and sub-table combined filter logic
 
@@ -42887,4 +42884,158 @@ when starting from a fresh rendered final page
 Now lets take the global filtering (in the h2 header) state into account
 
 - the global "Clear ALL filters" should only appear when at least one global or sub-table filter is in effect (right now it doesn't show up when at least one sub-table filter is in effect)
+
+
+* document test suite after userscript and library changes
+** library
+** userscript
+
+* change default colors of filter borders, and make them configurable
+
+- change the default colors of the filter borders, and make them configurable in "const configSchema": orange for the global filter, leave the colors as is for the other filters (sub-table and column level filters)
+
+- change the global filter placeholder from
+
+#+begin_example
+filterInput.placeholder = `🔍 Global Filter...`;
+#+end_example
+
+to
+
+#+begin_example
+filterInput.placeholder = `🔍 Global Filter… works across all sub-tables`;
+#+end_example
+
+when the page is in "multi" table mode. Leave it as is for "single" table mode (except change "..." to "…")
+
+- change the sub-table filter placeholder from
+
+#+begin_example
+filterInput.placeholder = `Filter "${categoryName}"…`;
+#+end_example
+
+to
+
+#+begin_example
+filterInput.placeholder = `Filter "${categoryName}"… just in this sub-table`;
+#+end_example
+
+- change the column level filter placeholder from
+
+#+begin_example
+input.placeholder = '...';
+#+end_example
+
+to
+
+#+begin_example
+input.placeholder = 'Filter on this column…';
+#+end_example
+
+but leave it as is for the other columns (except change "..." to "…")
+
+- make the global and sub-table filter fields resizable to the right, and make their initial default width configurable in "const configSchema"
+
+- implement a fix in the following code
+
+#+begin_example
+    async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false, isExclude = false) {
+        if (!file) {
+            Lib.warn('cache', 'No file selected.');
+            return;
+        }
+
+        const filterQuery = (isCaseSensitive || isRegExp) ? filterQueryRaw : filterQueryRaw.toLowerCase();
+
+        // Clear previous status message
+        preFilterMsg.textContent = '';
+
+        let globalRegex = null;
+        if (filterQueryRaw && isRegExp) {
+            try {
+                globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
+            } catch (e) {
+                await Lib.showCustomAlert(
+                    'Invalid Regular Expression in load filter field. Load aborted.',
+                    '❌ Invalid Regex',
+                    loadFromDiskBtn
+                );
+                // Reset file input so change event fires again if they pick same file
+                fileInput.value = '';
+                return;
+            }
+        }
+
+        Lib.debug('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}${filterQueryRaw ? `, exclude: ${isExclude}` : ''}`);
+#+end_example
+
+Is this code really working, I don't get any alert ?
+
+
+
+* TODO resize global filter input field (configurable) + the subtable specific one
+
+
+"Sub-table filter active border: now configurable. New setting 'sa_subtable_filter_active_border_color' (default #008000, green) controls the border and glow colour of sub-table filter inputs when active.
+Both new settings appear in the 🎨 FILTER HIGHLIGHT COLORS settings section."
+
+
+"Global filter active border: changed from red to orange (configurable). New setting 'sa_global_filter_active_border_color' (default #FFA500) controls the border and glow colour of the global filter input when a filter string is active.",
+
+
+* Remove the current key handling for "Ctrl+Shift+Esc"
+
+Remove the current key handling for "Ctrl+Shift+Esc" as that key combination is intercepted by the OS, also change the application help file "ShowAllEntityData_HELP.txt"
+Instead put the current value of "sa_shortcut_clear_filters" inside the tooltip of "Clear ALL filters"
+
+* how to make sure a userscript runs on pages like
+
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
+
+but not
+
+﻿https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85
+
+
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F-]{36}(\?.*)?$/
+
+
+// Recording
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Artist
+// @include /^https:\/\/musicbrainz\.org\/artist\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Release
+// @include /^https:\/\/musicbrainz\.org\/release\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Release Group
+// @include /^https:\/\/musicbrainz\.org\/release-group\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Work
+// @include /^https:\/\/musicbrainz\.org\/work\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Label
+// @include /^https:\/\/musicbrainz\.org\/label\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Area
+// @include /^https:\/\/musicbrainz\.org\/area\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Place
+// @include /^https:\/\/musicbrainz\.org\/place\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Event
+// @include /^https:\/\/musicbrainz\.org\/event\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Series
+// @include /^https:\/\/musicbrainz\.org\/series\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+
+
+
+// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work|label|area|place|event|series)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
+
+
+// @run-at document-end
+// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
 

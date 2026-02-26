@@ -1,1 +1,39 @@
-﻿<span class="mb-subtable-filter-toggle-icon active" title="Toggle filter elements on/off" role="button" aria-label="Toggle sub-table filter for &quot;recording location for (2)&quot;">🔍</span><button id="mb-stf-recording_location_for-toggle-filter-highlight-btn" type="button" title="Toggle filter highlighting on/off (sub-table filter and column filters)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(144, 238, 144); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: inline-block; color: rgb(0, 0, 0);">🎨 Toggle highlighting</button>
+// Recording
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Artist
+// @include /^https:\/\/musicbrainz\.org\/artist\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Release
+// @include /^https:\/\/musicbrainz\.org\/release\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Release Group
+// @include /^https:\/\/musicbrainz\.org\/release-group\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Work
+// @include /^https:\/\/musicbrainz\.org\/work\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Label
+// @include /^https:\/\/musicbrainz\.org\/label\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Area
+// @include /^https:\/\/musicbrainz\.org\/area\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Place
+// @include /^https:\/\/musicbrainz\.org\/place\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Event
+// @include /^https:\/\/musicbrainz\.org\/event\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Series
+// @include /^https:\/\/musicbrainz\.org\/series\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+
+
+
+// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work|label|area|place|event|series)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
+
+
+// @run-at document-end
+// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
+

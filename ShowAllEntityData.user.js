@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.21+2026-02-26
+// @version      9.97.22+2026-02-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -6824,11 +6824,46 @@
             document.removeEventListener('keydown', handleKey);
         };
 
-        const confirmLoad = () => {
+        /**
+         * Validates all load-dialog inputs — including the optional RegExp filter —
+         * shows inline feedback on error and keeps the dialog open for correction.
+         * Only on success closes the dialog and triggers the file picker.
+         *
+         * Changed sync → async to allow awaiting Lib.showCustomAlert() while the
+         * dialog is still in the DOM (so the user can correct the pattern without
+         * having to reopen the dialog from scratch).
+         *
+         * @returns {Promise<void>}
+         */
+        const confirmLoad = async () => {
             const query = input.value.trim();
             const useCase = dialog.querySelector('#sa-load-case').checked;
             const useRegex = dialog.querySelector('#sa-load-regex').checked;
             const useExclude = dialog.querySelector('#sa-load-exclude').checked;
+
+            // --- Regex pre-validation: must happen while the dialog is still open ---
+            if (query && useRegex) {
+                try {
+                    // Test-compile only; the result is not needed here.
+                    new RegExp(query, useCase ? '' : 'i');
+                } catch (e) {
+                    // Highlight the offending input field so the user sees at a glance
+                    // what needs to be corrected.
+                    input.style.borderColor = 'red';
+                    input.focus();
+
+                    await Lib.showCustomAlert(
+                        `Invalid Regular Expression: ${e.message}`,
+                        '❌ Invalid Regex',
+                        dialog.querySelector('#sa-load-confirm')
+                    );
+                    // Dialog stays open — return without closing so the user can fix the pattern.
+                    return;
+                }
+            }
+
+            // Input is valid — clear any previous error styling on the filter field.
+            input.style.borderColor = '';
 
             if (query && historyLimit > 0) {
                 let updatedHistory = [query, ...history.filter(h => h !== query)].slice(0, historyLimit);
@@ -10948,14 +10983,11 @@
         let globalRegex = null;
         if (filterQueryRaw && isRegExp) {
             try {
+                // confirmLoad() pre-validates the pattern before closing the dialog;
+                // this catch is a defensive fallback for direct programmatic callers only.
                 globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
             } catch (e) {
-                await Lib.showCustomAlert(
-                    'Invalid Regular Expression in load filter field. Load aborted.',
-                    '❌ Invalid Regex',
-                    loadFromDiskBtn
-                );
-                // Reset file input so change event fires again if they pick same file
+                Lib.error('cache', `Invalid regex reached loadTableDataFromDisk (should have been caught by confirmLoad): ${e.message}`);
                 fileInput.value = '';
                 return;
             }

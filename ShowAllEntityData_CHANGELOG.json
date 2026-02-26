@@ -1,5 +1,19 @@
 [
   {
+    "version": "9.97.22",
+    "date": "2026-02-26",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "RegExp pre-filter validation in the Load dialog was never reached: the invalid-pattern error was caught inside loadTableDataFromDisk(), which only runs after the dialog has already closed and the OS file-picker has opened, giving the user no way to correct the pattern. Fixed by moving validation into confirmLoad() (now async) where it fires before closeDialog() and fileInput.click(). On a bad pattern the filter input border turns red, Lib.showCustomAlert() is awaited with the engine error message, and the function returns early so the dialog stays open for correction.",
+          "confirmLoad() converted from synchronous to async to support awaiting Lib.showCustomAlert() while the dialog remains in the DOM.",
+          "loadTableDataFromDisk() regex try/catch downgraded from a user-facing Lib.showCustomAlert() call to a silent Lib.error() defensive fallback, because a valid pattern is now guaranteed by confirmLoad() for all normal UI-driven flows. Direct programmatic callers are still protected."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.21",
     "date": "2026-02-26",
     "sections": [
