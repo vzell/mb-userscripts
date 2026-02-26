@@ -1,9 +1,0 @@
-{
-  "version": "9.89.0+2026-02-23",
-  "description": "Three improvements:",
-  "description_list": [
-    "(1) Application help dialog: a '🔄 Force refresh' link is added to the title bar, left of the ✕ close button. Clicking it bypasses the GM cache, fetches the latest help text from GitHub and re-renders the content in place without closing the dialog. Detailed info-level log statements report the fetch URL, whether data was served from cache or the network, byte size, and any stale-cache warnings. The loadAndRender() function now accepts a forceRefresh boolean parameter.",
-    "(2) showCustomDialog / showCustomAlert / showCustomConfirm refactored: the local implementations (and their configurable CSS helper functions popupDialogCSS, popupHeaderCSS, etc.) have been removed from the script. All five call sites now use Lib.showCustomAlert() and Lib.showCustomConfirm() from VZ_MBLibrary. The '🪟 POPUP UI STYLES' section (six configSchema entries: sa_popup_dialog_style, sa_popup_header_style, sa_popup_message_style, sa_popup_ok_btn_style, sa_popup_cancel_btn_style, sa_popup_btn_gap) has been removed from the Settings dialog accordingly.",
-    "(3) SCRIPT_BASE_NAME derivation: SCRIPT_ID is now derived programmatically, SCRIPT_NAME / remote URLs / cache keys all use SCRIPT_BASE_NAME — carried forward from 9.88.0 together with the settings-dialog safety guards."
-  ]
-}
