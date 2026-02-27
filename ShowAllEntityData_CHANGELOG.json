@@ -1,5 +1,45 @@
 [
   {
+    "version": "9.97.30",
+    "date": "2026-02-27",
+    "sections": [
+      {
+        "label": "✨ Enhancements",
+        "items": [
+          "Global filter: the 'sa_filter_focus_prefix' (default '🔍 ') is now permanently visible in the global filter field at all times — focused or not, empty or not. The field is initialized with the prefix on creation and every programmatic reset (fresh fetch, disk load, clear-all, ✕ button) restores it to prefix-only rather than to an empty string. This is different from column filter inputs, where the prefix appears only while the field has focus. All values read from the global filter field pass through stripFilterPrefix() before use, so the invariant is transparent to all filtering logic."
+        ]
+      },
+      {
+        "label": "♻️ Refactoring",
+        "items": [
+          "The focus and blur event listeners on the global filter input have been removed. The blur listener's secondary responsibility (calling runFilter() after stripping the prefix) is no longer needed because the prefix is never stripped on blur. The keydown guard (guardFilterPrefixKeydown) and the prefix-safety-net inside the input listener remain."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.97.29",
+    "date": "2026-02-27",
+    "sections": [
+      {
+        "label": "✨ Enhancements",
+        "items": [
+          "Setting 'sa_col_filter_focus_prefix' renamed to 'sa_filter_focus_prefix'. The decorative search-icon prefix now applies to the global filter field as well as column filter fields. Both types of filter input show the prefix while focused and strip it before using the value as a filter query.",
+          "Global filter: the field now gains the same focus-mode behaviour as column filters — the configured prefix (default '🔍 ') is prepended to the placeholder (or to the value if a filter string is already present) on focus, and stripped on blur. The keydown guard prevents Backspace/Delete/ArrowLeft/Home/Ctrl+A from reaching the prefix characters. Border colour continues to signal active state (no persistent background tint on blur, unlike column filters).",
+          "Escape key on the global filter now behaves like on column filters: first press retains the prefix and clears only the user-entered text; second press blurs the field.",
+          "Ctrl+G (focus global filter shortcut) now positions the cursor at the end of the editable content after the prefix, instead of calling select() which would have included the prefix characters in the selection.",
+          "The '✕' clear button for the global filter now resets the placeholder to the focus-state variant (prefix + base text) when the field remains focused after clearing."
+        ]
+      },
+      {
+        "label": "♻️ Refactoring",
+        "items": [
+          "The four column-filter-specific helpers (stripColFilterPrefix, applyColFilterFocusStyle, removeColFilterFocusStyle, guardColFilterPrefixKeydown) have been replaced by four generalized equivalents: getFilterFocusPrefix(), stripFilterPrefix(value), applyFilterFocusStyle(input, blurPlaceholder, focusBg?), removeFilterFocusStyle(input, idlePlaceholder, hasActiveBg?), and guardFilterPrefixKeydown(input, e). The old names are retained as deprecated const aliases so no existing call site breaks. All internal call sites have been updated to the new names."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.28",
     "date": "2026-02-27",
     "sections": [

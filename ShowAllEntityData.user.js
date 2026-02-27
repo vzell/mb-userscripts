@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.28+2026-02-27
+// @version      9.97.30+2026-02-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -337,11 +337,11 @@
             description: "Background color kept on a column filter input after losing focus when it still contains a filter string"
         },
 
-        sa_col_filter_focus_prefix: {
-            label: "Column Filter Focus Prefix",
+        sa_filter_focus_prefix: {
+            label: "Filter Focus Prefix",
             type: "text",
             default: "🔍 ",
-            description: "Decorative prefix prepended to a column filter field while it has focus (stripped before the value is used as a filter string)"
+            description: "Decorative prefix prepended to any filter field (global or column) while it has focus (stripped before the value is used as a filter string)"
         },
 
         // ============================================================
@@ -3382,10 +3382,11 @@
      * Clear all filters (global and column filters)
      */
     function clearAllFilters() {
-        // Clear global filter
+        // Clear global filter — reset to prefix-only so the always-present prefix invariant
+        // is maintained (the global filter value always starts with getFilterFocusPrefix()).
         const filterInput = document.getElementById('mb-global-filter-input');
         if (filterInput) {
-            filterInput.value = '';
+            filterInput.value = getFilterFocusPrefix();
         }
 
         // Clear all column filters
@@ -4176,7 +4177,10 @@
                 const filterInput = document.getElementById('mb-global-filter-input');
                 if (filterInput) {
                     filterInput.focus();
-                    filterInput.select();
+                    // Position cursor at end of the user-editable content (after any prefix)
+                    // rather than selecting all (which would include the prefix characters).
+                    const pos = filterInput.value.length;
+                    filterInput.setSelectionRange(pos, pos);
                     Lib.debug('shortcuts', 'Global filter focused via ' + getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G'));
                 }
             }
@@ -4218,7 +4222,7 @@
 
                     if (targetInput) {
                         targetInput.focus();
-                        // No .select() here: the focus handler (applyColFilterFocusStyle)
+                        // No .select() here: the focus handler (applyFilterFocusStyle)
                         // prepends the search prefix and positions the cursor after it.
                         Lib.debug('shortcuts', `First column filter focused via ${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')} (table ${currentTableIndex + 1}/${tables.length})`);
                     } else {
@@ -4423,27 +4427,19 @@
                     const isColumn = e.target.classList.contains('mb-col-filter-input');
                     const filterType = isColumn ? 'Column' : 'Global';
 
-                    // For column filters, consider the field "empty" when only the
+                    // For both filter types, consider the field "empty" when only the
                     // focus prefix remains (no actual user-entered filter content).
-                    const effectiveValue = isColumn
-                        ? stripColFilterPrefix(e.target.value).trim()
-                        : e.target.value.trim();
+                    const effectiveValue = stripFilterPrefix(e.target.value).trim();
 
                     if (effectiveValue === '') {
                         // Second press → blur (blur handler strips prefix and clears bg)
                         e.target.blur();
                         Lib.debug('shortcuts', `${filterType} filter blurred via Escape (second press)`);
                     } else {
-                        // First press → clear user content but keep focus
-                        if (isColumn) {
-                            // Retain the focus prefix; position cursor right after it
-                            const _pfx = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
-                            e.target.value = _pfx;
-                            e.target.setSelectionRange(_pfx.length, _pfx.length);
-                        } else {
-                            e.target.value = '';
-                            e.target.setSelectionRange(0, 0);
-                        }
+                        // First press → clear user content but keep focus with prefix in place
+                        const _pfx = getFilterFocusPrefix();
+                        e.target.value = _pfx;
+                        e.target.setSelectionRange(_pfx.length, _pfx.length);
                         runFilter();
                         Lib.debug('shortcuts', `${filterType} filter cleared via Escape (first press, focus kept)`);
                     }
@@ -6115,9 +6111,13 @@
 
     const filterInput = document.createElement('input');
     filterInput.id = 'mb-global-filter-input';
+    // The focus prefix is ALWAYS present in the global filter value (never stripped on blur).
+    // We initialize the field with the prefix so the invariant holds from creation.
+    // The placeholder is shown only when value is empty, which cannot happen during normal
+    // use — it is kept as a fallback for programmatic resets that forget to restore the prefix.
     filterInput.placeholder = activeDefinition && activeDefinition.tableMode === 'multi'
-        ? `🔍 Global Filter… works across all sub-tables`
-        : `🔍 Global Filter…`;
+        ? `Global Filter… works across all sub-tables`
+        : `Global Filter…`;
     filterInput.title = 'Enter global filter string';
     filterInput.style.cssText = uiGlobalFilterInputCSS();
     // Remove default border-radius on the right so the x/handle attach flush
@@ -6378,9 +6378,8 @@
     clearAllFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
     clearAllFiltersBtn.title = `Clear global/sub-table filters and ALL column filters in all sub-tables — also triggered by ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}`;
     clearAllFiltersBtn.onclick = () => {
-        // Clear global filter
-        filterInput.value = '';
-        filterClear.click(); // This will trigger the clear handler
+        // filterClear.click() resets the global filter to prefix-only and runs the filter.
+        filterClear.click();
 
         // Clear all sub-table specific filter fields
         document.querySelectorAll('.mb-subtable-filter-container input[type="text"]').forEach(input => {
@@ -6415,8 +6414,8 @@
      *                             are gone (via updateFilterButtonsVisibility after runFilter).
      */
     function updateFilterButtonsVisibility() {
-        // Check if global filter has value
-        const globalFilterActive = filterInput.value.trim() !== '';
+        // Check if global filter has value (strip the decorative focus prefix first).
+        const globalFilterActive = stripFilterPrefix(filterInput.value).trim() !== '';
 
         // Check if any column filters have values.
         // Use stripColFilterPrefix so a focused-but-empty field carrying the decorative
@@ -7528,9 +7527,10 @@
      * Captures global and column filter highlighting parameters
      */
     function saveFilterHighlightState() {
-        // Save global filter parameters
+        // Save global filter parameters; strip the decorative focus prefix so the
+        // saved query is the clean filter string, not the decorated display value.
         const globalFilterInput = document.getElementById('mb-global-filter-input');
-        const globalQuery = globalFilterInput ? globalFilterInput.value.trim() : '';
+        const globalQuery = globalFilterInput ? stripFilterPrefix(globalFilterInput.value).trim() : '';
 
         // Save column filter parameters
         const columnFilters = [];
@@ -7664,75 +7664,106 @@
         });
     }
 
-    // ── Column filter focus-mode visual helpers ──────────────────────────────
+    // ── Filter focus-mode visual helpers (shared by global and column filters) ──
 
     /**
-     * Strip the decorative focus prefix (sa_col_filter_focus_prefix setting) from a raw
-     * column-filter input value, returning only the user-supplied filter string.
+     * Returns the configured focus prefix string.
+     * Central accessor so every call site reads the same value.
+     *
+     * @returns {string}
+     */
+    function getFilterFocusPrefix() {
+        return Lib.settings.sa_filter_focus_prefix ?? '🔍 ';
+    }
+
+    /**
+     * Strip the decorative focus prefix (sa_filter_focus_prefix setting) from a raw
+     * filter input value, returning only the user-supplied filter string.
+     * Works for both the global filter and any column filter input.
      *
      * @param {string} value - Raw HTMLInputElement.value (may begin with the configured prefix)
      * @returns {string} The filter string without the decorative prefix.
      */
-    function stripColFilterPrefix(value) {
-        const prefix = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
+    function stripFilterPrefix(value) {
+        const prefix = getFilterFocusPrefix();
         return value.startsWith(prefix) ? value.slice(prefix.length) : value;
     }
 
     /**
-     * Apply the focus-mode visual state to a column filter input:
+     * @deprecated Alias kept so any external callers are not broken.
+     * Use stripFilterPrefix() directly for new code.
+     */
+    const stripColFilterPrefix = stripFilterPrefix;
+
+    /**
+     * Apply the focus-mode visual state to any filter input:
      * prepend the search-icon prefix (if absent) and tint the background.
      * Positions the text cursor right after the prefix so the user can type immediately.
      *
-     * @param {HTMLInputElement} input
+     * @param {HTMLInputElement} input         - The filter input element.
+     * @param {string}           blurPlaceholder - Placeholder text to show while focused
+     *                                             (e.g. 'Filter on this column…' or the global placeholder).
+     * @param {string}           [focusBg]     - Optional CSS background-color override while focused.
+     *                                           Defaults to sa_col_filter_focus_bg for column inputs.
      */
-    function applyColFilterFocusStyle(input) {
-        const prefix = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
+    function applyFilterFocusStyle(input, blurPlaceholder, focusBg) {
+        const prefix = getFilterFocusPrefix();
         // Strip any already-present prefix so we can reason about the real content
         const existing = input.value.startsWith(prefix) ? input.value.slice(prefix.length) : input.value;
         if (existing === '') {
             // Empty field: leave value empty so the placeholder is visible.
             // Embed the prefix in the placeholder itself so the user can see the search icon.
             input.value = '';
-            input.placeholder = prefix + 'Filter on this column…';
+            input.placeholder = prefix + blurPlaceholder;
         } else {
             // Field already contains a filter string: prepend the prefix into the value
-            // (same behaviour as before — prefix is visible inline with the text).
+            // (prefix is visible inline with the text).
             input.value = prefix + existing;
             const pos = prefix.length + existing.length;
             input.setSelectionRange(pos, pos);
             // Placeholder is invisible when value is non-empty, but keep it consistent.
-            input.placeholder = prefix + 'Filter on this column…';
+            input.placeholder = prefix + blurPlaceholder;
         }
-        input.style.backgroundColor = Lib.settings.sa_col_filter_focus_bg || '#fffde7';
+        if (focusBg !== undefined) {
+            input.style.backgroundColor = focusBg;
+        }
     }
 
     /**
-     * Remove the focus-mode visual state from a column filter input on blur:
-     * always strip the decorative prefix so the stored value is the clean filter
-     * string.  The background tint is only cleared when the field is empty — if
-     * the user has typed an actual filter string the "active" background colour
-     * (sa_col_filter_active_bg) is kept as a persistent visual indicator that
-     * this column has an active filter.
+     * Remove the focus-mode visual state from any filter input on blur:
+     * always strip the decorative prefix so the stored value is the clean filter string.
      *
-     * @param {HTMLInputElement} input
+     * For column filters (hasActiveBg === true): the background tint is only cleared when
+     * the field is empty — if the user has typed an actual filter string the "active"
+     * background colour (sa_col_filter_active_bg) is kept as a persistent visual indicator
+     * that this column has an active filter.
+     *
+     * For the global filter (hasActiveBg === false): no persistent background is applied
+     * (the border colour already signals active state); background is always cleared.
+     *
+     * @param {HTMLInputElement} input           - The filter input element.
+     * @param {string}           idlePlaceholder  - Placeholder text to restore after blur.
+     * @param {boolean}          [hasActiveBg=false] - Whether to apply sa_col_filter_active_bg
+     *                                                 when the field still has content.
      */
-    function removeColFilterFocusStyle(input) {
-        input.value = stripColFilterPrefix(input.value);
-        // Restore the neutral placeholder now that focus is gone
-        input.placeholder = '…';
+    function removeFilterFocusStyle(input, idlePlaceholder, hasActiveBg = false) {
+        input.value = stripFilterPrefix(input.value);
+        input.placeholder = idlePlaceholder;
         if (input.value.trim() === '') {
-            // No filter content — clear the background entirely
             input.style.backgroundColor = '';
-        } else {
-            // Filter content present — switch to the "active" background colour
+        } else if (hasActiveBg) {
+            // Column filter: switch to the "active" background colour
             input.style.backgroundColor = Lib.settings.sa_col_filter_active_bg || '#fff9c4';
+        } else {
+            // Global filter: no persistent background on blur
+            input.style.backgroundColor = '';
         }
     }
 
     /**
      * keydown guard that prevents keyboard actions from destroying the decorative
-     * focus prefix inside a column filter input.  Attach as a 'keydown' listener
-     * on each .mb-col-filter-input element while it has focus.
+     * focus prefix inside any filter input.  Attach as a 'keydown' listener while
+     * the field has focus.  Works identically for the global filter and column filters.
      *
      * Rules enforced:
      *  • Backspace  — blocked when the cursor (or selection start) is at or before
@@ -7748,16 +7779,16 @@
      *                 (Shift+Home likewise, to prevent selecting over the prefix).
      *  • Ctrl+A     — rewritten to select only the user content (after the prefix).
      *
-     * @param {HTMLInputElement} input - The column filter input element.
+     * @param {HTMLInputElement} input - The filter input element.
      * @param {KeyboardEvent}    e     - The keydown event.
      */
-    function guardColFilterPrefixKeydown(input, e) {
-        const prefix = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
+    function guardFilterPrefixKeydown(input, e) {
+        const prefix = getFilterFocusPrefix();
         const pfxLen = prefix.length;
 
         // Skip entirely when the input doesn't currently carry the prefix
-        // (this is a safety guard; the listener is only active while focused,
-        // so applyColFilterFocusStyle should always have set the prefix already).
+        // (safety guard; the listener is only active while focused,
+        // so applyFilterFocusStyle should always have set the prefix already).
         if (!input.value.startsWith(prefix)) return;
 
         const selStart = input.selectionStart;
@@ -7831,6 +7862,9 @@
         }
     }
 
+    /** @deprecated Use guardFilterPrefixKeydown() directly for new code. */
+    const guardColFilterPrefixKeydown = guardFilterPrefixKeydown;
+
     /**
      * Adds a filter row beneath the table header with input fields for per-column filtering
      * @param {HTMLTableElement} table - The table to add column filters to
@@ -7878,20 +7912,20 @@
                 //
                 // The blur event fires before onclick (because the click moves focus
                 // away from the input), so by the time we arrive here the prefix has
-                // already been stripped by removeColFilterFocusStyle.  We therefore:
+                // already been stripped by removeFilterFocusStyle.  We therefore:
                 //   1. Clear the value (no prefix at this point).
                 //   2. Re-focus the input — this synchronously triggers the 'focus'
-                //      listener which calls applyColFilterFocusStyle, restoring the
+                //      listener which calls applyFilterFocusStyle, restoring the
                 //      prefix and the focus-background tint.
                 //   3. Run the filter immediately.
                 input.value = '';
-                input.focus(); // → applyColFilterFocusStyle adds prefix + focus bg
+                input.focus(); // → applyFilterFocusStyle adds prefix + focus bg
                 runFilter();
             };
 
             // Use debounced version for typing in column filters
             const debouncedColumnFilter = debounce(() => {
-                Lib.debug('filter', `Column filter updated on column ${idx}: "${stripColFilterPrefix(input.value)}"`);
+                Lib.debug('filter', `Column filter updated on column ${idx}: "${stripFilterPrefix(input.value)}"`);
                 runFilter();
             }, Lib.settings.sa_filter_debounce_delay || 300);
 
@@ -7900,8 +7934,8 @@
                 // If the user just started typing into a focused-but-empty field the prefix
                 // was deliberately kept out of the value (so the placeholder hint was visible).
                 // The moment any real character arrives we prepend the prefix so the focus
-                // guard and stripColFilterPrefix work correctly for the rest of the session.
-                const prefix = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
+                // guard and stripFilterPrefix work correctly for the rest of the session.
+                const prefix = getFilterFocusPrefix();
                 if (document.activeElement === input && input.value !== '' && !input.value.startsWith(prefix)) {
                     const typed = input.value;
                     input.value = prefix + typed;
@@ -7912,14 +7946,17 @@
             });
 
             // Focus: prepend search-icon prefix and tint the background
-            input.addEventListener('focus', () => applyColFilterFocusStyle(input));
+            input.addEventListener('focus', () => applyFilterFocusStyle(
+                input,
+                'Filter on this column…',
+                Lib.settings.sa_col_filter_focus_bg || '#fffde7'
+            ));
 
             // Keydown: prevent Backspace/Delete/ArrowLeft from consuming the prefix
-            input.addEventListener('keydown', (e) => guardColFilterPrefixKeydown(input, e));
+            input.addEventListener('keydown', (e) => guardFilterPrefixKeydown(input, e));
 
-            // Blur: strip prefix and clear the background tint so the stored
-            // value is always the clean filter string (no visual artefacts)
-            input.addEventListener('blur', () => removeColFilterFocusStyle(input));
+            // Blur: strip prefix and manage background tint; hasActiveBg=true for column inputs
+            input.addEventListener('blur', () => removeFilterFocusStyle(input, '…', true));
 
             wrapper.appendChild(input);
             wrapper.appendChild(clear);
@@ -8137,7 +8174,9 @@
         const isCaseSensitive = caseCheckbox.checked;
         const isRegExp = regexpCheckbox.checked;
         const isExclude = excludeCheckbox.checked;
-        const globalQueryRaw = filterInput.value;
+        // Strip the decorative focus prefix before using the value as a filter query.
+        // When the global filter input has focus it may carry e.g. "🔍 " at the start.
+        const globalQueryRaw = stripFilterPrefix(filterInput.value);
         const globalQuery = (isCaseSensitive || isRegExp) ? globalQueryRaw : globalQueryRaw.toLowerCase();
 
         let globalRegex = null;
@@ -8375,8 +8414,30 @@
     // Create debounced version of runFilter based on user configuration
     const debouncedRunFilter = debounce(runFilter, Lib.settings.sa_filter_debounce_delay || 300);
 
-    // Use debounced version for input events
-    filterInput.addEventListener('input', debouncedRunFilter);
+    // ── Global filter: the focus prefix is ALWAYS present in the value ───────────────────
+    // Unlike column filters (where the prefix appears only while focused), the global filter
+    // keeps the prefix permanently so it is visible at all times.  The invariant is:
+    //   filterInput.value always starts with getFilterFocusPrefix()
+    // Helpers that read the field value strip the prefix via stripFilterPrefix() before use.
+
+    // Seed the field with the prefix so the invariant holds from the very first render.
+    filterInput.value = getFilterFocusPrefix();
+
+    // Keydown guard: same Backspace / Delete / ArrowLeft / Home / Ctrl+A protection as
+    // column filters — the user must never be able to erase the permanent prefix.
+    filterInput.addEventListener('keydown', (e) => guardFilterPrefixKeydown(filterInput, e));
+
+    // Input: safety net — if some programmatic path emptied the field, restore the prefix
+    // before running the filter so the invariant is never violated.
+    filterInput.addEventListener('input', () => {
+        const prefix = getFilterFocusPrefix();
+        if (!filterInput.value.startsWith(prefix)) {
+            const typed = filterInput.value;
+            filterInput.value = prefix + typed;
+            filterInput.setSelectionRange(filterInput.value.length, filterInput.value.length);
+        }
+        debouncedRunFilter();
+    });
 
     // Use immediate version for checkbox changes (no typing involved)
     caseCheckbox.addEventListener('change', runFilter);
@@ -8385,7 +8446,8 @@
 
     // Use immediate version for clear button (explicit user action)
     filterClear.addEventListener('click', () => {
-        filterInput.value = '';
+        // Reset to prefix-only — the prefix is always present in the global filter.
+        filterInput.value = getFilterFocusPrefix();
         runFilter();
     });
 
@@ -8741,8 +8803,9 @@
             n.replaceWith(document.createTextNode(n.textContent));
         });
 
-        // Clear existing filter conditions and UI highlights for a fresh start
-        filterInput.value = '';
+        // Clear existing filter conditions and UI highlights for a fresh start.
+        // Reset to prefix-only — the global filter always keeps the prefix in its value.
+        filterInput.value = getFilterFocusPrefix();
         filterInput.style.boxShadow = '';
         caseCheckbox.checked = false;
         excludeCheckbox.checked = false;
@@ -11582,7 +11645,8 @@
                 //   (a) the loaded rows are all visible (no stale filter applied),
                 //   (b) filter-status / sort-status displays are cleared,
                 //   (c) "Toggle highlighting" and "Clear ALL filters" buttons are hidden.
-                filterInput.value = '';
+                // Reset to prefix-only — the global filter always keeps the prefix in its value.
+                filterInput.value = getFilterFocusPrefix();
                 filterInput.style.boxShadow = '';
                 filterStatusDisplay.textContent = '';
                 sortStatusDisplay.textContent = '';
