@@ -43330,3 +43330,15 @@ Bruce Springsteen & The E Street Band at Athletic & Convocation Center
 ~ Release group by Bruce Springsteen & The E Street Band
 #+end_example
 
+
+* unique
+
+In the uploaded userscript,
+
+please add on the final rendered page the following:
+
+For every table, in each column header row, for every column header, please render right aligned the following icon
+"📊". When clicked, a scrollable pull down menu (via, scrollbar + the usual keys up/down/pos1/end etc.)) should appear
+which displays for each column the unique column values in that column. When either clicking with the mouse or pressing
+enter on the current selected item in the pull down menu, that text value of the item should be entered as a filter string in filter field belo the column header
+
