@@ -43028,7 +43028,24 @@ There is one special thing about the global filter compared to column level filt
 The "sa_filter_focus_prefix" should ALWAYS be visible in the filter field. The rest of the logic stays the same
 
 * DONE in the libary, fix the up/down arrows in number files in the configuration dialog, the up arrow is hidden a little bit
+* DONE sidebar toggle
+** when sidebar is toggled there is artificial empty space reachable with the horizontal scrollbar
+** ghost sidebar toggle sometimes stays visible inside the data area depending on previous action  (Which ONE ??
 
+In the uploaded userscript,
+
+When on the final filtered page and then toggle the side bar via the side bar handle, everything initially works.
+
+Now the scenario when a ghost sidebar toggle sometimes stays visible inside the data area depending on previous action:
+
+- first toggle the side bar (sidbar oves out od our way)
+- then auto-resize the colums with the "Resize button" - a horizontal scrollbar can be used to see all the columns
+- now scroll completely to the rigt
+- now toggle the sidebar again to make it visible
+- when now scrolling back horizontally there is a ghost toggle handle visible on the position as if the sidebar was
+  initially not toggled. from now on the ghost handle stays visible "above" the table on that fixed position. when
+  scrolling horizontale back and forth, it looks like the table moves below the handle back and forth
+  
 
 * document test suite after userscript and library changes
 ** library
@@ -43087,21 +43104,3 @@ but not
 // @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
 
 
-* sidebar toggle
-** TODO when sidebar is toggled there is artificial empty space reachable with the horizontal scrollbar
-** TODO ghost sidebar toggle sometimes stays visible inside the data area depending on previous action  (Which ONE ??
-
-In the uploaded userscript,
-
-When on the final filtered page and then toggle the side bar via the side bar handle, everything initially works.
-
-Now the scenario when a ghost sidebar toggle sometimes stays visible inside the data area depending on previous action:
-
-- first toggle the side bar (sidbar oves out od our way)
-- then auto-resize the colums with the "Resize button" - a horizontal scrollbar can be used to see all the columns
-- now scroll completely to the rigt
-- now toggle the sidebar again to make it visible
-- when now scrolling back horizontally there is a ghost toggle handle visible on the position as if the sidebar was
-  initially not toggled. from now on the ghost handle stays visible "above" the table on that fixed position. when
-  scrolling horizontale back and forth, it looks like the table moves below the handle back and forth
-  
