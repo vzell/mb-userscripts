@@ -43019,6 +43019,20 @@ Remove the current key handling for "Ctrl+Shift+Esc" as that key combination is 
 Instead put the current value of "sa_shortcut_clear_filters" inside the tooltip of "Clear ALL filters"
 
 * DONE load from disk in regexp mode does not work
+* DONE in the global filter handle the "filter" icon like in multi table mode
+** init
+
+Rename the variable "sa_col_filter_focus_prefix" to just "sa_filter_focus_prefix" and use the same functionality for the
+global filter field, regarding the decorative prefix prepended to a column filter field while it has focus (stripped before the value is used as a filter string)
+
+Refactor everything so that the logic can be reused
+
+** special
+
+There is one special thing about the global filter compared to column level filters:
+
+The "sa_filter_focus_prefix" should ALWAYS be visible in the filter field. The rest of the logic stays the same
+
 
 * document test suite after userscript and library changes
 ** library
@@ -43078,20 +43092,6 @@ but not
 
 
 
-* TODO fix the up/down arrows in the configuration dialog, the up arrow is hidden a little bit
+* TODO in the libary, fix the up/down arrows in number files in the configuration dialog, the up arrow is hidden a little bit
 
-
-* TODO on single table handle the "filter" icon like in multi table mode
-** init
-
-Rename the variable "sa_col_filter_focus_prefix" to just "sa_filter_focus_prefix" and use the same functionality for the
-global filter field, regarding the decorative prefix prepended to a column filter field while it has focus (stripped before the value is used as a filter string)
-
-Refactor everything so that the logic can be reused
-
-** special
-
-There is one special thing about the global filter compared to column level filters:
-
-The "sa_filter_focus_prefix" should ALWAYS be visible in the filter field. The rest of the logic stays the same
 
