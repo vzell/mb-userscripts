@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.22+2026-02-26
+// @version      9.97.27+2026-02-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -8189,6 +8189,10 @@
 
         let filteredArray = []; // Declare outside to be accessible in status display
         let singleTableFilteredCount = 0; // Tracks filtered row count for single-table mode
+        // Regexp-error strings from column filters in single-table mode.
+        // Declared here (outside the else-branch) so the status-update block below can
+        // reference them regardless of which branch was taken.
+        let _singleColRxErrors = [];
         if (activeDefinition.tableMode === 'multi') {
             let totalFiltered = 0;
             let totalAbsolute = 0;
@@ -8199,7 +8203,17 @@
 
             groupedRows.forEach((group, groupIdx) => {
                 totalAbsolute += group.rows.length;
-                matchCtx.colFilters = getColFilters(tables[groupIdx], isCaseSensitive, isRegExp);
+                // In multi-table mode the global "[x] Rx" checkbox must ONLY affect the
+                // global filter string.  Each sub-table has its own Rx checkbox (inside
+                // .mb-subtable-filter-container) which controls BOTH the sub-table filter
+                // string AND the column-level filters of that same sub-table.
+                const _subTable = tables[groupIdx];
+                const _subH3    = _subTable ? _subTable.previousElementSibling : null;
+                const _subRxCb  = _subH3
+                    ? _subH3.querySelector('.mb-subtable-filter-container input[id$="-rx-checkbox"]')
+                    : null;
+                const _colIsRegExp = _subRxCb ? _subRxCb.checked : false;
+                matchCtx.colFilters = getColFilters(_subTable, isCaseSensitive, _colIsRegExp);
                 const matches = group.rows.map(r => r.cloneNode(true)).filter(r => testRowMatch(r, matchCtx));
 
                 // Always push to filteredArray, even if matches.length is 0, to maintain the table count and restoration capability
@@ -8239,10 +8253,11 @@
         } else {
             const totalAbsolute = allRows.length;
             matchCtx.colFilters = getColFilters(document.querySelector('table.tbl'), isCaseSensitive, isRegExp);
-            // ── Bug-fix 3: in single-table mode there is no h3 before the table,
-            //    so getColFilters cannot write regexp errors to a sub-table status span.
-            //    Capture any errors here so we can show them in filterStatusDisplay.
-            const _singleColRxErrors = matchCtx.colFilters._rxErrors || [];
+            // In single-table mode there is no h3 before the table, so getColFilters
+            // cannot write regexp errors to a sub-table status span.  Capture any errors
+            // here; _singleColRxErrors is declared in the outer scope so the status-update
+            // block at the bottom of runFilter() can always reach it.
+            _singleColRxErrors = matchCtx.colFilters._rxErrors || [];
             const filteredRows = allRows.map(row => row.cloneNode(true)).filter(row => testRowMatch(row, matchCtx));
             singleTableFilteredCount = filteredRows.length; // capture before async render
             renderFinalTable(filteredRows);
@@ -8336,10 +8351,9 @@
                 const singleModeLabel = singleActiveModeParts.length > 0
                     ? singleActiveModeParts.join(' ') + ' filter'
                     : 'Global filter';
-                // ── Bug-fix 3 continued: if any column regexp was invalid, show the
-                //    first error instead of the success message so the user knows why
-                //    their filter did not narrow the rows as expected.
-                if (typeof _singleColRxErrors !== 'undefined' && _singleColRxErrors.length > 0) {
+                // If any column regexp was invalid, show the first error in filterStatusDisplay
+                // instead of the success message, so the user knows why rows weren't narrowed.
+                if (_singleColRxErrors.length > 0) {
                     filterStatusDisplay.textContent = _singleColRxErrors[0];
                     filterStatusDisplay.style.color = filterBorderError();
                 } else {

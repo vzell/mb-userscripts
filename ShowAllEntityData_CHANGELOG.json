@@ -1,5 +1,19 @@
 [
   {
+    "version": "9.97.27",
+    "date": "2026-02-27",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Multi-table mode: the global '[x] Rx' checkbox now exclusively controls the global filter string. Previously its state was also forwarded to getColFilters() for every sub-table, which caused column-level filters to behave as regular expressions even when no sub-table Rx checkbox was checked. Fixed: in the groupedRows loop inside runFilter() the code now looks up the sub-table's own Rx checkbox (the input ending in '-rx-checkbox' inside .mb-subtable-filter-container of the preceding h3) and passes its state — not the global isRegExp flag — to getColFilters().",
+          "Multi-table mode: the sub-table '[x] Rx' checkbox now correctly governs BOTH the sub-table filter string AND the column-level filters of that sub-table. Previously column filters always received the global isRegExp flag regardless of the sub-table checkbox; now they receive the sub-table checkbox state.",
+          "Single-table mode: when '[x] Rx' is set and a column-level filter field contains an invalid regular expression, the error message is now correctly displayed in the '#mb-filter-status-display' span. Previously the error string was captured in a 'const' variable declared inside the else-branch of runFilter(), making it inaccessible in the status-update block that follows outside that branch (a block-scoping bug). Fixed: the variable is now declared as 'let _singleColRxErrors = []' before the if/else, and assigned (not re-declared) inside the else-branch, so the status-update block can always read it."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.26",
     "date": "2026-02-27",
     "sections": [
