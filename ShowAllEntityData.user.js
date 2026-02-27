@@ -680,9 +680,12 @@
               info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
           };
 
+    // Get version information dynamically
+    const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : 'unknown';
+    const libVersion = (Lib && Lib.version) ? Lib.version : 'unknown';
+
     // Copy settings reference so the callback can access them
     Object.assign(settings, Lib.settings);
-    Lib.info('init', "Script loaded with external library!");
 
     //--------------------------------------------------------------------------------
 
@@ -698,6 +701,7 @@
     const params = currentUrl.searchParams;
     const isFilteredRelationshipPage = params.has('link_type_id');
 
+    Lib.info('init', `Userscript (${scriptVersion}) loaded with external library (${libVersion}) active on MusicBrainz page: ${currentUrl}`);
     Lib.debug('init', `URL: ${currentUrl}`);
     Lib.debug('init', `URL basepath: ${basePath}`);
     Lib.debug('init', `URL path: ${path}`);
