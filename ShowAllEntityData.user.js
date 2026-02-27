@@ -5949,7 +5949,7 @@
     loadFromDiskBtn.onmouseover = () => { loadFromDiskBtn.style.backgroundColor = _loadStyle.hoverBg; };
     loadFromDiskBtn.onmouseout  = () => { loadFromDiskBtn.style.backgroundColor = _loadStyle.normalBg; };
     loadFromDiskBtn.type = 'button';
-    loadFromDiskBtn.title = `Load table data from disk (JSON file) (${getPrefixDisplay()}, then L)`;
+    loadFromDiskBtn.title = `Load table data from disk (serialized JSON file in Gzipped format) (${getPrefixDisplay()}, then L)`;
 
     const fileInput = document.createElement('input');
     fileInput.id = 'mb-file-input';
