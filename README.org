@@ -43311,4 +43311,22 @@ but also, when the globla filter box is activated and some filter text has been 
 please remove those inherited colors from the mentioned elements
 
 
+* for https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
+
+add the evemt alias int the next line
+
+so
+
+#+begin_example
+1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA (Bruce Springsteen & The E Street Band at Athletic & Convocation Center) - <filters and buttons>
+~ Release group by Bruce Springsteen & The E Street Band
+#+end_example
+
+to
+
+#+begin_example
+1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA - <filters and buttons>
+Bruce Springsteen & The E Street Band at Athletic & Convocation Center
+~ Release group by Bruce Springsteen & The E Street Band
+#+end_example
 
