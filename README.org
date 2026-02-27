@@ -42980,6 +42980,33 @@ OK,
 - the info area 'span class="mb-filter-status" data-table-name="<sub-table-name>" ...' should be used for the regexp
   error messages when the regexp is invalid in either a sub-table filter field or a column level filter field
 
+** multi.table
+
+- in pages of type "single" table, the columns accept regexps and apply the 4 px error border to the specific column if
+  there is an error, but (when Rx is active) they DO NOT write '⚠ Column \"…\": invalid regexp: …' to the
+  '<span id="mb-filter-status-display" class="mb-filter-status"' ... please fix
+  
+
+- in pages of type "multi" table, the column filter for sub-tables doesn't accept regexps at all (no row is selected
+  even when a valid regexp is in the filter field), at least column-level filter regexp errors (when Rx is active) DO
+  NOT write '⚠ Column \"…\": invalid regexp: …' to the span.mb-filter-status of the associated sub-table and DO NOT
+  apply the 4 px error border to the specific column input
+
+** TODO last regexp errors
+
+regexps are accepted now in column filters, but the checkbox "[x] Rx" on the global level has to be set for it.
+
+- the checkbox "[x] Rx" on the global level in "multi" table mode should ONLY influence the global filter string, right
+  now it also is taken into account for the column level filters
+
+- the checkbox "[x] Rx" on the global level in "single" table mode works OK, here the column level filters naturally
+  inherit the Rx flag from the "single" table
+
+- the checkbox "[x] Rx" on the sub-table level in "multi" table mode should influence BOTH, the sub-table filter string,
+  AND it should also be taken for the sub-table specific column filters
+
+- in "single" table mode, when the "[x] Rx" flag is set, and an invalid regepx is entered in a column level field, the
+  red "error" border is shown, but the info text is still not shown in the '<span id="mb-filter-status-display" class="mb-filter-status"'
 
 * TODO resize global filter input field (configurable) + the subtable specific one
 
@@ -43046,4 +43073,11 @@ but not
 
 // @run-at document-end
 // @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
+
+
+
+* fix the up/down arrows in the configuration dialog, the up arrow is hidden a little bit
+
+* TODO on single table handle the "filter" icon like in multi table mode
+
 

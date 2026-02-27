@@ -1,1 +1,1 @@
-<span class="mb-filter-status" data-table-name="engineering location for" data-table-index="0" style="color: green;">✓ Filtered 2 rows [Comment:"[a-z]"]</span>
+<span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Regexp filter: 106 rows in 24ms [global:"bruce [a-z]", 2 column filters]</span>
