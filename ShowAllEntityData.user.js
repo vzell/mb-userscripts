@@ -3693,7 +3693,7 @@
      */
     function uiCheckboxLabelCSS() {
         const { fontSize } = uiCheckboxVals();
-        return `font-size:${fontSize}; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none;`;
+        return `font-size:${fontSize}; color:#333; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none;`;
     }
 
     /**
