@@ -42858,7 +42858,6 @@ sub-table filter input has a value. Clicking it should clear the sub-table colum
 When starting fresh on a final rendered page and adding a filter string on the sub-table level, ONLY the global "Toggle highlight" button appears, but not the global "Clear filter" buttons.
 Also the the global "Toggle highlight" button just erases the hightlightning the first time it is clicked, but doesn't toggle it back on.
 
-
 * DONE rename "Toggle filter elements on/off for this section"
 
 rename tooltip "Toggle filter elements on/off" to "Toggle filter elements on/off for this section"
@@ -42886,7 +42885,8 @@ Now lets take the global filtering (in the h2 header) state into account
 ** library
 ** userscript
 
-* change default colors of filter borders, and make them configurable
+
+* TODO change default colors of filter borders, and make them configurable
 ** initial
 
 In the uploaded userscript,
@@ -42994,7 +42994,9 @@ OK,
 
 ** TODO last regexp errors
 
-regexps are accepted now in column filters, but the checkbox "[x] Rx" on the global level has to be set for it.
+In the uploaded userscript,
+
+regexps are accepted now in column filters in "multi" table mode, but the checkbox "[x] Rx" on the global level has to be set for it.
 
 - the checkbox "[x] Rx" on the global level in "multi" table mode should ONLY influence the global filter string, right
   now it also is taken into account for the column level filters
@@ -43008,20 +43010,22 @@ regexps are accepted now in column filters, but the checkbox "[x] Rx" on the glo
 - in "single" table mode, when the "[x] Rx" flag is set, and an invalid regepx is entered in a column level field, the
   red "error" border is shown, but the info text is still not shown in the '<span id="mb-filter-status-display" class="mb-filter-status"'
 
-* TODO resize global filter input field (configurable) + the subtable specific one
+Please fix and also write changelog entries in the uploaded file "ShowAllEntityData_CHANGELOG.json"
 
+
+* DONE resize global filter input field (configurable) + the subtable specific one
 
 "Sub-table filter active border: now configurable. New setting 'sa_subtable_filter_active_border_color' (default #008000, green) controls the border and glow colour of sub-table filter inputs when active.
 Both new settings appear in the 🎨 FILTER HIGHLIGHT COLORS settings section."
 
-
 "Global filter active border: changed from red to orange (configurable). New setting 'sa_global_filter_active_border_color' (default #FFA500) controls the border and glow colour of the global filter input when a filter string is active.",
 
 
-* Remove the current key handling for "Ctrl+Shift+Esc"
+* TODO Remove the current key handling for "Ctrl+Shift+Esc"
 
 Remove the current key handling for "Ctrl+Shift+Esc" as that key combination is intercepted by the OS, also change the application help file "ShowAllEntityData_HELP.txt"
 Instead put the current value of "sa_shortcut_clear_filters" inside the tooltip of "Clear ALL filters"
+
 
 * how to make sure a userscript runs on pages like
 
@@ -43076,8 +43080,10 @@ but not
 
 
 
-* fix the up/down arrows in the configuration dialog, the up arrow is hidden a little bit
+* TODO fix the up/down arrows in the configuration dialog, the up arrow is hidden a little bit
+
 
 * TODO on single table handle the "filter" icon like in multi table mode
 
 
+* TODO load from disk in regexp mdoe does not work
