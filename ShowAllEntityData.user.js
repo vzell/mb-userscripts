@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.30+2026-02-27
+// @version      9.97.31+2026-02-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -5636,10 +5636,19 @@
                 padding-right: 10px;
             }
 
-            /* Toggle handle */
+            /* Toggle handle
+             * NOTE: 'right' is intentionally NOT set here.
+             * It is controlled exclusively by updateHandlePosition() in JS so
+             * that the handle always tracks the sidebar's actual rendered left
+             * boundary — even when auto-resize changes the sidebar's CSS
+             * position from its default right-floated layout to
+             * position:sticky/left:0 (which makes the sidebar appear at the
+             * LEFT edge of the viewport during horizontal scrolling).
+             * Setting 'right' in CSS as well would create a specificity race
+             * and re-introduce the ghost-handle bug.
+             */
             #sidebar-toggle-handle {
                 position: fixed;
-                right: ${sidebarWidth};
                 top: 50%;
                 transform: translateY(-50%);
                 width: 14px;
@@ -5653,7 +5662,9 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                transition: right 0.3s ease;
+                /* No transition on 'right' — position is set by JS on every
+                 * scroll/resize so a CSS transition would fight JS updates and
+                 * produce visible lag / jitter. */
                 box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             }
 
@@ -5661,10 +5672,6 @@
                 content: '▶';
                 font-size: 9px;
                 color: #555;
-            }
-
-            .handle-collapsed {
-                right: 0 !important;
             }
 
             .handle-collapsed::after {
@@ -5682,6 +5689,54 @@
         const handle = document.createElement('div');
         handle.id = 'sidebar-toggle-handle';
         handle.title = 'Toggle Full Width Sidebar';
+
+        /**
+         * Dynamically position the sidebar toggle handle so that it always
+         * sits flush against the sidebar's actual LEFT boundary, regardless of:
+         *  - horizontal scroll position (window.scrollX)
+         *  - sidebar CSS position changes introduced by toggleAutoResizeColumns
+         *    (which switches the sidebar from its default right-floated layout
+         *     to position:sticky / left:0, meaning it appears at the LEFT edge
+         *     of the viewport while scrolling — not the right)
+         *
+         * When the sidebar is collapsed the handle snaps to the viewport's
+         * right edge (right: 0).
+         *
+         * This function is intentionally free of CSS transitions: it is called
+         * on every scroll / resize event, so transitions would fight JS updates
+         * and produce visible lag or jitter.
+         *
+         * @param {HTMLElement} handle - The toggle handle DOM element
+         */
+        function updateHandlePosition(handle) {
+            if (!handle) return;
+
+            const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+
+            if (isCollapsed) {
+                // Sidebar is hidden — park handle at viewport right edge.
+                handle.style.right = '0px';
+                return;
+            }
+
+            // Sidebar is visible — position handle flush against its left edge.
+            // getBoundingClientRect() accounts for all CSS transforms, sticky
+            // offsets, and the current scroll position, giving us the sidebar's
+            // actual rendered position in viewport coordinates.
+            const rect = sidebar.getBoundingClientRect();
+
+            // Guard: if the rect is off-screen (shouldn't happen when expanded,
+            // but be defensive) fall back to the nominal sidebar width.
+            if (rect.width <= 0) {
+                handle.style.right = sidebarWidth;
+                return;
+            }
+
+            // "right" for a position:fixed element is measured from the
+            // viewport's right edge, so:  right = viewportWidth - sidebarLeft
+            const distFromRight = window.innerWidth - rect.left;
+            handle.style.right = `${Math.max(0, distFromRight)}px`;
+        }
 
         const applyStretching = (isCollapsed) => {
             const containers = [document.getElementById("page"), document.getElementById("content")];
@@ -5709,16 +5764,34 @@
             sidebar.classList.toggle('sidebar-collapsed');
             handle.classList.toggle('handle-collapsed');
             applyStretching(isCollapsing);
+
+            // Re-position the handle after the DOM state change.
+            // Use rAF so the browser has committed the new layout before we
+            // read getBoundingClientRect(), avoiding stale geometry.
+            requestAnimationFrame(() => updateHandlePosition(handle));
+
             Lib.debug('meta', `Sidebar ${isCollapsing ? 'collapsed' : 'expanded'}. Full width applied.`);
         });
 
         document.body.appendChild(handle);
+
+        // Set initial position now that the handle is in the DOM.
+        requestAnimationFrame(() => updateHandlePosition(handle));
+
+        // Keep handle flush against the sidebar on every scroll / resize.
+        // Scroll events fire very frequently, so no throttling overhead is
+        // added here — updateHandlePosition() is a simple rect read + style set.
+        window.addEventListener('scroll', () => updateHandlePosition(handle), { passive: true });
+        window.addEventListener('resize', () => updateHandlePosition(handle), { passive: true });
 
         // Observer to handle dynamic content replacement by the "Show All" logic
         const observer = new MutationObserver(() => {
             if (sidebar.classList.contains('sidebar-collapsed')) {
                 applyStretching(true);
             }
+            // Re-evaluate handle position whenever the DOM changes (e.g. after
+            // toggleAutoResizeColumns alters sidebar.style.position).
+            requestAnimationFrame(() => updateHandlePosition(handle));
         });
         observer.observe(document.body, { childList: true, subtree: true });
     }

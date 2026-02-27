@@ -1,5 +1,17 @@
 [
   {
+      "version": "9.97.31",
+      "date": "2026-02-27",
+      "sections": [
+          {
+              "label": "🐛 Bug Fixes",
+              "items": [
+                  "Fix ghost sidebar toggle handle: The sidebar toggle handle is now positioned dynamically via JS (updateHandlePosition) instead of relying on a hard-coded CSS 'right: 240px'. The root cause was that toggleAutoResizeColumns changes the sidebar from its default right-floated layout to 'position: sticky; left: 0', making the sidebar appear at the LEFT viewport edge during horizontal scrolling — so the fixed handle at 'right: 240px' ended up floating over the content area rather than being adjacent to the sidebar. updateHandlePosition() reads the sidebar's live getBoundingClientRect() on every scroll, resize, and toggle event and sets handle.style.right = (window.innerWidth - sidebar.left) px, keeping the handle flush against the sidebar's actual rendered left boundary at all times regardless of scroll position or CSS position changes. The CSS 'transition: right 0.3s ease' and the '.handle-collapsed { right: 0 !important }' rule have been removed to avoid CSS/JS fights on high-frequency scroll events."
+              ]
+          }
+      ]
+  },
+  {
     "version": "9.97.30",
     "date": "2026-02-27",
     "sections": [

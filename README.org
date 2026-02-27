@@ -41007,7 +41007,7 @@ Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': await is only v
 Otherwise the the script woudn't even load
 
 
-* TODO make the whole sidebar vanish to the right side of the browser window
+* DONE make the whole sidebar vanish to the right side of the browser window
 ** DONE sidebar
 
 In the uploaded userscript,
@@ -41136,8 +41136,6 @@ Please implement this, so that we get the complete real estate when the sidebar 
 account that in the non-collapsed state the sidebar container usually has it's own scrollbar because it has lots of
 content. Make sure that an eventual scrollbar on the "content container does not collide with the sidebar container.
 
-** TODO when sidebar is toggled there is artificial empty space reachable with the horizontal scrollbar
-** TODO ghost sidebar toggle sometimes stays visible inside the data aread depending on previous action  (Which ONE ??)
 
 
 * TODO interact with other USERSCRIPTs - jesus2099
@@ -42611,13 +42609,6 @@ probably needs to be changed from sync to async for this.
 The same is true when using the "[x] Rx" checkbox toggle for filter expressions on the global filter or sub-table filters. Plese implement or fix
 
 
-* regexp mode
-
-- when in regexp mode, remove the alert window, just add red border and "Invalid regexp" info message
-  "Regexp invalid — no alert, just inline message: removed Lib.showCustomAlert() calls from runFilter() and applySubFilter() on invalid regex (introduced in 9.97.10). Alerts interrupted the typing flow; the red border + inline status message in the filter-status span is sufficient feedback. Both functions reverted from async to sync. The load dialog confirmLoad() alert (also 9.97.10) is retained as it validates before opening the OS file picker."
-
-
-
 * TODO tooltip for global "Clear all COLUMN filters" from
 
 #+begin_example
@@ -42630,10 +42621,13 @@ to
     clearColumnFiltersBtn.title = 'Globally clear all column-specific filter inputs';
 #+end_example
 
-
 * change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
 
 
+* DONE regexp mode
+
+- when in regexp mode, remove the alert window, just add red border and "Invalid regexp" info message
+  "Regexp invalid — no alert, just inline message: removed Lib.showCustomAlert() calls from runFilter() and applySubFilter() on invalid regex (introduced in 9.97.10). Alerts interrupted the typing flow; the red border + inline status message in the filter-status span is sufficient feedback. Both functions reverted from async to sync. The load dialog confirmLoad() alert (also 9.97.10) is retained as it validates before opening the OS file picker."
 
 * DONE subtables
 
@@ -43033,6 +43027,8 @@ There is one special thing about the global filter compared to column level filt
 
 The "sa_filter_focus_prefix" should ALWAYS be visible in the filter field. The rest of the logic stays the same
 
+* DONE in the libary, fix the up/down arrows in number files in the configuration dialog, the up arrow is hidden a little bit
+
 
 * document test suite after userscript and library changes
 ** library
@@ -43091,7 +43087,21 @@ but not
 // @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
 
 
+* sidebar toggle
+** TODO when sidebar is toggled there is artificial empty space reachable with the horizontal scrollbar
+** TODO ghost sidebar toggle sometimes stays visible inside the data area depending on previous action  (Which ONE ??
 
-* TODO in the libary, fix the up/down arrows in number files in the configuration dialog, the up arrow is hidden a little bit
+In the uploaded userscript,
 
+When on the final filtered page and then toggle the side bar via the side bar handle, everything initially works.
 
+Now the scenario when a ghost sidebar toggle sometimes stays visible inside the data area depending on previous action:
+
+- first toggle the side bar (sidbar oves out od our way)
+- then auto-resize the colums with the "Resize button" - a horizontal scrollbar can be used to see all the columns
+- now scroll completely to the rigt
+- now toggle the sidebar again to make it visible
+- when now scrolling back horizontally there is a ghost toggle handle visible on the position as if the sidebar was
+  initially not toggled. from now on the ghost handle stays visible "above" the table on that fixed position. when
+  scrolling horizontale back and forth, it looks like the table moves below the handle back and forth
+  
