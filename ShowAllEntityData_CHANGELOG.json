@@ -1,5 +1,24 @@
 [
   {
+    "version": "9.97.28",
+    "date": "2026-02-27",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Load from Disk — RegExp pre-filter now correctly applied: when the 'Regular Expression' checkbox in the Load dialog was checked, no rows were loaded at all. Root cause: confirmLoad() tried to sync the regex flag to the live filter bar by writing to 'preFilterRegexLabel.querySelector(\"input\")' — but 'preFilterRegexLabel' was never declared anywhere in the script, so the typeof guard suppressed the write and 'preFilterRxCheckbox.checked' stayed false. The fileInput.onchange handler therefore always read isRegExp=false, fell into the plain-text path, and treated the pattern literally (e.g. '^Thunder' as the string '^thunder'), which matched nothing. Fixed: the dead reference to 'preFilterRegexLabel' is replaced with a direct 'preFilterRxCheckbox.checked = useRegex' assignment.",
+          "Ctrl+Shift+Esc shortcut for 'Clear ALL filters' removed: this key combination is intercepted at the OS level on most platforms (Windows opens Task Manager; some Linux desktop environments also handle it), so it never reliably reached the browser. The keydown handler block has been removed entirely. The 'Clear ALL filters' action remains available via the configurable 'sa_shortcut_clear_filters' shortcut (default: Ctrl+Shift+G) and by clicking the '✕ Clear ALL filters' button. The button tooltip now dynamically displays the currently configured shortcut key."
+        ]
+      },
+      {
+        "label": "📝 Documentation",
+        "items": [
+          "ShowAllEntityData_HELP.txt: removed all references to Ctrl+Shift+Esc from the FILTERING and KEYBOARD SHORTCUTS sections. The 'Clear all filters' entry in KEYBOARD SHORTCUTS now notes that the shortcut is configurable and that the button tooltip reflects the currently configured key."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.97.27",
     "date": "2026-02-27",
     "sections": [

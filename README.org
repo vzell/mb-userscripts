@@ -42880,13 +42880,7 @@ Now lets take the global filtering (in the h2 header) state into account
 
 - the global "Clear ALL filters" should only appear when at least one global or sub-table filter is in effect (right now it doesn't show up when at least one sub-table filter is in effect)
 
-
-* document test suite after userscript and library changes
-** library
-** userscript
-
-
-* TODO change default colors of filter borders, and make them configurable
+* DONE change default colors of filter borders, and make them configurable
 ** initial
 
 In the uploaded userscript,
@@ -42992,7 +42986,7 @@ OK,
   NOT write '⚠ Column \"…\": invalid regexp: …' to the span.mb-filter-status of the associated sub-table and DO NOT
   apply the 4 px error border to the specific column input
 
-** TODO last regexp errors
+** DONE last regexp errors
 
 In the uploaded userscript,
 
@@ -43012,7 +43006,6 @@ regexps are accepted now in column filters in "multi" table mode, but the checkb
 
 Please fix and also write changelog entries in the uploaded file "ShowAllEntityData_CHANGELOG.json"
 
-
 * DONE resize global filter input field (configurable) + the subtable specific one
 
 "Sub-table filter active border: now configurable. New setting 'sa_subtable_filter_active_border_color' (default #008000, green) controls the border and glow colour of sub-table filter inputs when active.
@@ -43020,11 +43013,15 @@ Both new settings appear in the 🎨 FILTER HIGHLIGHT COLORS settings section."
 
 "Global filter active border: changed from red to orange (configurable). New setting 'sa_global_filter_active_border_color' (default #FFA500) controls the border and glow colour of the global filter input when a filter string is active.",
 
-
-* TODO Remove the current key handling for "Ctrl+Shift+Esc"
+* DONE Remove the current key handling for "Ctrl+Shift+Esc"
 
 Remove the current key handling for "Ctrl+Shift+Esc" as that key combination is intercepted by the OS, also change the application help file "ShowAllEntityData_HELP.txt"
 Instead put the current value of "sa_shortcut_clear_filters" inside the tooltip of "Clear ALL filters"
+
+
+* document test suite after userscript and library changes
+** library
+** userscript
 
 
 * how to make sure a userscript runs on pages like
@@ -43086,4 +43083,4 @@ but not
 * TODO on single table handle the "filter" icon like in multi table mode
 
 
-* TODO load from disk in regexp mdoe does not work
+* TODO load from disk in regexp mode does not work

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.27+2026-02-27
+// @version      9.97.28+2026-02-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3905,7 +3905,6 @@
                     { keys: getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C'), desc: 'Focus first column filter (cycle through tables)' },
                     { keys: getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G'), desc: 'Clear all filters' },
                     { keys: 'Shift+Esc', desc: 'Clear all COLUMN filters (global action)' },
-                    { keys: 'Ctrl+Shift+Esc', desc: 'Clear ALL filters — global + column (global action)' },
                     { keys: 'Escape', desc: 'Clear focused filter (press twice to blur)' }
                 ]
             },
@@ -4399,26 +4398,17 @@
                 }
             }
 
-            // Ctrl+Shift+Esc: clear ALL filters — global filter + sub-table filters + all
-            // column filters (equivalent to clicking "Clear ALL filters" button)
-            if (e.key === 'Escape' && (e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey) {
-                e.preventDefault();
-                e.stopPropagation();
-                const clearAllBtn = document.getElementById('mb-clear-all-filters-btn');
-                if (clearAllBtn) {
-                    clearAllBtn.click();
-                    Lib.debug('shortcuts', 'All filters cleared via Ctrl+Shift+Esc');
-                } else {
-                    // Fallback: clear directly (button may be hidden)
-                    clearAllFilters();
-                    Lib.debug('shortcuts', 'All filters cleared via Ctrl+Shift+Esc (direct fallback)');
-                }
-            }
+            // NOTE: Ctrl+Shift+Esc ("clear ALL filters" action) has been removed because
+            // that key combination is intercepted by the OS on most platforms (Windows opens
+            // the Task Manager; some Linux desktop environments handle it as well) and can
+            // therefore never reliably reach the browser.  Use the configurable
+            // sa_shortcut_clear_filters shortcut (default: Ctrl+Shift+G) or click the
+            // "✕ Clear ALL filters" button instead.
 
             // Plain Escape (no modifier except possibly handled above):
             // Clear focused filter (first press) or blur (second press).
-            // The Shift+Esc and Ctrl+Shift+Esc cases above have already returned via
-            // stopPropagation, so this block only fires for unmodified Escape.
+            // The Shift+Esc case above has already returned via stopPropagation,
+            // so this block only fires for unmodified Escape.
             if (e.key === 'Escape' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey &&
                 (e.target.matches('.mb-col-filter-input') ||
                  e.target.id === 'mb-global-filter-input')) {
@@ -6386,7 +6376,7 @@
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.id = 'mb-clear-all-filters-btn';
     clearAllFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearAllFiltersBtn.title = 'Clear global/sub-table filters and ALL column filters in all sub-tables — global action (Ctrl+Shift+Esc)';
+    clearAllFiltersBtn.title = `Clear global/sub-table filters and ALL column filters in all sub-tables — also triggered by ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}`;
     clearAllFiltersBtn.onclick = () => {
         // Clear global filter
         filterInput.value = '';
@@ -7041,8 +7031,10 @@
                 if (typeof preFilterCaseLabel !== 'undefined') {
                     preFilterCaseLabel.querySelector('input').checked = useCase;
                 }
-                if (typeof preFilterRegexLabel !== 'undefined') {
-                    preFilterRegexLabel.querySelector('input').checked = useRegex;
+                // preFilterRxCheckbox is the live checkbox element; preFilterRegexLabel
+                // was never declared, so we reference the checkbox directly.
+                if (typeof preFilterRxCheckbox !== 'undefined') {
+                    preFilterRxCheckbox.checked = useRegex;
                 }
                 if (typeof preFilterExcludeLabel !== 'undefined') {
                     preFilterExcludeLabel.querySelector('input').checked = useExclude;
