@@ -28,14 +28,13 @@
       {
         "label": "✨ Enhancements",
         "items": [
-          "Global filter border color now transitions through three configurable states: idle (empty field, default black), active (has valid filter text, default orange), and error (invalid regexp, default dark red). The border of the adjacent ✕ and ⋮ edge strips updates in sync. Three new color-picker settings — 'Global filter border — idle', 'Global filter border — active', 'Global filter border — error' — replace the single previous 'Global filter border color' setting.",
-          "When the Rx checkbox is active and the typed pattern is not a valid regular expression, an error message ('⚠ Invalid regexp: …') is shown immediately in the filter-status display in the error color, and the filter pass is skipped until the pattern becomes valid. The error message clears automatically once the regexp parses successfully.",
-          "Global filter box-shadow glow now uses the configured active border color instead of a hardcoded red.",
-          "Column filter placeholder is now visible on a freshly focused, empty field: the placeholder embeds the search-icon prefix (sa_col_filter_focus_prefix) followed by 'Filter on this column…', so the hint is readable as soon as focus arrives. The prefix is only moved into the field value when the user begins typing, preserving all prefix-guard behaviour for non-empty fields. On blur the placeholder reverts to '…'.",
-          "Global and sub-table filter fields are now resizable: a narrow ⋮ drag handle appears to the right of the ✕ clear button. Dragging it horizontally adjusts the input width (minimum 60 px). The ✕ button and ⋮ handle are distinct rectangular strips that share the input border color, eliminating any overlap between the clear action and the resize gesture.",
-          "Global filter placeholder reads '🔍 Global Filter… works across all sub-tables' on multi-table pages and '🔍 Global Filter…' on single-table pages.",
-          "Sub-table filter placeholder reads 'Filter \"<name>\"… just in this sub-table'.",
-          "New number settings 'Global filter initial width' (default 500 px) and 'Sub-table filter initial width' (default 320 px) control the starting width of the respective resizable filter fields."
+          "Global filter border color transitions through three configurable states: idle (empty, default black), active (valid filter text, default orange), error (invalid regexp, default #cc0000). The clear and drag edge strips update in sync via setGlobalFilterBorder().",
+          "When Rx is on and the pattern is invalid, '⚠ Invalid regexp: …' appears in the global filter-status display and the filter pass is skipped until the pattern is valid.",
+          "Global filter box-shadow glow now uses the configured active border color (was hardcoded red).",
+          "Column filter placeholder is now visible on a freshly focused empty field (prefix + 'Filter on this column…'). Reverts to '…' on blur.",
+          "Global and sub-table filter fields are now resizable via a separate ⋮ drag handle strip to the right of the ✕ clear button.",
+          "New settings 'sa_global_filter_initial_width' (default 500 px) and 'sa_subtable_filter_initial_width' (default 320 px).",
+          "Global filter placeholder is '🔍 Global Filter… works across all sub-tables' on multi-table pages."
         ]
       }
     ]
@@ -47,12 +46,9 @@
       {
         "label": "✨ Enhancements",
         "items": [
-          "Global filter border color is now configurable (single setting, default orange). Previously hardcoded to #ccc / red.",
-          "Global filter placeholder changed from '🔍 Global Filter...' to '🔍 Global Filter…' (ellipsis U+2026).",
-          "Sub-table filter placeholder changed from 'Filter \"<name>\"…' to 'Filter \"<name>\"… just in this sub-table'.",
-          "Column filter default (unfocused) placeholder changed from '...' to '…' (ellipsis U+2026).",
-          "Column filter focused placeholder changed to 'Filter on this column…'.",
-          "Global and sub-table filter fields made resizable via a dedicated ⋮ drag handle; initial widths configurable via sa_global_filter_initial_width and sa_subtable_filter_initial_width settings."
+          "Global filter border color made configurable (default orange; previously hardcoded #ccc/red).",
+          "Placeholders updated throughout: global filter '🔍 Global Filter…', sub-table 'Filter \"<n>\"… just in this sub-table', column filter '…' unfocused / 'Filter on this column…' focused.",
+          "Global and sub-table filter fields made resizable via a ⋮ drag handle; initial widths configurable."
         ]
       }
     ]
