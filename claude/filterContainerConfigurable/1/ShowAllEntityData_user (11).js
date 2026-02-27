@@ -549,25 +549,11 @@
         },
 
         // --- Global filter input (large input in the H2 bar) ---
-        sa_global_filter_border_idle: {
-            label: 'Global filter border — idle (empty)',
-            type: 'color_picker',
-            default: '#000000',
-            description: 'Border color of the global filter input when the field is empty (no active filter)'
-        },
-
-        sa_global_filter_border_active: {
-            label: 'Global filter border — active (has filter text)',
+        sa_global_filter_border_color: {
+            label: 'Global filter border color',
             type: 'color_picker',
             default: 'orange',
-            description: 'Border color of the global filter input while it holds a valid filter string'
-        },
-
-        sa_global_filter_border_error: {
-            label: 'Global filter border — error (invalid regexp)',
-            type: 'color_picker',
-            default: '#cc0000',
-            description: 'Border color of the global filter input when the Rx checkbox is on and the entered expression is not a valid regular expression'
+            description: 'Border color of the global filter input field (idle / valid-regex state)'
         },
 
         sa_global_filter_initial_width: {
@@ -592,8 +578,8 @@
             label: 'Global filter input style',
             type: 'popup_dialog',
             fields: ['fontSize', 'padding', 'border', 'borderRadius', 'width', 'height'],
-            default: '1em|2px 6px|2px solid #000|3px|500px|24px',
-            description: 'Global filter input: fontSize|padding|border|borderRadius|width|height (border color is overridden by the three "Global filter border" color pickers; initial width is overridden by "Global filter initial width")'
+            default: '1em|2px 6px|2px solid orange|3px|500px|24px',
+            description: 'Global filter input: fontSize|padding|border|borderRadius|width|height (border color is also controlled by "Global filter border color"; initial width is also controlled by "Global filter initial width")'
         },
 
         // --- Pre-load filter input (small input in the H1 controls bar) ---
@@ -3537,37 +3523,23 @@
     /**
      * CSS for the large global filter input in the H2 bar.
      * Config: sa_ui_global_filter_input_style — fontSize|padding|border|borderRadius|width|height
-     * The three dedicated "Global filter border" color pickers and sa_global_filter_initial_width
-     * take precedence over the border and width fields of the condensed style string.
-     * The initial render always uses the *idle* border color (field starts empty).
+     * The dedicated settings sa_global_filter_border_color and sa_global_filter_initial_width
+     * take precedence over the border and width fields of the condensed style.
      */
     function uiGlobalFilterInputCSS() {
-        const defaults = '1em|2px 6px|2px solid #000|3px|500px|24px';
+        const defaults = '1em|2px 6px|2px solid orange|3px|500px|24px';
         const [fontSize, padding, _border, borderRadius, _width, height] =
             parseCondensedStyle(Lib.settings.sa_ui_global_filter_input_style, defaults);
-        const borderColor = Lib.settings.sa_global_filter_border_idle || '#000';
+        const borderColor = Lib.settings.sa_global_filter_border_color || 'orange';
         const width       = (Lib.settings.sa_global_filter_initial_width ?? 500) + 'px';
         return `font-size:${fontSize}; padding:${padding}; border:2px solid ${borderColor}; border-radius:${borderRadius}; width:${width}; height:${height}; box-sizing:border-box; transition:box-shadow 0.2s;`;
     }
 
-    /** Border color when the global filter input is empty / idle. */
-    function gfBorderIdle()   { return Lib.settings.sa_global_filter_border_idle   || '#000'; }
-    /** Border color when the global filter input holds a valid filter string. */
-    function gfBorderActive() { return Lib.settings.sa_global_filter_border_active || 'orange'; }
-    /** Border color when the global filter input contains an invalid regexp. */
-    function gfBorderError()  { return Lib.settings.sa_global_filter_border_error  || '#cc0000'; }
-
     /**
-     * Apply `color` to the global filter input and its two attached edge strips (✕ and ⋮).
-     * Keeps the three sibling elements visually unified.
-     * @param {string} color  - Any CSS colour value.
+     * Returns the configured global filter border color (falls back to 'orange').
      */
-    function setGlobalFilterBorder(color) {
-        filterInput.style.borderColor = color;
-        const clearEl  = document.getElementById('mb-global-filter-clear');
-        const dragEl   = document.getElementById('mb-global-filter-drag');
-        if (clearEl) { clearEl.style.borderTopColor = color; clearEl.style.borderBottomColor = color; }
-        if (dragEl)  { dragEl.style.borderTopColor  = color; dragEl.style.borderBottomColor  = color; dragEl.style.borderRightColor = color; }
+    function globalFilterBorderColor() {
+        return Lib.settings.sa_global_filter_border_color || 'orange';
     }
 
     /**
@@ -6089,7 +6061,7 @@
         'width:18px; flex-shrink:0;',
         'cursor:pointer; user-select:none;',
         'font-size:0.65em; color:#999;',
-        'border:2px solid ' + gfBorderIdle() + '; border-left:none; border-right:none;',
+        'border:2px solid ' + globalFilterBorderColor() + '; border-left:none; border-right:none;',
         'background:#fafafa;',
         'transition:color 0.15s, background 0.15s;'
     ].join(' ');
@@ -6105,7 +6077,7 @@
         'display:inline-flex; align-items:center; justify-content:center;',
         'width:10px; flex-shrink:0;',
         'cursor:col-resize; user-select:none;',
-        'border:2px solid ' + gfBorderIdle() + '; border-left:none;',
+        'border:2px solid ' + globalFilterBorderColor() + '; border-left:none;',
         'border-radius:0 3px 3px 0;',
         'background:#f0f0f0;',
         'font-size:7px; color:#aaa; letter-spacing:-1px;'
@@ -7642,22 +7614,15 @@
      */
     function applyColFilterFocusStyle(input) {
         const prefix = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
-        // Strip any already-present prefix so we can reason about the real content
-        const existing = input.value.startsWith(prefix) ? input.value.slice(prefix.length) : input.value;
-        if (existing === '') {
-            // Empty field: leave value empty so the placeholder is visible.
-            // Embed the prefix in the placeholder itself so the user can see the search icon.
-            input.value = '';
-            input.placeholder = prefix + 'Filter on this column…';
-        } else {
-            // Field already contains a filter string: prepend the prefix into the value
-            // (same behaviour as before — prefix is visible inline with the text).
+        if (!input.value.startsWith(prefix)) {
+            const existing = input.value;
             input.value = prefix + existing;
+            // Place cursor after prefix (at the end of any pre-existing text)
             const pos = prefix.length + existing.length;
             input.setSelectionRange(pos, pos);
-            // Placeholder is invisible when value is non-empty, but keep it consistent.
-            input.placeholder = prefix + 'Filter on this column…';
         }
+        // Show a helpful placeholder that appears visually after the prefix
+        input.placeholder = 'Filter on this column…';
         input.style.backgroundColor = Lib.settings.sa_col_filter_focus_bg || '#fffde7';
     }
 
@@ -7852,17 +7817,6 @@
 
             input.addEventListener('input', (e) => {
                 e.stopPropagation();
-                // If the user just started typing into a focused-but-empty field the prefix
-                // was deliberately kept out of the value (so the placeholder hint was visible).
-                // The moment any real character arrives we prepend the prefix so the focus
-                // guard and stripColFilterPrefix work correctly for the rest of the session.
-                const prefix = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
-                if (document.activeElement === input && input.value !== '' && !input.value.startsWith(prefix)) {
-                    const typed = input.value;
-                    input.value = prefix + typed;
-                    // Keep caret at the end
-                    input.setSelectionRange(input.value.length, input.value.length);
-                }
                 debouncedColumnFilter();
             });
 
@@ -7998,34 +7952,19 @@
         const globalQuery = (isCaseSensitive || isRegExp) ? globalQueryRaw : globalQueryRaw.toLowerCase();
 
         let globalRegex = null;
-        let regexpError = null; // holds the Error message when the pattern is invalid
         if (globalQueryRaw && isRegExp) {
             try {
                 globalRegex = new RegExp(globalQueryRaw, isCaseSensitive ? '' : 'i');
-                // Valid regexp (or non-regexp mode): show active border
-                setGlobalFilterBorder(gfBorderActive());
+                filterInput.style.border = `2px solid ${globalFilterBorderColor()}`; // Reset to standard if valid
             } catch (e) {
-                regexpError = e.message; // remember for the status display
-                setGlobalFilterBorder(gfBorderError());
+                filterInput.style.border = '2px solid red'; // Visual cue for invalid Regex
             }
-        } else if (globalQueryRaw) {
-            // Plain text filter with content
-            setGlobalFilterBorder(gfBorderActive());
         } else {
-            // Empty field — back to idle border
-            setGlobalFilterBorder(gfBorderIdle());
+            filterInput.style.border = `2px solid ${globalFilterBorderColor()}`;
         }
 
-        // Show regexp parse error immediately in the status display (before the filter pass runs)
-        if (regexpError && filterStatusDisplay) {
-            filterStatusDisplay.textContent = `⚠ Invalid regexp: ${regexpError}`;
-            filterStatusDisplay.style.color = gfBorderError();
-            // Don't run the actual filter pass when the pattern is broken
-            return;
-        }
-
-        // Apply box-shadow glow to global filter when active
-        filterInput.style.boxShadow = globalQueryRaw ? `0 0 2px 2px ${gfBorderActive()}` : '';
+        // Apply colored box to global filter if active
+        filterInput.style.boxShadow = globalQueryRaw ? '0 0 2px 2px red' : '';
 
         const __activeEl = document.activeElement;
         const __scrollY = window.scrollY;

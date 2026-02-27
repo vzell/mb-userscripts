@@ -549,51 +549,12 @@
         },
 
         // --- Global filter input (large input in the H2 bar) ---
-        sa_global_filter_border_idle: {
-            label: 'Global filter border — idle (empty)',
-            type: 'color_picker',
-            default: '#000000',
-            description: 'Border color of the global filter input when the field is empty (no active filter)'
-        },
-
-        sa_global_filter_border_active: {
-            label: 'Global filter border — active (has filter text)',
-            type: 'color_picker',
-            default: 'orange',
-            description: 'Border color of the global filter input while it holds a valid filter string'
-        },
-
-        sa_global_filter_border_error: {
-            label: 'Global filter border — error (invalid regexp)',
-            type: 'color_picker',
-            default: '#cc0000',
-            description: 'Border color of the global filter input when the Rx checkbox is on and the entered expression is not a valid regular expression'
-        },
-
-        sa_global_filter_initial_width: {
-            label: 'Global filter initial width (px)',
-            type: 'number',
-            default: 500,
-            min: 100,
-            max: 2000,
-            description: 'Initial width in pixels of the global filter input; the field can be widened by dragging the resize handle at its right edge'
-        },
-
-        sa_subtable_filter_initial_width: {
-            label: 'Sub-table filter initial width (px)',
-            type: 'number',
-            default: 320,
-            min: 100,
-            max: 2000,
-            description: 'Initial width in pixels of each sub-table filter input; the field can be widened by dragging the resize handle at its right edge'
-        },
-
         sa_ui_global_filter_input_style: {
             label: 'Global filter input style',
             type: 'popup_dialog',
             fields: ['fontSize', 'padding', 'border', 'borderRadius', 'width', 'height'],
-            default: '1em|2px 6px|2px solid #000|3px|500px|24px',
-            description: 'Global filter input: fontSize|padding|border|borderRadius|width|height (border color is overridden by the three "Global filter border" color pickers; initial width is overridden by "Global filter initial width")'
+            default: '1em|2px 20px 2px 6px|2px solid #ccc|3px|500px|24px',
+            description: 'Global filter input: fontSize|padding|border|borderRadius|width|height'
         },
 
         // --- Pre-load filter input (small input in the H1 controls bar) ---
@@ -3537,37 +3498,12 @@
     /**
      * CSS for the large global filter input in the H2 bar.
      * Config: sa_ui_global_filter_input_style — fontSize|padding|border|borderRadius|width|height
-     * The three dedicated "Global filter border" color pickers and sa_global_filter_initial_width
-     * take precedence over the border and width fields of the condensed style string.
-     * The initial render always uses the *idle* border color (field starts empty).
      */
     function uiGlobalFilterInputCSS() {
-        const defaults = '1em|2px 6px|2px solid #000|3px|500px|24px';
-        const [fontSize, padding, _border, borderRadius, _width, height] =
+        const defaults = '1em|2px 20px 2px 6px|2px solid #ccc|3px|500px|24px';
+        const [fontSize, padding, border, borderRadius, width, height] =
             parseCondensedStyle(Lib.settings.sa_ui_global_filter_input_style, defaults);
-        const borderColor = Lib.settings.sa_global_filter_border_idle || '#000';
-        const width       = (Lib.settings.sa_global_filter_initial_width ?? 500) + 'px';
-        return `font-size:${fontSize}; padding:${padding}; border:2px solid ${borderColor}; border-radius:${borderRadius}; width:${width}; height:${height}; box-sizing:border-box; transition:box-shadow 0.2s;`;
-    }
-
-    /** Border color when the global filter input is empty / idle. */
-    function gfBorderIdle()   { return Lib.settings.sa_global_filter_border_idle   || '#000'; }
-    /** Border color when the global filter input holds a valid filter string. */
-    function gfBorderActive() { return Lib.settings.sa_global_filter_border_active || 'orange'; }
-    /** Border color when the global filter input contains an invalid regexp. */
-    function gfBorderError()  { return Lib.settings.sa_global_filter_border_error  || '#cc0000'; }
-
-    /**
-     * Apply `color` to the global filter input and its two attached edge strips (✕ and ⋮).
-     * Keeps the three sibling elements visually unified.
-     * @param {string} color  - Any CSS colour value.
-     */
-    function setGlobalFilterBorder(color) {
-        filterInput.style.borderColor = color;
-        const clearEl  = document.getElementById('mb-global-filter-clear');
-        const dragEl   = document.getElementById('mb-global-filter-drag');
-        if (clearEl) { clearEl.style.borderTopColor = color; clearEl.style.borderBottomColor = color; }
-        if (dragEl)  { dragEl.style.borderTopColor  = color; dragEl.style.borderBottomColor  = color; dragEl.style.borderRightColor = color; }
+        return `font-size:${fontSize}; padding:${padding}; border:${border}; border-radius:${borderRadius}; width:${width}; height:${height}; box-sizing:border-box; transition:box-shadow 0.2s;`;
     }
 
     /**
@@ -6068,69 +6004,22 @@
     const filterWrapper = document.createElement('span');
     filterWrapper.id = 'mb-global-filter-wrapper';
     filterWrapper.className = 'mb-filter-wrapper';
-    filterWrapper.style.cssText = 'display:inline-flex; align-items:stretch; position:relative;';
+    filterWrapper.style.cssText = 'position:relative; display:inline-block;';
 
     const filterInput = document.createElement('input');
     filterInput.id = 'mb-global-filter-input';
-    filterInput.placeholder = activeDefinition && activeDefinition.tableMode === 'multi'
-        ? `🔍 Global Filter… works across all sub-tables`
-        : `🔍 Global Filter…`;
+    filterInput.placeholder = `🔍 Global Filter...`;
     filterInput.title = 'Enter global filter string';
     filterInput.style.cssText = uiGlobalFilterInputCSS();
-    // Remove default border-radius on the right so the x/handle attach flush
-    filterInput.style.borderRadius = '3px 0 0 3px';
 
-    // ── Clear (✕) button — narrow strip to the right of the input ──────────
     const filterClear = document.createElement('span');
     filterClear.id = 'mb-global-filter-clear';
     filterClear.textContent = '✕';
-    filterClear.style.cssText = [
-        'display:inline-flex; align-items:center; justify-content:center;',
-        'width:18px; flex-shrink:0;',
-        'cursor:pointer; user-select:none;',
-        'font-size:0.65em; color:#999;',
-        'border:2px solid ' + gfBorderIdle() + '; border-left:none; border-right:none;',
-        'background:#fafafa;',
-        'transition:color 0.15s, background 0.15s;'
-    ].join(' ');
-    filterClear.title = 'Clear global filter (✕)';
-    filterClear.onmouseenter = () => { filterClear.style.color = '#c00'; filterClear.style.background = '#fee'; };
-    filterClear.onmouseleave = () => { filterClear.style.color = '#999'; filterClear.style.background = '#fafafa'; };
-
-    // ── Resize drag handle — narrow strip to the right of the ✕ button ─────
-    const filterDragHandle = document.createElement('span');
-    filterDragHandle.id = 'mb-global-filter-drag';
-    filterDragHandle.title = 'Drag to resize filter field';
-    filterDragHandle.style.cssText = [
-        'display:inline-flex; align-items:center; justify-content:center;',
-        'width:10px; flex-shrink:0;',
-        'cursor:col-resize; user-select:none;',
-        'border:2px solid ' + gfBorderIdle() + '; border-left:none;',
-        'border-radius:0 3px 3px 0;',
-        'background:#f0f0f0;',
-        'font-size:7px; color:#aaa; letter-spacing:-1px;'
-    ].join(' ');
-    filterDragHandle.textContent = '⋮';
-
-    filterDragHandle.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        const startX     = e.clientX;
-        const startWidth = filterInput.offsetWidth;
-        const onMove = (ev) => {
-            const newW = Math.max(60, startWidth + (ev.clientX - startX));
-            filterInput.style.width = newW + 'px';
-        };
-        const onUp = () => {
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup',   onUp);
-        };
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup',   onUp);
-    });
+    filterClear.style.cssText = 'position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:0.6em; color:#999; user-select:none;';
+    filterClear.title = 'Clear global filter';
 
     filterWrapper.appendChild(filterInput);
     filterWrapper.appendChild(filterClear);
-    filterWrapper.appendChild(filterDragHandle);
 
     const caseLabel = document.createElement('label');
     caseLabel.id = 'mb-global-filter-case-label';
@@ -6660,8 +6549,7 @@
         }
         .mb-subtable-filter-wrapper {
             position: relative;
-            display: inline-flex;
-            align-items: stretch;
+            display: inline-block;
         }
         .mb-subtable-filter-toggle-icon {
             cursor: pointer;
@@ -7642,21 +7530,12 @@
      */
     function applyColFilterFocusStyle(input) {
         const prefix = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
-        // Strip any already-present prefix so we can reason about the real content
-        const existing = input.value.startsWith(prefix) ? input.value.slice(prefix.length) : input.value;
-        if (existing === '') {
-            // Empty field: leave value empty so the placeholder is visible.
-            // Embed the prefix in the placeholder itself so the user can see the search icon.
-            input.value = '';
-            input.placeholder = prefix + 'Filter on this column…';
-        } else {
-            // Field already contains a filter string: prepend the prefix into the value
-            // (same behaviour as before — prefix is visible inline with the text).
+        if (!input.value.startsWith(prefix)) {
+            const existing = input.value;
             input.value = prefix + existing;
+            // Place cursor after prefix (at the end of any pre-existing text)
             const pos = prefix.length + existing.length;
             input.setSelectionRange(pos, pos);
-            // Placeholder is invisible when value is non-empty, but keep it consistent.
-            input.placeholder = prefix + 'Filter on this column…';
         }
         input.style.backgroundColor = Lib.settings.sa_col_filter_focus_bg || '#fffde7';
     }
@@ -7673,8 +7552,6 @@
      */
     function removeColFilterFocusStyle(input) {
         input.value = stripColFilterPrefix(input.value);
-        // Restore the neutral placeholder now that focus is gone
-        input.placeholder = '…';
         if (input.value.trim() === '') {
             // No filter content — clear the background entirely
             input.style.backgroundColor = '';
@@ -7815,7 +7692,7 @@
 
             const input = document.createElement('input');
             input.type = 'text';
-            input.placeholder = '…';
+            input.placeholder = '...';
             input.title = 'Enter column filter string';
             input.className = 'mb-col-filter-input';
             input.dataset.colIdx = idx;
@@ -7852,17 +7729,6 @@
 
             input.addEventListener('input', (e) => {
                 e.stopPropagation();
-                // If the user just started typing into a focused-but-empty field the prefix
-                // was deliberately kept out of the value (so the placeholder hint was visible).
-                // The moment any real character arrives we prepend the prefix so the focus
-                // guard and stripColFilterPrefix work correctly for the rest of the session.
-                const prefix = Lib.settings.sa_col_filter_focus_prefix ?? '🔍 ';
-                if (document.activeElement === input && input.value !== '' && !input.value.startsWith(prefix)) {
-                    const typed = input.value;
-                    input.value = prefix + typed;
-                    // Keep caret at the end
-                    input.setSelectionRange(input.value.length, input.value.length);
-                }
                 debouncedColumnFilter();
             });
 
@@ -7998,34 +7864,19 @@
         const globalQuery = (isCaseSensitive || isRegExp) ? globalQueryRaw : globalQueryRaw.toLowerCase();
 
         let globalRegex = null;
-        let regexpError = null; // holds the Error message when the pattern is invalid
         if (globalQueryRaw && isRegExp) {
             try {
                 globalRegex = new RegExp(globalQueryRaw, isCaseSensitive ? '' : 'i');
-                // Valid regexp (or non-regexp mode): show active border
-                setGlobalFilterBorder(gfBorderActive());
+                filterInput.style.border = '2px solid #ccc'; // Reset to standard if valid
             } catch (e) {
-                regexpError = e.message; // remember for the status display
-                setGlobalFilterBorder(gfBorderError());
+                filterInput.style.border = '2px solid red'; // Visual cue for invalid Regex
             }
-        } else if (globalQueryRaw) {
-            // Plain text filter with content
-            setGlobalFilterBorder(gfBorderActive());
         } else {
-            // Empty field — back to idle border
-            setGlobalFilterBorder(gfBorderIdle());
+            filterInput.style.border = '2px solid #ccc';
         }
 
-        // Show regexp parse error immediately in the status display (before the filter pass runs)
-        if (regexpError && filterStatusDisplay) {
-            filterStatusDisplay.textContent = `⚠ Invalid regexp: ${regexpError}`;
-            filterStatusDisplay.style.color = gfBorderError();
-            // Don't run the actual filter pass when the pattern is broken
-            return;
-        }
-
-        // Apply box-shadow glow to global filter when active
-        filterInput.style.boxShadow = globalQueryRaw ? `0 0 2px 2px ${gfBorderActive()}` : '';
+        // Apply colored box to global filter if active
+        filterInput.style.boxShadow = globalQueryRaw ? '0 0 2px 2px red' : '';
 
         const __activeEl = document.activeElement;
         const __scrollY = window.scrollY;
@@ -9426,61 +9277,18 @@
         const filterInput = document.createElement('input');
         filterInput.id = `${pfx}-input`;
         filterInput.type = 'text';
-        filterInput.placeholder = `Filter "${categoryName}"… just in this sub-table`;
+        filterInput.placeholder = `Filter "${categoryName}"…`;
         filterInput.title = `Filter rows in the "${categoryName}" sub-table`;
-        const _stfW = (Lib.settings.sa_subtable_filter_initial_width ?? 320) + 'px';
-        filterInput.style.cssText = `font-size:1em; padding:2px 6px; border:2px solid rgb(204,204,204); border-radius:3px 0 0 3px; width:${_stfW}; height:24px; box-sizing:border-box; transition:box-shadow 0.2s;`;
+        filterInput.style.cssText = 'font-size:1em; padding:2px 20px 2px 6px; border:2px solid rgb(204,204,204); border-radius:3px; width:320px; height:24px; box-sizing:border-box; transition:box-shadow 0.2s;';
 
-        // ── Clear (✕) strip ───────────────────────────────────────────────────
         const clearBtn = document.createElement('span');
         clearBtn.id = `${pfx}-clear`;
         clearBtn.title = `Clear filter for "${categoryName}"`;
         clearBtn.textContent = '✕';
-        clearBtn.style.cssText = [
-            'display:inline-flex; align-items:center; justify-content:center;',
-            'width:18px; flex-shrink:0;',
-            'cursor:pointer; user-select:none;',
-            'font-size:0.65em; color:rgb(153,153,153);',
-            'border:2px solid rgb(204,204,204); border-left:none; border-right:none;',
-            'background:#fafafa;',
-            'transition:color 0.15s, background 0.15s;'
-        ].join(' ');
-        clearBtn.onmouseenter = () => { clearBtn.style.color = '#c00'; clearBtn.style.background = '#fee'; };
-        clearBtn.onmouseleave = () => { clearBtn.style.color = 'rgb(153,153,153)'; clearBtn.style.background = '#fafafa'; };
-
-        // ── Resize drag handle ────────────────────────────────────────────────
-        const stfDragHandle = document.createElement('span');
-        stfDragHandle.title = 'Drag to resize filter field';
-        stfDragHandle.style.cssText = [
-            'display:inline-flex; align-items:center; justify-content:center;',
-            'width:10px; flex-shrink:0;',
-            'cursor:col-resize; user-select:none;',
-            'border:2px solid rgb(204,204,204); border-left:none;',
-            'border-radius:0 3px 3px 0;',
-            'background:#f0f0f0;',
-            'font-size:7px; color:#aaa; letter-spacing:-1px;'
-        ].join(' ');
-        stfDragHandle.textContent = '⋮';
-
-        stfDragHandle.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            const startX     = e.clientX;
-            const startWidth = filterInput.offsetWidth;
-            const onMove = (ev) => {
-                const newW = Math.max(60, startWidth + (ev.clientX - startX));
-                filterInput.style.width = newW + 'px';
-            };
-            const onUp = () => {
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup',   onUp);
-            };
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup',   onUp);
-        });
+        clearBtn.style.cssText = 'position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:0.6em; color:rgb(153,153,153); user-select:none;';
 
         filterWrapper.appendChild(filterInput);
         filterWrapper.appendChild(clearBtn);
-        filterWrapper.appendChild(stfDragHandle);
 
         // ── Case-sensitive checkbox ───────────────────────────────────────────
         const caseCheckbox = document.createElement('input');

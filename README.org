@@ -42564,7 +42564,7 @@ should trigger the "collapsing/uncollapsing" of just the current h2 section when
 * TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter
 
 
-* TODO Is the check for invalid regexp really working, I don't get any error
+* DONE Is the check for invalid regexp really working, I don't get any error
 
 Is the check for invalid regexp really working in the following code
 
@@ -42610,7 +42610,12 @@ probably needs to be changed from sync to async for this.
 
 The same is true when using the "[x] Rx" checkbox toggle for filter expressions on the global filter or sub-table filters. Plese implement or fix
 
-* fix invalid filter regexp
+
+* regexp mode
+
+- when in regexp mode, remove the alert window, just add red border and "Invalid regexp" info message
+  "Regexp invalid — no alert, just inline message: removed Lib.showCustomAlert() calls from runFilter() and applySubFilter() on invalid regex (introduced in 9.97.10). Alerts interrupted the typing flow; the red border + inline status message in the filter-status span is sufficient feedback. Both functions reverted from async to sync. The load dialog confirmLoad() alert (also 9.97.10) is retained as it validates before opening the OS file picker."
+
 
 
 * TODO tooltip for global "Clear all COLUMN filters" from
@@ -42635,15 +42640,6 @@ to
 - "Toggle highlight" button should only be visible when a filter string is present
 - subtable "Clear ALL filters" button (onyl visible when filter is active)
 - "Sub-table 'Toggle highlighting' button: now starts hidden and only becomes visible while a filter string is present in the sub-table input (controlled by updateInputStyle()).",
-
-
-* TODO subtables
-
-- when in regexp mode, remove the alert window, just add red border and "Invalid regexp" info message
-  "Regexp invalid — no alert, just inline message: removed Lib.showCustomAlert() calls from runFilter() and applySubFilter() on invalid regex (introduced in 9.97.10). Alerts interrupted the typing flow; the red border + inline status message in the filter-status span is sufficient feedback. Both functions reverted from async to sync. The load dialog confirmLoad() alert (also 9.97.10) is retained as it validates before opening the OS file picker."
-
-
-- runFilter async (is that a problem, async in general ?)
 
 * DONE One bug left
 
@@ -42891,8 +42887,13 @@ Now lets take the global filtering (in the h2 header) state into account
 ** userscript
 
 * change default colors of filter borders, and make them configurable
+** initial
 
-- change the default colors of the filter borders, and make them configurable in "const configSchema": orange for the global filter, leave the colors as is for the other filters (sub-table and column level filters)
+In the uploaded userscript,
+
+- change the default colors of the filter borders, and make them configurable in "const configSchema": choose "orange"
+  for the global filter and leave the colors as they are right nwo for the other filters (sub-table and column level
+  filters)
 
 - change the global filter placeholder from
 
@@ -42932,45 +42933,52 @@ to
 input.placeholder = 'Filter on this column…';
 #+end_example
 
+but ONLY on the focused/active column (as a placeholder after "the sa_col_filter_focus_prefix")
+
 but leave it as is for the other columns (except change "..." to "…")
 
-- make the global and sub-table filter fields resizable to the right, and make their initial default width configurable in "const configSchema"
+- make the global and sub-table filter fields resizable to the right, and make their initial default width configurable
+  in "const configSchema". Render the "clear input field" small "x" in the global and sub-table filter fields in sich a
+  way that it does not interfer with the drag handler for resizing the filter field. Maybe create two different small
+  rectangular areas, first one for the "x", and then another one for the drag handler
 
-- implement a fix in the following code
+** fix placeholder
+
+- actually the column level filter placeholder
 
 #+begin_example
-    async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false, isExclude = false) {
-        if (!file) {
-            Lib.warn('cache', 'No file selected.');
-            return;
-        }
-
-        const filterQuery = (isCaseSensitive || isRegExp) ? filterQueryRaw : filterQueryRaw.toLowerCase();
-
-        // Clear previous status message
-        preFilterMsg.textContent = '';
-
-        let globalRegex = null;
-        if (filterQueryRaw && isRegExp) {
-            try {
-                globalRegex = new RegExp(filterQueryRaw, isCaseSensitive ? '' : 'i');
-            } catch (e) {
-                await Lib.showCustomAlert(
-                    'Invalid Regular Expression in load filter field. Load aborted.',
-                    '❌ Invalid Regex',
-                    loadFromDiskBtn
-                );
-                // Reset file input so change event fires again if they pick same file
-                fileInput.value = '';
-                return;
-            }
-        }
-
-        Lib.debug('cache', `Loading data from file: ${file.name}. Prefilter active: ${!!filterQueryRaw}${filterQueryRaw ? `, exclude: ${isExclude}` : ''}`);
+input.placeholder = 'Filter on this column…';
 #+end_example
 
-Is this code really working, I don't get any alert ?
+does NOT show up in the filter field which has the input focus after "the sa_col_filter_focus_prefix"
 
+Regarding the colors, what I really meant is
+
+- the global filter should start out, when the final page gets rendered, with a default border color of black (not orange as I mentioned before), but still configurable
+- that color should then change to a configurable color (by default orange) as soon as the filter field holds any filter string (either through typing something in, or pasting in)
+- when the regexp checkbox "[x] RX" is activated, and the enduser enters an invalid reular expression, the border color
+  should change again to an "error" configurable color (by default red) as long as the regepx is still invalid. At the same time
+  an informational message (also in that color) should be displayed in the '<span id="mb-filter-status-display"' to tell the enduser what's wrong with the regexp so far.
+  Both the "error" color and the info message should be cleared when the regexp is valid. The border color should actually change back to the color when the the filter field hold valid data
+
+Please implement and maybe also adjust the names for the different configuration variables, to make it clear what they mean.
+
+Also add a changelog entry to the file "ShowAllEntityData_CHANGELOG.json". You missed that already the last time, please reapply.
+
+** more configurable
+
+OK,
+
+- now for the sub-table filter field I also want configurable colors along the line with the global filter. please add
+  them to the configuration section and use them instead of the currently hard coded ones (use the hard coded ones as
+  defaults in the configuration sections). The variable "sa_global_filter_border_error" should be renamed in
+  "sa_filter_border_error" as it should be used for all filter fields where regexp errors could potentially be show up.
+
+- the "error" color should be made much broader (bold) as it almost does not shine through thru the standard assigend
+  border color when data is entered (it's not really visible)
+
+- the info area 'span class="mb-filter-status" data-table-name="<sub-table-name>" ...' should be used for the regexp
+  error messages when the regexp is invalid in either a sub-table filter field or a column level filter field
 
 
 * TODO resize global filter input field (configurable) + the subtable specific one
