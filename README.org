@@ -42559,7 +42559,7 @@ should trigger the "collapsing/uncollapsing" of just the current h2 section when
 should trigger the "collapsing/uncollapsing" of just the current h2 section when, but trigger the "collapsing/uncollapsing" of ALL the h2 sections when "Ctrl"-clicking
 
 
-* TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter
+* TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter as long as the hold the mouse 1 during click on that toggle
 
 
 * DONE Is the check for invalid regexp really working, I don't get any error
@@ -43052,16 +43052,201 @@ Now the scenario when a ghost sidebar toggle sometimes stays visible inside the 
 ** userscript
 
 
+* version in debug
+
+I want to include the version information of the userscript and the library used
+
+#+begin_example
+Lib.info('init', `Userscript (9.97.31+2026-02-27) loaded with external library (3.13.2+2026-02-27) active on MusicBrainz page: ${currentUrl}`);
+#+end_example
+
+but I get in the debug log
+
+#+begin_example
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.97.31+2026-02-27) loaded with external library (9.97.31+2026-02-27) active on MusicBrainz page: https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+#+end_example
+
+
+do not hardcode "const libVersion = "3.13.2+2026-02-27" but instead get it also from the libarary itself, what needs to
+be changed
+
+I get two times the same version, the userscript version, but I also want the library version. here the debug log
+
+
+ok, but then , i hard code the libraray version as a string in the code
+
+#+begin_example
+// ── Public API ────────────────────────────────────────────────────────────
+return {
+    // Add this line to expose the library's metadata version
+    version: (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '3.13.2+2026-02-27',
+    
+    settings:           settingsInterface.values,
+    // ... rest of the existing return object
+};
+#+end_example
+
+I want to read it from the header area of the library
+
+#+begin_example
+// ==UserScript==
+// @name         VZ: MusicBrainz - Unified Library
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      3.13.2+2026-02-27
+#+end_example
+
+
+*
+
+Please rewrite
+
+the block
+
+#+begin_example
+// @match        *://*.musicbrainz.org/artist/*
+// @match        *://*.musicbrainz.org/release-group/*
+// @match        *://*.musicbrainz.org/release/*
+// @match        *://*.musicbrainz.org/work/*
+// @match        *://*.musicbrainz.org/recording/* 
+// @match        *://*.musicbrainz.org/label/*
+// @match        *://*.musicbrainz.org/series/*
+// @match        *://*.musicbrainz.org/place/*
+// @match        *://*.musicbrainz.org/area/*
+// @match        *://*.musicbrainz.org/instrument/*
+// @match        *://*.musicbrainz.org/event/*
+// @match        *://*.musicbrainz.org/search?query=*
+#+end_example
+
+into a block to use the "include" directive, as a template, see the following for the '// @match        *://*.musicbrainz.org/recording/* '
+ 
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/artist\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/release-group\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/release\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/work\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/label\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/series\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/place\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/area\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/instrument\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/event\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/search\?query=.*$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?|search\?query=.*)$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/search\?query=.*$/
+#+end_example
+
+** 2
+
+Please rewrite this block
+
+#+begin_example
+// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
+#+end_example
+
+into a condensed format as one line "inlcude", something like
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels)(?:\?.*)?$/
+#+end_example
+
+
 * how to make sure a userscript runs on pages like
 
+Please rewrite the foolowing
+
+#+begin_example
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+#+end_example
+
+to support the "*.//*." like '// @match        *://*.musicbrainz.org/'
+
+In userscript headers, besides "// @match" and "// @include" is there somethig like an "//@exclude" directive
+
+so that this type of URL would be included (different UUIDs should be possible)
+
 https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7?page=2&tport=8000
 
 but not
 
 ﻿https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85
+https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85&tport=8000
 
+
+// @match        *://*.musicbrainz.org/recording/*
+// @exclude      *://*.musicbrainz.org/recording/merge*
+// @include      /^https?://musicbrainz\.org/recording/                 [a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
+
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+-----------------------------------------------------------------------------------------------------------------------
+
+// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
+// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(?:\?.*)?$/
+
+// @include   /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+
+-----------------------------------------------------------------------------------------------------------------------
 
 // @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F-]{36}(\?.*)?$/
+
 
 
 // Recording
@@ -43102,5 +43287,28 @@ but not
 
 // @run-at document-end
 // @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
+
+
+
+* remove orange color shining through to the checkbox button texts
+
+In the uploaded userscript,
+
+on the final rendered page all the h2 headers .e.g
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Album
+#+end_example
+
+specifically the text, in this case "Album" are renderd in an orange like color. This color is currently inherited by the checkbox button texts "Cc", Rx" and "Ex"
+but also, when the globla filter box is activated and some filter text has been added, by the border around the small little "x" and the "resize handle"
+
+#+begin_example
+<span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span>
+<span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid orange; border-right: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span>
+#+end_example
+
+please remove those inherited colors from the mentioned elements
+
 
 
