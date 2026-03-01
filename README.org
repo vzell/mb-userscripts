@@ -43330,8 +43330,8 @@ Bruce Springsteen & The E Street Band at Athletic & Convocation Center
 ~ Release group by Bruce Springsteen & The E Street Band
 #+end_example
 
-
 * unique
+** initial
 
 In the uploaded userscript,
 
@@ -43342,3 +43342,9 @@ For every table, in each column header row, for every column header, please rend
 which displays for each column the unique column values in that column. When either clicking with the mouse or pressing
 enter on the current selected item in the pull down menu, that text value of the item should be entered as a filter string in filter field belo the column header
 
+** glitches
+
+A couple of glitches
+
+- after clicking the "📊" icon, when hovering over with the mouse, and then try to scroll with the mouse wheel, the dialog immediately closes
+- after clicking the "📊" icon, wen using the keyboard "down" key, it only moves through the visible rows of the dialog, please fix
