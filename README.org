@@ -43647,7 +43647,7 @@ inherent to the per-node highlightText walker), but the row now at least correct
 
 Please implement highlightning also for matches that span multiple tags.
 
-** TODO Implement a quickfilter
+** DONE Implement a quickfilter
 
 In the uploaded userscript,
 
@@ -43721,6 +43721,8 @@ Next a button '<button id="sa-render-confirm"' should be rendered
 #+end_example
 
 with the action of finally rendering the resulting table or multiple tables (like in the original implementation).
+
+also create a changlog entry in the uploaded CHANGELOG file
 
 Please reimplement and show me the complete new implementation from the whole user script and all relevant other parts
 of code change (if any) and also create a changlog entry in the uploaded CHANGELOG file
