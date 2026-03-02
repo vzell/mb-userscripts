@@ -7554,54 +7554,14 @@
      * @returns {string} The visible text content with whitespace joined
      */
     /**
-     * Normalises a raw string assembled from DOM text nodes into a clean,
-     * filter-ready form that matches what the browser visually renders.
-     *
-     * Two separate problems are solved here:
-     *
-     * 1. Cross-tag whitespace (previous fix):
-     *    Individual text nodes carry the HTML source indentation, e.g.
-     *    "Bruce Springsteen\n    ", " &\n    ", "The E Street Band\n    ".
-     *    Joining them verbatim produces multi-whitespace runs that never
-     *    match a user query like "Bruce Springsteen & The E Street Band".
-     *    Collapsing every \s+ run to a single space mirrors the browser's
-     *    inline-whitespace collapsing rule.
-     *
-     * 2. Space inside bracket/paren pairs from <span class="comment">:
-     *    MusicBrainz wraps disambiguation / live-detail comments in a pattern
-     *    like:
-     *        <span class="comment">(\n    <bdi>live, …</bdi>)\n  </span>
-     *    After whitespace collapse the text node "(\n    " becomes "( " and
-     *    ")\n  " becomes ") ", yielding "Youngstown ( live, … )" — but the
-     *    browser renders "Youngstown (live, …)" with no interior spaces.
-     *    A user therefore types "(live" to match, not "( live".
-     *    The post-processing step mirrors the browser by removing the
-     *    spurious single space that appears immediately after an opening
-     *    bracket/paren and immediately before a closing bracket/paren.
-     *    This is safe for MusicBrainz content: the visual rendering never
-     *    intentionally shows "( text )" with interior spaces, so no valid
-     *    search query would rely on those spaces being present.
-     *
-     * @param {string} raw - String assembled from joined text-node values.
-     * @returns {string} Normalised, filter-ready string.
-     */
-    function normalizeExtractedText(raw) {
-        return raw
-            // Step 1: collapse every whitespace run to a single space.
-            .replace(/\s+/g, ' ')
-            // Step 2: remove the spurious space that whitespace-collapse
-            // inserts inside bracket/paren pairs originating from HTML
-            // source-formatting newlines.
-            .replace(/\( /g, '(')
-            .replace(/ \)/g, ')')
-            .replace(/\[ /g, '[')
-            .replace(/ \]/g, ']')
-            .trim();
-    }
-
-    /**
      * Extracts all visible text from `element`, skipping script/style/head
-     * subtrees, and returns a normalised filter-ready string.
+     * subtrees, and returns a single whitespace-normalised string.
+     *
+     * Whitespace normalisation (collapse every run of \s+ to one space, then
+     * trim) is essential for cross-tag filter matching: individual text nodes
+     * often carry trailing newlines and indentation, so naïvely joining them
+     * produces strings like "Bruce Springsteen\n    &\n    The E Street Band"
+     * which would never match the user query "Bruce Springsteen &".
      *
      * @param {Element} element - DOM element to extract text from.
      * @returns {string} Normalised visible text content.
@@ -7622,7 +7582,10 @@
         while (node = walker.nextNode()) {
             if (node.nodeType === Node.TEXT_NODE) textParts.push(node.nodeValue);
         }
-        return normalizeExtractedText(textParts.join(' '));
+        // Collapse whitespace runs (including newlines / indentation from HTML
+        // formatting) so that text spanning multiple inline tags can be matched
+        // as a single continuous string.
+        return textParts.join(' ').replace(/\s+/g, ' ').trim();
     }
 
     /**
@@ -7630,12 +7593,11 @@
      * decorative elements and script/style/head subtrees.
      *
      * Text nodes that are pure whitespace or decorative icons (▶, ▼, …) are
-     * dropped. All remaining parts are joined and passed through
-     * normalizeExtractedText() so that:
-     *   - filter strings spanning multiple inline tags match correctly
-     *     (e.g. "Bruce Springsteen & The E Street Band"), and
-     *   - bracket/paren pairs from <span class="comment"> do not acquire
-     *     spurious interior spaces (e.g. "(live, …)" not "( live, … )").
+     * dropped.  All remaining text parts are joined and then whitespace-
+     * normalised (every run of \s+ collapsed to a single space, result trimmed)
+     * so that filter strings which span multiple inline tags — e.g.
+     * "Bruce Springsteen & The E Street Band" spread across two <a> elements
+     * and a bare text node — can be matched correctly.
      *
      * This function filters out common decorative content like:
      * - Expand/collapse icons (▶, ▼, ►, etc.)
@@ -7678,7 +7640,10 @@
                 }
             }
         }
-        return normalizeExtractedText(textParts.join(' '));
+        // Collapse whitespace runs (including newlines / indentation from HTML
+        // formatting) so that text spanning multiple inline tags can be matched
+        // as a single continuous string.
+        return textParts.join(' ').replace(/\s+/g, ' ').trim();
     }
 
     /**
@@ -11117,9 +11082,9 @@
                 const cell = row.cells[colIndex];
                 if (!cell) return;
                 // Use getCleanColumnText() instead of cell.textContent so that:
-                //   (a) <script> JSON blobs embedded by MusicBrainz are excluded,
-                //   (b) whitespace is normalised (cross-tag joins, paren spacing)
-                //       consistently with what the column filter actually matches.
+                //   (a) <script> JSON blobs (e.g. release-events, author-roles data
+                //       embedded by MusicBrainz) are excluded from the displayed value, and
+                //   (b) whitespace is normalised for consistent display in the dropdown.
                 const v = getCleanColumnText(cell);
                 if (v) seen.add(v);
             });

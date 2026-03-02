@@ -43052,7 +43052,7 @@ Now the scenario when a ghost sidebar toggle sometimes stays visible inside the 
 ** userscript
 
 
-* version in debug
+* DONE version of userscript and library in debug statement
 
 I want to include the version information of the userscript and the library used
 
@@ -43096,9 +43096,125 @@ I want to read it from the header area of the library
 #+end_example
 
 
-*
+* how to make sure a userscript runs on pages - match versus include
+** match
 
-Please rewrite
+// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
+
+** Please rewrite the following
+
+#+begin_example
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+#+end_example
+
+to support the "*.//*." like '// @match        *://*.musicbrainz.org/'
+
+In userscript headers, besides "// @match" and "// @include" is there somethig like an "//@exclude" directive
+
+so that this type of URL would be included (different UUIDs should be possible)
+
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7?page=2&tport=8000
+
+but not
+
+﻿https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85
+https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85&tport=8000
+
+
+// @match        *://*.musicbrainz.org/recording/*
+// @exclude      *://*.musicbrainz.org/recording/merge*
+// @include      /^https?://musicbrainz\.org/recording/                 [a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
+
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+-----------------------------------------------------------------------------------------------------------------------
+
+// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
+// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(?:\?.*)?$/
+
+// @include   /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+
+-----------------------------------------------------------------------------------------------------------------------
+
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F-]{36}(\?.*)?$/
+
+
+
+// Recording
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Artist
+// @include /^https:\/\/musicbrainz\.org\/artist\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Release
+// @include /^https:\/\/musicbrainz\.org\/release\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Release Group
+// @include /^https:\/\/musicbrainz\.org\/release-group\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Work
+// @include /^https:\/\/musicbrainz\.org\/work\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Label
+// @include /^https:\/\/musicbrainz\.org\/label\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Area
+// @include /^https:\/\/musicbrainz\.org\/area\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Place
+// @include /^https:\/\/musicbrainz\.org\/place\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Event
+// @include /^https:\/\/musicbrainz\.org\/event\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Series
+// @include /^https:\/\/musicbrainz\.org\/series\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+
+
+
+// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work|label|area|place|event|series)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
+
+
+// @run-at document-end
+// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
+
+
+** Please rewrite
 
 the block
 
@@ -43204,126 +43320,8 @@ into a condensed format as one line "inlcude", something like
 #+end_example
 
 
-* how to make sure a userscript runs on pages like
-** match
 
-// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
-// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
-// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
-// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
-
-** Please rewrite the foolowing
-
-#+begin_example
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-#+end_example
-
-to support the "*.//*." like '// @match        *://*.musicbrainz.org/'
-
-In userscript headers, besides "// @match" and "// @include" is there somethig like an "//@exclude" directive
-
-so that this type of URL would be included (different UUIDs should be possible)
-
-https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
-https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7?page=2&tport=8000
-
-but not
-
-﻿https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85
-https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85&tport=8000
-
-
-// @match        *://*.musicbrainz.org/recording/*
-// @exclude      *://*.musicbrainz.org/recording/merge*
-// @include      /^https?://musicbrainz\.org/recording/                 [a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
-
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
------------------------------------------------------------------------------------------------------------------------
-
-// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
-// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(?:\?.*)?$/
-
-// @include   /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-
------------------------------------------------------------------------------------------------------------------------
-
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F-]{36}(\?.*)?$/
-
-
-
-// Recording
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Artist
-// @include /^https:\/\/musicbrainz\.org\/artist\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Release
-// @include /^https:\/\/musicbrainz\.org\/release\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Release Group
-// @include /^https:\/\/musicbrainz\.org\/release-group\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Work
-// @include /^https:\/\/musicbrainz\.org\/work\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Label
-// @include /^https:\/\/musicbrainz\.org\/label\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Area
-// @include /^https:\/\/musicbrainz\.org\/area\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Place
-// @include /^https:\/\/musicbrainz\.org\/place\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Event
-// @include /^https:\/\/musicbrainz\.org\/event\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Series
-// @include /^https:\/\/musicbrainz\.org\/series\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-
-
-
-// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work|label|area|place|event|series)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
-
-
-// @run-at document-end
-// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
-
-
-
-* remove orange color shining through to the checkbox button texts
+* DONE remove orange color shining through to the checkbox button texts
 
 In the uploaded userscript,
 
@@ -43346,7 +43344,7 @@ please remove those inherited colors from the mentioned elements
 
 * for https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
 
-add the evemt alias int the next line
+add the event alias int the next line
 
 so
 
@@ -43363,6 +43361,20 @@ Bruce Springsteen & The E Street Band at Athletic & Convocation Center
 ~ Release group by Bruce Springsteen & The E Street Band
 #+end_example
 
+
+* unicode symbols
+** initial
+
+The "Ctrl-M" key combination in this userscript is used as a prefixkey prefix map. But it seems that some other userscript or the MusicBrainz pages themthelves
+have registered an event handler that fires in addition to ours but only when inside text input fields (like the global or column specific filter fields) 
+
+It popsup a unicodechars Menu
+
+#+begin_example
+<div class="mbunicodecharsMenuShow" id="mbunicodecharsMenu" style="top: 364.219px; left: 31px;">
+#+end_example
+
+Could this somehow be prevented, or better yet, remapped to a different key combination
 
 * unique
 ** initial
@@ -43401,16 +43413,227 @@ should look like
   
 but actually the "▼" and "📊" overlap.
 
+** filtering cells with HTML tags
 
-* unicode symbols
+In the uploaded userscript,
 
-The "Ctrl-M" key combination in this userscript is used as a prefixkey prefix map. But it seems that some other userscript or the MusicBrainz pages themthelves
-have registered an event handler that fires in addition to ours but only when inside text input fields (like the global or column specific filter fields) 
+when filtering either on the global, sub-table or column level, it works when entering strings which match on one or
+multiple text parts of the column data cells, but because these could have meta tags like 'a href' and others when
+trying to match a string which stretches over multiple tag based text cells, it breaks.
+See for example the following example column "Artist" in the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+with the following data cells content:
 
-It popsup a unicodechars Menu
-
+- Filtering e.g JUST for "Bruce Springsteen", "&" or "The E Street Band" ALONE will show the correspondig rows with the filter string highlighted
+- Filtering e.g for "Bruce Springsteen &" or "Bruce Springsteen & The E Street Band" gives no result
+  
 #+begin_example
-<div class="mbunicodecharsMenuShow" id="mbunicodecharsMenu" style="top: 364.219px; left: 31px;">
+<td>
+  <bdi>
+    <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+    </a> &amp;
+    <a href="/artist/d6652e7b-33fe-49ef-8336-4c863b4f996f" title="E Street Band, The">The E Street Band
+    </a>
+  </bdi>
+</td>
 #+end_example
 
-Could this somehow be prevented, or better yet, remapped to a different key combination
+Please fix, but leave the tags for display/rendering purposes intact. By the way another observation, in the
+"Unique-values column dropdown — shared singleton panel" on every column header, the unique values are already extracted
+just from the text parts of the data cells (except data cells which have "script" tags, which should actually be stripped when generating the "Unique-values column dropdown")
+
+Other examples which break are:
+
+#+begin_example
+# Artist
+
+<td>
+  <bdi>
+    <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+    </a> with
+    <span class="name-variation">
+    <a href="/artist/7d5c39ac-5d48-4fdb-81df-6212e38353b3" title="The Sessions Band – Sessions Band, The (performed with Bruce Springsteen)">The Seeger Sessions Band
+    </a>
+    </span>
+  </bdi>
+</td>
+
+# Country/Date
+
+<td>
+  <script type="application/json">{"events":[{"date":{"month":null,"year":1999,"day":null},"country":{"iso_3166_3_codes":[],"begin_date":null,"country_code":"US","entityType":"area","ended":false,"iso_3166_1_codes":["US"],"name":"United States","end_date":null,"typeID":1,"last_updated":"2013-06-15T18:06:39Z","editsPending":false,"comment":"","primary_code":"US","iso_3166_2_codes":[],"id":222,"gid":"489ce91b-6658-3307-9877-795b68554c98"}}]}
+  </script>
+  <div class="release-events-container">
+    <ul aria-label="Release events" class="release-events abbreviated">
+      <li aria-label="Release event" class="release-event">
+	<span class="flag flag-US release-country">
+	  <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	    <abbr title="United States">US
+	    </abbr>
+	  </a>
+	</span>
+	<span class="release-date">1999
+	</span>
+      </li>
+    </ul>
+  </div>
+</td>
+
+# Rating
+
+<td class="c">
+  <span class="inline-rating">
+    <span class="star-rating" tabindex="-1">
+      <span class="current-rating" style="width:73%">3.65
+      </span>
+      <a class="stars-1 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=81660&amp;rating=20&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D1%26all%3D0%26va%3D0" title="Rate: 1 star">1
+      </a>
+      <a class="stars-2 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=81660&amp;rating=40&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D1%26all%3D0%26va%3D0" title="Rate: 2 stars">2
+      </a>
+      <a class="stars-3 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=81660&amp;rating=60&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D1%26all%3D0%26va%3D0" title="Rate: 3 stars">3
+      </a>
+      <a class="stars-4 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=81660&amp;rating=80&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D1%26all%3D0%26va%3D0" title="Rate: 4 stars">4
+      </a>
+      <a class="stars-5 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=81660&amp;rating=100&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D1%26all%3D0%26va%3D0" title="Rate: 5 stars">5
+      </a>
+    </span>
+  </span>
+</td>
+
+# Title
+
+<td>
+  <span class="recordinglink">
+  </span>
+  <a href="/recording/3497900e-6c78-47d8-a6ae-4526e7f3bfd6">
+    <bdi>Blinded by the Light
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>version 1a
+    </bdi>)
+  </span>
+</td>
+
+# Name
+
+<td>
+  <a class="wrap-anywhere" href="/recording/f252338a-ee70-4b56-9cd8-cff10bc2c49a">
+    <bdi>(I Can’t Get No) Satisfaction
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>live, 1988‐01‐20: Waldorf‐Astoria Hotel, New York City, NY, USA
+    </bdi>)
+  </span>
+  <div class="work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">live recording of
+    <a href="/work/b8aeb29b-6c42-38da-a179-12e1fdb97ad3">(I Can’t Get No) Satisfaction
+    </a>
+  </div>
+</td>
+
+# Label
+
+<td>
+  <span class="catalog-number">CBS 450227 2
+  </span>,
+  <span class="catalog-number">CDCBS 450227 2
+  </span>
+</td>
+
+# Authors
+
+<td>
+  <script type="application/json">{"relations":[{"entity":{"isni_codes":[],"ended":false,"area":null,"ipi_codes":[],"last_updated":"2022-05-09T08:07:14Z","begin_area_id":38143,"editsPending":false,"gender":null,"comment":"","name":"Mick Jagger","id":15290,"begin_date":{"day":26,"year":1943,"month":7},"gender_id":1,"end_area_id":null,"sort_name":"Jagger, Mick","gid":"b5ffc3aa-b868-4b88-905f-d73d51dbe51c","end_date":null,"begin_area":null,"entityType":"artist","end_area":null,"typeID":1},"roles":["writer"],"credit":""},{"credit":"","roles":["writer"],"entity":{"ipi_codes":[],"area":null,"ended":false,"last_updated":"2022-02-03T00:00:19Z","begin_area_id":38143,"isni_codes":[],"id":24274,"name":"Keith Richards","comment":"Rolling Stones guitarist","editsPending":false,"gender":null,"sort_name":"Richards, Keith","end_date":null,"gid":"f0ed72a3-ae8f-4cf7-b51d-2696a2330230","end_area_id":null,"begin_date":{"month":12,"year":1943,"day":18},"gender_id":1,"end_area":null,"typeID":1,"entityType":"artist","begin_area":null}}]}
+  </script>
+  <div class="artist-roles-container">
+    <ul aria-label="Artist roles" class="artist-roles">
+      <li>
+	<a href="/artist/b5ffc3aa-b868-4b88-905f-d73d51dbe51c" title="Jagger, Mick">
+	  <bdi>Mick Jagger
+	  </bdi>
+	</a> (writer)
+      </li>
+      <li>
+	<a href="/artist/f0ed72a3-ae8f-4cf7-b51d-2696a2330230" title="Richards, Keith (Rolling Stones guitarist)">
+	  <bdi>Keith Richards
+	  </bdi>
+	</a>
+	<span class="comment">(
+	  <bdi>Rolling Stones guitarist
+	  </bdi>)
+	</span> (writer)
+      </li>
+    </ul>
+  </div>
+</td>
+#+end_example
+
+
+getCleanVisibleText / getCleanColumnText: normalize whitespace so cross-tag text joins cleanly for matching
+highlightText: rewrite to support highlighting across tag boundaries using a flat-text/segment-offset approach
+
+** unique
+
+- in the "Unique-values column dropdown — shared singleton panel", clicking one of the unique entries in the scrollable
+
+** special case "comment"
+
+Almost perfect. Some small glitches present:
+
+For data cells where a '<span class="comment">' tag is present, see e.g the following block of examples
+
+#+begin_example
+<td>
+  <a href="/event/b0466931-607d-4033-aff3-022c3122ea2d/event-art">
+    <span class="artwork-icon eaa-icon" title="This event has artwork in the Event Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/event/b0466931-607d-4033-aff3-022c3122ea2d">
+    <bdi>2025‐12‐14: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Hungerthon Benefit
+    </bdi>)
+  </span>
+</td>
+
+<td>
+  <span class="recordinglink">
+  </span>
+  <a href="/recording/cc1a9512-b541-4bc7-bb1c-1189ddfaef11">
+    <bdi>The Fever
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>live, 1977‐04‐17: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>)
+  </span>
+</td>
+
+<td>
+  <span class="recordinglink">
+  </span>
+  <a href="/recording/0049c702-1d7c-474e-9dc0-16a56cae6300">
+    <bdi>Youngstown
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>live, 1995‐11‐26: Wiltern Theatre, Los Angeles, CA, USA
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+the normalization of whitespace so cross-tag text joins cleanly for matching should actually be special cased in the following manner.
+
+Take for example the last example with a "recordinglink" data cell.
+
+- Textually it get's rendered as "Youngstown (live, 1995‐11‐26: Wiltern Theatre, Los Angeles, CA, USA)"
+
+- Currently in order to get successfully matched I have to enter it as "Youngstown ( live, 1995‐11‐26: Wiltern Theatre,  Los Angeles, CA, USA )"
+  so I need to enter an artificial blank " " after the beginnning "(" and before the ")", also the rendered text does NOT display these 2 blanks
+
+Please fix
+
+
