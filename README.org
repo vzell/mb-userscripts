@@ -43703,20 +43703,24 @@ The following filter block should be rendered next, but only be visible when all
                     <input type="checkbox" id="sa-load-exclude"> Exclude Matches
                 </label>
             </div>
-#+end_example
-
-When loaded
-
-#+begin_example
             <div style="display:flex; gap:12px;">
                 <button id="sa-filter-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span><span style="text-decoration:underline">F</span>ilter Data</span></button>
             </div>
 #+end_example
 
-When filtered
+After specifying the filter conditions (in the filter field and by checkmarking optionally the checkboxes), by clicking
+the '<button id="sa-filter-confirm"' the rows in memory should finally be filtered and the number of rows which would be
+rendered should be displayed in a line below the '<button id="sa-filter-confirm"'
+
+Next a button '<button id="sa-render-confirm"' should be rendered
 
 #+begin_example
             <div style="display:flex; gap:12px;">
                 <button id="sa-render-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span><span style="text-decoration:underline">R</span>ender Data</span></button>
             </div>
 #+end_example
+
+with the action of finally rendering the resulting table or multiple tables (like in the original implementation).
+
+Please reimplement and show me the complete new implementation from the whole user script and all relevant other parts
+of code change (if any) and also create a changlog entry in the uploaded CHANGELOG file
