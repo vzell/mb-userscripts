@@ -1,5 +1,17 @@
 [
     {
+        "version": "9.98.00",
+        "date": "2026-03-02",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "Prevent unicodechar table popup when pressing Ctrl-M in text fields."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.97.33",
         "date": "2026-03-02",
         "sections": [

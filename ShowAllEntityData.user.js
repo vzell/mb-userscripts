@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.97.33+2026-03-02
+// @version      9.98.00+2026-03-02
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1654,10 +1654,19 @@
         }
     }
 
+    // Register in the capture phase (third arg = true) so our handler runs BEFORE
+    // any bubbling-phase listener — including the jesus2099 "mb. SUPER MIND CONTROL"
+    // script that opens its mbunicodecharsMenu on Ctrl+M in the bubbling phase.
+    // Calling stopImmediatePropagation() when we match the prefix key prevents all
+    // subsequent capture listeners on document AND the entire bubbling phase from
+    // seeing the event, so no other handler can claim the same key combo.
     document.addEventListener('keydown', (e) => {
         // Prefix key: enter prefix mode for button selection and function shortcuts
         if (isPrefixKeyEvent(e)) {
             e.preventDefault();
+            // Stop other listeners (including other userscripts) from seeing this
+            // event, regardless of whether they registered in capture or bubble phase.
+            e.stopImmediatePropagation();
 
             // If already in mode, exit
             if (ctrlMModeActive) {
@@ -1823,7 +1832,7 @@
             clearTimeout(ctrlMModeTimeout);
             hideCtrlMTooltip();
         }
-    });
+    }, { capture: true });
 
     /**
      * Debounce utility function - delays execution until after wait milliseconds have elapsed
