@@ -43637,7 +43637,7 @@ Take for example the last example with a "recordinglink" data cell.
 
 Please fix
 
-** Highlighting for matches that span multiple tags
+** TODO Highlighting for matches that span multiple tags
 
 In the uploaded userscript,
 
@@ -43647,7 +43647,7 @@ inherent to the per-node highlightText walker), but the row now at least correct
 
 Please implement highlightning also for matches that span multiple tags.
 
-** Implement a quickfilter
+** TODO Implement a quickfilter
 
 In the uploaded userscript,
 
@@ -43657,7 +43657,7 @@ matching rows with a configurable color in the "const configSchema" variable. Th
 together with "Escape"-key for quickly clearing the filter field. The quickfilter field should initially be focused for
 immediate input.
 
-** load table data dialog
+** TODO load table data dialog
 
 In the uploaded userscript,
 
