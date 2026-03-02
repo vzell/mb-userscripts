@@ -43401,3 +43401,16 @@ should look like
   
 but actually the "▼" and "📊" overlap.
 
+
+* unicode symbols
+
+The "Ctrl-M" key combination in this userscript is used as a prefixkey prefix map. But it seems that some other userscript or the MusicBrainz pages themthelves
+have registered an event handler that fires in addition to ours but only when inside text input fields (like the global or column specific filter fields) 
+
+It popsup a unicodechars Menu
+
+#+begin_example
+<div class="mbunicodecharsMenuShow" id="mbunicodecharsMenu" style="top: 364.219px; left: 31px;">
+#+end_example
+
+Could this somehow be prevented, or better yet, remapped to a different key combination
