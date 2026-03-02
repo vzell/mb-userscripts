@@ -1,12 +1,37 @@
 [
     {
-        "version": "9.99.10",
+        "version": "9.99.03",
         "date": "2026-03-02",
         "sections": [
             {
                 "label": "✨ Enhancements",
                 "items": [
-                    "Unique-values column dropdown — Quickfilter per row implemented."
+                    "Load-from-Disk dialog — completely redesigned as a three-phase workflow: (1) Load: the user picks a file which is read and parsed entirely into memory with no filter applied; a spinner appears on the button during reading and a '✅ Loaded N rows from filename' status line is shown below the buttons when done. (2) Filter: revealed only after a successful load; the user may optionally enter a filter expression (with Case Sensitive / Regular Expression / Exclude Matches toggles); clicking 'Filter Data' counts matching rows in memory without touching the DOM and shows the count ('N of T rows match → will be rendered' or 'N rows will be rendered (M excluded)') below the button. (3) Render: revealed only when the filter count is > 0; clicking 'Render Data' calls the existing loadTableDataFromDisk() with the cached File object and the chosen filter parameters, shows a 'Rendering…' spinner, and closes the dialog when rendering completes. The dialog creates its own private file input so it is completely decoupled from the always-visible prefilter bar. Alt+L / Alt+F / Alt+R keyboard shortcuts activate each phase button respectively; Escape dismisses the dialog at any phase.",
+                    "Load-from-Disk dialog — in-memory row counting for the Filter phase uses a lightweight HTML-strip helper (regex, no DOM construction) making it fast even for large datasets."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.02",
+        "date": "2026-03-02",
+        "sections": [
+            {
+                "label": "✨ Enhancements",
+                "items": [
+                    "Unique-values column dropdown — Quickfilter per row implemented.."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.01",
+        "date": "2026-03-02",
+        "sections": [
+            {
+                "label": "✨ Enhancements",
+                "items": [
+                    "Unique-values column dropdown — quickfilter bar: a sticky 'Quick filter…' input field is now rendered at the top of every unique-values panel (the 📊 dropdown). The field is auto-focused when the panel opens so the user can type immediately. As the user types, the item list is narrowed in real time to only show values whose text contains the filter string (case-insensitive). The matching substring is highlighted with configurable foreground and background colors (new settings: 'Unique-Values Quickfilter Highlight Color' and 'Unique-Values Quickfilter Highlight Background' in the 🎨 Filter Highlight Colors section of Settings). A clickable '×' button appears (fades in) to the right of the input field when there is text; clicking it clears the filter and restores all items, keeping focus in the input. Pressing Escape once clears the filter (if non-empty); pressing Escape a second tgime (empty field) closes the panel. Arrow keys / Home / End / Enter continue to navigate and select the currently visible (filtered) items."
                 ]
             }
         ]

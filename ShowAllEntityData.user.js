@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.01+2026-03-02
+// @version      9.99.02+2026-03-02
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -7058,268 +7058,485 @@
      * Shows a modernized dialog to enter pre-filter criteria before loading data from disk.
      * Includes history of previous filter expressions and triggers the file loading process.
      */
+    /**
+     * Three-phase "Load from Disk" dialog:
+     *
+     *   Phase 1 — Load:    Prompt the user to pick a file. The entire file is
+     *                       read and parsed into memory (no filter applied).
+     *                       Shows a spinner while reading, then a row/filename
+     *                       status line when done.
+     *
+     *   Phase 2 — Filter:  Shown after a successful load. The user may enter an
+     *                       optional filter expression (with Case / Regex / Exclude
+     *                       toggles). Clicking "Filter Data" counts matching rows
+     *                       in memory (without touching the DOM) and shows the
+     *                       count below the button.
+     *
+     *   Phase 3 — Render:  Revealed after a filter count is computed. Clicking
+     *                       "Render Data" calls loadTableDataFromDisk() with the
+     *                       cached file and chosen filter params.
+     *
+     * @param {HTMLElement|null} triggerButton - Button to anchor the dialog to.
+     */
     async function showLoadFilterDialog(triggerButton = null) {
         const historyLimit = Lib.settings.sa_load_history_limit || 10;
         let history = GM_getValue('sa_load_filter_history', []);
 
-        // Remove any existing dialog
+        // Toggle: close if already open
         const existingOverlay = document.getElementById('sa-load-dialog-overlay');
         if (existingOverlay) {
             existingOverlay.remove();
             return;
         }
 
+        // ── Dialog-level state ──────────────────────────────────────────────
+        let rawData = null;   // parsed JSON data object (stored after file read)
+        let rawFile = null;   // the File object (re-passed to loadTableDataFromDisk)
+
+        // ── Build dialog DOM ────────────────────────────────────────────────
         const dialog = document.createElement('div');
         dialog.id = 'sa-load-dialog-overlay';
-        dialog.style.cssText = 'position:fixed; background:#fff; padding:24px; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.3); width:380px; font-family:sans-serif; border:1px solid #ccc; z-index:20000;';
+        dialog.style.cssText = [
+            'position:fixed',
+            'background:#fff',
+            'padding:24px',
+            'border-radius:12px',
+            'box-shadow:0 8px 32px rgba(0,0,0,0.3)',
+            'width:420px',
+            'max-width:calc(100vw - 40px)',
+            'font-family:sans-serif',
+            'border:1px solid #ccc',
+            'z-index:20000',
+            'max-height:calc(100vh - 40px)',
+            'overflow-y:auto',
+        ].join(';');
+
+        const historyItemsHTML = history
+            .map(item => `<div class="sa-history-item" style="padding:8px 12px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;">${item.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`)
+            .join('');
 
         dialog.innerHTML = `
-            <div style="margin-bottom:18px; border-bottom:1px solid #eee; padding-bottom:12px;">
-                <h3 style="margin:0; color:#222; font-size:1.2em;">📂 Load Table Data</h3>
-                <p style="margin:5px 0 0; color:#666; font-size:0.95em;">Filter rows while loading from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
+            <!-- ── Shared header ── -->
+            <div style="margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:12px;">
+                <h3 style="margin:0;color:#222;font-size:1.2em;">&#128194; Load Table Data</h3>
+                <p style="margin:5px 0 0;color:#666;font-size:0.95em;">Load serialized data from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
             </div>
 
-            <div style="margin-bottom:15px; position:relative;">
-                <div style="display:flex; gap:4px;">
-                    <input id="sa-load-filter-input" type="text" placeholder="Filter expression..."
-                        style="flex:1; padding:8px 12px; border:1px solid #ccc; border-radius:6px; font-size:1em; outline:none;">
-                    ${history.length > 0 ? `
-                    <button id="sa-load-history-toggle" title="Show history" style="padding:0 8px; background:#f0f0f0; border:1px solid #ccc; border-radius:6px; cursor:pointer;">▼</button>
-                    ` : ''}
+            <!-- ── Phase 1 — Load ── -->
+            <div id="sa-ld-phase1">
+                <div style="display:flex;gap:12px;margin-bottom:8px;">
+                    <button id="sa-load-confirm" style="flex:2;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">
+                        <span><span style="text-decoration:underline">L</span>oad Data</span>
+                    </button>
+                    <button id="sa-load-cancel" style="flex:1;padding:10px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;">Cancel</button>
                 </div>
-                <div id="sa-load-history-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:20001; max-height:150px; overflow-y:auto; margin-top:4px;">
-                    ${history.map(item => `<div class="sa-history-item" style="padding:8px 12px; cursor:pointer; font-size:0.9em; border-bottom:1px dotted #eee;">${item}</div>`).join('')}
+                <div id="sa-ld-load-status" style="display:none;padding:5px 2px;font-size:0.9em;min-height:20px;"></div>
+            </div>
+
+            <!-- ── Phase 2 — Filter (hidden until load complete) ── -->
+            <div id="sa-ld-phase2" style="display:none;margin-top:18px;border-top:1px solid #eee;padding-top:16px;">
+                <div style="margin-bottom:12px;position:relative;">
+                    <div style="display:flex;gap:4px;">
+                        <input id="sa-load-filter-input" type="text"
+                            placeholder="Filter expression... evaluated for each column"
+                            style="flex:1;padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:1em;outline:none;">
+                        <button id="sa-load-history-toggle" title="Show history"
+                            style="padding:0 8px;background:#f0f0f0;border:1px solid #ccc;border-radius:6px;cursor:pointer;display:${history.length > 0 ? 'inline-block' : 'none'};">&#9660;</button>
+                    </div>
+                    <div id="sa-load-history-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #ccc;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:20001;max-height:150px;overflow-y:auto;margin-top:4px;">
+                        ${historyItemsHTML}
+                    </div>
                 </div>
+                <div style="display:flex;gap:20px;justify-content:center;margin-bottom:14px;background:#f9f9f9;padding:10px;border-radius:8px;">
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                        <input type="checkbox" id="sa-load-case"> Case Sensitive
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                        <input type="checkbox" id="sa-load-regex"> Regular Expression
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
+                        <input type="checkbox" id="sa-load-exclude"> Exclude Matches
+                    </label>
+                </div>
+                <div style="display:flex;gap:12px;margin-bottom:8px;">
+                    <button id="sa-filter-confirm" style="flex:2;padding:10px;background:#1976D2;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">
+                        <span><span style="text-decoration:underline">F</span>ilter Data</span>
+                    </button>
+                </div>
+                <div id="sa-ld-filter-status" style="display:none;padding:5px 2px;font-size:0.9em;min-height:20px;"></div>
             </div>
 
-            <div style="display:flex; gap:20px; justify-content:center; margin-bottom:20px; background:#f9f9f9; padding:10px; border-radius:8px;">
-                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;">
-                    <input type="checkbox" id="sa-load-case"> Case Sensitive
-                </label>
-                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;">
-                    <input type="checkbox" id="sa-load-regex"> Regular Expression
-                </label>
-                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
-                    <input type="checkbox" id="sa-load-exclude"> Exclude Matches
-                </label>
-            </div>
-
-            <div style="display:flex; gap:12px;">
-                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">${makeButtonHTML('Load Data', 'L')}</button>
-                <button id="sa-load-cancel" style="flex:1; padding:10px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancel</button>
+            <!-- ── Phase 3 — Render (hidden until filter count computed) ── -->
+            <div id="sa-ld-phase3" style="display:none;margin-top:18px;border-top:1px solid #eee;padding-top:16px;">
+                <div style="display:flex;gap:12px;margin-bottom:8px;">
+                    <button id="sa-render-confirm" style="flex:2;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">
+                        <span><span style="text-decoration:underline">R</span>ender Data</span>
+                    </button>
+                </div>
+                <div id="sa-ld-render-status" style="display:none;padding:5px 2px;font-size:0.9em;min-height:20px;"></div>
             </div>
         `;
 
         document.body.appendChild(dialog);
 
-        // Position below trigger button or center screen
+        // Private file input (invisible, owned by this dialog instance)
+        const dialogFileInput = document.createElement('input');
+        dialogFileInput.type = 'file';
+        dialogFileInput.accept = '.gz,application/gzip,.json';
+        dialogFileInput.style.display = 'none';
+        document.body.appendChild(dialogFileInput);
+
+        // ── Position dialog ─────────────────────────────────────────────────
         setTimeout(() => {
             if (triggerButton) {
                 const btnRect = triggerButton.getBoundingClientRect();
                 const dlgRect = dialog.getBoundingClientRect();
-                let top = btnRect.bottom + 10;
+                let top  = btnRect.bottom + 10;
                 let left = btnRect.left;
-
-                if (top + dlgRect.height > window.innerHeight) {
-                    top = btnRect.top - dlgRect.height - 10;
-                }
-                if (left + dlgRect.width > window.innerWidth) {
-                    left = window.innerWidth - dlgRect.width - 10;
-                }
-                if (left < 0) left = 10;
-
+                if (top + dlgRect.height > window.innerHeight - 10) top = Math.max(10, btnRect.top - dlgRect.height - 10);
+                if (left + dlgRect.width > window.innerWidth - 10)  left = Math.max(10, window.innerWidth - dlgRect.width - 10);
+                dialog.style.top  = top  + 'px';
                 dialog.style.left = left + 'px';
-                dialog.style.top = top + 'px';
             } else {
-                dialog.style.left = '50%';
-                dialog.style.top = '50%';
+                dialog.style.left      = '50%';
+                dialog.style.top       = '50%';
                 dialog.style.transform = 'translate(-50%, -50%)';
             }
         }, 0);
 
-        const input = dialog.querySelector('#sa-load-filter-input');
-        if (input) {
-            const MIN_DIALOG_WIDTH = 380;
-            const MAX_DIALOG_MARGIN = 40;
-
-            const measureTextWidth = (text) => {
-                const span = document.createElement('span');
-                span.style.cssText = `
-                    visibility:hidden;
-                    position:absolute;
-                    white-space:pre;
-                    font-size:${getComputedStyle(input).fontSize};
-                    font-family:${getComputedStyle(input).fontFamily};
-                    font-weight:${getComputedStyle(input).fontWeight};
-                `;
-                span.textContent = text;
-                document.body.appendChild(span);
-                const width = span.offsetWidth + 40;
-                document.body.removeChild(span);
-                return width;
-            };
-
-            const resizeDialog = () => {
-                const requiredWidth = measureTextWidth(input.value || input.placeholder);
-                const maxWidth = window.innerWidth - MAX_DIALOG_MARGIN;
-                dialog.style.width = `${Math.min(Math.max(MIN_DIALOG_WIDTH, requiredWidth), maxWidth)}px`;
-            };
-
-            resizeDialog();
-            input.addEventListener('input', resizeDialog);
-            window.addEventListener('resize', resizeDialog);
-        }
-
-        const historyToggle = dialog.querySelector('#sa-load-history-toggle');
-        const historyDropdown = dialog.querySelector('#sa-load-history-dropdown');
-
-        input.focus();
-
-        // Inject hover styles
+        // ── Hover styles ────────────────────────────────────────────────────
         const styleId = 'sa-load-popup-styles';
         if (!document.getElementById(styleId)) {
-            const style = document.createElement('style');
-            style.id = styleId;
-            style.textContent = `
-                .sa-history-item:hover { background: #f0f0f0 !important; }
-                #sa-load-confirm:hover { background: #45a049 !important; }
-                #sa-load-cancel:hover { background: #e0e0e0 !important; }
+            const s = document.createElement('style');
+            s.id = styleId;
+            s.textContent = `
+                .sa-history-item:hover { background:#f0f0f0 !important; }
+                #sa-load-confirm:hover:not([disabled])   { background:#45a049 !important; }
+                #sa-load-cancel:hover                    { background:#e0e0e0 !important; }
+                #sa-filter-confirm:hover:not([disabled]) { background:#1565C0 !important; }
+                #sa-render-confirm:hover:not([disabled]) { background:#45a049 !important; }
             `;
-            document.head.appendChild(style);
+            document.head.appendChild(s);
         }
 
+        // ── Element refs ────────────────────────────────────────────────────
+        const phase2       = dialog.querySelector('#sa-ld-phase2');
+        const phase3       = dialog.querySelector('#sa-ld-phase3');
+        const loadBtn      = dialog.querySelector('#sa-load-confirm');
+        const cancelBtn    = dialog.querySelector('#sa-load-cancel');
+        const loadStatus   = dialog.querySelector('#sa-ld-load-status');
+        const filterInput  = dialog.querySelector('#sa-load-filter-input');
+        const filterBtn    = dialog.querySelector('#sa-filter-confirm');
+        const filterStatus = dialog.querySelector('#sa-ld-filter-status');
+        const renderBtn    = dialog.querySelector('#sa-render-confirm');
+        const renderStatus = dialog.querySelector('#sa-ld-render-status');
+        const historyToggle   = dialog.querySelector('#sa-load-history-toggle');
+        const historyDropdown = dialog.querySelector('#sa-load-history-dropdown');
+
+        // ── Cleanup ─────────────────────────────────────────────────────────
+        let _outsideHandler = null;
         const closeDialog = () => {
             dialog.remove();
+            dialogFileInput.remove();
             document.removeEventListener('keydown', handleKey);
+            if (_outsideHandler) document.removeEventListener('mousedown', _outsideHandler);
         };
 
+        // ── Outside-click to dismiss ─────────────────────────────────────────
+        // Small delay so the button click that opens this dialog doesn't instantly dismiss it.
+        _outsideHandler = (e) => {
+            if (dialog.contains(e.target) || e.target === dialogFileInput) return;
+            closeDialog();
+        };
+        setTimeout(() => document.addEventListener('mousedown', _outsideHandler), 200);
+
+        // ── Helper: strip HTML for lightweight counting ───────────────────────
+        const stripHtml = html => (html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
         /**
-         * Validates all load-dialog inputs — including the optional RegExp filter —
-         * shows inline feedback on error and keeps the dialog open for correction.
-         * Only on success closes the dialog and triggers the file picker.
+         * Counts how many rows in `data` satisfy the given filter parameters
+         * without building any DOM elements.
          *
-         * Changed sync → async to allow awaiting Lib.showCustomAlert() while the
-         * dialog is still in the DOM (so the user can correct the pattern without
-         * having to reopen the dialog from scratch).
-         *
-         * @returns {Promise<void>}
+         * @returns {number|null} matching row count, or null on regex compile error.
          */
-        const confirmLoad = async () => {
-            const query = input.value.trim();
-            const useCase = dialog.querySelector('#sa-load-case').checked;
-            const useRegex = dialog.querySelector('#sa-load-regex').checked;
+        function countFilteredRows(data, query, caseSensitive, regex, exclude) {
+            if (!query) {
+                if (data.tableMode === 'multi' && data.groups) {
+                    return data.groups.reduce((s, g) => s + g.rows.length, 0);
+                }
+                return data.rows ? data.rows.length : 0;
+            }
+            let globalRegex = null;
+            if (regex) {
+                try { globalRegex = new RegExp(query, caseSensitive ? '' : 'i'); }
+                catch (e) { return null; }
+            }
+            const lq = caseSensitive ? query : query.toLowerCase();
+
+            const rowPasses = (rowCells) => {
+                let matched;
+                if (regex && globalRegex) {
+                    matched = rowCells.some(cell => globalRegex.test(stripHtml(cell.html)));
+                } else {
+                    const text = rowCells.map(c => stripHtml(c.html)).join(' ');
+                    matched = caseSensitive ? text.includes(query) : text.toLowerCase().includes(lq);
+                }
+                return exclude ? !matched : matched;
+            };
+
+            let count = 0;
+            if (data.tableMode === 'multi' && data.groups) {
+                data.groups.forEach(g => g.rows.forEach(row => { if (rowPasses(row)) count++; }));
+            } else if (data.rows) {
+                data.rows.forEach(row => { if (rowPasses(row)) count++; });
+            }
+            return count;
+        }
+
+        // ── Phase 1: "Load Data" button ──────────────────────────────────────
+        loadBtn.onclick = () => {
+            dialogFileInput.value = '';
+            dialogFileInput.click();
+        };
+
+        dialogFileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Show spinner
+            loadBtn.disabled = true;
+            loadBtn.style.opacity = '0.7';
+            loadBtn.innerHTML = '&#9203; Loading\u2026';
+            loadStatus.style.display = 'none';
+            // Hide lower phases while re-loading a new file
+            phase2.style.display = 'none';
+            phase3.style.display = 'none';
+
+            try {
+                const data = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    const isGz   = file.name.endsWith('.gz');
+                    reader.onload = (ev) => {
+                        try {
+                            let json;
+                            if (isGz) {
+                                json = pako.ungzip(new Uint8Array(ev.target.result), { to: 'string' });
+                            } else {
+                                json = ev.target.result;
+                            }
+                            resolve(JSON.parse(json));
+                        } catch (err) { reject(err); }
+                    };
+                    reader.onerror = () => reject(new Error('File read error'));
+                    if (isGz) reader.readAsArrayBuffer(file);
+                    else       reader.readAsText(file);
+                });
+
+                if (!data.version || !data.pageType || !data.timestamp) {
+                    throw new Error('Invalid data file: missing required fields (version / pageType / timestamp)');
+                }
+
+                rawData = data;
+                rawFile = file;
+
+                const totalRows = (data.tableMode === 'multi' && data.groups)
+                    ? data.groups.reduce((s, g) => s + g.rows.length, 0)
+                    : (data.rows ? data.rows.length : 0);
+                const rowLabel = totalRows === 1 ? 'row' : 'rows';
+
+                // Restore Load button
+                loadBtn.innerHTML  = '<span><span style="text-decoration:underline">L</span>oad Data</span>';
+                loadBtn.disabled   = false;
+                loadBtn.style.opacity = '';
+
+                // Show load status
+                loadStatus.innerHTML   = `\u2705 Loaded <strong>${totalRows.toLocaleString()}</strong> ${rowLabel} from <em>"${file.name}"</em>`;
+                loadStatus.style.color = '#2e7d32';
+                loadStatus.style.display = 'block';
+
+                // Reveal Phase 2
+                filterStatus.style.display = 'none';
+                phase3.style.display       = 'none';
+                phase2.style.display       = 'block';
+                filterInput.focus();
+
+            } catch (err) {
+                rawData = null;
+                rawFile = null;
+                loadBtn.innerHTML  = '<span><span style="text-decoration:underline">L</span>oad Data</span>';
+                loadBtn.disabled   = false;
+                loadBtn.style.opacity = '';
+                loadStatus.innerHTML   = `\u274C Error: ${err.message}`;
+                loadStatus.style.color = '#c62828';
+                loadStatus.style.display = 'block';
+                Lib.error('cache', 'Load dialog: failed to read/parse file:', err);
+            }
+        };
+
+        // ── Phase 2: "Filter Data" button ────────────────────────────────────
+        filterBtn.onclick = async () => {
+            if (!rawData) return;
+
+            const query      = filterInput.value.trim();
+            const useCase    = dialog.querySelector('#sa-load-case').checked;
+            const useRegex   = dialog.querySelector('#sa-load-regex').checked;
             const useExclude = dialog.querySelector('#sa-load-exclude').checked;
 
-            // --- Regex pre-validation: must happen while the dialog is still open ---
+            // Regex pre-validation while dialog is still open
             if (query && useRegex) {
-                try {
-                    // Test-compile only; the result is not needed here.
-                    new RegExp(query, useCase ? '' : 'i');
-                } catch (e) {
-                    // Highlight the offending input field so the user sees at a glance
-                    // what needs to be corrected.
-                    input.style.borderColor = 'red';
-                    input.focus();
-
-                    await Lib.showCustomAlert(
-                        `Invalid Regular Expression: ${e.message}`,
-                        '❌ Invalid Regex',
-                        dialog.querySelector('#sa-load-confirm')
-                    );
-                    // Dialog stays open — return without closing so the user can fix the pattern.
+                try { new RegExp(query, useCase ? '' : 'i'); }
+                catch (e) {
+                    filterInput.style.borderColor = 'red';
+                    filterInput.focus();
+                    await Lib.showCustomAlert(`Invalid Regular Expression: ${e.message}`, '\u274C Invalid Regex', filterBtn);
                     return;
                 }
             }
+            filterInput.style.borderColor = '';
 
-            // Input is valid — clear any previous error styling on the filter field.
-            input.style.borderColor = '';
-
+            // Persist to history
             if (query && historyLimit > 0) {
-                let updatedHistory = [query, ...history.filter(h => h !== query)].slice(0, historyLimit);
-                GM_setValue('sa_load_filter_history', updatedHistory);
-                Lib.debug('cache', `Updated load filter history. Current count: ${updatedHistory.length}`);
+                const updated = [query, ...history.filter(h => h !== query)].slice(0, historyLimit);
+                GM_setValue('sa_load_filter_history', updated);
+                history = updated;
+                Lib.debug('cache', `Updated load filter history. Count: ${updated.length}`);
             }
 
+            const totalRows = (rawData.tableMode === 'multi' && rawData.groups)
+                ? rawData.groups.reduce((s, g) => s + g.rows.length, 0)
+                : (rawData.rows ? rawData.rows.length : 0);
+
+            const matchCount = countFilteredRows(rawData, query, useCase, useRegex, useExclude);
+            if (matchCount === null) {
+                filterStatus.innerHTML    = '\u274C Invalid regex \u2014 could not count rows';
+                filterStatus.style.color  = '#c62828';
+                filterStatus.style.display = 'block';
+                phase3.style.display = 'none';
+                return;
+            }
+
+            const rl = matchCount === 1 ? 'row' : 'rows';
+            if (!query) {
+                filterStatus.innerHTML = `<strong>${matchCount.toLocaleString()}</strong> ${rl} will be rendered (no filter applied)`;
+            } else if (useExclude) {
+                const excluded = totalRows - matchCount;
+                filterStatus.innerHTML = `<strong>${matchCount.toLocaleString()}</strong> ${rl} will be rendered &nbsp;\u00B7&nbsp; <span style="color:#888;">${excluded.toLocaleString()} excluded</span>`;
+            } else {
+                filterStatus.innerHTML = `<strong>${matchCount.toLocaleString()}</strong> of ${totalRows.toLocaleString()} ${rl} match \u2192 will be rendered`;
+            }
+            filterStatus.style.color   = matchCount === 0 ? '#c62828' : '#1565c0';
+            filterStatus.style.display = 'block';
+
+            // Reveal Phase 3 only when there are rows to render
+            phase3.style.display       = matchCount > 0 ? 'block' : 'none';
+            renderStatus.style.display = 'none';
+        };
+
+        // ── Phase 3: "Render Data" button ─────────────────────────────────────
+        renderBtn.onclick = async () => {
+            if (!rawFile || !rawData) return;
+
+            const query      = filterInput.value.trim();
+            const useCase    = dialog.querySelector('#sa-load-case').checked;
+            const useRegex   = dialog.querySelector('#sa-load-regex').checked;
+            const useExclude = dialog.querySelector('#sa-load-exclude').checked;
+
+            // Sync chosen filter params to the always-visible prefilter bar
+            // so that the post-render toggle button shows the right info.
             if (typeof preFilterInput !== 'undefined') {
                 preFilterInput.value = query;
-                if (typeof preFilterCaseLabel !== 'undefined') {
-                    preFilterCaseLabel.querySelector('input').checked = useCase;
-                }
-                // preFilterRxCheckbox is the live checkbox element; preFilterRegexLabel
-                // was never declared, so we reference the checkbox directly.
-                if (typeof preFilterRxCheckbox !== 'undefined') {
-                    preFilterRxCheckbox.checked = useRegex;
-                }
-                if (typeof preFilterExcludeLabel !== 'undefined') {
-                    preFilterExcludeLabel.querySelector('input').checked = useExclude;
-                }
             }
+            if (typeof preFilterCaseCheckbox !== 'undefined') {
+                preFilterCaseCheckbox.checked = useCase;
+            }
+            if (typeof preFilterRxCheckbox !== 'undefined') {
+                preFilterRxCheckbox.checked = useRegex;
+            }
+            if (typeof preFilterExcludeCheckbox !== 'undefined') {
+                preFilterExcludeCheckbox.checked = useExclude;
+            }
+
+            // Show rendering spinner; keep dialog visible for feedback
+            renderBtn.disabled     = true;
+            renderBtn.style.opacity = '0.7';
+            renderBtn.innerHTML    = '&#9203; Rendering\u2026';
+            renderStatus.innerHTML    = 'Rendering table \u2014 please wait\u2026';
+            renderStatus.style.color  = '#555';
+            renderStatus.style.display = 'block';
+
+            Lib.debug('cache', `Render Data clicked. filter="${query}", case=${useCase}, regex=${useRegex}, exclude=${useExclude}`);
+
+            // Delegate to the existing loader (re-reads the cached File object —
+            // no new file-picker prompt) with the user-chosen filter parameters.
+            await loadTableDataFromDisk(rawFile, query, useCase, useRegex, useExclude);
 
             closeDialog();
-            Lib.debug('cache', 'Load confirmed. Triggering file selector...');
-            fileInput.click();
         };
 
-        const handleKey = (e) => {
-            if (e.key === 'Escape') {
-                Lib.debug('ui', 'Load dialog closed via Escape key');
-                closeDialog();
-            } else if (e.altKey && e.key === 'l') {
-                // Alt-L: confirm load (mirrors the underlined L in "Load Data" button)
-                e.preventDefault();
-                confirmLoad();
-            } else if (e.key === 'Tab') {
-                // Tab cycles between the two action buttons when they have focus
-                const confirmBtn = dialog.querySelector('#sa-load-confirm');
-                const cancelBtn = dialog.querySelector('#sa-load-cancel');
-                if (document.activeElement === confirmBtn) {
-                    e.preventDefault();
-                    cancelBtn.focus();
-                } else if (document.activeElement === cancelBtn) {
-                    e.preventDefault();
-                    confirmBtn.focus();
-                }
-            }
-        };
-
-        document.addEventListener('keydown', handleKey);
-
-        // History Logic
+        // ── History dropdown ──────────────────────────────────────────────────
         if (historyToggle) {
-            historyToggle.onclick = (e) => {
-                e.stopPropagation();
-                historyDropdown.style.display = historyDropdown.style.display === 'none' ? 'block' : 'none';
+            historyToggle.onclick = (ev) => {
+                ev.stopPropagation();
+                historyDropdown.style.display =
+                    historyDropdown.style.display === 'none' ? 'block' : 'none';
             };
             dialog.querySelectorAll('.sa-history-item').forEach(el => {
                 el.onclick = () => {
-                    input.value = el.textContent;
+                    filterInput.value = el.textContent;
                     historyDropdown.style.display = 'none';
                 };
             });
         }
 
-        // Close dropdown when clicking elsewhere
-        window.onclick = (e) => {
+        // Close history dropdown when clicking elsewhere inside the dialog
+        dialog.addEventListener('click', (e) => {
             if (historyDropdown && !historyDropdown.contains(e.target) && e.target !== historyToggle) {
                 historyDropdown.style.display = 'none';
             }
+        });
+
+        // ── Filter-input auto-resize ──────────────────────────────────────────
+        const MIN_DIALOG_WIDTH = 420;
+        const MAX_DIALOG_MARGIN = 40;
+        const measureTextWidth = (text) => {
+            const span = document.createElement('span');
+            span.style.cssText = 'visibility:hidden;position:absolute;white-space:pre;font-size:1em;';
+            span.textContent = text;
+            document.body.appendChild(span);
+            const w = span.offsetWidth + 80;
+            document.body.removeChild(span);
+            return w;
+        };
+        const resizeDialog = () => {
+            const req = measureTextWidth(filterInput.value || filterInput.placeholder);
+            const max = window.innerWidth - MAX_DIALOG_MARGIN;
+            dialog.style.width = `${Math.min(Math.max(MIN_DIALOG_WIDTH, req), max)}px`;
+        };
+        filterInput.addEventListener('input', resizeDialog);
+        window.addEventListener('resize', resizeDialog);
+
+        // ── Keyboard shortcuts ────────────────────────────────────────────────
+        const handleKey = (e) => {
+            if (e.key === 'Escape') {
+                Lib.debug('ui', 'Load dialog closed via Escape key');
+                closeDialog();
+            } else if (e.altKey && e.key.toLowerCase() === 'l') {
+                e.preventDefault();
+                if (!loadBtn.disabled) loadBtn.click();
+            } else if (e.altKey && e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                if (phase2.style.display !== 'none' && !filterBtn.disabled) filterBtn.click();
+            } else if (e.altKey && e.key.toLowerCase() === 'r') {
+                e.preventDefault();
+                if (phase3.style.display !== 'none' && !renderBtn.disabled) renderBtn.click();
+            }
         };
 
-        // Close dialog when clicking outside it
-        document.addEventListener('mousedown', (e) => {
-            if (!dialog.contains(e.target)) {
-                closeDialog();
-            }
-        }, { once: true });
+        document.addEventListener('keydown', handleKey);
 
-        dialog.querySelector('#sa-load-confirm').onclick = confirmLoad;
-        dialog.querySelector('#sa-load-cancel').onclick = closeDialog;
+        cancelBtn.onclick = closeDialog;
     }
 
-    /**
-     * Normalizes alias table structure by removing invisible action columns and ensuring proper formatting
-     * @param {HTMLTableElement} table - The alias table element to normalize
-     */
     function normalizeAliasTable(table) {
         if (!table) return;
 
