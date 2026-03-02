@@ -43205,8 +43205,41 @@ into a condensed format as one line "inlcude", something like
 
 
 * how to make sure a userscript runs on pages like
+** match
 
-Please rewrite the foolowing
+// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
+
+** Please rewrite the foolowing
 
 #+begin_example
 // @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
@@ -43330,6 +43363,7 @@ Bruce Springsteen & The E Street Band at Athletic & Convocation Center
 ~ Release group by Bruce Springsteen & The E Street Band
 #+end_example
 
+
 * unique
 ** initial
 
@@ -43348,3 +43382,22 @@ A couple of glitches
 
 - after clicking the "📊" icon, when hovering over with the mouse, and then try to scroll with the mouse wheel, the dialog immediately closes
 - after clicking the "📊" icon, wen using the keyboard "down" key, it only moves through the visible rows of the dialog, please fix
+
+** return
+
+In the uploaded userscript,
+
+- In the "Unique-values column dropdown — shared singleton panel", clicking one of the unique entries in the scrollable
+pull down menu with the mouse copies the contents to the filter field in the same column. When using the keyboard to
+navigate the pulldown menu, the "Enter" key should do the same, which it currently does not.
+
+- when the final page is renderd after cliking the action button. The rendered columns should be at least so wide that
+  the column name, the sort symbols and the "📊" symbol do not overlap. Right now for example the year column when rendered
+should look like
+
+#+begin_example
+⇅ Year ▲▼📊
+#+end_example
+  
+but actually the "▼" and "📊" overlap.
+
