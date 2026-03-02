@@ -1,6 +1,6 @@
 [
     {
-        "version": "9.99.03",
+        "version": "9.99.20",
         "date": "2026-03-02",
         "sections": [
             {
@@ -13,19 +13,7 @@
         ]
     },
     {
-        "version": "9.99.02",
-        "date": "2026-03-02",
-        "sections": [
-            {
-                "label": "✨ Enhancements",
-                "items": [
-                    "Unique-values column dropdown — Quickfilter per row implemented.."
-                ]
-            }
-        ]
-    },
-    {
-        "version": "9.99.01",
+        "version": "9.99.10",
         "date": "2026-03-02",
         "sections": [
             {
