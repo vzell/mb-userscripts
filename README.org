@@ -43657,7 +43657,7 @@ matching rows with a configurable color in the "const configSchema" variable. Th
 together with "Escape"-key for quickly clearing the filter field. The quickfilter field should initially be focused for
 immediate input.
 
-** TODO load table data dialog
+** DONE load table data dialog
 
 In the uploaded userscript,
 
