@@ -1,3 +1,39 @@
+<div id="sa-load-dialog-overlay" style="position: fixed; background: rgb(255, 255, 255); padding: 24px; border-radius: 12px; box-shadow: rgba(0, 0, 0, 0.3) 0px 8px 32px; width: 380px; font-family: sans-serif; border: 1px solid rgb(204, 204, 204); z-index: 20000; left: 649.75px; top: 125.062px;">
+            <div style="margin-bottom:18px; border-bottom:1px solid #eee; padding-bottom:12px;">
+                <h3 style="margin:0; color:#222; font-size:1.2em;">📂 Load Table Data</h3>
+                <p style="margin:5px 0 0; color:#666; font-size:0.95em;">Filter rows while loading from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
+            </div>
+
+            <div style="margin-bottom:15px; position:relative;">
+                <div style="display:flex; gap:4px;">
+                    <input id="sa-load-filter-input" type="text" placeholder="Filter expression..." style="flex:1; padding:8px 12px; border:1px solid #ccc; border-radius:6px; font-size:1em; outline:none;">
+                    
+                    <button id="sa-load-history-toggle" title="Show history" style="padding:0 8px; background:#f0f0f0; border:1px solid #ccc; border-radius:6px; cursor:pointer;">▼</button>
+                    
+                </div>
+                <div id="sa-load-history-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:20001; max-height:150px; overflow-y:auto; margin-top:4px;">
+                    <div class="sa-history-item" style="padding:8px 12px; cursor:pointer; font-size:0.9em; border-bottom:1px dotted #eee;">Thunder Road</div><div class="sa-history-item" style="padding:8px 12px; cursor:pointer; font-size:0.9em; border-bottom:1px dotted #eee;">Bruce Springsteen &amp;</div><div class="sa-history-item" style="padding:8px 12px; cursor:pointer; font-size:0.9em; border-bottom:1px dotted #eee;">^Ha</div><div class="sa-history-item" style="padding:8px 12px; cursor:pointer; font-size:0.9em; border-bottom:1px dotted #eee;">[abc</div><div class="sa-history-item" style="padding:8px 12px; cursor:pointer; font-size:0.9em; border-bottom:1px dotted #eee;">Rolling</div><div class="sa-history-item" style="padding:8px 12px; cursor:pointer; font-size:0.9em; border-bottom:1px dotted #eee;">Jagger</div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:20px; justify-content:center; margin-bottom:20px; background:#f9f9f9; padding:10px; border-radius:8px;">
+                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;">
+                    <input type="checkbox" id="sa-load-case"> Case Sensitive
+                </label>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;">
+                    <input type="checkbox" id="sa-load-regex"> Regular Expression
+                </label>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
+                    <input type="checkbox" id="sa-load-exclude"> Exclude Matches
+                </label>
+            </div>
+
+            <div style="display:flex; gap:12px;">
+                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span><span style="text-decoration:underline">L</span>oad Data</span></button>
+                <button id="sa-load-cancel" style="flex:1; padding:10px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancel</button>
+            </div>
+        </div>
+
 <td>
   <a href="/event/b0466931-607d-4033-aff3-022c3122ea2d/event-art">
     <span class="artwork-icon eaa-icon" title="This event has artwork in the Event Art Archive">

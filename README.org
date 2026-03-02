@@ -43376,6 +43376,7 @@ It popsup a unicodechars Menu
 
 Could this somehow be prevented, or better yet, remapped to a different key combination
 
+
 * unique
 ** initial
 
@@ -43636,4 +43637,86 @@ Take for example the last example with a "recordinglink" data cell.
 
 Please fix
 
+** Highlighting for matches that span multiple tags
 
+In the uploaded userscript,
+
+This is what we have currently for filtering on the final rendered page either on the global, sub-table or column level:
+Highlighting for matches that span multiple tags still highlights each individual text-node fragment separately (that is
+inherent to the per-node highlightText walker), but the row now at least correctly appear/disappear as expected.
+
+Please implement highlightning also for matches that span multiple tags.
+
+** Implement a quickfilter
+
+In the uploaded userscript,
+
+implement a quickfilter dialog at the top of each "Unique-values column dropdown — shared singleton panel" which only
+displays unique column values which matches the filter string. The filter string should also be highlighted in the
+matching rows with a configurable color in the "const configSchema" variable. There should also be clickible small "x",
+together with "Escape"-key for quickly clearing the filter field. The quickfilter field should initially be focused for
+immediate input.
+
+** load table data dialog
+
+In the uploaded userscript,
+
+the current "Load from Disk" dialog '<div id="sa-load-dialog-overlay"' the data is either loaded from disk in a filtered
+way, or complete, if no filter condition es present.
+
+Please change it in the following ways:
+
+- First of all, the data should always be loaded COMPLETE from disk. That's why the following element should be first in the dialog
+
+#+begin_example
+            <div style="margin-bottom:18px; border-bottom:1px solid #eee; padding-bottom:12px;">
+                <h3 style="margin:0; color:#222; font-size:1.2em;">📂 Load Table Data</h3>
+                <p style="margin:5px 0 0; color:#666; font-size:0.95em;">Load serialized data from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
+            </div>
+
+            <div style="display:flex; gap:12px;">
+                <button id="sa-load-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span><span style="text-decoration:underline">L</span>oad Data</span></button>
+                <button id="sa-load-cancel" style="flex:1; padding:10px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancel</button>
+            </div>
+#+end_example
+
+During load, the button text should be changed to a spinner icon and the text "Loading...". When finished, the number of
+rows and filename from which it was loaded should be placed in a line below the "Load" and Cancel" buttons.
+
+The following filter block should be rendered next, but only be visible when all the rows have been loaded.
+
+#+begin_example
+            <div style="margin-bottom:15px; position:relative;">
+                <div style="display:flex; gap:4px;">
+                    <input id="sa-load-filter-input" type="text" placeholder="Filter expression... evaluated for each column" 
+                    <button id="sa-load-history-toggle" title="Show history" style="padding:0 8px; background:#f0f0f0; border:1px solid #ccc; border-radius:6px; cursor:pointer;">▼</button>
+                </div>
+            </div>
+            <div style="display:flex; gap:20px; justify-content:center; margin-bottom:20px; background:#f9f9f9; padding:10px; border-radius:8px;">
+                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;">
+                    <input type="checkbox" id="sa-load-case"> Case Sensitive
+                </label>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;">
+                    <input type="checkbox" id="sa-load-regex"> Regular Expression
+                </label>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
+                    <input type="checkbox" id="sa-load-exclude"> Exclude Matches
+                </label>
+            </div>
+#+end_example
+
+When loaded
+
+#+begin_example
+            <div style="display:flex; gap:12px;">
+                <button id="sa-filter-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span><span style="text-decoration:underline">F</span>ilter Data</span></button>
+            </div>
+#+end_example
+
+When filtered
+
+#+begin_example
+            <div style="display:flex; gap:12px;">
+                <button id="sa-render-confirm" style="flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;"><span><span style="text-decoration:underline">R</span>ender Data</span></button>
+            </div>
+#+end_example
