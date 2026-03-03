@@ -8942,7 +8942,7 @@
                                 const colFilterInfo = tableColFilters.map(inp => {
                                     const colIdx = parseInt(inp.dataset.colIdx, 10);
                                     const headers = table.querySelectorAll('thead tr:first-child th');
-                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼]/g, '').trim() : `Col ${colIdx}`;
+                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊]/g, '').trim() : `Col ${colIdx}`;
                                     return `${colName}:"${stripColFilterPrefix(inp.value)}"`;
                                 }).join(', ');
                                 subFilterStatus.textContent = `✓ Filtered ${rowsInTable} rows [${colFilterInfo}]`;
