@@ -43637,16 +43637,6 @@ Take for example the last example with a "recordinglink" data cell.
 
 Please fix
 
-** TODO Highlighting for matches that span multiple tags
-
-In the uploaded userscript,
-
-This is what we have currently for filtering on the final rendered page either on the global, sub-table or column level:
-Highlighting for matches that span multiple tags still highlights each individual text-node fragment separately (that is
-inherent to the per-node highlightText walker), but the row now at least correctly appear/disappear as expected.
-
-Please implement highlightning also for matches that span multiple tags.
-
 ** DONE Implement a quickfilter
 
 In the uploaded userscript,
@@ -43726,3 +43716,20 @@ also create a changlog entry in the uploaded CHANGELOG file
 
 Please reimplement and show me the complete new implementation from the whole user script and all relevant other parts
 of code change (if any) and also create a changlog entry in the uploaded CHANGELOG file
+
+** TODO Highlighting for matches that span multiple tags
+*** init
+
+In the uploaded userscript,
+
+This is what we have currently for filtering on the final rendered page either on the global, sub-table or column level:
+Highlighting for matches that span multiple tags still highlights each individual text-node fragment separately (that is
+inherent to the per-node highlightText walker), but the row now at least correctly appear/disappear as expected.
+
+Please implement highlightning also for matches that span multiple tags.
+
+*** sub-tables
+
+The highlightning for matches that span multiple tags works for the global filter and also for column level filters but
+not in the case of the sub-table level filters (although the filtering itself works)
+
