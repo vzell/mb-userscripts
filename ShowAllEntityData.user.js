@@ -12422,7 +12422,7 @@
 
         Lib.debug('cache', `Data saved to ${filename}`);
 
-        const rowNote = rowCount > 0 ? ` ${rowCount.toLocaleString()} rows saved.` : '';
+        const rowNote = rowCount > 0 ? ` ${rowCount.toLocaleString()} rows serialized to ${filename}.` : '';
         showDownloadNotification(
             `Saving of JSON table data to the filesystem initiated.${rowNote} Please monitor your browser for the file download.`
         );
