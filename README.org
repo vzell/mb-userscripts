@@ -43884,3 +43884,54 @@ https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direc
 
 and remove the "(show less)" line
 
+* (n) unique value 1
+** initial
+
+In the uploaded userscript,
+
+please extend the following function to also calculate the number of unique values in each table column 
+
+#+begin_example
+    /**
+     * Opens (or toggles closed) the unique-values dropdown for one column.
+     *
+     * Gathers distinct non-empty textContent values from every *visible*
+     * tbody row of `table` in column `colIndex`, sorts them case-insensitively,
+     * and shows them in the shared panel anchored just below `btn`.
+     *
+     * Keyboard navigation (focus stays on `btn` while the panel is open):
+     *   ArrowDown / ArrowUp  – move focused item one step
+     *   Home / End           – jump to first / last item
+     *   Enter                – select currently focused item
+     *   Escape               – close without selecting
+     *   Any printable char   – jump to first item whose text starts with that char
+     *
+     * @param {HTMLSpanElement}   btn      - The 📊 button element that was activated.
+     * @param {HTMLTableElement}  table    - The <table> that owns the column.
+     * @param {number}            colIndex - Zero-based index of the column.
+     */
+    function openUniqDrop(btn, table, colIndex) {
+#+end_example
+
+and render it in brackets in front of each value in the pull down menu, like the following example
+
+#+begin_example
+(n) <unique column value>
+#+end_example
+
+The "(n)" should be rendered in a user configurable color and background color (initially dark black on light yellow, in
+"const configSchema"). The "(n)" should only be used for display purposes inside the pulldown menus. When such an entry
+is clicked, or by pressing "Return", only the <unique column value> should be copied in the filter field (as it is in
+the current implementation)
+
+** alignment
+
+The alignment of the number of unique values should be like in the followng example:
+
+#+begin_example
+   (12) <unique column value>
+(21345) <unique column value>
+#+end_example
+
+So the number of digits of the highest unique count should be taken into account for the alignment. It could of course
+be different for each column in a table.
