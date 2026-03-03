@@ -43728,8 +43728,159 @@ inherent to the per-node highlightText walker), but the row now at least correct
 
 Please implement highlightning also for matches that span multiple tags.
 
-*** sub-tables
+*** DONE sub-tables
 
 The highlightning for matches that span multiple tags works for the global filter and also for column level filters but
 not in the case of the sub-table level filters (although the filtering itself works)
+
+** Space before comma separated area/location details
+
+In the uploaded userscript,
+
+#+begin_example
+    /**
+     * Helper to get visible text only, explicitly ignoring script/style tags
+     * @param {HTMLElement} element - The element to extract text from
+     * @returns {string} The visible text content with whitespace joined
+     */
+    /**
+     * Normalises a raw string assembled from DOM text nodes into a clean,
+     * filter-ready form that matches what the browser visually renders.
+     *
+     * Two separate problems are solved here:
+     *
+     * 1. Cross-tag whitespace (previous fix):
+     *    Individual text nodes carry the HTML source indentation, e.g.
+     *    "Bruce Springsteen\n    ", " &\n    ", "The E Street Band\n    ".
+     *    Joining them verbatim produces multi-whitespace runs that never
+     *    match a user query like "Bruce Springsteen & The E Street Band".
+     *    Collapsing every \s+ run to a single space mirrors the browser's
+     *    inline-whitespace collapsing rule.
+     *
+     * 2. Space inside bracket/paren pairs from <span class="comment">:
+     *    MusicBrainz wraps disambiguation / live-detail comments in a pattern
+     *    like:
+     *        <span class="comment">(\n    <bdi>live, …</bdi>)\n  </span>
+     *    After whitespace collapse the text node "(\n    " becomes "( " and
+     *    ")\n  " becomes ") ", yielding "Youngstown ( live, … )" — but the
+     *    browser renders "Youngstown (live, …)" with no interior spaces.
+     *    A user therefore types "(live" to match, not "( live".
+     *    The post-processing step mirrors the browser by removing the
+     *    spurious single space that appears immediately after an opening
+     *    bracket/paren and immediately before a closing bracket/paren.
+     *    This is safe for MusicBrainz content: the visual rendering never
+     *    intentionally shows "( text )" with interior spaces, so no valid
+     *    search query would rely on those spaces being present.
+     *
+     * @param {string} raw - String assembled from joined text-node values.
+     * @returns {string} Normalised, filter-ready string.
+     */
+    function normalizeExtractedText(raw) {
+#+end_example
+
+
+* "rowsInTable==1
+
+#+begin_example
+subFilterStatus.textContent = `✓ Filtered ${rowsInTable} rows [${colFilterInfo}]`;
+#+end_example
+
+to
+
+#+begin_example
+subFilterStatus.textContent = `✓ Filtered ${rowsInTable} row [${colFilterInfo}]`;
+#+end_example
+
+if "rowsInTable==1"
+
+* check code for "⇅▲▼" if it need's to be extended with the new unique column values symbol "📊" 
+
+#+begin_example
+11 matches for "⇅▲▼" in buffer: ShowAllEntityData.user.js
+   2028:                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
+   2521:            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
+   2876:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
+   2984:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+   3054:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+   8623:                ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹]/g, '').trim()
+   8945:                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊]/g, '').trim() : `Col ${colIdx}`;
+   9095:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+   9113:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+  11873:            th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊]/g, '').trim() : '';
+  11885:            const colName = th.textContent.replace(/[⇅▲▼📊]/g, '').trim();
+#+end_example
+
+* filenname change: currently "mb-${pageType}-${timestamp}.json.gz"
+
+for pageType with multiple action buttons like "Official RGs", "Non-official RGs" etc. append the button-text lowercased, "blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the filename
+
+#+begin_example
+const filename = `mb-${pageType}-${timestamp}.json.gz`;
+#+end_example
+
+for pageTypes which have a query string like e.g "?direction=1&link_type_id=835" append the "h3 header" lowercased, "blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the filename
+
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direction=1&link_type_id=835&page=1
+
+* Remove actions column from aliases pages
+
+#+begin_example
+@@ -140,6 +140,13 @@
+             description: "Remove the Performance column from the final rendered tables (comes from another userscript) "
+         },
+ 
++        sa_remove_actions: {
++            label: "Remove Actions column",
++            type: "checkbox",
++            default: true,
++            description: "Remove the Actions column from the final rendered tables (comes from Aliases pages) "
++        },
++
+         // ============================================================
+         // KEYBOARD SHORTCUTS SECTION
+         // ============================================================
+@@ -9054,7 +9061,8 @@
+             'Performance Attributes': 'sa_remove_perf',
+             'Rating': 'sa_remove_rating',
+             'Tagger': 'sa_remove_tagger',
+-            'Release events': 'sa_remove_release_events'
++            'Release events': 'sa_remove_release_events',
++	    'Actions': 'sa_remove_actions'
+         };
+ 
+         headers.forEach((th, idx) => {
+@@ -9589,7 +9597,8 @@
+                         'Performance Attributes': 'sa_remove_perf',
+                         'Rating': 'sa_remove_rating',
+                         'Tagger': 'sa_remove_tagger',
+-                        'Release events': 'sa_remove_release_events'
++                        'Release events': 'sa_remove_release_events',
++			'Actions': 'sa_remove_actions'
+                     };
+ 
+                     // Reset column indices for all active extractors before scanning each page.
+#+end_example
+
+#+begin_example
+        sa_remove_actions: {
+            label: "Remove Actions column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Actions column from the final rendered tables (comes from Aliases pages) "
+        },
+#+end_example
+
+
+* DONE show the filename saved additionally in the dialog
+
+#+begin_example
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid rgb(136, 136, 136); border-radius: 6px; padding: 20px; box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px; z-index: 10000; max-width: 400px; text-align: center; font-family: sans-serif; opacity: 1; transition: opacity 0.3s;"><div style="margin-bottom: 15px;">Saving of JSON table data to the filesystem initiated. 124 rows saved. Please monitor your browser for the file download.</div><button type="button" style="padding: 6px 12px; cursor: pointer; border-radius: 4px; background: rgb(76, 175, 80); color: white; border: none; font-size: 0.9em;">Close</button></div>
+#+end_example
+
+* pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
+
+"Artists" - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+"Recording artists" - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+
+and remove the "(show less)" line
 
