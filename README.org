@@ -44185,7 +44185,7 @@ In the uploaded library "VZ_MBLibrary.user.js",
 please implement when entering a search string in the "🔍 Filter changelog entries…" dialog the following functionality:
 
 - add a small red "x" at the end of the "🔍 Filter changelog entries…" input field, so that when either clicked or the "Escape"-key is pressed the clearing of the input field happens
-
+- also clicking on the "CLOSE" link in the upper right corner does NOT close the whole dialog (the same should happen when pressing the "Escape"-key if the "🔍 Filter changelog entries…" doesn't has the focus anymore
 
 2.) in the
 
