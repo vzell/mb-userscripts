@@ -44173,6 +44173,7 @@ Bruce Springsteen & The E Street Band at Athletic & Convocation Center
 * TODO highlight match when quick filtering in the configuration dialog
 
 * TODO add "escape"-key and "x" for clearing the quick filter in the changelog dialog
+** initial
 
 In the uploaded library "VZ_MBLibrary.user.js",
 
@@ -44198,4 +44199,22 @@ please implement when entering a search string in the "🔍 Search settings…" 
 - The search string should be highlighted in the filtered display configuration settings rows (like in the '// --- 4. Changelog Logic ---' block)
 - add a small red "x" at the end of the "🔍 Search settings…" input field, so that when clicked the same clearing of the input field happens as with the already functioning "Escape"-key handling
 
+** bugs
 
+2 bugs:
+
+1.) The following link doesn't react on a click at all
+
+#+begin_example
+<a id="vz-mb-show-all-entity-data-changelog-close" style="cursor:pointer;font-weight:600;color:#555;">
+                                CLOSE
+                            </a>
+#+end_example
+
+and it actually should unconditionally close the whole dialog when clicked
+
+2.) "Escape"-key in the filter input field DOESN'T clear the filter as it should on pressing first time "Escape",
+pressing the "x" icon DOES as it should. Pressing the "Escape"-key in an empyt filter input field should unfocus the
+filter input and when unfocused, pressing "Escape" again, should the unconditionally close the whole dialog as the "CLOSE" link, see bullet point 1.)
+
+please fix
