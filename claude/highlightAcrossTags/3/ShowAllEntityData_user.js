@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.24+2026-03-04
+// @version      9.99.22+2026-03-04
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -347,20 +347,6 @@
             type: "color_picker",
             default: "#ffeaa7",
             description: "Background color used to highlight the matching substring inside unique-values dropdown items"
-        },
-
-        sa_uniq_count_color: {
-            label: "Unique-Values Count Badge Text Color",
-            type: "color_picker",
-            default: "#111111",
-            description: "Text color for the (n) occurrence count badge rendered in front of each unique-values dropdown entry"
-        },
-
-        sa_uniq_count_bg: {
-            label: "Unique-Values Count Badge Background Color",
-            type: "color_picker",
-            default: "#fffacd",
-            description: "Background color for the (n) occurrence count badge rendered in front of each unique-values dropdown entry"
         },
 
         // ============================================================
@@ -11457,24 +11443,8 @@
      * Opens (or toggles closed) the unique-values dropdown for one column.
      *
      * Gathers distinct non-empty textContent values from every *visible*
-     * tbody row of `table` in column `colIndex`, counts how many times each
-     * value appears, sorts the unique values case-insensitively, and shows
-     * them in the shared panel anchored just below `btn`.
-     *
-     * Each dropdown entry is prefixed by a styled "(n)" badge (display only)
-     * that shows the occurrence count of that value among the currently visible
-     * rows.  All badges in the same dropdown are rendered in a monospace font
-     * and share a uniform width derived from the digit count of the highest
-     * occurrence count in that column, so the numbers right-align:
-     *
-     *     (12) value A
-     *   (5678) value B
-     *  (21345) value C
-     *
-     * The badge colors are controlled by the `sa_uniq_count_color` and
-     * `sa_uniq_count_bg` settings.  Clicking an entry (or pressing Enter while
-     * it is focused) copies only the raw column value — never the badge text —
-     * into the corresponding column filter input.
+     * tbody row of `table` in column `colIndex`, sorts them case-insensitively,
+     * and shows them in the shared panel anchored just below `btn`.
      *
      * Keyboard navigation (focus stays on `btn` while the panel is open):
      *   ArrowDown / ArrowUp  – move focused item one step
@@ -11503,8 +11473,8 @@
         _uniqDropOwner = btn;
         btn.classList.add('mb-col-uniq-active');
 
-        // ---- Collect distinct non-empty values with occurrence counts from visible tbody rows ----
-        const valueCounts = new Map();
+        // ---- Collect distinct non-empty values from visible tbody rows ----
+        const seen = new Set();
         const tbody = table.tBodies[0];
         if (tbody) {
             Array.from(tbody.rows).forEach(row => {
@@ -11516,22 +11486,12 @@
                 //   (b) whitespace is normalised (cross-tag joins, paren spacing)
                 //       consistently with what the column filter actually matches.
                 const v = getCleanColumnText(cell);
-                if (v) valueCounts.set(v, (valueCounts.get(v) || 0) + 1);
+                if (v) seen.add(v);
             });
         }
-        const vals = Array.from(valueCounts.keys()).sort((a, b) =>
+        const vals = Array.from(seen).sort((a, b) =>
             a.toLowerCase().localeCompare(b.toLowerCase())
         );
-
-        // Pre-compute the width of the widest count so all badges in this column
-        // are identically sized and the numbers right-align (e.g. "   (12)" vs
-        // "(21345)").  maxDigits is the character count of the largest count value;
-        // badgeChWidth adds 2 for the surrounding parentheses "(…)".
-        const maxCount     = valueCounts.size > 0
-            ? Math.max(...valueCounts.values())
-            : 0;
-        const maxDigits    = String(maxCount).length;
-        const badgeChWidth = maxDigits + 2; // "(" + digits + ")"
 
         // ---- Build panel content -------------------------------------------
         drop.innerHTML = '';
@@ -11565,18 +11525,10 @@
         const hlColor = Lib.settings.sa_uniq_quickfilter_highlight_color || '#c0392b';
         const hlBg    = Lib.settings.sa_uniq_quickfilter_highlight_bg    || '#ffeaa7';
 
-        // Count badge colors from settings (dark black on light yellow by default)
-        const cntColor = Lib.settings.sa_uniq_count_color || '#111111';
-        const cntBg    = Lib.settings.sa_uniq_count_bg    || '#fffacd';
-
         /**
          * (Re-)renders the item list, showing only values that match `filter`
-         * (case-insensitive substring). Each entry is prefixed by a styled
-         * "(n)" badge showing the occurrence count of that value in the visible
-         * rows. The badge is display-only; clicking or pressing Enter copies
-         * only the raw column value into the filter field (via `item.title`).
-         * Matching characters are wrapped in a <mark> element styled with the
-         * configured highlight colors.
+         * (case-insensitive substring). Matching characters are wrapped in a
+         * <mark> element styled with the configured highlight colors.
          *
          * @param {string} filter - The current quickfilter string (may be empty).
          */
@@ -11597,32 +11549,7 @@
                 const item = document.createElement('div');
                 item.className = 'mb-col-uniq-item';
                 item.setAttribute('role', 'option');
-                // title holds the raw value only — used by the Enter-key handler
-                // and applyUniqVal() so the badge text is never copied into the
-                // filter input field.
                 item.title = v;
-
-                // ---- Occurrence count badge: "(n) " prefix, display only ----
-                const count = valueCounts.get(v) || 0;
-                const badge = document.createElement('span');
-                badge.className = 'mb-uniq-count-badge';
-                badge.textContent = `(${count})`;
-                badge.setAttribute('aria-hidden', 'true');
-                badge.style.color              = cntColor;
-                badge.style.backgroundColor    = cntBg;
-                badge.style.fontWeight         = 'bold';
-                badge.style.fontFamily         = 'monospace';
-                badge.style.borderRadius       = '3px';
-                badge.style.padding            = '0 3px';
-                badge.style.marginRight        = '5px';
-                badge.style.fontSize           = '0.85em';
-                badge.style.display            = 'inline-block';
-                // Width is fixed to the widest badge in this column so that all
-                // count numbers right-align regardless of their digit count.
-                // badgeChWidth = maxDigits + 2 ("(" + digits + ")") in monospace ch.
-                badge.style.minWidth           = `${badgeChWidth}ch`;
-                badge.style.textAlign          = 'right';
-                item.appendChild(badge);
 
                 if (filter) {
                     // Build highlighted content with a <mark> around the match
@@ -11641,8 +11568,7 @@
                     item.appendChild(mark);
                     item.appendChild(document.createTextNode(v.slice(end)));
                 } else {
-                    // Use appendChild (not textContent) to preserve the badge node
-                    item.appendChild(document.createTextNode(v));
+                    item.textContent = v;
                 }
 
                 item.addEventListener('mousedown', ev => ev.preventDefault());

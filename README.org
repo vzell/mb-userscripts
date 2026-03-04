@@ -43733,9 +43733,11 @@ Please implement highlightning also for matches that span multiple tags.
 The highlightning for matches that span multiple tags works for the global filter and also for column level filters but
 not in the case of the sub-table level filters (although the filtering itself works)
 
-** Space before comma separated area/location details
+*** TODO Space before comma separated area/location details
 
 In the uploaded userscript,
+
+extend the following function
 
 #+begin_example
     /**
@@ -43777,6 +43779,81 @@ In the uploaded userscript,
      */
     function normalizeExtractedText(raw) {
 #+end_example
+
+to also special case the following HTML/TAG based constructs to highlight like the browser actually renders (along the
+lines what bullet point 2. above does with bracket/parent pairs)
+
+#+begin_example
+<td>
+  <a href="/area/a1411661-be21-4290-8dc1-50f3d8e3ea67">
+    <bdi>Honolulu
+    </bdi>
+  </a>,
+  <a href="/area/1b420c08-51a5-4bdd-9b0e-cd601703d20b">
+    <bdi>Hawaii
+    </bdi>
+  </a>,
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+</td>
+
+<td>
+  <a href="/area/68d8f243-fd55-4ca1-b511-48fa93575476">
+    <bdi>Ithaca
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>city
+    </bdi>)
+  </span>,
+  <a href="/area/75e398a3-5f3f-4224-9cd8-0fe44715bc95">
+    <bdi>New York
+    </bdi>
+  </a>
+</td>
+
+<td>
+  <a href="/label/011d1192-6f65-45bd-85c4-0400dd45693e">
+    <bdi>Columbia
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>owned by Sony Music Entertainment, worldwide except JP; formerly owned by CBS between 1938–1990 within US/CA/MX
+    </bdi>)
+  </span>,
+  <a href="/label/f9ada3ae-3081-44df-8581-ca27a3462b68">
+    <bdi>Sony BMG Music Entertainment
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Aug 5, 2004 – Oct 1, 2008
+    </bdi>)
+  </span>
+</td>
+
+<td>
+  <span class="catalog-number">CBS S 65480
+  </span>,
+  <span class="catalog-number">S 65480
+  </span>
+</td>
+#+end_example
+
+They render as
+
+#+begin_example
+Honolulu, Hawaii, United States
+Ithaca (city), New York
+Columbia (owned by Sony Music Entertainment, worldwide except JP; formerly owned by CBS between 1938–1990 within US/CA/MX), Sony BMG Music Entertainment (Aug 5, 2004 – Oct 1, 2008)
+CBS S 65480, S 65480
+#+end_example
+
+So basically the blank " " BEFORE the ", " should be removed. Right now the filtering works, but NOT the
+highlightning. This would also be what a user would type for matching
 
 
 * "rowsInTable==1
@@ -43870,13 +43947,6 @@ https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direc
         },
 #+end_example
 
-
-* DONE show the filename saved additionally in the dialog
-
-#+begin_example
-<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid rgb(136, 136, 136); border-radius: 6px; padding: 20px; box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px; z-index: 10000; max-width: 400px; text-align: center; font-family: sans-serif; opacity: 1; transition: opacity 0.3s;"><div style="margin-bottom: 15px;">Saving of JSON table data to the filesystem initiated. 124 rows saved. Please monitor your browser for the file download.</div><button type="button" style="padding: 6px 12px; cursor: pointer; border-radius: 4px; background: rgb(76, 175, 80); color: white; border: none; font-size: 0.9em;">Close</button></div>
-#+end_example
-
 * pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
 
 "Artists" - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
@@ -43884,7 +43954,8 @@ https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direc
 
 and remove the "(show less)" line
 
-* (n) unique value 1
+
+* DONE (n) unique value 1
 ** initial
 
 In the uploaded userscript,
@@ -43935,3 +44006,10 @@ The alignment of the number of unique values should be like in the followng exam
 
 So the number of digits of the highest unique count should be taken into account for the alignment. It could of course
 be different for each column in a table.
+* DONE show the filename saved additionally in the dialog
+
+#+begin_example
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid rgb(136, 136, 136); border-radius: 6px; padding: 20px; box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px; z-index: 10000; max-width: 400px; text-align: center; font-family: sans-serif; opacity: 1; transition: opacity 0.3s;"><div style="margin-bottom: 15px;">Saving of JSON table data to the filesystem initiated. 124 rows saved. Please monitor your browser for the file download.</div><button type="button" style="padding: 6px 12px; cursor: pointer; border-radius: 4px; background: rgb(76, 175, 80); color: white; border: none; font-size: 0.9em;">Close</button></div>
+#+end_example
+
+

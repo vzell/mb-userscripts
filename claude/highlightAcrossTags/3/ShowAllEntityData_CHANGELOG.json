@@ -1,38 +1,12 @@
 [
     {
-        "version": "9.99.24",
+        "version": "9.99.22",
         "date": "2026-03-04",
         "sections": [
             {
                 "label": "🐛 Bug Fixes",
                 "items": [
                     "normalizeExtractedText — Step 3: remove spurious space before comma separators between list items. MusicBrainz area, label, and catalog-number columns render multiple values separated by a bare comma+newline (e.g. '<bdi>Honolulu\\n</bdi>,\\n<a …>') which, after the existing join-and-collapse pipeline, produced an artificial space before the comma: 'Honolulu , Hawaii'. This caused both column-filter matching and highlight-span placement to diverge from what the browser renders ('Honolulu, Hawaii'), so a user typing 'Honolulu, Hawaii' would get no match and no highlighting even though the row was visually correct. Fixed by appending '.replace(/ ,/g, \",\")' as a new Step 3 in normalizeExtractedText, applied after whitespace collapse (Step 1) and bracket-interior-space removal (Step 2). The fix is safe because no MusicBrainz data format uses an intentional space before a comma. All four affected column types confirmed: area lists ('Honolulu, Hawaii, United States'), comment-disambiguated items ('Ithaca (city), New York'), multi-label columns ('Columbia (…), Sony BMG Music Entertainment (…)'), and catalog-number columns ('CBS S 65480, S 65480'). The stale orphaned JSDoc stub ('Helper to get visible text only…') that preceded the real block was also removed."
-                ]
-            }
-        ]
-    },
-    {
-        "version": "9.99.23",
-        "date": "2026-03-03",
-        "sections": [
-            {
-                "label": "✨ Enhancements",
-                "items": [
-                    "Unique-values dropdown — count badge alignment: all '(n)' badges within a single column dropdown now share a uniform width derived from the digit count of the largest occurrence count in that column. Badges are rendered in a monospace font with right-aligned text so the numbers line up vertically regardless of their digit count (e.g. '   (12)' above '(21345)'). The width is computed per column open via 'maxDigits = String(maxCount).length' and 'badgeChWidth = maxDigits + 2' (adding the two parentheses), applied as 'min-width: Nch' on the badge span. The previous fixed 'min-width: 1.6em' and 'text-align: center' are replaced by the dynamic ch-unit width with 'text-align: right'. The 'font-variant-numeric: tabular-nums' property (redundant with monospace) has been removed."
-                ]
-            }
-        ]
-    },
-    {
-        "version": "9.99.22",
-        "date": "2026-03-03",
-        "sections": [
-            {
-                "label": "✨ Enhancements",
-                "items": [
-                    "Unique-values dropdown — occurrence count badge: each entry in the unique-values dropdown now shows a styled '(n)' badge to its left indicating how many currently visible rows contain that value. The badge is purely presentational (aria-hidden); clicking an entry or pressing Enter copies only the raw column value into the filter field, exactly as before. The badge colors are configurable via two new settings: 'sa_uniq_count_color' (text color, default dark-black #111111) and 'sa_uniq_count_bg' (background color, default light-yellow #fffacd), both exposed as color pickers in the FILTER SETTINGS section of the configuration UI.",
-                    "Unique-values dropdown — internal value tracking changed from a Set to a Map so that each distinct value's occurrence count is recorded in a single pass over the visible tbody rows, with no additional DOM traversal overhead.",
-                    "Unique-values dropdown — 'renderItems' updated: the non-filter branch now uses 'item.appendChild(document.createTextNode(v))' instead of 'item.textContent = v' so that the count badge node that was already appended to the item is preserved when the item is rendered without an active quickfilter string."
                 ]
             }
         ]
