@@ -43643,6 +43643,49 @@ be different for each column in a table.
 <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid rgb(136, 136, 136); border-radius: 6px; padding: 20px; box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px; z-index: 10000; max-width: 400px; text-align: center; font-family: sans-serif; opacity: 1; transition: opacity 0.3s;"><div style="margin-bottom: 15px;">Saving of JSON table data to the filesystem initiated. 124 rows saved. Please monitor your browser for the file download.</div><button type="button" style="padding: 6px 12px; cursor: pointer; border-radius: 4px; background: rgb(76, 175, 80); color: white; border: none; font-size: 0.9em;">Close</button></div>
 #+end_example
 
+* DONE "rowsInTable==1
+** 1
+
+#+begin_example
+subFilterStatus.textContent = `✓ Filtered ${rowsInTable} rows [${colFilterInfo}]`;
+#+end_example
+
+to
+
+#+begin_example
+subFilterStatus.textContent = `✓ Filtered ${rowsInTable} row [${colFilterInfo}]`;
+#+end_example
+
+if "rowsInTable==1"
+
+** 2
+
+#+begin_example
+filterStatusDisplay.textContent = `✓ ${singleModeLabel}: ${rowCount} rows in ${filterDuration}ms${filterInfo}`;
+#+end_example
+
+* DONE check code for "⇅▲▼" if it need's to be extended with the new unique column values symbol "📊" 
+
+In the uploaded userscript,
+
+1.) check the following code for "⇅▲▼" if it need's to be extended with the new unique column values symbol "📊" 
+
+#+begin_example
+11 matches for "⇅▲▼" in buffer: ShowAllEntityData.user.js
+   2042:                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
+   2535:            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
+   2890:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
+   2998:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+   3068:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+   8661:                ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹]/g, '').trim()
+   8983:                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊]/g, '').trim() : `Col ${colIdx}`;
+   9133:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+   9151:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+  11971:            th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊]/g, '').trim() : '';
+  11983:            const colName = th.textContent.replace(/[⇅▲▼📊]/g, '').trim();
+#+end_example
+
+
 
 * document test suite after userscript and library changes
 ** library
@@ -43910,42 +43953,16 @@ It popsup a unicodechars Menu
 Could this somehow be prevented, or better yet, remapped to a different key combination
 
 
-* "rowsInTable==1
-
-#+begin_example
-subFilterStatus.textContent = `✓ Filtered ${rowsInTable} rows [${colFilterInfo}]`;
-#+end_example
-
-to
-
-#+begin_example
-subFilterStatus.textContent = `✓ Filtered ${rowsInTable} row [${colFilterInfo}]`;
-#+end_example
-
-if "rowsInTable==1"
-
-* check code for "⇅▲▼" if it need's to be extended with the new unique column values symbol "📊" 
-
-#+begin_example
-11 matches for "⇅▲▼" in buffer: ShowAllEntityData.user.js
-   2042:                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
-   2535:            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
-   2890:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
-   2998:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
-   3068:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
-   8661:                ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹]/g, '').trim()
-   8983:                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊]/g, '').trim() : `Col ${colIdx}`;
-   9133:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
-   9151:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
-  11971:            th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊]/g, '').trim() : '';
-  11983:            const colName = th.textContent.replace(/[⇅▲▼📊]/g, '').trim();
-#+end_example
-
-
 * filenname change: currently "mb-${pageType}-${timestamp}.json.gz"
+** initial
 
-for pageType with multiple action buttons like "Official RGs", "Non-official RGs" etc. append the button-text
-lowercased, "blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the current filename
+In the uploaded userscript,
+
+for pageTypes with multiple action buttons like "Official RGs", "Non-official RGs"
+etc. e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f, or
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+append the button-text lowercased, "blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the current filename
 
 #+begin_example
 const filename = `mb-${pageType}-${timestamp}.json.gz`;
@@ -43955,6 +43972,62 @@ for pageTypes which have a query string like e.g "?direction=1&link_type_id=835"
 "blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the filename, e.g
 
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direction=1&link_type_id=835&page=1
+
+** claude
+
+#+begin_example
+modified   ShowAllEntityData.user.js
+@@ -12482,9 +12482,32 @@
+             const blob = new Blob([compressedData], { type: 'application/gzip' });
+             const url = URL.createObjectURL(blob);
+ 
+-            // Generate filename based on page type and timestamp
++            // Generate filename based on page type and timestamp.
++            // For multi-button pages (e.g. "Official RGs" / "Non-official RGs") append the
++            // clicked button label as a slug so saved files are immediately distinguishable.
++            // For query-string pages (link_type_id=…) append the first visible h3 header
++            // text as a slug for the same reason.
+             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+-            const filename = `mb-${pageType}-${timestamp}.json.gz`;
++            let _filenameSuffix = '';
++            if (activeDefinition.buttons && activeDefinition.buttons.length > 1 && activeDefinition.label) {
++                // Multi-button page: use the clicked button's label (lowercased, spaces → underscores,
++                // all non-alphanumeric characters stripped).
++                _filenameSuffix = '-' + activeDefinition.label
++                    .toLowerCase()
++                    .replace(/\s+/g, '_')
++                    .replace(/[^a-z0-9_]/g, '');
++            } else if (isFilteredRelationshipPage) {
++                // Query-string (link_type_id) page: derive slug from the first h3 header text
++                // rendered by MusicBrainz (e.g. "performed Guitar on" → "performed_guitar_on").
++                const firstH3 = document.querySelector('#content h3');
++                if (firstH3) {
++                    _filenameSuffix = '-' + firstH3.textContent.trim()
++                        .toLowerCase()
++                        .replace(/\s+/g, '_')
++                        .replace(/[^a-z0-9_]/g, '');
++                }
++            }
++            const filename = `mb-${pageType}${_filenameSuffix}-${timestamp}.json.gz`;
+ 
+             triggerStandardDownload(url, filename, dataToSave.rowCount);
+             infoDisplay.textContent = `✓ Serialized ${dataToSave.rowCount.toLocaleString()} rows to ${filename}`;
+modified   ShowAllEntityData_CHANGELOG.json
+@@ -9,12 +9,6 @@
+                     "Header-text cleaning — all `replace(/[⇅▲▼]/g, '')` call sites now also strip the `📊` unique-values button emoji from column header text before comparison or export. Affected sites: CSV export header scan (line ~2890), JSON export header scan (~2998), Org-Mode export header scan (~3068), synthetic-column existence check (~9133), MB-Name column existence check (~9151), single-table sort column-name derivation (~2535), multi-table sort column-name derivation (~2042, which also strips superscript digits), and the sort-state persistence column-name read (~8661, unicode-range form). The two call sites that already included `📊` (getCleanColName at ~8983 and the stats-panel path at ~11971) were correct and left unchanged.",
+                     "Sub-table filter status — singular 'row' when exactly one row matches: `✓ Filtered 1 rows […]` now correctly reads `✓ Filtered 1 row […]`. Implemented via a ternary `${rowsInTable === 1 ? 'row' : 'rows'}` at the single affected call site (~8986)."
+                 ]
+-            },
+-            {
+-                "label": "✨ Enhancements",
+-                "items": [
+-                    "Save-to-Disk filename disambiguation: the generated filename now includes an extra slug between the `mb-${pageType}` prefix and the timestamp so that files saved from different button contexts or query-string variants of the same page type are immediately distinguishable without opening them. Two cases are handled: (1) Multi-button pages (e.g. artist-releases with 'Official RGs', 'Non-official RGs', 'Official VA RGs', 'Non-official VA RGs' buttons): when `activeDefinition.buttons.length > 1` and `activeDefinition.label` is set, the clicked button's label is lowercased, spaces are converted to underscores, and all non-alphanumeric characters are stripped to form the suffix (e.g. `mb-artist-releases-official_rgs-2026-03-04T…json.gz`). (2) Query-string pages filtered by `link_type_id` (e.g. `/area/…/releases?direction=1&link_type_id=835`): the text content of the first `#content h3` element is lowercased and slug-converted to form the suffix (e.g. `mb-area-releases-recorded_at-2026-03-04T…json.gz`). Pages that match neither condition continue to use the original `mb-${pageType}-${timestamp}.json.gz` format."
+-                ]
+             }
+         ]
+     },
+#+end_example
+
 
 * Remove actions column from aliases pages
 
@@ -44011,55 +44084,4 @@ https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direc
 
 and remove the "(show less)" line
 
-* ALL
 
-In the uploaded userscript,
-
-1.) check the following code for "⇅▲▼" if it need's to be extended with the new unique column values symbol "📊" 
-
-#+begin_example
-11 matches for "⇅▲▼" in buffer: ShowAllEntityData.user.js
-   2042:                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
-   2535:            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
-   2890:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
-   2998:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
-   3068:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
-   8661:                ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹]/g, '').trim()
-   8983:                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊]/g, '').trim() : `Col ${colIdx}`;
-   9133:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
-   9151:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
-  11971:            th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊]/g, '').trim() : '';
-  11983:            const colName = th.textContent.replace(/[⇅▲▼📊]/g, '').trim();
-#+end_example
-
-2.) change the following output statement to produce "row" instead of "rows" when 'if "rowsInTable==1"'
-
-So
-
-#+begin_example
-subFilterStatus.textContent = `✓ Filtered ${rowsInTable} rows [${colFilterInfo}]`;
-#+end_example
-
-to
-
-#+begin_example
-subFilterStatus.textContent = `✓ Filtered ${rowsInTable} row [${colFilterInfo}]`;
-#+end_example
-
-3.) for pageTypes with multiple action buttons like "Official RGs", "Non-official RGs"
-etc. e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f, or
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
-
-append the button-text lowercased, "blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the current filename
-
-#+begin_example
-const filename = `mb-${pageType}-${timestamp}.json.gz`;
-#+end_example
-
-for pageTypes which have a query string like e.g "?direction=1&link_type_id=835" append the "h3 header" lowercased,
-"blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the filename, e.g
-
-https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direction=1&link_type_id=835&page=1
-
-
-*                     filterStatusDisplay.textContent = `✓ ${singleModeLabel}: ${rowCount} rows in ${filterDuration}ms${filterInfo}`;
