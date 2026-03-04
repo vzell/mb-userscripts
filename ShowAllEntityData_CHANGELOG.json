@@ -1,6 +1,30 @@
 [
     {
-        "version": "9.99.28",
+        "version": "9.99.31",
+        "date": "2026-03-04",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "H1 comment-span relocation (complex case) — the `relocateH1CommentSpan()` IIFE now handles the more complex structure found on event pages where the `<bdi>` inside `<span class=\"comment\">` contains both an `<i title=\"Primary alias\">ALIAS</i>` element *and* trailing sibling text (extra show title) after the closing `</i>`: e.g. `<bdi><i title=\"Primary alias\">Southside Johnny &amp; The Asbury Jukes at The Stone Pony</i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show</bdi>`. Previously the entire span was removed and only ALIAS was surfaced, silently discarding the extra title. Now: (1) ALIAS is relocated to the alias line below h1 as before. (2) The extra sibling text (all text/element nodes following `</i>` within the `<bdi>`, or the `commentSpan` when no `<bdi>` wrapper is present) is collected, its leading `\", \"` stripped, and re-injected into the h1 as a new `<span class=\"comment\">(EXTRA)</span>` so it remains visible on the title line. When the extra text is blank after trimming the span is removed entirely (simple-case behaviour unchanged). Additionally, the early-return guard was tightened: spans without an `<i title>` element (plain MB disambiguation comments such as \"(live)\") are now explicitly skipped before any mutation occurs."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.30",
+        "date": "2026-03-04",
+        "sections": [
+            {
+                "label": "✨ Enhancements",
+                "items": [
+                    "H1 comment-span relocation — on release-group pages MusicBrainz may inject a `<span class=\"comment\">( <bdi><i title=\"Primary alias\">…</i></bdi> )</span>` directly inside the h1, placing the alias text (with surrounding parentheses) on the same line as the entity title and the userscript action buttons. The new `relocateH1CommentSpan()` IIFE removes that span from the h1, extracts the alias label from the `<i title=\"…\">` attribute (e.g. \"Primary alias\") and the alias text from the element's text content, then injects a replacement `<p id=\"mb-h1-alias-line\">` styled in italics immediately above `<p class=\"subheader\">` (or directly after the h1 when no subheader is found). The rendered line reads «<strong>Primary alias:</strong> Bruce Springsteen &amp; The E Street Band at Athletic &amp; Convocation Center», matching the requested layout: title line → alias line → subheader line. The injected element is removed and re-created on soft-navigation reloads to stay idempotent."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.29",
         "date": "2026-03-04",
         "sections": [
             {

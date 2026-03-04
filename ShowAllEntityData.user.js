@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.29+2026-03-04
+// @version      9.99.31+2026-03-04
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -6973,6 +6973,136 @@
     } else {
         headerContainer.appendChild(controlsContainer);
     }
+
+    // ── H1 comment-span relocation ────────────────────────────────────────────
+    // MusicBrainz sometimes injects a <span class="comment"> directly inside the
+    // h1 on release-group and event pages.  The structure can take two forms:
+    //
+    // Simple (release-group):
+    //   <span class="comment">( <bdi><i title="Primary alias">ALIAS</i></bdi> )</span>
+    //
+    // Complex (event) — extra sibling text after </i> inside the same <bdi>:
+    //   <span class="comment">(
+    //     <bdi>
+    //       <i title="Primary alias">ALIAS</i>, EXTRA
+    //     </bdi>)
+    //   </span>
+    //
+    // Desired output in both cases:
+    //
+    //   h1 line  : …entity title… (EXTRA)   ← only when EXTRA is non-empty,
+    //                                          leading ", " stripped, wrapped in ()
+    //   alias line: Primary alias: ALIAS     ← injected before <p class="subheader">
+    //
+    // When there is no <i title="…"> at all the whole span is left untouched so
+    // standard MB disambiguation comments (e.g. "(live)") are never disturbed.
+    //
+    // The injected <p id="mb-h1-alias-line"> is removed and re-created on every
+    // call so soft-navigation reloads stay idempotent.
+    /**
+     * Relocates the `<span class="comment">` alias block from the h1.
+     *
+     * Handles two structural variants found on MusicBrainz release-group and
+     * event pages:
+     *
+     *   Simple  — `<bdi><i title="…">ALIAS</i></bdi>`
+     *             The entire span is removed; an alias line is injected below h1.
+     *
+     *   Complex — `<bdi><i title="…">ALIAS</i>, EXTRA</bdi>`
+     *             The <i> (and its preceding text node inside the <bdi>) is
+     *             extracted for the alias line.  The remaining EXTRA text is
+     *             trimmed of its leading ", " and re-wrapped as `(EXTRA)` in a
+     *             new `<span class="comment">` that replaces the original span
+     *             in the h1, so EXTRA stays visible on the title line.
+     *             If EXTRA is blank after trimming the span is simply removed.
+     *
+     * @returns {void}
+     */
+    (function relocateH1CommentSpan() {
+        // Resolve the actual <h1> regardless of whether headerContainer is the h1
+        // itself or a descendant (e.g. an <a> element inside it).
+        const h1El = headerContainer.tagName === 'H1'
+            ? headerContainer
+            : (headerContainer.closest('h1') || headerContainer);
+
+        // Remove any stale injected alias line from a previous run (soft-nav).
+        const stale = document.getElementById('mb-h1-alias-line');
+        if (stale) stale.remove();
+
+        // Find the comment span directly inside the h1 (not inside a table cell
+        // or other descendant — those are handled by the extractor pipeline).
+        const commentSpan = h1El.querySelector(':scope > span.comment');
+        if (!commentSpan) return;
+
+        // We only act when the span contains an <i title="…"> alias marker.
+        // Plain disambiguation comments like "(live)" have no <i title> and must
+        // be left completely untouched.
+        const iEl = commentSpan.querySelector('i[title]');
+        if (!iEl) return;
+
+        const aliasTitle = iEl.getAttribute('title').trim();
+        const aliasText  = iEl.textContent.trim();
+
+        if (!aliasText) return; // Empty alias — nothing useful to show.
+
+        // ── Detect EXTRA sibling text after </i> inside the <bdi> ────────────
+        // Walk the text nodes that follow <i> within its parent <bdi> (or the
+        // commentSpan itself when there is no wrapping <bdi>).
+        const bdiEl = iEl.closest('bdi') || commentSpan;
+        let extraText = '';
+        let node = iEl.nextSibling;
+        while (node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                extraText += node.textContent;
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                extraText += node.textContent;
+            }
+            node = node.nextSibling;
+        }
+        // Strip leading comma+whitespace (", ") and surrounding whitespace.
+        extraText = extraText.replace(/^\s*,\s*/, '').trim();
+
+        // ── Mutate the h1 ────────────────────────────────────────────────────
+        if (extraText) {
+            // Replace the original comment span with a trimmed one that shows
+            // only (EXTRA) — the alias part is moved below.
+            const replacement = document.createElement('span');
+            replacement.className = 'comment';
+            replacement.textContent = '(' + extraText + ')';
+            commentSpan.replaceWith(replacement);
+        } else {
+            // No extra text: remove the whole span from the h1.
+            commentSpan.remove();
+        }
+
+        // ── Build the alias line ──────────────────────────────────────────────
+        const aliasLine = document.createElement('p');
+        aliasLine.id = 'mb-h1-alias-line';
+        // Modest italicised appearance close to the MB subheader style.
+        aliasLine.style.cssText = 'margin: 2px 0 4px 0; font-style: italic; color: #444;';
+
+        if (aliasTitle) {
+            const labelStrong = document.createElement('strong');
+            labelStrong.style.fontStyle = 'normal';
+            labelStrong.textContent = aliasTitle + ': ';
+            aliasLine.appendChild(labelStrong);
+        }
+        aliasLine.appendChild(document.createTextNode(aliasText));
+
+        // ── Insert before <p class="subheader"> or after the h1 ─────────────
+        const subheaderEl = document.querySelector('p.subheader');
+        if (subheaderEl && subheaderEl.parentNode) {
+            subheaderEl.parentNode.insertBefore(aliasLine, subheaderEl);
+        } else if (h1El.nextSibling) {
+            h1El.parentNode.insertBefore(aliasLine, h1El.nextSibling);
+        } else {
+            h1El.parentNode.appendChild(aliasLine);
+        }
+
+        Lib.debug('init', 'Relocated h1 comment span → #mb-h1-alias-line',
+            { aliasTitle, aliasText, extraText });
+    })();
+    // ── end H1 comment-span relocation ───────────────────────────────────────
 
     // Blur the native MusicBrainz search / header query input so that keyboard
     // shortcuts registered by this script are immediately reachable without the
