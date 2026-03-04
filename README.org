@@ -42623,7 +42623,6 @@ to
 
 * change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
 
-
 * DONE regexp mode
 
 - when in regexp mode, remove the alert window, just add red border and "Invalid regexp" info message
@@ -43046,11 +43045,25 @@ Now the scenario when a ghost sidebar toggle sometimes stays visible inside the 
   initially not toggled. from now on the ghost handle stays visible "above" the table on that fixed position. when
   scrolling horizontale back and forth, it looks like the table moves below the handle back and forth
   
+* DONE remove orange color shining through to the checkbox button texts
 
-* document test suite after userscript and library changes
-** library
-** userscript
+In the uploaded userscript,
 
+on the final rendered page all the h2 headers .e.g
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Album
+#+end_example
+
+specifically the text, in this case "Album" are renderd in an orange like color. This color is currently inherited by the checkbox button texts "Cc", Rx" and "Ex"
+but also, when the globla filter box is activated and some filter text has been added, by the border around the small little "x" and the "resize handle"
+
+#+begin_example
+<span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span>
+<span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid orange; border-right: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span>
+#+end_example
+
+please remove those inherited colors from the mentioned elements
 
 * DONE version of userscript and library in debug statement
 
@@ -43095,289 +43108,7 @@ I want to read it from the header area of the library
 // @version      3.13.2+2026-02-27
 #+end_example
 
-
-* how to make sure a userscript runs on pages - match versus include
-** match
-
-// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
-// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
-// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
-// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
-
-** Please rewrite the following
-
-#+begin_example
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-#+end_example
-
-to support the "*.//*." like '// @match        *://*.musicbrainz.org/'
-
-In userscript headers, besides "// @match" and "// @include" is there somethig like an "//@exclude" directive
-
-so that this type of URL would be included (different UUIDs should be possible)
-
-https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
-https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7?page=2&tport=8000
-
-but not
-
-﻿https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85
-https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85&tport=8000
-
-
-// @match        *://*.musicbrainz.org/recording/*
-// @exclude      *://*.musicbrainz.org/recording/merge*
-// @include      /^https?://musicbrainz\.org/recording/                 [a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
-
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
------------------------------------------------------------------------------------------------------------------------
-
-// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
-// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(?:\?.*)?$/
-
-// @include   /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-
------------------------------------------------------------------------------------------------------------------------
-
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F-]{36}(\?.*)?$/
-
-
-
-// Recording
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Artist
-// @include /^https:\/\/musicbrainz\.org\/artist\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Release
-// @include /^https:\/\/musicbrainz\.org\/release\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Release Group
-// @include /^https:\/\/musicbrainz\.org\/release-group\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Work
-// @include /^https:\/\/musicbrainz\.org\/work\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Label
-// @include /^https:\/\/musicbrainz\.org\/label\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Area
-// @include /^https:\/\/musicbrainz\.org\/area\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Place
-// @include /^https:\/\/musicbrainz\.org\/place\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Event
-// @include /^https:\/\/musicbrainz\.org\/event\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Series
-// @include /^https:\/\/musicbrainz\.org\/series\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-
-
-
-// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work|label|area|place|event|series)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
-
-
-// @run-at document-end
-// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
-
-
-** Please rewrite
-
-the block
-
-#+begin_example
-// @match        *://*.musicbrainz.org/artist/*
-// @match        *://*.musicbrainz.org/release-group/*
-// @match        *://*.musicbrainz.org/release/*
-// @match        *://*.musicbrainz.org/work/*
-// @match        *://*.musicbrainz.org/recording/* 
-// @match        *://*.musicbrainz.org/label/*
-// @match        *://*.musicbrainz.org/series/*
-// @match        *://*.musicbrainz.org/place/*
-// @match        *://*.musicbrainz.org/area/*
-// @match        *://*.musicbrainz.org/instrument/*
-// @match        *://*.musicbrainz.org/event/*
-// @match        *://*.musicbrainz.org/search?query=*
-#+end_example
-
-into a block to use the "include" directive, as a template, see the following for the '// @match        *://*.musicbrainz.org/recording/* '
- 
-#+begin_example
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-#+end_example
-
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/artist\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/release-group\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/release\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/work\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/label\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/series\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/place\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/area\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/instrument\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/event\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-#+end_example
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/search\?query=.*$/
-#+end_example
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?|search\?query=.*)$/
-#+end_example
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-#+end_example
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/search\?query=.*$/
-#+end_example
-
-** 2
-
-Please rewrite this block
-
-#+begin_example
-// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
-// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
-// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
-// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
-#+end_example
-
-into a condensed format as one line "inlcude", something like
-
-#+begin_example
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-#+end_example
-
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels)(?:\?.*)?$/
-#+end_example
-
-
-
-* DONE remove orange color shining through to the checkbox button texts
-
-In the uploaded userscript,
-
-on the final rendered page all the h2 headers .e.g
-
-#+begin_example
-<h2 class="mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Album
-#+end_example
-
-specifically the text, in this case "Album" are renderd in an orange like color. This color is currently inherited by the checkbox button texts "Cc", Rx" and "Ex"
-but also, when the globla filter box is activated and some filter text has been added, by the border around the small little "x" and the "resize handle"
-
-#+begin_example
-<span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span>
-<span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid orange; border-right: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span>
-#+end_example
-
-please remove those inherited colors from the mentioned elements
-
-
-* for https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
-
-add the event alias int the next line
-
-so
-
-#+begin_example
-1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA (Bruce Springsteen & The E Street Band at Athletic & Convocation Center) - <filters and buttons>
-~ Release group by Bruce Springsteen & The E Street Band
-#+end_example
-
-to
-
-#+begin_example
-1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA - <filters and buttons>
-Bruce Springsteen & The E Street Band at Athletic & Convocation Center
-~ Release group by Bruce Springsteen & The E Street Band
-#+end_example
-
-
-* unicode symbols
-** initial
-
-The "Ctrl-M" key combination in this userscript is used as a prefixkey prefix map. But it seems that some other userscript or the MusicBrainz pages themthelves
-have registered an event handler that fires in addition to ours but only when inside text input fields (like the global or column specific filter fields) 
-
-It popsup a unicodechars Menu
-
-#+begin_example
-<div class="mbunicodecharsMenuShow" id="mbunicodecharsMenu" style="top: 364.219px; left: 31px;">
-#+end_example
-
-Could this somehow be prevented, or better yet, remapped to a different key combination
-
-
-* unique
+* DONE unique and highlightning across tags
 ** initial
 
 In the uploaded userscript,
@@ -43717,7 +43448,7 @@ also create a changlog entry in the uploaded CHANGELOG file
 Please reimplement and show me the complete new implementation from the whole user script and all relevant other parts
 of code change (if any) and also create a changlog entry in the uploaded CHANGELOG file
 
-** TODO Highlighting for matches that span multiple tags
+** DONE Highlighting for matches that span multiple tags
 *** init
 
 In the uploaded userscript,
@@ -43733,7 +43464,7 @@ Please implement highlightning also for matches that span multiple tags.
 The highlightning for matches that span multiple tags works for the global filter and also for column level filters but
 not in the case of the sub-table level filters (although the filtering itself works)
 
-*** TODO Space before comma separated area/location details
+*** DONE Space before comma separated area/location details
 
 In the uploaded userscript,
 
@@ -43855,106 +43586,6 @@ CBS S 65480, S 65480
 So basically the blank " " BEFORE the ", " should be removed. Right now the filtering works, but NOT the
 highlightning. This would also be what a user would type for matching
 
-
-* "rowsInTable==1
-
-#+begin_example
-subFilterStatus.textContent = `✓ Filtered ${rowsInTable} rows [${colFilterInfo}]`;
-#+end_example
-
-to
-
-#+begin_example
-subFilterStatus.textContent = `✓ Filtered ${rowsInTable} row [${colFilterInfo}]`;
-#+end_example
-
-if "rowsInTable==1"
-
-* check code for "⇅▲▼" if it need's to be extended with the new unique column values symbol "📊" 
-
-#+begin_example
-11 matches for "⇅▲▼" in buffer: ShowAllEntityData.user.js
-   2028:                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
-   2521:            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
-   2876:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
-   2984:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
-   3054:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
-   8623:                ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹]/g, '').trim()
-   8945:                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊]/g, '').trim() : `Col ${colIdx}`;
-   9095:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
-   9113:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
-  11873:            th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊]/g, '').trim() : '';
-  11885:            const colName = th.textContent.replace(/[⇅▲▼📊]/g, '').trim();
-#+end_example
-
-* filenname change: currently "mb-${pageType}-${timestamp}.json.gz"
-
-for pageType with multiple action buttons like "Official RGs", "Non-official RGs" etc. append the button-text lowercased, "blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the filename
-
-#+begin_example
-const filename = `mb-${pageType}-${timestamp}.json.gz`;
-#+end_example
-
-for pageTypes which have a query string like e.g "?direction=1&link_type_id=835" append the "h3 header" lowercased, "blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the filename
-
-https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direction=1&link_type_id=835&page=1
-
-* Remove actions column from aliases pages
-
-#+begin_example
-@@ -140,6 +140,13 @@
-             description: "Remove the Performance column from the final rendered tables (comes from another userscript) "
-         },
- 
-+        sa_remove_actions: {
-+            label: "Remove Actions column",
-+            type: "checkbox",
-+            default: true,
-+            description: "Remove the Actions column from the final rendered tables (comes from Aliases pages) "
-+        },
-+
-         // ============================================================
-         // KEYBOARD SHORTCUTS SECTION
-         // ============================================================
-@@ -9054,7 +9061,8 @@
-             'Performance Attributes': 'sa_remove_perf',
-             'Rating': 'sa_remove_rating',
-             'Tagger': 'sa_remove_tagger',
--            'Release events': 'sa_remove_release_events'
-+            'Release events': 'sa_remove_release_events',
-+	    'Actions': 'sa_remove_actions'
-         };
- 
-         headers.forEach((th, idx) => {
-@@ -9589,7 +9597,8 @@
-                         'Performance Attributes': 'sa_remove_perf',
-                         'Rating': 'sa_remove_rating',
-                         'Tagger': 'sa_remove_tagger',
--                        'Release events': 'sa_remove_release_events'
-+                        'Release events': 'sa_remove_release_events',
-+			'Actions': 'sa_remove_actions'
-                     };
- 
-                     // Reset column indices for all active extractors before scanning each page.
-#+end_example
-
-#+begin_example
-        sa_remove_actions: {
-            label: "Remove Actions column",
-            type: "checkbox",
-            default: true,
-            description: "Remove the Actions column from the final rendered tables (comes from Aliases pages) "
-        },
-#+end_example
-
-* pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
-
-"Artists" - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
-"Recording artists" - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
-
-and remove the "(show less)" line
-
-
 * DONE (n) unique value 1
 ** initial
 
@@ -44013,3 +43644,422 @@ be different for each column in a table.
 #+end_example
 
 
+* document test suite after userscript and library changes
+** library
+** userscript
+
+
+* how to make sure a userscript runs on pages - match versus include
+** match
+
+// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
+
+** Please rewrite the following
+
+#+begin_example
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+#+end_example
+
+to support the "*.//*." like '// @match        *://*.musicbrainz.org/'
+
+In userscript headers, besides "// @match" and "// @include" is there somethig like an "//@exclude" directive
+
+so that this type of URL would be included (different UUIDs should be possible)
+
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7?page=2&tport=8000
+
+but not
+
+﻿https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85
+https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85&tport=8000
+
+
+// @match        *://*.musicbrainz.org/recording/*
+// @exclude      *://*.musicbrainz.org/recording/merge*
+// @include      /^https?://musicbrainz\.org/recording/                 [a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
+
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+-----------------------------------------------------------------------------------------------------------------------
+
+// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
+// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(?:\?.*)?$/
+
+// @include   /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+
+-----------------------------------------------------------------------------------------------------------------------
+
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F-]{36}(\?.*)?$/
+
+
+
+// Recording
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Artist
+// @include /^https:\/\/musicbrainz\.org\/artist\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Release
+// @include /^https:\/\/musicbrainz\.org\/release\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Release Group
+// @include /^https:\/\/musicbrainz\.org\/release-group\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Work
+// @include /^https:\/\/musicbrainz\.org\/work\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Label
+// @include /^https:\/\/musicbrainz\.org\/label\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Area
+// @include /^https:\/\/musicbrainz\.org\/area\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Place
+// @include /^https:\/\/musicbrainz\.org\/place\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Event
+// @include /^https:\/\/musicbrainz\.org\/event\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Series
+// @include /^https:\/\/musicbrainz\.org\/series\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+
+
+
+// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work|label|area|place|event|series)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
+
+
+// @run-at document-end
+// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
+
+
+** Please rewrite
+
+the block
+
+#+begin_example
+// @match        *://*.musicbrainz.org/artist/*
+// @match        *://*.musicbrainz.org/release-group/*
+// @match        *://*.musicbrainz.org/release/*
+// @match        *://*.musicbrainz.org/work/*
+// @match        *://*.musicbrainz.org/recording/* 
+// @match        *://*.musicbrainz.org/label/*
+// @match        *://*.musicbrainz.org/series/*
+// @match        *://*.musicbrainz.org/place/*
+// @match        *://*.musicbrainz.org/area/*
+// @match        *://*.musicbrainz.org/instrument/*
+// @match        *://*.musicbrainz.org/event/*
+// @match        *://*.musicbrainz.org/search?query=*
+#+end_example
+
+into a block to use the "include" directive, as a template, see the following for the '// @match        *://*.musicbrainz.org/recording/* '
+ 
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/artist\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/release-group\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/release\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/work\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/label\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/series\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/place\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/area\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/instrument\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/event\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/search\?query=.*$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?|search\?query=.*)$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/search\?query=.*$/
+#+end_example
+
+** 2
+
+Please rewrite this block
+
+#+begin_example
+// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
+#+end_example
+
+into a condensed format as one line "inlcude", something like
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels)(?:\?.*)?$/
+#+end_example
+
+
+
+* TODO for https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
+
+add the event alias int the next line
+
+so
+
+#+begin_example
+1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA (Bruce Springsteen & The E Street Band at Athletic & Convocation Center) - <filters and buttons>
+~ Release group by Bruce Springsteen & The E Street Band
+#+end_example
+
+to
+
+#+begin_example
+1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA - <filters and buttons>
+Bruce Springsteen & The E Street Band at Athletic & Convocation Center
+~ Release group by Bruce Springsteen & The E Street Band
+#+end_example
+
+* add synthet column for event alias
+
+* add unicode symbols back
+** initial
+
+The "Ctrl-M" key combination in this userscript is used as a prefixkey prefix map. But it seems that some other userscript or the MusicBrainz pages themthelves
+have registered an event handler that fires in addition to ours but only when inside text input fields (like the global or column specific filter fields) 
+
+It popsup a unicodechars Menu
+
+#+begin_example
+<div class="mbunicodecharsMenuShow" id="mbunicodecharsMenu" style="top: 364.219px; left: 31px;">
+#+end_example
+
+Could this somehow be prevented, or better yet, remapped to a different key combination
+
+
+* "rowsInTable==1
+
+#+begin_example
+subFilterStatus.textContent = `✓ Filtered ${rowsInTable} rows [${colFilterInfo}]`;
+#+end_example
+
+to
+
+#+begin_example
+subFilterStatus.textContent = `✓ Filtered ${rowsInTable} row [${colFilterInfo}]`;
+#+end_example
+
+if "rowsInTable==1"
+
+* check code for "⇅▲▼" if it need's to be extended with the new unique column values symbol "📊" 
+
+#+begin_example
+11 matches for "⇅▲▼" in buffer: ShowAllEntityData.user.js
+   2042:                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
+   2535:            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
+   2890:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
+   2998:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+   3068:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+   8661:                ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹]/g, '').trim()
+   8983:                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊]/g, '').trim() : `Col ${colIdx}`;
+   9133:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+   9151:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+  11971:            th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊]/g, '').trim() : '';
+  11983:            const colName = th.textContent.replace(/[⇅▲▼📊]/g, '').trim();
+#+end_example
+
+
+* filenname change: currently "mb-${pageType}-${timestamp}.json.gz"
+
+for pageType with multiple action buttons like "Official RGs", "Non-official RGs" etc. append the button-text
+lowercased, "blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the current filename
+
+#+begin_example
+const filename = `mb-${pageType}-${timestamp}.json.gz`;
+#+end_example
+
+for pageTypes which have a query string like e.g "?direction=1&link_type_id=835" append the "h3 header" lowercased,
+"blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the filename, e.g
+
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direction=1&link_type_id=835&page=1
+
+* Remove actions column from aliases pages
+
+#+begin_example
+@@ -140,6 +140,13 @@
+             description: "Remove the Performance column from the final rendered tables (comes from another userscript) "
+         },
+ 
++        sa_remove_actions: {
++            label: "Remove Actions column",
++            type: "checkbox",
++            default: true,
++            description: "Remove the Actions column from the final rendered tables (comes from Aliases pages) "
++        },
++
+         // ============================================================
+         // KEYBOARD SHORTCUTS SECTION
+         // ============================================================
+@@ -9054,7 +9061,8 @@
+             'Performance Attributes': 'sa_remove_perf',
+             'Rating': 'sa_remove_rating',
+             'Tagger': 'sa_remove_tagger',
+-            'Release events': 'sa_remove_release_events'
++            'Release events': 'sa_remove_release_events',
++	    'Actions': 'sa_remove_actions'
+         };
+ 
+         headers.forEach((th, idx) => {
+@@ -9589,7 +9597,8 @@
+                         'Performance Attributes': 'sa_remove_perf',
+                         'Rating': 'sa_remove_rating',
+                         'Tagger': 'sa_remove_tagger',
+-                        'Release events': 'sa_remove_release_events'
++                        'Release events': 'sa_remove_release_events',
++			'Actions': 'sa_remove_actions'
+                     };
+ 
+                     // Reset column indices for all active extractors before scanning each page.
+#+end_example
+
+#+begin_example
+        sa_remove_actions: {
+            label: "Remove Actions column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Actions column from the final rendered tables (comes from Aliases pages) "
+        },
+#+end_example
+
+* pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
+
+"Artists" - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+"Recording artists" - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+
+and remove the "(show less)" line
+
+* ALL
+
+In the uploaded userscript,
+
+1.) check the following code for "⇅▲▼" if it need's to be extended with the new unique column values symbol "📊" 
+
+#+begin_example
+11 matches for "⇅▲▼" in buffer: ShowAllEntityData.user.js
+   2042:                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
+   2535:            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
+   2890:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
+   2998:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+   3068:                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+   8661:                ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹]/g, '').trim()
+   8983:                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊]/g, '').trim() : `Col ${colIdx}`;
+   9133:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+   9151:            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+  11971:            th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊]/g, '').trim() : '';
+  11983:            const colName = th.textContent.replace(/[⇅▲▼📊]/g, '').trim();
+#+end_example
+
+2.) change the following output statement to produce "row" instead of "rows" when 'if "rowsInTable==1"'
+
+So
+
+#+begin_example
+subFilterStatus.textContent = `✓ Filtered ${rowsInTable} rows [${colFilterInfo}]`;
+#+end_example
+
+to
+
+#+begin_example
+subFilterStatus.textContent = `✓ Filtered ${rowsInTable} row [${colFilterInfo}]`;
+#+end_example
+
+3.) for pageTypes with multiple action buttons like "Official RGs", "Non-official RGs"
+etc. e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f, or
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+append the button-text lowercased, "blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the current filename
+
+#+begin_example
+const filename = `mb-${pageType}-${timestamp}.json.gz`;
+#+end_example
+
+for pageTypes which have a query string like e.g "?direction=1&link_type_id=835" append the "h3 header" lowercased,
+"blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the filename, e.g
+
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direction=1&link_type_id=835&page=1
+
+
+*                     filterStatusDisplay.textContent = `✓ ${singleModeLabel}: ${rowCount} rows in ${filterDuration}ms${filterInfo}`;
