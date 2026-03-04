@@ -44213,6 +44213,7 @@ https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91
 *** Fix placement of buttons to the end of (Southside Johnny & The Asbury Jukes at The Stone Pony, Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
 
 ** add the event alias int the next line - 1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA (Bruce Springsteen & The E Street Band at Athletic & Convocation Center)
+*** initial
 
 In the uploaded userscript,
 
@@ -44331,6 +44332,63 @@ Primary alias: Bruce Springsteen & The E Street Band at Athletic & Convocation C
 So in essence the whole '<span class="comment">' should be removed from the h1 header line and placed one line below the
 h1 header in right before the '<p class="subheader">' but the title value from '<i title="Primary alias">' + a ": "
 should be prepended to the actual value of the alias
+
+*** more complex
+
+Actually the whole structure could be more complex, instead of the last example
+
+#+begin_example
+<h1>
+  <a href="/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2">
+    <bdi>1981‐01‐26: Athletic &amp; Convocation Center, University of Notre Dame, South Bend, IN, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Bruce Springsteen &amp; The E Street Band at Athletic &amp; Convocation Center
+      </i>
+    </bdi>)
+  </span>
+</h1>
+#+end_example
+
+especially on pages of type https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91 there could be an
+optional string like '(2001-05-27)' after the closing '</a> ' in the h1 header line and also the '<i title="Primary alias">'
+could have an optional string ', Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show' e.g. after the closing '</i>'
+
+#+begin_example
+<h1>
+  <a href="/event/26cead1c-a5fa-4677-873a-312412c6dc91">
+    <bdi>2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a> (2001-05-27)
+  <!-- -->
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Southside Johnny &amp; The Asbury Jukes at The Stone Pony
+      </i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show
+    </bdi>)
+  </span>
+</h1>
+#+end_example
+
+so textual, instead of 
+
+#+begin_example
+2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA (2001-05-27) (Southside Johnny & The Asbury Jukes at The Stone Pony, Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
+~ Concert
+#+end_example
+
+it should look like
+
+#+begin_example
+2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA (2001-05-27) (Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
+Primary alias: Southside Johnny & The Asbury Jukes at The Stone Pony
+~ Concert
+#+end_example
+
+so basically the ', Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show' should still be rendered BETWEEN enclosing brackets "(" and ")" but without the leading ", " IN the h1 header line
+and only the "Primary alias:" stuff should be relocated as before
 
 
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1
