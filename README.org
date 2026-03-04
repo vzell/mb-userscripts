@@ -44406,6 +44406,7 @@ and make a final changelog entry in "ShowAllEntityData_CHANGELOG.json"
 
 
 * add disambiguation
+** search: Rx: 'convocation|live & alive' on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
 #+begin_example
         {
@@ -44444,3 +44445,4 @@ and make a final changelog entry in "ShowAllEntityData_CHANGELOG.json"
             tableMode: 'multi' // native tables, h3 headers
         },
 #+end_example
+
