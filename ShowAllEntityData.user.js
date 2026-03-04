@@ -9040,7 +9040,7 @@
                     filterStatusDisplay.textContent = _singleColRxErrors[0];
                     filterStatusDisplay.style.color = filterBorderError();
                 } else {
-                    filterStatusDisplay.textContent = `✓ ${singleModeLabel}: ${rowCount} ${rowsInTable === 1 ? 'row' : 'rows'} in ${filterDuration}ms${filterInfo}`;
+                    filterStatusDisplay.textContent = `✓ ${singleModeLabel}: ${rowCount} ${rowCount === 1 ? 'row' : 'rows'} in ${filterDuration}ms${filterInfo}`;
                     filterStatusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
                 }
             }
