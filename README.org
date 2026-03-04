@@ -44218,3 +44218,19 @@ pressing the "x" icon DOES as it should. Pressing the "Escape"-key in an empyt f
 filter input and when unfocused, pressing "Escape" again, should the unconditionally close the whole dialog as the "CLOSE" link, see bullet point 1.)
 
 please fix
+
+** another bug
+
+OK, now the dialog closing works again, but the changelog dialog is NOT resizable anymore. Please fix
+
+There is also something wrong with the display of the changelog itself. Please check the uploaded file
+"ShowAllEntityData_CHANGELOG.json".
+
+For example the following entry, looks like it's hyperlinked, after the text "e.g. Honolulu\n,\n'" because the text
+turns blue and the curser changes it's shape whe hovering over it:
+
+#+begin_example
+<ul style="margin:0;padding:0 0 0 16px;list-style:disc;"><li style="margin:2px 0;padding-left:0px;font-size:0.90em;color:#1a1a2e;line-height:1.55;">normalizeExtractedText — Step 3: remove spurious space before comma separators between list items. MusicBrainz area, label, and catalog-number columns render multiple values separated by a bare comma+newline (e.g. '<bdi>Honolulu\n</bdi>,\n<a …="">') which, after the existing join-and-collapse pipeline, produced an artificial space before the comma: 'Honolulu , Hawaii'. This caused both column-filter matching and highlight-span placement to diverge from what the browser renders ('Honolulu, Hawaii'), so a user typing 'Honolulu, Hawaii' would get no match and no highlighting even though the row was visually correct. Fixed by appending '.replace(/ ,/g, ",")' as a new Step 3 in normalizeExtractedText, applied after whitespace collapse (Step 1) and bracket-interior-space removal (Step 2). The fix is safe because no MusicBrainz data format uses an intentional space before a comma. All four affected column types confirmed: area lists ('Honolulu, Hawaii, United States'), comment-disambiguated items ('Ithaca (city), New York'), multi-label columns ('Columbia (…), Sony BMG Music Entertainment (…)'), and catalog-number columns ('CBS S 65480, S 65480'). The stale orphaned JSDoc stub ('Helper to get visible text only…') that preceded the real block was also removed.</a></li></ul>
+#+end_example
+
+Even more important, it doesn't even display the whole changelog file anymore, it only displays from "9.99.28 – 2026-03-04" up to "9.99.00 – 2026-03-02"
