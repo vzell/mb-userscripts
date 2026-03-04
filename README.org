@@ -43686,6 +43686,155 @@ In the uploaded userscript,
 #+end_example
 
 
+* DONE filenname change: currently "mb-${pageType}-${timestamp}.json.gz"
+** DONE Validation: Check if the file matches the current page type
+
+In the uploaded userscript,
+
+in the function
+
+#+begin_example
+async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false, isExclude = false) {
+#+end_example
+
+the following code block does not work any more after the rewrite of the "Load from Disk" functionality
+
+#+begin_example
+                // Validation: Check if the file matches the current page type
+                if (data.pageType !== pageType) {
+                    const loadAnywayConfirmed = await Lib.showCustomConfirm(
+                        `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
+                        '⚠️ Page Type Mismatch',
+                        loadFromDiskBtn
+                    );
+                    if (!loadAnywayConfirmed) {
+                        fileInput.value = '';
+                        return;
+                    }
+                }
+#+end_example
+
+** enhancement
+
+In the uploaded userscript,
+
+Two more enhancements should be implemented
+
+1.) - the current generated filename for saving table data to disk in the function 'saveTableDataToDisk()'
+
+#+begin_example
+const filename = `mb-${pageType}-${timestamp}.json.gz`;
+#+end_example
+
+should rewritten to use the following more informal format
+
+#+begin_example
+const filename = `MB-${pageType}-[<pageType details>-]<exportedNumberOfRows>-${timestamp}.json.gz`;
+#+end_example
+
+where
+
+#+begin_example
+<exportedNumberOfRows> - represents the number of rows to be serialized
+<pageType details> - represents an OPTIONAL detail for the page type (see more info in the following description how to deduce that)
+#+end_example
+
+a.) For multi-button pages (e.g. "Official RGs" https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f / "Non-official RGs" https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases)
+
+the '<pageType details>' should be the clicked button label (lowercased, spaces → underscores, all non-alphanumeric characters stripped) so saved files are immediately distinguishable,  
+
+b.) for pageTypes with mutiple tables which additionally have a button to show ALL rows
+
+#+begin_example
+<button class="mb-show-all-subtable-btn" type="button">Show all <n></button>
+#+end_example
+
+in a sub-table (if they initially exceed the maximum display limit of 100 rows) e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships,
+
+when then clicking that button, on the resulting rendered pages and when finally pressing the "Save to Disk" button the '<pageType details>' should be deduced from the h2 header, e.g 
+
+#+begin_example
+<h2>“holds phonographic copyright (℗) for” relationships</h2>
+#+end_example
+
+by extracting the text between the “” (lowercased, spaces → underscores, all non-alphanumeric characters stripped) , e.g.
+
+#+begin_example
+holds_phonographic_copyright_for
+#+end_example
+
+Such pages can be distinguished by the URLs which have a query string like e.g "?direction=1&link_type_id=869"
+
+2.) - In the function
+
+#+begin_example
+function showDownloadNotification(message, statusText = null)
+#+end_example
+
+the fontsize of the "message" should be made configurable in the variable "const configSchema" with the current values as default
+
+** collapse and remove
+
+Almost perfect, one last glitch, 
+in the function 'saveTableDataToDisk()'
+remove the "-filtered" from the pageType for URLs which have a query string when generating the filename and collapse
+multiple occurences of "_" to just one (e.g. 'holds_phonographic_copyright__for' ==> 'holds_phonographic_copyright_for'
+
+** claude
+
+#+begin_example
+modified   ShowAllEntityData.user.js
+@@ -12482,9 +12482,32 @@
+             const blob = new Blob([compressedData], { type: 'application/gzip' });
+             const url = URL.createObjectURL(blob);
+ 
+-            // Generate filename based on page type and timestamp
++            // Generate filename based on page type and timestamp.
++            // For multi-button pages (e.g. "Official RGs" / "Non-official RGs") append the
++            // clicked button label as a slug so saved files are immediately distinguishable.
++            // For query-string pages (link_type_id=…) append the first visible h3 header
++            // text as a slug for the same reason.
+             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+-            const filename = `mb-${pageType}-${timestamp}.json.gz`;
++            let _filenameSuffix = '';
++            if (activeDefinition.buttons && activeDefinition.buttons.length > 1 && activeDefinition.label) {
++                // Multi-button page: use the clicked button's label (lowercased, spaces → underscores,
++                // all non-alphanumeric characters stripped).
++                _filenameSuffix = '-' + activeDefinition.label
++                    .toLowerCase()
++                    .replace(/\s+/g, '_')
++                    .replace(/[^a-z0-9_]/g, '');
++            } else if (isFilteredRelationshipPage) {
++                // Query-string (link_type_id) page: derive slug from the first h3 header text
++                // rendered by MusicBrainz (e.g. "performed Guitar on" → "performed_guitar_on").
++                const firstH3 = document.querySelector('#content h3');
++                if (firstH3) {
++                    _filenameSuffix = '-' + firstH3.textContent.trim()
++                        .toLowerCase()
++                        .replace(/\s+/g, '_')
++                        .replace(/[^a-z0-9_]/g, '');
++                }
++            }
++            const filename = `mb-${pageType}${_filenameSuffix}-${timestamp}.json.gz`;
+ 
+             triggerStandardDownload(url, filename, dataToSave.rowCount);
+             infoDisplay.textContent = `✓ Serialized ${dataToSave.rowCount.toLocaleString()} rows to ${filename}`;
+modified   ShowAllEntityData_CHANGELOG.json
+@@ -9,12 +9,6 @@
+                     "Header-text cleaning — all `replace(/[⇅▲▼]/g, '')` call sites now also strip the `📊` unique-values button emoji from column header text before comparison or export. Affected sites: CSV export header scan (line ~2890), JSON export header scan (~2998), Org-Mode export header scan (~3068), synthetic-column existence check (~9133), MB-Name column existence check (~9151), single-table sort column-name derivation (~2535), multi-table sort column-name derivation (~2042, which also strips superscript digits), and the sort-state persistence column-name read (~8661, unicode-range form). The two call sites that already included `📊` (getCleanColName at ~8983 and the stats-panel path at ~11971) were correct and left unchanged.",
+                     "Sub-table filter status — singular 'row' when exactly one row matches: `✓ Filtered 1 rows […]` now correctly reads `✓ Filtered 1 row […]`. Implemented via a ternary `${rowsInTable === 1 ? 'row' : 'rows'}` at the single affected call site (~8986)."
+                 ]
+-            },
+-            {
+-                "label": "✨ Enhancements",
+-                "items": [
+-                    "Save-to-Disk filename disambiguation: the generated filename now includes an extra slug between the `mb-${pageType}` prefix and the timestamp so that files saved from different button contexts or query-string variants of the same page type are immediately distinguishable without opening them. Two cases are handled: (1) Multi-button pages (e.g. artist-releases with 'Official RGs', 'Non-official RGs', 'Official VA RGs', 'Non-official VA RGs' buttons): when `activeDefinition.buttons.length > 1` and `activeDefinition.label` is set, the clicked button's label is lowercased, spaces are converted to underscores, and all non-alphanumeric characters are stripped to form the suffix (e.g. `mb-artist-releases-official_rgs-2026-03-04T…json.gz`). (2) Query-string pages filtered by `link_type_id` (e.g. `/area/…/releases?direction=1&link_type_id=835`): the text content of the first `#content h3` element is lowercased and slug-converted to form the suffix (e.g. `mb-area-releases-recorded_at-2026-03-04T…json.gz`). Pages that match neither condition continue to use the original `mb-${pageType}-${timestamp}.json.gz` format."
+-                ]
+             }
+         ]
+     },
+#+end_example
+
 
 * document test suite after userscript and library changes
 ** library
@@ -43934,156 +44083,6 @@ It popsup a unicodechars Menu
 Could this somehow be prevented, or better yet, remapped to a different key combination
 
 
-* TODO filenname change: currently "mb-${pageType}-${timestamp}.json.gz"
-** DONE Validation: Check if the file matches the current page type
-
-In the uploaded userscript,
-
-in the function
-
-#+begin_example
-async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false, isExclude = false) {
-#+end_example
-
-the following code block does not work any more after the rewrite of the "Load from Disk" functionality
-
-#+begin_example
-                // Validation: Check if the file matches the current page type
-                if (data.pageType !== pageType) {
-                    const loadAnywayConfirmed = await Lib.showCustomConfirm(
-                        `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
-                        '⚠️ Page Type Mismatch',
-                        loadFromDiskBtn
-                    );
-                    if (!loadAnywayConfirmed) {
-                        fileInput.value = '';
-                        return;
-                    }
-                }
-#+end_example
-
-** enhancement
-
-In the uploaded userscript,
-
-Two more enhancements should be implemented
-
-1.) - the current generated filename for saving table data to disk in the function 'saveTableDataToDisk()'
-
-#+begin_example
-const filename = `mb-${pageType}-${timestamp}.json.gz`;
-#+end_example
-
-should rewritten to use the following more informal format
-
-#+begin_example
-const filename = `MB-${pageType}-[<pageType details>-]<exportedNumberOfRows>-${timestamp}.json.gz`;
-#+end_example
-
-where
-
-#+begin_example
-<exportedNumberOfRows> - represents the number of rows to be serialized
-<pageType details> - represents an OPTIONAL detail for the page type (see more info in the following description how to deduce that)
-#+end_example
-
-a.) For multi-button pages (e.g. "Official RGs" https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f / "Non-official RGs" https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases)
-
-the '<pageType details>' should be the clicked button label (lowercased, spaces → underscores, all non-alphanumeric characters stripped) so saved files are immediately distinguishable,  
-
-b.) for pageTypes with mutiple tables which additionally have a button to show ALL rows
-
-#+begin_example
-<button class="mb-show-all-subtable-btn" type="button">Show all <n></button>
-#+end_example
-
-in a sub-table (if they initially exceed the maximum display limit of 100 rows) e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships,
-
-when then clicking that button, on the resulting rendered pages and when finally pressing the "Save to Disk" button the '<pageType details>' should be deduced from the h2 header, e.g 
-
-#+begin_example
-<h2>“holds phonographic copyright (℗) for” relationships</h2>
-#+end_example
-
-by extracting the text between the “” (lowercased, spaces → underscores, all non-alphanumeric characters stripped) , e.g.
-
-#+begin_example
-holds_phonographic_copyright_for
-#+end_example
-
-Such pages can be distinguished by the URLs which have a query string like e.g "?direction=1&link_type_id=869"
-
-2.) - In the function
-
-#+begin_example
-function showDownloadNotification(message, statusText = null)
-#+end_example
-
-the fontsize of the "message" should be made configurable in the variable "const configSchema" with the current values as default
-
-** collapse and remove
-
-Almost perfect, one last glitch, 
-in the function 'saveTableDataToDisk()'
-remove the "-filtered" from the pageType for URLs which have a query string when generating the filename and collapse
-multiple occurences of "_" to just one (e.g. 'holds_phonographic_copyright__for' ==> 'holds_phonographic_copyright_for'
-
-** claude
-
-#+begin_example
-modified   ShowAllEntityData.user.js
-@@ -12482,9 +12482,32 @@
-             const blob = new Blob([compressedData], { type: 'application/gzip' });
-             const url = URL.createObjectURL(blob);
- 
--            // Generate filename based on page type and timestamp
-+            // Generate filename based on page type and timestamp.
-+            // For multi-button pages (e.g. "Official RGs" / "Non-official RGs") append the
-+            // clicked button label as a slug so saved files are immediately distinguishable.
-+            // For query-string pages (link_type_id=…) append the first visible h3 header
-+            // text as a slug for the same reason.
-             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
--            const filename = `mb-${pageType}-${timestamp}.json.gz`;
-+            let _filenameSuffix = '';
-+            if (activeDefinition.buttons && activeDefinition.buttons.length > 1 && activeDefinition.label) {
-+                // Multi-button page: use the clicked button's label (lowercased, spaces → underscores,
-+                // all non-alphanumeric characters stripped).
-+                _filenameSuffix = '-' + activeDefinition.label
-+                    .toLowerCase()
-+                    .replace(/\s+/g, '_')
-+                    .replace(/[^a-z0-9_]/g, '');
-+            } else if (isFilteredRelationshipPage) {
-+                // Query-string (link_type_id) page: derive slug from the first h3 header text
-+                // rendered by MusicBrainz (e.g. "performed Guitar on" → "performed_guitar_on").
-+                const firstH3 = document.querySelector('#content h3');
-+                if (firstH3) {
-+                    _filenameSuffix = '-' + firstH3.textContent.trim()
-+                        .toLowerCase()
-+                        .replace(/\s+/g, '_')
-+                        .replace(/[^a-z0-9_]/g, '');
-+                }
-+            }
-+            const filename = `mb-${pageType}${_filenameSuffix}-${timestamp}.json.gz`;
- 
-             triggerStandardDownload(url, filename, dataToSave.rowCount);
-             infoDisplay.textContent = `✓ Serialized ${dataToSave.rowCount.toLocaleString()} rows to ${filename}`;
-modified   ShowAllEntityData_CHANGELOG.json
-@@ -9,12 +9,6 @@
-                     "Header-text cleaning — all `replace(/[⇅▲▼]/g, '')` call sites now also strip the `📊` unique-values button emoji from column header text before comparison or export. Affected sites: CSV export header scan (line ~2890), JSON export header scan (~2998), Org-Mode export header scan (~3068), synthetic-column existence check (~9133), MB-Name column existence check (~9151), single-table sort column-name derivation (~2535), multi-table sort column-name derivation (~2042, which also strips superscript digits), and the sort-state persistence column-name read (~8661, unicode-range form). The two call sites that already included `📊` (getCleanColName at ~8983 and the stats-panel path at ~11971) were correct and left unchanged.",
-                     "Sub-table filter status — singular 'row' when exactly one row matches: `✓ Filtered 1 rows […]` now correctly reads `✓ Filtered 1 row […]`. Implemented via a ternary `${rowsInTable === 1 ? 'row' : 'rows'}` at the single affected call site (~8986)."
-                 ]
--            },
--            {
--                "label": "✨ Enhancements",
--                "items": [
--                    "Save-to-Disk filename disambiguation: the generated filename now includes an extra slug between the `mb-${pageType}` prefix and the timestamp so that files saved from different button contexts or query-string variants of the same page type are immediately distinguishable without opening them. Two cases are handled: (1) Multi-button pages (e.g. artist-releases with 'Official RGs', 'Non-official RGs', 'Official VA RGs', 'Non-official VA RGs' buttons): when `activeDefinition.buttons.length > 1` and `activeDefinition.label` is set, the clicked button's label is lowercased, spaces are converted to underscores, and all non-alphanumeric characters are stripped to form the suffix (e.g. `mb-artist-releases-official_rgs-2026-03-04T…json.gz`). (2) Query-string pages filtered by `link_type_id` (e.g. `/area/…/releases?direction=1&link_type_id=835`): the text content of the first `#content h3` element is lowercased and slug-converted to form the suffix (e.g. `mb-area-releases-recorded_at-2026-03-04T…json.gz`). Pages that match neither condition continue to use the original `mb-${pageType}-${timestamp}.json.gz` format."
--                ]
-             }
-         ]
-     },
-#+end_example
-
-
 * Remove actions column from aliases pages
 
 #+begin_example
@@ -44175,4 +44174,7 @@ to
 Bruce Springsteen & The E Street Band at Athletic & Convocation Center
 ~ Release group by Bruce Springsteen & The E Street Band
 #+end_example
+
+
+* TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1
 

@@ -680,7 +680,7 @@
         sa_ui_download_notification_font_size: {
             label: 'Download notification message font size',
             type: 'text',
-            default: '1em',
+            default: '1.2em',
             description: 'Font size of the message text inside the "Save to Disk" / export download notification popup (e.g. 0.9em, 14px, 1rem)'
         }
 
@@ -3164,8 +3164,8 @@
         const msg = document.createElement('div');
         msg.textContent = message;
         msg.style.marginBottom = '15px';
-        // Font size is configurable via sa_ui_download_notification_font_size (default: 1em)
-        msg.style.fontSize = (Lib.settings.sa_ui_download_notification_font_size || '1em');
+        // Font size is configurable via sa_ui_download_notification_font_size
+        msg.style.fontSize = (Lib.settings.sa_ui_download_notification_font_size || '1.2em');
 
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Close';
