@@ -43954,7 +43954,34 @@ Could this somehow be prevented, or better yet, remapped to a different key comb
 
 
 * filenname change: currently "mb-${pageType}-${timestamp}.json.gz"
-** initial
+** Validation: Check if the file matches the current page type
+
+In the uploaded userscript,
+
+in the function
+
+#+begin_example
+async function loadTableDataFromDisk(file, filterQueryRaw = '', isCaseSensitive = false, isRegExp = false, isExclude = false) {
+#+end_example
+
+the following code block does not work any more after the rewrite of the "Load from Disk" functionality
+
+#+begin_example
+                // Validation: Check if the file matches the current page type
+                if (data.pageType !== pageType) {
+                    const loadAnywayConfirmed = await Lib.showCustomConfirm(
+                        `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
+                        '⚠️ Page Type Mismatch',
+                        loadFromDiskBtn
+                    );
+                    if (!loadAnywayConfirmed) {
+                        fileInput.value = '';
+                        return;
+                    }
+                }
+#+end_example
+
+** enhancement
 
 In the uploaded userscript,
 
@@ -44027,7 +44054,6 @@ modified   ShowAllEntityData_CHANGELOG.json
          ]
      },
 #+end_example
-
 
 * Remove actions column from aliases pages
 
