@@ -44217,7 +44217,9 @@ https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91
 
 In the uploaded userscript,
 
-in pages of type https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2
+in pages of type https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2 - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0&page=12
+
+https://musicbrainz.org/release-group/a17893f0-2dfa-4a2b-a004-02ba6a9f85c3 - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0&page=9
 
 there is the possibility that in the h1 header there is an additional '<span class="comment">' container
 
@@ -44402,3 +44404,43 @@ and make a final changelog entry in "ShowAllEntityData_CHANGELOG.json"
 
 * TODO When auto-resized and using unique values in column outside the visible page (so using the scrollbar) and then clickin a value, the page should NOT jump back to the left.. the focus should stay
 
+
+* add disambiguation
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+==>
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
