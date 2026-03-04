@@ -1,18 +1,6 @@
 [
     {
-        "version": "9.99.27",
-        "date": "2026-03-04",
-        "sections": [
-            {
-                "label": "🐛 Bug Fixes",
-                "items": [
-                    "saveTableDataToDisk filename — two glitches fixed: (1) `-filtered` suffix: the internal pageType for `link_type_id` pages (e.g. `artist-relationships-filtered`) included the `-filtered` marker in the filename even though the detail slug already identifies the relationship. Fixed by deriving `pageTypeSlug = pageType.replace(/-filtered$/, '')` and using that in the filename instead of the raw `pageType`. (2) Double underscores in detail slug: special characters such as `℗` (and their surrounding spaces) are converted to underscores then stripped, leaving consecutive underscores like `holds_phonographic_copyright__for`. Fixed by appending `.replace(/_+/g, '_')` as a final step in the `toSlug` helper. Example before: `MB-artist-relationships-filtered-holds_phonographic_copyright__for-87-….json.gz`. Example after: `MB-artist-relationships-holds_phonographic_copyright_for-87-….json.gz`."
-                ]
-            }
-        ]
-    },
-    {
-        "version": "9.99.27",
+        "version": "9.99.26",
         "date": "2026-03-04",
         "sections": [
             {
@@ -20,18 +8,6 @@
                 "items": [
                     "saveTableDataToDisk — informative filename format: the generated filename now follows `MB-<pageType>[-<detail>-]<rowCount>-<timestamp>.json.gz` instead of the bare `mb-<pageType>-<timestamp>.json.gz`. The optional `<detail>` slug is derived from the page context via a shared `toSlug()` helper (lowercase → whitespace to underscores → strip non-alphanumeric): (a) Multi-button pages (e.g. artist-releases with multiple fetch buttons): the label of the last clicked fetch button is slugified — tracked by the new module-level `lastClickedButtonLabel` variable which is written in `startFetchingProcess` alongside the `activeDefinition` update. (b) Filtered-relationship pages whose URL contains `?…link_type_id=…`: the quoted text inside the first `#content h2` (matching straight or curly quotes) is slugified — e.g. `\"holds phonographic copyright (℗) for\" relationships` → `holds_phonographic_copyright_for`. (c) All other pages: no detail segment. Examples: `MB-artist-releases-official_rgs-342-2026-03-04T12-00-00.json.gz`, `MB-artist-relationships-holds_phonographic_copyright_for-87-2026-03-04T12-00-00.json.gz`, `MB-artist-recordings-1204-2026-03-04T12-00-00.json.gz`.",
                     "showDownloadNotification — configurable message font size: a new `sa_ui_download_notification_font_size` setting (type `text`, default `1em`) has been added to the `configSchema` UI APPEARANCE section. The value is applied as `msg.style.fontSize` on the message `<div>` inside the download notification popup, making it independently adjustable from the rest of the popup UI (e.g. `0.85em`, `14px`, `1.1rem`)."
-                ]
-            }
-        ]
-    },
-    {
-        "version": "9.99.26",
-        "date": "2026-03-04",
-        "sections": [
-            {
-                "label": "🐛 Bug Fixes",
-                "items": [
-                    "Page-type mismatch warning broken after 'Load from Disk' dialog rewrite — the pageType mismatch check in `loadTableDataFromDisk` referenced `loadFromDiskBtn` (wrong anchor for `Lib.showCustomConfirm`) and `fileInput` (the outer hidden input, not the dialog's `dialogFileInput`), so cancelling the confirm had no effect: the dialog stayed open with `rawData`/`rawFile` already set and the user could still proceed to render. Fixed by moving the check into `showLoadFilterDialog`'s Phase 1 handler (`dialogFileInput.onchange`), immediately after the required-fields validation. On cancel the handler now resets `rawData`/`rawFile` to null, restores the Load button, displays a cancellation message in `loadStatus`, and returns without revealing Phase 2. The dead check block in `loadTableDataFromDisk` was replaced with a comment noting the moved location."
                 ]
             }
         ]

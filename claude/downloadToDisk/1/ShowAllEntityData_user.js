@@ -7361,29 +7361,6 @@
                     throw new Error('Invalid data file: missing required fields (version / pageType / timestamp)');
                 }
 
-                // Validation: Check if the file matches the current page type.
-                // Handled here (Phase 1) so the dialog can react properly:
-                // on cancel, rawData/rawFile stay unset and Phase 2 is not revealed.
-                if (data.pageType !== pageType) {
-                    const loadAnywayConfirmed = await Lib.showCustomConfirm(
-                        `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
-                        '\u26A0\uFE0F Page Type Mismatch',
-                        triggerButton || loadBtn
-                    );
-                    if (!loadAnywayConfirmed) {
-                        rawData = null;
-                        rawFile = null;
-                        loadBtn.innerHTML  = '<span><span style="text-decoration:underline">L</span>oad Data</span>';
-                        loadBtn.disabled   = false;
-                        loadBtn.style.opacity = '';
-                        loadStatus.innerHTML   = '\u{1F6AB} Load cancelled \u2014 page type mismatch.';
-                        loadStatus.style.color = '#c62828';
-                        loadStatus.style.display = 'block';
-                        Lib.debug('cache', `Load cancelled by user: file pageType "${data.pageType}" \u2260 current pageType "${pageType}"`);
-                        return;
-                    }
-                }
-
                 rawData = data;
                 rawFile = file;
 
@@ -12685,10 +12662,20 @@
 
                 const data = JSON.parse(jsonString);
 
+                // Validation: Check if the file matches the current page type
+                if (data.pageType !== pageType) {
+                    const loadAnywayConfirmed = await Lib.showCustomConfirm(
+                        `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
+                        '⚠️ Page Type Mismatch',
+                        loadFromDiskBtn
+                    );
+                    if (!loadAnywayConfirmed) {
+                        fileInput.value = '';
+                        return;
+                    }
+                }
+
                 // Validate data structure
-                // NOTE: pageType mismatch check was moved to showLoadFilterDialog Phase 1
-                // (dialogFileInput.onchange), where it has access to the correct dialog
-                // elements and can properly abort before rawData/rawFile are set.
                 if (!data.version || !data.pageType || !data.timestamp) {
                     throw new Error('Invalid data file: missing required fields');
                 }

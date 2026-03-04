@@ -43917,26 +43917,7 @@ into a condensed format as one line "inlcude", something like
 
 
 
-* TODO for https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
-
-add the event alias int the next line
-
-so
-
-#+begin_example
-1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA (Bruce Springsteen & The E Street Band at Athletic & Convocation Center) - <filters and buttons>
-~ Release group by Bruce Springsteen & The E Street Band
-#+end_example
-
-to
-
-#+begin_example
-1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA - <filters and buttons>
-Bruce Springsteen & The E Street Band at Athletic & Convocation Center
-~ Release group by Bruce Springsteen & The E Street Band
-#+end_example
-
-* add synthet column for event alias
+* add synthetic column for event alias
 
 * add unicode symbols back
 ** initial
@@ -43953,8 +43934,8 @@ It popsup a unicodechars Menu
 Could this somehow be prevented, or better yet, remapped to a different key combination
 
 
-* filenname change: currently "mb-${pageType}-${timestamp}.json.gz"
-** Validation: Check if the file matches the current page type
+* TODO filenname change: currently "mb-${pageType}-${timestamp}.json.gz"
+** DONE Validation: Check if the file matches the current page type
 
 In the uploaded userscript,
 
@@ -43985,20 +43966,67 @@ the following code block does not work any more after the rewrite of the "Load f
 
 In the uploaded userscript,
 
-for pageTypes with multiple action buttons like "Official RGs", "Non-official RGs"
-etc. e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f, or
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+Two more enhancements should be implemented
 
-append the button-text lowercased, "blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the current filename
+1.) - the current generated filename for saving table data to disk in the function 'saveTableDataToDisk()'
 
 #+begin_example
 const filename = `mb-${pageType}-${timestamp}.json.gz`;
 #+end_example
 
-for pageTypes which have a query string like e.g "?direction=1&link_type_id=835" append the "h3 header" lowercased,
-"blank to '_'-underscore"-conversion after the "mb-${pageType}" part of the filename, e.g
+should rewritten to use the following more informal format
 
-https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases?direction=1&link_type_id=835&page=1
+#+begin_example
+const filename = `MB-${pageType}-[<pageType details>-]<exportedNumberOfRows>-${timestamp}.json.gz`;
+#+end_example
+
+where
+
+#+begin_example
+<exportedNumberOfRows> - represents the number of rows to be serialized
+<pageType details> - represents an OPTIONAL detail for the page type (see more info in the following description how to deduce that)
+#+end_example
+
+a.) For multi-button pages (e.g. "Official RGs" https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f / "Non-official RGs" https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases)
+
+the '<pageType details>' should be the clicked button label (lowercased, spaces → underscores, all non-alphanumeric characters stripped) so saved files are immediately distinguishable,  
+
+b.) for pageTypes with mutiple tables which additionally have a button to show ALL rows
+
+#+begin_example
+<button class="mb-show-all-subtable-btn" type="button">Show all <n></button>
+#+end_example
+
+in a sub-table (if they initially exceed the maximum display limit of 100 rows) e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships,
+
+when then clicking that button, on the resulting rendered pages and when finally pressing the "Save to Disk" button the '<pageType details>' should be deduced from the h2 header, e.g 
+
+#+begin_example
+<h2>“holds phonographic copyright (℗) for” relationships</h2>
+#+end_example
+
+by extracting the text between the “” (lowercased, spaces → underscores, all non-alphanumeric characters stripped) , e.g.
+
+#+begin_example
+holds_phonographic_copyright_for
+#+end_example
+
+Such pages can be distinguished by the URLs which have a query string like e.g "?direction=1&link_type_id=869"
+
+2.) - In the function
+
+#+begin_example
+function showDownloadNotification(message, statusText = null)
+#+end_example
+
+the fontsize of the "message" should be made configurable in the variable "const configSchema" with the current values as default
+
+** collapse and remove
+
+Almost perfect, one last glitch, 
+in the function 'saveTableDataToDisk()'
+remove the "-filtered" from the pageType for URLs which have a query string when generating the filename and collapse
+multiple occurences of "_" to just one (e.g. 'holds_phonographic_copyright__for' ==> 'holds_phonographic_copyright_for'
 
 ** claude
 
@@ -44055,6 +44083,7 @@ modified   ShowAllEntityData_CHANGELOG.json
      },
 #+end_example
 
+
 * Remove actions column from aliases pages
 
 #+begin_example
@@ -44110,4 +44139,40 @@ modified   ShowAllEntityData_CHANGELOG.json
 
 and remove the "(show less)" line
 
+
+* TODO font size in dialogs configurable
+
+In the function
+
+#+begin_example
+function showDownloadNotification(message, statusText = null)
+#+end_example
+
+the fontsize of the "message" should be made configurable in the variable "const configSchema" with the current values as default
+
+** Saving of JSON table data ....
+
+
+* TODO Event-Alias handling
+
+https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91
+
+* TODO for https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
+
+add the event alias int the next line
+
+so
+
+#+begin_example
+1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA (Bruce Springsteen & The E Street Band at Athletic & Convocation Center) - <filters and buttons>
+~ Release group by Bruce Springsteen & The E Street Band
+#+end_example
+
+to
+
+#+begin_example
+1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA - <filters and buttons>
+Bruce Springsteen & The E Street Band at Athletic & Convocation Center
+~ Release group by Bruce Springsteen & The E Street Band
+#+end_example
 

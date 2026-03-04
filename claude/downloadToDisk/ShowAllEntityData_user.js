@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.27+2026-03-04
+// @version      9.99.26+2026-03-04
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -7361,29 +7361,6 @@
                     throw new Error('Invalid data file: missing required fields (version / pageType / timestamp)');
                 }
 
-                // Validation: Check if the file matches the current page type.
-                // Handled here (Phase 1) so the dialog can react properly:
-                // on cancel, rawData/rawFile stay unset and Phase 2 is not revealed.
-                if (data.pageType !== pageType) {
-                    const loadAnywayConfirmed = await Lib.showCustomConfirm(
-                        `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
-                        '\u26A0\uFE0F Page Type Mismatch',
-                        triggerButton || loadBtn
-                    );
-                    if (!loadAnywayConfirmed) {
-                        rawData = null;
-                        rawFile = null;
-                        loadBtn.innerHTML  = '<span><span style="text-decoration:underline">L</span>oad Data</span>';
-                        loadBtn.disabled   = false;
-                        loadBtn.style.opacity = '';
-                        loadStatus.innerHTML   = '\u{1F6AB} Load cancelled \u2014 page type mismatch.';
-                        loadStatus.style.color = '#c62828';
-                        loadStatus.style.display = 'block';
-                        Lib.debug('cache', `Load cancelled by user: file pageType "${data.pageType}" \u2260 current pageType "${pageType}"`);
-                        return;
-                    }
-                }
-
                 rawData = data;
                 rawFile = file;
 
@@ -12549,8 +12526,7 @@
                     .toLowerCase()
                     .trim()
                     .replace(/\s+/g, '_')
-                    .replace(/[^a-z0-9_]/g, '')
-                    .replace(/_+/g, '_');  // collapse runs of underscores (e.g. from stripped special chars like ℗)
+                    .replace(/[^a-z0-9_]/g, '');
             };
 
             const isMultiBtn = activeDefinition &&
@@ -12580,11 +12556,7 @@
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
             const rowSegment = dataToSave.rowCount.toString();
             const detailSegment = detailSlug ? `-${detailSlug}` : '';
-            // Strip the '-filtered' suffix that is part of the internal pageType identifier
-            // for link_type_id pages — it is redundant in the filename since the detail slug
-            // already captures the relationship label.
-            const pageTypeSlug = pageType.replace(/-filtered$/, '');
-            const filename = `MB-${pageTypeSlug}${detailSegment}-${rowSegment}-${timestamp}.json.gz`;
+            const filename = `MB-${pageType}${detailSegment}-${rowSegment}-${timestamp}.json.gz`;
 
             triggerStandardDownload(url, filename, dataToSave.rowCount);
             infoDisplay.textContent = `✓ Serialized ${dataToSave.rowCount.toLocaleString()} rows to ${filename}`;
@@ -12685,10 +12657,20 @@
 
                 const data = JSON.parse(jsonString);
 
+                // Validation: Check if the file matches the current page type
+                if (data.pageType !== pageType) {
+                    const loadAnywayConfirmed = await Lib.showCustomConfirm(
+                        `Warning: This file appears to be for "${data.pageType}", but you are on a "${pageType}" page.\n\nTry loading anyway?`,
+                        '⚠️ Page Type Mismatch',
+                        loadFromDiskBtn
+                    );
+                    if (!loadAnywayConfirmed) {
+                        fileInput.value = '';
+                        return;
+                    }
+                }
+
                 // Validate data structure
-                // NOTE: pageType mismatch check was moved to showLoadFilterDialog Phase 1
-                // (dialogFileInput.onchange), where it has access to the correct dialog
-                // elements and can properly abort before rawData/rawFile are set.
                 if (!data.version || !data.pageType || !data.timestamp) {
                     throw new Error('Invalid data file: missing required fields');
                 }
