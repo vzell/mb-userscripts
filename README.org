@@ -39931,6 +39931,137 @@ but the "Configuration" button which calls
 
 still doesn't work I still gt the 'Settings interface not available. Please use the menu: Editing → ⚙️ Settings Manager' message
 
+* DONE make the whole sidebar vanish to the right side of the browser window
+** DONE sidebar
+
+In the uploaded userscript,
+make the whole sidebar
+
+#+begin_example
+<div id="sidebar">
+#+end_example
+
+collapsable/un-collapsable to the right side of the browser window when repeatedly clicking on an UI handle, by creating
+this UI handle on the vertical line which is located between the page content and the sidebar itself
+ 
+#+begin_example
+var sidebar = document.getElementById("sidebar");
+#+end_example
+
+** DONE autostretch
+
+Now also add functionality, that the rest of the webpage consumes the space gained when the sidebar is collapsed and the other way around
+
+** DONE also during initial rendering
+
+Yup it works perfect on the rendered page after pressing the action button, but the sidebar collapse handle is already
+generated when the URL is entered. BUT in that case the stretching of the rest of the page doesn't happen also the
+collapsable/un-collapsable functionality works
+
+Please fix
+
+** DONE fix use of even more space, especially on the page entry
+
+In the uploaded userscript,
+when the whole sidebar
+
+#+begin_example
+<div id="sidebar">
+#+end_example
+
+is collapsed to the right side,
+
+ - The content area STILL doesn't stretch to the right side
+ - also a scrollbar appears which actually doesn't make any sense
+
+In the HTML file "original.html" you find the original non-collapsed website content
+and in the "vanished.html" the one where the sidebar is collapsed
+
+Please fix the code, so that the whole rela estate is being used.
+
+Don't touch other workable code, comments and debug logging
+
+ - The content area STILL doesn't stretch when the sidebar is collapsed on the initial page load (before clicking the "Show all" action button)
+ - AND also in the case of clicking the "Show all" action button it works fine, there could still be more stretching applied as it uses only half of the space it COULD use
+
+Pleae try and fix both issues
+
+example URL: https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c
+
+** no sidebar toggle on the initial render page, only after pressing the action button
+
+In the uploaded userscript,
+ - on the initial page load (before clicking the "Show all" action button) the sidebar toggle should not be there/visisble, it should ONLY appear after pressing the action button
+
+** double scrollbars
+
+In the uploaded userscript,
+
+OK, I fixed the userscript with your changes, but after the initial rendering, there are two scrollbars visible on the
+right side, the inner should NOT be there.  This also happens after the action button has been clicked and the page is
+rerendered
+
+In the HTML file "double-scrollbars.html." you find the doubling of the scrollbar (when the userscripts runs)
+and in the "single-scrollbar.html" the webpage without running a userscript
+
+Please fix
+
+            #page, #content {
+                transition: margin-right 0.3s ease, padding-right 0.3s ease, width 0.3s ease, max-width 0.3s ease, margin-left 0.3s ease;
+            }
+
+** double scrollbars
+
+In the uploaded userscript,
+after the initial rendering, there are two scrollbars visible on the right side, the inner should NOT be there.  This
+also happens after the action button has been clicked and the page is rerendered
+	    
+** still problem
+
+In the uploaded userscript,
+after the initial rendering, there are two scrollbars visible on the right side, the inner should NOT be there.  This
+also happens after the action button has been clicked and the page is rerendered.
+
+It looks like the '<div id="sidebar">' container itself (which can be collapsed and in the non-collapsed state actually needs the scrollbar because it has lots of content).
+Please fix and only provide the necessary css changes if not code changes are involved
+
+** collapse by default after pressing the action button
+
+Please collapse the sidebar by default after pressing the action button
+
+** boolean
+
+In the uploaded userscript,
+using the boolean "sa_collabsable_sidebar" make the whole
+
+#+begin_example
+    function initSidebarCollapse() {
+#+end_example
+
+and
+
+#+begin_example
+    initSidebarCollapse();
+#+end_example
+
+functionality onyl available if true.
+
+Also call the initSidebarCollapse(); function only on the final rendered page, after pressing the action button
+
+** sidebar
+
+In the uploaded userscript,
+
+there is a problem when on the final rendered page the sidebar container '<div id="sidebar">' is collapsed
+("initSidebarCollapse()" function) to the right side, the container '<div id="content">' does not occupy the complete
+real estate which gets freed up by the now more or less vanished sidebar container.
+
+Please implement this, so that we get the complete real estate when the sidebar container IS collapsed, but take into
+account that in the non-collapsed state the sidebar container usually has it's own scrollbar because it has lots of
+content. Make sure that an eventual scrollbar on the "content container does not collide with the sidebar container.
+
+
+* DONE include lib from github
 
 
 * TODO exclude standalone recordings
@@ -41007,137 +41138,6 @@ Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': await is only v
 Otherwise the the script woudn't even load
 
 
-* DONE make the whole sidebar vanish to the right side of the browser window
-** DONE sidebar
-
-In the uploaded userscript,
-make the whole sidebar
-
-#+begin_example
-<div id="sidebar">
-#+end_example
-
-collapsable/un-collapsable to the right side of the browser window when repeatedly clicking on an UI handle, by creating
-this UI handle on the vertical line which is located between the page content and the sidebar itself
- 
-#+begin_example
-var sidebar = document.getElementById("sidebar");
-#+end_example
-
-** DONE autostretch
-
-Now also add functionality, that the rest of the webpage consumes the space gained when the sidebar is collapsed and the other way around
-
-** DONE also during initial rendering
-
-Yup it works perfect on the rendered page after pressing the action button, but the sidebar collapse handle is already
-generated when the URL is entered. BUT in that case the stretching of the rest of the page doesn't happen also the
-collapsable/un-collapsable functionality works
-
-Please fix
-
-** DONE fix use of even more space, especially on the page entry
-
-In the uploaded userscript,
-when the whole sidebar
-
-#+begin_example
-<div id="sidebar">
-#+end_example
-
-is collapsed to the right side,
-
- - The content area STILL doesn't stretch to the right side
- - also a scrollbar appears which actually doesn't make any sense
-
-In the HTML file "original.html" you find the original non-collapsed website content
-and in the "vanished.html" the one where the sidebar is collapsed
-
-Please fix the code, so that the whole rela estate is being used.
-
-Don't touch other workable code, comments and debug logging
-
- - The content area STILL doesn't stretch when the sidebar is collapsed on the initial page load (before clicking the "Show all" action button)
- - AND also in the case of clicking the "Show all" action button it works fine, there could still be more stretching applied as it uses only half of the space it COULD use
-
-Pleae try and fix both issues
-
-example URL: https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c
-
-** no sidebar toggle on the initial render page, only after pressing the action button
-
-In the uploaded userscript,
- - on the initial page load (before clicking the "Show all" action button) the sidebar toggle should not be there/visisble, it should ONLY appear after pressing the action button
-
-** double scrollbars
-
-In the uploaded userscript,
-
-OK, I fixed the userscript with your changes, but after the initial rendering, there are two scrollbars visible on the
-right side, the inner should NOT be there.  This also happens after the action button has been clicked and the page is
-rerendered
-
-In the HTML file "double-scrollbars.html." you find the doubling of the scrollbar (when the userscripts runs)
-and in the "single-scrollbar.html" the webpage without running a userscript
-
-Please fix
-
-            #page, #content {
-                transition: margin-right 0.3s ease, padding-right 0.3s ease, width 0.3s ease, max-width 0.3s ease, margin-left 0.3s ease;
-            }
-
-** double scrollbars
-
-In the uploaded userscript,
-after the initial rendering, there are two scrollbars visible on the right side, the inner should NOT be there.  This
-also happens after the action button has been clicked and the page is rerendered
-	    
-** still problem
-
-In the uploaded userscript,
-after the initial rendering, there are two scrollbars visible on the right side, the inner should NOT be there.  This
-also happens after the action button has been clicked and the page is rerendered.
-
-It looks like the '<div id="sidebar">' container itself (which can be collapsed and in the non-collapsed state actually needs the scrollbar because it has lots of content).
-Please fix and only provide the necessary css changes if not code changes are involved
-
-** collapse by default after pressing the action button
-
-Please collapse the sidebar by default after pressing the action button
-
-** boolean
-
-In the uploaded userscript,
-using the boolean "sa_collabsable_sidebar" make the whole
-
-#+begin_example
-    function initSidebarCollapse() {
-#+end_example
-
-and
-
-#+begin_example
-    initSidebarCollapse();
-#+end_example
-
-functionality onyl available if true.
-
-Also call the initSidebarCollapse(); function only on the final rendered page, after pressing the action button
-
-** sidebar
-
-In the uploaded userscript,
-
-there is a problem when on the final rendered page the sidebar container '<div id="sidebar">' is collapsed
-("initSidebarCollapse()" function) to the right side, the container '<div id="content">' does not occupy the complete
-real estate which gets freed up by the now more or less vanished sidebar container.
-
-Please implement this, so that we get the complete real estate when the sidebar container IS collapsed, but take into
-account that in the non-collapsed state the sidebar container usually has it's own scrollbar because it has lots of
-content. Make sure that an eventual scrollbar on the "content container does not collide with the sidebar container.
-
-
-
 * TODO interact with other USERSCRIPTs - jesus2099
 ** copy image links for releases to final rendered data if available, or grap them again on the rendered page
 
@@ -41158,7 +41158,8 @@ I actually would want this for the uploaded userscript to happen, as it has the 
 ** talk to
 *** jesus2009 - render ing of coverimages befreo table and before each row
 *** xxx -for RGs read in all releases and make collapsable
-* generalize special column handling (e.g. Tagger, jesus2099 image handling, collapsing RGs, Advance Relationship icons ==> discogs, SL, MB
+
+* TODO generalize special column handling (e.g. Tagger, jesus2099 image handling, collapsing RGs, Advance Relationship icons ==> discogs, SL, MB
 ** remove or fix "Tagger" column
 *** DONE initial
 
@@ -41398,7 +41399,7 @@ function splitCountryDateCell(newRow, countryDateIdx) {
 Doing this for Location and Area as well would shave hundreds of lines of visual noise off startFetchingProcess and make the primary data-collection loop much easier to follow.
 #+end_example
 
-* Reorder functions
+* TODO Reorder functions
 ** question
 
 - Reorder all functions sorted at the end of the file
@@ -41454,7 +41455,6 @@ The reorganized code is functionally identical to the original but much more rea
 
 *** gemini
 
-
 * TODO generic refactoring
 
 In the uploaded script, the code has been grown over time and is now more or less unmaintanble.  What are the best
@@ -41463,6 +41463,7 @@ practices and best patterns
 
 - Check for obvious code which could make it into a functions without breaking the rest of the big userscript
 - check for code blocks which could easily be refactored to make the code more clear
+
 
 * TODO posting to MusicBrainz forum
 ** <2026-01-28 Wed 09:05>
@@ -41901,6 +41902,26 @@ Subject: Full-page view.
 What to show: Show the sidebar in its "Collapsed" state to demonstrate how the table stretches to fill the full screen width, providing a much clearer view for wide tables.
 #+end_example
 
+* TODO forum demo screen shot - RG-R sort format/lable/catalog/country
+
+Text: ever wanted to see ....
+
+now lets concentrate on just Canada --> filter "Country"="can"  ->>status line tells you excaltly that
+
+now filter globally "with just version"
+
+now toggle highlightning on/off
+
+DO the same with loading from the filesystem ---- demo of higjlightning filter column there .. just "Greetings from asbury park, n.j." --- toggle highligh of loading filter
+
+clear all filters
+
+press anywhere on original sort
+
+* TODO screenshot
+
+Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
+
 
 * Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
 
@@ -42049,10 +42070,7 @@ Include a "Close" button and also "Escape" key closing of the popup.
 
 * align button texts and make everything configurable (size, font, height, character to underline)
 
-
-
 * add version to app help, configuration and keybord shortcuts dialogs
-
 
 * DONE why does the "Global Prefilter Highlight Color" starts out in black when clicking on the color chooser icon
 
@@ -42074,32 +42092,6 @@ All other buttons which use the color chooser dialog work with the color defined
 #+begin_example
 <warning icon> "Page Reloaded"
 #+end_example
-
-
-* TODO forum demo screen shot - RG-R sort format/lable/catalog/country
-
-Text: ever wanted to see ....
-
-now lets concentrate on just Canada --> filter "Country"="can"  ->>status line tells you excaltly that
-
-now filter globally "with just version"
-
-now toggle highlightning on/off
-
-DO the same with loading from the filesystem ---- demo of higjlightning filter column there .. just "Greetings from asbury park, n.j." --- toggle highligh of loading filter
-
-clear all filters
-
-press anywhere on original sort
-
-
-* TODO screenshot
-
-Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
-
-
-
-* TODO include lib from github
 
 
 * DONE When dragging the config dialog and releasing it, becasue the mouse pointer is outsode of the popup window, it directly closes, although it remember ist size and position.
@@ -43685,7 +43677,6 @@ In the uploaded userscript,
   11983:            const colName = th.textContent.replace(/[⇅▲▼📊]/g, '').trim();
 #+end_example
 
-
 * DONE filenname change: currently "mb-${pageType}-${timestamp}.json.gz"
 ** DONE Validation: Check if the file matches the current page type
 
@@ -43834,6 +43825,18 @@ modified   ShowAllEntityData_CHANGELOG.json
          ]
      },
 #+end_example
+
+* DONE font size in dialogs configurable
+
+In the function
+
+#+begin_example
+function showDownloadNotification(message, statusText = null)
+#+end_example
+
+the fontsize of the "message" should be made configurable in the variable "const configSchema" with the current values as default
+
+** Saving of JSON table data ....
 
 
 * document test suite after userscript and library changes
@@ -44066,8 +44069,6 @@ into a condensed format as one line "inlcude", something like
 
 
 
-* add synthetic column for event alias
-
 * add unicode symbols back
 ** initial
 
@@ -44131,7 +44132,8 @@ Could this somehow be prevented, or better yet, remapped to a different key comb
         },
 #+end_example
 
-* pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
+
+* configurable: pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
 
 "Artists" - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
 "Recording artists" - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
@@ -44139,24 +44141,14 @@ Could this somehow be prevented, or better yet, remapped to a different key comb
 and remove the "(show less)" line
 
 
-* TODO font size in dialogs configurable
-
-In the function
-
-#+begin_example
-function showDownloadNotification(message, statusText = null)
-#+end_example
-
-the fontsize of the "message" should be made configurable in the variable "const configSchema" with the current values as default
-
-** Saving of JSON table data ....
-
-
-* TODO Event-Alias handling
+* TODO Event-Alias handling - add the event alias int the next line
+** extract as synthetic column - add synthetic column for event alias
 
 https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91
 
-* TODO for https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
+** add the event alias int the next line
+
+https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2/aliases
 
 add the event alias int the next line
 
@@ -44177,4 +44169,33 @@ Bruce Springsteen & The E Street Band at Athletic & Convocation Center
 
 
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1
+
+* TODO highlight match when quick filtering in the configuration dialog
+
+* TODO add "escape"-key and "x" for clearing the quick filter in the changelog dialog
+
+In the uploaded library "VZ_MBLibrary.user.js",
+
+1.) in the
+
+#+begin_example
+// --- 4. Changelog Logic ---
+#+end_example
+
+please implement when entering a search string in the "🔍 Filter changelog entries…" dialog the following functionality:
+
+- add a small red "x" at the end of the "🔍 Filter changelog entries…" input field, so that when either clicked or the "Escape"-key is pressed the clearing of the input field happens
+
+
+2.) in the
+
+#+begin_example
+// --- 3. Settings Logic ---
+#+end_example
+
+please implement when entering a search string in the "🔍 Search settings…" dialog the following functionality:
+
+- The search string should be highlighted in the filtered display configuration settings rows (like in the '// --- 4. Changelog Logic ---' block)
+- add a small red "x" at the end of the "🔍 Search settings…" input field, so that when clicked the same clearing of the input field happens as with the already functioning "Escape"-key handling
+
 
