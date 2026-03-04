@@ -41922,6 +41922,8 @@ press anywhere on original sort
 
 Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
+* write special about it in the forum because of the 2 Action buttons
+
 
 * Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
 
@@ -42096,30 +42098,6 @@ All other buttons which use the color chooser dialog work with the color defined
 
 * DONE When dragging the config dialog and releasing it, becasue the mouse pointer is outsode of the popup window, it directly closes, although it remember ist size and position.
 * DONE Keyboard short cuts popup should be draggable
-
-* changelog popup should get focus when popupped
-
-The ChangeLog popup should get focus when popupped (the "Close" button a the bottom right corner is not needed, we have
-the "CLOSE" link and "Escape"-key handling). Additionally when filtering, the search string should be highlighted in the
-changelog entries and the number of hits should be displayed in the the header area, so change this
-
-#+begin_example
-                            ${_changelogMeta.fromCache === null
-                                ? `${_changelog.length} entries (static/local)`
-                                : `${_changelog.length} entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
-#+end_example
-
-to
-
-#+begin_example
-                            ${_changelogMeta.fromCache === null
-                                ? `${_changelog.length} entries (static/local)`
-                                : `${_changelog.length} (<n> filtered) entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
-#+end_example
-
-
-* write special about it in the forum because of the 2 Action buttons
-
 
 * DONE keyboard shortcut and app help popups should have a sticky bottom with the help about "Click outside or press Escape to close"
 ** initial
@@ -42459,8 +42437,6 @@ should get a new 'title="Clear all COLUMN filters for this table"' and the butto
 #+end_example
 
 
-* Tests: "to" as column level filter on "Album" in the "Title" column
-
 
 * DONE make the h2/h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
 ** DONE initial
@@ -42614,6 +42590,7 @@ to
 #+end_example
 
 * change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
+
 
 * DONE regexp mode
 
@@ -43838,6 +43815,92 @@ the fontsize of the "message" should be made configurable in the variable "const
 
 ** Saving of JSON table data ....
 
+* DONE highlight match when quick filtering in the configuration dialog
+* DONE add "escape"-key and "x" for clearing the quick filter in the changelog dialog
+** initial
+
+In the uploaded library "VZ_MBLibrary.user.js",
+
+1.) in the
+
+#+begin_example
+// --- 4. Changelog Logic ---
+#+end_example
+
+please implement when entering a search string in the "🔍 Filter changelog entries…" dialog the following functionality:
+
+- add a small red "x" at the end of the "🔍 Filter changelog entries…" input field, so that when either clicked or the "Escape"-key is pressed the clearing of the input field happens
+- also clicking on the "CLOSE" link in the upper right corner does NOT close the whole dialog (the same should happen when pressing the "Escape"-key if the "🔍 Filter changelog entries…" doesn't has the focus anymore
+
+2.) in the
+
+#+begin_example
+// --- 3. Settings Logic ---
+#+end_example
+
+please implement when entering a search string in the "🔍 Search settings…" dialog the following functionality:
+
+- The search string should be highlighted in the filtered display configuration settings rows (like in the '// --- 4. Changelog Logic ---' block)
+- add a small red "x" at the end of the "🔍 Search settings…" input field, so that when clicked the same clearing of the input field happens as with the already functioning "Escape"-key handling
+
+** bugs
+
+2 bugs:
+
+1.) The following link doesn't react on a click at all
+
+#+begin_example
+<a id="vz-mb-show-all-entity-data-changelog-close" style="cursor:pointer;font-weight:600;color:#555;">
+                                CLOSE
+                            </a>
+#+end_example
+
+and it actually should unconditionally close the whole dialog when clicked
+
+2.) "Escape"-key in the filter input field DOESN'T clear the filter as it should on pressing first time "Escape",
+pressing the "x" icon DOES as it should. Pressing the "Escape"-key in an empyt filter input field should unfocus the
+filter input and when unfocused, pressing "Escape" again, should the unconditionally close the whole dialog as the "CLOSE" link, see bullet point 1.)
+
+please fix
+
+** another bug
+
+OK, now the dialog closing works again, but the changelog dialog is NOT resizable anymore. Please fix
+
+There is also something wrong with the display of the changelog itself. Please check the uploaded file
+"ShowAllEntityData_CHANGELOG.json".
+
+For example the following entry, looks like it's hyperlinked, after the text "e.g. Honolulu\n,\n'" because the text
+turns blue and the curser changes it's shape whe hovering over it:
+
+#+begin_example
+<ul style="margin:0;padding:0 0 0 16px;list-style:disc;"><li style="margin:2px 0;padding-left:0px;font-size:0.90em;color:#1a1a2e;line-height:1.55;">normalizeExtractedText — Step 3: remove spurious space before comma separators between list items. MusicBrainz area, label, and catalog-number columns render multiple values separated by a bare comma+newline (e.g. '<bdi>Honolulu\n</bdi>,\n<a …="">') which, after the existing join-and-collapse pipeline, produced an artificial space before the comma: 'Honolulu , Hawaii'. This caused both column-filter matching and highlight-span placement to diverge from what the browser renders ('Honolulu, Hawaii'), so a user typing 'Honolulu, Hawaii' would get no match and no highlighting even though the row was visually correct. Fixed by appending '.replace(/ ,/g, ",")' as a new Step 3 in normalizeExtractedText, applied after whitespace collapse (Step 1) and bracket-interior-space removal (Step 2). The fix is safe because no MusicBrainz data format uses an intentional space before a comma. All four affected column types confirmed: area lists ('Honolulu, Hawaii, United States'), comment-disambiguated items ('Ithaca (city), New York'), multi-label columns ('Columbia (…), Sony BMG Music Entertainment (…)'), and catalog-number columns ('CBS S 65480, S 65480'). The stale orphaned JSDoc stub ('Helper to get visible text only…') that preceded the real block was also removed.</a></li></ul>
+#+end_example
+
+Even more important, it doesn't even display the whole changelog file anymore, it only displays from "9.99.28 – 2026-03-04" up to "9.99.00 – 2026-03-02"
+
+
+* changelog popup should get focus when popupped
+
+The ChangeLog popup should get focus when popupped (the "Close" button a the bottom right corner is not needed, we have
+the "CLOSE" link and "Escape"-key handling). Additionally when filtering, the search string should be highlighted in the
+changelog entries and the number of hits should be displayed in the the header area, so change this
+
+#+begin_example
+                            ${_changelogMeta.fromCache === null
+                                ? `${_changelog.length} entries (static/local)`
+                                : `${_changelog.length} entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
+#+end_example
+
+to
+
+#+begin_example
+                            ${_changelogMeta.fromCache === null
+                                ? `${_changelog.length} entries (static/local)`
+                                : `${_changelog.length} (<n> filtered) entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
+#+end_example
+
+
 
 * document test suite after userscript and library changes
 ** library
@@ -44170,67 +44233,9 @@ Bruce Springsteen & The E Street Band at Athletic & Convocation Center
 
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1
 
-* TODO highlight match when quick filtering in the configuration dialog
+* update HELP
 
-* TODO add "escape"-key and "x" for clearing the quick filter in the changelog dialog
-** initial
+Please update in the uploaded HELP file "ShowAllEntityData_HELP.txt" the content with the current state of the
+userscript "ShowAllEntityData.user.js", also take into account the current library implementation "VZ_MBLibrary.user.js"
+and make a final changelog entry in "ShowAllEntityData_CHANGELOG.json"
 
-In the uploaded library "VZ_MBLibrary.user.js",
-
-1.) in the
-
-#+begin_example
-// --- 4. Changelog Logic ---
-#+end_example
-
-please implement when entering a search string in the "🔍 Filter changelog entries…" dialog the following functionality:
-
-- add a small red "x" at the end of the "🔍 Filter changelog entries…" input field, so that when either clicked or the "Escape"-key is pressed the clearing of the input field happens
-- also clicking on the "CLOSE" link in the upper right corner does NOT close the whole dialog (the same should happen when pressing the "Escape"-key if the "🔍 Filter changelog entries…" doesn't has the focus anymore
-
-2.) in the
-
-#+begin_example
-// --- 3. Settings Logic ---
-#+end_example
-
-please implement when entering a search string in the "🔍 Search settings…" dialog the following functionality:
-
-- The search string should be highlighted in the filtered display configuration settings rows (like in the '// --- 4. Changelog Logic ---' block)
-- add a small red "x" at the end of the "🔍 Search settings…" input field, so that when clicked the same clearing of the input field happens as with the already functioning "Escape"-key handling
-
-** bugs
-
-2 bugs:
-
-1.) The following link doesn't react on a click at all
-
-#+begin_example
-<a id="vz-mb-show-all-entity-data-changelog-close" style="cursor:pointer;font-weight:600;color:#555;">
-                                CLOSE
-                            </a>
-#+end_example
-
-and it actually should unconditionally close the whole dialog when clicked
-
-2.) "Escape"-key in the filter input field DOESN'T clear the filter as it should on pressing first time "Escape",
-pressing the "x" icon DOES as it should. Pressing the "Escape"-key in an empyt filter input field should unfocus the
-filter input and when unfocused, pressing "Escape" again, should the unconditionally close the whole dialog as the "CLOSE" link, see bullet point 1.)
-
-please fix
-
-** another bug
-
-OK, now the dialog closing works again, but the changelog dialog is NOT resizable anymore. Please fix
-
-There is also something wrong with the display of the changelog itself. Please check the uploaded file
-"ShowAllEntityData_CHANGELOG.json".
-
-For example the following entry, looks like it's hyperlinked, after the text "e.g. Honolulu\n,\n'" because the text
-turns blue and the curser changes it's shape whe hovering over it:
-
-#+begin_example
-<ul style="margin:0;padding:0 0 0 16px;list-style:disc;"><li style="margin:2px 0;padding-left:0px;font-size:0.90em;color:#1a1a2e;line-height:1.55;">normalizeExtractedText — Step 3: remove spurious space before comma separators between list items. MusicBrainz area, label, and catalog-number columns render multiple values separated by a bare comma+newline (e.g. '<bdi>Honolulu\n</bdi>,\n<a …="">') which, after the existing join-and-collapse pipeline, produced an artificial space before the comma: 'Honolulu , Hawaii'. This caused both column-filter matching and highlight-span placement to diverge from what the browser renders ('Honolulu, Hawaii'), so a user typing 'Honolulu, Hawaii' would get no match and no highlighting even though the row was visually correct. Fixed by appending '.replace(/ ,/g, ",")' as a new Step 3 in normalizeExtractedText, applied after whitespace collapse (Step 1) and bracket-interior-space removal (Step 2). The fix is safe because no MusicBrainz data format uses an intentional space before a comma. All four affected column types confirmed: area lists ('Honolulu, Hawaii, United States'), comment-disambiguated items ('Ithaca (city), New York'), multi-label columns ('Columbia (…), Sony BMG Music Entertainment (…)'), and catalog-number columns ('CBS S 65480, S 65480'). The stale orphaned JSDoc stub ('Helper to get visible text only…') that preceded the real block was also removed.</a></li></ul>
-#+end_example
-
-Even more important, it doesn't even display the whole changelog file anymore, it only displays from "9.99.28 – 2026-03-04" up to "9.99.00 – 2026-03-02"
