@@ -8983,7 +8983,7 @@
                                     const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊]/g, '').trim() : `Col ${colIdx}`;
                                     return `${colName}:"${stripColFilterPrefix(inp.value)}"`;
                                 }).join(', ');
-                                subFilterStatus.textContent = `✓ Filtered ${rowsInTable} rows [${colFilterInfo}]`;
+                                subFilterStatus.textContent = `✓ Filtered ${rowsInTable} ${rowsInTable === 1 ? 'row' : 'rows'} [${colFilterInfo}]`;
                                 subFilterStatus.style.color = 'green';
                             } else {
                                 subFilterStatus.textContent = '';
