@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.24+2026-03-04
+// @version      9.99.25+2026-03-04
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2039,7 +2039,7 @@
 
                 // Derive column name for numeric detection (strip sort icons and superscripts)
                 const hdrName = headers[idx]
-                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
+                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊]/g, '').trim()
                     : '';
                 const isNumeric = hdrName.includes('Year') || hdrName.includes('Releases') ||
                                   hdrName.includes('Track') || hdrName.includes('Length') ||
@@ -2532,7 +2532,7 @@
 
         // Create checkbox for each column
         headers.forEach((th, index) => {
-            const colName = th.textContent.replace(/[⇅▲▼]/g, '').trim();
+            const colName = th.textContent.replace(/[⇅▲▼📊]/g, '').trim();
             if (!colName) return; // Skip empty headers
 
             const wrapper = document.createElement('div');
@@ -2887,7 +2887,7 @@
                 if (cell.style.display === 'none') return;
 
                 // Clean header text (remove sort icons)
-                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
+                let headerText = cell.textContent.replace(/[⇅▲▼📊]/g, '').trim();
                 // Remove extra whitespace
                 headerText = headerText.replace(/\s+/g, ' ');
                 headers.push(headerText);
@@ -2995,7 +2995,7 @@
         if (headerRow) {
             Array.from(headerRow.cells).forEach(cell => {
                 if (cell.style.display === 'none') return;
-                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+                let headerText = cell.textContent.replace(/[⇅▲▼📊]/g, '').trim().replace(/\s+/g, ' ');
                 data.headers.push(headerText);
             });
         }
@@ -3065,7 +3065,7 @@
             const headers = [];
             Array.from(headerRow.cells).forEach(cell => {
                 if (cell.style.display === 'none') return;
-                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim().replace(/\s+/g, ' ');
+                let headerText = cell.textContent.replace(/[⇅▲▼📊]/g, '').trim().replace(/\s+/g, ' ');
                 headers.push(headerText);
             });
             rows.push('| ' + headers.join(' | ') + ' |');
@@ -8658,7 +8658,7 @@
             const colIdx  = parseInt(inp.dataset.colIdx, 10);
             const headers = table.querySelectorAll('thead tr:first-child th');
             const colName = headers[colIdx]
-                ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹]/g, '').trim()
+                ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹📊]/g, '').trim()
                 : `Col ${colIdx}`;
 
             if (isRegExp) {
@@ -9130,7 +9130,7 @@
         // Each extractor may declare one or more synthetic columns; we only add a
         // header when it is not already present (idempotent across re-renders).
         activeColumnExtractors.forEach(entry => {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊]/g, '').trim());
             entry.syntheticColumns.forEach(colName => {
                 if (!headersText.includes(colName)) {
                     const th = document.createElement('th');
@@ -9148,7 +9148,7 @@
 
         // On pages where the configuration is enabled, create the "MB-Name" and "Comment" columns
         if (isMainColEnabled) {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼]/g, '').trim());
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊]/g, '').trim());
             if (!headersText.includes('MB-Name')) {
                 const thN = document.createElement('th');
                 thN.textContent = 'MB-Name';

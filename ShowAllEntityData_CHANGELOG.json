@@ -1,5 +1,24 @@
 [
     {
+        "version": "9.99.25",
+        "date": "2026-03-04",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "Header-text cleaning — all `replace(/[⇅▲▼]/g, '')` call sites now also strip the `📊` unique-values button emoji from column header text before comparison or export. Affected sites: CSV export header scan (line ~2890), JSON export header scan (~2998), Org-Mode export header scan (~3068), synthetic-column existence check (~9133), MB-Name column existence check (~9151), single-table sort column-name derivation (~2535), multi-table sort column-name derivation (~2042, which also strips superscript digits), and the sort-state persistence column-name read (~8661, unicode-range form). The two call sites that already included `📊` (getCleanColName at ~8983 and the stats-panel path at ~11971) were correct and left unchanged.",
+                    "Sub-table filter status — singular 'row' when exactly one row matches: `✓ Filtered 1 rows […]` now correctly reads `✓ Filtered 1 row […]`. Implemented via a ternary `${rowsInTable === 1 ? 'row' : 'rows'}` at the single affected call site (~8986)."
+                ]
+            },
+            {
+                "label": "✨ Enhancements",
+                "items": [
+                    "Save-to-Disk filename disambiguation: the generated filename now includes an extra slug between the `mb-${pageType}` prefix and the timestamp so that files saved from different button contexts or query-string variants of the same page type are immediately distinguishable without opening them. Two cases are handled: (1) Multi-button pages (e.g. artist-releases with 'Official RGs', 'Non-official RGs', 'Official VA RGs', 'Non-official VA RGs' buttons): when `activeDefinition.buttons.length > 1` and `activeDefinition.label` is set, the clicked button's label is lowercased, spaces are converted to underscores, and all non-alphanumeric characters are stripped to form the suffix (e.g. `mb-artist-releases-official_rgs-2026-03-04T…json.gz`). (2) Query-string pages filtered by `link_type_id` (e.g. `/area/…/releases?direction=1&link_type_id=835`): the text content of the first `#content h3` element is lowercased and slug-converted to form the suffix (e.g. `mb-area-releases-recorded_at-2026-03-04T…json.gz`). Pages that match neither condition continue to use the original `mb-${pageType}-${timestamp}.json.gz` format."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.24",
         "date": "2026-03-04",
         "sections": [
