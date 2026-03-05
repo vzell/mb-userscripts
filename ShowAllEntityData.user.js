@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.34+2026-03-05
+// @version      9.99.35+2026-03-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1034,9 +1034,14 @@
             type: 'instrument-aliases',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Instrument' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
+            // extractMainColumn: 'Locale' was intentionally removed for all *-aliases page definitions.
+            // The Locale column on alias tables contains plain locale text (e.g. "English United States")
+            // followed by a <span class="comment">primary</span> role indicator, NOT an entity link.
+            // Extracting it as MB-Name / Comment incorrectly polluted those synthetic columns.
+            // (Bug fix: v9.99.35)
+            //features: {
+            //    extractMainColumn: 'Locale' // Specific header
+            //},
             tableMode: 'single'
         },
         // Area pages
@@ -1129,9 +1134,6 @@
             type: 'area-aliases',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Area' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
             tableMode: 'single'
         },
         {
@@ -1177,9 +1179,6 @@
             type: 'place-aliases',
             match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Place' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
             tableMode: 'single'
         },
         {
@@ -1215,9 +1214,6 @@
             type: 'series-aliases',
             match: (path) => path.match(/\/series\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Series' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
             tableMode: 'single'
         },
         {
@@ -1243,9 +1239,6 @@
             type: 'label-aliases',
             match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Label' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
             tableMode: 'single'
         },
         {
@@ -1291,9 +1284,6 @@
             type: 'work-aliases',
             match: (path) => path.match(/\/work\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Work' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
             tableMode: 'single'
         },
         {
@@ -1344,8 +1334,7 @@
                 {
                     label: 'Show all Aliases for Artist',
                     targetHeader: 'Aliases',
-                    tableMode: 'single',
-                    extractMainColumn: 'Locale'
+                    tableMode: 'single'
                 },
                 {
                     label: 'Show all Artist Credits for Artist',
@@ -1408,9 +1397,6 @@
             type: 'releasegroup-aliases',
             match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Releasegroup' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
             tableMode: 'single'
         },
         {
@@ -1437,9 +1423,6 @@
             type: 'release-aliases',
             match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Release' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
             tableMode: 'single'
         },
         {
@@ -1454,9 +1437,6 @@
             type: 'recording-aliases',
             match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Recording' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
             tableMode: 'single'
         },
         {
@@ -1484,9 +1464,6 @@
             type: 'event-aliases',
             match: (path) => path.match(/\/event\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Event' } ],
-            features: {
-                extractMainColumn: 'Locale' // Specific header
-            },
             tableMode: 'single'
         },
         {
@@ -6972,7 +6949,19 @@
     document.head.appendChild(style);
 
     if (headerContainer.tagName === 'A') {
-        headerContainer.after(controlsContainer);
+        // Resolve the owning <h1> and append at the END so that any pre-existing
+        // siblings that follow the <a> inside the h1 — date text nodes and plain
+        // <span class="comment"> disambiguation spans (e.g. "(Bleachers)" on event
+        // alias pages) — remain BEFORE the controls container in the natural DOM
+        // order.  Using headerContainer.after() instead would insert the controls
+        // right after <a>, leaving trailing h1 content stranded after the buttons.
+        const _h1ForInsert = headerContainer.closest('h1');
+        if (_h1ForInsert) {
+            _h1ForInsert.appendChild(controlsContainer);
+        } else {
+            // Fallback: no parent <h1> found — insert immediately after the <a>.
+            headerContainer.after(controlsContainer);
+        }
     } else {
         headerContainer.appendChild(controlsContainer);
     }

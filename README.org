@@ -40060,9 +40060,7 @@ Please implement this, so that we get the complete real estate when the sidebar 
 account that in the non-collapsed state the sidebar container usually has it's own scrollbar because it has lots of
 content. Make sure that an eventual scrollbar on the "content container does not collide with the sidebar container.
 
-
 * DONE include lib from github
-
 
 * TODO exclude standalone recordings
 
@@ -42089,14 +42087,6 @@ All other buttons which use the color chooser dialog work with the color defined
 
 * DONE Click outside should always close
 
-
-* Make all popup dialogs use the format of
-
-#+begin_example
-<warning icon> "Page Reloaded"
-#+end_example
-
-
 * DONE When dragging the config dialog and releasing it, becasue the mouse pointer is outsode of the popup window, it directly closes, although it remember ist size and position.
 * DONE Keyboard short cuts popup should be draggable
 
@@ -42425,20 +42415,6 @@ should get a new 'title="Clear all COLUMN filters for this table"' and the butto
   Disk"-button when there were sortings on sub-tables active, the sort direction icons are still highlighted (even multi
   columns sort with colorized data cells for better visualization). This should also be reset, like what we did before with resetting the filte stuff
   
-
-* Why is this
-
-#+begin_example
-<span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span>
-#+end_example
-
-#+begin_example
-                filterStatusDisplay.textContent = `✓ ${modeLabel}${globalFilterInfo}`;
-                filterStatusDisplay.style.color = 'green';
-#+end_example
-
-
-
 * DONE make the h2/h3 headerline texts clickable so they belong to the collpase/uncollapse functionality
 ** DONE initial
 
@@ -42527,10 +42503,6 @@ should trigger the "collapsing/uncollapsing" of just the current h2 section when
 
 should trigger the "collapsing/uncollapsing" of just the current h2 section when, but trigger the "collapsing/uncollapsing" of ALL the h2 sections when "Ctrl"-clicking
 
-
-* TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter as long as the hold the mouse 1 during click on that toggle
-
-
 * DONE Is the check for invalid regexp really working, I don't get any error
 
 Is the check for invalid regexp really working in the following code
@@ -42576,6 +42548,29 @@ probably needs to be changed from sync to async for this.
 
 
 The same is true when using the "[x] Rx" checkbox toggle for filter expressions on the global filter or sub-table filters. Plese implement or fix
+
+
+* Make all popup dialogs use the format of
+
+#+begin_example
+<warning icon> "Page Reloaded"
+#+end_example
+
+
+* Why is this
+
+#+begin_example
+<span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span>
+#+end_example
+
+#+begin_example
+                filterStatusDisplay.textContent = `✓ ${modeLabel}${globalFilterInfo}`;
+                filterStatusDisplay.style.color = 'green';
+#+end_example
+
+
+
+* TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter as long as the hold the mouse 1 during click on that toggle
 
 
 * TODO tooltip for global "Clear all COLUMN filters" from
@@ -43880,6 +43875,365 @@ turns blue and the curser changes it's shape whe hovering over it:
 
 Even more important, it doesn't even display the whole changelog file anymore, it only displays from "9.99.28 – 2026-03-04" up to "9.99.00 – 2026-03-02"
 
+* DONE update HELP
+
+Please update in the uploaded HELP file "ShowAllEntityData_HELP.txt" the content with the current state of the
+userscript "ShowAllEntityData.user.js", also take into account the current library implementation "VZ_MBLibrary.user.js"
+and make a final changelog entry in "ShowAllEntityData_CHANGELOG.json"
+
+* DONE add disambiguation to Artist-RGs pages
+** search: Rx: 'convocation|live & alive' on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+==>
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+I changed the definition for the pageType "type: 'artist-releasegroups'" to
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+so basically added
+
+#+begin_example
+            features: {
+                extractMainColumn: 'Title'
+            },
+#+end_example
+
+Now the question, the rendered final table shows the two synthetic columns "MB-Name" and "Comment" but somehow nothing
+gets extracted from the "Title" column.
+
+Here an example of the rendered header row and a data row (filtered):
+
+#+begin_example
+<table class="tbl" data-mb-total-rows="419" style="margin-left: 1.5em; width: calc(100% - 1.5em);">
+  <thead>
+    <tr>
+      <th colspan="1" class="checkbox-cell" style="position: relative;">
+	<input type="checkbox">
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th colspan="1" class="year c" style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Year
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Year">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th colspan="1" style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Title
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Title">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th colspan="1" class="artist" style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Artist
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Artist">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th colspan="1" class="rating c" style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Rating
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Rating">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th colspan="1" class="count c" style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Releases
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Releases">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th style="background-color: rgb(211, 211, 211); cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> MB-Name
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for MB-Name">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th style="background-color: rgb(211, 211, 211); cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Comment
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Comment">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+    </tr>
+    <tr class="mb-col-filter-row">
+      <th>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="1">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="2" style="background-color: rgb(255, 249, 196); box-shadow: green 0px 0px 2px 2px;">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="3">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="4">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="5">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="6">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="7">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="odd">
+      <td>
+	<input name="add-to-merge" type="checkbox" value="1812962">
+      </td>
+      <td class="c">1995
+      </td>
+      <td>
+	<span class="artwork-icon caa-icon" title="This release group has artwork in the Cover Art Archive">
+	</span>
+	<a class="wrap-anywhere" href="/release-group/a17893f0-2dfa-4a2b-a004-02ba6a9f85c3">
+	  <bdi>
+	    <span class="mb-column-filter-highlight">
+	      <span class="mb-subtable-filter-highlight">Live
+	      </span>&amp;
+	    </span> A
+	    <span class="mb-subtable-filter-highlight">live
+	    </span>
+	  </bdi>
+	</a>
+	<span class="mb-subtable-filter-highlight">
+	</span>
+	<span class="comment">(
+	  <bdi>3 CD imm 43.90009
+	  </bdi>)
+	</span>
+      </td>
+      <td>
+	<bdi>
+	  <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+	  </a>
+	</bdi>
+      </td>
+      <td class="c">
+	<span class="inline-rating">
+	  <span class="star-rating" tabindex="-1">
+	    <a class="stars-1 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=20&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 1 star">1
+	    </a>
+	    <a class="stars-2 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=40&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 2 stars">2
+	    </a>
+	    <a class="stars-3 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=60&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 3 stars">3
+	    </a>
+	    <a class="stars-4 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=80&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 4 stars">4
+	    </a>
+	    <a class="stars-5 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=100&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 5 stars">5
+	    </a>
+	  </span>
+	</span>
+      </td>
+      <td class="c">1
+      </td>
+    </tr>
+  </tbody>
+</table>
+#+end_example
+
+* DONE artist-releasegroups special handling explained
+
+Bug 1 — artist-releasegroups branch had no extraction pipeline at all.
+
+The artist-releasegroups fetch path (doc.querySelectorAll('table.tbl')…) was a completely independent loop that only did
+document.importNode(row) + indicesToExclude deletion and then immediately pushed the raw row. The MB-Name/Comment
+extraction, column extractor calls, and synthetic-cell appending all lived exclusively in the generic else-branch, which
+this pageType never enters. The fix: the artist-releasegroups branch now runs the same 5-step pipeline as the
+else-branch — (1) MB-Name/Comment cell creation from mainColIdx, (2) active column extractor evaluation, (3)
+excluded-column deletion, (4) extractor synthetic-cell appending, (5) MB-Name/Comment cell appending.
+
+Bug 2 — stale pageType !== 'artist-releasegroups' guard in the else-branch.
+
+Even if a row somehow reached the else-branch, tdName/tdComment would never be appended for this pageType due to that
+explicit guard. Replaced with if (mainColIdx !== -1) — data-driven rather than hardcoded, consistent with how all other
+branches now work.
+
+* DONE history drop-down missing from load dialog
+
+In the uploaded userscript,
+
+The functionality about the "history drop-down in the 'Load from Disk'-dialog" is somehow since the latest rewrites
+missing, also some infrastructure code is still there
+
+#+begin_example
+        sa_load_history_limit: {
+            label: 'Load Filter History Limit',
+            type: 'number',
+            default: 50,
+            min: 0,
+            max: 50,
+            description: 'Number of previous filter expressions to remember in the load dialog.'
+        },
+#+end_example
+
+#+begin_example
+        // ── History dropdown ──────────────────────────────────────────────────
+        if (historyToggle) {
+            historyToggle.onclick = (ev) => {
+                ev.stopPropagation();
+                historyDropdown.style.display =
+                    historyDropdown.style.display === 'none' ? 'block' : 'none';
+            };
+            dialog.querySelectorAll('.sa-history-item').forEach(el => {
+                el.onclick = () => {
+                    filterInput.value = el.textContent;
+                    historyDropdown.style.display = 'none';
+                };
+            });
+        }
+
+        // Close history dropdown when clicking elsewhere inside the dialog
+        dialog.addEventListener('click', (e) => {
+            if (historyDropdown && !historyDropdown.contains(e.target) && e.target !== historyToggle) {
+                historyDropdown.style.display = 'none';
+            }
+        });
+#+end_example
+
+Please fix
+
 
 * changelog popup should get focus when popupped
 
@@ -44397,165 +44751,117 @@ and only the "Primary alias:" stuff should be relocated as before
 
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1
 
-
-* TODO update HELP
-
-Please update in the uploaded HELP file "ShowAllEntityData_HELP.txt" the content with the current state of the
-userscript "ShowAllEntityData.user.js", also take into account the current library implementation "VZ_MBLibrary.user.js"
-and make a final changelog entry in "ShowAllEntityData_CHANGELOG.json"
-
-
 * TODO When auto-resized and using unique values in column outside the visible page (so using the scrollbar) and then clicking a value, the page should NOT jump back to the left.. the focus should stay
 
+* TODO Why is the disambiguation rendered after all the buttons for Event-Aliases
 
-* add disambiguation
-** search: Rx: 'convocation|live & alive' on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+For pages of type https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
+
+- why is the '<span class="comment">(Bleachers)</span>' rendered after all the action buttons in the h1 header, e.g.
 
 #+begin_example
-        {
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
-            ],
-            tableMode: 'multi' // native tables, h3 headers
-        },
+<h1><a href="/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c"><bdi>From the Studio to the Stage: New York</bdi></a><div id="mb-show-all-controls-container" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: 10px; vertical-align: middle; line-height: 1;"><button type="button" title="Fetch all the table data from the MusicBrainz backend database (Ctrl+M, then 1)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(204, 255, 204); color: black;" class="">🧮¹ Show all Aliases for Event</button><button id="mb-stop-btn" type="button" title="Stop the current data fetching process from the MusicBrainz backend database" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; align-items: center; justify-content: center; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47); display: none;"><span>St<span style="text-decoration:underline">o</span>p</span></button><span id="mb-button-divider-initial" class="mb-button-divider-initial" style="color: rgb(153, 153, 153); margin: 0px 4px;"> | </span><button id="mb-save-to-disk-btn" type="button" title="Save current table data to disk as Gzipped JSON (Ctrl+M, then S)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-block; align-items: center; justify-content: center; background-color: rgb(76, 175, 80); color: white; border: 1px solid rgb(69, 160, 73);"><span>💾 <span style="text-decoration:underline">S</span>ave to Disk</span></button><button id="mb-load-from-disk-btn" type="button" title="Load table data from disk (serialized JSON file in Gzipped format) (Ctrl+M, then L)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(33, 150, 243); color: white; border: 1px solid rgb(11, 125, 218);"><span>📂 <span style="text-decoration:underline">L</span>oad from Disk</span></button><span class="mb-button-divider-after-load" style="color: rgb(153, 153, 153); margin: 0px 4px;"> | </span><input id="mb-file-input" type="file" accept=".gz,application/gzip" style="display: none;"><span id="mb-fetch-progress-wrap" style="display: none; align-items: center; vertical-align: middle;"><span id="mb-fetch-progress-outer" style="display: inline-block; position: relative; width: auto; min-width: 420px; max-width: 750px; height: 20px; background: rgb(224, 224, 224); border-radius: 4px; overflow: hidden; vertical-align: middle; border: 1px solid rgb(187, 187, 187);"><span id="mb-fetch-progress-fill" style="display: block; position: absolute; top: 0px; left: 0px; height: 100%; width: 100%; background: rgb(204, 255, 204); transition: width 0.2s, background 0.3s; border-radius: 3px 0px 0px 3px;"></span><span id="mb-fetch-progress-label" style="position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: bold; color: rgb(51, 51, 51); white-space: nowrap; pointer-events: none;">Loading page 1 of 1... (2 rows) - 0.0s left</span></span></span><button id="mb-resize-btn" title="Auto-resize columns to optimal width (Ctrl+M, then R)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>↔️ <span style="text-decoration:underline">R</span>esize</span></button><button id="mb-visible-btn" title="Show/hide table columns (Ctrl+M, then V)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>👁️ <span style="text-decoration:underline">V</span>isible</span></button><button id="mb-density-btn" title="Change table density (spacing) (Ctrl+M, then D)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>📏 <span style="text-decoration:underline">D</span>ensity</span></button><button id="mb-stats-btn" title="Show table statistics (Ctrl+M, then I)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>📊 Stat<span style="text-decoration:underline">i</span>stics</span></button><button id="mb-export-btn" title="Export visible rows and columns to various formats (Ctrl+M, then E)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>💾 <span style="text-decoration:underline">E</span>xport</span></button><span class="mb-button-divider-before-shortcuts" style="color: rgb(153, 153, 153); margin: 0px 4px;"> | </span><button id="mb-shortcuts-help-btn" title="Show keyboard shortcuts (or press ? / Ctrl+M, then K)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;">🎹</button><button id="mb-settings-btn" type="button" title="Open userscript settings manager to configure script behavior (Ctrl+M, then ,)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(96, 125, 139); color: white; border: 1px solid rgb(84, 110, 122);">⚙️</button><button id="mb-app-help-btn" title="Show application help and feature overview (Ctrl+M, then H)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(120, 144, 156); color: white; border: 1px solid rgb(96, 125, 139); user-select: none;">❓</button></div> (2024-10-04)<!-- --> <span class="comment">(Bleachers)</span></h1>
 #+end_example
 
-==>
+- and why for example moves the 'English United States (primary)' column value (initially under the "Locale" column when the page is first loaded), below the "MB-Name" column, see the following complete rendered final page
 
 #+begin_example
-        {
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
-            ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
-                ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi' // native tables, h3 headers
-        },
-#+end_example
-
-I changed the definition for the pageType "type: 'artist-releasegroups'" to
-
-#+begin_example
-        {
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
-            ],
-            features: {
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi' // native tables, h3 headers
-        },
-#+end_example
-
-so basically added
-
-#+begin_example
-            features: {
-                extractMainColumn: 'Title'
-            },
-#+end_example
-
-Now the question, the rendered final table shows the two synthetic columns "MB-Name" and "Comment" but somehow nothing
-gets extracted from the "Title" column.
-
-Here an example of the rendered header row and a data row (filtered):
-
-#+begin_example
-<table class="tbl" data-mb-total-rows="419" style="margin-left: 1.5em; width: calc(100% - 1.5em);">
+<table class="tbl">
   <thead>
     <tr>
-      <th colspan="1" class="checkbox-cell" style="position: relative;">
-	<input type="checkbox">
-	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
-	</div>
-      </th>
-      <th colspan="1" class="year c" style="cursor: default; position: relative;">
+      <th style="cursor: default; position: relative;">
 	<div class="mb-col-hdr-flex">
 	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
-	  </span> Year
+	  </span> Alias
 	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
 	  </span>
 	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
 	  </span>
-	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Year">📊
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Alias">📊
 	  </span>
 	</div>
 	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
 	</div>
       </th>
-      <th colspan="1" style="cursor: default; position: relative;">
+      <th style="cursor: default; position: relative;">
 	<div class="mb-col-hdr-flex">
 	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
-	  </span> Title
+	  </span> Sort name
 	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
 	  </span>
 	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
 	  </span>
-	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Title">📊
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Sort name">📊
 	  </span>
 	</div>
 	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
 	</div>
       </th>
-      <th colspan="1" class="artist" style="cursor: default; position: relative;">
+      <th style="cursor: default; position: relative;">
 	<div class="mb-col-hdr-flex">
 	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
-	  </span> Artist
+	  </span> Begin date
 	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
 	  </span>
 	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
 	  </span>
-	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Artist">📊
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Begin date">📊
 	  </span>
 	</div>
 	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
 	</div>
       </th>
-      <th colspan="1" class="rating c" style="cursor: default; position: relative;">
+      <th style="cursor: default; position: relative;">
 	<div class="mb-col-hdr-flex">
 	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
-	  </span> Rating
+	  </span> End date
 	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
 	  </span>
 	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
 	  </span>
-	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Rating">📊
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for End date">📊
 	  </span>
 	</div>
 	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
 	</div>
       </th>
-      <th colspan="1" class="count c" style="cursor: default; position: relative;">
+      <th style="cursor: default; position: relative;">
 	<div class="mb-col-hdr-flex">
 	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
-	  </span> Releases
+	  </span> Type
 	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
 	  </span>
 	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
 	  </span>
-	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Releases">📊
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Type">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Locale
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Locale">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th class="actions" style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Actions
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Actions">📊
 	  </span>
 	</div>
 	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
@@ -44592,6 +44898,11 @@ Here an example of the rendered header row and a data row (filtered):
     </tr>
     <tr class="mb-col-filter-row">
       <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="0">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
       </th>
       <th>
 	<span class="mb-col-filter-wrapper">
@@ -44602,7 +44913,7 @@ Here an example of the rendered header row and a data row (filtered):
       </th>
       <th>
 	<span class="mb-col-filter-wrapper">
-	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="2" style="background-color: rgb(255, 249, 196); box-shadow: green 0px 0px 2px 2px;">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="2">
 	  <span class="mb-col-filter-clear" title="Clear column filter">✕
 	  </span>
 	</span>
@@ -44642,134 +44953,134 @@ Here an example of the rendered header row and a data row (filtered):
 	  </span>
 	</span>
       </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="8">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
     </tr>
   </thead>
   <tbody>
     <tr class="odd">
       <td>
-	<input name="add-to-merge" type="checkbox" value="1812962">
-      </td>
-      <td class="c">1995
-      </td>
-      <td>
-	<span class="artwork-icon caa-icon" title="This release group has artwork in the Cover Art Archive">
-	</span>
-	<a class="wrap-anywhere" href="/release-group/a17893f0-2dfa-4a2b-a004-02ba6a9f85c3">
-	  <bdi>
-	    <span class="mb-column-filter-highlight">
-	      <span class="mb-subtable-filter-highlight">Live
-	      </span>&amp;
-	    </span> A
-	    <span class="mb-subtable-filter-highlight">live
-	    </span>
-	  </bdi>
-	</a>
-	<span class="mb-subtable-filter-highlight">
-	</span>
-	<span class="comment">(
-	  <bdi>3 CD imm 43.90009
-	  </bdi>)
-	</span>
-      </td>
-      <td>
-	<bdi>
-	  <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
-	  </a>
+	<bdi>2024-10-04: Madison Square Garden, New York City, NY, USA
 	</bdi>
       </td>
-      <td class="c">
-	<span class="inline-rating">
-	  <span class="star-rating" tabindex="-1">
-	    <a class="stars-1 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=20&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 1 star">1
-	    </a>
-	    <a class="stars-2 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=40&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 2 stars">2
-	    </a>
-	    <a class="stars-3 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=60&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 3 stars">3
-	    </a>
-	    <a class="stars-4 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=80&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 4 stars">4
-	    </a>
-	    <a class="stars-5 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=100&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 5 stars">5
-	    </a>
-	  </span>
-	</span>
+      <td>
       </td>
-      <td class="c">1
+      <td>
+      </td>
+      <td>
+      </td>
+      <td>Event name
+      </td>
+      <td>English United States
+	<!-- -->
+	<!-- -->(
+	<span class="comment">primary
+	</span>)
+      </td>
+      <td>English United States
+      </td>
+      <td>primary
+      </td>
+    </tr>
+    <tr class="even">
+      <td>
+	<bdi>Bleachers at Madison Square Garden, New York, NY, USA
+	</bdi>
+      </td>
+      <td>
+      </td>
+      <td>
+      </td>
+      <td>
+      </td>
+      <td>Event name
+      </td>
+      <td>
+      </td>
+      <td>
+      </td>
+      <td>
       </td>
     </tr>
   </tbody>
 </table>
+
+
+<td>
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <a href="https://musicbrainz.org/release/63cf0c09-3e33-4f68-8453-c02db5ef3455/cover-art" ref="/release-group/a17893f0-2dfa-4a2b-a004-02ba6a9f85c3" title="10 images found in this release">
+    <span class="caa-icon jesus2099userjs154481" style="background-size: contain; background-image: url(&quot;//coverartarchive.org/release-group/a17893f0-2dfa-4a2b-a004-02ba6a9f85c3/front-250&quot;);">
+    </span>
+  </a>
+  <span class="artwork-icon caa-icon" title="This release group has artwork in the Cover Art Archive">
+  </span>
+  <a class="wrap-anywhere" href="/release-group/a17893f0-2dfa-4a2b-a004-02ba6a9f85c3">
+    <bdi>Live &amp; Alive
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>3 CD imm 43.90009
+    </bdi>)
+  </span>
+</td>
+
+
+<td>
+  <a class="wrap-anywhere" href="/event/26cead1c-a5fa-4677-873a-312412c6dc91">
+    <bdi>
+      <span class="mb-column-filter-highlight">2001
+      </span>‐05‐27: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Southside Johnny &amp; The Asbury Jukes at The Stone Pony
+      </i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show
+    </bdi>)
+  </span>
+</td>
+
+
+<h1>
+  <a href="/event/26cead1c-a5fa-4677-873a-312412c6dc91">
+    <bdi>2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a> (2001-05-27)
+  <!-- -->
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Southside Johnny &amp; The Asbury Jukes at The Stone Pony
+      </i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show
+    </bdi>)
+  </span>
+</h1>
+
+<h1>
+  <a href="/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2">
+    <bdi>1981‐01‐26: Athletic &amp; Convocation Center, University of Notre Dame, South Bend, IN, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Bruce Springsteen &amp; The E Street Band at Athletic &amp; Convocation Center
+      </i>
+    </bdi>)
+  </span>
+</h1>
 #+end_example
 
+For all other pageTypes this anomalies do NOT exist. Please explain and fix (maybe with a special casing for URLs of pageType "<Entity>-Aliases" pages)
 
-* TODO Why is the disambiguation rendered after all the buttons for Event-Aliases
-
-https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
-
-
-* artist-releasegroups
-
-Bug 1 — artist-releasegroups branch had no extraction pipeline at all.
-
-The artist-releasegroups fetch path (doc.querySelectorAll('table.tbl')…) was a completely independent loop that only did
-document.importNode(row) + indicesToExclude deletion and then immediately pushed the raw row. The MB-Name/Comment
-extraction, column extractor calls, and synthetic-cell appending all lived exclusively in the generic else-branch, which
-this pageType never enters. The fix: the artist-releasegroups branch now runs the same 5-step pipeline as the
-else-branch — (1) MB-Name/Comment cell creation from mainColIdx, (2) active column extractor evaluation, (3)
-excluded-column deletion, (4) extractor synthetic-cell appending, (5) MB-Name/Comment cell appending.
-
-Bug 2 — stale pageType !== 'artist-releasegroups' guard in the else-branch.
-
-Even if a row somehow reached the else-branch, tdName/tdComment would never be appended for this pageType due to that
-explicit guard. Replaced with if (mainColIdx !== -1) — data-driven rather than hardcoded, consistent with how all other
-branches now work.
-
-
-* DONE history drop-down missing from load dialog
-
-In the uploaded userscript,
-
-The functionality about the "history drop-down in the 'Load from Disk'-dialog" is somehow since the latest rewrites
-missing, also some infrastructure code is still there
-
-#+begin_example
-        sa_load_history_limit: {
-            label: 'Load Filter History Limit',
-            type: 'number',
-            default: 50,
-            min: 0,
-            max: 50,
-            description: 'Number of previous filter expressions to remember in the load dialog.'
-        },
-#+end_example
-
-#+begin_example
-        // ── History dropdown ──────────────────────────────────────────────────
-        if (historyToggle) {
-            historyToggle.onclick = (ev) => {
-                ev.stopPropagation();
-                historyDropdown.style.display =
-                    historyDropdown.style.display === 'none' ? 'block' : 'none';
-            };
-            dialog.querySelectorAll('.sa-history-item').forEach(el => {
-                el.onclick = () => {
-                    filterInput.value = el.textContent;
-                    historyDropdown.style.display = 'none';
-                };
-            });
-        }
-
-        // Close history dropdown when clicking elsewhere inside the dialog
-        dialog.addEventListener('click', (e) => {
-            if (historyDropdown && !historyDropdown.contains(e.target) && e.target !== historyToggle) {
-                historyDropdown.style.display = 'none';
-            }
-        });
-#+end_example
-
-Please fix
 
 
 * TODO Toggle sidebar handle NOT visible when loaded from filesystem
+
 
 * TODO Persistent storage of "Visible columns" for each pageType
 

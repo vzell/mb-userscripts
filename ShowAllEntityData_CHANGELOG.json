@@ -1,5 +1,18 @@
 [
     {
+        "version": "9.99.35",
+        "date": "2026-03-05",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "event-aliases (Bug 1) — controls container inserted before disambiguation span: on entity alias pages (and any other page where the h1's `headerContainer` resolves to the inner `<a>` element rather than the `<h1>` itself), the controls `<div>` was inserted via `headerContainer.after(controlsContainer)` — immediately after the `<a>` link, pushing any pre-existing h1 siblings that followed the `<a>` (the date text node and a plain `<span class=\"comment\">` disambiguation such as \"(Bleachers)\") to appear after the action buttons. `relocateH1CommentSpan()` then skipped the plain span (no `<i title>` inside) and left it stranded after the controls. Fixed by resolving the owning `<h1>` via `headerContainer.closest('h1')` and calling `h1El.appendChild(controlsContainer)` instead, which appends the controls at the end of the h1 so that any pre-existing text and comment siblings remain in their natural position before the buttons. A safe fallback to the previous `after()` behaviour is retained when no parent `<h1>` is found.",
+                    "All *-aliases pages (Bug 2) — Locale column incorrectly split into MB-Name / Comment: `extractMainColumn: 'Locale'` was set on all 11 aliases page definitions (`instrument-aliases`, `area-aliases`, `place-aliases`, `series-aliases`, `label-aliases`, `work-aliases`, `artist-aliases`, `releasegroup-aliases`, `release-aliases`, `recording-aliases`, `event-aliases`). The MB-Name/Comment extraction pipeline then treated the Locale cell (e.g. `English United States`) as the main entity column — since the cell contains no `<a>` link, the fallback extracted the first text node as MB-Name and the `<span class=\"comment\">primary</span>` role indicator as Comment, producing wrong synthetic columns: MB-Name = \"English United States\", Comment = \"primary\". The Locale column on alias tables is purely descriptive plain text; it never contains entity links or entity disambiguation comments. Fixed by removing `extractMainColumn: 'Locale'` (and the surrounding `features` block where it was the sole entry) from all 11 aliases page definitions. The commented-out lines and an explanatory note are left in place for future reference."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.34",
         "date": "2026-03-05",
         "sections": [
