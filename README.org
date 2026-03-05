@@ -44703,3 +44703,21 @@ Here an example of the rendered header row and a data row (filtered):
 * TODO Why is the disambiguation rendered after all the buttons for Event-Aliases
 
 https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
+
+* artist-releasegroups
+
+Bug 1 — artist-releasegroups branch had no extraction pipeline at all.
+
+The artist-releasegroups fetch path (doc.querySelectorAll('table.tbl')…) was a completely independent loop that only did
+document.importNode(row) + indicesToExclude deletion and then immediately pushed the raw row. The MB-Name/Comment
+extraction, column extractor calls, and synthetic-cell appending all lived exclusively in the generic else-branch, which
+this pageType never enters. The fix: the artist-releasegroups branch now runs the same 5-step pipeline as the
+else-branch — (1) MB-Name/Comment cell creation from mainColIdx, (2) active column extractor evaluation, (3)
+excluded-column deletion, (4) extractor synthetic-cell appending, (5) MB-Name/Comment cell appending.
+
+Bug 2 — stale pageType !== 'artist-releasegroups' guard in the else-branch.
+
+Even if a row somehow reached the else-branch, tdName/tdComment would never be appended for this pageType due to that
+explicit guard. Replaced with if (mainColIdx !== -1) — data-driven rather than hardcoded, consistent with how all other
+branches now work.
+
