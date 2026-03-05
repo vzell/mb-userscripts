@@ -460,7 +460,7 @@
             label: 'Enable Column Resizing',
             type: 'checkbox',
             default: true,
-            description: 'Enable manual column resizing with mouse drag and "↔️ Auto-Resize" button'
+            description: 'Enable manual column resizing with mouse drag and "↔️ Resize" button'
         },
 
         sa_enable_column_visibility: {
@@ -2333,7 +2333,7 @@
 
     /**
      * Ensure settings button is always the last button in controls container
-     * Also adds a divider before the Auto-Resize button after data is loaded
+     * Also adds a divider before the Resize button after data is loaded
      */
     function ensureSettingsButtonIsLast() {
         const controlsContainer = document.getElementById('mb-show-all-controls-container');
@@ -2375,7 +2375,7 @@
             }
         }
 
-        // Add divider between Load from Disk and Auto-Resize if not already present.
+        // Add divider between Load from Disk and Resize if not already present.
         // Note: the initialDivider (between action buttons and Save/Load) is intentionally
         // kept — it remains relevant both on the initial page and after load.
         const loadBtn = document.getElementById('mb-load-from-disk-btn');

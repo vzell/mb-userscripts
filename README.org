@@ -44234,526 +44234,7 @@ missing, also some infrastructure code is still there
 
 Please fix
 
-
-* changelog popup should get focus when popupped
-
-The ChangeLog popup should get focus when popupped (the "Close" button a the bottom right corner is not needed, we have
-the "CLOSE" link and "Escape"-key handling). Additionally when filtering, the search string should be highlighted in the
-changelog entries and the number of hits should be displayed in the the header area, so change this
-
-#+begin_example
-                            ${_changelogMeta.fromCache === null
-                                ? `${_changelog.length} entries (static/local)`
-                                : `${_changelog.length} entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
-#+end_example
-
-to
-
-#+begin_example
-                            ${_changelogMeta.fromCache === null
-                                ? `${_changelog.length} entries (static/local)`
-                                : `${_changelog.length} (<n> filtered) entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
-#+end_example
-
-
-
-* document test suite after userscript and library changes
-** library
-** userscript
-
-
-* how to make sure a userscript runs on pages - match versus include
-** match
-
-// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
-// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
-// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
-// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
-
-** Please rewrite the following
-
-#+begin_example
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-#+end_example
-
-to support the "*.//*." like '// @match        *://*.musicbrainz.org/'
-
-In userscript headers, besides "// @match" and "// @include" is there somethig like an "//@exclude" directive
-
-so that this type of URL would be included (different UUIDs should be possible)
-
-https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
-https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7?page=2&tport=8000
-
-but not
-
-﻿https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85
-https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85&tport=8000
-
-
-// @match        *://*.musicbrainz.org/recording/*
-// @exclude      *://*.musicbrainz.org/recording/merge*
-// @include      /^https?://musicbrainz\.org/recording/                 [a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
-
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
------------------------------------------------------------------------------------------------------------------------
-
-// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
-// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(?:\?.*)?$/
-
-// @include   /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-
------------------------------------------------------------------------------------------------------------------------
-
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F-]{36}(\?.*)?$/
-
-
-
-// Recording
-// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Artist
-// @include /^https:\/\/musicbrainz\.org\/artist\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Release
-// @include /^https:\/\/musicbrainz\.org\/release\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Release Group
-// @include /^https:\/\/musicbrainz\.org\/release-group\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Work
-// @include /^https:\/\/musicbrainz\.org\/work\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Label
-// @include /^https:\/\/musicbrainz\.org\/label\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Area
-// @include /^https:\/\/musicbrainz\.org\/area\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Place
-// @include /^https:\/\/musicbrainz\.org\/place\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Event
-// @include /^https:\/\/musicbrainz\.org\/event\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-// Series
-// @include /^https:\/\/musicbrainz\.org\/series\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
-
-
-
-
-// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work|label|area|place|event|series)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
-
-
-// @run-at document-end
-// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
-
-
-** Please rewrite
-
-the block
-
-#+begin_example
-// @match        *://*.musicbrainz.org/artist/*
-// @match        *://*.musicbrainz.org/release-group/*
-// @match        *://*.musicbrainz.org/release/*
-// @match        *://*.musicbrainz.org/work/*
-// @match        *://*.musicbrainz.org/recording/* 
-// @match        *://*.musicbrainz.org/label/*
-// @match        *://*.musicbrainz.org/series/*
-// @match        *://*.musicbrainz.org/place/*
-// @match        *://*.musicbrainz.org/area/*
-// @match        *://*.musicbrainz.org/instrument/*
-// @match        *://*.musicbrainz.org/event/*
-// @match        *://*.musicbrainz.org/search?query=*
-#+end_example
-
-into a block to use the "include" directive, as a template, see the following for the '// @match        *://*.musicbrainz.org/recording/* '
- 
-#+begin_example
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-#+end_example
-
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/artist\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/release-group\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/release\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/work\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/label\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/series\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/place\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/area\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/instrument\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/event\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-#+end_example
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/search\?query=.*$/
-#+end_example
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?|search\?query=.*)$/
-#+end_example
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-#+end_example
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/search\?query=.*$/
-#+end_example
-
-** 2
-
-Please rewrite this block
-
-#+begin_example
-// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
-// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
-// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
-// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
-// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
-// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
-// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
-#+end_example
-
-into a condensed format as one line "inlcude", something like
-
-#+begin_example
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-#+end_example
-
-
-#+begin_example
-// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels)(?:\?.*)?$/
-#+end_example
-
-
-
-* add unicode symbols back
-** initial
-
-The "Ctrl-M" key combination in this userscript is used as a prefixkey prefix map. But it seems that some other userscript or the MusicBrainz pages themthelves
-have registered an event handler that fires in addition to ours but only when inside text input fields (like the global or column specific filter fields) 
-
-It popsup a unicodechars Menu
-
-#+begin_example
-<div class="mbunicodecharsMenuShow" id="mbunicodecharsMenu" style="top: 364.219px; left: 31px;">
-#+end_example
-
-Could this somehow be prevented, or better yet, remapped to a different key combination
-
-
-* Remove actions column from aliases pages
-
-#+begin_example
-@@ -140,6 +140,13 @@
-             description: "Remove the Performance column from the final rendered tables (comes from another userscript) "
-         },
- 
-+        sa_remove_actions: {
-+            label: "Remove Actions column",
-+            type: "checkbox",
-+            default: true,
-+            description: "Remove the Actions column from the final rendered tables (comes from Aliases pages) "
-+        },
-+
-         // ============================================================
-         // KEYBOARD SHORTCUTS SECTION
-         // ============================================================
-@@ -9054,7 +9061,8 @@
-             'Performance Attributes': 'sa_remove_perf',
-             'Rating': 'sa_remove_rating',
-             'Tagger': 'sa_remove_tagger',
--            'Release events': 'sa_remove_release_events'
-+            'Release events': 'sa_remove_release_events',
-+	    'Actions': 'sa_remove_actions'
-         };
- 
-         headers.forEach((th, idx) => {
-@@ -9589,7 +9597,8 @@
-                         'Performance Attributes': 'sa_remove_perf',
-                         'Rating': 'sa_remove_rating',
-                         'Tagger': 'sa_remove_tagger',
--                        'Release events': 'sa_remove_release_events'
-+                        'Release events': 'sa_remove_release_events',
-+			'Actions': 'sa_remove_actions'
-                     };
- 
-                     // Reset column indices for all active extractors before scanning each page.
-#+end_example
-
-#+begin_example
-        sa_remove_actions: {
-            label: "Remove Actions column",
-            type: "checkbox",
-            default: true,
-            description: "Remove the Actions column from the final rendered tables (comes from Aliases pages) "
-        },
-#+end_example
-
-
-* configurable: pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
-
-"Artists" - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
-"Recording artists" - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
-
-and remove the "(show less)" line
-
-
-* TODO Event-Alias handling - add the event alias int the next line
-** extract as synthetic column - add synthetic column for event alias - 2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA (2001-05-27) (Southside Johnny & The Asbury Jukes at The Stone Pony, Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
-
-https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91
-
-*** Fix placement of buttons to the end of (Southside Johnny & The Asbury Jukes at The Stone Pony, Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
-
-** add the event alias int the next line - 1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA (Bruce Springsteen & The E Street Band at Athletic & Convocation Center)
-*** initial
-
-In the uploaded userscript,
-
-in pages of type https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2 - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0&page=12
-
-https://musicbrainz.org/release-group/a17893f0-2dfa-4a2b-a004-02ba6a9f85c3 - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0&page=9
-
-there is the possibility that in the h1 header there is an additional '<span class="comment">' container
-
-#+begin_example
-  <span class="comment">(
-    <bdi>
-      <i title="Primary alias">Bruce Springsteen &amp; The E Street Band at Athletic &amp; Convocation Center
-      </i>
-    </bdi>)
-  </span>
-#+end_example
-
-e.g.
-
-#+begin_example
-<h1>
-  <a href="/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2">
-    <bdi>1981‐01‐26: Athletic &amp; Convocation Center, University of Notre Dame, South Bend, IN, USA
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>
-      <i title="Primary alias">Bruce Springsteen &amp; The E Street Band at Athletic &amp; Convocation Center
-      </i>
-    </bdi>)
-  </span>
-  <div id="mb-show-all-controls-container" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: 10px; vertical-align: middle; line-height: 1;">
-    <button type="button" title="Fetch all the table data from the MusicBrainz backend database (Ctrl+M, then 1)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;">🧮¹ Show all Releases for ReleaseGroup
-    </button>
-    <button id="mb-stop-btn" type="button" title="Stop the current data fetching process from the MusicBrainz backend database" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; align-items: center; justify-content: center; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47); display: none;">
-      <span>St
-	<span style="text-decoration:underline">o
-	</span>p
-      </span>
-    </button>
-    <span id="mb-button-divider-initial" class="mb-button-divider-initial" style="color: rgb(153, 153, 153); margin: 0px 4px;"> |
-    </span>
-    <button id="mb-save-to-disk-btn" type="button" title="Save current table data to disk as Gzipped JSON (Ctrl+M, then S)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: none; align-items: center; justify-content: center; background-color: rgb(76, 175, 80); color: white; border: 1px solid rgb(69, 160, 73);">
-      <span>💾
-	<span style="text-decoration:underline">S
-	</span>ave to Disk
-      </span>
-    </button>
-    <button id="mb-load-from-disk-btn" type="button" title="Load table data from disk (serialized JSON file in Gzipped format) (Ctrl+M, then L)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(33, 150, 243); color: white; border: 1px solid rgb(11, 125, 218);">
-      <span>📂
-	<span style="text-decoration:underline">L
-	</span>oad from Disk
-      </span>
-    </button>
-    <input id="mb-file-input" type="file" accept=".gz,application/gzip" style="display: none;">
-    <span class="mb-button-divider-before-shortcuts" style="color: rgb(153, 153, 153); margin: 0px 4px;"> |
-    </span>
-    <button id="mb-shortcuts-help-btn" title="Show keyboard shortcuts (or press ? / Ctrl+M, then K)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;">🎹
-    </button>
-    <button id="mb-settings-btn" type="button" title="Open userscript settings manager to configure script behavior (Ctrl+M, then ,)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(96, 125, 139); color: white; border: 1px solid rgb(84, 110, 122);">⚙️
-    </button>
-    <button id="mb-app-help-btn" title="Show application help and feature overview (Ctrl+M, then H)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(120, 144, 156); color: white; border: 1px solid rgb(96, 125, 139); user-select: none;">❓
-    </button>
-    <span id="mb-fetch-progress-wrap" style="display: none; align-items: center; vertical-align: middle;">
-      <span id="mb-fetch-progress-outer" style="display: inline-block; position: relative; width: auto; min-width: 420px; max-width: 750px; height: 20px; background: rgb(224, 224, 224); border-radius: 4px; overflow: hidden; vertical-align: middle; border: 1px solid rgb(187, 187, 187);">
-	<span id="mb-fetch-progress-fill" style="display: block; position: absolute; top: 0px; left: 0px; height: 100%; width: 0%; background: rgb(255, 204, 204); transition: width 0.2s, background 0.3s; border-radius: 3px 0px 0px 3px;">
-	</span>
-	<span id="mb-fetch-progress-label" style="position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: bold; color: rgb(51, 51, 51); white-space: nowrap; pointer-events: none;">
-	</span>
-      </span>
-    </span>
-  </div>
-</h1>
-#+end_example
-
-When rendering the final page the '<i title="Primary alias">Bruce Springsteen &amp; The E Street Band at Athletic &amp;
-Convocation Center' part without the enclosing brackets "(" and ")" should be rendered right after the h1 header line
-and before the next '<p class="subheader">' container, e.g.
-
-#+begin_example
-<p class="subheader">
-  <span class="prefix">~
-  </span>
-  <!-- -->Release group by
-  <bdi>
-    <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
-    </a> &amp;
-    <a href="/artist/d6652e7b-33fe-49ef-8336-4c863b4f996f" title="E Street Band, The">The E Street Band
-    </a>
-  </bdi>
-  <span id="mb-status-sentinel" style="display: inline-block; width: 0px; height: 0px; overflow: hidden; vertical-align: middle;">
-  </span>
-  <div id="mb-status-displays-container" style="display: inline-flex; align-items: center; gap: 8px; line-height: 1; vertical-align: middle; margin-left: 10px;">
-    <span id="mb-global-status-display" style="font-size: 0.95em; color: rgb(51, 51, 51); font-weight: bold; vertical-align: middle;">
-    </span>
-    <span id="mb-info-display" style="font-size: 0.95em; color: rgb(51, 51, 51); font-weight: bold; vertical-align: middle;">
-    </span>
-  </div>
-</p>
-#+end_example
-
-so textual, instead of 
-
-#+begin_example
-1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA (Bruce Springsteen & The E Street Band at Athletic & Convocation Center) <standard buttons like "Show all..." etc>
-~ Release group by Bruce Springsteen & The E Street Band
-#+end_example
-
-it should look like
-
-#+begin_example
-1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA <standard buttons like "Show all..." etc>
-Primary alias: Bruce Springsteen & The E Street Band at Athletic & Convocation Center
-~ Release group by Bruce Springsteen & The E Street Band
-#+end_example
-
-So in essence the whole '<span class="comment">' should be removed from the h1 header line and placed one line below the
-h1 header in right before the '<p class="subheader">' but the title value from '<i title="Primary alias">' + a ": "
-should be prepended to the actual value of the alias
-
-*** more complex
-
-Actually the whole structure could be more complex, instead of the last example
-
-#+begin_example
-<h1>
-  <a href="/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2">
-    <bdi>1981‐01‐26: Athletic &amp; Convocation Center, University of Notre Dame, South Bend, IN, USA
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>
-      <i title="Primary alias">Bruce Springsteen &amp; The E Street Band at Athletic &amp; Convocation Center
-      </i>
-    </bdi>)
-  </span>
-</h1>
-#+end_example
-
-especially on pages of type https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91 there could be an
-optional string like '(2001-05-27)' after the closing '</a> ' in the h1 header line and also the '<i title="Primary alias">'
-could have an optional string ', Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show' e.g. after the closing '</i>'
-
-#+begin_example
-<h1>
-  <a href="/event/26cead1c-a5fa-4677-873a-312412c6dc91">
-    <bdi>2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA
-    </bdi>
-  </a> (2001-05-27)
-  <!-- -->
-  <span class="comment">(
-    <bdi>
-      <i title="Primary alias">Southside Johnny &amp; The Asbury Jukes at The Stone Pony
-      </i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show
-    </bdi>)
-  </span>
-</h1>
-#+end_example
-
-so textual, instead of 
-
-#+begin_example
-2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA (2001-05-27) (Southside Johnny & The Asbury Jukes at The Stone Pony, Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
-~ Concert
-#+end_example
-
-it should look like
-
-#+begin_example
-2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA (2001-05-27) (Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
-Primary alias: Southside Johnny & The Asbury Jukes at The Stone Pony
-~ Concert
-#+end_example
-
-so basically the ', Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show' should still be rendered BETWEEN enclosing brackets "(" and ")" but without the leading ", " IN the h1 header line
-and only the "Primary alias:" stuff should be relocated as before
-
-** From the Studio to the Stage: New York (2024-10-04) (2024-10-04: Madison Square Garden, New York City, NY, USA, Bleachers) - https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
-
-
-* TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1
-
-* TODO When auto-resized and using unique values in column outside the visible page (so using the scrollbar) and then clicking a value, the page should NOT jump back to the left.. the focus should stay
-
-* TODO Why is the disambiguation rendered after all the buttons for Event-Aliases
+* DONE Why is the disambiguation rendered after all the buttons for Event-Aliases
 
 For pages of type https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
 
@@ -45078,6 +44559,528 @@ For pages of type https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716
 For all other pageTypes this anomalies do NOT exist. Please explain and fix (maybe with a special casing for URLs of pageType "<Entity>-Aliases" pages)
 
 
+* DONE Remove actions column from aliases pages
+
+#+begin_example
+@@ -140,6 +140,13 @@
+             description: "Remove the Performance column from the final rendered tables (comes from another userscript) "
+         },
+ 
++        sa_remove_actions: {
++            label: "Remove Actions column",
++            type: "checkbox",
++            default: true,
++            description: "Remove the Actions column from the final rendered tables (comes from Aliases pages) "
++        },
++
+         // ============================================================
+         // KEYBOARD SHORTCUTS SECTION
+         // ============================================================
+@@ -9054,7 +9061,8 @@
+             'Performance Attributes': 'sa_remove_perf',
+             'Rating': 'sa_remove_rating',
+             'Tagger': 'sa_remove_tagger',
+-            'Release events': 'sa_remove_release_events'
++            'Release events': 'sa_remove_release_events',
++	    'Actions': 'sa_remove_actions'
+         };
+ 
+         headers.forEach((th, idx) => {
+@@ -9589,7 +9597,8 @@
+                         'Performance Attributes': 'sa_remove_perf',
+                         'Rating': 'sa_remove_rating',
+                         'Tagger': 'sa_remove_tagger',
+-                        'Release events': 'sa_remove_release_events'
++                        'Release events': 'sa_remove_release_events',
++			'Actions': 'sa_remove_actions'
+                     };
+ 
+                     // Reset column indices for all active extractors before scanning each page.
+#+end_example
+
+#+begin_example
+        sa_remove_actions: {
+            label: "Remove Actions column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Actions column from the final rendered tables (comes from Aliases pages) "
+        },
+#+end_example
+
+
+* changelog popup should get focus when popupped
+
+The ChangeLog popup should get focus when popupped (the "Close" button a the bottom right corner is not needed, we have
+the "CLOSE" link and "Escape"-key handling). Additionally when filtering, the search string should be highlighted in the
+changelog entries and the number of hits should be displayed in the the header area, so change this
+
+#+begin_example
+                            ${_changelogMeta.fromCache === null
+                                ? `${_changelog.length} entries (static/local)`
+                                : `${_changelog.length} entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
+#+end_example
+
+to
+
+#+begin_example
+                            ${_changelogMeta.fromCache === null
+                                ? `${_changelog.length} entries (static/local)`
+                                : `${_changelog.length} (<n> filtered) entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
+#+end_example
+
+
+
+* document test suite after userscript and library changes
+** library
+** userscript
+
+
+* how to make sure a userscript runs on pages - match versus include
+** match
+
+// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
+
+** Please rewrite the following
+
+#+begin_example
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+#+end_example
+
+to support the "*.//*." like '// @match        *://*.musicbrainz.org/'
+
+In userscript headers, besides "// @match" and "// @include" is there somethig like an "//@exclude" directive
+
+so that this type of URL would be included (different UUIDs should be possible)
+
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7?page=2&tport=8000
+
+but not
+
+﻿https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85
+https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-4557-8138-2a0a297f5c85&tport=8000
+
+
+// @match        *://*.musicbrainz.org/recording/*
+// @exclude      *://*.musicbrainz.org/recording/merge*
+// @include      /^https?://musicbrainz\.org/recording/                 [a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
+
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+-----------------------------------------------------------------------------------------------------------------------
+
+// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\?.*)?$/
+// @include   /^https?://musicbrainz\.org/recording/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(?:\?.*)?$/
+
+// @include   /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+
+-----------------------------------------------------------------------------------------------------------------------
+
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F-]{36}(\?.*)?$/
+
+
+
+// Recording
+// @include /^https:\/\/musicbrainz\.org\/recording\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Artist
+// @include /^https:\/\/musicbrainz\.org\/artist\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Release
+// @include /^https:\/\/musicbrainz\.org\/release\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Release Group
+// @include /^https:\/\/musicbrainz\.org\/release-group\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Work
+// @include /^https:\/\/musicbrainz\.org\/work\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Label
+// @include /^https:\/\/musicbrainz\.org\/label\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Area
+// @include /^https:\/\/musicbrainz\.org\/area\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Place
+// @include /^https:\/\/musicbrainz\.org\/place\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Event
+// @include /^https:\/\/musicbrainz\.org\/event\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+// Series
+// @include /^https:\/\/musicbrainz\.org\/series\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:\?.*)?$/
+
+
+
+
+// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work|label|area|place|event|series)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
+
+
+// @run-at document-end
+// @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
+
+
+** Please rewrite
+
+the block
+
+#+begin_example
+// @match        *://*.musicbrainz.org/artist/*
+// @match        *://*.musicbrainz.org/release-group/*
+// @match        *://*.musicbrainz.org/release/*
+// @match        *://*.musicbrainz.org/work/*
+// @match        *://*.musicbrainz.org/recording/* 
+// @match        *://*.musicbrainz.org/label/*
+// @match        *://*.musicbrainz.org/series/*
+// @match        *://*.musicbrainz.org/place/*
+// @match        *://*.musicbrainz.org/area/*
+// @match        *://*.musicbrainz.org/instrument/*
+// @match        *://*.musicbrainz.org/event/*
+// @match        *://*.musicbrainz.org/search?query=*
+#+end_example
+
+into a block to use the "include" directive, as a template, see the following for the '// @match        *://*.musicbrainz.org/recording/* '
+ 
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/artist\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/release-group\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/release\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/work\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/recording\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/label\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/series\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/place\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/area\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/instrument\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/event\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/search\?query=.*$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?|search\?query=.*)$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/search\?query=.*$/
+#+end_example
+
+** 2
+
+Please rewrite this block
+
+#+begin_example
+// @match        *://*.musicbrainz.org/release-group/*-*-*-*-*/aliases
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/artist/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/discids*
+// @match        *://*.musicbrainz.org/release/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/fingerprints*
+// @match        *://*.musicbrainz.org/recording/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/work/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/event/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/relationships*
+// @match        *://*.musicbrainz.org/label/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/series/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/performances*
+// @match        *://*.musicbrainz.org/place/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/events*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/places*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/works*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/labels*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/area/*-*-*-*-*/aliases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/artists*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/releases*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/recordings*
+// @match        *://*.musicbrainz.org/instrument/*-*-*-*-*/aliases
+#+end_example
+
+into a condensed format as one line "inlcude", something like
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+
+#+begin_example
+// @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels)(?:\?.*)?$/
+#+end_example
+
+
+
+* TODO add unicode symbols back
+** initial
+
+The "Ctrl-M" key combination in this userscript is used as a prefixkey prefix map. But it seems that some other userscript or the MusicBrainz pages themthelves
+have registered an event handler that fires in addition to ours but only when inside text input fields (like the global or column specific filter fields) 
+
+It popsup a unicodechars Menu
+
+#+begin_example
+<div class="mbunicodecharsMenuShow" id="mbunicodecharsMenu" style="top: 364.219px; left: 31px;">
+#+end_example
+
+Could this somehow be prevented, or better yet, remapped to a different key combination
+
+
+* configurable: pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
+
+"Artists" - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+"Recording artists" - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+
+and remove the "(show less)" line
+
+
+* TODO Event-Alias handling - add the event alias int the next line
+** extract as synthetic column - add synthetic column for event alias - 2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA (2001-05-27) (Southside Johnny & The Asbury Jukes at The Stone Pony, Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
+
+https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91
+
+*** Fix placement of buttons to the end of (Southside Johnny & The Asbury Jukes at The Stone Pony, Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
+
+** add the event alias int the next line - 1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA (Bruce Springsteen & The E Street Band at Athletic & Convocation Center)
+*** initial
+
+In the uploaded userscript,
+
+in pages of type https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2 - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0&page=12
+
+https://musicbrainz.org/release-group/a17893f0-2dfa-4a2b-a004-02ba6a9f85c3 - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0&page=9
+
+there is the possibility that in the h1 header there is an additional '<span class="comment">' container
+
+#+begin_example
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Bruce Springsteen &amp; The E Street Band at Athletic &amp; Convocation Center
+      </i>
+    </bdi>)
+  </span>
+#+end_example
+
+e.g.
+
+#+begin_example
+<h1>
+  <a href="/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2">
+    <bdi>1981‐01‐26: Athletic &amp; Convocation Center, University of Notre Dame, South Bend, IN, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Bruce Springsteen &amp; The E Street Band at Athletic &amp; Convocation Center
+      </i>
+    </bdi>)
+  </span>
+  <div id="mb-show-all-controls-container" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: 10px; vertical-align: middle; line-height: 1;">
+    <button type="button" title="Fetch all the table data from the MusicBrainz backend database (Ctrl+M, then 1)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;">🧮¹ Show all Releases for ReleaseGroup
+    </button>
+    <button id="mb-stop-btn" type="button" title="Stop the current data fetching process from the MusicBrainz backend database" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; align-items: center; justify-content: center; background-color: rgb(244, 67, 54); color: white; border: 1px solid rgb(211, 47, 47); display: none;">
+      <span>St
+	<span style="text-decoration:underline">o
+	</span>p
+      </span>
+    </button>
+    <span id="mb-button-divider-initial" class="mb-button-divider-initial" style="color: rgb(153, 153, 153); margin: 0px 4px;"> |
+    </span>
+    <button id="mb-save-to-disk-btn" type="button" title="Save current table data to disk as Gzipped JSON (Ctrl+M, then S)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: none; align-items: center; justify-content: center; background-color: rgb(76, 175, 80); color: white; border: 1px solid rgb(69, 160, 73);">
+      <span>💾
+	<span style="text-decoration:underline">S
+	</span>ave to Disk
+      </span>
+    </button>
+    <button id="mb-load-from-disk-btn" type="button" title="Load table data from disk (serialized JSON file in Gzipped format) (Ctrl+M, then L)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(33, 150, 243); color: white; border: 1px solid rgb(11, 125, 218);">
+      <span>📂
+	<span style="text-decoration:underline">L
+	</span>oad from Disk
+      </span>
+    </button>
+    <input id="mb-file-input" type="file" accept=".gz,application/gzip" style="display: none;">
+    <span class="mb-button-divider-before-shortcuts" style="color: rgb(153, 153, 153); margin: 0px 4px;"> |
+    </span>
+    <button id="mb-shortcuts-help-btn" title="Show keyboard shortcuts (or press ? / Ctrl+M, then K)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;">🎹
+    </button>
+    <button id="mb-settings-btn" type="button" title="Open userscript settings manager to configure script behavior (Ctrl+M, then ,)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(96, 125, 139); color: white; border: 1px solid rgb(84, 110, 122);">⚙️
+    </button>
+    <button id="mb-app-help-btn" title="Show application help and feature overview (Ctrl+M, then H)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(120, 144, 156); color: white; border: 1px solid rgb(96, 125, 139); user-select: none;">❓
+    </button>
+    <span id="mb-fetch-progress-wrap" style="display: none; align-items: center; vertical-align: middle;">
+      <span id="mb-fetch-progress-outer" style="display: inline-block; position: relative; width: auto; min-width: 420px; max-width: 750px; height: 20px; background: rgb(224, 224, 224); border-radius: 4px; overflow: hidden; vertical-align: middle; border: 1px solid rgb(187, 187, 187);">
+	<span id="mb-fetch-progress-fill" style="display: block; position: absolute; top: 0px; left: 0px; height: 100%; width: 0%; background: rgb(255, 204, 204); transition: width 0.2s, background 0.3s; border-radius: 3px 0px 0px 3px;">
+	</span>
+	<span id="mb-fetch-progress-label" style="position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: bold; color: rgb(51, 51, 51); white-space: nowrap; pointer-events: none;">
+	</span>
+      </span>
+    </span>
+  </div>
+</h1>
+#+end_example
+
+When rendering the final page the '<i title="Primary alias">Bruce Springsteen &amp; The E Street Band at Athletic &amp;
+Convocation Center' part without the enclosing brackets "(" and ")" should be rendered right after the h1 header line
+and before the next '<p class="subheader">' container, e.g.
+
+#+begin_example
+<p class="subheader">
+  <span class="prefix">~
+  </span>
+  <!-- -->Release group by
+  <bdi>
+    <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+    </a> &amp;
+    <a href="/artist/d6652e7b-33fe-49ef-8336-4c863b4f996f" title="E Street Band, The">The E Street Band
+    </a>
+  </bdi>
+  <span id="mb-status-sentinel" style="display: inline-block; width: 0px; height: 0px; overflow: hidden; vertical-align: middle;">
+  </span>
+  <div id="mb-status-displays-container" style="display: inline-flex; align-items: center; gap: 8px; line-height: 1; vertical-align: middle; margin-left: 10px;">
+    <span id="mb-global-status-display" style="font-size: 0.95em; color: rgb(51, 51, 51); font-weight: bold; vertical-align: middle;">
+    </span>
+    <span id="mb-info-display" style="font-size: 0.95em; color: rgb(51, 51, 51); font-weight: bold; vertical-align: middle;">
+    </span>
+  </div>
+</p>
+#+end_example
+
+so textual, instead of 
+
+#+begin_example
+1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA (Bruce Springsteen & The E Street Band at Athletic & Convocation Center) <standard buttons like "Show all..." etc>
+~ Release group by Bruce Springsteen & The E Street Band
+#+end_example
+
+it should look like
+
+#+begin_example
+1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA <standard buttons like "Show all..." etc>
+Primary alias: Bruce Springsteen & The E Street Band at Athletic & Convocation Center
+~ Release group by Bruce Springsteen & The E Street Band
+#+end_example
+
+So in essence the whole '<span class="comment">' should be removed from the h1 header line and placed one line below the
+h1 header in right before the '<p class="subheader">' but the title value from '<i title="Primary alias">' + a ": "
+should be prepended to the actual value of the alias
+
+*** more complex
+
+Actually the whole structure could be more complex, instead of the last example
+
+#+begin_example
+<h1>
+  <a href="/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2">
+    <bdi>1981‐01‐26: Athletic &amp; Convocation Center, University of Notre Dame, South Bend, IN, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Bruce Springsteen &amp; The E Street Band at Athletic &amp; Convocation Center
+      </i>
+    </bdi>)
+  </span>
+</h1>
+#+end_example
+
+especially on pages of type https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91 there could be an
+optional string like '(2001-05-27)' after the closing '</a> ' in the h1 header line and also the '<i title="Primary alias">'
+could have an optional string ', Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show' e.g. after the closing '</i>'
+
+#+begin_example
+<h1>
+  <a href="/event/26cead1c-a5fa-4677-873a-312412c6dc91">
+    <bdi>2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a> (2001-05-27)
+  <!-- -->
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Southside Johnny &amp; The Asbury Jukes at The Stone Pony
+      </i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show
+    </bdi>)
+  </span>
+</h1>
+#+end_example
+
+so textual, instead of 
+
+#+begin_example
+2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA (2001-05-27) (Southside Johnny & The Asbury Jukes at The Stone Pony, Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
+~ Concert
+#+end_example
+
+it should look like
+
+#+begin_example
+2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA (2001-05-27) (Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
+Primary alias: Southside Johnny & The Asbury Jukes at The Stone Pony
+~ Concert
+#+end_example
+
+so basically the ', Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show' should still be rendered BETWEEN enclosing brackets "(" and ")" but without the leading ", " IN the h1 header line
+and only the "Primary alias:" stuff should be relocated as before
+
+** From the Studio to the Stage: New York (2024-10-04) (2024-10-04: Madison Square Garden, New York City, NY, USA, Bleachers) - https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
+
+
+* TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1
+
+* TODO When auto-resized and using unique values in column outside the visible page (so using the scrollbar) and then clicking a value, the page should NOT jump back to the left.. the focus should stay
+
+In the uploaded userscript,
+
+When tables are auto-resized with "" and using unique values in column outside the visible page (so using the scrollbar) and then clicking
+a value, the page should NOT jump back to the left.. the focus should stay
 
 * TODO Toggle sidebar handle NOT visible when loaded from filesystem
 
