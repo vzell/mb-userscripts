@@ -44407,6 +44407,7 @@ and make a final changelog entry in "ShowAllEntityData_CHANGELOG.json"
 
 * TODO When auto-resized and using unique values in column outside the visible page (so using the scrollbar) and then clickin a value, the page should NOT jump back to the left.. the focus should stay
 
+
 * add disambiguation
 ** search: Rx: 'convocation|live & alive' on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
@@ -44704,6 +44705,7 @@ Here an example of the rendered header row and a data row (filtered):
 
 https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
 
+
 * artist-releasegroups
 
 Bug 1 — artist-releasegroups branch had no extraction pipeline at all.
@@ -44720,4 +44722,45 @@ Bug 2 — stale pageType !== 'artist-releasegroups' guard in the else-branch.
 Even if a row somehow reached the else-branch, tdName/tdComment would never be appended for this pageType due to that
 explicit guard. Replaced with if (mainColIdx !== -1) — data-driven rather than hardcoded, consistent with how all other
 branches now work.
+
+* history drop-down missing from load dialog
+
+#+begin_example
+        sa_load_history_limit: {
+            label: 'Load Filter History Limit',
+            type: 'number',
+            default: 50,
+            min: 0,
+            max: 50,
+            description: 'Number of previous filter expressions to remember in the load dialog.'
+        },
+#+end_example
+
+#+begin_example
+        // ── History dropdown ──────────────────────────────────────────────────
+        if (historyToggle) {
+            historyToggle.onclick = (ev) => {
+                ev.stopPropagation();
+                historyDropdown.style.display =
+                    historyDropdown.style.display === 'none' ? 'block' : 'none';
+            };
+            dialog.querySelectorAll('.sa-history-item').forEach(el => {
+                el.onclick = () => {
+                    filterInput.value = el.textContent;
+                    historyDropdown.style.display = 'none';
+                };
+            });
+        }
+
+        // Close history dropdown when clicking elsewhere inside the dialog
+        dialog.addEventListener('click', (e) => {
+            if (historyDropdown && !historyDropdown.contains(e.target) && e.target !== historyToggle) {
+                historyDropdown.style.display = 'none';
+            }
+        });
+#+end_example
+
+* TODO Toggle sidebar handle NOT visible when loaded from filesystem
+
+* TODO Persistent storage of "Visible columns" for each pageType
 

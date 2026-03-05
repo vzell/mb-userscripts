@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.31+2026-03-04
+// @version      9.99.32+2026-03-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1364,6 +1364,9 @@
                 { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
                 { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
             ],
+            features: {
+                extractMainColumn: 'Title'
+            },
             tableMode: 'multi' // native tables, h3 headers
         },
         {
@@ -9856,11 +9859,93 @@
                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
                             if (row.cells.length > 1) {
                                 const newRow = document.importNode(row, true);
-                                // Lib.debug(
-                                //     'row',
-                                //     `Row cloned → initial cell count=${newRow.cells.length}`
-                                // );
+
+                                // ── Shared synthetic-column pipeline ─────────────────────────────
+                                // Run MB-Name / Comment extraction (when extractMainColumn is
+                                // configured) and active column extractors using the same logic as
+                                // the generic else-branch below, so that features added to this
+                                // page type via `features.extractMainColumn` or `columnExtractors`
+                                // work correctly here too.
+
+                                // 1. MB-Name / Comment cells (only when configured)
+                                const tdName    = document.createElement('td');
+                                const tdComment = document.createElement('td');
+                                if (mainColIdx !== -1) {
+                                    const targetCell = getCellByLogicalIndex(newRow, mainColIdx);
+                                    if (targetCell) {
+                                        // Extract MB-Name: prefer <a><bdi> link, then first <a>,
+                                        // then first meaningful text node, then full text minus comments.
+                                        const nameLink = targetCell.querySelector('a bdi')?.closest('a');
+                                        if (nameLink) {
+                                            tdName.appendChild(nameLink.cloneNode(true));
+                                        } else {
+                                            let foundName = false;
+                                            for (const child of targetCell.childNodes) {
+                                                if (child.nodeType === Node.ELEMENT_NODE) {
+                                                    if (child.classList.contains('comment') || child.tagName === 'SCRIPT' || child.tagName === 'STYLE') continue;
+                                                    if (child.tagName === 'A') {
+                                                        tdName.appendChild(child.cloneNode(true));
+                                                        foundName = true;
+                                                        break;
+                                                    }
+                                                } else if (child.nodeType === Node.TEXT_NODE) {
+                                                    const t = child.textContent.trim();
+                                                    if (t && t !== '(' && t !== ')' && t !== ',') {
+                                                        tdName.textContent = t;
+                                                        foundName = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            if (!foundName) {
+                                                const clone = targetCell.cloneNode(true);
+                                                clone.querySelectorAll('.comment').forEach(el => el.remove());
+                                                tdName.textContent = clone.textContent.trim();
+                                            }
+                                        }
+
+                                        // Extract Comment: text of first .comment > bdi (or .comment itself)
+                                        const commentSpan = targetCell.querySelector('.comment');
+                                        if (commentSpan) {
+                                            const val = commentSpan.querySelector('bdi') || commentSpan;
+                                            tdComment.textContent = val.textContent.trim();
+                                        }
+                                    }
+                                }
+
+                                // 2. Active column extractors (e.g. splitCountryDate)
+                                // Capture synthetic cells BEFORE column deletion so colIdx stays valid.
+                                const extractedSyntheticCells = activeColumnExtractors.map(entry => {
+                                    if (entry.colIdx === -1) {
+                                        return entry.syntheticColumns.map(() => document.createElement('td'));
+                                    }
+                                    const sourceCell = newRow.cells[entry.colIdx];
+                                    if (!sourceCell) {
+                                        Lib.warn('extract', `colIdx ${entry.colIdx} out of range for extractor "${entry.extractor}" (row has ${newRow.cells.length} cells)`);
+                                        return entry.syntheticColumns.map(() => document.createElement('td'));
+                                    }
+                                    if (typeof ColumnDataExtractor[entry.extractor] !== 'function') {
+                                        Lib.error('extract', `Unknown extractor function: "${entry.extractor}"`);
+                                        return entry.syntheticColumns.map(() => document.createElement('td'));
+                                    }
+                                    const result = ColumnDataExtractor[entry.extractor](sourceCell);
+                                    while (result.length < entry.syntheticColumns.length) result.push(document.createElement('td'));
+                                    return result.slice(0, entry.syntheticColumns.length);
+                                });
+
+                                // 3. Delete excluded columns (descending to preserve index stability)
                                 [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
+
+                                // 4. Append synthetic cells from column extractors in declaration order
+                                extractedSyntheticCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
+
+                                // 5. Append MB-Name / Comment when extractMainColumn is active
+                                if (mainColIdx !== -1) {
+                                    newRow.appendChild(tdName);
+                                    newRow.appendChild(tdComment);
+                                }
+                                // ── end shared synthetic-column pipeline ─────────────────────────
+
                                 currentGroup.rows.push(newRow);
                                 rowsInThisPage++;
                                 totalRowsAccumulated++;
@@ -10020,8 +10105,13 @@
                                     // Append synthetic cells from all extractors in declaration order
                                     extractedSyntheticCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
 
-                                    if (pageType !== 'artist-releasegroups') {
-                                        newRow.appendChild(tdName); newRow.appendChild(tdComment);
+                                    // Append MB-Name / Comment when extractMainColumn is active.
+                                    // The artist-releasegroups branch has its own identical pipeline
+                                    // above; this else-branch never handles that pageType, so the
+                                    // former `pageType !== 'artist-releasegroups'` guard is gone.
+                                    if (mainColIdx !== -1) {
+                                        newRow.appendChild(tdName);
+                                        newRow.appendChild(tdComment);
                                     }
 
                                     if (activeDefinition.tableMode === 'multi') {
