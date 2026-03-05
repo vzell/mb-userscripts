@@ -44724,7 +44724,7 @@ explicit guard. Replaced with if (mainColIdx !== -1) — data-driven rather than
 branches now work.
 
 
-* TODO history drop-down missing from load dialog
+* DONE history drop-down missing from load dialog
 
 In the uploaded userscript,
 
@@ -44767,6 +44767,7 @@ missing, also some infrastructure code is still there
 #+end_example
 
 Please fix
+
 
 * TODO Toggle sidebar handle NOT visible when loaded from filesystem
 

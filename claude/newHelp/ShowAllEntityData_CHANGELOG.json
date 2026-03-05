@@ -1,24 +1,12 @@
 [
     {
-        "version": "9.99.34",
+        "version": "9.99.33",
         "date": "2026-03-05",
         "sections": [
             {
                 "label": "📝 Documentation",
                 "items": [
-                    "HELP file updated to reflect the current state of the userscript (v9.99.33) and VZ_MBLibrary (v3.14.3). New and expanded sections: Unique-Values Column Dropdown (📊 button, quickfilter bar, count badges, keyboard navigation, Escape behaviour); Load-from-Disk three-phase dialog (Load → Filter → Render with Alt+L / Alt+F / Alt+R shortcuts); Filter Input States & Border Colors (idle / active / error states, ⋮ resizable handle for global and sub-table inputs); Cross-tag filter highlighting note added to the Filtering section; Synthetic Columns table expanded to include Place/Area/Country (from Location), MB-Area/Country (from Area), Format Types, and MB-Name/Comment; H1 Alias Line section describing the relocateH1CommentSpan() behaviour on Release Group and Event pages; Load Dialog Keyboard Shortcuts section; Settings section expanded with all new setting groups and entries (filter border colors, unique-values badge colors, sort progress threshold, render warning threshold, download notification font size, sub-table filter border colors, overflow tables in new tab); Changelog Dialog section updated to document live search with highlighting and ✕ clear button; Library Settings section added (🔧 Library Settings GM menu item, font size/family options); Multi-table Pages section updated with sub-table filter error reporting and overflow-tab setting; SAVE & LOAD section updated with informative filename format."
-                ]
-            }
-        ]
-    },
-    {
-        "version": "9.99.33",
-        "date": "2026-03-05",
-        "sections": [
-            {
-                "label": "🐛 Bug Fixes",
-                "items": [
-                    "Load-from-Disk dialog — history dropdown regression fixed: the 3-phase dialog rewrite introduced a regression where the history toggle button (▼) was invisible for the entire dialog session whenever the GM history store was empty at open-time. Root cause: the toggle's `display` was baked into the static template HTML (`display:${history.length > 0 ? 'inline-block' : 'none'}`) and never updated afterwards. As a consequence, the very first time a user typed a filter expression and clicked “Filter Data”, that expression was correctly saved to GM storage — but the toggle stayed hidden and the dropdown was never refreshed, making the feature appear entirely absent. Fixed by (1) extracting a `refreshHistoryDropdown()` local helper that rebuilds the dropdown's `innerHTML`, re-attaches item click-handlers, and syncs the toggle's `display` to `history.length`; (2) calling it once at dialog-setup time (superseding the static `historyItemsHTML` in the template); and (3) calling it again inside `filterBtn.onclick` immediately after `history = updated` so the toggle and item list stay in sync within the same dialog session. Additionally, `el.textContent.trim()` is now used when populating the filter input from a history item to guard against any leading/trailing whitespace in the rendered item text."
+                    "HELP file updated to reflect the current state of the userscript (v9.99.32) and VZ_MBLibrary (v3.14.3). New and expanded sections: Unique-Values Column Dropdown (📊 button, quickfilter bar, count badges, keyboard navigation, Escape behaviour); Load-from-Disk three-phase dialog (Load → Filter → Render with Alt+L / Alt+F / Alt+R shortcuts); Filter Input States & Border Colors (idle / active / error states, ⋮ resizable handle for global and sub-table inputs); Cross-tag filter highlighting note added to the Filtering section; Synthetic Columns table expanded to include Place/Area/Country (from Location), MB-Area/Country (from Area), Format Types, and MB-Name/Comment; H1 Alias Line section describing the relocateH1CommentSpan() behaviour on Release Group and Event pages; Load Dialog Keyboard Shortcuts section; Settings section expanded with all new setting groups and entries (filter border colors, unique-values badge colors, sort progress threshold, render warning threshold, download notification font size, sub-table filter border colors, overflow tables in new tab); Changelog Dialog section updated to document live search with highlighting and ✕ clear button; Library Settings section added (🔧 Library Settings GM menu item, font size/family options); Multi-table Pages section updated with sub-table filter error reporting and overflow-tab setting; SAVE & LOAD section updated with informative filename format."
                 ]
             }
         ]
