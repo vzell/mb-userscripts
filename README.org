@@ -44392,8 +44392,11 @@ Primary alias: Southside Johnny & The Asbury Jukes at The Stone Pony
 so basically the ', Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show' should still be rendered BETWEEN enclosing brackets "(" and ")" but without the leading ", " IN the h1 header line
 and only the "Primary alias:" stuff should be relocated as before
 
+** From the Studio to the Stage: New York (2024-10-04) (2024-10-04: Madison Square Garden, New York City, NY, USA, Bleachers) - https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
+
 
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1
+
 
 * TODO update HELP
 
@@ -44403,7 +44406,6 @@ and make a final changelog entry in "ShowAllEntityData_CHANGELOG.json"
 
 
 * TODO When auto-resized and using unique values in column outside the visible page (so using the scrollbar) and then clickin a value, the page should NOT jump back to the left.. the focus should stay
-
 
 * add disambiguation
 ** search: Rx: 'convocation|live & alive' on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
@@ -44446,3 +44448,258 @@ and make a final changelog entry in "ShowAllEntityData_CHANGELOG.json"
         },
 #+end_example
 
+I changed the definition for the pageType "type: 'artist-releasegroups'" to
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+so basically added
+
+#+begin_example
+            features: {
+                extractMainColumn: 'Title'
+            },
+#+end_example
+
+Now the question, the rendered final table shows the two synthetic columns "MB-Name" and "Comment" but somehow nothing
+gets extracted from the "Title" column.
+
+Here an example of the rendered header row and a data row (filtered):
+
+#+begin_example
+<table class="tbl" data-mb-total-rows="419" style="margin-left: 1.5em; width: calc(100% - 1.5em);">
+  <thead>
+    <tr>
+      <th colspan="1" class="checkbox-cell" style="position: relative;">
+	<input type="checkbox">
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th colspan="1" class="year c" style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Year
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Year">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th colspan="1" style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Title
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Title">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th colspan="1" class="artist" style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Artist
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Artist">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th colspan="1" class="rating c" style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Rating
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Rating">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th colspan="1" class="count c" style="cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Releases
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Releases">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th style="background-color: rgb(211, 211, 211); cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> MB-Name
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for MB-Name">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+      <th style="background-color: rgb(211, 211, 211); cursor: default; position: relative;">
+	<div class="mb-col-hdr-flex">
+	  <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+	  </span> Comment
+	  <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	  </span>
+	  <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	  </span>
+	  <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for Comment">📊
+	  </span>
+	</div>
+	<div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+	</div>
+      </th>
+    </tr>
+    <tr class="mb-col-filter-row">
+      <th>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="1">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="2" style="background-color: rgb(255, 249, 196); box-shadow: green 0px 0px 2px 2px;">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="3">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="4">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="5">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="6">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+      <th>
+	<span class="mb-col-filter-wrapper">
+	  <input type="text" placeholder="…" title="Enter column filter string" class="mb-col-filter-input" data-col-idx="7">
+	  <span class="mb-col-filter-clear" title="Clear column filter">✕
+	  </span>
+	</span>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="odd">
+      <td>
+	<input name="add-to-merge" type="checkbox" value="1812962">
+      </td>
+      <td class="c">1995
+      </td>
+      <td>
+	<span class="artwork-icon caa-icon" title="This release group has artwork in the Cover Art Archive">
+	</span>
+	<a class="wrap-anywhere" href="/release-group/a17893f0-2dfa-4a2b-a004-02ba6a9f85c3">
+	  <bdi>
+	    <span class="mb-column-filter-highlight">
+	      <span class="mb-subtable-filter-highlight">Live
+	      </span>&amp;
+	    </span> A
+	    <span class="mb-subtable-filter-highlight">live
+	    </span>
+	  </bdi>
+	</a>
+	<span class="mb-subtable-filter-highlight">
+	</span>
+	<span class="comment">(
+	  <bdi>3 CD imm 43.90009
+	  </bdi>)
+	</span>
+      </td>
+      <td>
+	<bdi>
+	  <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+	  </a>
+	</bdi>
+      </td>
+      <td class="c">
+	<span class="inline-rating">
+	  <span class="star-rating" tabindex="-1">
+	    <a class="stars-1 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=20&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 1 star">1
+	    </a>
+	    <a class="stars-2 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=40&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 2 stars">2
+	    </a>
+	    <a class="stars-3 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=60&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 3 stars">3
+	    </a>
+	    <a class="stars-4 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=80&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 4 stars">4
+	    </a>
+	    <a class="stars-5 set-rating" href="/rating/rate/?entity_type=release_group&amp;entity_id=1812962&amp;rating=100&amp;returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D9%26all%3D1%26va%3D0" title="Rate: 5 stars">5
+	    </a>
+	  </span>
+	</span>
+      </td>
+      <td class="c">1
+      </td>
+    </tr>
+  </tbody>
+</table>
+#+end_example
+
+
+* TODO Why is the disambiguation rendered after all the buttons for Event-Aliases
+
+https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
