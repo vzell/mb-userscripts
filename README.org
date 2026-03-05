@@ -40062,14 +40062,6 @@ content. Make sure that an eventual scrollbar on the "content container does not
 
 * DONE include lib from github
 
-* TODO exclude standalone recordings
-
-https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72
-
-Check for "No releases found which feature this recording." under the h2 header "Appears on releases".
-In that case don't even render the additional action buttons when entering such a page, but still log it to the console
-
-
 * TODO add fetching to local db storage and reading from it
 ** initial
 
@@ -42549,45 +42541,6 @@ probably needs to be changed from sync to async for this.
 
 The same is true when using the "[x] Rx" checkbox toggle for filter expressions on the global filter or sub-table filters. Plese implement or fix
 
-
-* Make all popup dialogs use the format of
-
-#+begin_example
-<warning icon> "Page Reloaded"
-#+end_example
-
-
-* Why is this
-
-#+begin_example
-<span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span>
-#+end_example
-
-#+begin_example
-                filterStatusDisplay.textContent = `✓ ${modeLabel}${globalFilterInfo}`;
-                filterStatusDisplay.style.color = 'green';
-#+end_example
-
-
-
-* TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter as long as the hold the mouse 1 during click on that toggle
-
-
-* TODO tooltip for global "Clear all COLUMN filters" from
-
-#+begin_example
-    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
-#+end_example
-
-to
-
-#+begin_example
-    clearColumnFiltersBtn.title = 'Globally clear all column-specific filter inputs';
-#+end_example
-
-* change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
-
-
 * DONE regexp mode
 
 - when in regexp mode, remove the alert window, just add red border and "Invalid regexp" info message
@@ -44558,7 +44511,6 @@ For pages of type https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716
 
 For all other pageTypes this anomalies do NOT exist. Please explain and fix (maybe with a special casing for URLs of pageType "<Entity>-Aliases" pages)
 
-
 * DONE Remove actions column from aliases pages
 
 #+begin_example
@@ -44606,6 +44558,68 @@ For all other pageTypes this anomalies do NOT exist. Please explain and fix (may
             description: "Remove the Actions column from the final rendered tables (comes from Aliases pages) "
         },
 #+end_example
+
+* DONE When auto-resized and using unique values in column outside the visible page (so using the scrollbar) and then clicking a value, the page should NOT jump back to the left.. the focus should stay
+
+In the uploaded userscript,
+
+When tables are auto-resized with the "↔️ Resize" button and then using the horizontal scrollbar to scroll to e.g. the
+last column of the table ("Comment") or some other column which is out of the standard page which would be shown when no
+scrolling would have been done.
+
+Now the bug: when using the "Show unique column values" dropdown menu in the column header in such a column and clicking
+a value, the page jumps back to the state whenwe hadn't used the scrollbar yet, so basically we loos the focus of where
+we are. It should NOT jump back to the left.. the focus should stay. Fix fix
+
+
+* Make all popup dialogs use the format of
+
+#+begin_example
+<warning icon> "Page Reloaded"
+#+end_example
+
+
+* Why is this
+
+#+begin_example
+<span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span>
+#+end_example
+
+#+begin_example
+                filterStatusDisplay.textContent = `✓ ${modeLabel}${globalFilterInfo}`;
+                filterStatusDisplay.style.color = 'green';
+#+end_example
+
+
+
+* TODO exclude standalone recordings
+
+In the uploaded userscript,
+
+https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72
+
+Check for "No releases found which feature this recording." under the h2 header "Appears on releases".
+In that case don't even render the additional action buttons when entering such a page, but still log it to the console
+
+
+
+* TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter as long as the hold the mouse 1 during click on that toggle
+
+
+* TODO tooltip for global "Clear all COLUMN filters" from
+
+#+begin_example
+    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
+#+end_example
+
+to
+
+#+begin_example
+    clearColumnFiltersBtn.title = 'Globally clear all column-specific filter inputs';
+#+end_example
+
+* change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
+
 
 
 * changelog popup should get focus when popupped
@@ -44875,10 +44889,19 @@ It popsup a unicodechars Menu
 Could this somehow be prevented, or better yet, remapped to a different key combination
 
 
-* configurable: pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
+* TODO configurable: pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
+
+In the uploaded userscript,
+
+Please add the following functionality but make it configurable on a boolean configuration parameter inside the variable
+"const configSchema"
+
+On some URL pageTypes, e.g.
 
 "Artists" - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
 "Recording artists" - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+
+pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
 
 and remove the "(show less)" line
 
@@ -45073,22 +45096,60 @@ and only the "Primary alias:" stuff should be relocated as before
 ** From the Studio to the Stage: New York (2024-10-04) (2024-10-04: Madison Square Garden, New York City, NY, USA, Bleachers) - https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
 
 
-* TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1
+* TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
 
-* TODO When auto-resized and using unique values in column outside the visible page (so using the scrollbar) and then clicking a value, the page should NOT jump back to the left.. the focus should stay
+For example for the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
 
-In the uploaded userscript,
+when auto-resizing the table with the "↔️ Resize" button, the following data cell in the "Event" column" ist still not properly autoresized
 
-When tables are auto-resized with the "↔️ Resize" button and then using the horizontal scrollbar to scroll to e.g. the
-last column of the table ("Comment") or some other column which is out of the standard page which would be shown when no
-scrolling would have been done.
+#+begin_example
+<td>
+  <span class="blank-icon">
+  </span>
+  <a class="wrap-anywhere" href="/event/83f93115-3da6-4ab6-934a-a034f6303a88">
+    <bdi>2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>5th Annual Academy Museum Gala
+    </bdi>)
+  </span>
+</td>
+#+end_example
 
-Now the bug: when using the "Show unique column values" dropdown menu in the column header in such a column and clicking
-a value, the page jumps back to the state whenwe hadn't used the scrollbar yet, so basically we loos the focus of where
-we are. It should NOT jump back to the left.. the focus should stay. Fix fix
+but instead it breaks in the next row after the '(5th Annual Academy' and 'Museum Gala)' is rendered in the next row
+
+#+begin_example
+2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA (5th Annual Academy
+Museum Gala)
+#+end_example
+
+Is it maybe because of the presence of data cells which have '<span class="artwork-icon eaa-icon"' prepended to the actual event title, e.g.
+
+#+begin_example
+<td>
+  <a href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/event-art">
+    <span class="artwork-icon eaa-icon" title="This event has artwork in the Event Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f">
+    <bdi>2025‐10‐26: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Birthday Party at The Pony
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+Please fix
+
 
 * TODO Toggle sidebar handle NOT visible when loaded from filesystem
 
 
 * TODO Persistent storage of "Visible columns" for each pageType
+
+* TODO extract the "video" icon from recordings - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
 
