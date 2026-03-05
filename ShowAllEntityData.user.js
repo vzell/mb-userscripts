@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.36+2026-03-05
+// @version      9.99.38+2026-03-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -5381,12 +5381,31 @@
                 columnVisible[colIndex] = th.style.display !== 'none';
             });
 
-            // Create temporary measurement container
+            // Create temporary measurement container.
+            //
+            // IMPORTANT – white-space / word-break / overflow-wrap:
+            //   We must ensure the cloned content is measured as a single,
+            //   non-wrapping line.  Three pitfalls prevented here:
+            //
+            //   1. Table-fixup: appending an orphaned <td>/<th> to a plain <div>
+            //      makes the browser wrap it in anonymous table/table-row boxes.
+            //      Those anonymous boxes carry the UA-stylesheet default of
+            //      white-space:normal, silently overriding the measureDiv's
+            //      white-space:nowrap and causing content to wrap.  Fix: clone
+            //      only the *children* of each cell directly into the measureDiv
+            //      so no <td>/<th> is ever appended (no fixup triggered).
+            //
+            //   2. .wrap-anywhere (overflow-wrap:anywhere): even outside a table
+            //      context this can break text.  Explicitly reset it on the div.
+            //
+            //   3. word-break: same — reset to normal so no mid-word breaks occur.
             const measureDiv = document.createElement('div');
             measureDiv.style.cssText = `
                 position: absolute;
                 visibility: hidden;
                 white-space: nowrap;
+                word-break: normal;
+                overflow-wrap: normal;
                 font-family: inherit;
                 font-size: inherit;
                 padding: 4px 8px;
@@ -5403,9 +5422,6 @@
                     return;
                 }
 
-                // Clone the entire content to preserve HTML structure (images, links, etc.)
-                const contentClone = th.cloneNode(true);
-
                 // DO NOT remove sort icons - they need to be measured as they're always present in headers
                 // The sorting symbols (⇅, ▲, ▼) take up space and must be included in width calculation
 
@@ -5416,9 +5432,21 @@
                 measureDiv.style.padding = styles.padding;
                 measureDiv.style.fontFamily = styles.fontFamily;
 
-                // Clear previous content and add the clone
+                // Clone the th's CHILDREN directly into measureDiv (not the <th> itself).
+                // Appending an orphaned <th> triggers browser table-fixup which wraps
+                // it in anonymous table/table-row boxes that carry white-space:normal,
+                // defeating the white-space:nowrap set on measureDiv.
                 measureDiv.innerHTML = '';
-                measureDiv.appendChild(contentClone);
+                Array.from(th.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
+                // Force every cloned descendant to not wrap.  CSS inheritance only
+                // fills values that are not explicitly set — it does NOT override
+                // explicit stylesheet rules like .wrap-anywhere{overflow-wrap:anywhere}.
+                // Setting the inline style on each element beats any stylesheet rule.
+                measureDiv.querySelectorAll('*').forEach(el => {
+                    el.style.whiteSpace   = 'nowrap';
+                    el.style.overflowWrap = 'normal';
+                    el.style.wordBreak    = 'normal';
+                });
 
                 const width = measureDiv.offsetWidth;
 
@@ -5444,9 +5472,6 @@
                     // Skip hidden columns
                     if (!columnVisible[colIndex]) return;
 
-                    // Clone the entire content to preserve HTML structure (images, links, etc.)
-                    const contentClone = cell.cloneNode(true);
-
                     // Copy styles for accurate measurement
                     const styles = window.getComputedStyle(cell);
                     measureDiv.style.fontSize = styles.fontSize;
@@ -5454,9 +5479,29 @@
                     measureDiv.style.padding = styles.padding;
                     measureDiv.style.fontFamily = styles.fontFamily;
 
-                    // Clear previous content and add the clone
+                    // Clone the cell's CHILDREN directly into measureDiv (not the <td> itself).
+                    // Appending an orphaned <td> triggers browser table-fixup which wraps
+                    // it in anonymous table/table-row boxes that carry white-space:normal,
+                    // defeating the white-space:nowrap set on measureDiv.  This is the root
+                    // cause of Event-column cells (which contain a blank-icon/artwork-icon
+                    // span + a .wrap-anywhere link + a .comment span) being measured as
+                    // too narrow — only the widest single token (e.g. the icon's fixed
+                    // pixel width) was returned instead of the full single-line width.
                     measureDiv.innerHTML = '';
-                    measureDiv.appendChild(contentClone);
+                    Array.from(cell.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
+                    // Force every cloned descendant to not wrap.  CSS inheritance only
+                    // fills values that are not explicitly set — it does NOT override
+                    // explicit stylesheet rules like .wrap-anywhere{overflow-wrap:anywhere}.
+                    // Setting the inline style on each element beats any stylesheet rule.
+                    // Without this, .wrap-anywhere anchors break text inside the measureDiv
+                    // even though its own white-space is nowrap, causing offsetWidth to
+                    // reflect only the widest non-breaking token instead of the full
+                    // single-line width of the entire cell content.
+                    measureDiv.querySelectorAll('*').forEach(el => {
+                        el.style.whiteSpace   = 'nowrap';
+                        el.style.overflowWrap = 'normal';
+                        el.style.wordBreak    = 'normal';
+                    });
 
                     const width = measureDiv.offsetWidth;
 

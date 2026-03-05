@@ -1,5 +1,29 @@
 [
     {
+        "version": "9.99.38",
+        "date": "2026-03-05",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "Auto-resize (↔️ Resize) — Event column still wrapping after v9.99.37 fix: v9.99.37 correctly eliminated the browser table-fixup problem (orphaned `<td>` causing anonymous table-row boxes with `white-space:normal`), but a second independent wrapping mechanism remained: MusicBrainz's own stylesheet sets `overflow-wrap:anywhere` directly on every `.wrap-anywhere` anchor element. CSS inheritance only fills property values that are not explicitly set — it does NOT override explicit stylesheet rules. Setting `overflow-wrap:normal` on the parent `measureDiv` therefore had no effect on descendant `<a class=\"wrap-anywhere\">` nodes, which retained `overflow-wrap:anywhere` and continued to break text at arbitrary code points inside the measurement div, causing `offsetWidth` to reflect only the width of the wrapped first line rather than the full single-line content width. Fixed by traversing all cloned descendant elements with `measureDiv.querySelectorAll('*')` after they are appended and explicitly setting `el.style.whiteSpace = 'nowrap'`, `el.style.overflowWrap = 'normal'`, and `el.style.wordBreak = 'normal'` on each one. Inline styles always win over stylesheet rules regardless of specificity, guaranteeing that no descendant element can cause a line break during measurement. The same querySelectorAll pass is applied in both the header and data-cell measurement loops."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.37",
+        "date": "2026-03-05",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "Auto-resize (↔️ Resize) — Event column cells containing a blank-icon/artwork-icon span not measured to their full single-line width: the column-width measurement loop cloned each `<td>` / `<th>` and appended it directly to a hidden `position:absolute` measurement `<div>`. Orphaned `<td>` / `<th>` elements appended outside a `<table>` trigger the browser's CSS table-fixup algorithm, which silently wraps them in anonymous table / table-row boxes. Those anonymous boxes carry the UA-stylesheet default of `white-space:normal`, overriding the `white-space:nowrap` that was set on the measurement div. As a result, content inside the cloned cell wrapped during measurement, and `offsetWidth` reflected only the widest non-breaking token (e.g. the fixed-pixel width of the `artwork-icon eaa-icon` span) rather than the full single-line width of icon + main-link text + comment. This made the Event column too narrow for cells that contained a long venue name followed by a `<span class=\"comment\">` (e.g. `2025-10-18: David Geffen Theater … (5th Annual Academy Museum Gala)`) — the comment text wrapped to the next line. Fixed by cloning the element's *children* directly into the measurement div (via `Array.from(cell.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)))`) rather than the `<td>` / `<th>` itself, eliminating the table-fixup entirely. Additionally added `word-break:normal` and `overflow-wrap:normal` to the measurement div's `cssText` so that the `.wrap-anywhere` class (`overflow-wrap:anywhere`) present on event-link anchors cannot cause mid-word breaks even in the non-table measurement context."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.36",
         "date": "2026-03-05",
         "sections": [
