@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.32+2026-03-05
+// @version      9.99.33+2026-03-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -7581,6 +7581,8 @@
                 GM_setValue('sa_load_filter_history', updated);
                 history = updated;
                 Lib.debug('cache', `Updated load filter history. Count: ${updated.length}`);
+                // Keep the dropdown in sync within the current dialog session.
+                refreshHistoryDropdown();
             }
 
             const totalRows = (rawData.tableMode === 'multi' && rawData.groups)
@@ -7654,22 +7656,50 @@
             closeDialog();
         };
 
-        // ── History dropdown ──────────────────────────────────────────────────
+        // ── History dropdown ──────────────────────────────────────────────────────
+
+        /**
+         * Rebuilds the history dropdown HTML and re-attaches item click-handlers,
+         * then syncs the toggle button's visibility to the current history length.
+         *
+         * Must be called:
+         *   - once after the dialog is built (initial setup / supersedes the static
+         *     historyItemsHTML already rendered into the template), and
+         *   - again inside filterBtn.onclick whenever a new entry is saved so that
+         *     the dropdown stays in sync within the same dialog session (fixes the
+         *     regression introduced by the 3-phase dialog rewrite where the toggle
+         *     stayed permanently hidden when history was empty at dialog-open time).
+         */
+        const refreshHistoryDropdown = () => {
+            if (!historyToggle || !historyDropdown) return;
+            // Sync toggle visibility to current list length.
+            historyToggle.style.display = history.length > 0 ? 'inline-block' : 'none';
+            // Rebuild item list.
+            historyDropdown.innerHTML = history
+                .map(item => `<div class="sa-history-item" style="padding:8px 12px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;">${item.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</div>`)
+                .join('');
+            // Attach click handlers on the freshly rendered items.
+            historyDropdown.querySelectorAll('.sa-history-item').forEach(el => {
+                el.onclick = () => {
+                    filterInput.value = el.textContent.trim();
+                    historyDropdown.style.display = 'none';
+                };
+            });
+        };
+
+        // Initial setup — correct toggle visibility + item handlers (supersedes the
+        // static historyItemsHTML already in the template innerHTML).
+        refreshHistoryDropdown();
+
         if (historyToggle) {
             historyToggle.onclick = (ev) => {
                 ev.stopPropagation();
                 historyDropdown.style.display =
                     historyDropdown.style.display === 'none' ? 'block' : 'none';
             };
-            dialog.querySelectorAll('.sa-history-item').forEach(el => {
-                el.onclick = () => {
-                    filterInput.value = el.textContent;
-                    historyDropdown.style.display = 'none';
-                };
-            });
         }
 
-        // Close history dropdown when clicking elsewhere inside the dialog
+        // Close history dropdown when clicking elsewhere inside the dialog.
         dialog.addEventListener('click', (e) => {
             if (historyDropdown && !historyDropdown.contains(e.target) && e.target !== historyToggle) {
                 historyDropdown.style.display = 'none';

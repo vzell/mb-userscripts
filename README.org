@@ -44405,7 +44405,7 @@ userscript "ShowAllEntityData.user.js", also take into account the current libra
 and make a final changelog entry in "ShowAllEntityData_CHANGELOG.json"
 
 
-* TODO When auto-resized and using unique values in column outside the visible page (so using the scrollbar) and then clickin a value, the page should NOT jump back to the left.. the focus should stay
+* TODO When auto-resized and using unique values in column outside the visible page (so using the scrollbar) and then clicking a value, the page should NOT jump back to the left.. the focus should stay
 
 
 * add disambiguation
@@ -44723,7 +44723,13 @@ Even if a row somehow reached the else-branch, tdName/tdComment would never be a
 explicit guard. Replaced with if (mainColIdx !== -1) — data-driven rather than hardcoded, consistent with how all other
 branches now work.
 
-* history drop-down missing from load dialog
+
+* TODO history drop-down missing from load dialog
+
+In the uploaded userscript,
+
+The functionality about the "history drop-down in the 'Load from Disk'-dialog" is somehow since the latest rewrites
+missing, also some infrastructure code is still there
 
 #+begin_example
         sa_load_history_limit: {
@@ -44759,6 +44765,8 @@ branches now work.
             }
         });
 #+end_example
+
+Please fix
 
 * TODO Toggle sidebar handle NOT visible when loaded from filesystem
 
