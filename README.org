@@ -45079,8 +45079,13 @@ and only the "Primary alias:" stuff should be relocated as before
 
 In the uploaded userscript,
 
-When tables are auto-resized with "" and using unique values in column outside the visible page (so using the scrollbar) and then clicking
-a value, the page should NOT jump back to the left.. the focus should stay
+When tables are auto-resized with the "↔️ Resize" button and then using the horizontal scrollbar to scroll to e.g. the
+last column of the table ("Comment") or some other column which is out of the standard page which would be shown when no
+scrolling would have been done.
+
+Now the bug: when using the "Show unique column values" dropdown menu in the column header in such a column and clicking
+a value, the page jumps back to the state whenwe hadn't used the scrollbar yet, so basically we loos the focus of where
+we are. It should NOT jump back to the left.. the focus should stay. Fix fix
 
 * TODO Toggle sidebar handle NOT visible when loaded from filesystem
 
