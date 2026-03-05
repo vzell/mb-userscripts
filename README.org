@@ -44596,10 +44596,21 @@ we are. It should NOT jump back to the left.. the focus should stay. Fix fix
 
 In the uploaded userscript,
 
-https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72
+for pageTypes like https://musicbrainz.org/recording/38a7bc42-7f19-44b1-af20-a865482b7f72 there must be implemented a special case:
 
-Check for "No releases found which feature this recording." under the h2 header "Appears on releases".
-In that case don't even render the additional action buttons when entering such a page, but still log it to the console
+if after the h2 header
+
+#+begin_example
+<h2 class="appears-on-releases">Appears on releases</h2>
+#+end_example
+
+there is a line like
+
+#+begin_example
+<p>No releases found which feature this recording.</p>
+#+end_example
+
+in that case don't even render the additional action buttons when entering such a page, but still log it to the console
 
 
 
