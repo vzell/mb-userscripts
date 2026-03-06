@@ -40062,6 +40062,7 @@ content. Make sure that an eventual scrollbar on the "content container does not
 
 * DONE include lib from github
 
+
 * TODO add fetching to local db storage and reading from it
 ** initial
 
@@ -41455,467 +41456,7 @@ practices and best patterns
 - check for code blocks which could easily be refactored to make the code more clear
 
 
-* TODO posting to MusicBrainz forum
-** <2026-01-28 Wed 09:05>
-
-#+begin_example
-# [MusicBrainz: Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
-
-I talked to Misses/Mr. Gemini and out came a new Userscript which accumulates all the paginated MB pages of different entities, renders them depending on the entity type either in a flat or in a grouped table structure with real-time filtering and sorting support.
-
-The currently supported entity types are
-
- * Artist-ReleaseGroups
- * ReleaseGroup-Releases
- * Artist-Releases
- * Artist-Works
- * Artist-Recordings
- * Works
- * Recordings
- * Artist-Events
- * Series
- * Labels
- * Place-Events
- * Place-Performances (buggy, I’m working on that later)
-
-![image|690x343](upload://7UxNLpR1vOIs0xP0wqFnDILhRYm.png)
-
-![image|690x173](upload://bbmH3R7j0EuzA3LGmyxh7OLUaLu.png)
-
-![image|690x276](upload://wLemH2Q4wCerLDPTRSTiRBB2rKd.jpeg)
-
-Almost everything is collapsable/un-collapsable (see the tooltip support).
-
-The final rendrered tables also include new extracted columns for easy sorting, like for example the "Country/Date" column in the Series view is split in its different parts "Country" and "Date"
-
-![image|690x136](upload://aQKg02za09Ktbm8UwTT0Afi4rBG.png)
-
-Also I will make more variables configurable via the TamperMonkey menue in the future
-
-![image|393x499](upload://nnvvX9Cow2FOM9k9NIm5GPnlbtb.png)
-
-You can get the script at https://github.com/vzell/mb-userscripts under [Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
-#+end_example
-
-* Forum
-** ChatGPT
-
-#+begin_example
-Here’s a forum-ready description you can post in the MusicBrainz community, followed by concrete screenshot suggestions to showcase the script effectively.
-
-🎛️ VZ: Show All Entity Data In A Consolidated View
-
-A power-user userscript for MusicBrainz that consolidates paginated and multi-table entity pages into a single, filterable, sortable, exportable data view.
-
-Works on:
-
-Artist pages (recordings, releases, works, relationships, etc.)
-
-Release groups
-
-Releases
-
-Recordings
-
-Works
-
-Labels
-
-Areas
-
-Events
-
-Series
-
-Places
-
-Instruments
-
-Search results
-
-🚀 What It Does
-1️⃣ Consolidates All Pages Into One View
-
-No more clicking through 40+ pages.
-
-The script:
-
-Fetches all paginated results
-
-Merges them into one single table
-
-Keeps everything sortable and filterable
-
-Handles multi-table pages (like subheadings or relationship sections)
-
-Perfect for large artists, labels, or search result sets.
-
-2️⃣ Real-Time Filtering (Global + Per Column)
-
-Global filter across all visible columns
-
-Individual column filters
-
-RegExp support (with Rx toggle)
-
-Debounced filtering for performance
-
-ESC clears the focused filter
-
-“Clear All Filters” button
-
-Filtering performance timing is shown in the status bar.
-
-3️⃣ High-Performance Sorting for Large Datasets
-
-Stable sorting
-
-Async chunked sorting for >5000 rows
-
-Progress indicator for very large datasets
-
-Numeric auto-detection
-
-Visual sort indicators
-
-Even 10k+ rows remain responsive.
-
-4️⃣ Column Management
-
-👁️ Show/Hide columns
-
-Select All / Deselect All
-
-Sticky headers (headers and filter row remain visible)
-
-Ctrl+Click header to toggle all headers within the same container
-
-Manual column resizing (drag like Excel)
-
-Auto-resize columns (fit to content)
-
-Restore original widths
-
-5️⃣ Table Density Control
-
-Choose between:
-
-Compact
-
-Normal
-
-Comfortable
-
-Great when working with massive datasets.
-
-6️⃣ CSV Export
-
-Export:
-
-Only visible rows
-
-Only visible columns
-
-Filtered results
-
-Filename automatically includes:
-
-Page type
-
-Timestamp
-
-Perfect for analysis in Excel / LibreOffice / Sheets.
-
-7️⃣ Offline Storage / Caching
-
-Save full dataset to disk (JSON)
-
-Load from disk later
-
-Avoid re-fetching large datasets
-
-Very useful for artists with 8000+ recordings.
-
-8️⃣ Quick Stats Panel
-
-Displays:
-
-Total rows
-
-Visible rows
-
-Column counts
-
-Filter status
-
-Estimated memory usage
-
-Hidden row/column counts
-
-Great for understanding what you’re actually looking at.
-
-9️⃣ Keyboard Shortcuts (Power-User Mode)
-
-Ctrl+F → Focus filter
-
-Ctrl+Shift+F → Clear filters
-
-Ctrl+E → Export CSV
-
-Ctrl+S → Save
-
-Ctrl+L → Load
-
-Ctrl+, → Settings
-
-? → Show shortcuts help
-
-ESC → Clear focused filter
-
-🔧 Additional Highlights
-
-Sidebar collapsing for more horizontal space
-
-Alternating row striping
-
-Chunked rendering for very large tables
-
-Pre-filter on load
-
-Visual progress indicators
-
-Schema-driven settings dialog
-
-Configurable performance thresholds
-
-Status display with timing feedback
-
-Works with other userscripts (e.g., additional columns)
-
-📸 Best Screenshot Suggestions
-
-If you want to show the full power of the script, use 6–8 carefully chosen screenshots:
-
-1️⃣ Before vs After (Most Important)
-
-Use a large artist like:
-
-Bruce Springsteen
-
-Show:
-
-Default multi-page recordings view
-
-Then the single consolidated view with thousands of rows
-
-This immediately demonstrates the core value.
-
-2️⃣ Filtering + Column Filters + RegExp
-
-Show:
-
-Global filter active
-
-At least one column filter active
-
-“Rx” enabled
-
-Status line showing filtering results + timing
-
-This shows depth, not just “a big table”.
-
-3️⃣ Column Visibility Menu Open
-
-Capture:
-
-👁️ Visible Columns dropdown open
-
-Some columns hidden
-
-Table visibly adapted
-
-This shows customization power.
-
-4️⃣ Manual Column Resize + Auto-Resize Toggle
-
-Show:
-
-A very wide table
-
-Auto-resize enabled
-
-Horizontal scroll active
-
-Manual drag handle visible
-
-This makes it look “professional” and Excel-like.
-
-5️⃣ Stats Panel Open
-
-Have:
-
-Stats panel visible
-
-Filters applied
-
-Hidden rows count visible
-
-This visually communicates performance awareness.
-
-6️⃣ CSV Export Feedback Popup
-
-After exporting:
-
-Show status bar update
-
-Export completion popup
-
-Demonstrates practical usefulness.
-
-7️⃣ Density Comparison (Optional but Nice)
-
-Two screenshots:
-
-Compact mode
-
-Comfortable mode
-
-Shows polish and user preference control.
-
-8️⃣ Keyboard Shortcut Overlay
-
-Press ? and capture the shortcuts help overlay.
-
-This reinforces “power tool” positioning.
-
-💡 How To Present It On The Forum
-
-Structure your post like:
-
-Short 3-line summary (what + why)
-
-4–6 screenshots
-
-Bullet list of features
-
-GitHub link
-
-Installation note (tested with Tampermonkey 5.4.1+)
-
-Suggested Short Intro Paragraph
-
-This userscript turns paginated MusicBrainz entity pages into a single consolidated, sortable, filterable data table — optimized for large datasets (thousands of rows), with column management, CSV export, offline caching, keyboard shortcuts, and performance-aware rendering.
-
-If you'd like, I can also generate:
-
-A shorter “teaser-style” forum post
-
-A technical deep-dive version
-
-Or a polished README.md version for GitHub
-#+end_example
-
-** Gemini
-
-#+begin_example
-This userscript is designed to significantly improve the browsing and data-management experience on MusicBrainz by consolidating fragmented, paginated tables into a single, powerful, and highly interactive view.
-
-Below is a highlight-oriented description suitable for the MusicBrainz forum, followed by suggestions for effective screenshots.
-
-Forum Post Draft: [UNOFFICIAL] VZ: MusicBrainz - Show All Entity Data In A Consolidated View
-Tired of clicking through pages of recordings, releases, or events?
-
-The Show All Entity Data userscript transforms the way you interact with MusicBrainz tables. It accumulates paginated and sub-headed lists (Events, Recordings, Releases, Works, Labels, etc.) into one consolidated view, giving you a powerful, spreadsheet-like interface directly in your browser.
-
-Key Highlights:
-🚀 One-Click Consolidation: Instantly fetch all pages of a list (e.g., an artist's 5,000+ recordings) into a single, seamless table.
-
-🔍 Advanced Real-time Filtering:
-
-Global Search: Filter the entire dataset instantly as you type.
-
-Per-Column Filtering: Narrow down results by specific columns (e.g., only show "Live" recordings or specific "Dates").
-
-Regex Support: Power users can use Regular Expressions for complex filtering.
-
-📊 Spreadsheet-style Interaction:
-
-Fast Sorting: High-performance sorting (even for datasets over 10,000 rows) with numeric and date awareness.
-
-Resizable Columns: Drag column edges to adjust widths, just like Excel.
-
-Sticky Headers: Keep your orientation with table headers that stay at the top while you scroll.
-
-Column Visibility: Toggle specific columns on or off to focus on the data that matters.
-
-💾 Data Portability & Persistence:
-
-Export to CSV: Save your filtered view directly to a CSV file for use in Excel or Google Sheets.
-
-Save/Load to Disk: Save the entire fetched dataset to a JSON file and reload it later—perfect for avoiding re-fetching large artist discographies.
-
-📏 Customization & UI:
-
-Table Density: Choose between Compact, Normal, or Comfortable views.
-
-Collapsible Sidebar: Reclaim screen real estate by collapsing the MusicBrainz sidebar into a thin handle.
-
-Quick Stats: View a live summary of row counts, hidden items, and filter status.
-
-🎹 Power User Shortcuts: Use Ctrl+F to search, Ctrl+E to export, and ? to view the full shortcut menu.
-
-Screenshot Recommendations
-To showcase the script effectively, I recommend the following four screenshots:
-
-The "Consolidated Table" View:
-
-Subject: An Artist's Recordings page (with thousands of rows).
-
-What to show: The active "Global Filter" bar at the top, the "Sticky Header" visible while scrolled down, and the consolidated H3/H2 headers showing total counts.
-
-Column Filtering & Highlighting:
-
-Subject: Any entity table with active filters.
-
-What to show: Demonstrate a specific column filter (e.g., filtering the "Format" column for "CD") and show the real-time text highlighting in the result rows.
-
-UI Controls & Density:
-
-Subject: The top control bar.
-
-What to show: The "Visible Columns" dropdown menu, the "Density" toggle, and the "Stats" panel visible on the side.
-
-The Sidebar & Layout:
-
-Subject: Full-page view.
-
-What to show: Show the sidebar in its "Collapsed" state to demonstrate how the table stretches to fill the full screen width, providing a much clearer view for wide tables.
-#+end_example
-
-* TODO forum demo screen shot - RG-R sort format/lable/catalog/country
-
-Text: ever wanted to see ....
-
-now lets concentrate on just Canada --> filter "Country"="can"  ->>status line tells you excaltly that
-
-now filter globally "with just version"
-
-now toggle highlightning on/off
-
-DO the same with loading from the filesystem ---- demo of higjlightning filter column there .. just "Greetings from asbury park, n.j." --- toggle highligh of loading filter
-
-clear all filters
-
-press anywhere on original sort
-
-* TODO screenshot
-
-Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
-
-* write special about it in the forum because of the 2 Action buttons
-
-
-* Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
+* TODO Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
 
 Question:
 Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which
@@ -42058,11 +41599,6 @@ Include a "Close" button and also "Escape" key closing of the popup.
 
 
 
-
-
-* align button texts and make everything configurable (size, font, height, character to underline)
-
-* add version to app help, configuration and keybord shortcuts dialogs
 
 
 * DONE why does the "Global Prefilter Highlight Color" starts out in black when clicking on the color chooser icon
@@ -44571,28 +44107,7 @@ Now the bug: when using the "Show unique column values" dropdown menu in the col
 a value, the page jumps back to the state whenwe hadn't used the scrollbar yet, so basically we loos the focus of where
 we are. It should NOT jump back to the left.. the focus should stay. Fix fix
 
-
-* Make all popup dialogs use the format of
-
-#+begin_example
-<warning icon> "Page Reloaded"
-#+end_example
-
-
-* Why is this
-
-#+begin_example
-<span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span>
-#+end_example
-
-#+begin_example
-                filterStatusDisplay.textContent = `✓ ${modeLabel}${globalFilterInfo}`;
-                filterStatusDisplay.style.color = 'green';
-#+end_example
-
-
-
-* TODO exclude standalone recordings
+* DONE exclude standalone recordings
 
 In the uploaded userscript,
 
@@ -44611,6 +44126,35 @@ there is a line like
 #+end_example
 
 in that case don't even render the additional action buttons when entering such a page, but still log it to the console
+
+
+
+* align button texts and make everything configurable (size, font, height, character to underline)
+
+* add version to app help, configuration and keybord shortcuts dialogs
+
+* Make all popup dialogs use the format of
+
+#+begin_example
+<warning icon> "Page Reloaded"
+#+end_example
+
+
+* document test suite after userscript and library changes
+** library
+** userscript
+
+
+* Why is this
+
+#+begin_example
+<span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span>
+#+end_example
+
+#+begin_example
+                filterStatusDisplay.textContent = `✓ ${modeLabel}${globalFilterInfo}`;
+                filterStatusDisplay.style.color = 'green';
+#+end_example
 
 
 
@@ -44653,11 +44197,6 @@ to
                                 : `${_changelog.length} (<n> filtered) entries — source: <strong>${_changelogMeta.fromCache ? '📦 cache' : '🌐 network'}</strong>${_changelogMeta.fetchedAt ? ` · fetched ${Math.round((Date.now() - _changelogMeta.fetchedAt) / 1000)}s ago` : ''}`}
 #+end_example
 
-
-
-* document test suite after userscript and library changes
-** library
-** userscript
 
 
 * how to make sure a userscript runs on pages - match versus include
@@ -44909,12 +44448,33 @@ Please add the following functionality but make it configurable on a boolean con
 
 On some URL pageTypes, e.g.
 
-"Artists" - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
-"Recording artists" - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+"Place-Events" - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+"Artist-Works" - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
 
-pages with "(show <n> more)" in the artists column, emulate pressing the "(show <n> more)" link first, before fetching the next page
+whenever a '<li class="show-all">' container, e.g.
 
-and remove the "(show less)" line
+#+begin_example
+<li class="show-all">
+  <a href="#" role="button" title="Show all artists">(show 320 more)
+  </a>
+</li>
+#+end_example
+
+in the data cells at the very end of special columns like "Recording artists" or
+"Attributes" for https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works or the "Artists" column for
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events is encountered, emulate pressing the "(show <n> more)" hyperlink first for each such column and row, before fetching the next page
+
+After rendering the additional information coming from the "(show <n> more)" press, wait for the appearance of the container
+
+#+begin_example
+<li class="show-less"><a href="#" role="button" title="Show less artists">(show less)</a></li>
+#+end_example
+
+and remove the whole container from the final rendered page. Please add comprehensive debug logging to the conssole and
+REMOVE the whole '<li class="show-less"><a href="#" role="button" title="Show less artists">(show less)</a></li>'
+structure.
+
+Please also add a changelog entry
 
 
 * TODO Event-Alias handling - add the event alias int the next line
@@ -45159,8 +44719,474 @@ Please fix
 
 * TODO Toggle sidebar handle NOT visible when loaded from filesystem
 
+The toggle sidebar handle is NOT visible when loaded data from the from filesystem via "Load from Disk" button
+
 
 * TODO Persistent storage of "Visible columns" for each pageType
 
+
 * TODO extract the "video" icon from recordings - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+
+* TODO posting to MusicBrainz forum
+** <2026-01-28 Wed 09:05>
+
+#+begin_example
+# [MusicBrainz: Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
+
+I talked to Misses/Mr. Gemini and out came a new Userscript which accumulates all the paginated MB pages of different entities, renders them depending on the entity type either in a flat or in a grouped table structure with real-time filtering and sorting support.
+
+The currently supported entity types are
+
+ * Artist-ReleaseGroups
+ * ReleaseGroup-Releases
+ * Artist-Releases
+ * Artist-Works
+ * Artist-Recordings
+ * Works
+ * Recordings
+ * Artist-Events
+ * Series
+ * Labels
+ * Place-Events
+ * Place-Performances (buggy, I’m working on that later)
+
+![image|690x343](upload://7UxNLpR1vOIs0xP0wqFnDILhRYm.png)
+
+![image|690x173](upload://bbmH3R7j0EuzA3LGmyxh7OLUaLu.png)
+
+![image|690x276](upload://wLemH2Q4wCerLDPTRSTiRBB2rKd.jpeg)
+
+Almost everything is collapsable/un-collapsable (see the tooltip support).
+
+The final rendrered tables also include new extracted columns for easy sorting, like for example the "Country/Date" column in the Series view is split in its different parts "Country" and "Date"
+
+![image|690x136](upload://aQKg02za09Ktbm8UwTT0Afi4rBG.png)
+
+Also I will make more variables configurable via the TamperMonkey menue in the future
+
+![image|393x499](upload://nnvvX9Cow2FOM9k9NIm5GPnlbtb.png)
+
+You can get the script at https://github.com/vzell/mb-userscripts under [Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
+#+end_example
+
+* Forum
+** ChatGPT
+
+#+begin_example
+Here’s a forum-ready description you can post in the MusicBrainz community, followed by concrete screenshot suggestions to showcase the script effectively.
+
+🎛️ VZ: Show All Entity Data In A Consolidated View
+
+A power-user userscript for MusicBrainz that consolidates paginated and multi-table entity pages into a single, filterable, sortable, exportable data view.
+
+Works on:
+
+Artist pages (recordings, releases, works, relationships, etc.)
+
+Release groups
+
+Releases
+
+Recordings
+
+Works
+
+Labels
+
+Areas
+
+Events
+
+Series
+
+Places
+
+Instruments
+
+Search results
+
+🚀 What It Does
+1️⃣ Consolidates All Pages Into One View
+
+No more clicking through 40+ pages.
+
+The script:
+
+Fetches all paginated results
+
+Merges them into one single table
+
+Keeps everything sortable and filterable
+
+Handles multi-table pages (like subheadings or relationship sections)
+
+Perfect for large artists, labels, or search result sets.
+
+2️⃣ Real-Time Filtering (Global + Per Column)
+
+Global filter across all visible columns
+
+Individual column filters
+
+RegExp support (with Rx toggle)
+
+Debounced filtering for performance
+
+ESC clears the focused filter
+
+“Clear All Filters” button
+
+Filtering performance timing is shown in the status bar.
+
+3️⃣ High-Performance Sorting for Large Datasets
+
+Stable sorting
+
+Async chunked sorting for >5000 rows
+
+Progress indicator for very large datasets
+
+Numeric auto-detection
+
+Visual sort indicators
+
+Even 10k+ rows remain responsive.
+
+4️⃣ Column Management
+
+👁️ Show/Hide columns
+
+Select All / Deselect All
+
+Sticky headers (headers and filter row remain visible)
+
+Ctrl+Click header to toggle all headers within the same container
+
+Manual column resizing (drag like Excel)
+
+Auto-resize columns (fit to content)
+
+Restore original widths
+
+5️⃣ Table Density Control
+
+Choose between:
+
+Compact
+
+Normal
+
+Comfortable
+
+Great when working with massive datasets.
+
+6️⃣ CSV Export
+
+Export:
+
+Only visible rows
+
+Only visible columns
+
+Filtered results
+
+Filename automatically includes:
+
+Page type
+
+Timestamp
+
+Perfect for analysis in Excel / LibreOffice / Sheets.
+
+7️⃣ Offline Storage / Caching
+
+Save full dataset to disk (JSON)
+
+Load from disk later
+
+Avoid re-fetching large datasets
+
+Very useful for artists with 8000+ recordings.
+
+8️⃣ Quick Stats Panel
+
+Displays:
+
+Total rows
+
+Visible rows
+
+Column counts
+
+Filter status
+
+Estimated memory usage
+
+Hidden row/column counts
+
+Great for understanding what you’re actually looking at.
+
+9️⃣ Keyboard Shortcuts (Power-User Mode)
+
+Ctrl+F → Focus filter
+
+Ctrl+Shift+F → Clear filters
+
+Ctrl+E → Export CSV
+
+Ctrl+S → Save
+
+Ctrl+L → Load
+
+Ctrl+, → Settings
+
+? → Show shortcuts help
+
+ESC → Clear focused filter
+
+🔧 Additional Highlights
+
+Sidebar collapsing for more horizontal space
+
+Alternating row striping
+
+Chunked rendering for very large tables
+
+Pre-filter on load
+
+Visual progress indicators
+
+Schema-driven settings dialog
+
+Configurable performance thresholds
+
+Status display with timing feedback
+
+Works with other userscripts (e.g., additional columns)
+
+📸 Best Screenshot Suggestions
+
+If you want to show the full power of the script, use 6–8 carefully chosen screenshots:
+
+1️⃣ Before vs After (Most Important)
+
+Use a large artist like:
+
+Bruce Springsteen
+
+Show:
+
+Default multi-page recordings view
+
+Then the single consolidated view with thousands of rows
+
+This immediately demonstrates the core value.
+
+2️⃣ Filtering + Column Filters + RegExp
+
+Show:
+
+Global filter active
+
+At least one column filter active
+
+“Rx” enabled
+
+Status line showing filtering results + timing
+
+This shows depth, not just “a big table”.
+
+3️⃣ Column Visibility Menu Open
+
+Capture:
+
+👁️ Visible Columns dropdown open
+
+Some columns hidden
+
+Table visibly adapted
+
+This shows customization power.
+
+4️⃣ Manual Column Resize + Auto-Resize Toggle
+
+Show:
+
+A very wide table
+
+Auto-resize enabled
+
+Horizontal scroll active
+
+Manual drag handle visible
+
+This makes it look “professional” and Excel-like.
+
+5️⃣ Stats Panel Open
+
+Have:
+
+Stats panel visible
+
+Filters applied
+
+Hidden rows count visible
+
+This visually communicates performance awareness.
+
+6️⃣ CSV Export Feedback Popup
+
+After exporting:
+
+Show status bar update
+
+Export completion popup
+
+Demonstrates practical usefulness.
+
+7️⃣ Density Comparison (Optional but Nice)
+
+Two screenshots:
+
+Compact mode
+
+Comfortable mode
+
+Shows polish and user preference control.
+
+8️⃣ Keyboard Shortcut Overlay
+
+Press ? and capture the shortcuts help overlay.
+
+This reinforces “power tool” positioning.
+
+💡 How To Present It On The Forum
+
+Structure your post like:
+
+Short 3-line summary (what + why)
+
+4–6 screenshots
+
+Bullet list of features
+
+GitHub link
+
+Installation note (tested with Tampermonkey 5.4.1+)
+
+Suggested Short Intro Paragraph
+
+This userscript turns paginated MusicBrainz entity pages into a single consolidated, sortable, filterable data table — optimized for large datasets (thousands of rows), with column management, CSV export, offline caching, keyboard shortcuts, and performance-aware rendering.
+
+If you'd like, I can also generate:
+
+A shorter “teaser-style” forum post
+
+A technical deep-dive version
+
+Or a polished README.md version for GitHub
+#+end_example
+
+** Gemini
+
+#+begin_example
+This userscript is designed to significantly improve the browsing and data-management experience on MusicBrainz by consolidating fragmented, paginated tables into a single, powerful, and highly interactive view.
+
+Below is a highlight-oriented description suitable for the MusicBrainz forum, followed by suggestions for effective screenshots.
+
+Forum Post Draft: [UNOFFICIAL] VZ: MusicBrainz - Show All Entity Data In A Consolidated View
+Tired of clicking through pages of recordings, releases, or events?
+
+The Show All Entity Data userscript transforms the way you interact with MusicBrainz tables. It accumulates paginated and sub-headed lists (Events, Recordings, Releases, Works, Labels, etc.) into one consolidated view, giving you a powerful, spreadsheet-like interface directly in your browser.
+
+Key Highlights:
+🚀 One-Click Consolidation: Instantly fetch all pages of a list (e.g., an artist's 5,000+ recordings) into a single, seamless table.
+
+🔍 Advanced Real-time Filtering:
+
+Global Search: Filter the entire dataset instantly as you type.
+
+Per-Column Filtering: Narrow down results by specific columns (e.g., only show "Live" recordings or specific "Dates").
+
+Regex Support: Power users can use Regular Expressions for complex filtering.
+
+📊 Spreadsheet-style Interaction:
+
+Fast Sorting: High-performance sorting (even for datasets over 10,000 rows) with numeric and date awareness.
+
+Resizable Columns: Drag column edges to adjust widths, just like Excel.
+
+Sticky Headers: Keep your orientation with table headers that stay at the top while you scroll.
+
+Column Visibility: Toggle specific columns on or off to focus on the data that matters.
+
+💾 Data Portability & Persistence:
+
+Export to CSV: Save your filtered view directly to a CSV file for use in Excel or Google Sheets.
+
+Save/Load to Disk: Save the entire fetched dataset to a JSON file and reload it later—perfect for avoiding re-fetching large artist discographies.
+
+📏 Customization & UI:
+
+Table Density: Choose between Compact, Normal, or Comfortable views.
+
+Collapsible Sidebar: Reclaim screen real estate by collapsing the MusicBrainz sidebar into a thin handle.
+
+Quick Stats: View a live summary of row counts, hidden items, and filter status.
+
+🎹 Power User Shortcuts: Use Ctrl+F to search, Ctrl+E to export, and ? to view the full shortcut menu.
+
+Screenshot Recommendations
+To showcase the script effectively, I recommend the following four screenshots:
+
+The "Consolidated Table" View:
+
+Subject: An Artist's Recordings page (with thousands of rows).
+
+What to show: The active "Global Filter" bar at the top, the "Sticky Header" visible while scrolled down, and the consolidated H3/H2 headers showing total counts.
+
+Column Filtering & Highlighting:
+
+Subject: Any entity table with active filters.
+
+What to show: Demonstrate a specific column filter (e.g., filtering the "Format" column for "CD") and show the real-time text highlighting in the result rows.
+
+UI Controls & Density:
+
+Subject: The top control bar.
+
+What to show: The "Visible Columns" dropdown menu, the "Density" toggle, and the "Stats" panel visible on the side.
+
+The Sidebar & Layout:
+
+Subject: Full-page view.
+
+What to show: Show the sidebar in its "Collapsed" state to demonstrate how the table stretches to fill the full screen width, providing a much clearer view for wide tables.
+#+end_example
+
+* TODO forum demo screen shot - RG-R sort format/lable/catalog/country
+
+Text: ever wanted to see ....
+
+now lets concentrate on just Canada --> filter "Country"="can"  ->>status line tells you excaltly that
+
+now filter globally "with just version"
+
+now toggle highlightning on/off
+
+DO the same with loading from the filesystem ---- demo of higjlightning filter column there .. just "Greetings from asbury park, n.j." --- toggle highligh of loading filter
+
+clear all filters
+
+press anywhere on original sort
+
+* TODO screenshot
+
+Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
+
+* write special about it in the forum because of the 2 Action buttons
+
+
+* MAYBE: make the "Load from Disk" dialog a little wider and a little mor heigth in the font
+
 
