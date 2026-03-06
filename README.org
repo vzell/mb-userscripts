@@ -44385,6 +44385,14 @@ with the following structure for the JSON '"iswcs":' element
 Please extend the current implementation
 
 
+* DONE Toggle sidebar handle NOT visible when loaded from filesystem
+
+The toggle sidebar handle is NOT visible when loaded data from the from filesystem via "Load from Disk" button
+
+* DONE Persistent storage of "Visible columns" for each pageType
+
+Please add the functionality to persistently store the configured "Visible columns" for each pageType after leaving the dialog called by clicking the "Visible"-button
+
 
 * align button texts and make everything configurable (size, font, height, character to underline)
 
@@ -44936,15 +44944,6 @@ Is it maybe because of the presence of data cells which have '<span class="artwo
 Please fix
 
 
-* TODO (1) - Toggle sidebar handle NOT visible when loaded from filesystem
-
-The toggle sidebar handle is NOT visible when loaded data from the from filesystem via "Load from Disk" button
-
-
-* TODO (2) - Persistent storage of "Visible columns" for each pageType
-
-Please add the functionality to persistently store the configured "Visible columns" for each pageType after leaving the dialog called by clicking the "Visible"-button
-
 * TODO extract the "video" icon from recordings - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
 
 
@@ -45410,4 +45409,4 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 * TODO MAYBE: make the "Load from Disk" dialog a little wider and the font a little bigger
 
-
+* TODO marking text with the mouse inside a filter field should NOT be able to mark the filter icon
