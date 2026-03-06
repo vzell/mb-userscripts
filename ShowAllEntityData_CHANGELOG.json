@@ -1,5 +1,19 @@
 [
     {
+        "version": "9.99.44",
+        "date": "2026-03-06",
+        "sections": [
+            {
+                "label": "✨ Enhancements",
+                "items": [
+                    "New config section '💾 LOAD AND SAVE DATA TO/FROM DISK' in the settings dialog: `sa_load_history_limit` relocated from ⚡ PERFORMANCE SETTINGS; `sa_ui_save_btn_style`, `sa_ui_load_btn_style`, and `sa_ui_download_notification_font_size` relocated from 🖌️ ELEMENT UI STYLES. Three new settings added: `sa_ld_dialog_width` (initial pixel width of the Load dialog, default 600, range 300–1400), `sa_ld_dialog_header_font_size` (font size of the description paragraph in the Load dialog header, default '1.00em'), and `sa_ld_status_font_size` (shared font size for the load-, filter-, and render-status containers, default '0.95em'). All values are read when the dialog opens.",
+                    "'📂 Load Table Data' dialog is now draggable and resizable: the header area acts as a drag handle (`cursor:move; user-select:none`) — dragging it moves the dialog freely within the viewport. CSS `resize:both` enables corner/edge resizing with `min-width:320px` and `min-height:120px` guards. Drag listeners are de-registered in `closeDialog()` to avoid leaks.",
+                    "Filter-prefix mouse-selection guard: new `attachFilterPrefixSelectionGuard(input)` replaces the previous broken `mouseup`-based approach. The previous approach failed because mouse-drag selections are updated continuously on mousemove and the mouseup event (even with a deferred microtask) only fires after the drag is already complete. The new implementation listens to `document.selectionchange` — an event that fires synchronously for every selection change including during live drags — and clamps `selectionStart` to at least `prefix.length` the instant it drifts into the prefix region, while leaving `selectionEnd` untouched. A re-entrancy flag (`_clamping`) prevents the programmatic `setSelectionRange()` call inside the handler from retriggering selectionchange in browsers that fire it for programmatic changes. The guard is registered on `focus` and unregistered on `blur` for both the permanent global filter input and every per-column filter input created by `addColumnFilterRow()`."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.43",
         "date": "2026-03-06",
         "sections": [

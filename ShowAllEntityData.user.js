@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.43+2026-03-06
+// @version      9.99.44+2026-03-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -388,15 +388,6 @@
             label: '⚡ PERFORMANCE SETTINGS'
         },
 
-        sa_load_history_limit: {
-            label: 'Load Filter History Limit',
-            type: 'number',
-            default: 50,
-            min: 0,
-            max: 50,
-            description: 'Number of previous filter expressions to remember in the load dialog.'
-        },
-
         sa_filter_debounce_delay: {
             label: "Filter debounce delay (ms)",
             type: "number",
@@ -532,23 +523,6 @@
             fields: ['fontSize', 'padding', 'height', 'borderRadius'],
             default: '0.8em|2px 8px|24px|6px',
             description: 'Base style for all h1 action-bar buttons: fontSize|padding|height|borderRadius'
-        },
-
-        // --- H1 action bar: per-button colour overrides ---
-        sa_ui_save_btn_style: {
-            label: 'Save button colors',
-            type: 'popup_dialog',
-            fields: ['bg', 'color', 'border', 'bgHover'],
-            default: '#4CAF50|white|1px solid #45a049|#45a049',
-            description: 'Save-to-Disk button: bg|color|border|bgHover'
-        },
-
-        sa_ui_load_btn_style: {
-            label: 'Load button colors',
-            type: 'popup_dialog',
-            fields: ['bg', 'color', 'border', 'bgHover'],
-            default: '#2196F3|white|1px solid #0b7dda|#0b7dda',
-            description: 'Load-from-Disk button: bg|color|border|bgHover'
         },
 
         sa_ui_stop_btn_style: {
@@ -691,6 +665,63 @@
             fields: ['fontSize', 'marginRight'],
             default: '0.8em|2px',
             description: 'Checkboxes (Cc / Rx / Ex) in filter bars: fontSize|marginRight'
+        },
+
+        // ============================================================
+        // LOAD AND SAVE DATA TO/FROM DISK SECTION
+        // ============================================================
+        divider_save_load: {
+            type: 'divider',
+            label: '💾 LOAD AND SAVE DATA TO/FROM DISK'
+        },
+
+        sa_load_history_limit: {
+            label: 'Load Filter History Limit',
+            type: 'number',
+            default: 50,
+            min: 0,
+            max: 50,
+            description: 'Number of previous filter expressions to remember in the load dialog.'
+        },
+
+        sa_ld_dialog_width: {
+            label: 'Load dialog width (px)',
+            type: 'number',
+            default: 600,
+            min: 300,
+            max: 1400,
+            description: 'Initial pixel width of the "📂 Load Table Data" dialog. The dialog is also resizable by dragging its edges.'
+        },
+
+        sa_ld_dialog_header_font_size: {
+            label: 'Load dialog header description font size',
+            type: 'text',
+            default: '1.00em',
+            description: 'Font size of the description paragraph below the "📂 Load Table Data" dialog title (e.g. 0.9em, 14px, 1rem)'
+        },
+
+        sa_ld_status_font_size: {
+            label: 'Load dialog status message font size',
+            type: 'text',
+            default: '0.95em',
+            description: 'Font size for the load-, filter- and render-status message containers inside the "📂 Load Table Data" dialog (e.g. 0.9em, 14px, 1rem)'
+        },
+
+        // --- H1 action bar: Save / Load button colour overrides ---
+        sa_ui_save_btn_style: {
+            label: 'Save button colors',
+            type: 'popup_dialog',
+            fields: ['bg', 'color', 'border', 'bgHover'],
+            default: '#4CAF50|white|1px solid #45a049|#45a049',
+            description: 'Save-to-Disk button: bg|color|border|bgHover'
+        },
+
+        sa_ui_load_btn_style: {
+            label: 'Load button colors',
+            type: 'popup_dialog',
+            fields: ['bg', 'color', 'border', 'bgHover'],
+            default: '#2196F3|white|1px solid #0b7dda|#0b7dda',
+            description: 'Load-from-Disk button: bg|color|border|bgHover'
         },
 
         // --- Download / export notification popup ---
@@ -7394,7 +7425,10 @@
      * @param {HTMLElement|null} triggerButton - Button to anchor the dialog to.
      */
     async function showLoadFilterDialog(triggerButton = null) {
-        const historyLimit = Lib.settings.sa_load_history_limit || 10;
+        const historyLimit  = Lib.settings.sa_load_history_limit || 10;
+        const dialogWidth   = (Lib.settings.sa_ld_dialog_width   || 600) + 'px';
+        const headerFontSz  = Lib.settings.sa_ld_dialog_header_font_size || '1.00em';
+        const statusFontSz  = Lib.settings.sa_ld_status_font_size        || '0.95em';
         let history = GM_getValue('sa_load_filter_history', []);
 
         // Toggle: close if already open
@@ -7417,13 +7451,17 @@
             'padding:24px',
             'border-radius:12px',
             'box-shadow:0 8px 32px rgba(0,0,0,0.3)',
-            'width:600px',
+            `width:${dialogWidth}`,
             'max-width:calc(100vw - 40px)',
+            'min-width:320px',
             'font-family:sans-serif',
             'border:1px solid #ccc',
             'z-index:20000',
             'max-height:calc(100vh - 40px)',
+            'min-height:120px',
             'overflow-y:auto',
+            'resize:both',
+            'box-sizing:border-box',
         ].join(';');
 
         const historyItemsHTML = history
@@ -7431,10 +7469,10 @@
             .join('');
 
         dialog.innerHTML = `
-            <!-- ── Shared header ── -->
-            <div style="margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:12px;">
+            <!-- ── Shared header (also drag handle) ── -->
+            <div id="sa-ld-drag-handle" style="margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:12px;cursor:move;user-select:none;">
                 <h3 style="margin:0;color:#222;font-size:1.2em;">&#128194; Load Table Data</h3>
-                <p style="margin:5px 0 0;color:#666;font-size:1.00em;">Load serialized data from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
+                <p style="margin:5px 0 0;color:#666;font-size:${headerFontSz};">Load serialized data from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
             </div>
 
             <!-- ── Phase 1 — Load ── -->
@@ -7445,7 +7483,7 @@
                     </button>
                     <button id="sa-load-cancel" style="flex:1;padding:10px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;">Cancel</button>
                 </div>
-                <div id="sa-ld-load-status" style="display:none;padding:5px 2px;font-size:0.95em;min-height:20px;"></div>
+                <div id="sa-ld-load-status" style="display:none;padding:5px 2px;font-size:${statusFontSz};min-height:20px;"></div>
             </div>
 
             <!-- ── Phase 2 — Filter (hidden until load complete) ── -->
@@ -7478,7 +7516,7 @@
                         <span><span style="text-decoration:underline">F</span>ilter Data</span>
                     </button>
                 </div>
-                <div id="sa-ld-filter-status" style="display:none;padding:5px 2px;font-size:0.95em;min-height:20px;"></div>
+                <div id="sa-ld-filter-status" style="display:none;padding:5px 2px;font-size:${statusFontSz};min-height:20px;"></div>
             </div>
 
             <!-- ── Phase 3 — Render (hidden until filter count computed) ── -->
@@ -7488,7 +7526,7 @@
                         <span><span style="text-decoration:underline">R</span>ender Data</span>
                     </button>
                 </div>
-                <div id="sa-ld-render-status" style="display:none;padding:5px 2px;font-size:0.95em;min-height:20px;"></div>
+                <div id="sa-ld-render-status" style="display:none;padding:5px 2px;font-size:${statusFontSz};min-height:20px;"></div>
             </div>
         `;
 
@@ -7555,6 +7593,8 @@
             dialogFileInput.remove();
             document.removeEventListener('keydown', handleKey);
             if (_outsideHandler) document.removeEventListener('mousedown', _outsideHandler);
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup',   onDragEnd);
         };
 
         // ── Outside-click to dismiss ─────────────────────────────────────────
@@ -7564,6 +7604,43 @@
             closeDialog();
         };
         setTimeout(() => document.addEventListener('mousedown', _outsideHandler), 200);
+
+        // ── Drag to move ─────────────────────────────────────────────────────
+        // The shared header element (#sa-ld-drag-handle) acts as the drag handle.
+        // On first drag the dialog snaps from CSS-transform centred positioning
+        // to absolute pixel coordinates so the offset math is always correct.
+        const dragHandle = dialog.querySelector('#sa-ld-drag-handle');
+        let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
+
+        dragHandle.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button, a, input')) return;
+            isDragging = true;
+            const rect = dialog.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+            dialog.style.transform = 'none';
+            dialog.style.left = rect.left + 'px';
+            dialog.style.top  = rect.top  + 'px';
+            e.preventDefault();
+        });
+
+        /**
+         * Moves the dialog during a mouse drag, clamped to the viewport.
+         * @param {MouseEvent} e
+         */
+        const onDragMove = (e) => {
+            if (!isDragging) return;
+            const x = Math.max(0, Math.min(e.clientX - dragOffsetX, window.innerWidth  - dialog.offsetWidth));
+            const y = Math.max(0, Math.min(e.clientY - dragOffsetY, window.innerHeight - dialog.offsetHeight));
+            dialog.style.left = x + 'px';
+            dialog.style.top  = y + 'px';
+        };
+
+        /** Ends a drag operation. */
+        const onDragEnd = () => { isDragging = false; };
+
+        document.addEventListener('mousemove', onDragMove);
+        document.addEventListener('mouseup',   onDragEnd);
 
         // ── Helper: strip HTML for lightweight counting ───────────────────────
         const stripHtml = html => (html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -8838,6 +8915,61 @@
     const guardColFilterPrefixKeydown = guardFilterPrefixKeydown;
 
     /**
+     * Attach a real-time mouse-selection guard to a filter input so that the
+     * decorative focus prefix (🔍 ) can never be included in a mouse-drag
+     * selection.
+     *
+     * WHY selectionchange instead of mouseup:
+     *   During a mouse drag the browser updates the selection on every mousemove,
+     *   not only when the button is released.  A mouseup handler (even with a
+     *   deferred microtask) therefore only corrects the selection AFTER the drag
+     *   is complete, meaning the prefix appears briefly selected.  The
+     *   document.selectionchange event fires synchronously for every selection
+     *   change — including live drags — so it is the only hook that reliably
+     *   prevents the prefix from ever appearing inside the selection highlight.
+     *
+     * Strategy:
+     *   • On focus  — register a selectionchange listener on document.
+     *   • On blur   — unregister the same listener.
+     *   • In the handler — if selectionStart has drifted into the prefix, clamp
+     *     it back to pfxLen while leaving selectionEnd untouched (the user is
+     *     free to extend the selection rightward into the filter text).
+     *   • Guard against infinite recursion: calling setSelectionRange inside a
+     *     selectionchange handler can itself fire selectionchange in some
+     *     browsers; a re-entrancy flag prevents a loop.
+     *
+     * @param {HTMLInputElement} input - Any filter input that carries the prefix.
+     */
+    function attachFilterPrefixSelectionGuard(input) {
+        let _clamping = false;
+
+        /**
+         * selectionchange handler: clamps selectionStart to at least pfxLen.
+         */
+        const onSelectionChange = () => {
+            if (_clamping) return;
+            if (document.activeElement !== input) return;
+            const prefix = getFilterFocusPrefix();
+            if (!input.value.startsWith(prefix)) return;
+            const pfxLen = prefix.length;
+            const start  = input.selectionStart;
+            const end    = input.selectionEnd;
+            if (start < pfxLen) {
+                _clamping = true;
+                input.setSelectionRange(pfxLen, Math.max(pfxLen, end));
+                _clamping = false;
+            }
+        };
+
+        input.addEventListener('focus', () => {
+            document.addEventListener('selectionchange', onSelectionChange);
+        });
+        input.addEventListener('blur', () => {
+            document.removeEventListener('selectionchange', onSelectionChange);
+        });
+    }
+
+    /**
      * Adds a filter row beneath the table header with input fields for per-column filtering
      * @param {HTMLTableElement} table - The table to add column filters to
      */
@@ -8926,6 +9058,11 @@
 
             // Keydown: prevent Backspace/Delete/ArrowLeft from consuming the prefix
             input.addEventListener('keydown', (e) => guardFilterPrefixKeydown(input, e));
+
+            // Selection guard: prevent mouse-drag selections from covering the prefix icon.
+            // Uses document.selectionchange which fires on every selection update during
+            // a drag — unlike mouseup which only fires after the drag ends.
+            attachFilterPrefixSelectionGuard(input);
 
             // Blur: strip prefix and manage background tint; hasActiveBg=true for column inputs
             input.addEventListener('blur', () => removeFilterFocusStyle(input, '…', true));
@@ -9402,6 +9539,11 @@
     // Keydown guard: same Backspace / Delete / ArrowLeft / Home / Ctrl+A protection as
     // column filters — the user must never be able to erase the permanent prefix.
     filterInput.addEventListener('keydown', (e) => guardFilterPrefixKeydown(filterInput, e));
+
+    // Selection guard: prevent mouse-drag selections from covering the prefix icon.
+    // Uses document.selectionchange so selection is clamped during live drags,
+    // not only after mouseup.
+    attachFilterPrefixSelectionGuard(filterInput);
 
     // Input: safety net — if some programmatic path emptied the field, restore the prefix
     // before running the filter so the invariant is never violated.
