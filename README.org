@@ -45410,3 +45410,6 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 * TODO MAYBE: make the "Load from Disk" dialog a little wider and the font a little bigger
 
 * TODO marking text with the mouse inside a filter field should NOT be able to mark the filter icon
+
+* TODO extract the VZ event disambiguation configurable in its constituents
+
