@@ -1,3 +1,60 @@
+<div id="sa-load-dialog-overlay" style="position: fixed; background: rgb(255, 255, 255); padding: 24px; border-radius: 12px; box-shadow: rgba(0, 0, 0, 0.3) 0px 8px 32px; width: 420px; max-width: calc(-40px + 100vw); font-family: sans-serif; border: 1px solid rgb(204, 204, 204); z-index: 20000; max-height: calc(-40px + 100vh); overflow-y: auto; top: 125.463px; left: 487.013px;">
+            <!-- ── Shared header ── -->
+            <div style="margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:12px;">
+                <h3 style="margin:0;color:#222;font-size:1.2em;">📂 Load Table Data</h3>
+                <p style="margin:5px 0 0;color:#666;font-size:0.95em;">Load serialized data from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
+            </div>
+
+            <!-- ── Phase 1 — Load ── -->
+            <div id="sa-ld-phase1">
+                <div style="display:flex;gap:12px;margin-bottom:8px;">
+                    <button id="sa-load-confirm" style="flex: 2 1 0%; padding: 10px; background: rgb(76, 175, 80); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;"><span><span style="text-decoration:underline">L</span>oad Data</span></button>
+                    <button id="sa-load-cancel" style="flex:1;padding:10px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;">Cancel</button>
+                </div>
+                <div id="sa-ld-load-status" style="display: block; padding: 5px 2px; font-size: 0.9em; min-height: 20px; color: rgb(46, 125, 50);">✅ Loaded <strong>1,586</strong> rows from <em>"MB-artist-works-1586-2026-03-05T23-42-08.json.gz"</em></div>
+            </div>
+
+            <!-- ── Phase 2 — Filter (hidden until load complete) ── -->
+            <div id="sa-ld-phase2" style="display: block; margin-top: 18px; border-top: 1px solid rgb(238, 238, 238); padding-top: 16px;">
+                <div style="margin-bottom:12px;position:relative;">
+                    <div style="display:flex;gap:4px;">
+                        <input id="sa-load-filter-input" type="text" placeholder="Filter expression... evaluated for each column" style="flex: 1 1 0%; padding: 8px 12px; border-width: 1px; border-style: solid; border-image: initial; border-radius: 6px; font-size: 1em; outline: none;">
+                        <button id="sa-load-history-toggle" title="Show history" style="padding:0 8px;background:#f0f0f0;border:1px solid #ccc;border-radius:6px;cursor:pointer;display:inline-block;">▼</button>
+                    </div>
+                    <div id="sa-load-history-dropdown" style="display: none; position: absolute; top: 100%; left: 0px; right: 0px; background: white; border: 1px solid rgb(204, 204, 204); border-radius: 6px; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px; z-index: 20001; max-height: 150px; overflow-y: auto; margin-top: 4px;"><div class="sa-history-item" style="padding:8px 12px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;">Frank Sinatra</div><div class="sa-history-item" style="padding:8px 12px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;">Thunder Road</div><div class="sa-history-item" style="padding:8px 12px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;">Cover Me</div></div>
+                </div>
+                <div style="display:flex;gap:20px;justify-content:center;margin-bottom:14px;background:#f9f9f9;padding:10px;border-radius:8px;">
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                        <input type="checkbox" id="sa-load-case"> Case Sensitive
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                        <input type="checkbox" id="sa-load-regex"> Regular Expression
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
+                        <input type="checkbox" id="sa-load-exclude"> Exclude Matches
+                    </label>
+                </div>
+                <div style="display:flex;gap:12px;margin-bottom:8px;">
+                    <button id="sa-filter-confirm" style="flex:2;padding:10px;background:#1976D2;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">
+                        <span><span style="text-decoration:underline">F</span>ilter Data</span>
+                    </button>
+                </div>
+                <div id="sa-ld-filter-status" style="display: block; padding: 5px 2px; font-size: 0.9em; min-height: 20px; color: rgb(21, 101, 192);"><strong>1,586</strong> rows will be rendered (no filter applied)</div>
+            </div>
+
+            <!-- ── Phase 3 — Render (hidden until filter count computed) ── -->
+            <div id="sa-ld-phase3" style="display: block; margin-top: 18px; border-top: 1px solid rgb(238, 238, 238); padding-top: 16px;">
+                <div style="display:flex;gap:12px;margin-bottom:8px;">
+                    <button id="sa-render-confirm" style="flex:2;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">
+                        <span><span style="text-decoration:underline">R</span>ender Data</span>
+                    </button>
+                </div>
+                <div id="sa-ld-render-status" style="display:none;padding:5px 2px;font-size:0.9em;min-height:20px;"></div>
+            </div>
+        </div>
+
+
+
 OK, here is another column "ISWC" on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works?page=16
 
 <td class="iswc">

@@ -7417,7 +7417,7 @@
             'padding:24px',
             'border-radius:12px',
             'box-shadow:0 8px 32px rgba(0,0,0,0.3)',
-            'width:420px',
+            'width:600px',
             'max-width:calc(100vw - 40px)',
             'font-family:sans-serif',
             'border:1px solid #ccc',
@@ -7434,7 +7434,7 @@
             <!-- ── Shared header ── -->
             <div style="margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:12px;">
                 <h3 style="margin:0;color:#222;font-size:1.2em;">&#128194; Load Table Data</h3>
-                <p style="margin:5px 0 0;color:#666;font-size:0.95em;">Load serialized data from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
+                <p style="margin:5px 0 0;color:#666;font-size:1.00em;">Load serialized data from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
             </div>
 
             <!-- ── Phase 1 — Load ── -->
@@ -7445,7 +7445,7 @@
                     </button>
                     <button id="sa-load-cancel" style="flex:1;padding:10px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;">Cancel</button>
                 </div>
-                <div id="sa-ld-load-status" style="display:none;padding:5px 2px;font-size:0.9em;min-height:20px;"></div>
+                <div id="sa-ld-load-status" style="display:none;padding:5px 2px;font-size:0.95em;min-height:20px;"></div>
             </div>
 
             <!-- ── Phase 2 — Filter (hidden until load complete) ── -->
@@ -7478,7 +7478,7 @@
                         <span><span style="text-decoration:underline">F</span>ilter Data</span>
                     </button>
                 </div>
-                <div id="sa-ld-filter-status" style="display:none;padding:5px 2px;font-size:0.9em;min-height:20px;"></div>
+                <div id="sa-ld-filter-status" style="display:none;padding:5px 2px;font-size:0.95em;min-height:20px;"></div>
             </div>
 
             <!-- ── Phase 3 — Render (hidden until filter count computed) ── -->
@@ -7488,7 +7488,7 @@
                         <span><span style="text-decoration:underline">R</span>ender Data</span>
                     </button>
                 </div>
-                <div id="sa-ld-render-status" style="display:none;padding:5px 2px;font-size:0.9em;min-height:20px;"></div>
+                <div id="sa-ld-render-status" style="display:none;padding:5px 2px;font-size:0.95em;min-height:20px;"></div>
             </div>
         `;
 
