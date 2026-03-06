@@ -1,5 +1,17 @@
 [
     {
+        "version": "9.99.42",
+        "date": "2026-03-06",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "Sidebar toggle handle not shown after 'Load from Disk': `initSidebarCollapse()` was only called at the end of the live fetch/render path (the “🧮 Show all” button flow) and was never invoked when data was restored from a saved file via the “📂 Load” button. Fixed by adding the same `if (Lib.settings.sa_collabsable_sidebar) { initSidebarCollapse(); }` call to the Load-from-Disk post-render block, immediately after `addExportButton()`, matching the structure of the fetch path. An idempotency guard (`if (document.getElementById('sidebar-toggle-handle')) return`) was also added at the top of `initSidebarCollapse()` so that calling it a second time (e.g. the user loads a file on a page where the sidebar was already initialized by a prior fetch) is a safe no-op that simply logs a debug message and returns."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.41",
         "date": "2026-03-06",
         "sections": [

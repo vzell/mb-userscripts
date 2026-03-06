@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.41+2026-03-06
+// @version      9.99.42+2026-03-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -5658,6 +5658,13 @@
         const content = document.getElementById("content");
 
         if (!sidebar) return;
+
+        // Guard: if the handle was already injected (e.g. by a previous fetch run
+        // before the user loaded data from disk) do not create a second one.
+        if (document.getElementById('sidebar-toggle-handle')) {
+            Lib.debug('init', 'Sidebar toggle handle already present — skipping re-init.');
+            return;
+        }
 
         Lib.debug('init', 'Initializing aggressive full-width sidebar toggle.');
 
@@ -13601,6 +13608,12 @@
                 // Add export button
                 if (Lib.settings.sa_enable_export) {
                     addExportButton();
+                }
+
+                // Initialize sidebar collapse toggle (must run after render;
+                // idempotent — safe to call even if a prior fetch already ran it)
+                if (Lib.settings.sa_collabsable_sidebar) {
+                    initSidebarCollapse();
                 }
 
                 updateH2Count(loadedRowCount, loadedRowCount);
