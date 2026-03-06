@@ -1,37 +1,14 @@
 [
     {
-        "version": "9.99.46",
-        "date": "2026-03-06",
-        "sections": [
-            {
-                "label": "✨ Enhancements",
-                "items": [
-                    "Video column — sortable and filterable via invisible sort-key text: the `video` ColumnDataExtractor now appends a `<span class=\"mb-video-sort-key\" aria-hidden=\"true\" style=\"display:none\">` to every synthetic `Video` cell. The span contains the literal text `\"video\"` when the `<span class=\"video\">` indicator was present, or `\"audio\"` otherwise. The span is never rendered by the browser, but both `getCleanColumnText()` and `getCleanVisibleText()` use a `TreeWalker` that does NOT skip `display:none` nodes, so all three consumers that depend on them pick up the text transparently: (1) **Sorting** — `createMultiColumnComparator()` calls `getCleanVisibleText(cell)` and now receives `\"audio\"` or `\"video\"`, making ascending/descending sort place audio recordings before video recordings in the expected alphabetical order. (2) **Unique-values dropdown** — `openUniqDrop()` calls `getCleanColumnText(cell)` and now produces exactly two entries (`\"audio\"` and `\"video\"`) with correct occurrence counts. (3) **Filter matching** — `applyUniqVal()` writes the raw value (`\"video\"` or `\"audio\"`) into the column filter input; the filter loop calls `getCleanColumnText(cell)` and the string matches correctly, so clicking `\"video\"` shows only rows with the icon and clicking `\"audio\"` shows only rows without it. No changes were required to any of these consumers — only the `video` extractor was modified."
-                ]
-            }
-        ]
-    },
-    {
-        "date": "2026-03-06",
-        "sections": [
-            {
-                "label": "✨ Enhancements",
-                "items": [
-                    "New `video` ColumnDataExtractor for `artist-recordings` and `place-performances` page types: the `<span class=\"video\" title=\"This recording is a video\">` icon is now *moved* (not copied) out of the `Name` / `Title` source column and placed into a dedicated synthetic `Video` column. Removal is done via `videoSpan.remove()` on the live source `<td>` before the node is re-inserted into the new synthetic cell, so no duplication occurs and the title column stays uncluttered. Rows without the video indicator receive an empty placeholder `<td>` to keep the table structure consistent. The extractor is wired into `pageDefinitions` via a canonical `columnExtractors` descriptor: `{ sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }` for `artist-recordings` (single-table, paginated) and `{ sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }` for `place-performances` (multi-table, non-paginated). No changes were required to the extraction pipeline — only the new registry entry in `ColumnDataExtractor` and the two updated `pageDefinitions` entries."
-                ]
-            }
-        ]
-    },
-    {
         "version": "9.99.44",
         "date": "2026-03-06",
         "sections": [
             {
                 "label": "✨ Enhancements",
                 "items": [
-                    "New config section '💾 LOAD AND SAVE DATA TO/FROM DISK' in the settings dialog: `sa_load_history_limit` relocated from ⚡ PERFORMANCE SETTINGS; `sa_ui_save_btn_style`, `sa_ui_load_btn_style`, and `sa_ui_download_notification_font_size` relocated from 🖌️ ELEMENT UI STYLES. Three new settings added: `sa_ld_dialog_width` (initial pixel width of the Load dialog, default 600, range 300–1400), `sa_ld_dialog_header_font_size` (font size of the description paragraph in the Load dialog header, default '1.00em'), and `sa_ld_status_font_size` (shared font size for the load-, filter-, and render-status containers, default '0.95em'). All values are read when the dialog opens.",
-                    "'📂 Load Table Data' dialog is now draggable and resizable: the header area acts as a drag handle (`cursor:move; user-select:none`) — dragging it moves the dialog freely within the viewport. CSS `resize:both` enables corner/edge resizing with `min-width:320px` and `min-height:120px` guards. Drag listeners are de-registered in `closeDialog()` to avoid leaks.",
-                    "Filter-prefix mouse-selection guard: new `attachFilterPrefixSelectionGuard(input)` replaces the previous broken `mouseup`-based approach. The previous approach failed because mouse-drag selections are updated continuously on mousemove and the mouseup event (even with a deferred microtask) only fires after the drag is already complete. The new implementation listens to `document.selectionchange` — an event that fires synchronously for every selection change including during live drags — and clamps `selectionStart` to at least `prefix.length` the instant it drifts into the prefix region, while leaving `selectionEnd` untouched. A re-entrancy flag (`_clamping`) prevents the programmatic `setSelectionRange()` call inside the handler from retriggering selectionchange in browsers that fire it for programmatic changes. The guard is registered on `focus` and unregistered on `blur` for both the permanent global filter input and every per-column filter input created by `addColumnFilterRow()`."
+                    "New config section '💾 LOAD AND SAVE DATA TO/FROM DISK' in the settings dialog: the settings `sa_load_history_limit` (Load Filter History Limit), `sa_ui_save_btn_style` (Save button colors), `sa_ui_load_btn_style` (Load button colors), and `sa_ui_download_notification_font_size` (Download notification font size) have been relocated from the PERFORMANCE SETTINGS and UI APPEARANCE sections respectively into this dedicated section. Three new settings have been added to the section: `sa_ld_dialog_width` (initial pixel width of the Load dialog, default 600), `sa_ld_dialog_header_font_size` (font size of the description paragraph in the Load dialog header, default '1.00em'), and `sa_ld_status_font_size` (shared font size for the load-, filter-, and render-status message containers, default '0.95em'). The Load dialog now reads all five values at open time so every aspect of its size and typography is configurable without touching source code.",
+                    "'📂 Load Table Data' dialog is now draggable and resizable: the header area (title + description paragraph) acts as a drag handle — clicking and dragging it anywhere except interactive children (buttons, links, inputs) moves the dialog freely within the viewport, clamped to the window edges. CSS `resize: both` is applied so the dialog can also be resized by dragging its bottom-right corner handle, with `min-width: 320px` and `min-height: 120px` guards. The `closeDialog` cleanup function now also de-registers the document-level `mousemove`/`mouseup` drag listeners to avoid leaking handlers after the dialog closes.",
+                    "Filter-prefix mouse-selection guard: a new helper `guardFilterPrefixMouseUp(input)` has been added that prevents the decorative focus-prefix icon (🔍 ) from being included in a mouse-drag text selection inside any filter input. It uses a deferred microtask (Promise.resolve().then()) to let the browser commit the post-mouseup selection before clamping `selectionStart` to at least `prefix.length`; `selectionEnd` is preserved so the user can freely extend the selection rightward into the filter text. The guard is wired to both the global filter input and every column-filter input created by `addColumnFilterRow()`, complementing the existing keyboard-based `guardFilterPrefixKeydown()` protection."
                 ]
             }
         ]

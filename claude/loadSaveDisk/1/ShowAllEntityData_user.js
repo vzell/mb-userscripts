@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.46+2026-03-06
+// @version      9.99.44+2026-03-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -976,74 +976,6 @@
                 tdTypes.textContent = types.join(', ');
             }
             return [tdTypes];
-        },
-
-        /**
-         * video — extracts the MusicBrainz video-indicator span from a recording
-         * title cell into a dedicated synthetic "Video" column, and removes it from
-         * the source cell so the title column stays uncluttered.
-         *
-         * Source structure (optional):
-         *   <span class="video" title="This recording is a video">…icon…</span>
-         *
-         * The span is moved (not copied) out of the source cell: the original DOM
-         * node is removed so both the title column and the Video column always
-         * reflect the real state without duplication.
-         *
-         * Sortability and dropdown filtering:
-         *   An invisible <span class="mb-video-sort-key" style="display:none"> is
-         *   always appended to tdVideo.  It contains the literal text "video" when
-         *   the indicator span was present, or "audio" otherwise.  The span is not
-         *   rendered by the browser but IS walked by getCleanColumnText() and
-         *   getCleanVisibleText() (both use a TreeWalker that does not skip
-         *   display:none elements), so:
-         *     - Sorting ascending/descending works ("audio" < "video" alphabetically).
-         *     - The unique-values dropdown shows exactly "audio" and "video".
-         *     - Clicking "video" in the dropdown filters to rows that have the icon;
-         *       clicking "audio" filters to rows that do not.
-         *
-         * Synthetic columns: ['Video']
-         *
-         * @param   {HTMLTableCellElement} sourceCell  The source <td> element.
-         * @returns {HTMLTableCellElement[]}            Array of one synthetic <td>.
-         */
-        video(sourceCell) {
-            const tdVideo = document.createElement('td');
-
-            /**
-             * Appends an invisible text label used exclusively as a sort/filter key.
-             * The label is never rendered — style="display:none" hides it visually —
-             * but the TreeWalker inside getCleanColumnText() and getCleanVisibleText()
-             * does not skip display:none nodes, so sorting and the unique-value
-             * dropdown both pick it up correctly.
-             *
-             * @param {string} label - "video" or "audio"
-             */
-            const appendSortKey = (label) => {
-                const keySpan = document.createElement('span');
-                keySpan.className = 'mb-video-sort-key';
-                keySpan.setAttribute('aria-hidden', 'true');
-                keySpan.style.display = 'none';
-                keySpan.textContent = label;
-                tdVideo.appendChild(keySpan);
-            };
-
-            if (sourceCell) {
-                const videoSpan = sourceCell.querySelector('span.video[title="This recording is a video"]');
-                if (videoSpan) {
-                    // Move the node: remove from source so the title cell is clean,
-                    // then place the original (not a clone) into the synthetic cell.
-                    videoSpan.remove();
-                    tdVideo.appendChild(videoSpan);
-                    appendSortKey('video');
-                } else {
-                    appendSortKey('audio');
-                }
-            } else {
-                appendSortKey('audio');
-            }
-
-            return [tdVideo];
         }
     };
 
@@ -1320,9 +1252,6 @@
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Performances for Place' } ],
             features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
                 extractMainColumn: 'Title'
             },
             tableMode: 'multi',
@@ -1498,9 +1427,6 @@
             match: (path) => path.includes('/recordings'),
             buttons: [ { label: 'Show all Recordings for Artist' } ],
             features: {
-                columnExtractors: [
-                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
                 extractMainColumn: 'Name'
             },
             tableMode: 'single'

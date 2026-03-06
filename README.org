@@ -45675,6 +45675,7 @@ Still breaks when auto-resizing
 * optionally hide "recording of <work>" in Artist-Recordings" pages
 
 * remove video icon from main column and extract to synthetic colum
+** initial
 
 In the uploaded userscript,
 
@@ -45761,4 +45762,15 @@ With video icon:
   </div>
 </td>
 #+end_example
+
+** make sortable
+
+Currently the "Video" column is not sortable, as there is no textual representation of the video icon. Please add an
+invisible text (so it should not be rendered insdie of the data cells) of "video" when the container '<span class="video" title="This recording is a video">' is present,
+and the text "audio" otherwise (also not rendered). But BOTH values should be taken into account when sorting
+ascending/descending and also should be renderded inside the unique column value drop-down for selection purposes (clicking on "video" should filter on cells with the '<span class="video"' and clicking on "audio" all except the '<span class="video"'
+
+
+* The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
+
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.46+2026-03-06
+// @version      9.99.44+2026-03-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -507,6 +507,71 @@
         },
 
         // ============================================================
+        // LOAD AND SAVE DATA TO/FROM DISK SECTION
+        // ============================================================
+        divider_save_load: {
+            type: 'divider',
+            label: '💾 LOAD AND SAVE DATA TO/FROM DISK'
+        },
+
+        sa_load_history_limit: {
+            label: 'Load Filter History Limit',
+            type: 'number',
+            default: 50,
+            min: 0,
+            max: 50,
+            description: 'Number of previous filter expressions to remember in the load dialog.'
+        },
+
+        sa_ld_dialog_width: {
+            label: 'Load dialog width (px)',
+            type: 'number',
+            default: 600,
+            min: 300,
+            max: 1400,
+            description: 'Initial pixel width of the "📂 Load Table Data" dialog. The dialog is also resizable by dragging its edges.'
+        },
+
+        sa_ld_dialog_header_font_size: {
+            label: 'Load dialog header description font size',
+            type: 'text',
+            default: '1.00em',
+            description: 'Font size for the description paragraph shown below the "📂 Load Table Data" dialog title (e.g. 0.9em, 14px, 1rem)'
+        },
+
+        sa_ld_status_font_size: {
+            label: 'Load dialog status message font size',
+            type: 'text',
+            default: '0.95em',
+            description: 'Font size for the load-, filter- and render-status message containers inside the "📂 Load Table Data" dialog (e.g. 0.9em, 14px, 1rem)'
+        },
+
+        // --- H1 action bar: per-button colour overrides (Save / Load) ---
+        sa_ui_save_btn_style: {
+            label: 'Save button colors',
+            type: 'popup_dialog',
+            fields: ['bg', 'color', 'border', 'bgHover'],
+            default: '#4CAF50|white|1px solid #45a049|#45a049',
+            description: 'Save-to-Disk button: bg|color|border|bgHover'
+        },
+
+        sa_ui_load_btn_style: {
+            label: 'Load button colors',
+            type: 'popup_dialog',
+            fields: ['bg', 'color', 'border', 'bgHover'],
+            default: '#2196F3|white|1px solid #0b7dda|#0b7dda',
+            description: 'Load-from-Disk button: bg|color|border|bgHover'
+        },
+
+        // --- Download / export notification popup ---
+        sa_ui_download_notification_font_size: {
+            label: 'Download notification message font size',
+            type: 'text',
+            default: '1.2em',
+            description: 'Font size of the message text inside the "Save to Disk" / export download notification popup (e.g. 0.9em, 14px, 1rem)'
+        },
+
+        // ============================================================
         // UI APPEARANCE SECTION
         // Condensed pipe-separated config strings for every interactive
         // UI element in the script. Format is documented per entry.
@@ -666,71 +731,6 @@
             default: '0.8em|2px',
             description: 'Checkboxes (Cc / Rx / Ex) in filter bars: fontSize|marginRight'
         },
-
-        // ============================================================
-        // LOAD AND SAVE DATA TO/FROM DISK SECTION
-        // ============================================================
-        divider_save_load: {
-            type: 'divider',
-            label: '💾 LOAD AND SAVE DATA TO/FROM DISK'
-        },
-
-        sa_load_history_limit: {
-            label: 'Load Filter History Limit',
-            type: 'number',
-            default: 50,
-            min: 0,
-            max: 50,
-            description: 'Number of previous filter expressions to remember in the load dialog.'
-        },
-
-        sa_ld_dialog_width: {
-            label: 'Load dialog width (px)',
-            type: 'number',
-            default: 600,
-            min: 300,
-            max: 1400,
-            description: 'Initial pixel width of the "📂 Load Table Data" dialog. The dialog is also resizable by dragging its edges.'
-        },
-
-        sa_ld_dialog_header_font_size: {
-            label: 'Load dialog header description font size',
-            type: 'text',
-            default: '1.00em',
-            description: 'Font size of the description paragraph below the "📂 Load Table Data" dialog title (e.g. 0.9em, 14px, 1rem)'
-        },
-
-        sa_ld_status_font_size: {
-            label: 'Load dialog status message font size',
-            type: 'text',
-            default: '0.95em',
-            description: 'Font size for the load-, filter- and render-status message containers inside the "📂 Load Table Data" dialog (e.g. 0.9em, 14px, 1rem)'
-        },
-
-        // --- H1 action bar: Save / Load button colour overrides ---
-        sa_ui_save_btn_style: {
-            label: 'Save button colors',
-            type: 'popup_dialog',
-            fields: ['bg', 'color', 'border', 'bgHover'],
-            default: '#4CAF50|white|1px solid #45a049|#45a049',
-            description: 'Save-to-Disk button: bg|color|border|bgHover'
-        },
-
-        sa_ui_load_btn_style: {
-            label: 'Load button colors',
-            type: 'popup_dialog',
-            fields: ['bg', 'color', 'border', 'bgHover'],
-            default: '#2196F3|white|1px solid #0b7dda|#0b7dda',
-            description: 'Load-from-Disk button: bg|color|border|bgHover'
-        },
-
-        // --- Download / export notification popup ---
-        sa_ui_download_notification_font_size: {
-            label: 'Download notification message font size',
-            type: 'text',
-            default: '1.2em',
-            description: 'Font size of the message text inside the "Save to Disk" / export download notification popup (e.g. 0.9em, 14px, 1rem)'
-        }
 
     };
 
@@ -976,74 +976,6 @@
                 tdTypes.textContent = types.join(', ');
             }
             return [tdTypes];
-        },
-
-        /**
-         * video — extracts the MusicBrainz video-indicator span from a recording
-         * title cell into a dedicated synthetic "Video" column, and removes it from
-         * the source cell so the title column stays uncluttered.
-         *
-         * Source structure (optional):
-         *   <span class="video" title="This recording is a video">…icon…</span>
-         *
-         * The span is moved (not copied) out of the source cell: the original DOM
-         * node is removed so both the title column and the Video column always
-         * reflect the real state without duplication.
-         *
-         * Sortability and dropdown filtering:
-         *   An invisible <span class="mb-video-sort-key" style="display:none"> is
-         *   always appended to tdVideo.  It contains the literal text "video" when
-         *   the indicator span was present, or "audio" otherwise.  The span is not
-         *   rendered by the browser but IS walked by getCleanColumnText() and
-         *   getCleanVisibleText() (both use a TreeWalker that does not skip
-         *   display:none elements), so:
-         *     - Sorting ascending/descending works ("audio" < "video" alphabetically).
-         *     - The unique-values dropdown shows exactly "audio" and "video".
-         *     - Clicking "video" in the dropdown filters to rows that have the icon;
-         *       clicking "audio" filters to rows that do not.
-         *
-         * Synthetic columns: ['Video']
-         *
-         * @param   {HTMLTableCellElement} sourceCell  The source <td> element.
-         * @returns {HTMLTableCellElement[]}            Array of one synthetic <td>.
-         */
-        video(sourceCell) {
-            const tdVideo = document.createElement('td');
-
-            /**
-             * Appends an invisible text label used exclusively as a sort/filter key.
-             * The label is never rendered — style="display:none" hides it visually —
-             * but the TreeWalker inside getCleanColumnText() and getCleanVisibleText()
-             * does not skip display:none nodes, so sorting and the unique-value
-             * dropdown both pick it up correctly.
-             *
-             * @param {string} label - "video" or "audio"
-             */
-            const appendSortKey = (label) => {
-                const keySpan = document.createElement('span');
-                keySpan.className = 'mb-video-sort-key';
-                keySpan.setAttribute('aria-hidden', 'true');
-                keySpan.style.display = 'none';
-                keySpan.textContent = label;
-                tdVideo.appendChild(keySpan);
-            };
-
-            if (sourceCell) {
-                const videoSpan = sourceCell.querySelector('span.video[title="This recording is a video"]');
-                if (videoSpan) {
-                    // Move the node: remove from source so the title cell is clean,
-                    // then place the original (not a clone) into the synthetic cell.
-                    videoSpan.remove();
-                    tdVideo.appendChild(videoSpan);
-                    appendSortKey('video');
-                } else {
-                    appendSortKey('audio');
-                }
-            } else {
-                appendSortKey('audio');
-            }
-
-            return [tdVideo];
         }
     };
 
@@ -1320,9 +1252,6 @@
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Performances for Place' } ],
             features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
                 extractMainColumn: 'Title'
             },
             tableMode: 'multi',
@@ -1498,9 +1427,6 @@
             match: (path) => path.includes('/recordings'),
             buttons: [ { label: 'Show all Recordings for Artist' } ],
             features: {
-                columnExtractors: [
-                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
                 extractMainColumn: 'Name'
             },
             tableMode: 'single'
@@ -7680,26 +7606,27 @@
         setTimeout(() => document.addEventListener('mousedown', _outsideHandler), 200);
 
         // ── Drag to move ─────────────────────────────────────────────────────
-        // The shared header element (#sa-ld-drag-handle) acts as the drag handle.
-        // On first drag the dialog snaps from CSS-transform centred positioning
-        // to absolute pixel coordinates so the offset math is always correct.
+        // Dragging is initiated from the header area (#sa-ld-drag-handle).
+        // Once drag starts the dialog's CSS-transform centred positioning is
+        // converted to absolute pixel coordinates so the drag offset math works.
         const dragHandle = dialog.querySelector('#sa-ld-drag-handle');
         let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
 
         dragHandle.addEventListener('mousedown', (e) => {
-            if (e.target.closest('button, a, input')) return;
+            if (e.target.closest('button, a, input')) return; // don't hijack interactive children
             isDragging = true;
             const rect = dialog.getBoundingClientRect();
             dragOffsetX = e.clientX - rect.left;
             dragOffsetY = e.clientY - rect.top;
+            // Snap out of CSS-transform centred positioning to absolute pixel coordinates
             dialog.style.transform = 'none';
             dialog.style.left = rect.left + 'px';
             dialog.style.top  = rect.top  + 'px';
-            e.preventDefault();
+            e.preventDefault(); // prevent text selection during drag
         });
 
         /**
-         * Moves the dialog during a mouse drag, clamped to the viewport.
+         * Mousemove handler for dragging the load dialog.
          * @param {MouseEvent} e
          */
         const onDragMove = (e) => {
@@ -7710,7 +7637,9 @@
             dialog.style.top  = y + 'px';
         };
 
-        /** Ends a drag operation. */
+        /**
+         * Mouseup handler — ends a drag operation.
+         */
         const onDragEnd = () => { isDragging = false; };
 
         document.addEventListener('mousemove', onDragMove);
@@ -8989,57 +8918,38 @@
     const guardColFilterPrefixKeydown = guardFilterPrefixKeydown;
 
     /**
-     * Attach a real-time mouse-selection guard to a filter input so that the
-     * decorative focus prefix (🔍 ) can never be included in a mouse-drag
-     * selection.
+     * Clamp a mouse-driven text selection so it can never extend into the
+     * decorative focus prefix.  Attach as a 'mouseup' listener on any filter
+     * input that carries the prefix while focused.
      *
-     * WHY selectionchange instead of mouseup:
-     *   During a mouse drag the browser updates the selection on every mousemove,
-     *   not only when the button is released.  A mouseup handler (even with a
-     *   deferred microtask) therefore only corrects the selection AFTER the drag
-     *   is complete, meaning the prefix appears briefly selected.  The
-     *   document.selectionchange event fires synchronously for every selection
-     *   change — including live drags — so it is the only hook that reliably
-     *   prevents the prefix from ever appearing inside the selection highlight.
+     * The browser sets the selection AFTER the mouseup event fires, so we defer
+     * the clamp by one microtask (Promise.resolve()) to let the browser commit
+     * its selection first, then override only the start boundary if it landed
+     * inside the prefix.
      *
-     * Strategy:
-     *   • On focus  — register a selectionchange listener on document.
-     *   • On blur   — unregister the same listener.
-     *   • In the handler — if selectionStart has drifted into the prefix, clamp
-     *     it back to pfxLen while leaving selectionEnd untouched (the user is
-     *     free to extend the selection rightward into the filter text).
-     *   • Guard against infinite recursion: calling setSelectionRange inside a
-     *     selectionchange handler can itself fire selectionchange in some
-     *     browsers; a re-entrancy flag prevents a loop.
+     * Rules enforced:
+     *  • selectionStart is clamped to at least prefix.length so the icon can
+     *    never be part of a mouse-drag selection.
+     *  • selectionEnd is left unchanged (the user freely extends rightward).
+     *  • If the entire selection would be within the prefix (both start and end
+     *    ≤ pfxLen), the cursor is repositioned to just after the prefix.
      *
-     * @param {HTMLInputElement} input - Any filter input that carries the prefix.
+     * @param {HTMLInputElement} input - The filter input element.
      */
-    function attachFilterPrefixSelectionGuard(input) {
-        let _clamping = false;
-
-        /**
-         * selectionchange handler: clamps selectionStart to at least pfxLen.
-         */
-        const onSelectionChange = () => {
-            if (_clamping) return;
+    function guardFilterPrefixMouseUp(input) {
+        const prefix = getFilterFocusPrefix();
+        if (!input.value.startsWith(prefix)) return;
+        const pfxLen = prefix.length;
+        // Defer one microtask so the browser has committed the selection.
+        Promise.resolve().then(() => {
             if (document.activeElement !== input) return;
-            const prefix = getFilterFocusPrefix();
-            if (!input.value.startsWith(prefix)) return;
-            const pfxLen = prefix.length;
-            const start  = input.selectionStart;
-            const end    = input.selectionEnd;
+            const start = input.selectionStart;
+            const end   = input.selectionEnd;
             if (start < pfxLen) {
-                _clamping = true;
+                // Clamp the start of the selection to just after the prefix.
+                // If the end is also within the prefix, collapse cursor there.
                 input.setSelectionRange(pfxLen, Math.max(pfxLen, end));
-                _clamping = false;
             }
-        };
-
-        input.addEventListener('focus', () => {
-            document.addEventListener('selectionchange', onSelectionChange);
-        });
-        input.addEventListener('blur', () => {
-            document.removeEventListener('selectionchange', onSelectionChange);
         });
     }
 
@@ -9133,10 +9043,8 @@
             // Keydown: prevent Backspace/Delete/ArrowLeft from consuming the prefix
             input.addEventListener('keydown', (e) => guardFilterPrefixKeydown(input, e));
 
-            // Selection guard: prevent mouse-drag selections from covering the prefix icon.
-            // Uses document.selectionchange which fires on every selection update during
-            // a drag — unlike mouseup which only fires after the drag ends.
-            attachFilterPrefixSelectionGuard(input);
+            // Mouseup: clamp mouse-drag selections so the prefix icon cannot be selected
+            input.addEventListener('mouseup', () => guardFilterPrefixMouseUp(input));
 
             // Blur: strip prefix and manage background tint; hasActiveBg=true for column inputs
             input.addEventListener('blur', () => removeFilterFocusStyle(input, '…', true));
@@ -9614,10 +9522,8 @@
     // column filters — the user must never be able to erase the permanent prefix.
     filterInput.addEventListener('keydown', (e) => guardFilterPrefixKeydown(filterInput, e));
 
-    // Selection guard: prevent mouse-drag selections from covering the prefix icon.
-    // Uses document.selectionchange so selection is clamped during live drags,
-    // not only after mouseup.
-    attachFilterPrefixSelectionGuard(filterInput);
+    // Mouseup: clamp mouse-drag selections so the prefix icon cannot be selected
+    filterInput.addEventListener('mouseup', () => guardFilterPrefixMouseUp(filterInput));
 
     // Input: safety net — if some programmatic path emptied the field, restore the prefix
     // before running the filter so the invariant is never violated.

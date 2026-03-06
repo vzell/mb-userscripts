@@ -1,17 +1,6 @@
 [
     {
-        "version": "9.99.46",
-        "date": "2026-03-06",
-        "sections": [
-            {
-                "label": "✨ Enhancements",
-                "items": [
-                    "Video column — sortable and filterable via invisible sort-key text: the `video` ColumnDataExtractor now appends a `<span class=\"mb-video-sort-key\" aria-hidden=\"true\" style=\"display:none\">` to every synthetic `Video` cell. The span contains the literal text `\"video\"` when the `<span class=\"video\">` indicator was present, or `\"audio\"` otherwise. The span is never rendered by the browser, but both `getCleanColumnText()` and `getCleanVisibleText()` use a `TreeWalker` that does NOT skip `display:none` nodes, so all three consumers that depend on them pick up the text transparently: (1) **Sorting** — `createMultiColumnComparator()` calls `getCleanVisibleText(cell)` and now receives `\"audio\"` or `\"video\"`, making ascending/descending sort place audio recordings before video recordings in the expected alphabetical order. (2) **Unique-values dropdown** — `openUniqDrop()` calls `getCleanColumnText(cell)` and now produces exactly two entries (`\"audio\"` and `\"video\"`) with correct occurrence counts. (3) **Filter matching** — `applyUniqVal()` writes the raw value (`\"video\"` or `\"audio\"`) into the column filter input; the filter loop calls `getCleanColumnText(cell)` and the string matches correctly, so clicking `\"video\"` shows only rows with the icon and clicking `\"audio\"` shows only rows without it. No changes were required to any of these consumers — only the `video` extractor was modified."
-                ]
-            }
-        ]
-    },
-    {
+        "version": "9.99.45",
         "date": "2026-03-06",
         "sections": [
             {
