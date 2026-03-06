@@ -45566,11 +45566,12 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 * TODO extract the VZ event disambiguation configurable in its constituents
 
-* Add guard if some action would leave the final rendered page and warn the user with an alert dialog
 
-* synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header to distinguish them from standard columns
+* TODO Add guard if some action would leave the final rendered page and warn the user with an alert dialog
 
-* filename fix: 
+
+* TODO synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header to distinguish them from standard columns
+* TODO filename fix: 
 
 A couple of more fixes:
 
@@ -45603,7 +45604,9 @@ MB-artist-releases-official_releases-8084-2026-03-06T12-58-05.json.gz
 
 for example, if the user would click a hyperlinked entry in a row of a rendered final table (single or multi table mode), the current page would be replaced by a newly rendered one
   
+
 * make the initial collapsing of the sidebar configurable, by default false
+
 
 * remove "artwork icon/picture" and render the artwork icon in a separate column
 
@@ -45674,7 +45677,8 @@ Still breaks when auto-resizing
 
 * optionally hide "recording of <work>" in Artist-Recordings" pages
 
-* remove video icon from main column and extract to synthetic colum
+
+* DONE remove video icon from main column and extract to synthetic colum
 ** initial
 
 In the uploaded userscript,
@@ -45718,7 +45722,7 @@ In the following are examples how these look like currently:
 
 https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
 
-Sub-table: "Shooting loation for"
+Sub-table: "Shooting location for"
 "Title: column
 
 With video icon
@@ -45773,4 +45777,151 @@ ascending/descending and also should be renderded inside the unique column value
 
 * The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
 
+
+* clean icons and "▶" and "➕"
+
+In the uploaded userscript,
+
+remove the following spans (if present) from the column cells before rendering them on the final tables
+
+#+begin_example
+<span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+</span>
+#+end_example
+
+and
+
+#+begin_example
+<span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
+</span>
+#+end_example
+
+The definition on which pageType and on which column is configured inside in the variable "const pageDefinitions"
+as the feature
+
+#+begin_example
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+                ],
+#+end_example
+
+or
+
+#+begin_example
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+                ],
+#+end_example
+
+So the parameter erasers: "['▶', '➕']" is a comma separated list which spancs should be removed in which "sourceColumn"
+
+'▶' should remove the span
+
+#+begin_example
+<span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+</span>
+#+end_example
+
+and '➕' the span
+
+#+begin_example
+<span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
+</span>
+#+end_example
+
+The following new additions have been added to the pageType definitions
+
+#+begin_example
+        {
+            type: 'series-releases',
+            match: (path) => path.includes('/series'),
+            buttons: [ { label: 'Show all Releases for Series' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+
+#+begin_example
+        {
+            type: 'label-releases',
+            match: (path) => path.includes('/label'),
+            buttons: [ { label: 'Show all Releases for Label' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release groups', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'releasegroup-releases',
+            match: (path) => path.includes('/release-group/'),
+            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+#+end_example
+
+** add debug statements to the column erasing functionaliyt
 

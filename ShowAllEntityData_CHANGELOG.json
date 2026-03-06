@@ -1,5 +1,22 @@
 [
     {
+      "version": "9.99.47",
+      "date": "2026-03-06",
+      "sections": [
+        {
+          "label": "🚀 Features",
+          "items": [
+            "columnErasers: new per-page feature that strips specific marker spans (▶, ➕) from configured source columns before row rendering",
+            "buildActiveColumnErasers() builds the runtime eraser descriptor list from pageDefinition features",
+            "applyColumnErasers() removes matching spans by text-content detection (style-attribute-independent)",
+            "Eraser column indices are resolved per-page in the header-scanning pass and reset between pages",
+            "Applied in both the artist-releasegroups branch and the generic row-processing branch, before column extractors run",
+            "Active for: series-releases (▶, ➕ on Release), label-releases (▶ on Release), artist-recordings (▶, ➕ on Release groups), releasegroup-releases (▶ on Release)"
+          ]
+        }
+      ]
+    },
+    {
         "version": "9.99.46",
         "date": "2026-03-06",
         "sections": [
