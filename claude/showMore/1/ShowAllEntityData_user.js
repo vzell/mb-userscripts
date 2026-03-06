@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.41+2026-03-06
+// @version      9.99.40+2026-03-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -102,16 +102,23 @@
             label: 'Auto-expand "(show N more)" cells before row extraction',
             type: "checkbox",
             default: true,
-            description: 'On pages such as "Place-Events" and "Artist-Works", MusicBrainz truncates certain columns and hides ' +
-                         'remaining entries behind a "(show N more)" toggle (li.show-all). ' +
-                         'The complete data for ALL entries is always present in a <script type="application/json"> element ' +
-                         'inside the same <td> — React just limits how many <li> items it renders. ' +
-                         'When enabled, the script reads that JSON, detects its shape by the top-level key ' +
-                         '("relations" for Place-Events Artists, "artists" for Artist-Works Recording artists, ' +
-                         '"attributes" for Artist-Works Attributes, "iswcs" for Artist-Works ISWC), reconstructs the missing <li> elements, ' +
-                         'and removes both li.show-all and li.show-less. ' +
-                         'Works identically on the live page and on DOMParser-fetched subsequent pages — no iframes or extra network requests required. ' +
-                         'New JSON shapes (future MB columns) can be added to the SHOW_ALL_JSON_HANDLERS registry in the source.'
+            description: 'On pages such as "Place-Events" (Artists column) and "Artist-Works" (Recording artists / Attributes columns), automatically expand every "(show N more)" toggle inside data cells (li.show-all) before extracting rows. ' +
+                         'For the live current page a real click event is dispatched and the script waits up to 5 s for React to finish rendering the extra items (confirmed by li.show-less appearing). ' +
+                         'For subsequent paginated pages that contain li.show-all, the page is silently loaded in a hidden same-origin <iframe> so that React executes and responds to clicks — exactly as on the live page. ' +
+                         'The iframe is removed as soon as row extraction for that page completes. ' +
+                         'After expansion the li.show-less sentinel is always removed from the output. ' +
+                         'Pages with no li.show-all elements continue to use the fast DOMParser path with no overhead.'
+        },
+
+        sa_expand_iframe_hydration_delay_ms: {
+            label: 'Iframe React hydration delay (ms)',
+            type: 'number',
+            default: 1200,
+            min: 0,
+            max: 10000,
+            description: 'Milliseconds to wait after the hidden iframe finishes loading before dispatching show-all click events. ' +
+                         'This gives React time to hydrate and attach event handlers. Increase if expansions are not triggering on slow connections or machines. ' +
+                         'Only relevant when sa_expand_show_all_cells is enabled and a fetched page contains li.show-all elements.'
         },
 
         // ============================================================
@@ -9806,6 +9813,10 @@
         let cumulativeFetchTime = 0;
         let lastCategorySeenAcrossPages = null;
         let totalRowsAccumulated = 0;
+        // Holds the cleanup function for the hidden iframe used on the current
+        // paginated page (when sa_expand_show_all_cells switches from DOMParser
+        // to iframe mode).  Cleared at the bottom of every loop iteration.
+        let pendingIframeCleanup = null;
 
         try {
             for (let p = 1; p <= maxPage; p++) {
@@ -9835,7 +9846,43 @@
                    } else {
                         Lib.debug('fetch', `Fetching URL for page ${p}: ${fetchUrl.toString()}`);
                         const html = await fetchHtml(fetchUrl.toString());
-                        doc = new DOMParser().parseFromString(html, "text/html");
+                        // ── Show-all pre-check ───────────────────────────────────────────────
+                        // Parse the raw HTML first with DOMParser (zero cost, no JS execution).
+                        // If the page contains li.show-all elements AND the feature is enabled,
+                        // those items are loaded dynamically by React — they do NOT exist as
+                        // hidden DOM siblings in the static HTML.  DOMParser can never expand
+                        // them because it runs no JavaScript at all.
+                        // In that case we discard the inert DOMParser document and instead
+                        // load the same URL in a hidden same-origin <iframe> where React
+                        // executes, hydrates, and correctly responds to synthetic click events
+                        // — exactly as on the live current page.
+                        // Pages with no li.show-all elements keep the fast DOMParser path.
+                        const parsedDoc = new DOMParser().parseFromString(html, 'text/html');
+
+                        if (Lib.settings.sa_expand_show_all_cells && parsedDoc.querySelector('li.show-all')) {
+                            Lib.debug(
+                                'expand',
+                                `Page ${p}: li.show-all detected in fetched HTML — ` +
+                                `DOMParser cannot run React; switching to hidden iframe for page ${p}: ${fetchUrl.toString()}`
+                            );
+                            try {
+                                const { doc: iframeDoc, cleanup: cleanupFn } =
+                                    await fetchPageInIframe(fetchUrl.toString(), p);
+                                pendingIframeCleanup = cleanupFn;
+                                doc = iframeDoc;
+                            } catch (iframeErr) {
+                                Lib.warn(
+                                    'expand',
+                                    `Page ${p}: Hidden iframe load failed (${iframeErr.message}). ` +
+                                    `Falling back to DOMParser document — li.show-all cells will NOT be expanded on this page.`
+                                );
+                                doc = parsedDoc;
+                            }
+                        } else {
+                            // No li.show-all → fast path: use the already-parsed DOMParser doc.
+                            Lib.debug('fetch', `Page ${p}: No li.show-all elements detected — using DOMParser document.`);
+                            doc = parsedDoc;
+                        }
                     }
 
                     if (!doc) {
@@ -9843,17 +9890,17 @@
                     }
                 } catch (e) {
                     Lib.error('fetch', `Error fetching/parsing page ${p}:`, e);
+                    if (pendingIframeCleanup) { pendingIframeCleanup(); pendingIframeCleanup = null; }
                     break; // Stop fetching further pages on error
                 }
 
                 // ── Auto-expand "(show N more)" cells before row extraction ──────────
-                // expandShowAllCells reads the <script type="application/json"> sibling
-                // that MusicBrainz inlines next to every artist-roles-container and
-                // reconstructs the truncated <li> items from its JSON data.  This works
-                // identically on the live document and on DOMParser documents because
-                // the full data is always present in the static HTML — no JS execution
-                // or iframe is required.
-                expandShowAllCells(doc, p);
+                // Runs for every page (live doc or iframe doc).  When doc is a hidden
+                // iframe document the function's isLive flag is set to true so it uses
+                // the same click-and-poll path as the live current page.
+                // Pages whose doc came from DOMParser (no li.show-all) are skipped
+                // instantly by the early-out inside expandShowAllCells.
+                await expandShowAllCells(doc, p, /*isLive=*/ doc !== null && pendingIframeCleanup !== null);
 
                 let mainColIdx = -1;
                 let indicesToExclude = [];
@@ -10280,6 +10327,16 @@
 
                 // Detailed statistics per page fetch
                 Lib.debug('fetch', `Page ${p}/${maxPage} processed in ${(pageDuration / 1000).toFixed(2)}s. Rows on page: ${rowsInThisPage}. Total: ${totalRowsAccumulated}`);
+
+                // ── Iframe cleanup ──────────────────────────────────────────────────────
+                // If this page was rendered in a hidden iframe (because it contained
+                // li.show-all elements), destroy the iframe now that row extraction is
+                // complete.  Keeping it alive would waste memory and DOM resources.
+                if (pendingIframeCleanup) {
+                    Lib.debug('expand', `Page ${p}: Invoking iframe cleanup after row extraction.`);
+                    pendingIframeCleanup();
+                    pendingIframeCleanup = null;
+                }
 
                 if (activeDefinition.tableMode === 'multi') {
                     const summaryParts = groupedRows.map(g => {
@@ -12755,343 +12812,307 @@
     }
 
     /**
-     * Handler registry for every known `<script type="application/json">` structure that
-     * MusicBrainz embeds next to a truncated list containing `li.show-all`.
+     * Loads a MusicBrainz page URL in a hidden, same-origin `<iframe>` appended to
+     * the current document body and returns a live `Document` once the iframe's `load`
+     * event fires.
      *
-     * Each handler is keyed by the **top-level property name** of the JSON object
-     * (e.g. "relations", "artists", "attributes").  Detection is intentionally done
-     * by JSON key rather than by container class-name so that new page types are
-     * automatically supported as long as they use the same JSON shape.
+     * Because the iframe shares the same origin as the parent page, React scripts load
+     * and hydrate normally — synthetic click events dispatched inside the iframe's
+     * document are handled by React's event system just as they are on the live page.
+     * This is the only reliable way to expand `li.show-all` cells on paginated pages
+     * without user interaction, since those items are fetched and rendered dynamically
+     * by React and are not present in the static server-rendered HTML.
      *
-     * Handler contract
-     * ────────────────
-     * {
-     *   description {string}  — Human-readable label used in log messages.
-     *   buildLi(doc, entry, index) → HTMLLIElement
-     *     Constructs a single <li> element that mirrors what React would have rendered
-     *     for the given JSON entry.  Must not insert it into the DOM — the caller does
-     *     that.  May return null to signal "skip this entry" (a warning is logged).
-     * }
+     * The iframe is intentionally invisible:
+     *   • `position:fixed` + very negative `top`/`left` keeps it off-screen.
+     *   • `visibility:hidden` prevents any flash.
+     *   • `pointer-events:none` prevents accidental interaction.
      *
-     * Known structures
-     * ────────────────
-     * "relations"  — Place-Events "Artists" column (`artist-roles-container`)
-     *   Each entry: { credit, roles[], entity: { gid, name, sort_name, comment } }
-     *   Rendered:   <li><a href="/artist/{gid}" title="{sort_name[ (comment)]}">
-     *                 <bdi>{credit||name}</bdi></a>[ ({roles.join(', ')})}</li>
+     * The caller is responsible for calling `cleanup()` to remove the iframe from the
+     * DOM once it is no longer needed (i.e. after row extraction from its document).
      *
-     * "artists"    — Artist-Works "Recording artists" column (`work-artists-container`)
-     *   Each entry: { gid, id, entityType, names: [{ name, joinPhrase,
-     *                 artist: { gid, sort_name, comment } }] }
-     *   Rendered:   <li><bdi>
-     *                 <a href="/artist/{gid}" title="{sort_name[ (comment)]}">{name}</a>
-     *                 {joinPhrase}…</bdi></li>
+     * A hydration delay (`sa_expand_iframe_hydration_delay_ms`, default 1200 ms) is
+     * applied after `load` before resolving, giving React time to attach event
+     * handlers before the caller dispatches click events.
      *
-     * "attributes" — Artist-Works "Attributes" column (`entity-attributes-container`)
-     *   Each entry: { typeName, value, typeID, value_id, id }
-     *   Rendered:   <li class="work-attribute work-attribute-{css-slug}">
-     *                 {value}<!-- --><!-- -->({typeName})</li>
-     *   Note: MusicBrainz may render the LAST entry of the full list AFTER li.show-all.
-     *   The before/after counting in expandShowAllCells handles this correctly.
-     *
-     * To add support for a new JSON shape, append a new entry to this object.
+     * @param {string} url     - Absolute URL of the page to load.
+     * @param {number} pageNum - 1-based page number used in log messages.
+     * @param {number} [timeoutMs=30000] - Maximum ms to wait for the iframe `load` event.
+     * @returns {Promise<{doc: Document, cleanup: Function}>}
+     *   Resolves with the iframe's live `contentDocument` and a `cleanup` function.
+     * @throws {Error} If the iframe does not fire `load` within `timeoutMs`.
      */
-    const SHOW_ALL_JSON_HANDLERS = {
+    function fetchPageInIframe(url, pageNum, timeoutMs = 30000) {
+        Lib.debug('expand', `Page ${pageNum}: Creating hidden iframe for ${url} (timeout: ${timeoutMs} ms).`);
 
-        // ── "relations": Place-Events → Artists column ───────────────────────────────
-        relations: {
-            description: 'Artist roles (e.g. Place-Events "Artists" column)',
-            buildLi(doc, entry) {
-                const entity = entry?.entity;
-                if (!entity) return null;
+        return new Promise((resolve, reject) => {
+            const iframe = document.createElement('iframe');
 
-                const gid         = entity.gid       || '';
-                const name        = entity.name      || '';
-                const sortName    = entity.sort_name || name;
-                const comment     = entity.comment   || '';
-                const displayName = entry.credit     || name;
-                const roles       = Array.isArray(entry.roles) && entry.roles.length > 0
-                    ? entry.roles.join(', ')
-                    : '';
-                const title       = comment ? `${sortName} (${comment})` : sortName;
+            // Keep the iframe completely off-screen and non-interactive.
+            // width/height must be non-zero or some browsers skip layout and stall load.
+            iframe.style.cssText = [
+                'position:fixed',
+                'top:-9999px',
+                'left:-9999px',
+                'width:1px',
+                'height:1px',
+                'visibility:hidden',
+                'pointer-events:none',
+                'border:none',
+                'overflow:hidden'
+            ].join(';');
+            iframe.setAttribute('aria-hidden', 'true');
+            iframe.setAttribute('tabindex',    '-1');
 
-                const li  = doc.createElement('li');
-                const a   = doc.createElement('a');
-                const bdi = doc.createElement('bdi');
-                a.href          = `/artist/${gid}`;
-                a.title         = title;
-                bdi.textContent = displayName;
-                a.appendChild(bdi);
-                li.appendChild(a);
-                if (roles) li.appendChild(doc.createTextNode(` (${roles})`));
-                return li;
-            }
-        },
-
-        // ── "artists": Artist-Works → Recording artists column ───────────────────────
-        artists: {
-            description: 'Artist credits (e.g. Artist-Works "Recording artists" column)',
-            buildLi(doc, entry) {
-                if (!Array.isArray(entry?.names) || entry.names.length === 0) return null;
-
-                const li  = doc.createElement('li');
-                const bdi = doc.createElement('bdi');
-
-                entry.names.forEach(nameEntry => {
-                    const artist    = nameEntry?.artist;
-                    const gid       = artist?.gid       || '';
-                    const sortName  = artist?.sort_name || nameEntry?.name || '';
-                    const comment   = artist?.comment   || '';
-                    const title     = comment ? `${sortName} (${comment})` : sortName;
-
-                    const a     = doc.createElement('a');
-                    a.href      = `/artist/${gid}`;
-                    a.title     = title;
-                    a.textContent = nameEntry.name || '';
-                    bdi.appendChild(a);
-
-                    // joinPhrase is the separator that FOLLOWS this name (e.g. " & ", " with ", "").
-                    // Append it as a text node; skip when empty (last name in credit).
-                    if (nameEntry.joinPhrase) {
-                        bdi.appendChild(doc.createTextNode(nameEntry.joinPhrase));
+            const cleanup = () => {
+                try {
+                    if (iframe.parentNode) {
+                        iframe.remove();
+                        Lib.debug('expand', `Page ${pageNum}: Hidden iframe removed from DOM.`);
                     }
-                });
+                } catch (_) { /* ignore */ }
+            };
 
-                li.appendChild(bdi);
-                return li;
+            const hardTimeout = setTimeout(() => {
+                cleanup();
+                reject(new Error(
+                    `Hidden iframe for page ${pageNum} did not fire 'load' within ${timeoutMs} ms (URL: ${url}). ` +
+                    `Check network connectivity or increase the timeout.`
+                ));
+            }, timeoutMs);
+
+            iframe.addEventListener('load', async () => {
+                clearTimeout(hardTimeout);
+
+                // Verify we actually got a document (CSP frame-ancestors may block framing,
+                // in which case contentDocument is null or cross-origin after redirect).
+                const iframeDoc = iframe.contentDocument;
+                if (!iframeDoc) {
+                    cleanup();
+                    reject(new Error(
+                        `Hidden iframe for page ${pageNum} has no accessible contentDocument after load. ` +
+                        `MusicBrainz may have a 'frame-ancestors' CSP directive that blocks same-origin framing, ` +
+                        `or the page redirected to a different origin. URL: ${url}`
+                    ));
+                    return;
+                }
+
+                // Wait for React to hydrate and attach event listeners before resolving.
+                // Without this delay, click events dispatched immediately after 'load' are
+                // ignored because React has not yet registered its synthetic event handler
+                // on the root element.
+                const hydrationDelay = Math.max(0, Lib.settings.sa_expand_iframe_hydration_delay_ms ?? 1200);
+                Lib.debug(
+                    'expand',
+                    `Page ${pageNum}: Iframe loaded (readyState="${iframeDoc.readyState}"). ` +
+                    `Waiting ${hydrationDelay} ms for React hydration before resolving.`
+                );
+                await new Promise(r => setTimeout(r, hydrationDelay));
+
+                Lib.debug('expand', `Page ${pageNum}: Iframe ready — resolving with live contentDocument.`);
+                resolve({ doc: iframeDoc, cleanup });
+            }, { once: true });
+
+            iframe.addEventListener('error', (evt) => {
+                clearTimeout(hardTimeout);
+                cleanup();
+                reject(new Error(`Hidden iframe emitted an error event for page ${pageNum}: ${evt.message || 'unknown error'}. URL: ${url}`));
+            }, { once: true });
+
+            // Append first, THEN set src — avoids a race in some browsers where
+            // setting src before insertion into the live DOM suppresses the load event.
+            document.body.appendChild(iframe);
+            Lib.debug('expand', `Page ${pageNum}: Iframe appended to DOM; setting src = "${url}".`);
+            iframe.src = url;
+        });
+    }
+
+    /**
+     * Polls a parent element until a descendant matching `selector` appears or the
+     * timeout elapses.
+     *
+     * @param {Element} parent        - Root element to query within.
+     * @param {string}  selector      - CSS selector to wait for.
+     * @param {number}  maxWaitMs     - Maximum wait time in milliseconds.
+     * @param {number}  [intervalMs]  - Polling interval in milliseconds (default 100).
+     * @returns {Promise<boolean>}      Resolves true when found, false on timeout.
+     */
+    function pollForShowLess(parent, selector, maxWaitMs, intervalMs = 100) {
+        return new Promise(resolve => {
+            // Immediate check — no setInterval overhead when already present
+            if (parent.querySelector(selector)) {
+                Lib.debug('expand', `pollForShowLess: "${selector}" already present, no polling required.`);
+                resolve(true);
+                return;
             }
-        },
-
-        // ── "attributes": Artist-Works → Attributes column ───────────────────────────
-        attributes: {
-            description: 'Work attributes (e.g. Artist-Works "Attributes" column)',
-            buildLi(doc, entry) {
-                if (!entry?.typeName) return null;
-
-                // CSS slug: lower-case, non-alphanumeric → hyphen (matches MB's own slugs)
-                const slug = entry.typeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                const li   = doc.createElement('li');
-                li.className = `work-attribute work-attribute-${slug}`;
-
-                // React renders: {value}<!-- --><!-- -->({typeName})
-                // The comment nodes are React render artefacts; we reproduce the visible
-                // text equivalently as two text nodes separated by a comment node.
-                li.appendChild(doc.createTextNode(entry.value ?? ''));
-                li.appendChild(doc.createComment(''));
-                li.appendChild(doc.createComment(''));
-                li.appendChild(doc.createTextNode(`(${entry.typeName})`));
-                return li;
-            }
-        },
-
-        // ── "iswcs": Artist-Works → ISWC column ─────────────────────────────────────
-        // Each entry: { iswc, id, work_id, entityType, editsPending }
-        // Rendered:
-        //   <li class="iswc">
-        //     <a href="/iswc/{iswc}">
-        //       <bdi><code>{iswc}</code></bdi>
-        //     </a>
-        //   </li>
-        iswcs: {
-            description: 'ISWC codes (e.g. Artist-Works "ISWC" column)',
-            buildLi(doc, entry) {
-                if (!entry?.iswc) return null;
-
-                const li   = doc.createElement('li');
-                li.className = 'iswc';
-                const a    = doc.createElement('a');
-                a.href     = `/iswc/${entry.iswc}`;
-                const bdi  = doc.createElement('bdi');
-                const code = doc.createElement('code');
-                code.textContent = entry.iswc;
-                bdi.appendChild(code);
-                a.appendChild(bdi);
-                li.appendChild(a);
-                return li;
-            }
-        }
-
-    }; // end SHOW_ALL_JSON_HANDLERS
+            const start = Date.now();
+            const timer = setInterval(() => {
+                if (parent.querySelector(selector)) {
+                    clearInterval(timer);
+                    Lib.debug('expand', `pollForShowLess: "${selector}" appeared after ${Date.now() - start} ms.`);
+                    resolve(true);
+                } else if (Date.now() - start >= maxWaitMs) {
+                    clearInterval(timer);
+                    Lib.warn('expand', `pollForShowLess: timeout — "${selector}" did not appear within ${maxWaitMs} ms.`);
+                    resolve(false);
+                }
+            }, intervalMs);
+        });
+    }
 
     /**
      * Expands every `<li class="show-all">` element found in `doc` before row extraction.
      *
-     * MusicBrainz truncates lists in certain table columns and hides remaining entries
-     * behind `<li class="show-all"><a ...>(show N more)</a></li>`.  The complete data
-     * for every entry is always embedded in the static server-rendered HTML inside a
-     * `<script type="application/json">` sibling element in the same `<td>`.  React
-     * reads that JSON on mount and simply limits the number of rendered `<li>` items.
+     * MusicBrainz renders "(show N more)" toggles in data columns such as "Artists" on
+     * Place-Events pages and "Recording artists" / "Attributes" on Artist-Works pages.
+     * This function ensures those hidden items are visible in the document so that the
+     * subsequent row-extraction pipeline captures the full content.
      *
-     * Algorithm (per li.show-all)
-     * ───────────────────────────
-     * 1. Locate the parent <ul> and enclosing <td>.
-     * 2. Find `td > script[type="application/json"]` and parse it.
-     * 3. Detect the JSON shape by its top-level property name ("relations", "artists",
-     *    "attributes", …) and look up the corresponding handler in SHOW_ALL_JSON_HANDLERS.
-     * 4. Split the existing non-toggle <li> elements into "before" (rendered first N
-     *    entries) and "after" (e.g. the pinned last entry in the Attributes column).
-     * 5. Reconstruct the missing middle entries from the JSON array using the handler's
-     *    buildLi() and insert them immediately before li.show-all.
-     * 6. Remove li.show-all and any li.show-less nodes.
+     * The function uses a single expansion strategy for all live documents:
      *
-     * Step 4 handles the "Attributes" column edge-case where MusicBrainz keeps the very
-     * last entry visible after li.show-all (e.g. "SPA ID" in the example above).
+     *   LIVE document  (doc === window.document  OR  an iframe's contentDocument)
+     *     A real click event is dispatched on the `<a>` inside each `li.show-all`.
+     *     The function then polls for `<li class="show-less">` to appear (up to
+     *     MAX_EXPAND_WAIT_MS ms), which MusicBrainz inserts as a sentinel once the
+     *     React component has finished rendering the additional items.  Every
+     *     `li.show-less` node is removed from the DOM after confirmation.
      *
-     * Works identically on the live document and on DOMParser documents — no JS
-     * execution, no iframes, and no extra network requests required.
+     *   Note: DOMParser documents (inert, no JavaScript) are never passed here.
+     *     When the fetch loop detects `li.show-all` in a DOMParser doc it discards
+     *     that doc and loads the page in a hidden iframe instead, then calls this
+     *     function with `isLive = true` on the iframe's live document.
+     *     Pages with no `li.show-all` use the fast DOMParser path and never reach
+     *     this function at all (early-exit in the loop).
      *
      * Controlled by the `sa_expand_show_all_cells` configuration flag.
      *
-     * @param {Document} doc     - The document to process (live page or DOMParser).
+     * @param {Document} doc     - The document to process (live page doc or iframe contentDocument).
      * @param {number}   pageNum - 1-based page number for log context.
+     * @param {boolean}  [isLive=false] - Explicitly declare the document as live (JS-capable).
+     *                                    Pass true for iframe documents (doc !== window.document).
+     * @returns {Promise<void>}
      */
-    function expandShowAllCells(doc, pageNum) {
+    async function expandShowAllCells(doc, pageNum, isLive = false) {
+        // ── Feature gate ────────────────────────────────────────────────────────────
         if (!Lib.settings.sa_expand_show_all_cells) {
             Lib.debug('expand', `Page ${pageNum}: sa_expand_show_all_cells is disabled — skipping.`);
             return;
         }
 
+        const MAX_EXPAND_WAIT_MS = 5000; // max ms to wait per show-all click
+        const POLL_INTERVAL_MS   = 100;  // polling cadence while waiting for show-less
+
+        // Treat the document as live if it IS the current page document, or if the
+        // caller explicitly marked it as live (i.e. it is an iframe contentDocument).
+        const docIsLive = isLive || (doc === window.document);
+
+        // ── Discover all li.show-all nodes in the document ──────────────────────────
         const showAllItems = Array.from(doc.querySelectorAll('li.show-all'));
+
         if (showAllItems.length === 0) {
             Lib.debug('expand', `Page ${pageNum}: No li.show-all elements found — nothing to expand.`);
             return;
         }
 
+        if (!docIsLive) {
+            // This branch should not normally be reached because the fetch loop switches
+            // to an iframe whenever li.show-all is detected.  If it is reached (e.g. a
+            // fallback path), log a clear warning and bail out rather than silently stripping.
+            Lib.warn(
+                'expand',
+                `Page ${pageNum}: ${showAllItems.length} li.show-all element(s) found but document is not ` +
+                `live (no JS execution).  Cannot expand — items will be missing from this page's rows. ` +
+                `This indicates the iframe fallback was not triggered correctly.`
+            );
+            return;
+        }
+
         Lib.debug(
             'expand',
-            `Page ${pageNum}: Found ${showAllItems.length} li.show-all element(s). ` +
-            `Expanding from inline <script type="application/json"> data.`
+            `Page ${pageNum}: Found ${showAllItems.length} li.show-all element(s) in LIVE document ` +
+            `(${doc === window.document ? 'current page' : 'hidden iframe'}). ` +
+            `Strategy: click + poll for li.show-less (timeout ${MAX_EXPAND_WAIT_MS} ms each).`
         );
 
         let expandedCount = 0;
         let skippedCount  = 0;
 
-        showAllItems.forEach((showAllLi, i) => {
-            const linkText = showAllLi.querySelector('a')?.textContent?.trim() ?? '(no link)';
+        for (let i = 0; i < showAllItems.length; i++) {
 
-            // ── Locate parent <ul> and enclosing <td> ───────────────────────────────
-            const parentUl = showAllLi.closest('ul');
-            const td       = showAllLi.closest('td');
-            if (!parentUl || !td) {
-                Lib.warn('expand', `Page ${pageNum}: [${i}] "${linkText}" — no parent <ul>/<td> found. Skipping.`);
-                skippedCount++;
-                return;
+            // Respect a stop request made by the user during a long fetch run
+            if (stopRequested) {
+                Lib.debug('expand', `Page ${pageNum}: Stop requested — aborting expandShowAllCells at item ${i}.`);
+                break;
             }
 
-            // Column context for log messages
-            const colHeader = td.closest('table')
-                ?.querySelector(`thead th:nth-child(${td.cellIndex + 1})`)
-                ?.textContent?.trim() ?? '?';
-            const ctx = `col-index=${td.cellIndex}, header="${colHeader}"`;
+            const showAllLi = showAllItems[i];
+            const link      = showAllLi.querySelector('a');
 
-            // ── Find and parse the JSON script ───────────────────────────────────────
-            const jsonScript = td.querySelector('script[type="application/json"]');
-            if (!jsonScript) {
-                Lib.warn('expand', `Page ${pageNum}: [${i}] No <script type="application/json"> in <td> at ${ctx}. Removing toggle only.`);
-                showAllLi.remove();
-                td.querySelectorAll('li.show-less').forEach(el => el.remove());
+            if (!link) {
+                Lib.debug('expand', `Page ${pageNum}: li.show-all[${i}] has no <a> child element — skipping.`);
                 skippedCount++;
-                return;
+                continue;
             }
 
-            let jsonData;
-            try {
-                jsonData = JSON.parse(jsonScript.textContent);
-            } catch (e) {
-                Lib.warn('expand', `Page ${pageNum}: [${i}] JSON parse error at ${ctx}: ${e.message}. Skipping.`);
-                skippedCount++;
-                return;
-            }
-
-            // ── Detect JSON shape and select handler ─────────────────────────────────
-            // The top-level key of the JSON object identifies the data type.
-            const topKey = Object.keys(jsonData ?? {})[0];
-            const entries = topKey ? jsonData[topKey] : null;
-            const handler = topKey ? SHOW_ALL_JSON_HANDLERS[topKey] : null;
-
-            if (!handler || !Array.isArray(entries) || entries.length === 0) {
-                Lib.warn(
-                    'expand',
-                    `Page ${pageNum}: [${i}] Unknown or empty JSON shape at ${ctx} ` +
-                    `(top-level key: "${topKey ?? 'none'}"). ` +
-                    `Known keys: ${Object.keys(SHOW_ALL_JSON_HANDLERS).join(', ')}. Skipping.`
-                );
-                skippedCount++;
-                return;
-            }
+            const linkText    = link.textContent.trim();
+            const parentUl    = showAllLi.closest('ul') || showAllLi.parentElement;
+            // Derive a human-readable column context for the log
+            const closestTd   = showAllLi.closest('td');
+            const cellContext  = closestTd
+                ? `col-index=${closestTd.cellIndex}, header="${
+                    closestTd.closest('tr')?.parentElement?.closest('table')
+                        ?.querySelector(`thead th:nth-child(${closestTd.cellIndex + 1})`)
+                        ?.textContent?.trim() ?? '?'}"` 
+                : 'outside-td';
 
             Lib.debug(
                 'expand',
-                `Page ${pageNum}: [${i}] JSON shape: "${topKey}" (${handler.description}), ` +
-                `${entries.length} total entries at ${ctx}.`
+                `Page ${pageNum}: Processing li.show-all[${i}] — ` +
+                `link="${linkText}", ${cellContext}, ` +
+                `parentTag=${parentUl ? parentUl.tagName : 'N/A'}.`
             );
 
-            // ── Split existing <li>s into before-toggle and after-toggle ─────────────
-            // MusicBrainz occasionally keeps the very last item visible AFTER li.show-all
-            // (observed in the "Attributes" column).  We must account for those "pinned"
-            // trailing items so that we insert only the truly missing middle entries.
-            const allLis = Array.from(parentUl.querySelectorAll('li'));
-            const showAllIdx = allLis.indexOf(showAllLi);
+            // ── Click + poll for li.show-less ────────────────────────────────────────
+            Lib.debug('expand', `Page ${pageNum}: [${i}] Dispatching click on show-all link: "${linkText}".`);
+            link.click();
 
-            const isDataLi = li => !li.classList.contains('show-all') && !li.classList.contains('show-less');
-            const beforeLis = allLis.slice(0, showAllIdx).filter(isDataLi);
-            const afterLis  = allLis.slice(showAllIdx + 1).filter(isDataLi);
-
-            const beforeCount = beforeLis.length;
-            const afterCount  = afterLis.length;
-            const totalCount  = entries.length;
-
-            Lib.debug(
-                'expand',
-                `Page ${pageNum}: [${i}] Li split: before=${beforeCount}, after=${afterCount}, ` +
-                `JSON total=${totalCount}, missing=${totalCount - beforeCount - afterCount}.`
+            const appeared = await pollForShowLess(
+                parentUl || doc.body,
+                'li.show-less',
+                MAX_EXPAND_WAIT_MS,
+                POLL_INTERVAL_MS
             );
 
-            if (beforeCount + afterCount >= totalCount) {
+            if (appeared) {
+                const showLessNodes = (parentUl || doc.body).querySelectorAll('li.show-less');
                 Lib.debug(
                     'expand',
-                    `Page ${pageNum}: [${i}] All ${totalCount} entries already rendered at ${ctx} — removing toggles only.`
+                    `Page ${pageNum}: [${i}] Expansion confirmed for "${linkText}". ` +
+                    `Removing ${showLessNodes.length} li.show-less node(s).`
                 );
-                showAllLi.remove();
-                td.querySelectorAll('li.show-less').forEach(el => el.remove());
+                showLessNodes.forEach(el => {
+                    Lib.debug('expand', `Page ${pageNum}: [${i}]   Removed: ${el.outerHTML.slice(0, 120)}`);
+                    el.remove();
+                });
                 expandedCount++;
-                return;
-            }
-
-            // ── Build and insert missing <li> elements ───────────────────────────────
-            // Missing entries occupy positions [beforeCount .. totalCount - afterCount - 1].
-            const missingEntries = entries.slice(beforeCount, totalCount - afterCount);
-            let insertedCount = 0;
-
-            missingEntries.forEach((entry, j) => {
-                const li = handler.buildLi(doc, entry, beforeCount + j);
-                if (!li) {
-                    Lib.warn('expand', `Page ${pageNum}: [${i}]   handler.buildLi returned null for entry[${beforeCount + j}] — skipping.`);
-                    return;
+            } else {
+                Lib.warn(
+                    'expand',
+                    `Page ${pageNum}: [${i}] Timed out (${MAX_EXPAND_WAIT_MS} ms) waiting for li.show-less ` +
+                    `after clicking "${linkText}". Expansion may be incomplete for this cell. ` +
+                    `Consider increasing sa_expand_iframe_hydration_delay_ms if this recurs.`
+                );
+                // Clean up any stale show-less that may have appeared late
+                if (parentUl) {
+                    parentUl.querySelectorAll('li.show-less').forEach(el => el.remove());
                 }
-                parentUl.insertBefore(li, showAllLi);
-                insertedCount++;
-                Lib.debug('expand', `Page ${pageNum}: [${i}]   Inserted [${beforeCount + j}]: "${li.textContent.trim().slice(0, 80)}"`);
-            });
-
-            // ── Remove toggle nodes ──────────────────────────────────────────────────
-            showAllLi.remove();
-            td.querySelectorAll('li.show-less').forEach(el => {
-                Lib.debug('expand', `Page ${pageNum}: [${i}]   Removed li.show-less: "${el.textContent.trim().slice(0, 60)}"`);
-                el.remove();
-            });
-
-            Lib.debug(
-                'expand',
-                `Page ${pageNum}: [${i}] Expansion complete at ${ctx} — ` +
-                `inserted ${insertedCount}, before=${beforeCount}, after=${afterCount}, total=${beforeCount + insertedCount + afterCount}.`
-            );
-            expandedCount++;
-        });
+                skippedCount++;
+            }
+        }
 
         Lib.debug(
             'expand',
-            `Page ${pageNum}: expandShowAllCells complete — expanded: ${expandedCount}, skipped: ${skippedCount}.`
+            `Page ${pageNum}: expandShowAllCells complete — expanded: ${expandedCount}, skipped/timed-out: ${skippedCount}.`
         );
     }
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.41+2026-03-06
+// @version      9.99.40+2026-03-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -108,7 +108,7 @@
                          'inside the same <td> — React just limits how many <li> items it renders. ' +
                          'When enabled, the script reads that JSON, detects its shape by the top-level key ' +
                          '("relations" for Place-Events Artists, "artists" for Artist-Works Recording artists, ' +
-                         '"attributes" for Artist-Works Attributes, "iswcs" for Artist-Works ISWC), reconstructs the missing <li> elements, ' +
+                         '"attributes" for Artist-Works Attributes), reconstructs the missing <li> elements, ' +
                          'and removes both li.show-all and li.show-less. ' +
                          'Works identically on the live page and on DOMParser-fetched subsequent pages — no iframes or extra network requests required. ' +
                          'New JSON shapes (future MB columns) can be added to the SHOW_ALL_JSON_HANDLERS registry in the source.'
@@ -12880,33 +12880,6 @@
                 li.appendChild(doc.createComment(''));
                 li.appendChild(doc.createComment(''));
                 li.appendChild(doc.createTextNode(`(${entry.typeName})`));
-                return li;
-            }
-        },
-
-        // ── "iswcs": Artist-Works → ISWC column ─────────────────────────────────────
-        // Each entry: { iswc, id, work_id, entityType, editsPending }
-        // Rendered:
-        //   <li class="iswc">
-        //     <a href="/iswc/{iswc}">
-        //       <bdi><code>{iswc}</code></bdi>
-        //     </a>
-        //   </li>
-        iswcs: {
-            description: 'ISWC codes (e.g. Artist-Works "ISWC" column)',
-            buildLi(doc, entry) {
-                if (!entry?.iswc) return null;
-
-                const li   = doc.createElement('li');
-                li.className = 'iswc';
-                const a    = doc.createElement('a');
-                a.href     = `/iswc/${entry.iswc}`;
-                const bdi  = doc.createElement('bdi');
-                const code = doc.createElement('code');
-                code.textContent = entry.iswc;
-                bdi.appendChild(code);
-                a.appendChild(bdi);
-                li.appendChild(a);
                 return li;
             }
         }

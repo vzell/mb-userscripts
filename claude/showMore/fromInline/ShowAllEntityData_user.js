@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.41+2026-03-06
+// @version      9.99.40+2026-03-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -102,16 +102,16 @@
             label: 'Auto-expand "(show N more)" cells before row extraction',
             type: "checkbox",
             default: true,
-            description: 'On pages such as "Place-Events" and "Artist-Works", MusicBrainz truncates certain columns and hides ' +
-                         'remaining entries behind a "(show N more)" toggle (li.show-all). ' +
-                         'The complete data for ALL entries is always present in a <script type="application/json"> element ' +
-                         'inside the same <td> — React just limits how many <li> items it renders. ' +
-                         'When enabled, the script reads that JSON, detects its shape by the top-level key ' +
-                         '("relations" for Place-Events Artists, "artists" for Artist-Works Recording artists, ' +
-                         '"attributes" for Artist-Works Attributes, "iswcs" for Artist-Works ISWC), reconstructs the missing <li> elements, ' +
-                         'and removes both li.show-all and li.show-less. ' +
-                         'Works identically on the live page and on DOMParser-fetched subsequent pages — no iframes or extra network requests required. ' +
-                         'New JSON shapes (future MB columns) can be added to the SHOW_ALL_JSON_HANDLERS registry in the source.'
+            description: 'On pages such as "Place-Events" (Artists column) and "Artist-Works" (Recording artists / Attributes columns), ' +
+                         'MusicBrainz truncates artist lists and hides remaining entries behind a "(show N more)" toggle (li.show-all). ' +
+                         'The full artist data is always present in a sibling <script type="application/json"> element inside the same <td>; ' +
+                         'React merely limits the number of rendered <li> items. ' +
+                         'When enabled, the script reads that JSON directly from the static HTML, reconstructs the missing <li> elements ' +
+                         '(with correct /artist/<gid> links, sort_name titles, bdi name text, and role annotations), inserts them before ' +
+                         'the show-all toggle, and then removes both li.show-all and li.show-less from the output. ' +
+                         'This works identically for the live current page and for every subsequent paginated page fetched via DOMParser — ' +
+                         'no hidden iframes or React interaction required. ' +
+                         'Pages with no li.show-all elements incur no overhead.'
         },
 
         // ============================================================
@@ -12755,190 +12755,33 @@
     }
 
     /**
-     * Handler registry for every known `<script type="application/json">` structure that
-     * MusicBrainz embeds next to a truncated list containing `li.show-all`.
-     *
-     * Each handler is keyed by the **top-level property name** of the JSON object
-     * (e.g. "relations", "artists", "attributes").  Detection is intentionally done
-     * by JSON key rather than by container class-name so that new page types are
-     * automatically supported as long as they use the same JSON shape.
-     *
-     * Handler contract
-     * ────────────────
-     * {
-     *   description {string}  — Human-readable label used in log messages.
-     *   buildLi(doc, entry, index) → HTMLLIElement
-     *     Constructs a single <li> element that mirrors what React would have rendered
-     *     for the given JSON entry.  Must not insert it into the DOM — the caller does
-     *     that.  May return null to signal "skip this entry" (a warning is logged).
-     * }
-     *
-     * Known structures
-     * ────────────────
-     * "relations"  — Place-Events "Artists" column (`artist-roles-container`)
-     *   Each entry: { credit, roles[], entity: { gid, name, sort_name, comment } }
-     *   Rendered:   <li><a href="/artist/{gid}" title="{sort_name[ (comment)]}">
-     *                 <bdi>{credit||name}</bdi></a>[ ({roles.join(', ')})}</li>
-     *
-     * "artists"    — Artist-Works "Recording artists" column (`work-artists-container`)
-     *   Each entry: { gid, id, entityType, names: [{ name, joinPhrase,
-     *                 artist: { gid, sort_name, comment } }] }
-     *   Rendered:   <li><bdi>
-     *                 <a href="/artist/{gid}" title="{sort_name[ (comment)]}">{name}</a>
-     *                 {joinPhrase}…</bdi></li>
-     *
-     * "attributes" — Artist-Works "Attributes" column (`entity-attributes-container`)
-     *   Each entry: { typeName, value, typeID, value_id, id }
-     *   Rendered:   <li class="work-attribute work-attribute-{css-slug}">
-     *                 {value}<!-- --><!-- -->({typeName})</li>
-     *   Note: MusicBrainz may render the LAST entry of the full list AFTER li.show-all.
-     *   The before/after counting in expandShowAllCells handles this correctly.
-     *
-     * To add support for a new JSON shape, append a new entry to this object.
-     */
-    const SHOW_ALL_JSON_HANDLERS = {
-
-        // ── "relations": Place-Events → Artists column ───────────────────────────────
-        relations: {
-            description: 'Artist roles (e.g. Place-Events "Artists" column)',
-            buildLi(doc, entry) {
-                const entity = entry?.entity;
-                if (!entity) return null;
-
-                const gid         = entity.gid       || '';
-                const name        = entity.name      || '';
-                const sortName    = entity.sort_name || name;
-                const comment     = entity.comment   || '';
-                const displayName = entry.credit     || name;
-                const roles       = Array.isArray(entry.roles) && entry.roles.length > 0
-                    ? entry.roles.join(', ')
-                    : '';
-                const title       = comment ? `${sortName} (${comment})` : sortName;
-
-                const li  = doc.createElement('li');
-                const a   = doc.createElement('a');
-                const bdi = doc.createElement('bdi');
-                a.href          = `/artist/${gid}`;
-                a.title         = title;
-                bdi.textContent = displayName;
-                a.appendChild(bdi);
-                li.appendChild(a);
-                if (roles) li.appendChild(doc.createTextNode(` (${roles})`));
-                return li;
-            }
-        },
-
-        // ── "artists": Artist-Works → Recording artists column ───────────────────────
-        artists: {
-            description: 'Artist credits (e.g. Artist-Works "Recording artists" column)',
-            buildLi(doc, entry) {
-                if (!Array.isArray(entry?.names) || entry.names.length === 0) return null;
-
-                const li  = doc.createElement('li');
-                const bdi = doc.createElement('bdi');
-
-                entry.names.forEach(nameEntry => {
-                    const artist    = nameEntry?.artist;
-                    const gid       = artist?.gid       || '';
-                    const sortName  = artist?.sort_name || nameEntry?.name || '';
-                    const comment   = artist?.comment   || '';
-                    const title     = comment ? `${sortName} (${comment})` : sortName;
-
-                    const a     = doc.createElement('a');
-                    a.href      = `/artist/${gid}`;
-                    a.title     = title;
-                    a.textContent = nameEntry.name || '';
-                    bdi.appendChild(a);
-
-                    // joinPhrase is the separator that FOLLOWS this name (e.g. " & ", " with ", "").
-                    // Append it as a text node; skip when empty (last name in credit).
-                    if (nameEntry.joinPhrase) {
-                        bdi.appendChild(doc.createTextNode(nameEntry.joinPhrase));
-                    }
-                });
-
-                li.appendChild(bdi);
-                return li;
-            }
-        },
-
-        // ── "attributes": Artist-Works → Attributes column ───────────────────────────
-        attributes: {
-            description: 'Work attributes (e.g. Artist-Works "Attributes" column)',
-            buildLi(doc, entry) {
-                if (!entry?.typeName) return null;
-
-                // CSS slug: lower-case, non-alphanumeric → hyphen (matches MB's own slugs)
-                const slug = entry.typeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                const li   = doc.createElement('li');
-                li.className = `work-attribute work-attribute-${slug}`;
-
-                // React renders: {value}<!-- --><!-- -->({typeName})
-                // The comment nodes are React render artefacts; we reproduce the visible
-                // text equivalently as two text nodes separated by a comment node.
-                li.appendChild(doc.createTextNode(entry.value ?? ''));
-                li.appendChild(doc.createComment(''));
-                li.appendChild(doc.createComment(''));
-                li.appendChild(doc.createTextNode(`(${entry.typeName})`));
-                return li;
-            }
-        },
-
-        // ── "iswcs": Artist-Works → ISWC column ─────────────────────────────────────
-        // Each entry: { iswc, id, work_id, entityType, editsPending }
-        // Rendered:
-        //   <li class="iswc">
-        //     <a href="/iswc/{iswc}">
-        //       <bdi><code>{iswc}</code></bdi>
-        //     </a>
-        //   </li>
-        iswcs: {
-            description: 'ISWC codes (e.g. Artist-Works "ISWC" column)',
-            buildLi(doc, entry) {
-                if (!entry?.iswc) return null;
-
-                const li   = doc.createElement('li');
-                li.className = 'iswc';
-                const a    = doc.createElement('a');
-                a.href     = `/iswc/${entry.iswc}`;
-                const bdi  = doc.createElement('bdi');
-                const code = doc.createElement('code');
-                code.textContent = entry.iswc;
-                bdi.appendChild(code);
-                a.appendChild(bdi);
-                li.appendChild(a);
-                return li;
-            }
-        }
-
-    }; // end SHOW_ALL_JSON_HANDLERS
-
-    /**
      * Expands every `<li class="show-all">` element found in `doc` before row extraction.
      *
-     * MusicBrainz truncates lists in certain table columns and hides remaining entries
-     * behind `<li class="show-all"><a ...>(show N more)</a></li>`.  The complete data
-     * for every entry is always embedded in the static server-rendered HTML inside a
-     * `<script type="application/json">` sibling element in the same `<td>`.  React
-     * reads that JSON on mount and simply limits the number of rendered `<li>` items.
+     * MusicBrainz truncates artist/attribute lists in table cells and hides the remaining
+     * entries behind a `<li class="show-all"><a ...>(show N more)</a></li>` toggle.
+     * Crucially, the **full data for all entries** is already embedded in the static HTML
+     * inside a `<script type="application/json">` element that is a sibling of the
+     * `<div class="artist-roles-container">` (or equivalent container) inside the same
+     * `<td>`.  React reads this JSON on mount and simply limits the number of rendered
+     * `<li>` items — the hidden items are never written to the DOM at all.
      *
-     * Algorithm (per li.show-all)
-     * ───────────────────────────
-     * 1. Locate the parent <ul> and enclosing <td>.
-     * 2. Find `td > script[type="application/json"]` and parse it.
-     * 3. Detect the JSON shape by its top-level property name ("relations", "artists",
-     *    "attributes", …) and look up the corresponding handler in SHOW_ALL_JSON_HANDLERS.
-     * 4. Split the existing non-toggle <li> elements into "before" (rendered first N
-     *    entries) and "after" (e.g. the pinned last entry in the Attributes column).
-     * 5. Reconstruct the missing middle entries from the JSON array using the handler's
-     *    buildLi() and insert them immediately before li.show-all.
-     * 6. Remove li.show-all and any li.show-less nodes.
+     * This function exploits that fact: it locates the JSON script, counts the `<li>`
+     * items that React already rendered (i.e. all non-toggle siblings in the `<ul>`),
+     * then constructs the remaining `<li>` elements from the JSON `relations` array and
+     * inserts them immediately before `li.show-all`.  Both `li.show-all` and any
+     * `li.show-less` nodes are removed from the result.
      *
-     * Step 4 handles the "Attributes" column edge-case where MusicBrainz keeps the very
-     * last entry visible after li.show-all (e.g. "SPA ID" in the example above).
+     * Each reconstructed `<li>` mirrors the structure React would produce:
+     *   <li>
+     *     <a href="/artist/{gid}" title="{sort_name}"><bdi>{name}</bdi></a>
+     *     {role annotation, e.g. " (guest performer)"}
+     *   </li>
      *
-     * Works identically on the live document and on DOMParser documents — no JS
-     * execution, no iframes, and no extra network requests required.
+     * The approach is identical for the live current page (`doc === window.document`)
+     * and for DOMParser documents (subsequent paginated pages) because the JSON is
+     * always present in the static HTML served by the server — no JavaScript execution,
+     * no hidden iframes, and no network round-trips beyond the normal page fetch are
+     * required.
      *
      * Controlled by the `sa_expand_show_all_cells` configuration flag.
      *
@@ -12946,12 +12789,15 @@
      * @param {number}   pageNum - 1-based page number for log context.
      */
     function expandShowAllCells(doc, pageNum) {
+        // ── Feature gate ────────────────────────────────────────────────────────────
         if (!Lib.settings.sa_expand_show_all_cells) {
             Lib.debug('expand', `Page ${pageNum}: sa_expand_show_all_cells is disabled — skipping.`);
             return;
         }
 
+        // ── Find all li.show-all nodes ───────────────────────────────────────────────
         const showAllItems = Array.from(doc.querySelectorAll('li.show-all'));
+
         if (showAllItems.length === 0) {
             Lib.debug('expand', `Page ${pageNum}: No li.show-all elements found — nothing to expand.`);
             return;
@@ -12967,54 +12813,65 @@
         let skippedCount  = 0;
 
         showAllItems.forEach((showAllLi, i) => {
-            const linkText = showAllLi.querySelector('a')?.textContent?.trim() ?? '(no link)';
 
-            // ── Locate parent <ul> and enclosing <td> ───────────────────────────────
+            const link = showAllLi.querySelector('a');
+            const linkText = link ? link.textContent.trim() : '(no link)';
+
+            // ── Locate the parent <ul> and the containing <td> ──────────────────────
             const parentUl = showAllLi.closest('ul');
             const td       = showAllLi.closest('td');
+
             if (!parentUl || !td) {
-                Lib.warn('expand', `Page ${pageNum}: [${i}] "${linkText}" — no parent <ul>/<td> found. Skipping.`);
+                Lib.warn(
+                    'expand',
+                    `Page ${pageNum}: [${i}] li.show-all "${linkText}" — ` +
+                    `could not find parent <ul> or enclosing <td>. Skipping.`
+                );
                 skippedCount++;
                 return;
             }
 
-            // Column context for log messages
+            // ── Derive a column-context string for the log ───────────────────────────
             const colHeader = td.closest('table')
                 ?.querySelector(`thead th:nth-child(${td.cellIndex + 1})`)
                 ?.textContent?.trim() ?? '?';
             const ctx = `col-index=${td.cellIndex}, header="${colHeader}"`;
+            Lib.debug('expand', `Page ${pageNum}: [${i}] Processing li.show-all "${linkText}" at ${ctx}.`);
 
-            // ── Find and parse the JSON script ───────────────────────────────────────
+            // ── Find the <script type="application/json"> in the same <td> ──────────
+            // MusicBrainz places it as a direct child of <td>, immediately before the
+            // <div class="artist-roles-container"> (or equivalent wrapper div).
             const jsonScript = td.querySelector('script[type="application/json"]');
             if (!jsonScript) {
-                Lib.warn('expand', `Page ${pageNum}: [${i}] No <script type="application/json"> in <td> at ${ctx}. Removing toggle only.`);
+                Lib.warn(
+                    'expand',
+                    `Page ${pageNum}: [${i}] No <script type="application/json"> found in <td> ` +
+                    `at ${ctx}. Cannot reconstruct missing items. Removing toggle nodes only.`
+                );
                 showAllLi.remove();
                 td.querySelectorAll('li.show-less').forEach(el => el.remove());
                 skippedCount++;
                 return;
             }
 
+            // ── Parse the JSON ───────────────────────────────────────────────────────
             let jsonData;
             try {
                 jsonData = JSON.parse(jsonScript.textContent);
-            } catch (e) {
-                Lib.warn('expand', `Page ${pageNum}: [${i}] JSON parse error at ${ctx}: ${e.message}. Skipping.`);
+            } catch (parseErr) {
+                Lib.warn(
+                    'expand',
+                    `Page ${pageNum}: [${i}] Failed to parse JSON at ${ctx}: ${parseErr.message}. Skipping.`
+                );
                 skippedCount++;
                 return;
             }
 
-            // ── Detect JSON shape and select handler ─────────────────────────────────
-            // The top-level key of the JSON object identifies the data type.
-            const topKey = Object.keys(jsonData ?? {})[0];
-            const entries = topKey ? jsonData[topKey] : null;
-            const handler = topKey ? SHOW_ALL_JSON_HANDLERS[topKey] : null;
-
-            if (!handler || !Array.isArray(entries) || entries.length === 0) {
+            const relations = jsonData?.relations;
+            if (!Array.isArray(relations) || relations.length === 0) {
                 Lib.warn(
                     'expand',
-                    `Page ${pageNum}: [${i}] Unknown or empty JSON shape at ${ctx} ` +
-                    `(top-level key: "${topKey ?? 'none'}"). ` +
-                    `Known keys: ${Object.keys(SHOW_ALL_JSON_HANDLERS).join(', ')}. Skipping.`
+                    `Page ${pageNum}: [${i}] JSON at ${ctx} has no "relations" array (or it is empty). Skipping.`
                 );
                 skippedCount++;
                 return;
@@ -13022,35 +12879,28 @@
 
             Lib.debug(
                 'expand',
-                `Page ${pageNum}: [${i}] JSON shape: "${topKey}" (${handler.description}), ` +
-                `${entries.length} total entries at ${ctx}.`
+                `Page ${pageNum}: [${i}] JSON contains ${relations.length} relation(s) total at ${ctx}.`
             );
 
-            // ── Split existing <li>s into before-toggle and after-toggle ─────────────
-            // MusicBrainz occasionally keeps the very last item visible AFTER li.show-all
-            // (observed in the "Attributes" column).  We must account for those "pinned"
-            // trailing items so that we insert only the truly missing middle entries.
-            const allLis = Array.from(parentUl.querySelectorAll('li'));
-            const showAllIdx = allLis.indexOf(showAllLi);
-
-            const isDataLi = li => !li.classList.contains('show-all') && !li.classList.contains('show-less');
-            const beforeLis = allLis.slice(0, showAllIdx).filter(isDataLi);
-            const afterLis  = allLis.slice(showAllIdx + 1).filter(isDataLi);
-
-            const beforeCount = beforeLis.length;
-            const afterCount  = afterLis.length;
-            const totalCount  = entries.length;
+            // ── Count already-rendered <li> items ────────────────────────────────────
+            // The <li> elements already in the DOM are the first N entries of the
+            // relations array.  show-all / show-less toggles are not data items.
+            const existingLis = Array.from(parentUl.querySelectorAll('li')).filter(
+                li => !li.classList.contains('show-all') && !li.classList.contains('show-less')
+            );
+            const alreadyRendered = existingLis.length;
 
             Lib.debug(
                 'expand',
-                `Page ${pageNum}: [${i}] Li split: before=${beforeCount}, after=${afterCount}, ` +
-                `JSON total=${totalCount}, missing=${totalCount - beforeCount - afterCount}.`
+                `Page ${pageNum}: [${i}] Already rendered: ${alreadyRendered} li(s). ` +
+                `Need to add: ${relations.length - alreadyRendered} li(s).`
             );
 
-            if (beforeCount + afterCount >= totalCount) {
+            if (alreadyRendered >= relations.length) {
                 Lib.debug(
                     'expand',
-                    `Page ${pageNum}: [${i}] All ${totalCount} entries already rendered at ${ctx} — removing toggles only.`
+                    `Page ${pageNum}: [${i}] All ${relations.length} items already rendered — ` +
+                    `nothing to insert. Removing toggle nodes.`
                 );
                 showAllLi.remove();
                 td.querySelectorAll('li.show-less').forEach(el => el.remove());
@@ -13058,23 +12908,54 @@
                 return;
             }
 
-            // ── Build and insert missing <li> elements ───────────────────────────────
-            // Missing entries occupy positions [beforeCount .. totalCount - afterCount - 1].
-            const missingEntries = entries.slice(beforeCount, totalCount - afterCount);
+            // ── Build and insert the missing <li> elements ───────────────────────────
+            // Slice off the entries that are already rendered, then iterate the rest.
+            const missing = relations.slice(alreadyRendered);
             let insertedCount = 0;
 
-            missingEntries.forEach((entry, j) => {
-                const li = handler.buildLi(doc, entry, beforeCount + j);
-                if (!li) {
-                    Lib.warn('expand', `Page ${pageNum}: [${i}]   handler.buildLi returned null for entry[${beforeCount + j}] — skipping.`);
+            missing.forEach((rel, j) => {
+                const entity = rel?.entity;
+                if (!entity) {
+                    Lib.warn('expand', `Page ${pageNum}: [${i}]   relation[${alreadyRendered + j}] has no "entity" — skipping entry.`);
                     return;
                 }
+
+                const gid      = entity.gid      || '';
+                const name     = entity.name     || '';
+                const sortName = entity.sort_name || name;
+                const roles    = Array.isArray(rel.roles) && rel.roles.length > 0
+                    ? rel.roles.join(', ')
+                    : '';
+                const credit   = rel.credit || '';
+                // Displayed name: prefer credit over canonical name (matches MB behaviour)
+                const displayName = credit || name;
+
+                // Build:  <li><a href="/artist/{gid}" title="{sortName}"><bdi>{displayName}</bdi></a> ({roles})</li>
+                const li  = doc.createElement('li');
+                const a   = doc.createElement('a');
+                const bdi = doc.createElement('bdi');
+
+                a.href        = `/artist/${gid}`;
+                a.title       = sortName;
+                bdi.textContent = displayName;
+                a.appendChild(bdi);
+                li.appendChild(a);
+
+                if (roles) {
+                    li.appendChild(doc.createTextNode(` (${roles})`));
+                }
+
+                // Insert before li.show-all so the list stays in relation order
                 parentUl.insertBefore(li, showAllLi);
                 insertedCount++;
-                Lib.debug('expand', `Page ${pageNum}: [${i}]   Inserted [${beforeCount + j}]: "${li.textContent.trim().slice(0, 80)}"`);
+
+                Lib.debug(
+                    'expand',
+                    `Page ${pageNum}: [${i}]   Inserted li: "${displayName}" (${roles}) → /artist/${gid}`
+                );
             });
 
-            // ── Remove toggle nodes ──────────────────────────────────────────────────
+            // ── Remove the toggle nodes ──────────────────────────────────────────────
             showAllLi.remove();
             td.querySelectorAll('li.show-less').forEach(el => {
                 Lib.debug('expand', `Page ${pageNum}: [${i}]   Removed li.show-less: "${el.textContent.trim().slice(0, 60)}"`);
@@ -13084,7 +12965,7 @@
             Lib.debug(
                 'expand',
                 `Page ${pageNum}: [${i}] Expansion complete at ${ctx} — ` +
-                `inserted ${insertedCount}, before=${beforeCount}, after=${afterCount}, total=${beforeCount + insertedCount + afterCount}.`
+                `inserted ${insertedCount} new li(s), total in list now ${alreadyRendered + insertedCount}.`
             );
             expandedCount++;
         });

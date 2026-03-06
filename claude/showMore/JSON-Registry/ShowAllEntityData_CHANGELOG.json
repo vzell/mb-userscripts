@@ -1,17 +1,5 @@
 [
     {
-        "version": "9.99.41",
-        "date": "2026-03-06",
-        "sections": [
-            {
-                "label": "✨ Enhancements",
-                "items": [
-                    "SHOW_ALL_JSON_HANDLERS: add `\"iswcs\"` handler for the Artist-Works \"ISWC\" column — pages such as `https://musicbrainz.org/artist/<uuid>/works` can have a `<td class=\"iswc\">` whose `<script type=\"application/json\">` contains `{\"iswcs\":[{iswc, id, work_id, entityType, editsPending}, …]}`. The new handler reconstructs each missing entry as `<li class=\"iswc\"><a href=\"/iswc/{iswc}\"><bdi><code>{iswc}</code></bdi></a></li>`, exactly matching the structure React renders for visible items. The existing before/after-split algorithm in `expandShowAllCells` correctly handles the pinned last-item edge-case (observed in this column: the last ISWC remains visible after `li.show-all`). No other code changes required — adding the handler to `SHOW_ALL_JSON_HANDLERS` is sufficient."
-                ]
-            }
-        ]
-    },
-    {
         "version": "9.99.40",
         "date": "2026-03-06",
         "sections": [
