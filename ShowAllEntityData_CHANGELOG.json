@@ -1,5 +1,21 @@
 [
     {
+      "version": "9.99.48",
+      "date": "2026-03-06",
+      "sections": [
+        {
+          "label": "🐛 Bugfix / Debug",
+          "items": [
+            "columnErasers: added Lib.debug/Lib.warn statements throughout the erasing pipeline",
+            "applyColumnErasers: Lib.warn when a sourceColumn is not found in table headers (colIdx=-1) or cell index is out of range",
+            "applyColumnErasers: Lib.debug per removed span (symbol + column name + colIdx); Lib.debug when no matching spans are found in a cell",
+            "indices summary line: extended with eraserSummary showing configured symbols, sourceColumn and resolved colIdx per eraser descriptor",
+            "button-click handler: Lib.debug lists all configured columnErasers at activation time"
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.47",
       "date": "2026-03-06",
       "sections": [

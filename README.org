@@ -45571,6 +45571,7 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 
 * TODO synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header to distinguish them from standard columns
+
 * TODO filename fix: 
 
 A couple of more fixes:
@@ -45779,6 +45780,7 @@ ascending/descending and also should be renderded inside the unique column value
 
 
 * clean icons and "▶" and "➕"
+** initial
 
 In the uploaded userscript,
 
@@ -45923,5 +45925,7 @@ The following new additions have been added to the pageType definitions
         },
 #+end_example
 
-** add debug statements to the column erasing functionaliyt
+** add debug statements to the column erasing functionality
+
+add debug statements to the column erasing functionality
 
