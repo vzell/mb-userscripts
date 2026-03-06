@@ -1252,6 +1252,9 @@
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Performances for Place' } ],
             features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
                 extractMainColumn: 'Title'
             },
             tableMode: 'multi',
@@ -1427,6 +1430,9 @@
             match: (path) => path.includes('/recordings'),
             buttons: [ { label: 'Show all Recordings for Artist' } ],
             features: {
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
                 extractMainColumn: 'Name'
             },
             tableMode: 'single'

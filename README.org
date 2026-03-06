@@ -45566,3 +45566,199 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 * TODO extract the VZ event disambiguation configurable in its constituents
 
+* Add guard if some action would leave the final rendered page and warn the user with an alert dialog
+
+* synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header to distinguish them from standard columns
+
+* filename fix: 
+
+A couple of more fixes:
+
+- synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header, to
+  distinguish them from standard columns, when loaded back from the serialized data from disk (maybe this information
+  also needs to be stored in the serialized format somehow when pressing the "Save to Disk" button)
+
+- after loading data from disk, the action button, which would normally be used to load the data initially from the
+  paginated web pages, should turn it's background color to the same "#CCFFCC" background to give the enduser a visual
+  clue which data types are actually loaded
+
+- strip the leading "_" from the button text when constructing the filename for data serialization, so e.g.
+
+#+begin_example
+MB-artist-releasegroups-_official_rgs-579-2026-03-06T12-12-15.json.gz
+MB-artist-releasegroups-_nonofficial_rgs-2120-2026-03-06T12-12-36.json.gz
+MB-artist-releases-_official_releases-8084-2026-03-06T12-58-05.json.gz
+#+end_example
+
+should acutally be
+
+#+begin_example
+MB-artist-releasegroups-official_rgs-579-2026-03-06T12-12-15.json.gz
+MB-artist-releasegroups-nonofficial_rgs-2120-2026-03-06T12-12-36.json.gz
+MB-artist-releases-official_releases-8084-2026-03-06T12-58-05.json.gz
+#+end_example
+
+- add guard if some action would leave the final rendered page and warn the user with an alert dialog, to make it clear
+  to the enduser he would loose all his customization (data loading, filtering, sorting, resizing etc.):
+
+for example, if the user would click a hyperlinked entry in a row of a rendered final table (single or multi table mode), the current page would be replaced by a newly rendered one
+  
+* make the initial collapsing of the sidebar configurable, by default false
+
+* remove "artwork icon/picture" and render the artwork icon in a separate column
+
+remove "artwork icon/picture" and render the artwork icon in a separate column
+
+- For pages of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+#+begin_example
+<td>
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <a href="/release/6c592bda-7e00-40ae-80e1-cc2c17163814/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive" style="background-size: contain; background-image: url(&quot;//coverartarchive.org/release/6c592bda-7e00-40ae-80e1-cc2c17163814/front-250&quot;);">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/release/6c592bda-7e00-40ae-80e1-cc2c17163814">
+    <bdi>Born to Run
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>club edition, Pitman pressing
+    </bdi>)
+  </span>
+</td>
+
+<td>
+  <a href="/release/58d54b37-e37d-3b53-87dd-09cc1590ed79/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/release/58d54b37-e37d-3b53-87dd-09cc1590ed79">
+    <bdi>Born to Run
+    </bdi>
+  </a>
+</td>
+#+end_example
+
+- sorting works just on the title part - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+Still breaks when auto-resizing
+
+#+begin_example
+<td><a href="/label/0b6073f1-78a5-4078-bc01-22d7b05d0b7a"><bdi>Columbia House</bdi></a> <span class="comment">(<bdi>distributor, a division of CBS Records Canada Ltd.</bdi>)</span>, <a href="/label/f65eb039-2e15-4139-83d9-d31dbbf18afa"><bdi>Epic Soundtrax</bdi></a></td>
+#+end_example
+
+- OK, for resizing, also sorting works just on the title part - For pages of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+#+begin_example
+<td>
+  <span class="artwork-icon caa-icon" title="This release group has artwork in the Cover Art Archive">
+  </span>
+  <a class="wrap-anywhere" href="/release-group/cb58c8fd-3dcf-48d8-821c-be86e19614cc">
+    <bdi>1997-02-12: Capitol Theatre, Sydney, Australia
+    </bdi>
+  </a>
+</td>
+
+<td>
+  <span class="blank-icon">
+  </span>
+  <a class="wrap-anywhere" href="/release-group/4c31db85-8c89-4607-8d91-dc0c1dae0798">
+    <bdi>Sydney 1997
+    </bdi>
+  </a>
+</td>
+#+end_example
+  
+
+* optionally hide "recording of <work>" in Artist-Recordings" pages
+
+* remove video icon from main column and extract to synthetic colum
+
+In the uploaded userscript,
+
+the variable "const pageDefinitions" has been enhanced with new "columnExtractors" features for specific pageTypes.
+
+#+begin_example
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+please implement the new extractor function "extractor: 'video'" in the following way:
+
+- remove the container '<span class="video" title="This recording is a video">' with the rendered video icon from the "sourceColumn:" and extract the same container to the synthetic column 'Video'
+
+In the following are examples how these look like currently:
+
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+
+Sub-table: "Shooting loation for"
+"Title: column
+
+With video icon
+
+#+begin_example
+<td>
+  <span class="recordinglink">
+  </span>
+  <span class="video" title="This recording is a video">
+  </span>
+  <a href="/recording/546c3a7b-880f-43cc-990d-172f35038b93">
+    <bdi>(You Want to) Make a Memory
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>live, 2008-07-15: Madison Square Garden, New York, NY, USA
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+
+"Name" column:
+
+With video icon:
+
+#+begin_example
+<td>
+  <span class="video" title="This recording is a video">
+  </span>
+  <a class="wrap-anywhere" href="/recording/875a6a0d-1fcc-416e-959f-433f96b0da17">
+    <bdi>"Born to Run"
+    </bdi>
+  </a>
+  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">
+    <span style="color: green; font-weight: bold;">Suggested work:
+    </span>&nbsp;
+    <a href="/work/9893a23c-f282-3b07-a2db-b4f2f3b9f4b2">Born to Run
+    </a>
+  </div>
+</td>
+#+end_example
+
