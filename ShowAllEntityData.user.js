@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.42+2026-03-06
+// @version      9.99.43+2026-03-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2427,6 +2427,50 @@
             return;
         }
 
+        // ── Persistence helpers ─────────────────────────────────────────────────────
+        // Column visibility is stored per pageType in GM storage as a plain object
+        // mapping  { "Column Name": true|false }.  Column names are used as keys
+        // (not indices) so that the state survives pages where injected columns shift
+        // the index layout between sessions.
+        const COLVIS_KEY_PREFIX = 'vz-mb-colvis-';
+        const colvisStorageKey  = COLVIS_KEY_PREFIX + pageType;
+
+        /**
+         * Persist the current checkbox state for this pageType.
+         * Called on every path that closes the menu so the stored value always
+         * reflects the last intentional configuration the user left behind.
+         */
+        const saveColVisState = () => {
+            const state = {};
+            checkboxes.forEach(cb => {
+                const colName = cb.closest('div')?.querySelector('label')?.textContent ?? '';
+                if (colName) state[colName] = cb.checked;
+            });
+            try {
+                GM_setValue(colvisStorageKey, JSON.stringify(state));
+                Lib.debug('ui', `Column visibility saved for pageType "${pageType}":`, state);
+            } catch (err) {
+                Lib.warn('ui', `Failed to save column visibility for "${pageType}":`, err);
+            }
+        };
+
+        /**
+         * Load stored column visibility state for this pageType.
+         * Returns a plain object { "Column Name": bool } or null when nothing is stored.
+         */
+        const loadColVisState = () => {
+            try {
+                const raw = GM_getValue(colvisStorageKey, null);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                Lib.debug('ui', `Column visibility loaded for pageType "${pageType}":`, parsed);
+                return parsed;
+            } catch (err) {
+                Lib.warn('ui', `Failed to load column visibility for "${pageType}":`, err);
+                return null;
+            }
+        };
+
         // Create toggle button
         const toggleBtn = document.createElement('button');
         toggleBtn.id = 'mb-visible-btn';
@@ -2549,6 +2593,7 @@
             checkbox.id = `mb-col-vis-${index}`;
             checkbox.style.cssText = 'margin-right: 8px; cursor: pointer;';
             checkbox.dataset.columnIndex = index;
+            checkbox.dataset.columnName  = colName; // store for persistence lookup
 
             const label = document.createElement('label');
             label.htmlFor = checkbox.id;
@@ -2572,6 +2617,28 @@
             wrapper.appendChild(label);
             contentWrapper.appendChild(wrapper);
         });
+
+        // ── Restore persisted state (applied after all checkboxes are built) ────────
+        // This must happen before the separator / action buttons are appended so that
+        // updateButtonColor() below reflects the restored state correctly.
+        const savedState = loadColVisState();
+        if (savedState) {
+            checkboxes.forEach(cb => {
+                const colName = cb.dataset.columnName;
+                if (colName && Object.prototype.hasOwnProperty.call(savedState, colName)) {
+                    const shouldBeVisible = !!savedState[colName];
+                    if (cb.checked !== shouldBeVisible) {
+                        cb.checked = shouldBeVisible;
+                        // Fire the change event so toggleColumn() hides/shows the DOM cells
+                        cb.dispatchEvent(new Event('change'));
+                    }
+                }
+            });
+            Lib.debug('ui', `Restored column visibility for pageType "${pageType}" from GM storage.`);
+        }
+
+        // Reflect the (possibly-restored) state on the button tint right away
+        updateButtonColor();
 
         // Add separator
         const separator = document.createElement('div');
@@ -2656,6 +2723,7 @@
         chooseConfigBtn.addEventListener('mouseleave',() => { chooseConfigBtn.style.cssText = menuBtnBase + 'width:100%; margin-top:5px;'; });
         chooseConfigBtn.onclick = (e) => {
             e.stopPropagation();
+            saveColVisState();
             menu.style.display = 'none';
             Lib.debug('ui', 'Chose current column configuration');
         };
@@ -2668,7 +2736,7 @@
 
         // Add close instruction text
         const closeText = document.createElement('div');
-        closeText.textContent = 'Click outside or press Escape to close';
+        closeText.textContent = 'Click outside or press Escape to close and save';
         closeText.style.cssText = 'font-size: 0.9em; color: #666; text-align: center; font-style: italic;';
         contentWrapper.appendChild(closeText);
 
@@ -2801,7 +2869,8 @@
                     if (focused === selectAllBtn || focused === deselectAllBtn || focused === chooseConfigBtn) {
                         focused.click();
                     } else {
-                        // Enter on a checkbox row closes the menu (existing behaviour).
+                        // Enter on a checkbox row: save state and close the menu.
+                        saveColVisState();
                         menu.style.display = 'none';
                     }
                     break;
@@ -2819,6 +2888,7 @@
             const isVisible = menu.style.display === 'block';
 
             if (isVisible) {
+                saveColVisState();
                 menu.style.display = 'none';
             } else {
                 menu.style.display = 'block';
@@ -2840,17 +2910,21 @@
             }
         };
 
-        // Close menu when clicking outside
+        // Close menu when clicking outside — also saves state
         const closeMenu = (e) => {
             if (!menu.contains(e.target) && e.target !== toggleBtn) {
+                if (menu.style.display === 'block') {
+                    saveColVisState();
+                }
                 menu.style.display = 'none';
             }
         };
         document.addEventListener('click', closeMenu);
 
-        // Close menu on Escape key
+        // Close menu on Escape key — also saves state
         const closeMenuOnEscape = (e) => {
             if (e.key === 'Escape' && menu.style.display === 'block') {
+                saveColVisState();
                 menu.style.display = 'none';
             }
         };

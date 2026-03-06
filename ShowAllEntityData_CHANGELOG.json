@@ -1,5 +1,17 @@
 [
     {
+        "version": "9.99.43",
+        "date": "2026-03-06",
+        "sections": [
+            {
+                "label": "✨ Enhancements",
+                "items": [
+                    "Persistent column visibility per pageType: the \"👁️ Visible\" column-visibility dialog now saves and restores the checked/unchecked state of every column across page loads. State is stored in GM storage under the key `vz-mb-colvis-{pageType}` as a JSON object mapping column name → boolean (e.g. `{\"Title\": true, \"Length\": false}`). Column names are used as keys instead of indices so the stored state is robust against pages where injected or optional columns shift column indices between sessions. Save is triggered on every path that closes the menu: (1) clicking the 'Visible' button again to toggle it closed, (2) clicking outside the menu, (3) pressing Escape, (4) pressing Enter on a checkbox row, and (5) clicking the 'Choose current configuration' button (which previously only closed the menu without saving). Restore runs immediately after all checkboxes are built at init time — `toggleColumn()` is called for each checkbox whose stored value differs from the default (all-visible), and `updateButtonColor()` is called afterwards so the button tint correctly reflects the restored state before the menu is ever opened. The close-hint text at the bottom of the menu has been updated to read 'Click outside or press Escape to close and save' to make the save-on-close behaviour discoverable."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.42",
         "date": "2026-03-06",
         "sections": [
