@@ -1,5 +1,26 @@
 [
     {
+      "version": "9.99.49",
+      "date": "2026-03-06",
+      "sections": [
+        {
+          "label": "🐛 Bugfix",
+          "items": [
+            "Disk-load: synthetic column headers (MB-Name, Comment, Country, Date, etc.) now restore with the original dark background — header cell style attribute is serialized and re-applied on load",
+            "Disk-load: the action button matching the loaded data type is now coloured green (#ccffcc) after a successful disk load; falls back to colouring all action buttons when no button-label was stored (old files)",
+            "Filename slug: strip leading (and trailing) underscores from the detail segment so emoji-prefixed button labels yield e.g. \"official_rgs\" instead of \"_official_rgs\""
+          ]
+        },
+        {
+          "label": "🚀 Features",
+          "items": [
+            "Navigation guard: a document-level click listener (capture phase, idempotent) intercepts anchor clicks inside rendered table.tbl rows while data is loaded and shows a confirm() dialog before same-tab navigation — prevents silent loss of loaded data, filters, sorts, column widths and other session state",
+            "Navigation guard exemptions: fragment-only links, javascript: pseudo-links, target=_blank links, same-page URL variants, and clicks outside table.tbl are all passed through without prompting"
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.48",
       "date": "2026-03-06",
       "sections": [

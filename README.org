@@ -44549,6 +44549,252 @@ move further to the left that the actual filter icon itself)
 The selection of the '🔍 ' + space in a mouse-drag selection in the global and column specific filter fields is still
 allowed with the mouse. Please prevent and fix, the latest approach doesn't seem to work
 
+* DONE remove video icon from main column and extract to synthetic colum
+** initial
+
+In the uploaded userscript,
+
+the variable "const pageDefinitions" has been enhanced with new "columnExtractors" features for specific pageTypes.
+
+#+begin_example
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+please implement the new extractor function "extractor: 'video'" in the following way:
+
+- remove the container '<span class="video" title="This recording is a video">' with the rendered video icon from the "sourceColumn:" and extract the same container to the synthetic column 'Video'
+
+In the following are examples how these look like currently:
+
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+
+Sub-table: "Shooting location for"
+"Title: column
+
+With video icon
+
+#+begin_example
+<td>
+  <span class="recordinglink">
+  </span>
+  <span class="video" title="This recording is a video">
+  </span>
+  <a href="/recording/546c3a7b-880f-43cc-990d-172f35038b93">
+    <bdi>(You Want to) Make a Memory
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>live, 2008-07-15: Madison Square Garden, New York, NY, USA
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+
+"Name" column:
+
+With video icon:
+
+#+begin_example
+<td>
+  <span class="video" title="This recording is a video">
+  </span>
+  <a class="wrap-anywhere" href="/recording/875a6a0d-1fcc-416e-959f-433f96b0da17">
+    <bdi>"Born to Run"
+    </bdi>
+  </a>
+  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">
+    <span style="color: green; font-weight: bold;">Suggested work:
+    </span>&nbsp;
+    <a href="/work/9893a23c-f282-3b07-a2db-b4f2f3b9f4b2">Born to Run
+    </a>
+  </div>
+</td>
+#+end_example
+
+** make sortable
+
+Currently the "Video" column is not sortable, as there is no textual representation of the video icon. Please add an
+invisible text (so it should not be rendered insdie of the data cells) of "video" when the container '<span class="video" title="This recording is a video">' is present,
+and the text "audio" otherwise (also not rendered). But BOTH values should be taken into account when sorting
+ascending/descending and also should be renderded inside the unique column value drop-down for selection purposes (clicking on "video" should filter on cells with the '<span class="video"' and clicking on "audio" all except the '<span class="video"'
+
+* DONE clean icons and "▶" and "➕"
+** initial
+
+In the uploaded userscript,
+
+remove the following spans (if present) from the column cells before rendering them on the final tables
+
+#+begin_example
+<span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+</span>
+#+end_example
+
+and
+
+#+begin_example
+<span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
+</span>
+#+end_example
+
+The definition on which pageType and on which column is configured inside in the variable "const pageDefinitions"
+as the feature
+
+#+begin_example
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+                ],
+#+end_example
+
+or
+
+#+begin_example
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+                ],
+#+end_example
+
+So the parameter erasers: "['▶', '➕']" is a comma separated list which spancs should be removed in which "sourceColumn"
+
+'▶' should remove the span
+
+#+begin_example
+<span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+</span>
+#+end_example
+
+and '➕' the span
+
+#+begin_example
+<span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
+</span>
+#+end_example
+
+The following new additions have been added to the pageType definitions
+
+#+begin_example
+        {
+            type: 'series-releases',
+            match: (path) => path.includes('/series'),
+            buttons: [ { label: 'Show all Releases for Series' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+
+#+begin_example
+        {
+            type: 'label-releases',
+            match: (path) => path.includes('/label'),
+            buttons: [ { label: 'Show all Releases for Label' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release groups', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'releasegroup-releases',
+            match: (path) => path.includes('/release-group/'),
+            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+#+end_example
+
+** add debug statements to the column erasing functionality
+
+add debug statements to the column erasing functionality
+
 
 * align button texts and make everything configurable (size, font, height, character to underline)
 
@@ -45573,6 +45819,7 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 * TODO synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header to distinguish them from standard columns
 
 * TODO filename fix: 
+** initial
 
 A couple of more fixes:
 
@@ -45604,7 +45851,9 @@ MB-artist-releases-official_releases-8084-2026-03-06T12-58-05.json.gz
   to the enduser he would loose all his customization (data loading, filtering, sorting, resizing etc.):
 
 for example, if the user would click a hyperlinked entry in a row of a rendered final table (single or multi table mode), the current page would be replaced by a newly rendered one
-  
+
+** only the specific button should be green
+
 
 * make the initial collapsing of the sidebar configurable, by default false
 
@@ -45678,254 +45927,6 @@ Still breaks when auto-resizing
 
 * optionally hide "recording of <work>" in Artist-Recordings" pages
 
-
-* DONE remove video icon from main column and extract to synthetic colum
-** initial
-
-In the uploaded userscript,
-
-the variable "const pageDefinitions" has been enhanced with new "columnExtractors" features for specific pageTypes.
-
-#+begin_example
-        {
-            type: 'artist-recordings',
-            match: (path) => path.includes('/recordings'),
-            buttons: [ { label: 'Show all Recordings for Artist' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                extractMainColumn: 'Name'
-            },
-            tableMode: 'single'
-        },
-
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-#+end_example
-
-please implement the new extractor function "extractor: 'video'" in the following way:
-
-- remove the container '<span class="video" title="This recording is a video">' with the rendered video icon from the "sourceColumn:" and extract the same container to the synthetic column 'Video'
-
-In the following are examples how these look like currently:
-
-https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
-
-Sub-table: "Shooting location for"
-"Title: column
-
-With video icon
-
-#+begin_example
-<td>
-  <span class="recordinglink">
-  </span>
-  <span class="video" title="This recording is a video">
-  </span>
-  <a href="/recording/546c3a7b-880f-43cc-990d-172f35038b93">
-    <bdi>(You Want to) Make a Memory
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>live, 2008-07-15: Madison Square Garden, New York, NY, USA
-    </bdi>)
-  </span>
-</td>
-#+end_example
-
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
-
-"Name" column:
-
-With video icon:
-
-#+begin_example
-<td>
-  <span class="video" title="This recording is a video">
-  </span>
-  <a class="wrap-anywhere" href="/recording/875a6a0d-1fcc-416e-959f-433f96b0da17">
-    <bdi>"Born to Run"
-    </bdi>
-  </a>
-  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">
-    <span style="color: green; font-weight: bold;">Suggested work:
-    </span>&nbsp;
-    <a href="/work/9893a23c-f282-3b07-a2db-b4f2f3b9f4b2">Born to Run
-    </a>
-  </div>
-</td>
-#+end_example
-
-** make sortable
-
-Currently the "Video" column is not sortable, as there is no textual representation of the video icon. Please add an
-invisible text (so it should not be rendered insdie of the data cells) of "video" when the container '<span class="video" title="This recording is a video">' is present,
-and the text "audio" otherwise (also not rendered). But BOTH values should be taken into account when sorting
-ascending/descending and also should be renderded inside the unique column value drop-down for selection purposes (clicking on "video" should filter on cells with the '<span class="video"' and clicking on "audio" all except the '<span class="video"'
-
-
 * The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
 
-
-* clean icons and "▶" and "➕"
-** initial
-
-In the uploaded userscript,
-
-remove the following spans (if present) from the column cells before rendering them on the final tables
-
-#+begin_example
-<span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
-</span>
-#+end_example
-
-and
-
-#+begin_example
-<span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
-</span>
-#+end_example
-
-The definition on which pageType and on which column is configured inside in the variable "const pageDefinitions"
-as the feature
-
-#+begin_example
-                columnErasers: [
-                    { sourceColumn: 'Release', erasers: ['▶'] }
-                ],
-#+end_example
-
-or
-
-#+begin_example
-                columnErasers: [
-                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
-                ],
-#+end_example
-
-So the parameter erasers: "['▶', '➕']" is a comma separated list which spancs should be removed in which "sourceColumn"
-
-'▶' should remove the span
-
-#+begin_example
-<span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
-</span>
-#+end_example
-
-and '➕' the span
-
-#+begin_example
-<span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
-</span>
-#+end_example
-
-The following new additions have been added to the pageType definitions
-
-#+begin_example
-        {
-            type: 'series-releases',
-            match: (path) => path.includes('/series'),
-            buttons: [ { label: 'Show all Releases for Series' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
-                    {
-                        sourceColumn:    'Tracks',
-                        extractor:       'sumTracks',
-                        syntheticColumns: ['Total Tracks']
-                    },
-                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
-                ],
-                extractMainColumn: 'Release'
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-
-#+begin_example
-        {
-            type: 'label-releases',
-            match: (path) => path.includes('/label'),
-            buttons: [ { label: 'Show all Releases for Label' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Release', erasers: ['▶'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
-                    {
-                        sourceColumn:    'Tracks',
-                        extractor:       'sumTracks',
-                        syntheticColumns: ['Total Tracks']
-                    },
-                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
-                ],
-                extractMainColumn: 'Release'
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-#+begin_example
-        {
-            type: 'artist-recordings',
-            match: (path) => path.includes('/recordings'),
-            buttons: [ { label: 'Show all Recordings for Artist' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Release groups', erasers: ['▶', '➕'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                extractMainColumn: 'Name'
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-#+begin_example
-        {
-            type: 'releasegroup-releases',
-            match: (path) => path.includes('/release-group/'),
-            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Release', erasers: ['▶'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
-                    {
-                        sourceColumn:    'Tracks',
-                        extractor:       'sumTracks',
-                        syntheticColumns: ['Total Tracks']
-                    },
-                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
-                ],
-                extractMainColumn: 'Release'
-            },
-            tableMode: 'multi',
-            non_paginated: false
-        },
-#+end_example
-
-** add debug statements to the column erasing functionality
-
-add debug statements to the column erasing functionality
 
