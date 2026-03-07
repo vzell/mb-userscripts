@@ -1,5 +1,34 @@
 [
     {
+      "version": "9.99.51",
+      "date": "2026-03-06",
+      "sections": [
+        {
+          "label": "🐛 Bugfix",
+          "items": [
+            "Disk-load action button colouring: replaced single-strategy label comparison with a robust three-strategy cascade",
+            "Strategy 1: slugify(data.buttonLabel) vs slugify(btn.dataset.label) — immune to emoji, superscript digits, case and decoration (works for files saved with v9.99.49+)",
+            "Strategy 2: extract the detail slug from the filename (MB-<pageType>-<detail>-<rows>-<ts>.json.gz) and compare against slugify(btn.dataset.label) — covers all files saved before buttonLabel was added to the payload",
+            "Strategy 3 (fallback): colour all action buttons green when neither slug strategy finds a match",
+            "detailSlugFromFilename() helper: splits the filename after the pageType prefix, collects tokens until the first all-digit (row-count) token, rejoins with underscores to reconstruct the detail slug"
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.50",
+      "date": "2026-03-06",
+      "sections": [
+        {
+          "label": "🐛 Bugfix",
+          "items": [
+            "Disk-load action button colouring: fix all buttons turning green instead of only the matching one — root cause was that row-count superscripts (e.g. \"official_rgs⁵⁷⁹\") are appended to button textContent after a live fetch, causing the textContent comparison to fail and the fallback (colour all) to trigger",
+            "Action buttons now carry a data-label attribute (stamped at creation time from conf.label) that is immune to textContent mutations; disk-load colouring compares against data-label with a textContent fallback for forward-compatibility"
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.49",
       "date": "2026-03-06",
       "sections": [

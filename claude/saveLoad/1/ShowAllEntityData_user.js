@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.51+2026-03-06
+// @version      9.99.50+2026-03-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -13975,113 +13975,35 @@
                 if (data.tableMode) activeDefinition.tableMode = data.tableMode;
                 if (activeDefinition.tableMode !== 'multi') originalAllRows = [...allRows];
 
-                // Visually mark the action button that corresponds to the loaded data with
+                // Visually mark the action button(s) that correspond to the loaded data with
                 // the same "#ccffcc" success colour used at the end of a live fetch, so the
                 // user has a clear indication of which data type is currently displayed.
-                //
-                // Matching strategy (two passes, first match wins):
-                //   1. Slug-match data.buttonLabel (present in files saved with v9.99.49+):
-                //      toSlug(btn.dataset.label) === toSlug(data.buttonLabel)
-                //      Using slugs makes the comparison immune to emoji, superscript digits,
-                //      case differences, and any other textContent decoration.
-                //   2. Filename-slug fallback (for older files without buttonLabel):
-                //      Extract the detail segment from the filename
-                //      (format: MB-<pageType>-<detailSlug>-<rows>-<timestamp>.json[.gz])
-                //      and compare toSlug(btn.dataset.label) against it.
-                //   3. If neither strategy finds a match, colour all action buttons green.
+                // Strategy: prefer an exact label-match on data.buttonLabel; fall back to
+                // colouring all action buttons when no label was saved or none matched.
                 {
-                    /**
-                     * Convert a label to a safe filename slug — identical logic to toSlug()
-                     * in saveTableDataToDisk, intentionally duplicated here so the load path
-                     * has no dependency on the save path's closure-scoped helper.
-                     *
-                     * @param {string} text
-                     * @returns {string}
-                     */
-                    const slugify = (text) => {
-                        if (!text) return '';
-                        return text
-                            .toLowerCase()
-                            .trim()
-                            .replace(/\s+/g, '_')
-                            .replace(/[^a-z0-9_]/g, '')
-                            .replace(/_+/g, '_')
-                            .replace(/^_+|_+$/g, '');
-                    };
-
-                    /**
-                     * Return the detail-slug segment embedded in a MB save filename, or '' when
-                     * the filename does not match the expected pattern.
-                     *
-                     * Filename format:
-                     *   MB-<pageTypeSlug>[-<detailSlug>]-<rowCount>-<ISOTimestamp>.json[.gz]
-                     *
-                     * The detail slug is everything between the pageType slug and the numeric
-                     * row-count segment.  We identify the row-count segment as the first purely
-                     * numeric token after the pageType prefix.
-                     *
-                     * @param {string} filename - e.g. "MB-artist-releasegroups-official_rgs-579-2026-03-06T16-28-02.json.gz"
-                     * @param {string} ptSlug   - page-type slug e.g. "artist-releasegroups"
-                     * @returns {string}
-                     */
-                    const detailSlugFromFilename = (filename, ptSlug) => {
-                        // Strip directory path and extension(s) (.json.gz or .json)
-                        const base = filename.replace(/^.*[\\/]/, '').replace(/\.json(\.gz)?$/, '');
-                        // Expected prefix: "MB-<ptSlug>-"
-                        const prefix = `MB-${ptSlug}-`;
-                        if (!base.startsWith(prefix)) return '';
-                        const rest = base.slice(prefix.length); // e.g. "official_rgs-579-2026-03-06T16-28-02"
-                        // Collect tokens until we hit the first all-digit token (row count)
-                        const tokens = rest.split('-');
-                        const detailTokens = [];
-                        for (const tok of tokens) {
-                            if (/^\d+$/.test(tok)) break;  // row-count segment reached
-                            detailTokens.push(tok);
-                        }
-                        return detailTokens.join('_');  // e.g. "official_rgs"
-                    };
-
-                    const pageTypeSlug = pageType.replace(/-filtered$/, '');
+                    const savedLabel = (data.buttonLabel || '').trim().toLowerCase();
                     let matched = false;
-
-                    // --- Strategy 1: slug-match data.buttonLabel ---
-                    const savedButtonSlug = slugify(data.buttonLabel || '');
-                    if (savedButtonSlug) {
+                    if (savedLabel) {
                         allActionButtons.forEach(btn => {
-                            const btnSlug = slugify(btn.dataset.label || btn.textContent);
-                            if (btnSlug === savedButtonSlug) {
+                            // Compare against data-label (the immutable original conf.label stamped at
+                            // button-creation time) rather than textContent, which may have been mutated
+                            // by appended row-count superscripts (e.g. "🧮 Official RGs⁵⁷⁹").
+                            const btnLabel = (btn.dataset.label || btn.textContent).trim().toLowerCase();
+                            if (btnLabel === savedLabel) {
                                 btn.style.backgroundColor = '#ccffcc';
                                 btn.style.color = 'black';
                                 matched = true;
-                                Lib.debug('cache', `Disk-load [strategy 1]: coloured button green via buttonLabel slug "${savedButtonSlug}" → "${btn.dataset.label || btn.textContent.trim()}"`);
+                                Lib.debug('cache', `Disk-load: coloured matching action button green: "${btn.dataset.label || btn.textContent.trim()}"`);
                             }
                         });
                     }
-
-                    // --- Strategy 2: filename detail-slug fallback (older files) ---
                     if (!matched) {
-                        const fileDetailSlug = detailSlugFromFilename(file.name, pageTypeSlug);
-                        Lib.debug('cache', `Disk-load [strategy 2]: extracted detail slug from filename "${file.name}" → "${fileDetailSlug}"`);
-                        if (fileDetailSlug) {
-                            allActionButtons.forEach(btn => {
-                                const btnSlug = slugify(btn.dataset.label || btn.textContent);
-                                if (btnSlug === fileDetailSlug) {
-                                    btn.style.backgroundColor = '#ccffcc';
-                                    btn.style.color = 'black';
-                                    matched = true;
-                                    Lib.debug('cache', `Disk-load [strategy 2]: coloured button green via filename slug "${fileDetailSlug}" → "${btn.dataset.label || btn.textContent.trim()}"`);
-                                }
-                            });
-                        }
-                    }
-
-                    // --- Strategy 3: fallback — colour all buttons ---
-                    if (!matched) {
+                        // No specific button found — colour all buttons to signal loaded state
                         allActionButtons.forEach(btn => {
                             btn.style.backgroundColor = '#ccffcc';
                             btn.style.color = 'black';
                         });
-                        Lib.debug('cache', `Disk-load [strategy 3]: no button slug matched; coloured all ${allActionButtons.length} action button(s) green`);
+                        Lib.debug('cache', `Disk-load: no button label match; coloured all ${allActionButtons.length} action button(s) green`);
                     }
                 }
 

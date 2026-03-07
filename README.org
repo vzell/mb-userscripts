@@ -45854,6 +45854,11 @@ for example, if the user would click a hyperlinked entry in a row of a rendered 
 
 ** only the specific button should be green
 
+There is still a bug, when loading from "MB-artist-releasegroups-official_rgs-579-2026-03-06T16-28-02.json.gz" e.g. all
+4 action buttons turned green on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f, but it should
+actually be ONLY the one with the btton text "Official RGs"
+
+Still not, the button text is actually an icon, then a superscript and then the text
 
 * make the initial collapsing of the sidebar configurable, by default false
 
