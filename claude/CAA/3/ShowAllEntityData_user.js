@@ -1373,7 +1373,7 @@
             buttons: [ { label: 'Show all Events for Area' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
                 ],
                 extractMainColumn: 'Event'
@@ -1498,7 +1498,7 @@
             buttons: [ { label: 'Show all Events for Place' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] }
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
                 extractMainColumn: 'Event'
             },
@@ -1816,7 +1816,7 @@
             buttons: [ { label: 'Show all Events for Artist' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
                 ],
                 extractMainColumn: 'Event'

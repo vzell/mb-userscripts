@@ -44549,102 +44549,6 @@ move further to the left that the actual filter icon itself)
 The selection of the '🔍 ' + space in a mouse-drag selection in the global and column specific filter fields is still
 allowed with the mouse. Please prevent and fix, the latest approach doesn't seem to work
 
-* DONE remove video icon from main column and extract to synthetic colum
-** initial
-
-In the uploaded userscript,
-
-the variable "const pageDefinitions" has been enhanced with new "columnExtractors" features for specific pageTypes.
-
-#+begin_example
-        {
-            type: 'artist-recordings',
-            match: (path) => path.includes('/recordings'),
-            buttons: [ { label: 'Show all Recordings for Artist' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                extractMainColumn: 'Name'
-            },
-            tableMode: 'single'
-        },
-
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-#+end_example
-
-please implement the new extractor function "extractor: 'video'" in the following way:
-
-- remove the container '<span class="video" title="This recording is a video">' with the rendered video icon from the "sourceColumn:" and extract the same container to the synthetic column 'Video'
-
-In the following are examples how these look like currently:
-
-https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
-
-Sub-table: "Shooting location for"
-"Title: column
-
-With video icon
-
-#+begin_example
-<td>
-  <span class="recordinglink">
-  </span>
-  <span class="video" title="This recording is a video">
-  </span>
-  <a href="/recording/546c3a7b-880f-43cc-990d-172f35038b93">
-    <bdi>(You Want to) Make a Memory
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>live, 2008-07-15: Madison Square Garden, New York, NY, USA
-    </bdi>)
-  </span>
-</td>
-#+end_example
-
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
-
-"Name" column:
-
-With video icon:
-
-#+begin_example
-<td>
-  <span class="video" title="This recording is a video">
-  </span>
-  <a class="wrap-anywhere" href="/recording/875a6a0d-1fcc-416e-959f-433f96b0da17">
-    <bdi>"Born to Run"
-    </bdi>
-  </a>
-  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">
-    <span style="color: green; font-weight: bold;">Suggested work:
-    </span>&nbsp;
-    <a href="/work/9893a23c-f282-3b07-a2db-b4f2f3b9f4b2">Born to Run
-    </a>
-  </div>
-</td>
-#+end_example
-
-** make sortable
-
-Currently the "Video" column is not sortable, as there is no textual representation of the video icon. Please add an
-invisible text (so it should not be rendered insdie of the data cells) of "video" when the container '<span class="video" title="This recording is a video">' is present,
-and the text "audio" otherwise (also not rendered). But BOTH values should be taken into account when sorting
-ascending/descending and also should be renderded inside the unique column value drop-down for selection purposes (clicking on "video" should filter on cells with the '<span class="video"' and clicking on "audio" all except the '<span class="video"'
-
 * DONE clean icons and "▶" and "➕"
 ** initial
 
@@ -44883,6 +44787,318 @@ The whole implementation should be aligned with what we alreday have for the cur
                 ],
 #+end_example
 
+* DONE remove video icon from main column and extract to synthetic colum
+** initial
+
+In the uploaded userscript,
+
+the variable "const pageDefinitions" has been enhanced with new "columnExtractors" features for specific pageTypes.
+
+#+begin_example
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+please implement the new extractor function "extractor: 'video'" in the following way:
+
+- remove the container '<span class="video" title="This recording is a video">' with the rendered video icon from the "sourceColumn:" and extract the same container to the synthetic column 'Video'
+
+In the following are examples how these look like currently:
+
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+
+Sub-table: "Shooting location for"
+"Title: column
+
+With video icon
+
+#+begin_example
+<td>
+  <span class="recordinglink">
+  </span>
+  <span class="video" title="This recording is a video">
+  </span>
+  <a href="/recording/546c3a7b-880f-43cc-990d-172f35038b93">
+    <bdi>(You Want to) Make a Memory
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>live, 2008-07-15: Madison Square Garden, New York, NY, USA
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+
+"Name" column:
+
+With video icon:
+
+#+begin_example
+<td>
+  <span class="video" title="This recording is a video">
+  </span>
+  <a class="wrap-anywhere" href="/recording/875a6a0d-1fcc-416e-959f-433f96b0da17">
+    <bdi>"Born to Run"
+    </bdi>
+  </a>
+  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">
+    <span style="color: green; font-weight: bold;">Suggested work:
+    </span>&nbsp;
+    <a href="/work/9893a23c-f282-3b07-a2db-b4f2f3b9f4b2">Born to Run
+    </a>
+  </div>
+</td>
+#+end_example
+
+** make sortable
+
+Currently the "Video" column is not sortable, as there is no textual representation of the video icon. Please add an
+invisible text (so it should not be rendered insdie of the data cells) of "video" when the container '<span class="video" title="This recording is a video">' is present,
+and the text "audio" otherwise (also not rendered). But BOTH values should be taken into account when sorting
+ascending/descending and also should be renderded inside the unique column value drop-down for selection purposes (clicking on "video" should filter on cells with the '<span class="video"' and clicking on "audio" all except the '<span class="video"'
+
+* remove "artwork icon/picture" and render the artwork icon in a separate column
+** initial
+
+In the uploaded userscript,
+
+the variable "const pageDefinitions" has been enhanced with a new "columnExtractors" feature for specific pageTypes.
+
+#+begin_example
+           features: {
+               columnExtractors: [
+                   { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] }
+               ],
+#+end_example
+
+please implement the new extractor function "extractor: 'caa'" in the following way:
+
+- remove the container '' with the rendered video icon from the "sourceColumn:" and extract the same container to the synthetic column 'CAA'
+
+In the following are examples how these look like currently:
+
+- for pages of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases, e.g.
+
+#+begin_example
+<td>
+  <a href="/release/c3f193ec-2d7d-41f3-baba-d8b1ba54bf1a/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/release/c3f193ec-2d7d-41f3-baba-d8b1ba54bf1a">
+    <bdi>Philadelphia: Music From the Motion Picture
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Canadian music club release distributed by Columbia House
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+- for pages of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events, e.g.
+
+#+begin_example
+<td>
+  <a href="/event/b0466931-607d-4033-aff3-022c3122ea2d/event-art">
+    <span class="artwork-icon eaa-icon" title="This event has artwork in the Event Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/event/b0466931-607d-4033-aff3-022c3122ea2d">
+    <bdi>2025‐12‐14: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Hungerthon Benefit
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+So basically remove the whole 'a href' anchor with the included '<span class="artwork-icon caa-icon"' for "Cover Art Archive"
+
+#+begin_example
+  <a href="/release/c3f193ec-2d7d-41f3-baba-d8b1ba54bf1a/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
+    </span>
+  </a>
+#+end_example
+
+or remove the whole 'a href' anchor with the included '<span class="artwork-icon eaa-icon"' for "Event Art Archive"
+
+#+begin_example
+  <a href="/event/b0466931-607d-4033-aff3-022c3122ea2d/event-art">
+    <span class="artwork-icon eaa-icon" title="This event has artwork in the Event Art Archive">
+    </span>
+  </a>
+#+end_example
+** doens't work for
+
+It somehow doesn't work for the following pageTypes
+
+#+begin_example
+type: 'artist-releases'
+type: 'releasegroup-releases'
+#+end_example
+
+** still
+
+It still doesn't work for the following pageType
+
+#+begin_example
+type: 'artist-releasegroups'
+#+end_example
+
+the other ones were fixed
+
+** <span class="blank-icon">
+
+please always remove the following span
+
+#+begin_example
+  <span class="blank-icon">
+  </span>
+#+end_example
+
+
+* remove "artwork icon/picture" and render the artwork icon in a separate column
+
+- For pages of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+#+begin_example
+<td>
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <a href="/release/6c592bda-7e00-40ae-80e1-cc2c17163814/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive" style="background-size: contain; background-image: url(&quot;//coverartarchive.org/release/6c592bda-7e00-40ae-80e1-cc2c17163814/front-250&quot;);">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/release/6c592bda-7e00-40ae-80e1-cc2c17163814">
+    <bdi>Born to Run
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>club edition, Pitman pressing
+    </bdi>)
+  </span>
+</td>
+
+<td>
+  <a href="/release/58d54b37-e37d-3b53-87dd-09cc1590ed79/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/release/58d54b37-e37d-3b53-87dd-09cc1590ed79">
+    <bdi>Born to Run
+    </bdi>
+  </a>
+</td>
+#+end_example
+
+- sorting works just on the title part - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+Still breaks when auto-resizing
+
+#+begin_example
+<td><a href="/label/0b6073f1-78a5-4078-bc01-22d7b05d0b7a"><bdi>Columbia House</bdi></a> <span class="comment">(<bdi>distributor, a division of CBS Records Canada Ltd.</bdi>)</span>, <a href="/label/f65eb039-2e15-4139-83d9-d31dbbf18afa"><bdi>Epic Soundtrax</bdi></a></td>
+#+end_example
+
+- OK, for resizing, also sorting works just on the title part - For pages of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+#+begin_example
+<td>
+  <span class="artwork-icon caa-icon" title="This release group has artwork in the Cover Art Archive">
+  </span>
+  <a class="wrap-anywhere" href="/release-group/cb58c8fd-3dcf-48d8-821c-be86e19614cc">
+    <bdi>1997-02-12: Capitol Theatre, Sydney, Australia
+    </bdi>
+  </a>
+</td>
+
+<td>
+  <span class="blank-icon">
+  </span>
+  <a class="wrap-anywhere" href="/release-group/4c31db85-8c89-4607-8d91-dc0c1dae0798">
+    <bdi>Sydney 1997
+    </bdi>
+  </a>
+</td>
+#+end_example
+  
+* TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
+
+For example for the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+when auto-resizing the table with the "↔️ Resize" button, the following data cell in the "Event" column" ist still not properly autoresized
+
+#+begin_example
+<td>
+  <span class="blank-icon">
+  </span>
+  <a class="wrap-anywhere" href="/event/83f93115-3da6-4ab6-934a-a034f6303a88">
+    <bdi>2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>5th Annual Academy Museum Gala
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+but instead it breaks in the next row after the '(5th Annual Academy' and 'Museum Gala)' is rendered in the next row
+
+#+begin_example
+2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA (5th Annual Academy
+Museum Gala)
+#+end_example
+
+Is it maybe because of the presence of data cells which have '<span class="artwork-icon eaa-icon"' prepended to the actual event title, e.g.
+
+#+begin_example
+<td>
+  <a href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/event-art">
+    <span class="artwork-icon eaa-icon" title="This event has artwork in the Event Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f">
+    <bdi>2025‐10‐26: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Birthday Party at The Pony
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+Please fix
 
 
 * align button texts and make everything configurable (size, font, height, character to underline)
@@ -45383,56 +45599,6 @@ so basically the ', Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anni
 and only the "Primary alias:" stuff should be relocated as before
 
 ** From the Studio to the Stage: New York (2024-10-04) (2024-10-04: Madison Square Garden, New York City, NY, USA, Bleachers) - https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
-
-
-* TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
-
-For example for the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
-
-when auto-resizing the table with the "↔️ Resize" button, the following data cell in the "Event" column" ist still not properly autoresized
-
-#+begin_example
-<td>
-  <span class="blank-icon">
-  </span>
-  <a class="wrap-anywhere" href="/event/83f93115-3da6-4ab6-934a-a034f6303a88">
-    <bdi>2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>5th Annual Academy Museum Gala
-    </bdi>)
-  </span>
-</td>
-#+end_example
-
-but instead it breaks in the next row after the '(5th Annual Academy' and 'Museum Gala)' is rendered in the next row
-
-#+begin_example
-2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA (5th Annual Academy
-Museum Gala)
-#+end_example
-
-Is it maybe because of the presence of data cells which have '<span class="artwork-icon eaa-icon"' prepended to the actual event title, e.g.
-
-#+begin_example
-<td>
-  <a href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/event-art">
-    <span class="artwork-icon eaa-icon" title="This event has artwork in the Event Art Archive">
-    </span>
-  </a>
-  <a class="wrap-anywhere" href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f">
-    <bdi>2025‐10‐26: The Stone Pony, Asbury Park, NJ, USA
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>Birthday Party at The Pony
-    </bdi>)
-  </span>
-</td>
-#+end_example
-
-Please fix
 
 
 * TODO extract the "video" icon from recordings - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
@@ -45952,73 +46118,13 @@ Still not, the button text is actually an icon, then a superscript and then the 
 * make the initial collapsing of the sidebar configurable, by default false
 
 
-* remove "artwork icon/picture" and render the artwork icon in a separate column
-
-remove "artwork icon/picture" and render the artwork icon in a separate column
-
-- For pages of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-
-#+begin_example
-<td>
-  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
-  </span>
-  <a href="/release/6c592bda-7e00-40ae-80e1-cc2c17163814/cover-art">
-    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive" style="background-size: contain; background-image: url(&quot;//coverartarchive.org/release/6c592bda-7e00-40ae-80e1-cc2c17163814/front-250&quot;);">
-    </span>
-  </a>
-  <a class="wrap-anywhere" href="/release/6c592bda-7e00-40ae-80e1-cc2c17163814">
-    <bdi>Born to Run
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>club edition, Pitman pressing
-    </bdi>)
-  </span>
-</td>
-
-<td>
-  <a href="/release/58d54b37-e37d-3b53-87dd-09cc1590ed79/cover-art">
-    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
-    </span>
-  </a>
-  <a class="wrap-anywhere" href="/release/58d54b37-e37d-3b53-87dd-09cc1590ed79">
-    <bdi>Born to Run
-    </bdi>
-  </a>
-</td>
-#+end_example
-
-- sorting works just on the title part - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
-
-Still breaks when auto-resizing
-
-#+begin_example
-<td><a href="/label/0b6073f1-78a5-4078-bc01-22d7b05d0b7a"><bdi>Columbia House</bdi></a> <span class="comment">(<bdi>distributor, a division of CBS Records Canada Ltd.</bdi>)</span>, <a href="/label/f65eb039-2e15-4139-83d9-d31dbbf18afa"><bdi>Epic Soundtrax</bdi></a></td>
-#+end_example
-
-- OK, for resizing, also sorting works just on the title part - For pages of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-#+begin_example
-<td>
-  <span class="artwork-icon caa-icon" title="This release group has artwork in the Cover Art Archive">
-  </span>
-  <a class="wrap-anywhere" href="/release-group/cb58c8fd-3dcf-48d8-821c-be86e19614cc">
-    <bdi>1997-02-12: Capitol Theatre, Sydney, Australia
-    </bdi>
-  </a>
-</td>
-
-<td>
-  <span class="blank-icon">
-  </span>
-  <a class="wrap-anywhere" href="/release-group/4c31db85-8c89-4607-8d91-dc0c1dae0798">
-    <bdi>Sydney 1997
-    </bdi>
-  </a>
-</td>
-#+end_example
-  
 
 * optionally hide "recording of <work>" in Artist-Recordings" pages
 
+
 * The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
+
+
+* collpase multiline column cells and display a shorted version together wuth a popup which has the complete unalterd multi-row cell content
+
+Add a collpase icon "▶" in the column header for the functionality of including all cell data or shortening to a single rowcount

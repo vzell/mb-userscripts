@@ -1044,97 +1044,6 @@
             }
 
             return [tdVideo];
-        },
-
-        /**
-         * caa — extracts the Cover Art Archive (CAA) or Event Art Archive (EAA)
-         * artwork anchor from a source cell into a dedicated synthetic "CAA" column,
-         * and removes it from the source cell so the title/name column stays clean.
-         *
-         * Recognised source structures (all variants are handled by a single
-         * compound selector — a span need not carry ALL of these classes):
-         *
-         *   Release/Release-group pages (CAA):
-         *     <a href="…/cover-art">
-         *       <span class="artwork-icon caa-icon" …></span>
-         *     </a>
-         *     — or, on artist release-groups pages, the span may carry only:
-         *     <span class="caa-icon" …></span>
-         *
-         *   Event pages (EAA):
-         *     <a href="…/event-art">
-         *       <span class="artwork-icon eaa-icon" …></span>
-         *     </a>
-         *
-         * The selector `a > span.caa-icon, a > span.eaa-icon, a > span.artwork-icon`
-         * covers every combination: a span is matched as long as it carries ANY of
-         * the three classes, regardless of whether the others are also present.
-         *
-         * The anchor is *moved* (not cloned) out of the source cell: the original
-         * DOM node is removed from sourceCell and re-parented into tdCaa so that
-         * neither the source column nor the CAA column contain duplicate markup.
-         *
-         * Sortability and dropdown filtering:
-         *   An invisible <span class="mb-caa-sort-key" style="display:none"> is
-         *   always appended to tdCaa containing the text "yes" when an artwork anchor
-         *   was found, or "no" otherwise.  The span is not rendered by the browser
-         *   but IS walked by getCleanColumnText() / getCleanVisibleText() (both use
-         *   a TreeWalker that does not skip display:none elements), so:
-         *     - Sorting ascending/descending works ("no" < "yes" alphabetically).
-         *     - The unique-values dropdown shows exactly "no" and "yes".
-         *     - Clicking "yes" in the dropdown filters to rows that carry artwork;
-         *       clicking "no" filters to rows without any artwork anchor.
-         *
-         * Synthetic columns: ['CAA']
-         *
-         * @param   {HTMLTableCellElement} sourceCell  The source <td> element.
-         * @returns {HTMLTableCellElement[]}            Array of one synthetic <td>.
-         */
-        caa(sourceCell) {
-            const tdCaa = document.createElement('td');
-
-            /**
-             * Appends an invisible text label used exclusively as a sort/filter key.
-             * The label is never rendered — style="display:none" hides it visually —
-             * but the TreeWalker inside getCleanColumnText() and getCleanVisibleText()
-             * does not skip display:none nodes, so sorting and the unique-value
-             * dropdown both pick it up correctly.
-             *
-             * @param {string} label - "yes" when artwork is present, "no" otherwise
-             */
-            const appendSortKey = (label) => {
-                const keySpan = document.createElement('span');
-                keySpan.className = 'mb-caa-sort-key';
-                keySpan.setAttribute('aria-hidden', 'true');
-                keySpan.style.display = 'none';
-                keySpan.textContent = label;
-                tdCaa.appendChild(keySpan);
-            };
-
-            if (sourceCell) {
-                // Match an anchor whose direct child span carries ANY of the three
-                // artwork icon classes: caa-icon (releases, release-groups),
-                // eaa-icon (events), or artwork-icon (compound class on some pages).
-                // Using a comma-separated selector means a span is matched as long
-                // as it has at least one of the classes — no AND logic required.
-                const iconSpan = sourceCell.querySelector(
-                    'a > span.caa-icon, a > span.eaa-icon, a > span.artwork-icon'
-                );
-                const artworkAnchor = iconSpan ? iconSpan.closest('a') : null;
-                if (artworkAnchor) {
-                    // Move the node: detach from source so the title cell is clean,
-                    // then re-parent the original (not a clone) into the synthetic cell.
-                    artworkAnchor.remove();
-                    tdCaa.appendChild(artworkAnchor);
-                    appendSortKey('yes');
-                } else {
-                    appendSortKey('no');
-                }
-            } else {
-                appendSortKey('no');
-            }
-
-            return [tdCaa];
         }
     };
 
@@ -1373,7 +1282,7 @@
             buttons: [ { label: 'Show all Events for Area' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
                 ],
                 extractMainColumn: 'Event'
@@ -1498,7 +1407,7 @@
             buttons: [ { label: 'Show all Events for Place' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] }
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
                 extractMainColumn: 'Event'
             },
@@ -1816,7 +1725,7 @@
             buttons: [ { label: 'Show all Events for Artist' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
                 ],
                 extractMainColumn: 'Event'

@@ -4,15 +4,6 @@
       "date": "2026-03-07",
       "sections": [
         {
-          "label": "✨ Enhancements",
-          "items": [
-            "ColumnDataExtractor: added new 'caa' extractor that moves the Cover Art Archive (caa-icon) or Event Art Archive (eaa-icon) artwork anchor out of the source cell into a dedicated synthetic 'CAA' column",
-            "caa extractor: detection uses the compound selector 'a > span.caa-icon, a > span.eaa-icon, a > span.artwork-icon' — covers release/event pages where both artwork-icon and caa-icon/eaa-icon are present, AND artist release-groups pages where only caa-icon is present without artwork-icon",
-            "caa extractor: anchor is moved (not cloned) so neither the source column nor the CAA column contain duplicate markup",
-            "caa extractor: appends an invisible mb-caa-sort-key span ('yes'/'no') enabling sort and unique-value dropdown filtering identical to the existing 'video' extractor pattern"
-          ]
-        },
-        {
           "label": "🐛 Bugfix",
           "items": [
             "pageDefinitions artist-releases: fixed 'caa' extractor sourceColumn mismatch — was 'Title', corrected to 'Release' (matching extractMainColumn and the actual column header on /artist/{mbid}/releases pages)",

@@ -1051,24 +1051,17 @@
          * artwork anchor from a source cell into a dedicated synthetic "CAA" column,
          * and removes it from the source cell so the title/name column stays clean.
          *
-         * Recognised source structures (all variants are handled by a single
-         * compound selector — a span need not carry ALL of these classes):
+         * Recognised source structures (either variant is handled identically):
          *
-         *   Release/Release-group pages (CAA):
+         *   Cover Art Archive (release pages):
          *     <a href="…/cover-art">
-         *       <span class="artwork-icon caa-icon" …></span>
+         *       <span class="artwork-icon caa-icon" title="This release has artwork …"></span>
          *     </a>
-         *     — or, on artist release-groups pages, the span may carry only:
-         *     <span class="caa-icon" …></span>
          *
-         *   Event pages (EAA):
+         *   Event Art Archive (event pages):
          *     <a href="…/event-art">
-         *       <span class="artwork-icon eaa-icon" …></span>
+         *       <span class="artwork-icon eaa-icon" title="This event has artwork …"></span>
          *     </a>
-         *
-         * The selector `a > span.caa-icon, a > span.eaa-icon, a > span.artwork-icon`
-         * covers every combination: a span is matched as long as it carries ANY of
-         * the three classes, regardless of whether the others are also present.
          *
          * The anchor is *moved* (not cloned) out of the source cell: the original
          * DOM node is removed from sourceCell and re-parented into tdCaa so that
@@ -1112,15 +1105,11 @@
             };
 
             if (sourceCell) {
-                // Match an anchor whose direct child span carries ANY of the three
-                // artwork icon classes: caa-icon (releases, release-groups),
-                // eaa-icon (events), or artwork-icon (compound class on some pages).
-                // Using a comma-separated selector means a span is matched as long
-                // as it has at least one of the classes — no AND logic required.
-                const iconSpan = sourceCell.querySelector(
-                    'a > span.caa-icon, a > span.eaa-icon, a > span.artwork-icon'
-                );
-                const artworkAnchor = iconSpan ? iconSpan.closest('a') : null;
+                // Select the first anchor whose direct child is an artwork-icon span
+                // (covers both caa-icon for releases and eaa-icon for events).
+                const artworkAnchor = sourceCell.querySelector('a > span.artwork-icon')
+                    ? sourceCell.querySelector('a > span.artwork-icon').closest('a')
+                    : null;
                 if (artworkAnchor) {
                     // Move the node: detach from source so the title cell is clean,
                     // then re-parent the original (not a clone) into the synthetic cell.
@@ -1373,7 +1362,7 @@
             buttons: [ { label: 'Show all Events for Area' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
                 ],
                 extractMainColumn: 'Event'
@@ -1498,7 +1487,7 @@
             buttons: [ { label: 'Show all Events for Place' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] }
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
                 extractMainColumn: 'Event'
             },
@@ -1698,7 +1687,7 @@
             ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                 ],
                 extractMainColumn: 'Release'
@@ -1745,7 +1734,7 @@
                     { sourceColumn: 'Release', erasers: ['▶'] }
                 ],
                 columnExtractors: [
-                    { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
                     {
                         sourceColumn:    'Tracks',
@@ -1816,7 +1805,7 @@
             buttons: [ { label: 'Show all Events for Artist' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
                 ],
                 extractMainColumn: 'Event'
