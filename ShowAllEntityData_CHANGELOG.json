@@ -1,5 +1,36 @@
 [
     {
+      "version": "9.99.57",
+      "date": "2026-03-07",
+      "sections": [
+        {
+          "label": "🐛 Bugfix",
+          "items": [
+            "collapsableColumns cell toggle: toggle span is now appended to the end of the first <li> element (inline, after the item text) instead of being appended to the <td> itself — previously it appeared on a new line below the entire <ul>",
+            "collapsableColumns column-header button: converted from one-directional 'expand-only' action to a true stateful toggle — ▶ (collapsed state) click drives ALL cell toggles in the column to ◀ (expanded); ◀ (expanded state) click drives ALL cell toggles back to ▶ (collapsed); header icon and aria-expanded update accordingly after each click",
+            "collapsableColumns global button: converted from one-directional 'expand-only' action to a true stateful toggle — ▶ Expand columns click drives all column-header buttons to expanded state (◀) and updates label to '◀ Collapse columns'; subsequent click drives all back to collapsed state (▶) and restores label '▶ Expand columns'; each column-header button is only clicked when it is not already in the target state, ensuring columns reach a uniform consistent state regardless of their individual prior states; global toggle state is reset to collapsed on every (re-)init"
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.56",
+      "date": "2026-03-07",
+      "sections": [
+        {
+          "label": "✨ Enhancements",
+          "items": [
+            "collapsableColumns: new feature — page definitions may now declare `features.collapsableColumns: [...]` to enable per-column collapsing of multi-row cells; `expandShowAllCells` is guaranteed to run before the collapse pass so all cell data is available",
+            "collapsableColumns cell toggle: body cells with ≥2 <li> items are initially collapsed (only first item shown) with a ▶ icon appended; clicking ▶ expands all items and changes icon to ◀; clicking ◀ re-collapses — fully toggleable at cell level",
+            "collapsableColumns column-header button: when at least one body cell in a collapsable column is multi-row, a ▶ span is inserted into .mb-col-hdr-flex immediately before the 📊 unique-values button (with margin-left:auto transferred so both remain right-aligned); clicking it emulates a click on every still-collapsed (▶) cell toggle in that column, expanding them all",
+            "collapsableColumns global button: a '▶ Collapse columns' button (id=mb-col-collapse-all-btn) is added to the filter bar before the 🎨 Toggle-highlighting button; clicking it emulates a click on every column-header ▶, which in turn expands all remaining collapsed cells in all collapsable columns; button is hidden when no collapsable columns are active",
+            "initCollapsableColumns(): new function — idempotent (safe for disk-load re-runs), removes previously attached toggles and resets <li> visibility before re-applying; called after makeTableSortableUnified in both the main fetch path and the disk-load path",
+            "headerText strip patterns updated: ▶ and ◀ are now stripped from header textContent in all replace(/[⇅▲▼📊]/g) patterns throughout the codebase (CSV/JSON/Org-mode export, column-visibility toggle, column-filter label, cleanupHeaders synthetic-column detection, makeTableSortableUnified colName + getCleanColName helper)"
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.55",
       "date": "2026-03-07",
       "sections": [

@@ -45741,7 +45741,7 @@ and only the "Primary alias:" stuff should be relocated as before
 ** From the Studio to the Stage: New York (2024-10-04) (2024-10-04: Madison Square Garden, New York City, NY, USA, Bleachers) - https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
 
 
-* TODO extract the "video" icon from recordings - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+* DONE extract the "video" icon from recordings - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
 
 
 * TODO posting to MusicBrainz forum
@@ -46208,12 +46208,10 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 * TODO extract the VZ event disambiguation configurable in its constituents
 
 
-* TODO Add guard if some action would leave the final rendered page and warn the user with an alert dialog
+* DONE Add guard if some action would leave the final rendered page and warn the user with an alert dialog
 
-
-* TODO synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header to distinguish them from standard columns
-
-* TODO filename fix: 
+* DONE synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header to distinguish them from standard columns
+* DONE filename fix: 
 ** initial
 
 A couple of more fixes:
@@ -46255,7 +46253,8 @@ actually be ONLY the one with the btton text "Official RGs"
 
 Still not, the button text is actually an icon, then a superscript and then the text
 
-* make the initial collapsing of the sidebar configurable, by default false
+
+* TODO make the initial collapsing of the sidebar configurable, by default false
 
 
 
@@ -46266,6 +46265,7 @@ Still not, the button text is actually an icon, then a superscript and then the 
 
 
 * TODO collpase multiline column cells and display a shorted version together wuth a popup which has the complete unalterd multi-row cell content
+** initial
 
 In the uploaded userscript,
 
@@ -46330,5 +46330,10 @@ should always run prior to the new functionality, to make sure that all column v
 
 throughtout the code where necessary
 
-  
-  
+** real toggle
+
+Actually the global and per column header collapse icon "▶" should act as a toggle and repeated clicks should
+collapse/uncollapse all in the whole table (global) and all inside a column (per colum header ). Also the icon should
+change it's direction depending on the current toggle state. The text in the global button also accordingly.
+
+A last glich, the toggle icon per multi-row cell should be located at the very end of the first column in a mult-row cell and NOT on a new row below
