@@ -44884,7 +44884,7 @@ and the text "audio" otherwise (also not rendered). But BOTH values should be ta
 ascending/descending and also should be renderded inside the unique column value drop-down for selection purposes (clicking on "video" should filter on cells with the '<span class="video"' and clicking on "audio" all except the '<span class="video"'
 
 * remove "artwork icon/picture" and render the artwork icon in a separate column
-** initial
+** DONE initial
 
 In the uploaded userscript,
 
@@ -44958,7 +44958,7 @@ or remove the whole 'a href' anchor with the included '<span class="artwork-icon
     </span>
   </a>
 #+end_example
-** doens't work for
+** DONE doesn't work for
 
 It somehow doesn't work for the following pageTypes
 
@@ -44967,17 +44967,7 @@ type: 'artist-releases'
 type: 'releasegroup-releases'
 #+end_example
 
-** still
-
-It still doesn't work for the following pageType
-
-#+begin_example
-type: 'artist-releasegroups'
-#+end_example
-
-the other ones were fixed
-
-** <span class="blank-icon">
+** DONE <span class="blank-icon">
 
 In the uploaded userscript,
 
@@ -44995,6 +44985,16 @@ add the functionality to ALWAYS remove the following span (if present)
 #+end_example
 
 otherwise there is an artificially render whitespace visisble in the resulting tables
+
+** still type: 'artist-releasegroups'
+
+It still doesn't work for the following pageType
+
+#+begin_example
+type: 'artist-releasegroups'
+#+end_example
+
+the other ones were fixed
 
 
 * remove "artwork icon/picture" and render the artwork icon in a separate column
@@ -45066,6 +45066,8 @@ Still breaks when auto-resizing
 For example for the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
 
 when auto-resizing the table with the "↔️ Resize" button, the following data cell in the "Event" column" ist still not properly autoresized
+
+Filter for "academy"
 
 #+begin_example
 <td>
@@ -46137,4 +46139,8 @@ Still not, the button text is actually an icon, then a superscript and then the 
 
 * collpase multiline column cells and display a shorted version together wuth a popup which has the complete unalterd multi-row cell content
 
-Add a collpase icon "▶" in the column header for the functionality of including all cell data or shortening to a single rowcount
+- Add a global collpase icon "▶" in the column header for the functionality of including all cell data or shortening to a single rowcount
+
+- add a column cell specific collpase icon "▶"
+
+  
