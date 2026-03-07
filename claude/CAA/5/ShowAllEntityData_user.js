@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.54+2026-03-07
+// @version      9.99.55+2026-03-07
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1138,6 +1138,30 @@
                 } else {
                     appendSortKey('no');
                 }
+
+                // Strip any orphaned artwork-icon spans remaining in sourceCell.
+                //
+                // On artist-releasegroups pages, when the jesus2099 "mb. SUPER MIND
+                // CONTROL" userscript is active, the cell contains two distinct nodes:
+                //   (1) <a href=".../cover-art">
+                //         <span class="caa-icon jesus2099userjs154481"> ← matched above
+                //       </a>
+                //   (2) <span class="artwork-icon caa-icon">              ← bare, no <a>
+                //
+                // The selector `a > span.caa-icon` only matches (1); the anchor and its
+                // inner span are moved to tdCaa.  Node (2) is never wrapped in an <a>,
+                // so the querySelector above cannot reach it, and it stays behind in
+                // sourceCell — producing the visible stray icon in the Title column.
+                //
+                // After the anchor move (or when no anchor was present), any span still
+                // carrying an artwork class in sourceCell must be an orphaned placeholder;
+                // removing them keeps the Title column clean in all scenarios.
+                sourceCell.querySelectorAll(
+                    'span.caa-icon, span.eaa-icon, span.artwork-icon'
+                ).forEach(orphan => {
+                    Lib.debug('extract', 'caa extractor: removed orphaned artwork-icon span from source cell');
+                    orphan.remove();
+                });
             } else {
                 appendSortKey('no');
             }

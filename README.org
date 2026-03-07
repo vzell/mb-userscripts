@@ -44988,13 +44988,67 @@ otherwise there is an artificially render whitespace visisble in the resulting t
 
 ** still type: 'artist-releasegroups'
 
-It still doesn't work for the following pageType
+In the uploaded userscript,
+
+The removal of '<span class="artwork-icon caa-icon"' still doesn't work for the pageType "type: 'artist-releasegroups'"
+
+Here is the original cell structure before render the final page
 
 #+begin_example
-type: 'artist-releasegroups'
+<td>
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <a href="https://musicbrainz.org/release/70d6b303-307e-492a-b1d1-0b96219082d1/cover-art" ref="/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c" title="6 images found in this release">
+    <span class="caa-icon jesus2099userjs154481" style="background-size: contain; background-image: url(&quot;//coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250&quot;);">
+    </span>
+  </a>
+  <span class="artwork-icon caa-icon" title="This release group has artwork in the Cover Art Archive">
+  </span>
+  <a class="wrap-anywhere" href="/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c" style="">
+    <bdi>Greetings From Asbury Park, N.J.
+    </bdi>
+  </a>
+</td>
 #+end_example
 
-the other ones were fixed
+and this is the structure after all the cleanup defined in 
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+cleanedup structure:
+
+#+begin_example
+<td>
+  <span class="artwork-icon caa-icon" title="This release group has artwork in the Cover Art Archive">
+  </span>
+  <a class="wrap-anywhere" href="/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c">
+    <bdi>Greetings From Asbury Park, N.J.
+    </bdi>
+  </a>
+</td>
+#+end_example
 
 
 * remove "artwork icon/picture" and render the artwork icon in a separate column
