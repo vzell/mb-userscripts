@@ -44681,7 +44681,7 @@ or
                 ],
 #+end_example
 
-So the parameter erasers: "['▶', '➕']" is a comma separated list which spancs should be removed in which "sourceColumn"
+So the parameter erasers: "['▶', '➕']" is a comma separated list which spanss should be removed in which "sourceColumn"
 
 '▶' should remove the span
 
@@ -44794,6 +44794,95 @@ The following new additions have been added to the pageType definitions
 ** add debug statements to the column erasing functionality
 
 add debug statements to the column erasing functionality
+
+** jesus2099
+
+In the uploaded userscript,
+
+remove the following spans (if present) from the column cells before rendering them on the final tables
+
+#+begin_example
+  <a href="/release/5bcaf3c0-c40e-3283-a449-4002633b9add/cover-art">
+    <span class="caa-icon jesus2099userjs154481" style="background-size: contain; background-image: url(&quot;//coverartarchive.org/release/5bcaf3c0-c40e-3283-a449-4002633b9add/front-250&quot;);">
+    </span>
+  </a>
+#+end_example
+
+or
+
+#+begin_example
+  <a href="/release/5b457e4a-1d78-435f-8a51-75ae206024ca/cover-art">
+    <span class="caa-icon jesus2099userjs154481">
+    </span>
+  </a>
+#+end_example
+
+so basically the whole "caa-icon" anchor with the including span
+
+The definition on which pageType and on which column is configured inside in the variable "const pageDefinitions"
+as the feature
+
+#+begin_example
+                columnErasers: [
+                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] }
+                ],
+#+end_example
+
+or
+
+#+begin_example
+                columnErasers: [
+                    { sourceColumn: 'Release title', erasers: ['jesus2099'] }
+                ],
+#+end_example
+
+The following new additions have been added to the pageType definitions
+
+#+begin_example
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'recording-releases',
+            match: (path) => path.includes('/recording'),
+            buttons: [ { label: 'Show all Releases for Recording' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release title', erasers: ['jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                ],
+                extractMainColumn: 'Release title'
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+#+end_example
+
+The whole implementation should be aligned with what we alreday have for the current erasers
+
+#+begin_example
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+                ],
+#+end_example
+
 
 
 * align button texts and make everything configurable (size, font, height, character to underline)
@@ -45933,5 +46022,3 @@ Still breaks when auto-resizing
 * optionally hide "recording of <work>" in Artist-Recordings" pages
 
 * The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
-
-
