@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.55+2026-03-07
+// @version      9.99.56+2026-03-07
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2420,9 +2420,9 @@
                 const valA = getCleanVisibleText(a.cells[idx]).trim().toLowerCase() || '';
                 const valB = getCleanVisibleText(b.cells[idx]).trim().toLowerCase() || '';
 
-                // Derive column name for numeric detection (strip sort icons and superscripts)
+                // Derive column name for numeric detection (strip sort/collapse icons and superscripts)
                 const hdrName = headers[idx]
-                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊]/g, '').trim()
+                    ? headers[idx].textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀]/g, '').trim()
                     : '';
                 const isNumeric = hdrName.includes('Year') || hdrName.includes('Releases') ||
                                   hdrName.includes('Track') || hdrName.includes('Length') ||
@@ -2959,7 +2959,7 @@
 
         // Create checkbox for each column
         headers.forEach((th, index) => {
-            const colName = th.textContent.replace(/[⇅▲▼📊]/g, '').trim();
+            const colName = th.textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim();
             if (!colName) return; // Skip empty headers
 
             const wrapper = document.createElement('div');
@@ -3344,9 +3344,7 @@
                 if (cell.style.display === 'none') return;
 
                 // Clean header text (remove sort icons)
-                let headerText = cell.textContent.replace(/[⇅▲▼📊]/g, '').trim();
-                // Remove extra whitespace
-                headerText = headerText.replace(/\s+/g, ' ');
+                let headerText = cell.textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim();
                 headers.push(headerText);
             });
             rows.push(headers);
@@ -3452,7 +3450,7 @@
         if (headerRow) {
             Array.from(headerRow.cells).forEach(cell => {
                 if (cell.style.display === 'none') return;
-                let headerText = cell.textContent.replace(/[⇅▲▼📊]/g, '').trim().replace(/\s+/g, ' ');
+                let headerText = cell.textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim().replace(/\s+/g, ' ');
                 data.headers.push(headerText);
             });
         }
@@ -3522,7 +3520,7 @@
             const headers = [];
             Array.from(headerRow.cells).forEach(cell => {
                 if (cell.style.display === 'none') return;
-                let headerText = cell.textContent.replace(/[⇅▲▼📊]/g, '').trim().replace(/\s+/g, ' ');
+                let headerText = cell.textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim().replace(/\s+/g, ' ');
                 headers.push(headerText);
             });
             rows.push('| ' + headers.join(' | ') + ' |');
@@ -6983,6 +6981,19 @@
     };
     filterContainer.appendChild(unhighlightAllBtn);
 
+    // Global ▶ collapse button — collapses all collapsable columns at once.
+    // Inserted BEFORE the '🎨 Toggle highlighting' button so it is easy to find.
+    // Visibility is managed by initCollapsableColumns(): shown only when the
+    // active page definition declares collapsableColumns with multi-row data.
+    const globalCollapseBtn = document.createElement('button');
+    globalCollapseBtn.id = 'mb-col-collapse-all-btn';
+    globalCollapseBtn.textContent = '▶ Collapse columns';
+    globalCollapseBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
+    globalCollapseBtn.title =
+        'Collapse all expanded multi-row cells back to ▶ state in every ' +
+        'collapsable column (emulates clicking the ▶ header button in each column)';
+    filterContainer.insertBefore(globalCollapseBtn, unhighlightAllBtn);
+
     const xSymbol = document.createElement('span');
     xSymbol.textContent = '✗ ';
     xSymbol.style.color = 'red';
@@ -7409,6 +7420,50 @@
             opacity: 1;
             background: rgba(0,100,255,0.13);
         }
+
+        /* ============================================================
+           Collapsable multi-row cell and column-header controls (▶/◀)
+           ============================================================ */
+
+        /* Per-cell ▶/◀ toggle appended after the first <li> item */
+        .mb-cell-collapse-toggle {
+            cursor: pointer;
+            font-size: 0.72em;
+            line-height: 1;
+            opacity: 0.55;
+            user-select: none;
+            padding: 1px 3px;
+            border-radius: 3px;
+            transition: opacity 0.15s, background 0.15s;
+            vertical-align: middle;
+            margin-left: 5px;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .mb-cell-collapse-toggle:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.09);
+        }
+
+        /* Per-column ▶ button inserted into the .mb-col-hdr-flex row,
+           immediately before the 📊 unique-values button */
+        .mb-col-collapse-hdr-btn {
+            cursor: pointer;
+            font-size: 0.80em;
+            line-height: 1;
+            opacity: 0.55;
+            user-select: none;
+            padding: 0 2px;
+            border-radius: 3px;
+            transition: opacity 0.15s, background 0.15s;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+        .mb-col-collapse-hdr-btn:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.09);
+        }
+
         #mb-col-uniq-dropdown {
             position: fixed;
             z-index: 999999;
@@ -9502,7 +9557,7 @@
             const colIdx  = parseInt(inp.dataset.colIdx, 10);
             const headers = table.querySelectorAll('thead tr:first-child th');
             const colName = headers[colIdx]
-                ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹📊]/g, '').trim()
+                ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹📊▶◀]/g, '').trim()
                 : `Col ${colIdx}`;
 
             if (isRegExp) {
@@ -9828,7 +9883,7 @@
                                 const colFilterInfo = tableColFilters.map(inp => {
                                     const colIdx = parseInt(inp.dataset.colIdx, 10);
                                     const headers = table.querySelectorAll('thead tr:first-child th');
-                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊]/g, '').trim() : `Col ${colIdx}`;
+                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim() : `Col ${colIdx}`;
                                     return `${colName}:"${stripColFilterPrefix(inp.value)}"`;
                                 }).join(', ');
                                 subFilterStatus.textContent = `✓ Filtered ${rowsInTable} ${rowsInTable === 1 ? 'row' : 'rows'} [${colFilterInfo}]`;
@@ -9983,7 +10038,7 @@
         // Each extractor may declare one or more synthetic columns; we only add a
         // header when it is not already present (idempotent across re-renders).
         activeColumnExtractors.forEach(entry => {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊]/g, '').trim());
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim());
             entry.syntheticColumns.forEach(colName => {
                 if (!headersText.includes(colName)) {
                     const th = document.createElement('th');
@@ -10001,7 +10056,7 @@
 
         // On pages where the configuration is enabled, create the "MB-Name" and "Comment" columns
         if (isMainColEnabled) {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊]/g, '').trim());
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim());
             if (!headersText.includes('MB-Name')) {
                 const thN = document.createElement('th');
                 thN.textContent = 'MB-Name';
@@ -11003,6 +11058,11 @@
                 if (mainTable) addColumnFilterRow(mainTable);
 
                 if (mainTable) makeTableSortableUnified(mainTable, 'main_table');
+
+                // Initialise collapsable multi-row columns (runs after expand + sort setup).
+                // expandShowAllCells already ran during the fetch phase, so all cell data
+                // is fully available before we collapse the initial view here.
+                if (mainTable) initCollapsableColumns(mainTable);
 
                 // Series page: disable sorting UI for the "#" (number) column - (DOM-only cleanup; no logic changes)
                 if (location.pathname.startsWith('/series/')) {
@@ -12825,6 +12885,215 @@
 
     // =========================================================================
 
+    /**
+     * Initialises collapsable multi-row column cells for page types that declare
+     * `features.collapsableColumns` in their page definition.
+     *
+     * IMPORTANT: This function must be called AFTER `expandShowAllCells` has run
+     * (which is guaranteed — expand runs per-page during the fetch phase, before
+     * any rows reach the DOM) and AFTER `makeTableSortableUnified` has constructed
+     * the `.mb-col-hdr-flex` layout inside each header cell.
+     *
+     * Behaviour per declared column:
+     *   - Body cells with ≥2 `<li>` items are initially collapsed: only the first
+     *     item remains visible; a ▶ toggle icon is appended to the cell.
+     *   - Clicking a cell ▶ expands all items (icon becomes ◀; clicking ◀
+     *     collapses them again and restores ▶).
+     *   - When at least one body cell is multi-row, a ▶ button is inserted into
+     *     the column's `.mb-col-hdr-flex` row immediately before the 📊 button.
+     *     Clicking it emulates a click on every still-collapsed (▶) cell toggle
+     *     in that column, expanding all of them at once.
+     *   - A single global ▶ button (`id="mb-col-collapse-all-btn"`) is made
+     *     visible and wired to emulate a click on every column-header ▶ button.
+     *
+     * The function is idempotent: it removes any previously attached toggles
+     * and resets collapsed state before re-applying, making it safe to call
+     * after a disk-load re-render.
+     *
+     * @param {HTMLTableElement} table - The fully rendered `<table>` element.
+     */
+    function initCollapsableColumns(table) {
+        if (!activeDefinition || !activeDefinition.features) return;
+        const collapsableColumns = activeDefinition.features.collapsableColumns;
+        if (!Array.isArray(collapsableColumns) || collapsableColumns.length === 0) {
+            const globalBtn = document.getElementById('mb-col-collapse-all-btn');
+            if (globalBtn) globalBtn.style.display = 'none';
+            return;
+        }
+
+        Lib.debug('collapse', `initCollapsableColumns: processing columns: [${collapsableColumns.join(', ')}]`);
+
+        // ── Idempotent cleanup: remove previously attached toggles ────────────
+        // Restore margin-left:auto on any 📊 button whose sibling collapse button
+        // had borrowed it, then remove all previously added elements.
+        table.querySelectorAll('.mb-col-collapse-hdr-btn').forEach(btn => {
+            const hdrFlex = btn.closest('.mb-col-hdr-flex');
+            if (hdrFlex) {
+                const uniqBtn = hdrFlex.querySelector('.mb-col-uniq-btn');
+                if (uniqBtn) uniqBtn.style.marginLeft = '';
+            }
+            btn.remove();
+        });
+        table.querySelectorAll('.mb-cell-collapse-toggle').forEach(el => el.remove());
+        // Reset all previously hidden <li> items in body cells
+        table.querySelectorAll('tbody td ul > li').forEach(li => {
+            li.style.display = '';
+        });
+
+        const headers = Array.from(table.querySelectorAll('thead tr:first-child th'));
+        let anyColumnHasMultiRow = false;
+        // Collect header-level collapse buttons for global-button wiring
+        const collapseHdrBtns = [];
+
+        collapsableColumns.forEach(colName => {
+            // ── Locate column index by matching clean header text ─────────────
+            const colIndex = headers.findIndex(th => {
+                const clean = th.textContent
+                    .replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀]/g, '')
+                    .trim()
+                    .replace(/\s+/g, ' ');
+                return clean === colName;
+            });
+
+            if (colIndex < 0) {
+                Lib.debug('collapse', `initCollapsableColumns: column "${colName}" not found in headers — skipping.`);
+                return;
+            }
+
+            const th = headers[colIndex];
+            const bodyRows = Array.from(table.querySelectorAll('tbody tr'));
+
+            // ── Gather body cells that actually contain multiple <li> items ───
+            const multiRowCells = [];
+            bodyRows.forEach(tr => {
+                const td = tr.cells[colIndex];
+                if (!td) return;
+                const lis = Array.from(td.querySelectorAll('ul > li'));
+                if (lis.length >= 2) multiRowCells.push({ td, lis });
+            });
+
+            if (multiRowCells.length === 0) {
+                Lib.debug(
+                    'collapse',
+                    `initCollapsableColumns: column "${colName}" (index ${colIndex}) — ` +
+                    `no multi-row cells found, skipping header button.`
+                );
+                return;
+            }
+
+            anyColumnHasMultiRow = true;
+            Lib.debug(
+                'collapse',
+                `initCollapsableColumns: column "${colName}" (index ${colIndex}) — ` +
+                `${multiRowCells.length} multi-row cell(s).`
+            );
+
+            // ── Wire up each multi-row body cell ──────────────────────────────
+            multiRowCells.forEach(({ td, lis }) => {
+                // Initially collapse: hide all <li> items beyond the first.
+                lis.slice(1).forEach(li => { li.style.display = 'none'; });
+
+                const cellToggle = document.createElement('span');
+                cellToggle.className = 'mb-cell-collapse-toggle';
+                cellToggle.textContent = '▶';
+                cellToggle.title = `Show all ${lis.length} items (click to expand)`;
+                cellToggle.setAttribute('role', 'button');
+                cellToggle.setAttribute('aria-expanded', 'false');
+                cellToggle.setAttribute('aria-label', `Expand: ${lis.length} items are collapsed`);
+
+                cellToggle.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const nowExpanding = cellToggle.textContent === '▶';
+                    lis.slice(1).forEach(li => {
+                        li.style.display = nowExpanding ? '' : 'none';
+                    });
+                    cellToggle.textContent = nowExpanding ? '◀' : '▶';
+                    cellToggle.title = nowExpanding
+                        ? `Collapse back to first item`
+                        : `Show all ${lis.length} items (click to expand)`;
+                    cellToggle.setAttribute('aria-expanded', nowExpanding ? 'true' : 'false');
+                    cellToggle.setAttribute(
+                        'aria-label',
+                        nowExpanding
+                            ? `Collapse: showing all ${lis.length} items`
+                            : `Expand: ${lis.length} items are collapsed`
+                    );
+                });
+
+                td.appendChild(cellToggle);
+            });
+
+            // ── Add ▶ button to column header ─────────────────────────────────
+            const hdrFlex = th.querySelector('.mb-col-hdr-flex');
+            const collapseHdrBtn = document.createElement('span');
+            collapseHdrBtn.className = 'mb-col-collapse-hdr-btn';
+            collapseHdrBtn.dataset.colIndex = String(colIndex);
+            collapseHdrBtn.textContent = '▶';
+            collapseHdrBtn.title =
+                `Expand all still-collapsed cells in "${colName}" ` +
+                `(emulates clicking every cell ▶ in this column)`;
+            collapseHdrBtn.setAttribute('role', 'button');
+            collapseHdrBtn.setAttribute('aria-label', `Expand all collapsed cells in column: ${colName}`);
+
+            collapseHdrBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                // Emulate a click on every cell toggle currently showing ▶
+                // (i.e. still in the collapsed state) in this column.
+                Array.from(table.querySelectorAll('tbody tr')).forEach(tr => {
+                    const td = tr.cells[colIndex];
+                    if (!td) return;
+                    const toggle = td.querySelector('.mb-cell-collapse-toggle');
+                    if (toggle && toggle.textContent === '▶') {
+                        toggle.click();
+                    }
+                });
+            });
+
+            if (hdrFlex) {
+                const uniqBtn = hdrFlex.querySelector('.mb-col-uniq-btn');
+                if (uniqBtn) {
+                    // Transfer the margin-left:auto from the 📊 button to the
+                    // collapse button so both are visually pushed to the right
+                    // edge of the flex container, with ▶ immediately before 📊.
+                    uniqBtn.style.marginLeft = '';
+                    collapseHdrBtn.style.marginLeft = 'auto';
+                    hdrFlex.insertBefore(collapseHdrBtn, uniqBtn);
+                } else {
+                    hdrFlex.appendChild(collapseHdrBtn);
+                }
+            } else {
+                // Fallback for headers that lack a flex wrapper
+                th.appendChild(collapseHdrBtn);
+            }
+
+            collapseHdrBtns.push(collapseHdrBtn);
+        });
+
+        // ── Wire global ▶ button ──────────────────────────────────────────────
+        const globalBtn = document.getElementById('mb-col-collapse-all-btn');
+        if (globalBtn) {
+            if (anyColumnHasMultiRow) {
+                globalBtn.style.display = '';
+                // Re-wire onclick each call (safe for disk-load re-runs).
+                // Emulates a click on every column-header ▶ button, which in
+                // turn emulates a click on every still-collapsed cell ▶ in that
+                // column — expanding all remaining collapsed multi-row cells.
+                globalBtn.onclick = () => {
+                    collapseHdrBtns.forEach(btn => btn.click());
+                };
+            } else {
+                globalBtn.style.display = 'none';
+            }
+        }
+
+        Lib.debug(
+            'collapse',
+            `initCollapsableColumns: complete — ` +
+            `${collapsableColumns.length} column(s) declared, ` +
+            `${collapseHdrBtns.length} with multi-row cells wired.`
+        );
+    }
+
     function makeTableSortableUnified(table, sortKey) {
         // Determine mode based on active definition
         const isMultiTable = activeDefinition && activeDefinition.tableMode === 'multi';
@@ -12950,7 +13219,7 @@
 
         // --- Helper: derive clean column name from a th element ---------------
         const getCleanColName = (th) =>
-            th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊]/g, '').trim() : '';
+            th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀]/g, '').trim() : '';
 
         // --- Helper: is a column name numeric? ---------------------------------
         const isNumericCol = (name) =>
@@ -12962,7 +13231,7 @@
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'default';
 
-            const colName = th.textContent.replace(/[⇅▲▼📊]/g, '').trim();
+            const colName = th.textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim();
             th.innerHTML = ''; // clear for new icon layout
 
             const createIcon = (char, targetState) => {
@@ -14290,6 +14559,10 @@
                     if (mainTable) {
                         addColumnFilterRow(mainTable);
                         makeTableSortableUnified(mainTable, 'main_table');
+                        // Re-initialise collapsable columns after disk-load re-render.
+                        // Headers were rebuilt by cleanupHeaders + makeTableSortableUnified,
+                        // so toggles must be re-attached to the freshly rendered rows.
+                        initCollapsableColumns(mainTable);
                     }
                 }
 

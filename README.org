@@ -46265,24 +46265,70 @@ Still not, the button text is actually an icon, then a superscript and then the 
 * The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
 
 
-* collpase multiline column cells and display a shorted version together wuth a popup which has the complete unalterd multi-row cell content
+* TODO collpase multiline column cells and display a shorted version together wuth a popup which has the complete unalterd multi-row cell content
 
+In the uploaded userscript,
 
-the variable "const pageDefinitions" has been enhanced with a new "columnExtractors" feature for specific pageTypes.
+the variable "const pageDefinitions" has been enhanced with a new "collapsableColumns" paraneter for specific pageTypes, e.g.
 
 #+begin_example
-           features: {
-               columnExtractors: [
-                   { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] }
-               ],
+        {
+            type: 'place-events',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] }
+                ],
+                collapsableColumns: [ 'Artists' ],
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        },
 #+end_example
 
-please implement the new extractor function "extractor: 'caa'" in the following way:
+#+begin_example
+        {
+            type: 'artist-works',
+            match: (path) => path.includes('/works'),
+            buttons: [ { label: 'Show all Works for Artist' } ],
+            features: {
+                collapsableColumns: [ 'Authors', 'Recording artists', 'ISWC', 'Attributes' ],
+                extractMainColumn: 'Work'
+            },
+            tableMode: 'single'
+        },
+#+end_example
 
-- add a global collpase icon "▶" for the whole table
+Please enhance the user script with the following functionality:
+
+- Make sure the function
+
+#+begin_example
+function expandShowAllCells(doc, pageNum) {
+#+end_example
+
+should always run prior to the new functionality, to make sure that all column values are actually available.
+
+- in each column which belongs to "collapsableColumns", initially collapse all the multi-row cell values in each column
+  cell and render just the first row in each cell + a collapse icon "▶" at the very end of the column. When clicking the
+  icon "▶", all the rows in such a multi-row cell should again be displayed
+
+- when at least one data cell in a column is a multi-row cell, add a column specific collapse icon "▶" in the column
+  header right before the "Show unique column values"-dropdown icon. When clicking that column header icon, emulate a
+  click on every cell specific collapse icon "▶" in that column
+
+- add a global collpase icon "▶" for the whole table in front of the '<button
+  id="mb-toggle-filter-highlight-btn"'-button and when clicking iterate over all the columns which could potentially
+  have multi-row cells and emulate a click on each collapse icon "▶" in each header
+
+- also take into account the new header specific collpase icon "▶" in references like
+
+#+begin_example
+                let headerText = cell.textContent.replace(/[⇅▲▼📊]/g, '').trim();
+#+end_example
+
+throughtout the code where necessary
+
   
-- Add a column specific collpase icon "▶" in the column header for the functionality of including all cell data or shortening to a single rowcount
-
-- add a column cell specific collpase icon "▶"
-
   
