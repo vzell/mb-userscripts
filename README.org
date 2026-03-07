@@ -44979,12 +44979,22 @@ the other ones were fixed
 
 ** <span class="blank-icon">
 
-please always remove the following span
+In the uploaded userscript,
+
+in the following function
+
+#+begin_example
+        caa(sourceCell) {
+#+end_example
+
+add the functionality to ALWAYS remove the following span (if present)
 
 #+begin_example
   <span class="blank-icon">
   </span>
 #+end_example
+
+otherwise there is an artificially render whitespace visisble in the resulting tables
 
 
 * remove "artwork icon/picture" and render the artwork icon in a separate column
