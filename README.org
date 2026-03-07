@@ -45050,6 +45050,80 @@ cleanedup structure:
 </td>
 #+end_example
 
+** Still not right.
+
+Still not right, the "columnErasers" from the "features" structure should always run before the "columnExtractors"
+
+#+begin_example
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                extractMainColumn: 'Title'
+            },
+#+end_example
+
+So for the example cell
+
+#+begin_example
+<td>
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <a href="https://musicbrainz.org/release/70d6b303-307e-492a-b1d1-0b96219082d1/cover-art" ref="/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c" title="6 images found in this release">
+    <span class="caa-icon jesus2099userjs154481" style="background-size: contain; background-image: url(&quot;//coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250&quot;);">
+    </span>
+  </a>
+  <span class="artwork-icon caa-icon" title="This release group has artwork in the Cover Art Archive">
+  </span>
+  <a class="wrap-anywhere" href="/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c" style="">
+    <bdi>Greetings From Asbury Park, N.J.
+    </bdi>
+  </a>
+</td>
+#+end_example
+
+the two containers
+
+#+begin_example
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+#+end_example
+
+and
+
+#+begin_example
+  <a href="https://musicbrainz.org/release/70d6b303-307e-492a-b1d1-0b96219082d1/cover-art" ref="/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c" title="6 images found in this release">
+    <span class="caa-icon jesus2099userjs154481" style="background-size: contain; background-image: url(&quot;//coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250&quot;);">
+    </span>
+  </a>
+#+end_example
+
+should always be removed first, so leaving
+
+#+begin_example
+<td>
+  <span class="artwork-icon caa-icon" title="This release group has artwork in the Cover Art Archive">
+  </span>
+  <a class="wrap-anywhere" href="/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c" style="">
+    <bdi>Greetings From Asbury Park, N.J.
+    </bdi>
+  </a>
+</td>
+#+end_example
+
+Then the "caa" columnExtractor
+
+#+begin_example
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+#+end_example
+
+could finally add the synthetic column "CAA" and remove the span '<span class="artwork-icon caa-icon"'
+
 
 * remove "artwork icon/picture" and render the artwork icon in a separate column
 
@@ -46193,7 +46267,21 @@ Still not, the button text is actually an icon, then a superscript and then the 
 
 * collpase multiline column cells and display a shorted version together wuth a popup which has the complete unalterd multi-row cell content
 
-- Add a global collpase icon "▶" in the column header for the functionality of including all cell data or shortening to a single rowcount
+
+the variable "const pageDefinitions" has been enhanced with a new "columnExtractors" feature for specific pageTypes.
+
+#+begin_example
+           features: {
+               columnExtractors: [
+                   { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['CAA'] }
+               ],
+#+end_example
+
+please implement the new extractor function "extractor: 'caa'" in the following way:
+
+- add a global collpase icon "▶" for the whole table
+  
+- Add a column specific collpase icon "▶" in the column header for the functionality of including all cell data or shortening to a single rowcount
 
 - add a column cell specific collpase icon "▶"
 
