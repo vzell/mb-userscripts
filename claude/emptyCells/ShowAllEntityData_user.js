@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.76+2026-03-08
+// @version      9.99.74+2026-03-08
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1274,91 +1274,6 @@
             }
 
             return [tdCancelled];
-        },
-
-        /**
-         * primaryAlias — extracts the MusicBrainz "Primary alias" indicator from a
-         * title/event cell into a dedicated synthetic "Primary Alias" column, and
-         * removes it from the source cell.
-         *
-         * Source structure (optional — only present when a primary alias is set):
-         *
-         *   <span class="comment">(
-         *     <bdi>
-         *       <i title="Primary alias">Some Primary Alias Text
-         *       </i>[, Optional disambiguation text]
-         *     </bdi>)
-         *   </span>
-         *
-         * The extractor performs the following steps:
-         *   1. Finds the <i title="Primary alias"> element inside the source cell.
-         *      Returns an empty synthetic cell immediately when none is found.
-         *   2. Copies its trimmed text content into the synthetic "Primary Alias" cell.
-         *   3. Removes the <i> element from the source cell DOM.
-         *   4. Walks the text nodes remaining in the parent <bdi> and strips any
-         *      leading ", " prefix from the first non-empty text node encountered.
-         *      This comma-space is produced by MusicBrainz only when BOTH a primary
-         *      alias AND a disambiguation comment are present; once the <i> is gone the
-         *      leading separator becomes orphaned and must be removed so the residual
-         *      disambiguation text stands alone.
-         *   5. If the containing <span class="comment"> is left with no meaningful
-         *      visible text (i.e. only the outer parentheses remain), the entire
-         *      comment span is also removed from the source cell to keep it clean.
-         *
-         * Synthetic columns: ['Primary Alias']
-         *
-         * @param   {HTMLTableCellElement} sourceCell  The source <td> element.
-         * @returns {HTMLTableCellElement[]}            Array of one synthetic <td>.
-         */
-        primaryAlias(sourceCell) {
-            const tdAlias = document.createElement('td');
-
-            if (!sourceCell) return [tdAlias];
-
-            const iTag = sourceCell.querySelector('i[title="Primary alias"]');
-            if (!iTag) return [tdAlias];
-
-            // Step 1: capture the alias text before mutating the DOM.
-            tdAlias.textContent = iTag.textContent.trim();
-
-            // Step 2: find the containing <bdi> before removing the <i> so we can
-            // still walk its remaining child nodes afterward.
-            const parentBdi = iTag.closest('bdi');
-
-            // Step 3: remove the <i> from the source cell.
-            iTag.remove();
-
-            if (parentBdi) {
-                // Step 4: strip the orphaned leading ", " from the first non-whitespace
-                // text node that follows where the <i> used to be.
-                // MusicBrainz renders the comment bdi as:
-                //   <i title="Primary alias">…</i>, disambiguation text
-                // so after <i> removal the first substantive text node starts with ", ".
-                for (const node of parentBdi.childNodes) {
-                    if (node.nodeType !== Node.TEXT_NODE) continue;
-                    const raw = node.textContent;
-                    const trimmed = raw.trimStart();
-                    if (trimmed === '') continue;          // pure-whitespace node — skip
-                    if (trimmed.startsWith(', ')) {
-                        // Replace only the leading ", "; preserve any surrounding
-                        // indentation/newline whitespace so rendered spacing is intact.
-                        node.textContent = raw.replace(/, /, '');
-                    }
-                    break;                                 // first non-empty node handled
-                }
-
-                // Step 5: if the comment span now contains nothing beyond the literal
-                // parentheses wrapper, remove it entirely from the source cell.
-                const commentSpan = parentBdi.closest('span.comment');
-                if (commentSpan) {
-                    const remaining = commentSpan.textContent.replace(/[()]/g, '').trim();
-                    if (remaining === '') {
-                        commentSpan.remove();
-                    }
-                }
-            }
-
-            return [tdAlias];
         }
     };
 
@@ -11394,39 +11309,10 @@
                                 // the generic else-branch below, so that features added to this
                                 // page type via `features.extractMainColumn` or `columnExtractors`
                                 // work correctly here too.
-                                //
-                                // ORDERING: column extractors run FIRST so that any mutating
-                                // extractor (e.g. primaryAlias, which removes <i title="Primary alias">
-                                // from the source cell) cleans the DOM before MB-Name / Comment
-                                // reads it.  Without this order, Comment would capture both the
-                                // primary alias text and the disambiguation comment together.
 
-                                // 1. Active column extractors (e.g. splitCountryDate, primaryAlias)
-                                // Capture synthetic cells BEFORE column deletion so colIdx stays valid.
+                                // 1. MB-Name / Comment cells (only when configured)
                                 const tdName    = document.createElement('td');
                                 const tdComment = document.createElement('td');
-                                const extractedSyntheticCells = activeColumnExtractors.map(entry => {
-                                    if (entry.colIdx === -1) {
-                                        return entry.syntheticColumns.map(() => document.createElement('td'));
-                                    }
-                                    const sourceCell = newRow.cells[entry.colIdx];
-                                    if (!sourceCell) {
-                                        Lib.warn('extract', `colIdx ${entry.colIdx} out of range for extractor "${entry.extractor}" (row has ${newRow.cells.length} cells)`);
-                                        return entry.syntheticColumns.map(() => document.createElement('td'));
-                                    }
-                                    if (typeof ColumnDataExtractor[entry.extractor] !== 'function') {
-                                        Lib.error('extract', `Unknown extractor function: "${entry.extractor}"`);
-                                        return entry.syntheticColumns.map(() => document.createElement('td'));
-                                    }
-                                    const result = ColumnDataExtractor[entry.extractor](sourceCell);
-                                    while (result.length < entry.syntheticColumns.length) result.push(document.createElement('td'));
-                                    return result.slice(0, entry.syntheticColumns.length);
-                                });
-
-                                // 2. MB-Name / Comment cells (only when configured)
-                                // Reads the source cell AFTER all extractors have mutated it, so that
-                                // elements removed by extractors (e.g. the primary-alias <i>) are
-                                // already gone and Comment only contains the disambiguation text.
                                 if (mainColIdx !== -1) {
                                     const targetCell = getCellByLogicalIndex(newRow, mainColIdx);
                                     if (targetCell) {
@@ -11469,6 +11355,26 @@
                                         }
                                     }
                                 }
+
+                                // 2. Active column extractors (e.g. splitCountryDate)
+                                // Capture synthetic cells BEFORE column deletion so colIdx stays valid.
+                                const extractedSyntheticCells = activeColumnExtractors.map(entry => {
+                                    if (entry.colIdx === -1) {
+                                        return entry.syntheticColumns.map(() => document.createElement('td'));
+                                    }
+                                    const sourceCell = newRow.cells[entry.colIdx];
+                                    if (!sourceCell) {
+                                        Lib.warn('extract', `colIdx ${entry.colIdx} out of range for extractor "${entry.extractor}" (row has ${newRow.cells.length} cells)`);
+                                        return entry.syntheticColumns.map(() => document.createElement('td'));
+                                    }
+                                    if (typeof ColumnDataExtractor[entry.extractor] !== 'function') {
+                                        Lib.error('extract', `Unknown extractor function: "${entry.extractor}"`);
+                                        return entry.syntheticColumns.map(() => document.createElement('td'));
+                                    }
+                                    const result = ColumnDataExtractor[entry.extractor](sourceCell);
+                                    while (result.length < entry.syntheticColumns.length) result.push(document.createElement('td'));
+                                    return result.slice(0, entry.syntheticColumns.length);
+                                });
 
                                 // 3. Delete excluded columns (descending to preserve index stability)
                                 [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
@@ -11566,46 +11472,9 @@
                                     // are still valid (column deletion has not happened yet).
                                     applyRenderMultiRowCells(newRow, activeRenderMultiRowCols);
 
-                                    // ── Extraction pipeline ───────────────────────────────────────
-                                    // ORDERING: column extractors run FIRST so that any mutating
-                                    // extractor (e.g. primaryAlias, which removes <i title="Primary alias">
-                                    // from the source cell) cleans the DOM before MB-Name / Comment
-                                    // reads it.  Without this order, Comment would capture both the
-                                    // primary alias text and the disambiguation comment together.
-
-                                    // 1. Run all active column extractors BEFORE column deletion and
-                                    //    BEFORE MB-Name / Comment extraction.
-                                    // colIdx references into newRow are only valid while the cell
-                                    // count matches the fetched DOM; deleteCell() below shifts them.
-                                    // Each extractor returns an array of new <td> elements (one per
-                                    // declared syntheticColumn).  We accumulate them here and append
-                                    // them after deletion so they land at the end of the row.
+                                    // Extraction logic for MB-Name and Comment
                                     const tdName = document.createElement('td');
                                     const tdComment = document.createElement('td');
-                                    const extractedSyntheticCells = activeColumnExtractors.map(entry => {
-                                        if (entry.colIdx === -1) {
-                                            // Source column not present on this page — emit empty cells
-                                            return entry.syntheticColumns.map(() => document.createElement('td'));
-                                        }
-                                        const sourceCell = newRow.cells[entry.colIdx];
-                                        if (!sourceCell) {
-                                            Lib.warn('extract', `colIdx ${entry.colIdx} out of range for extractor "${entry.extractor}" (row has ${newRow.cells.length} cells)`);
-                                            return entry.syntheticColumns.map(() => document.createElement('td'));
-                                        }
-                                        if (typeof ColumnDataExtractor[entry.extractor] !== 'function') {
-                                            Lib.error('extract', `Unknown extractor function: "${entry.extractor}"`);
-                                            return entry.syntheticColumns.map(() => document.createElement('td'));
-                                        }
-                                        const result = ColumnDataExtractor[entry.extractor](sourceCell);
-                                        // Pad or trim to declared syntheticColumns length for structural consistency
-                                        while (result.length < entry.syntheticColumns.length) result.push(document.createElement('td'));
-                                        return result.slice(0, entry.syntheticColumns.length);
-                                    });
-
-                                    // 2. Extraction logic for MB-Name and Comment.
-                                    // Reads the source cell AFTER all extractors have mutated it, so that
-                                    // elements removed by extractors (e.g. the primary-alias <i>) are
-                                    // already gone and Comment only contains the disambiguation text.
 
                                     // If a main column was identified (via config or detection), perform the extraction
                                     if (mainColIdx !== -1) {
@@ -11657,6 +11526,32 @@
                                             }
                                         }
                                     }
+
+                                    // --- Run all active column extractors BEFORE column deletion.
+                                    // colIdx references into newRow are only valid while the cell
+                                    // count matches the fetched DOM; deleteCell() below shifts them.
+                                    // Each extractor returns an array of new <td> elements (one per
+                                    // declared syntheticColumn).  We accumulate them here and append
+                                    // them after deletion so they land at the end of the row.
+                                    const extractedSyntheticCells = activeColumnExtractors.map(entry => {
+                                        if (entry.colIdx === -1) {
+                                            // Source column not present on this page — emit empty cells
+                                            return entry.syntheticColumns.map(() => document.createElement('td'));
+                                        }
+                                        const sourceCell = newRow.cells[entry.colIdx];
+                                        if (!sourceCell) {
+                                            Lib.warn('extract', `colIdx ${entry.colIdx} out of range for extractor "${entry.extractor}" (row has ${newRow.cells.length} cells)`);
+                                            return entry.syntheticColumns.map(() => document.createElement('td'));
+                                        }
+                                        if (typeof ColumnDataExtractor[entry.extractor] !== 'function') {
+                                            Lib.error('extract', `Unknown extractor function: "${entry.extractor}"`);
+                                            return entry.syntheticColumns.map(() => document.createElement('td'));
+                                        }
+                                        const result = ColumnDataExtractor[entry.extractor](sourceCell);
+                                        // Pad or trim to declared syntheticColumns length for structural consistency
+                                        while (result.length < entry.syntheticColumns.length) result.push(document.createElement('td'));
+                                        return result.slice(0, entry.syntheticColumns.length);
+                                    });
 
                                     // Delete excluded columns (descending order preserves index stability)
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });

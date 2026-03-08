@@ -47276,5 +47276,47 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 * TODO add the empty cell stuff to all unique drop down lists, especially for "Barcode" - https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
+Generalize the concept of "synBox"
+
+#+begin_example
+        // synBox is inserted between qfBar and listBox; always present but
+        // empty (zero height) when no synthetic entries apply.
+        const synBox = document.createElement('div');
+        synBox.className = 'mb-col-uniq-syn-box';
+        // Insert synBox right before listBox so it renders above regular values
+        drop.insertBefore(synBox, listBox);
+#+end_example
+
+to every column in every table ("single" and "multi" table mode), not only to tables which have columns with multi-row cells, but use only the entry
+
+#+begin_example
+'○ empty cells'
+#+end_example
+
+for columns which have actual empty cells
+
+
+
 * TODO extract the VZ event disambiguation configurable in its constituents
 
+* splitCountryDate -> Date -> dd mm yyyy day month  
+
+#+begin_example
+    const ColumnDataExtractor = {
+
+        /**
+         * splitCountryDate — splits a "Country/Date" cell into separate Country and
+         * Date cells.  Source structure: .release-event > (.release-country +
+         * .release-date), repeated once per release event.
+         *
+         * Each release event becomes one <li> item inside a <ul>, producing true
+         * multi-row cells instead of the former comma-separated flat layout.  A
+         * single-event cell is still wrapped in <ul><li> so that the structure is
+         * consistent and compatible with the collapsableColumns mechanism
+         * (initCollapsableColumns inspects `ul > li` count to decide whether to add
+         * the ▶/◀ toggle — cells with only one <li> are left un-toggled).
+         *
+         * Synthetic columns: ['Country', 'Date']
+         */
+        splitCountryDate(sourceCell) {
+#+end_example

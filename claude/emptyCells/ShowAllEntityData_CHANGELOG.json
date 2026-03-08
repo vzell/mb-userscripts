@@ -1,42 +1,18 @@
 [
     {
-      "version": "9.99.76",
-      "date": "2026-03-08",
-      "sections": [
-        {
-          "label": "✨ Enhancements",
-          "items": [
-            "synBox '○ empty cells' generalized to every column — the unique-value dropdown (📊) now shows the '○ empty cells' synthetic entry for all column types (plain text, extractor synthetic, CAA, Video, Primary Alias, …), not only for collapsable multi-row columns; for collapsable columns the full 'Cell structure' section (empty / single-row / collapsed / expanded / any) is preserved as before; for all other columns only the single '○ empty cells' entry is emitted (no section header, no unneeded clutter), making it easy to filter e.g. to events that have no primary alias or releases that have no cover art; makeSynItem is hoisted above the collapsable guard and a shared appendSynDivider helper avoids duplicating the divider logic"
-          ]
-        },
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "testRowMatch hasEmpty fix — the 'empty cells' multi-row state filter now evaluates hasEmpty as lis.length === 0 && !getCleanColumnText(cell) instead of the former lis.length === 0 alone; without this fix every row in a non-collapsable column (which never contains ul>li structure) would have matched the '○ empty cells' filter, returning the full unfiltered row set instead of only the genuinely empty ones"
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.75",
-      "date": "2026-03-08",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "extraction pipeline ordering fix — column extractors now run BEFORE the MB-Name / Comment extraction in both pipeline branches (shared synthetic-column pipeline for special page types such as artist-releasegroups, and the generic else-branch); previously MB-Name / Comment read the source cell first, so mutating extractors like primaryAlias had not yet removed the <i title=\"Primary alias\"> element, causing the Comment column to incorrectly contain both the primary alias text and the disambiguation comment; with the new order, any mutating extractor cleans the source cell DOM before Comment is read, so Comment contains only the actual disambiguation text"
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.74",
       "date": "2026-03-08",
       "sections": [
         {
           "label": "✨ Enhancements",
           "items": [
-            "primaryAlias column extractor — new ColumnDataExtractor entry: extracts the MusicBrainz <i title=\"Primary alias\"> element from a source Title/Event cell into a dedicated synthetic 'Primary Alias' column; the <i> element is removed from the source cell (not cloned), and any orphaned leading \", \" text node left in the parent <bdi> is stripped so that a residual disambiguation comment stands alone; if the containing <span class=\"comment\"> is left empty after removal it is also discarded; registered for Artist-Events ('Event' column) and Artist-release-groups ('Title' column) page types"
+            "synBox '○ empty cells' generalized to every column — the unique-value dropdown (📊) now shows the '○ empty cells' synthetic entry for all column types (plain text, extractor synthetic, CAA, Video, Primary Alias, …), not only for collapsable multi-row columns; for collapsable columns the full 'Cell structure' section (empty / single-row / collapsed / expanded / any) is preserved as before; for all other columns only the single '○ empty cells' entry is emitted (no section header, no unneeded clutter), making it easy to filter e.g. to events that have no primary alias or releases that have no cover art"
+          ]
+        },
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "testRowMatch hasEmpty fix — the 'empty cells' multi-row state filter now evaluates hasEmpty as lis.length === 0 && !getCleanColumnText(cell) instead of the former lis.length === 0 alone; without this fix every row in a non-collapsable column (which never contains ul>li structure) would have matched the '○ empty cells' filter, returning the full unfiltered row set instead of only the genuinely empty ones"
           ]
         }
       ]
