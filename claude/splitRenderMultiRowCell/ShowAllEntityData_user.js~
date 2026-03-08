@@ -1347,7 +1347,7 @@
      * activeDefinition object.
      *
      * `features.renderMultiRowCell` is an array of column-header name strings
-     * (e.g. ['Label', 'Catalog#']).  For each named column the pipeline will
+     * (e.g. ['Label', 'Catalog']).  For each named column the pipeline will
      * convert its comma-separated cell content into a <ul><li> multi-row
      * structure so that entries are visually stacked rather than written in a
      * single line.
@@ -1890,7 +1890,7 @@
                 extractMainColumn: 'Release'
             },
             collapsableColumns: [ 'Country/Date' ],
-            renderMultiRowCell: [ 'Label', 'Catalog#' ],
+            renderMultiRowCell: [ 'Label', 'Catalog' ],
             tableMode: 'single'
         },
         {
@@ -1944,7 +1944,7 @@
                     { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
                 ],
                 collapsableColumns: [ 'Country/Date' ],
-                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                renderMultiRowCell: [ 'Label', 'Catalog' ],
                 extractMainColumn: 'Release'
             },
             tableMode: 'multi',
