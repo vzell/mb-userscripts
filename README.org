@@ -45430,6 +45430,10 @@ Is it maybe because of the presence of data cells which have '<span class="artwo
 
 Please fix
 
+** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works - "Auld Lang Syne (original Scots version, lyrics by Robert Burns)"
+** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events - 2023‐10‐28: Pollak Theatre, Monmouth University, West Long Branch, NJ, USA (The Wild, The Innocent & The E Street Shuffle 50th Anniversary Symposium)
+
+
 
 * align button texts and make everything configurable (size, font, height, character to underline)
 
@@ -46454,3 +46458,8 @@ Still not, the button text is actually an icon, then a superscript and then the 
 * The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
 
 
+* remove the "+" in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships in column "Title" for "Holds copyright (c) for"
+
+* extract "cancelled" from "Event" in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+* render as multi-row cells - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?tport=8000 - "Label, "Catalog"
