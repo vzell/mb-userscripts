@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.70+2026-03-08
+// @version      9.99.64+2026-03-08
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1378,15 +1378,9 @@
      *   a single <li> item.  Leading and trailing whitespace-only text nodes
      *   within each group are dropped before appending to the <li>.
      *
-     *   - Cells with zero logical rows (empty cells) are left unchanged.
-     *   - All non-empty cells — including those with exactly one logical row —
-     *     are wrapped in a <ul><li> so that initCollapsableColumns,
-     *     testRowMatch (hasSingleRow ≡ lis.length === 1), and the statistics
-     *     panel see a uniform structure regardless of how many entries the cell
-     *     contains.  This matches the behaviour of splitCountryDate, which also
-     *     always wraps even single-event cells in <ul><li>.
-     *   - Cells with ≥2 logical rows additionally receive a ▶/◀ cell toggle
-     *     from initCollapsableColumns (single-<li> cells are unaffected by it).
+     *   - Cells with zero or one logical row are left unchanged (no wrapping).
+     *   - Cells with ≥2 logical rows have their content replaced by a <ul>
+     *     whose <li> children contain cloned versions of the collected nodes.
      *
      * This function is compatible with the collapsableColumns mechanism: if the
      * same column names are also declared in `features.collapsableColumns`, the
@@ -1446,15 +1440,8 @@
                 return trimmed;
             }).filter(g => g.length > 0);
 
-            // ── Skip only truly empty cells; always wrap non-empty ones ──────
-            // Even a single logical row must be wrapped in <ul><li> so that
-            // initCollapsableColumns, testRowMatch (hasSingleRow check via
-            // lis.length === 1), and the statistics panel all see a consistent
-            // ul > li structure — matching the behaviour of splitCountryDate,
-            // which always wraps even single-event cells.
-            // initCollapsableColumns adds a ▶/◀ toggle only when lis.length ≥ 2,
-            // so single-<li> cells are left un-toggled, which is correct.
-            if (nonEmptyGroups.length < 1) continue;
+            // ── Only wrap when ≥2 logical rows exist ─────────────────────────
+            if (nonEmptyGroups.length < 2) continue;
 
             const ul = document.createElement('ul');
             nonEmptyGroups.forEach(group => {
@@ -1466,7 +1453,7 @@
             td.innerHTML = '';
             td.appendChild(ul);
 
-            Lib.debug('extract', `renderMultiRowCell: column "${entry.columnName}" (colIdx=${entry.colIdx}) — wrapped into ${nonEmptyGroups.length} li row(s)`);
+            Lib.debug('extract', `renderMultiRowCell: column "${entry.columnName}" (colIdx=${entry.colIdx}) — split into ${nonEmptyGroups.length} rows`);
         }
     }
 
@@ -1609,8 +1596,7 @@
                         columnExtractors: [
                             { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                         ],
-                        renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                        collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                        collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                     }
                 },
                 {
@@ -1900,10 +1886,11 @@
                     { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                 ],
-                renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release'
             },
+            renderMultiRowCell: [ 'Label', 'Catalog#' ],
+            collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
             tableMode: 'single'
         },
         {
@@ -2874,10 +2861,7 @@
         const isMultiMode = activeDefinition.tableMode === 'multi';
         document.querySelectorAll('table.tbl').forEach(t => initCollapsableColumns(t));
         if (isMultiMode) {
-            // rewireGlobalCollapseButtonMulti handles the global button; each sub-table
-            // collapse button must be shown/tinted separately via updateSubTableCollapseButton.
             rewireGlobalCollapseButtonMulti();
-            document.querySelectorAll('table.tbl').forEach(t => updateSubTableCollapseButton(t));
         }
     }
 
@@ -2999,7 +2983,7 @@
      * The rendered structure is:
      *   <span>▶ Expand</span>   (or ◀ Collapse)
      *   <span style="flex-direction:column …">
-     *     <span>multi-row</span>
+     *     <span>multi-rows</span>
      *     <span>cells</span>
      *   </span>
      *
@@ -3008,7 +2992,7 @@
      *
      * State detection (used by all click handlers) relies on `btn.textContent.startsWith('▶')`.
      * Because textContent concatenates all descendant text, the result is either
-     * "▶ Expandmulti-rowcells" (expand) or "◀ Collapsemulti-rowcells" (collapse),
+     * "▶ Expandmulti-rowscells" (expand) or "◀ Collapsemulti-rowscells" (collapse),
      * both of which are correctly identified by the leading character.
      *
      * @param {boolean} expand - true → ▶ Expand state; false → ◀ Collapse state
@@ -3018,7 +3002,7 @@
         const arrowLabel = expand ? '▶ Expand' : '◀ Collapse';
         return `<span>${arrowLabel}</span>` +
             `<span style="display:flex;flex-direction:column;align-items:flex-start;` +
-            `line-height:1;font-size:0.9em;"><span>multi-row</span>` +
+            `line-height:1;font-size:0.9em;"><span>multi-rows</span>` +
             `<span>cells</span></span>`;
     }
 
@@ -3033,7 +3017,7 @@
         btn.setAttribute('aria-label', `Expand all collapsed multi-row cells in: ${categoryName}`);
         // Same base style as createSubTableHighlightButton; hidden until
         // updateSubTableCollapseButton() determines multi-row cells exist.
-        // Uses inline-flex so the two-row label (▶ Expand / multi-row / cells)
+        // Uses inline-flex so the two-row label (▶ Expand / multi-rows / cells)
         // renders correctly; margin-left:8px shifts it right of the Ex label
         // to prevent overlap when the button is tinted during highlight mode.
         btn.style.cssText = [
@@ -8249,15 +8233,6 @@
     let allRows = [];
     let originalAllRows = [];
     let groupedRows = [];
-    // Source-of-truth for per-cell expand/collapse state, keyed "rowIdx:colIdx".
-    // Updated by every toggle click; read by initCollapsableColumns, testRowMatch,
-    // and openUniqDrop so they all agree even after renderFinalTable+init resets the DOM.
-    const expandedCells = new Map();
-    // Global row-index counter — incremented for EVERY row pushed to allRows or
-    // groupedRows (both live-fetch and disk-load), regardless of tableMode.
-    // Stored as data-mb-row-idx on the TR element so cloneNode(true) propagates
-    // it automatically. Reset to 0 at the start of every new fetch / disk-load.
-    let _mbRowIdxCounter = 0;
     let isLoaded = false;
     let stopRequested = false;
     let multiTableSortStates = new Map();
@@ -9881,9 +9856,6 @@
             clear.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // Drop any active multi-row state filter mode so the cleared field
-                // reverts to normal text-filter behaviour.
-                delete input.dataset.mbMultirowMode;
                 // Clicking ✕ is identical to pressing Escape the first time while
                 // the field is focused: clear any user-entered text, keep the field
                 // focused with the decorative prefix in place.
@@ -9909,11 +9881,6 @@
 
             input.addEventListener('input', (e) => {
                 e.stopPropagation();
-                // If the user manually edits a field that carried a multi-row state filter,
-                // drop the mode so subsequent key strokes act as a normal text filter.
-                if (input.dataset.mbMultirowMode) {
-                    delete input.dataset.mbMultirowMode;
-                }
                 // If the user just started typing into a focused-but-empty field the prefix
                 // was deliberately kept out of the value (so the placeholder hint was visible).
                 // The moment any real character arrives we prepend the prefix so the focus
@@ -10017,8 +9984,7 @@
             const raw = stripColFilterPrefix(inp.value);
 
             if (!raw) {
-                // Empty field: clear any stale multi-row mode and error styling, skip
-                delete inp.dataset.mbMultirowMode;
+                // Empty field: clear any error styling and skip
                 inp.style.boxShadow   = '';
                 inp.style.borderColor = '';
                 inp.style.borderWidth = '';
@@ -10031,21 +9997,6 @@
             const colName = headers[colIdx]
                 ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹📊▶◀]/g, '').trim()
                 : `Col ${colIdx}`;
-
-            // ── Multi-row state filter (set by applyMultiRowStateFilter via uniq-drop) ──
-            // Bypasses normal text matching; testRowMatch() checks the toggle DOM state.
-            if (inp.dataset.mbMultirowMode) {
-                inp.style.boxShadow   = '0 0 2px 2px green';
-                inp.style.borderColor = '';
-                inp.style.borderWidth = '';
-                result.push({
-                    val:            raw,
-                    idx:            colIdx,
-                    isMultiRowFilter: true,
-                    multiRowMode:   inp.dataset.mbMultirowMode
-                });
-                return;
-            }
 
             if (isRegExp) {
                 // Validate the regexp before accepting it
@@ -10134,33 +10085,6 @@
         // --- Column filters ---
         let colHit = true;
         for (const f of colFilters) {
-            // ── Multi-row state filter: match by expandedCells state, not by DOM toggle ──
-            // Using expandedCells (keyed "rowIdx:colIdx") instead of toggle.textContent
-            // ensures correctness across renderFinalTable+initCollapsableColumns cycles:
-            // the DOM toggle is reset to '▶' by initCollapsableColumns but expandedCells
-            // always reflects the user's actual expand/collapse actions.
-            if (f.isMultiRowFilter) {
-                const cell   = row.cells[f.idx];
-                const lis    = cell ? Array.from(cell.querySelectorAll('ul > li')) : [];
-                const hasMultiRow   = lis.length >= 2;
-                const hasSingleRow  = lis.length === 1;
-                const rowIdx = row.dataset ? row.dataset.mbRowIdx : undefined;
-                const ecKey  = rowIdx !== undefined ? `${rowIdx}:${f.idx}` : undefined;
-                const isExpanded = ecKey !== undefined && expandedCells.get(ecKey) === true;
-                let match = false;
-                if (f.multiRowMode === 'any') {
-                    match = hasMultiRow;
-                } else if (f.multiRowMode === 'collapsed') {
-                    match = hasMultiRow && !isExpanded;
-                } else if (f.multiRowMode === 'expanded') {
-                    match = hasMultiRow && isExpanded;
-                } else if (f.multiRowMode === 'single') {
-                    match = hasSingleRow;
-                }
-                if (!match) { colHit = false; break; }
-                continue; // no text highlight for state-based filters
-            }
-
             const cellText = getCleanColumnText(row.cells[f.idx]);
             let match = false;
             if (isRegExp) {
@@ -10183,12 +10107,7 @@
         if (finalHit) {
             // Highlighting on excluded matches would be misleading, so skip it
             if (globalQuery && !isExclude) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
-            // Multi-row state filters operate on DOM structure, not on text → skip highlight
-            colFilters.forEach(f => {
-                if (!f.isMultiRowFilter) {
-                    highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp);
-                }
-            });
+            colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
         }
         return finalHit;
     }
@@ -10950,8 +10869,6 @@
         allRows = [];
         originalAllRows = [];
         groupedRows = [];
-        expandedCells.clear();
-        _mbRowIdxCounter = 0;
 
         // Run refactored clutter removal
         performClutterCleanup();
@@ -11280,7 +11197,6 @@
                                 // ── end shared synthetic-column pipeline ─────────────────────────
 
                                 currentGroup.rows.push(newRow);
-                                newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                 rowsInThisPage++;
                                 totalRowsAccumulated++;
                                 pageCategoryMap.set(category, (pageCategoryMap.get(category) || 0) + 1);
@@ -11466,11 +11382,9 @@
                                         } else {
                                             groupedRows.push({ category: currentStatus, rows: [newRow] });
                                         }
-                                        newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                         lastCategorySeenAcrossPages = currentStatus;
                                         pageCategoryMap.set(currentStatus, (pageCategoryMap.get(currentStatus) || 0) + 1);
                                     } else {
-                                        newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                         allRows.push(newRow);
                                     }
 
@@ -13166,13 +13080,6 @@
 
         // ---- Collect distinct non-empty values with occurrence counts from visible tbody rows ----
         const valueCounts = new Map();
-        // Counts for synthetic multi-row state entries (collapsed ▶ / expanded ◀ / any / single-row)
-        // These are derived from expandedCells (the authoritative source of truth) + ul>li count,
-        // NOT from the DOM toggle textContent which is reset to '▶' by initCollapsableColumns
-        // after every renderFinalTable call.
-        let multiRowCollapsedCount = 0;
-        let multiRowExpandedCount  = 0;
-        let singleRowCount         = 0;
         const tbody = table.tBodies[0];
         if (tbody) {
             Array.from(tbody.rows).forEach(row => {
@@ -13185,21 +13092,6 @@
                 //       consistently with what the column filter actually matches.
                 const v = getCleanColumnText(cell);
                 if (v) valueCounts.set(v, (valueCounts.get(v) || 0) + 1);
-                // Count multi-row / single-row state using expandedCells as source of truth.
-                // Counting from DOM toggle.textContent would give wrong results after a
-                // runFilter() cycle because initCollapsableColumns resets all toggles to '▶'.
-                const lis = cell.querySelectorAll('ul > li');
-                const rowIdx = row.dataset ? row.dataset.mbRowIdx : undefined;
-                if (lis.length >= 2) {
-                    const key = rowIdx !== undefined ? `${rowIdx}:${colIndex}` : null;
-                    if (key !== null && expandedCells.get(key) === true) {
-                        multiRowExpandedCount++;
-                    } else {
-                        multiRowCollapsedCount++;
-                    }
-                } else if (lis.length === 1) {
-                    singleRowCount++;
-                }
             });
         }
         const vals = Array.from(valueCounts.keys()).sort((a, b) =>
@@ -13337,105 +13229,6 @@
             });
         }
 
-        // --- Synthetic multi-row state items (separate, pinned container) ------
-        // Lives in its own <div> that is added to `drop` BEFORE `listBox` so it
-        // always appears at the top.  Critically, `renderItems()` only mutates
-        // `listBox` (via listBox.innerHTML = ''), so the synthetic section is
-        // NEVER wiped out by quickfilter re-renders or the initial renderItems('').
-        const totalMultiRow = multiRowCollapsedCount + multiRowExpandedCount;
-        const isCollapsableCol = (() => {
-            if (!activeDefinition || !activeDefinition.features) return false;
-            const cols = activeDefinition.features.collapsableColumns;
-            if (!Array.isArray(cols)) return false;
-            const headers = table.querySelectorAll('thead tr:first-child th');
-            const th = headers[colIndex];
-            if (!th) return false;
-            const clean = th.textContent
-                .replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀]/g, '')
-                .trim().replace(/\s+/g, ' ');
-            return cols.includes(clean);
-        })();
-
-        // synBox is inserted between qfBar and listBox; always present but
-        // empty (zero height) when no synthetic entries apply.
-        const synBox = document.createElement('div');
-        synBox.className = 'mb-col-uniq-syn-box';
-        // Insert synBox right before listBox so it renders above regular values
-        drop.insertBefore(synBox, listBox);
-
-        if (isCollapsableCol && (singleRowCount > 0 || totalMultiRow > 0)) {
-            // Section header label
-            const synHdr = document.createElement('div');
-            synHdr.textContent = 'Multi-row cell state';
-            synHdr.style.cssText = [
-                'font-size:0.75em; font-weight:600; color:#555;',
-                'padding:4px 8px 2px 8px; letter-spacing:0.03em; user-select:none;'
-            ].join(' ');
-            synBox.appendChild(synHdr);
-
-            /**
-             * Creates and appends a single synthetic multi-row state entry to synBox.
-             * @param {string} mode    - 'single' | 'collapsed' | 'expanded' | 'any'
-             * @param {string} label   - Human-readable display text
-             * @param {number} count   - Number of visible rows matching this mode
-             */
-            const makeSynItem = (mode, label, count) => {
-                const item = document.createElement('div');
-                item.className = 'mb-col-uniq-item mb-col-uniq-multirow-item';
-                item.setAttribute('role', 'option');
-                item.title = label;
-                item.style.cssText = 'background:#f0f4f8; font-style:italic;';
-
-                const badge = document.createElement('span');
-                badge.className = 'mb-uniq-count-badge';
-                badge.textContent = `(${count})`;
-                badge.setAttribute('aria-hidden', 'true');
-                badge.style.color           = cntColor;
-                badge.style.backgroundColor = cntBg;
-                badge.style.fontWeight      = 'bold';
-                badge.style.fontFamily      = 'monospace';
-                badge.style.borderRadius    = '3px';
-                badge.style.padding         = '0 3px';
-                badge.style.marginRight     = '5px';
-                badge.style.fontSize        = '0.85em';
-                badge.style.display         = 'inline-block';
-                item.appendChild(badge);
-                item.appendChild(document.createTextNode(label));
-
-                item.addEventListener('mousedown', ev => ev.preventDefault());
-                item.addEventListener('click', () => {
-                    applyMultiRowStateFilter(mode, table, colIndex);
-                    closeUniqDrop();
-                });
-                synBox.appendChild(item);
-            };
-
-            // ── Synthetic entries — single-row first, then multi-row states ───
-            // "single-row cells" appears at the very top of synBox so it is the
-            // first entry the user sees in the dropdown.
-            if (singleRowCount > 0) {
-                makeSynItem('single', '• single-row cells', singleRowCount);
-            }
-            if (multiRowCollapsedCount > 0) {
-                makeSynItem('collapsed', '▶ collapsed multi-row cells', multiRowCollapsedCount);
-            }
-            if (multiRowExpandedCount > 0) {
-                makeSynItem('expanded', '◀ expanded multi-row cells', multiRowExpandedCount);
-            }
-            if (totalMultiRow > 1) {
-                // "any" is useful only when both states coexist
-                makeSynItem('any', '▶◀ any multi-row cells', totalMultiRow);
-            }
-
-            // Thin divider between synthetic and regular items
-            if (vals.length > 0) {
-                const divider = document.createElement('div');
-                divider.style.cssText = 'border-top:1px solid #d0d0d0; margin:4px 0;';
-                divider.setAttribute('aria-hidden', 'true');
-                synBox.appendChild(divider);
-            }
-        }
-
         if (vals.length === 0) {
             const msg = document.createElement('div');
             msg.className = 'mb-col-uniq-empty';
@@ -13479,9 +13272,7 @@
         // the overflow container, causing ArrowDown to stop at the last
         // initially-visible item without revealing more entries.
         let focIdx = -1;
-        // allItems() collects from the whole dropdown panel (synBox + listBox) so
-        // keyboard ArrowDown/Up/Enter work on synthetic entries too.
-        const allItems = () => Array.from(drop.querySelectorAll('.mb-col-uniq-item'));
+        const allItems = () => Array.from(listBox.querySelectorAll('.mb-col-uniq-item'));
 
         /**
          * Moves focus to item at position `idx` and scrolls the panel so the
@@ -13500,8 +13291,10 @@
             // Scroll the panel's own overflow container to keep el visible.
             // We intentionally avoid el.scrollIntoView() here because it may
             // scroll the page instead of the fixed-position overflow panel.
-            // Use el.offsetTop relative to drop (the scrollable container).
-            const elTop  = el.offsetTop;
+            // el.offsetTop is relative to listBox (its offset parent), so we
+            // compute the visible window relative to listBox within drop.
+            const listBoxTop = listBox.offsetTop; // offset of listBox inside drop
+            const elTop  = listBoxTop + el.offsetTop;
             const elBot  = elTop + el.offsetHeight;
             const panTop = drop.scrollTop;
             const panBot = panTop + drop.clientHeight;
@@ -13531,14 +13324,8 @@
             } else if (ev.key === 'Enter') {
                 ev.preventDefault(); ev.stopPropagation();
                 if (focIdx >= 0 && items[focIdx]) {
-                    const focused = items[focIdx];
-                    if (focused.classList.contains('mb-col-uniq-multirow-item')) {
-                        // Synthetic multi-row entry: delegate to state filter
-                        focused.click();
-                    } else {
-                        // Regular value entry: apply as text filter
-                        applyUniqVal(focused.title, table, colIndex);
-                    }
+                    // Use the full original value via title attribute (unmodified by highlighting)
+                    applyUniqVal(items[focIdx].title, table, colIndex);
                     closeUniqDrop();
                 }
             } else if (ev.key === 'Escape') {
@@ -13578,13 +13365,7 @@
         const bRect = btn.getBoundingClientRect();
         const vw    = window.innerWidth;
         const vh    = window.innerHeight;
-        const synItemCount = isCollapsableCol
-            ? (singleRowCount         > 0 ? 1 : 0) +
-              (multiRowCollapsedCount > 0 ? 1 : 0) +
-              (multiRowExpandedCount  > 0 ? 1 : 0) +
-              (totalMultiRow > 1        ? 1 : 0)
-            : 0;
-        const dropH = Math.min(320, (vals.length + synItemCount) * 29 + 50 + 38); // +50 syn header/divider, +38 qf bar
+        const dropH = Math.min(320, vals.length * 29 + 12 + 38); // +38 for quickfilter bar
         const dropW = drop.offsetWidth || 200;
 
         let top  = bRect.bottom + 3;
@@ -13623,8 +13404,6 @@
         );
         if (!input) return;
 
-        // Clear any stale multi-row state filter mode so the text value takes effect
-        delete input.dataset.mbMultirowMode;
         input.value = value;
 
         // Apply the "active" background tint so the field looks highlighted
@@ -13635,65 +13414,6 @@
         input.dispatchEvent(new Event('input', { bubbles: true }));
 
         Lib.debug('filter', `Uniq-drop: applied "${value}" to col ${colIndex}`);
-    }
-
-    /**
-     * Activates a DOM-state based multi-row cell filter on a single column.
-     *
-     * Unlike `applyUniqVal()` which puts a text string into the column filter
-     * input, this function marks the input with `data-mb-multirow-mode` so that
-     * `getColFilters()` can emit a special `{ isMultiRowFilter, multiRowMode }`
-     * descriptor and `testRowMatch()` can filter rows by the collapse/expand
-     * state of their `.mb-cell-collapse-toggle` rather than by text content.
-     *
-     * Three modes are supported:
-     *   'collapsed'  → keep rows where the column toggle shows ▶ (collapsed)
-     *   'expanded'   → keep rows where the column toggle shows ◀ (expanded)
-     *   'any'        → keep rows that have a multi-row cell in this column
-     *
-     * The display label stored in `input.value` is purely cosmetic; the actual
-     * filtering logic reads `input.dataset.mbMultirowMode` in `getColFilters()`.
-     * If the user edits the field manually the 'input' event handler deletes
-     * `dataset.mbMultirowMode` and the filter degrades to a normal text filter.
-     *
-     * @param {string}           mode      - 'collapsed' | 'expanded' | 'any'
-     * @param {HTMLTableElement} table     - The table owning the column.
-     * @param {number}           colIndex  - Zero-based column index.
-     */
-    function applyMultiRowStateFilter(mode, table, colIndex) {
-        const filterRow = table.querySelector('thead tr.mb-col-filter-row');
-        if (!filterRow) return;
-        const input = filterRow.querySelector(
-            `.mb-col-filter-input[data-col-idx="${colIndex}"]`
-        );
-        if (!input) return;
-
-        // Tag the input so getColFilters produces a multi-row state filter object.
-        input.dataset.mbMultirowMode = mode;
-
-        // Store a human-readable display label so the field looks intentionally set.
-        const label = mode === 'collapsed' ? '▶ multi-row: collapsed' :
-                      mode === 'expanded'  ? '◀ multi-row: expanded'  :
-                      mode === 'single'    ? '• single-row cells'     :
-                                            '▶◀ multi-row: any';
-        input.value = label;
-
-        // Visual: "active" background + green glow (same as other active col filters)
-        const activeBg = Lib.settings.sa_col_filter_active_bg || '#fff9c4';
-        input.style.backgroundColor = activeBg;
-        input.style.boxShadow       = '0 0 2px 2px green';
-        input.style.borderColor     = '';
-        input.style.borderWidth     = '';
-
-        // Call runFilter() directly instead of dispatching a synthetic 'input' event.
-        // A synthetic input event would be caught by the column filter's own input handler
-        // which unconditionally deletes dataset.mbMultirowMode before getColFilters() can
-        // read it — causing the mode to vanish and the filter to match nothing.
-        if (typeof runFilter === 'function') {
-            runFilter();
-        }
-
-        Lib.debug('filter', `Uniq-drop: multi-row state filter "${mode}" applied to col ${colIndex}`);
     }
 
     // =========================================================================
@@ -13823,10 +13543,7 @@
         globalBtn.title         = 'Expand all collapsed multi-row cells in every collapsable column';
 
         // Re-wire onclick with the freshly collected allHdrBtns array.
-        globalBtn.onclick = (e) => {
-            // Stop the click from bubbling to the H2 toggle handler.
-            e.stopPropagation();
-
+        globalBtn.onclick = () => {
             const targetExpand = globalBtn.textContent.startsWith('▶');
 
             allHdrBtns.forEach(btn => {
@@ -13885,24 +13602,6 @@
                     ? `Collapse: showing all ${lis.length} items`
                     : `Expand: ${lis.length} items are collapsed`
             );
-
-            // ── Keep expandedCells in sync (source-of-truth for toggle state) ─
-            // expandedCells is keyed "rowIdx:colIdx" and is used by the
-            // unique-values dropdown counter, testRowMatch, and
-            // initCollapsableColumns so they all see the correct state even
-            // after renderFinalTable+initCollapsableColumns has reset the DOM.
-            {
-                const tr = toggle.closest('tr');
-                const rowIdx = tr ? tr.dataset.mbRowIdx : undefined;
-                if (rowIdx !== undefined) {
-                    const colIdx = td ? Array.from(tr.cells).indexOf(td) : -1;
-                    if (colIdx >= 0) {
-                        const key = `${rowIdx}:${colIdx}`;
-                        if (nowExpanding) expandedCells.set(key, true);
-                        else             expandedCells.delete(key);
-                    }
-                }
-            }
 
             // ── Update toggle-icon highlight for hidden-match signalling ──────
             // When expanding: all list items are now visible — no collapsed
@@ -14109,19 +13808,8 @@
             let maxFirstLiWidth = 0;
 
             multiRowCells.forEach(({ td, lis }) => {
-                // Determine whether this cell should be restored as expanded.
-                // expandedCells (keyed "rowIdx:colIdx") is the authoritative state;
-                // it is updated on every user toggle click so it survives the
-                // renderFinalTable + initCollapsableColumns reset cycle.
-                const tr = td.closest('tr');
-                const rowIdx = tr ? tr.dataset.mbRowIdx : undefined;
-                const ecKey  = rowIdx !== undefined ? `${rowIdx}:${colIndex}` : undefined;
-                const startExpanded = ecKey !== undefined && expandedCells.get(ecKey) === true;
-
-                // Collapse or expand: hide/show extra <li> items.
-                lis.slice(1).forEach(li => {
-                    li.style.display = startExpanded ? '' : 'none';
-                });
+                // Initially collapse: hide all <li> items beyond the first.
+                lis.slice(1).forEach(li => { li.style.display = 'none'; });
 
                 // Mark <td> for CSS positioning context + right padding.
                 td.classList.add('mb-has-collapse-toggle');
@@ -14129,27 +13817,20 @@
                 // Create the toggle icon span — click handling via delegation.
                 const cellToggle = document.createElement('span');
                 cellToggle.className = 'mb-cell-collapse-toggle';
-                cellToggle.textContent = startExpanded ? '◀' : '▶';
-                cellToggle.title = startExpanded
-                    ? `Collapse back to first item (${lis.length} total)`
-                    : `Show all ${lis.length} items (click to expand)`;
+                cellToggle.textContent = '▶';
+                cellToggle.title = `Show all ${lis.length} items (click to expand)`;
                 cellToggle.setAttribute('role', 'button');
-                cellToggle.setAttribute('aria-expanded', startExpanded ? 'true' : 'false');
-                cellToggle.setAttribute('aria-label',
-                    startExpanded
-                        ? `Collapse: showing all ${lis.length} items`
-                        : `Expand: ${lis.length} items are collapsed`
-                );
+                cellToggle.setAttribute('aria-expanded', 'false');
+                cellToggle.setAttribute('aria-label', `Expand: ${lis.length} items are collapsed`);
                 td.appendChild(cellToggle);
 
                 // ── Highlight toggle icon if collapsed items contain a match ──
                 // testRowMatch() / highlightText() may have already wrapped
                 // matching text in highlight spans before initCollapsableColumns
-                // runs.  Any spans in lis[1..n] are invisible when collapsed —
-                // add the signalling class so the user can see that expanding
-                // this cell will reveal matching content.
-                // When already expanded, lis[1..n] are visible so no hidden match.
-                const hasHiddenMatch = !startExpanded && lis.slice(1).some(li =>
+                // runs.  Any spans in lis[1..n] are invisible (just been hidden
+                // above) — add the signalling class so the user can see that
+                // expanding this cell will reveal matching content.
+                const hasHiddenMatch = lis.slice(1).some(li =>
                     li.querySelector(
                         '.mb-global-filter-highlight, ' +
                         '.mb-column-filter-highlight, ' +
@@ -14267,12 +13948,7 @@
 
                     // Re-wire onclick (safe for disk-load re-runs — re-wiring
                     // captures the fresh collapseHdrBtns array from this init).
-                    globalBtn.onclick = (e) => {
-                        // Stop the click from bubbling to the H2 toggle handler
-                        // (the button's innerHTML contains <span> children whose
-                        // e.target would not match the BUTTON tag guard on h2).
-                        e.stopPropagation();
-
+                    globalBtn.onclick = () => {
                         // ▶ = some/all collapsed → expand all.
                         // ◀ = all expanded       → collapse all.
                         const targetExpand = globalBtn.textContent.startsWith('▶');
@@ -15606,8 +15282,6 @@
                 // Reconstruct rows from serialized data with Filtering
                 if (data.tableMode === 'multi' && data.groups) {
                     groupedRows = [];
-                    expandedCells.clear();
-                    _mbRowIdxCounter = 0;
                     data.groups.forEach(group => {
                         const reconstructedRows = [];
                         group.rows.forEach((rowCells, rowIndex) => {
@@ -15622,7 +15296,6 @@
                             });
 
                             if (rowMatchesFilter(tr)) {
-                                tr.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                 reconstructedRows.push(tr);
                             }
                         });
@@ -15638,8 +15311,6 @@
                     allRows = [];
                 } else if (data.rows) {
                     allRows = [];
-                    expandedCells.clear();
-                    _mbRowIdxCounter = 0;
                     data.rows.forEach((rowCells, rowIndex) => {
                         const tr = document.createElement('tr');
                         tr.className = rowIndex % 2 === 0 ? 'even' : 'odd';
@@ -15652,7 +15323,6 @@
                         });
 
                         if (rowMatchesFilter(tr)) {
-                            tr.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                             allRows.push(tr);
                         }
                     });

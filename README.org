@@ -46437,9 +46437,10 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 * extract "cancelled" from "Event" in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
 
 
-* render as multi-row cells - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?tport=8000 - "Label, "Catalog"
+* DONE render as multi-row cells - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?tport=8000 - "Label, "Catalog"
 
-* split column as multi-row cell
+
+* DONE split column as multi-row cell
 ** DONE initial
 
 In the uploaded userscript,
@@ -46933,7 +46934,7 @@ So basically the comma "," should be used as the multi-row cell splitter and not
 
 * add a synthetic value for multi-row cells
 
-add a synthetic value to the unique column values drow-down menu which represents collapsed/uncollapsed multi-row cells
+add a synthetic value to the unique column values drop-down menu which represents collapsed/uncollapsed multi-row cells
 (maybe by checking the "collapse/uncollapse" toggle icon) and when clicking on it all the table rows with multi-row
 cells should be filtered
 
@@ -46945,7 +46946,8 @@ the case of "multi" table pages the sub-table collapse/uncollpase toggle button 
 are unvisible per sub-table) should also not be rendered (only when the columns are made visible again)
 
 
-* TODO multi-row button text
+* TODO multi-row button text + multi-row cell column unvisible
+** initial
 
 In the uploaded userscript,
 
@@ -46988,4 +46990,132 @@ as it overlaps especially when the button gets colorized during highlighting of 
 4.) when making a multi-row cell column unvisible by using the "Visible"-button and it's implementation, the global, and
 in the case of "multi" table pages the sub-table collapse/uncollpase toggle button (but only if ALL multi-row cell
 columns are unvisible per sub-table) should also not be rendered (only when the columns are made visible again)
+
+** bug
+
+1.) Almost, one bug left:
+
+in "multi"-table mode, when making multi-row cell column unvisible by using the "Visible"-button and it's
+implementation, the global and sub-table collapse/uncollpase toggle buttons corretly vanish as sonn as the last column
+which has multi-row cells is made unvisible, but when then reenable these columns again, ONLY the global toggle button gets visible again, the sub-table toggle button stays hidden
+
+2.) rename '<span>multi-rows</span>' into '<span>multi-row</span>' inside the "function makeCollapseExpandBtnHTML(expand)"
+
+3.) add the new additional functionality: 
+
+add a synthetic value to the unique column values drop-down menu which represents collapsed/uncollapsed multi-row cells
+(maybe by checking the "collapse/uncollapse" toggle icon) and when clicking on it all the table rows with multi-row
+cells in that column should be filtered
+
+** bug: protect the global toggle button to not collapse the h2 header row where its' located in
+
+2 bugs left:
+
+- protect the global toggle button to not collapse/uncollapse the whole h2 header row where its' located in (although
+  it's toggle functionality itself is working). The bug exists by either single clicking the button toggle or by
+  "Ctrl"-clicking it
+
+- the new additional functionality DOESN't work at all, there are no new entries visible in the unique column values
+  drop-down menu which represents collapsed/uncollapsed (or both) multi-row cells. Please fix or think about reimplementation
+  
+** bug
+
+Still one bug left:
+
+Although now the synthetic values for collapsed/uncollapsed/either are rendered in the "unique column values
+drop-down"-menu, when selecting such a synthetic value, it correctly gets copied to the filter field, but the actual
+corresponding rows are not filtered at all, so we always have a "no rows selected" state
+
+** add new synthetic "single-row cells" value to the very beginning of the "unique column values drop-down"-menu
+
+In the uploaded userscript,
+
+1.) add a new synthetic "single-row cells" value to the very beginning of the "unique column values drop-down"-menu in the
+"synBox" container. Also take the synthetic value into account when count the number of entries
+
+#+begin_example
+        // Counts for synthetic multi-row state entries (collapsed ▶ / expanded ◀ / any)
+        let multiRowCollapsedCount = 0;
+        let multiRowExpandedCount  = 0;
+#+end_example
+
+and all other code places where necessary
+
+2.) there is also a filtering bug with the current implementation when selecting synthetic values from the "unique column values drop-down"-menu
+
+For example when we start on the final rendered page of
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events with a total of 109 rows in the table (where 105 rows have multi-row cells).
+
+- clicking on the "unique column values drop-down"-menu in the "Artists" column correctly shows the following submenue for the synthetic entries
+
+#+begin_example
+(105) ▶ collapsed multi-row cells
+(105) ▶◀ any multi-row cells
+#+end_example
+
+- selecting either of this entries (and later claring the filter again) correctly filters all 105 rows with multi-row cells - also displays the count in the h2 header line correctly (105 of 109)
+
+- starting again from scratch and then uncollapsing two multi-row cells in the "Artists" column. When now clicking on
+  the "unique column values drop-down"-menu in the "Artists" column it still correctly shows the following submenue for
+  the synthetic entries
+
+#+begin_example
+(103) ▶ collapsed multi-row cells
+(2) ◀ expanded multi-row cells
+(105) ▶◀ any multi-row cells
+#+end_example
+
+- now when I select the entry "(2) ◀ expanded multi-row cells", it fills in the filter field and displays corretly the two filtered rows - also displays the count in the h2 header line correctly (2 of 109)
+
+- BUT now the BUG: when I clear the filter field, and when I click on the "unique column values drop-down"-menu in the "Artists" column, it again shows the right submenue
+
+#+begin_example
+(105) ▶ collapsed multi-row cells
+(105) ▶◀ any multi-row cells
+#+end_example
+
+but when now selecting for example "(105) ▶ collapsed multi-row cells" it shows just rows with collapsed multi-row cells
+but the count in the h2 header line is wrong - it says (103 of 109), somehow the previous two entries are taken into
+account
+
+- additionally when uncollapsing still more entries, the "unique column values drop-down"-menu in the "Artists" column
+  still shows the right entries with the right counts, but when selecting the newly uncollpased count entry, it still
+  filters the original TWO entries. It looks like this count is somehow persisted and not properly reset when changing
+  the collapse/uncollpase state of further entries
+
+** still bug in "multi" table pageType e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+Everything works fine now for the "single" table case,
+
+but there are still bugs in "multi" table pageTypes e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c - 119 total rows present on the final rendered page:
+
+- only for the very first multi-cell column "Country/Date" in the "Official" sub-table there is an entry for "(117) •single-row cells" (117 entries) and just one "(1) ▶ collapsed multi-row cells"; so there is ONE entry missing because
+  there should be 119 in total
+
+- all other multi-cell column columns like e.g. "Label" or "Catalog#" have NO "single-row cells" entries at all
+  
+- and it also somehow just counts the "▶ collapsed multi-row cells"/"▶◀ any multi-row cells" but never the "◀ expanded
+  multi-row cells" even if explicitly uncollpasing some of the mult-row cells
+
+Please fix, or better extend the current working "single" table implementation to "multiple" table mode (but DON't break the "single" table mode)
+
+Please also add changelog entries to the uplodaed file "ShowAllEntityData_CHANGELOG.json". you missed it already for the last bug fix, please reapply
+
+** bug fix
+
+In the uploaded userscript,
+
+There is still a bug with pageTypes which have
+
+#+begin_example
+renderMultiRowCell: [ 'Label', 'Catalog#' ],
+#+end_example
+
+All these multi-row cell type columns should be rendered in <li> containers in such a way that not only data cells which
+really have multiple rows, but also cells wich consists of just one row, so that the "collapsableColumns:" feature works with them
+
+Please recheck all the implementations for "single" and "multi"-table modes. For example the "Country/Date" column takes the
+right approach.
+
+** add synthetic entry for empty cells
 

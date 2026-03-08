@@ -1,47 +1,5 @@
 [
     {
-      "version": "9.99.70",
-      "date": "2026-03-08",
-      "sections": [
-        {
-          "label": "🐛 Bugfix",
-          "items": [
-            "applyRenderMultiRowCells — single-row cells not wrapped in <ul><li>: the function skipped wrapping when a cell contained only one logical row (nonEmptyGroups.length < 2 guard caused a continue), leaving those cells as raw DOM nodes rather than <ul><li> containers; this broke (1) the collapsableColumns feature for renderMultiRowCell columns such as Label and Catalog# because initCollapsableColumns and testRowMatch both inspect ul > li count — lis.length === 1 signals a single-row cell but lis.length === 0 (un-wrapped) is invisible to both; (2) the '• single-row cells' synthetic filter entry in the unique-values dropdown never matched Label/Catalog# cells with exactly one entry; (3) the statistics panel counted them as neither single-row nor multi-row; fixed by changing the guard to nonEmptyGroups.length < 1 so only truly empty cells are skipped — all non-empty cells, including single-entry ones, are now always wrapped in <ul><li>, matching the long-established behaviour of splitCountryDate which has always wrapped even single-event cells; initCollapsableColumns correctly adds a ▶/◀ toggle only for lis.length ≥ 2 so single-<li> cells remain un-toggled; docstring updated to document the new wrapping contract"
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.69",
-      "date": "2026-03-08",
-      "sections": [
-        {
-          "label": "🐛 Bugfix",
-          "items": [
-            "unique-values dropdown / multi-table mode — expanded cells never counted as expanded and always shown as collapsed: data-mb-row-idx was never assigned to rows in multi-table mode (both artist-releasegroups and generic multi push paths), so expandedCells Map keys were always null and every cell with ul>li count ≥ 2 fell into the collapsed bucket regardless of actual user expand actions; fixed by introducing a module-level _mbRowIdxCounter that is reset to 0 at the start of every fetch and disk-load, and assigning data-mb-row-idx = String(_mbRowIdxCounter++) to every row in all four push sites (artist-releasegroups live-fetch, generic multi/single live-fetch, multi-table disk-load, single-table disk-load) so that expandedCells, testRowMatch, initCollapsableColumns and openUniqDrop all share the same stable row identity across renderFinalTable and initCollapsableColumns reset cycles in both single-table and multi-table modes"
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.68",
-      "date": "2026-03-08",
-      "sections": [
-        {
-          "label": "✨ Enhancements",
-          "items": [
-            "unique-values dropdown — new synthetic '• single-row cells' entry: for collapsable columns, a new entry is prepended as the very first item in synBox showing how many visible rows have exactly one ul>li item (cells with a list structure but only one entry that therefore have no ▶/◀ toggle); selecting it applies a 'single' multiRowMode filter so only those rows remain visible; synItemCount height estimation updated to include the extra slot"
-          ]
-        },
-        {
-          "label": "🐛 Bugfix",
-          "items": [
-            "unique-values dropdown / multi-row state filter — stale counts and wrong h2 total after clear+reselect: the dropdown counted toggle state by reading .mb-cell-collapse-toggle textContent (▶ or ◀) from the DOM, but initCollapsableColumns resets every toggle to ▶ after renderFinalTable clones rows; after the first filter+clear cycle all DOM toggles showed ▶ so multiRowExpandedCount was always 0 and multiRowCollapsedCount was inflated; selection of the 'expanded' entry matched no rows; subsequently selecting 'collapsed' matched only the pre-expansion count because testRowMatch also read toggle.textContent from clones (which likewise showed ▶); fixed by introducing an expandedCells Map (keyed 'rowIdx:colIdx') as the authoritative source of truth: the ensureCollapseDelegate toggle click handler now writes into / deletes from expandedCells; openUniqDrop counts from ul>li count + expandedCells instead of toggle.textContent; testRowMatch uses expandedCells instead of toggle.textContent; initCollapsableColumns reads expandedCells to restore the correct ▶/◀ state and hidden/visible li items after every re-render"
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.67",
       "date": "2026-03-08",
       "sections": [

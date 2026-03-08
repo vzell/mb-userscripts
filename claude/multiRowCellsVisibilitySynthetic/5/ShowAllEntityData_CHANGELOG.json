@@ -1,17 +1,5 @@
 [
     {
-      "version": "9.99.70",
-      "date": "2026-03-08",
-      "sections": [
-        {
-          "label": "🐛 Bugfix",
-          "items": [
-            "applyRenderMultiRowCells — single-row cells not wrapped in <ul><li>: the function skipped wrapping when a cell contained only one logical row (nonEmptyGroups.length < 2 guard caused a continue), leaving those cells as raw DOM nodes rather than <ul><li> containers; this broke (1) the collapsableColumns feature for renderMultiRowCell columns such as Label and Catalog# because initCollapsableColumns and testRowMatch both inspect ul > li count — lis.length === 1 signals a single-row cell but lis.length === 0 (un-wrapped) is invisible to both; (2) the '• single-row cells' synthetic filter entry in the unique-values dropdown never matched Label/Catalog# cells with exactly one entry; (3) the statistics panel counted them as neither single-row nor multi-row; fixed by changing the guard to nonEmptyGroups.length < 1 so only truly empty cells are skipped — all non-empty cells, including single-entry ones, are now always wrapped in <ul><li>, matching the long-established behaviour of splitCountryDate which has always wrapped even single-event cells; initCollapsableColumns correctly adds a ▶/◀ toggle only for lis.length ≥ 2 so single-<li> cells remain un-toggled; docstring updated to document the new wrapping contract"
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.69",
       "date": "2026-03-08",
       "sections": [

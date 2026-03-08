@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.70+2026-03-08
+// @version      9.99.67+2026-03-08
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1378,15 +1378,9 @@
      *   a single <li> item.  Leading and trailing whitespace-only text nodes
      *   within each group are dropped before appending to the <li>.
      *
-     *   - Cells with zero logical rows (empty cells) are left unchanged.
-     *   - All non-empty cells — including those with exactly one logical row —
-     *     are wrapped in a <ul><li> so that initCollapsableColumns,
-     *     testRowMatch (hasSingleRow ≡ lis.length === 1), and the statistics
-     *     panel see a uniform structure regardless of how many entries the cell
-     *     contains.  This matches the behaviour of splitCountryDate, which also
-     *     always wraps even single-event cells in <ul><li>.
-     *   - Cells with ≥2 logical rows additionally receive a ▶/◀ cell toggle
-     *     from initCollapsableColumns (single-<li> cells are unaffected by it).
+     *   - Cells with zero or one logical row are left unchanged (no wrapping).
+     *   - Cells with ≥2 logical rows have their content replaced by a <ul>
+     *     whose <li> children contain cloned versions of the collected nodes.
      *
      * This function is compatible with the collapsableColumns mechanism: if the
      * same column names are also declared in `features.collapsableColumns`, the
@@ -1446,15 +1440,8 @@
                 return trimmed;
             }).filter(g => g.length > 0);
 
-            // ── Skip only truly empty cells; always wrap non-empty ones ──────
-            // Even a single logical row must be wrapped in <ul><li> so that
-            // initCollapsableColumns, testRowMatch (hasSingleRow check via
-            // lis.length === 1), and the statistics panel all see a consistent
-            // ul > li structure — matching the behaviour of splitCountryDate,
-            // which always wraps even single-event cells.
-            // initCollapsableColumns adds a ▶/◀ toggle only when lis.length ≥ 2,
-            // so single-<li> cells are left un-toggled, which is correct.
-            if (nonEmptyGroups.length < 1) continue;
+            // ── Only wrap when ≥2 logical rows exist ─────────────────────────
+            if (nonEmptyGroups.length < 2) continue;
 
             const ul = document.createElement('ul');
             nonEmptyGroups.forEach(group => {
@@ -1466,7 +1453,7 @@
             td.innerHTML = '';
             td.appendChild(ul);
 
-            Lib.debug('extract', `renderMultiRowCell: column "${entry.columnName}" (colIdx=${entry.colIdx}) — wrapped into ${nonEmptyGroups.length} li row(s)`);
+            Lib.debug('extract', `renderMultiRowCell: column "${entry.columnName}" (colIdx=${entry.colIdx}) — split into ${nonEmptyGroups.length} rows`);
         }
     }
 
@@ -1609,8 +1596,7 @@
                         columnExtractors: [
                             { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                         ],
-                        renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                        collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                        collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                     }
                 },
                 {
@@ -1900,10 +1886,11 @@
                     { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                 ],
-                renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release'
             },
+            renderMultiRowCell: [ 'Label', 'Catalog#' ],
+            collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
             tableMode: 'single'
         },
         {
@@ -8249,15 +8236,6 @@
     let allRows = [];
     let originalAllRows = [];
     let groupedRows = [];
-    // Source-of-truth for per-cell expand/collapse state, keyed "rowIdx:colIdx".
-    // Updated by every toggle click; read by initCollapsableColumns, testRowMatch,
-    // and openUniqDrop so they all agree even after renderFinalTable+init resets the DOM.
-    const expandedCells = new Map();
-    // Global row-index counter — incremented for EVERY row pushed to allRows or
-    // groupedRows (both live-fetch and disk-load), regardless of tableMode.
-    // Stored as data-mb-row-idx on the TR element so cloneNode(true) propagates
-    // it automatically. Reset to 0 at the start of every new fetch / disk-load.
-    let _mbRowIdxCounter = 0;
     let isLoaded = false;
     let stopRequested = false;
     let multiTableSortStates = new Map();
@@ -10134,28 +10112,17 @@
         // --- Column filters ---
         let colHit = true;
         for (const f of colFilters) {
-            // ── Multi-row state filter: match by expandedCells state, not by DOM toggle ──
-            // Using expandedCells (keyed "rowIdx:colIdx") instead of toggle.textContent
-            // ensures correctness across renderFinalTable+initCollapsableColumns cycles:
-            // the DOM toggle is reset to '▶' by initCollapsableColumns but expandedCells
-            // always reflects the user's actual expand/collapse actions.
+            // ── Multi-row state filter: match by DOM toggle state, not by text ──
             if (f.isMultiRowFilter) {
                 const cell   = row.cells[f.idx];
-                const lis    = cell ? Array.from(cell.querySelectorAll('ul > li')) : [];
-                const hasMultiRow   = lis.length >= 2;
-                const hasSingleRow  = lis.length === 1;
-                const rowIdx = row.dataset ? row.dataset.mbRowIdx : undefined;
-                const ecKey  = rowIdx !== undefined ? `${rowIdx}:${f.idx}` : undefined;
-                const isExpanded = ecKey !== undefined && expandedCells.get(ecKey) === true;
+                const toggle = cell ? cell.querySelector('.mb-cell-collapse-toggle') : null;
                 let match = false;
                 if (f.multiRowMode === 'any') {
-                    match = hasMultiRow;
+                    match = !!toggle;
                 } else if (f.multiRowMode === 'collapsed') {
-                    match = hasMultiRow && !isExpanded;
-                } else if (f.multiRowMode === 'expanded') {
-                    match = hasMultiRow && isExpanded;
-                } else if (f.multiRowMode === 'single') {
-                    match = hasSingleRow;
+                    match = !!toggle && toggle.textContent.trim() === '▶';
+                } else { // 'expanded'
+                    match = !!toggle && toggle.textContent.trim() === '◀';
                 }
                 if (!match) { colHit = false; break; }
                 continue; // no text highlight for state-based filters
@@ -10950,8 +10917,6 @@
         allRows = [];
         originalAllRows = [];
         groupedRows = [];
-        expandedCells.clear();
-        _mbRowIdxCounter = 0;
 
         // Run refactored clutter removal
         performClutterCleanup();
@@ -11280,7 +11245,6 @@
                                 // ── end shared synthetic-column pipeline ─────────────────────────
 
                                 currentGroup.rows.push(newRow);
-                                newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                 rowsInThisPage++;
                                 totalRowsAccumulated++;
                                 pageCategoryMap.set(category, (pageCategoryMap.get(category) || 0) + 1);
@@ -11466,11 +11430,9 @@
                                         } else {
                                             groupedRows.push({ category: currentStatus, rows: [newRow] });
                                         }
-                                        newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                         lastCategorySeenAcrossPages = currentStatus;
                                         pageCategoryMap.set(currentStatus, (pageCategoryMap.get(currentStatus) || 0) + 1);
                                     } else {
-                                        newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                         allRows.push(newRow);
                                     }
 
@@ -13166,13 +13128,9 @@
 
         // ---- Collect distinct non-empty values with occurrence counts from visible tbody rows ----
         const valueCounts = new Map();
-        // Counts for synthetic multi-row state entries (collapsed ▶ / expanded ◀ / any / single-row)
-        // These are derived from expandedCells (the authoritative source of truth) + ul>li count,
-        // NOT from the DOM toggle textContent which is reset to '▶' by initCollapsableColumns
-        // after every renderFinalTable call.
+        // Counts for synthetic multi-row state entries (collapsed ▶ / expanded ◀ / any)
         let multiRowCollapsedCount = 0;
         let multiRowExpandedCount  = 0;
-        let singleRowCount         = 0;
         const tbody = table.tBodies[0];
         if (tbody) {
             Array.from(tbody.rows).forEach(row => {
@@ -13185,20 +13143,11 @@
                 //       consistently with what the column filter actually matches.
                 const v = getCleanColumnText(cell);
                 if (v) valueCounts.set(v, (valueCounts.get(v) || 0) + 1);
-                // Count multi-row / single-row state using expandedCells as source of truth.
-                // Counting from DOM toggle.textContent would give wrong results after a
-                // runFilter() cycle because initCollapsableColumns resets all toggles to '▶'.
-                const lis = cell.querySelectorAll('ul > li');
-                const rowIdx = row.dataset ? row.dataset.mbRowIdx : undefined;
-                if (lis.length >= 2) {
-                    const key = rowIdx !== undefined ? `${rowIdx}:${colIndex}` : null;
-                    if (key !== null && expandedCells.get(key) === true) {
-                        multiRowExpandedCount++;
-                    } else {
-                        multiRowCollapsedCount++;
-                    }
-                } else if (lis.length === 1) {
-                    singleRowCount++;
+                // Count collapse-toggle state for synthetic items
+                const toggle = cell.querySelector('.mb-cell-collapse-toggle');
+                if (toggle) {
+                    if (toggle.textContent.trim() === '▶') multiRowCollapsedCount++;
+                    else if (toggle.textContent.trim() === '◀') multiRowExpandedCount++;
                 }
             });
         }
@@ -13363,7 +13312,7 @@
         // Insert synBox right before listBox so it renders above regular values
         drop.insertBefore(synBox, listBox);
 
-        if (isCollapsableCol && (singleRowCount > 0 || totalMultiRow > 0)) {
+        if (isCollapsableCol && totalMultiRow > 0) {
             // Section header label
             const synHdr = document.createElement('div');
             synHdr.textContent = 'Multi-row cell state';
@@ -13375,7 +13324,7 @@
 
             /**
              * Creates and appends a single synthetic multi-row state entry to synBox.
-             * @param {string} mode    - 'single' | 'collapsed' | 'expanded' | 'any'
+             * @param {string} mode    - 'collapsed' | 'expanded' | 'any'
              * @param {string} label   - Human-readable display text
              * @param {number} count   - Number of visible rows matching this mode
              */
@@ -13410,12 +13359,6 @@
                 synBox.appendChild(item);
             };
 
-            // ── Synthetic entries — single-row first, then multi-row states ───
-            // "single-row cells" appears at the very top of synBox so it is the
-            // first entry the user sees in the dropdown.
-            if (singleRowCount > 0) {
-                makeSynItem('single', '• single-row cells', singleRowCount);
-            }
             if (multiRowCollapsedCount > 0) {
                 makeSynItem('collapsed', '▶ collapsed multi-row cells', multiRowCollapsedCount);
             }
@@ -13579,8 +13522,7 @@
         const vw    = window.innerWidth;
         const vh    = window.innerHeight;
         const synItemCount = isCollapsableCol
-            ? (singleRowCount         > 0 ? 1 : 0) +
-              (multiRowCollapsedCount > 0 ? 1 : 0) +
+            ? (multiRowCollapsedCount > 0 ? 1 : 0) +
               (multiRowExpandedCount  > 0 ? 1 : 0) +
               (totalMultiRow > 1        ? 1 : 0)
             : 0;
@@ -13674,7 +13616,6 @@
         // Store a human-readable display label so the field looks intentionally set.
         const label = mode === 'collapsed' ? '▶ multi-row: collapsed' :
                       mode === 'expanded'  ? '◀ multi-row: expanded'  :
-                      mode === 'single'    ? '• single-row cells'     :
                                             '▶◀ multi-row: any';
         input.value = label;
 
@@ -13886,24 +13827,6 @@
                     : `Expand: ${lis.length} items are collapsed`
             );
 
-            // ── Keep expandedCells in sync (source-of-truth for toggle state) ─
-            // expandedCells is keyed "rowIdx:colIdx" and is used by the
-            // unique-values dropdown counter, testRowMatch, and
-            // initCollapsableColumns so they all see the correct state even
-            // after renderFinalTable+initCollapsableColumns has reset the DOM.
-            {
-                const tr = toggle.closest('tr');
-                const rowIdx = tr ? tr.dataset.mbRowIdx : undefined;
-                if (rowIdx !== undefined) {
-                    const colIdx = td ? Array.from(tr.cells).indexOf(td) : -1;
-                    if (colIdx >= 0) {
-                        const key = `${rowIdx}:${colIdx}`;
-                        if (nowExpanding) expandedCells.set(key, true);
-                        else             expandedCells.delete(key);
-                    }
-                }
-            }
-
             // ── Update toggle-icon highlight for hidden-match signalling ──────
             // When expanding: all list items are now visible — no collapsed
             //   content remains, so there can be no hidden match → always clear.
@@ -14109,19 +14032,8 @@
             let maxFirstLiWidth = 0;
 
             multiRowCells.forEach(({ td, lis }) => {
-                // Determine whether this cell should be restored as expanded.
-                // expandedCells (keyed "rowIdx:colIdx") is the authoritative state;
-                // it is updated on every user toggle click so it survives the
-                // renderFinalTable + initCollapsableColumns reset cycle.
-                const tr = td.closest('tr');
-                const rowIdx = tr ? tr.dataset.mbRowIdx : undefined;
-                const ecKey  = rowIdx !== undefined ? `${rowIdx}:${colIndex}` : undefined;
-                const startExpanded = ecKey !== undefined && expandedCells.get(ecKey) === true;
-
-                // Collapse or expand: hide/show extra <li> items.
-                lis.slice(1).forEach(li => {
-                    li.style.display = startExpanded ? '' : 'none';
-                });
+                // Initially collapse: hide all <li> items beyond the first.
+                lis.slice(1).forEach(li => { li.style.display = 'none'; });
 
                 // Mark <td> for CSS positioning context + right padding.
                 td.classList.add('mb-has-collapse-toggle');
@@ -14129,27 +14041,20 @@
                 // Create the toggle icon span — click handling via delegation.
                 const cellToggle = document.createElement('span');
                 cellToggle.className = 'mb-cell-collapse-toggle';
-                cellToggle.textContent = startExpanded ? '◀' : '▶';
-                cellToggle.title = startExpanded
-                    ? `Collapse back to first item (${lis.length} total)`
-                    : `Show all ${lis.length} items (click to expand)`;
+                cellToggle.textContent = '▶';
+                cellToggle.title = `Show all ${lis.length} items (click to expand)`;
                 cellToggle.setAttribute('role', 'button');
-                cellToggle.setAttribute('aria-expanded', startExpanded ? 'true' : 'false');
-                cellToggle.setAttribute('aria-label',
-                    startExpanded
-                        ? `Collapse: showing all ${lis.length} items`
-                        : `Expand: ${lis.length} items are collapsed`
-                );
+                cellToggle.setAttribute('aria-expanded', 'false');
+                cellToggle.setAttribute('aria-label', `Expand: ${lis.length} items are collapsed`);
                 td.appendChild(cellToggle);
 
                 // ── Highlight toggle icon if collapsed items contain a match ──
                 // testRowMatch() / highlightText() may have already wrapped
                 // matching text in highlight spans before initCollapsableColumns
-                // runs.  Any spans in lis[1..n] are invisible when collapsed —
-                // add the signalling class so the user can see that expanding
-                // this cell will reveal matching content.
-                // When already expanded, lis[1..n] are visible so no hidden match.
-                const hasHiddenMatch = !startExpanded && lis.slice(1).some(li =>
+                // runs.  Any spans in lis[1..n] are invisible (just been hidden
+                // above) — add the signalling class so the user can see that
+                // expanding this cell will reveal matching content.
+                const hasHiddenMatch = lis.slice(1).some(li =>
                     li.querySelector(
                         '.mb-global-filter-highlight, ' +
                         '.mb-column-filter-highlight, ' +
@@ -15606,8 +15511,6 @@
                 // Reconstruct rows from serialized data with Filtering
                 if (data.tableMode === 'multi' && data.groups) {
                     groupedRows = [];
-                    expandedCells.clear();
-                    _mbRowIdxCounter = 0;
                     data.groups.forEach(group => {
                         const reconstructedRows = [];
                         group.rows.forEach((rowCells, rowIndex) => {
@@ -15622,7 +15525,6 @@
                             });
 
                             if (rowMatchesFilter(tr)) {
-                                tr.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                 reconstructedRows.push(tr);
                             }
                         });
@@ -15638,8 +15540,6 @@
                     allRows = [];
                 } else if (data.rows) {
                     allRows = [];
-                    expandedCells.clear();
-                    _mbRowIdxCounter = 0;
                     data.rows.forEach((rowCells, rowIndex) => {
                         const tr = document.createElement('tr');
                         tr.className = rowIndex % 2 === 0 ? 'even' : 'odd';
@@ -15652,7 +15552,6 @@
                         });
 
                         if (rowMatchesFilter(tr)) {
-                            tr.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                             allRows.push(tr);
                         }
                     });

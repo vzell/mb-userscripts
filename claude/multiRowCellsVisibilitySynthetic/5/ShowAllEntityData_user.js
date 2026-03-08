@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.70+2026-03-08
+// @version      9.99.69+2026-03-08
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1378,15 +1378,9 @@
      *   a single <li> item.  Leading and trailing whitespace-only text nodes
      *   within each group are dropped before appending to the <li>.
      *
-     *   - Cells with zero logical rows (empty cells) are left unchanged.
-     *   - All non-empty cells — including those with exactly one logical row —
-     *     are wrapped in a <ul><li> so that initCollapsableColumns,
-     *     testRowMatch (hasSingleRow ≡ lis.length === 1), and the statistics
-     *     panel see a uniform structure regardless of how many entries the cell
-     *     contains.  This matches the behaviour of splitCountryDate, which also
-     *     always wraps even single-event cells in <ul><li>.
-     *   - Cells with ≥2 logical rows additionally receive a ▶/◀ cell toggle
-     *     from initCollapsableColumns (single-<li> cells are unaffected by it).
+     *   - Cells with zero or one logical row are left unchanged (no wrapping).
+     *   - Cells with ≥2 logical rows have their content replaced by a <ul>
+     *     whose <li> children contain cloned versions of the collected nodes.
      *
      * This function is compatible with the collapsableColumns mechanism: if the
      * same column names are also declared in `features.collapsableColumns`, the
@@ -1446,15 +1440,8 @@
                 return trimmed;
             }).filter(g => g.length > 0);
 
-            // ── Skip only truly empty cells; always wrap non-empty ones ──────
-            // Even a single logical row must be wrapped in <ul><li> so that
-            // initCollapsableColumns, testRowMatch (hasSingleRow check via
-            // lis.length === 1), and the statistics panel all see a consistent
-            // ul > li structure — matching the behaviour of splitCountryDate,
-            // which always wraps even single-event cells.
-            // initCollapsableColumns adds a ▶/◀ toggle only when lis.length ≥ 2,
-            // so single-<li> cells are left un-toggled, which is correct.
-            if (nonEmptyGroups.length < 1) continue;
+            // ── Only wrap when ≥2 logical rows exist ─────────────────────────
+            if (nonEmptyGroups.length < 2) continue;
 
             const ul = document.createElement('ul');
             nonEmptyGroups.forEach(group => {
@@ -1466,7 +1453,7 @@
             td.innerHTML = '';
             td.appendChild(ul);
 
-            Lib.debug('extract', `renderMultiRowCell: column "${entry.columnName}" (colIdx=${entry.colIdx}) — wrapped into ${nonEmptyGroups.length} li row(s)`);
+            Lib.debug('extract', `renderMultiRowCell: column "${entry.columnName}" (colIdx=${entry.colIdx}) — split into ${nonEmptyGroups.length} rows`);
         }
     }
 

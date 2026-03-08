@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.70+2026-03-08
+// @version      9.99.68+2026-03-08
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1378,15 +1378,9 @@
      *   a single <li> item.  Leading and trailing whitespace-only text nodes
      *   within each group are dropped before appending to the <li>.
      *
-     *   - Cells with zero logical rows (empty cells) are left unchanged.
-     *   - All non-empty cells — including those with exactly one logical row —
-     *     are wrapped in a <ul><li> so that initCollapsableColumns,
-     *     testRowMatch (hasSingleRow ≡ lis.length === 1), and the statistics
-     *     panel see a uniform structure regardless of how many entries the cell
-     *     contains.  This matches the behaviour of splitCountryDate, which also
-     *     always wraps even single-event cells in <ul><li>.
-     *   - Cells with ≥2 logical rows additionally receive a ▶/◀ cell toggle
-     *     from initCollapsableColumns (single-<li> cells are unaffected by it).
+     *   - Cells with zero or one logical row are left unchanged (no wrapping).
+     *   - Cells with ≥2 logical rows have their content replaced by a <ul>
+     *     whose <li> children contain cloned versions of the collected nodes.
      *
      * This function is compatible with the collapsableColumns mechanism: if the
      * same column names are also declared in `features.collapsableColumns`, the
@@ -1446,15 +1440,8 @@
                 return trimmed;
             }).filter(g => g.length > 0);
 
-            // ── Skip only truly empty cells; always wrap non-empty ones ──────
-            // Even a single logical row must be wrapped in <ul><li> so that
-            // initCollapsableColumns, testRowMatch (hasSingleRow check via
-            // lis.length === 1), and the statistics panel all see a consistent
-            // ul > li structure — matching the behaviour of splitCountryDate,
-            // which always wraps even single-event cells.
-            // initCollapsableColumns adds a ▶/◀ toggle only when lis.length ≥ 2,
-            // so single-<li> cells are left un-toggled, which is correct.
-            if (nonEmptyGroups.length < 1) continue;
+            // ── Only wrap when ≥2 logical rows exist ─────────────────────────
+            if (nonEmptyGroups.length < 2) continue;
 
             const ul = document.createElement('ul');
             nonEmptyGroups.forEach(group => {
@@ -1466,7 +1453,7 @@
             td.innerHTML = '';
             td.appendChild(ul);
 
-            Lib.debug('extract', `renderMultiRowCell: column "${entry.columnName}" (colIdx=${entry.colIdx}) — wrapped into ${nonEmptyGroups.length} li row(s)`);
+            Lib.debug('extract', `renderMultiRowCell: column "${entry.columnName}" (colIdx=${entry.colIdx}) — split into ${nonEmptyGroups.length} rows`);
         }
     }
 
@@ -1609,8 +1596,7 @@
                         columnExtractors: [
                             { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                         ],
-                        renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                        collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                        collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                     }
                 },
                 {
@@ -1900,10 +1886,11 @@
                     { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                 ],
-                renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release'
             },
+            renderMultiRowCell: [ 'Label', 'Catalog#' ],
+            collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
             tableMode: 'single'
         },
         {
@@ -8253,11 +8240,6 @@
     // Updated by every toggle click; read by initCollapsableColumns, testRowMatch,
     // and openUniqDrop so they all agree even after renderFinalTable+init resets the DOM.
     const expandedCells = new Map();
-    // Global row-index counter — incremented for EVERY row pushed to allRows or
-    // groupedRows (both live-fetch and disk-load), regardless of tableMode.
-    // Stored as data-mb-row-idx on the TR element so cloneNode(true) propagates
-    // it automatically. Reset to 0 at the start of every new fetch / disk-load.
-    let _mbRowIdxCounter = 0;
     let isLoaded = false;
     let stopRequested = false;
     let multiTableSortStates = new Map();
@@ -10951,7 +10933,6 @@
         originalAllRows = [];
         groupedRows = [];
         expandedCells.clear();
-        _mbRowIdxCounter = 0;
 
         // Run refactored clutter removal
         performClutterCleanup();
@@ -11280,7 +11261,6 @@
                                 // ── end shared synthetic-column pipeline ─────────────────────────
 
                                 currentGroup.rows.push(newRow);
-                                newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                 rowsInThisPage++;
                                 totalRowsAccumulated++;
                                 pageCategoryMap.set(category, (pageCategoryMap.get(category) || 0) + 1);
@@ -11466,11 +11446,10 @@
                                         } else {
                                             groupedRows.push({ category: currentStatus, rows: [newRow] });
                                         }
-                                        newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                         lastCategorySeenAcrossPages = currentStatus;
                                         pageCategoryMap.set(currentStatus, (pageCategoryMap.get(currentStatus) || 0) + 1);
                                     } else {
-                                        newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
+                                        newRow.dataset.mbRowIdx = String(allRows.length);
                                         allRows.push(newRow);
                                     }
 
@@ -15606,8 +15585,6 @@
                 // Reconstruct rows from serialized data with Filtering
                 if (data.tableMode === 'multi' && data.groups) {
                     groupedRows = [];
-                    expandedCells.clear();
-                    _mbRowIdxCounter = 0;
                     data.groups.forEach(group => {
                         const reconstructedRows = [];
                         group.rows.forEach((rowCells, rowIndex) => {
@@ -15622,7 +15599,6 @@
                             });
 
                             if (rowMatchesFilter(tr)) {
-                                tr.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                 reconstructedRows.push(tr);
                             }
                         });
@@ -15636,10 +15612,10 @@
                         loadedRowCount += reconstructedRows.length;
                     });
                     allRows = [];
+                    expandedCells.clear();
                 } else if (data.rows) {
                     allRows = [];
                     expandedCells.clear();
-                    _mbRowIdxCounter = 0;
                     data.rows.forEach((rowCells, rowIndex) => {
                         const tr = document.createElement('tr');
                         tr.className = rowIndex % 2 === 0 ? 'even' : 'odd';
@@ -15652,7 +15628,7 @@
                         });
 
                         if (rowMatchesFilter(tr)) {
-                            tr.dataset.mbRowIdx = String(_mbRowIdxCounter++);
+                            tr.dataset.mbRowIdx = String(allRows.length);
                             allRows.push(tr);
                         }
                     });
