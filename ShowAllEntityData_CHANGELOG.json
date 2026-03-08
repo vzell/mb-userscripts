@@ -1,5 +1,17 @@
 [
     {
+      "version": "9.99.59",
+      "date": "2026-03-08",
+      "sections": [
+        {
+          "label": "🐛 Bugfix",
+          "items": [
+            "collapsableColumns global toggle button missing after Load from Disk: root cause was that initCollapsableColumns() was called BEFORE the subsequent runFilter() call in the disk-load path; runFilter() clones allRows and replaces tbody content, discarding all toggle modifications and leaving the DOM without toggle spans; additionally filterContainer is not in the DOM yet when initCollapsableColumns() ran there, so the global button was set to display:'' but inside an invisible container — the fix moves ownership of initCollapsableColumns() into runFilter()'s single-table branch (called after renderFinalTable + updateH2Count), so it always runs on the actual final DOM rows with filterContainer already in the DOM; this also fixes toggle state after every user-triggered filter/sort operation since initCollapsableColumns() is now idempotently called after every single-table re-render"
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.58",
       "date": "2026-03-07",
       "sections": [

@@ -44883,7 +44883,7 @@ invisible text (so it should not be rendered insdie of the data cells) of "video
 and the text "audio" otherwise (also not rendered). But BOTH values should be taken into account when sorting
 ascending/descending and also should be renderded inside the unique column value drop-down for selection purposes (clicking on "video" should filter on cells with the '<span class="video"' and clicking on "audio" all except the '<span class="video"'
 
-* remove "artwork icon/picture" and render the artwork icon in a separate column
+* DONE remove "artwork icon/picture" and render the artwork icon in a separate column
 ** DONE initial
 
 In the uploaded userscript,
@@ -45124,8 +45124,7 @@ Then the "caa" columnExtractor
 
 could finally add the synthetic column "CAA" and remove the span '<span class="artwork-icon caa-icon"'
 
-
-* remove "artwork icon/picture" and render the artwork icon in a separate column
+* DONE remove "artwork icon/picture" and render the artwork icon in a separate column
 
 - For pages of type https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
@@ -45189,6 +45188,123 @@ Still breaks when auto-resizing
 </td>
 #+end_example
   
+* DONE collpase multiline column cells and display a shorted version together wuth a popup which has the complete unalterd multi-row cell content
+** initial
+
+In the uploaded userscript,
+
+the variable "const pageDefinitions" has been enhanced with a new "collapsableColumns" paraneter for specific pageTypes, e.g.
+
+#+begin_example
+        {
+            type: 'place-events',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] }
+                ],
+                collapsableColumns: [ 'Artists' ],
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'artist-works',
+            match: (path) => path.includes('/works'),
+            buttons: [ { label: 'Show all Works for Artist' } ],
+            features: {
+                collapsableColumns: [ 'Authors', 'Recording artists', 'ISWC', 'Attributes' ],
+                extractMainColumn: 'Work'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+Please enhance the user script with the following functionality:
+
+- Make sure the function
+
+#+begin_example
+function expandShowAllCells(doc, pageNum) {
+#+end_example
+
+should always run prior to the new functionality, to make sure that all column values are actually available.
+
+- in each column which belongs to "collapsableColumns", initially collapse all the multi-row cell values in each column
+  cell and render just the first row in each cell + a collapse icon "▶" at the very end of the column. When clicking the
+  icon "▶", all the rows in such a multi-row cell should again be displayed
+
+- when at least one data cell in a column is a multi-row cell, add a column specific collapse icon "▶" in the column
+  header right before the "Show unique column values"-dropdown icon. When clicking that column header icon, emulate a
+  click on every cell specific collapse icon "▶" in that column
+
+- add a global collpase icon "▶" for the whole table in front of the '<button
+  id="mb-toggle-filter-highlight-btn"'-button and when clicking iterate over all the columns which could potentially
+  have multi-row cells and emulate a click on each collapse icon "▶" in each header
+
+- also take into account the new header specific collpase icon "▶" in references like
+
+#+begin_example
+                let headerText = cell.textContent.replace(/[⇅▲▼📊]/g, '').trim();
+#+end_example
+
+throughtout the code where necessary
+
+** real toggle
+
+Actually the global and per column header collapse icon "▶" should act as a toggle and repeated clicks should
+collapse/uncollapse all in the whole table (global) and all inside a column (per colum header ). Also the icon should
+change it's direction depending on the current toggle state. The text in the global button also accordingly.
+
+A last glich, the toggle icon per multi-row cell should be located at the very end of the first column in a mult-row cell and NOT on a new row below
+
+** right aligned
+
+- the collapse toggle icon should be right aligned inside the column cell and NOT directly behind the first row column
+  values. It should also stay right aligned when the row gets either auto or manually resized. Initially when the final
+  page is rendered, the minimum width of columns with multi-row cells should at least account for the longest column
+  value over all rows in a table + the space for the toggle icon itself (right now for example on
+  https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events in almost all cells the collapse icon "▶" is
+  still rendered visually in the next row (although it's located after the first row value in a multi-row cell)
+
+- there is a bug that the toggling of collapsing/uncollapsing is NOT working anymore (clicking the toggle icon/button
+  has no effect) as soon as the table has been sorted either ascending or descending on whatever column (including the
+  multi-row column)
+
+- the same happens when serializing the table data to disk (either collapsed or uncollapsed) via "Save to Disk"-button and then load
+  back via "Load from Disk"-button, no more collapsing/uncollapsing possible (clicking the toggle icon/button has no effect)
+
+** DONE global collpase icon "▶" missing after "Load from Disk"
+
+- the global toggle button for collapsing/uncollapsing is missing when pressing "Load from Disk" right on the intial
+  page. It should again be rendered as long as there is at least one data cell with multi-row data. If pressing "Load
+  from Disk" when we have already been on the final rendered page it's there
+
+** hide and hightlight toggle icons
+
+In the uploaded userscript,
+
+please check the function "initCollapsableColumns" and its implementation and add the following functionalities
+
+- when filtering and there are only rows shown where no multi-row data cells are present, the global toggle button and
+  the column specific toggle icons in the column headers should also be hidden, until rows are filtered in such a way
+  that when at least one data cell in a column is again of type multi-row cell, then display the column header toggle
+  icon for that column again. The global toggle button should appear as soon as there is at least one data cell with
+  multi-row data (independant of which column)
+
+- when filtering data and the filter string is actually matched in the collapsed part of a multi-row cell (so the
+  highlightning is not yet visibly except we would uncollapse), hightlight the right aligned toggle icon in the first
+  row of the multi-row cell instead (to give the end user a clue). But also clear the highlightning again from the
+  toggle icon if uncollapse and so on.
+
+- also change the background color and text color of the global toggle button if at least one multi-row data cell has
+  highlighning (doesn't matter if in the visible part, when uncollapsed or in the collpased invisible part, to give the
+  end user a clue)
+
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
 
 For example for the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
@@ -46263,101 +46379,4 @@ Still not, the button text is actually an icon, then a superscript and then the 
 
 * The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
 
-
-* TODO collpase multiline column cells and display a shorted version together wuth a popup which has the complete unalterd multi-row cell content
-** initial
-
-In the uploaded userscript,
-
-the variable "const pageDefinitions" has been enhanced with a new "collapsableColumns" paraneter for specific pageTypes, e.g.
-
-#+begin_example
-        {
-            type: 'place-events',
-            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
-            buttons: [ { label: 'Show all Events for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] }
-                ],
-                collapsableColumns: [ 'Artists' ],
-                extractMainColumn: 'Event'
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-#+begin_example
-        {
-            type: 'artist-works',
-            match: (path) => path.includes('/works'),
-            buttons: [ { label: 'Show all Works for Artist' } ],
-            features: {
-                collapsableColumns: [ 'Authors', 'Recording artists', 'ISWC', 'Attributes' ],
-                extractMainColumn: 'Work'
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-Please enhance the user script with the following functionality:
-
-- Make sure the function
-
-#+begin_example
-function expandShowAllCells(doc, pageNum) {
-#+end_example
-
-should always run prior to the new functionality, to make sure that all column values are actually available.
-
-- in each column which belongs to "collapsableColumns", initially collapse all the multi-row cell values in each column
-  cell and render just the first row in each cell + a collapse icon "▶" at the very end of the column. When clicking the
-  icon "▶", all the rows in such a multi-row cell should again be displayed
-
-- when at least one data cell in a column is a multi-row cell, add a column specific collapse icon "▶" in the column
-  header right before the "Show unique column values"-dropdown icon. When clicking that column header icon, emulate a
-  click on every cell specific collapse icon "▶" in that column
-
-- add a global collpase icon "▶" for the whole table in front of the '<button
-  id="mb-toggle-filter-highlight-btn"'-button and when clicking iterate over all the columns which could potentially
-  have multi-row cells and emulate a click on each collapse icon "▶" in each header
-
-- also take into account the new header specific collpase icon "▶" in references like
-
-#+begin_example
-                let headerText = cell.textContent.replace(/[⇅▲▼📊]/g, '').trim();
-#+end_example
-
-throughtout the code where necessary
-
-** real toggle
-
-Actually the global and per column header collapse icon "▶" should act as a toggle and repeated clicks should
-collapse/uncollapse all in the whole table (global) and all inside a column (per colum header ). Also the icon should
-change it's direction depending on the current toggle state. The text in the global button also accordingly.
-
-A last glich, the toggle icon per multi-row cell should be located at the very end of the first column in a mult-row cell and NOT on a new row below
-
-** right aligned
-
-- the collapse toggle icon should be right aligned inside the column cell and NOT directly behind the first row column
-  values. It should also stay right aligned when the row gets either auto or manually resized. Initially when the final
-  page is rendered, the minimum width of columns with multi-row cells should at least account for the longest column
-  value over all rows in a table + the space for the toggle icon itself (right now for example on
-  https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events in almost all cells the collapse icon "▶" is
-  still rendered visually in the next row (although it's located after the first row value in a multi-row cell)
-
-- there is a bug that the toggling of collapsing/uncollapsing is NOT working anymore (clicking the toggle icon/button
-  has no effect) as soon as the table has been sorted either ascending or descending on whatever column (including the
-  multi-row column)
-
-- the same happens when serializing the table data to disk (either collapsed or uncollapsed) via "Save to Disk"-button and then load
-  back via "Load from Disk"-button, no more collapsing/uncollapsing possible (clicking the toggle icon/button has no effect)
-
-** global collpase icon "▶" missing after "Load from Disk"
-
-One bug left:
-
-the global toggle button for collapsing/uncollapsing is missing after "Load from Disk". It should again be rendered as
-long as there is at least one data cell with multi-row data
 
