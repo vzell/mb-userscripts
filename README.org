@@ -33591,137 +33591,6 @@ identify additional "Lib.warn" statement usage and potential renames of current 
 In the uploaded userscript
 what would be a much shorter and more pregnant name for this userscript, given the current functionlity
 
-* DONE new columns e.g. for labels
-
-In the uploaded script,
-
-Currently we have the following definitions
-#+begin_example
-    // 3. Set Feature Flags based on active definition
-    // These are evaluated dynamically during fetch based on button-specific features
-    let typesWithSplitCD = [];
-    let typesWithSplitLocation = [];
-    let typesWithSplitArea = [];
-#+end_example
-
-to define which table columns in which pageType should additionally be split in supplemental information which will be
-rendered in additional synthetical columns at the end of the table, e.g.
-
-- the "Country/Date" column will be split in TWO additional columns "Country" and "Date"
-- the "Location" column will be split in THREE additional columns  Place, Area and Country
-
-Please refactor the current column splitting logic into standalone functions and move them out of the main execution flow.
-
-Consolidate the current splitting logic into a helper object called "ColumnDataExtractor" (because we not only want to
-split current data, but also generalize the extraction logic itself). This allows the main fetching and rendering logic
-to simply "ask" for an extraction type without caring about the implementation details.
-
-Maybe somehow specify in the
-
-#+begin_example
-    const pageDefinitions = [
-#+end_example
-
-variable which pageType has columns where data should be extracted from
-
-e.g. column-name to extract data from, how many additional synthetical columns will be created, name of the extractor
-function (maybe part of a generic "ColumnDataExtractor" object)
-
-As a first application of the algorithm, the URL of the following pageType https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
-has a "Tracks" column with a typical content of
-
-#+begin_example
-<td>9 + 7 + 8 + 10 + 11 + 9 + 10 + 12</td>
-#+end_example
-
-Generate an extractor function whcih sums up all the numerical values and create a new synthetical column named "Total
-Tracks" which should be treated like the current synthetical columns when columns are splitted and be rendered at the end of table
-
-** oops
-
-I actually provided you with the wrong instruction, instead of
-
-#+begin_example
-As a first application of the algorithm, the URL of the following pageType https://musicbrainz.org/release/4865fa3a-ee89-454e-97b6-796b851ae19
-has a "Tracks" column with a typical content of
-#+end_example
-
-this should actually read
-
-#+begin_example
-As a first application of the algorithm, the URL of the following pageType https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
-has a "Tracks" column with a typical content of
-#+end_example
-
-Please revert that parts of the generated code which defines a new pageType
-
-** sum of all tracks
-** extract the real format
-
-In the uploaded script
-
-for the following pageTypes
-
-- https://musicbrainz.org/release-group/85206823-9808-3da2-a9d7-2e9b8b0f4e99
-- https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
-- https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
-
-define a new extractor funtion "extractFormatTypes"
-
-#+begin_example
-    const ColumnDataExtractor = {
-            
-                columnExtractors: [
-                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] },
-#+end_example
-
-which extracts format types given in the "Format" cell in the following formats
-
-#+begin_example
-8×12" Vinyl
-2xCD-R
-2xCD-R + DVD
-#+end_example
-
-into an new column for representation as
-
-#+begin_example
-12" Vinyl
-CD-R
-CD-R, DVD
-#+end_example
-
-So basically strip the numeric quantity factor like "8x" from the actual type like "12" Vinyl"
-If there multiple different occurences of type indictated with a " + " in between, change this to ", "
-
-** https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
-
-extract comment from the following columns
- - Release title
- - Label
-
-** TODO Add support for extracting "Primary alias" in disambiguation "comment"
-
-https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
-https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91/aliases
-
-#+begin_example
-<td>
-  <span class="blank-icon">
-  </span>
-  <a class="wrap-anywhere" href="/event/26cead1c-a5fa-4677-873a-312412c6dc91">
-    <bdi>2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>
-      <i title="Primary alias">Southside Johnny &amp; The Asbury Jukes at The Stone Pony
-      </i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show
-    </bdi>)
-  </span>
-</td>
-#+end_example
-
 * DONE refactor column splitting in different functions and take them out of the main flow
 ** initial
 
@@ -46085,6 +45954,75 @@ So basically account for complete empty cells in multi-row cell columns.
 For example in https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the "Country/Date" column has one row where that column is completely empty
 
 
+* DONE remove the "+" in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships in column "Title" for "Holds copyright (c) for"
+* DONE extract "cancelled" from "Event" in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+In the uploaded userscript,
+
+in the variable "const pageDefinitions" there is a new "columnExtractor" definition
+
+#+begin_example
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+#+end_example
+
+for the following pageType
+
+#+begin_example
+        {
+            type: 'events',
+            match: (path) => path.includes('/events'),
+            buttons: [ { label: 'Show all Events for Artist' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Canceled'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
+                ],
+                collapsableColumns: [ 'Location' ],
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        }
+#+end_example
+
+please add the new function "cancelledEvent" to the registry
+
+#+begin_example
+const ColumnDataExtractor = {
+#+end_example
+
+and implement the new functionality of extracting the cancelled status of an event in the following way:
+
+Here is an example entry which has the "cancelled" state at https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+#+begin_example
+<tr class="even">
+  <td>
+    <input name="add-to-merge" type="checkbox" value="24355">
+  </td>
+  <td>
+    <a class="wrap-anywhere" href="/event/a3a46b48-2913-49c5-86f8-f98969a837fc">
+      <bdi>1978‐08‐08: Ryerson Theatre, Ryerson University, Toronto, ON, Canada
+      </bdi>
+    </a>
+    <span class="cancelled">(
+      <bdi>cancelled
+      </bdi>)
+    </span>
+  </td>
+#+end_example
+
+so create the new synthetic column by extracting "cancelled" from the container bdi container inside '<span class="cancelled">'
+
+#+begin_example
+    <span class="cancelled">(
+      <bdi>cancelled
+      </bdi>)
+#+end_example
+
+Take the same approach as for the "caa" or "video" extractor, but in this case leave the "sourceColumn: Event" intact, so don't delete the extracted value 
+
 
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
 
@@ -46327,7 +46265,6 @@ https://musicbrainz.org/recording/merge?returnto=%2Frecording%2Ff2f99a81-9375-45
 
 // @run-at document-end
 // @include /^https:\/\/musicbrainz\.org\/(artist|recording|release|release-group|work)\/[0-9a-fA-F-]{36}(?:\?.*)?$/
-
 
 ** Please rewrite
 
@@ -47103,94 +47040,188 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 
 
-* TODO extract the VZ event disambiguation configurable in its constituents
-
-
-* TODO make the initial collapsing of the sidebar configurable, by default false
-
-
-
 * optionally hide "recording of <work>" in Artist-Recordings" pages
-
 
 * The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
 
 
-* DONE remove the "+" in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships in column "Title" for "Holds copyright (c) for"
-* DONE extract "cancelled" from "Event" in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
-
-In the uploaded userscript,
-
-in the variable "const pageDefinitions" there is a new "columnExtractor" definition
-
-#+begin_example
-                columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
-#+end_example
-
-for the following pageType
-
-#+begin_example
-        {
-            type: 'events',
-            match: (path) => path.includes('/events'),
-            buttons: [ { label: 'Show all Events for Artist' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Canceled'] },
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
-                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
-                ],
-                collapsableColumns: [ 'Location' ],
-                extractMainColumn: 'Event'
-            },
-            tableMode: 'single'
-        }
-#+end_example
-
-please add the new function "cancelledEvent" to the registry
-
-#+begin_example
-const ColumnDataExtractor = {
-#+end_example
-
-and implement the new functionality of extracting the cancelled status of an event in the following way:
-
-Here is an example entry which has the "cancelled" state at https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
-
-#+begin_example
-<tr class="even">
-  <td>
-    <input name="add-to-merge" type="checkbox" value="24355">
-  </td>
-  <td>
-    <a class="wrap-anywhere" href="/event/a3a46b48-2913-49c5-86f8-f98969a837fc">
-      <bdi>1978‐08‐08: Ryerson Theatre, Ryerson University, Toronto, ON, Canada
-      </bdi>
-    </a>
-    <span class="cancelled">(
-      <bdi>cancelled
-      </bdi>)
-    </span>
-  </td>
-#+end_example
-
-so create the new synthetic column by extracting "cancelled" from the container bdi container inside '<span class="cancelled">'
-
-#+begin_example
-    <span class="cancelled">(
-      <bdi>cancelled
-      </bdi>)
-#+end_example
-
-Take the same approach as for the "caa" or "video" extractor, but in this case leave the "sourceColumn: Event" intact, so don't delete the extracted value 
-
-
 * TODO add the empty cell stuff to all unique drop down lists
 
-* add "caa" to
+* TODO add "caa" to
 
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709&page=1 - "Holds copyright (c) for"
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=1 - "Holds copyright (p) for"
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=44&page=1 - "instruments"
+
+* DONE make the initial collapsing of the sidebar configurable, by default false
+
+make the initial collapsing of the sidebar configurable when rendering the final page.
+
+Add a new setting "sa_sidebar_collapsed" (By default it should be false) after
+
+#+begin_example
+        sa_collabsable_sidebar: {
+            label: "Collabsable sidebar (experimental)",
+            type: "checkbox",
+            default: true,
+            description: "Render sidebar collabsable"
+        },
+
+#+end_example
+
+
+* DONE new columns e.g. for labels
+** initial
+
+In the uploaded script,
+
+Currently we have the following definitions
+#+begin_example
+    // 3. Set Feature Flags based on active definition
+    // These are evaluated dynamically during fetch based on button-specific features
+    let typesWithSplitCD = [];
+    let typesWithSplitLocation = [];
+    let typesWithSplitArea = [];
+#+end_example
+
+to define which table columns in which pageType should additionally be split in supplemental information which will be
+rendered in additional synthetical columns at the end of the table, e.g.
+
+- the "Country/Date" column will be split in TWO additional columns "Country" and "Date"
+- the "Location" column will be split in THREE additional columns  Place, Area and Country
+
+Please refactor the current column splitting logic into standalone functions and move them out of the main execution flow.
+
+Consolidate the current splitting logic into a helper object called "ColumnDataExtractor" (because we not only want to
+split current data, but also generalize the extraction logic itself). This allows the main fetching and rendering logic
+to simply "ask" for an extraction type without caring about the implementation details.
+
+Maybe somehow specify in the
+
+#+begin_example
+    const pageDefinitions = [
+#+end_example
+
+variable which pageType has columns where data should be extracted from
+
+e.g. column-name to extract data from, how many additional synthetical columns will be created, name of the extractor
+function (maybe part of a generic "ColumnDataExtractor" object)
+
+As a first application of the algorithm, the URL of the following pageType https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
+has a "Tracks" column with a typical content of
+
+#+begin_example
+<td>9 + 7 + 8 + 10 + 11 + 9 + 10 + 12</td>
+#+end_example
+
+Generate an extractor function whcih sums up all the numerical values and create a new synthetical column named "Total
+Tracks" which should be treated like the current synthetical columns when columns are splitted and be rendered at the end of table
+
+** oops
+
+I actually provided you with the wrong instruction, instead of
+
+#+begin_example
+As a first application of the algorithm, the URL of the following pageType https://musicbrainz.org/release/4865fa3a-ee89-454e-97b6-796b851ae19
+has a "Tracks" column with a typical content of
+#+end_example
+
+this should actually read
+
+#+begin_example
+As a first application of the algorithm, the URL of the following pageType https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
+has a "Tracks" column with a typical content of
+#+end_example
+
+Please revert that parts of the generated code which defines a new pageType
+
+** sum of all tracks
+** extract the real format
+
+In the uploaded script
+
+for the following pageTypes
+
+- https://musicbrainz.org/release-group/85206823-9808-3da2-a9d7-2e9b8b0f4e99
+- https://musicbrainz.org/label/762c208c-210d-4e59-b46c-6f3558ce3a22
+- https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+
+define a new extractor funtion "extractFormatTypes"
+
+#+begin_example
+    const ColumnDataExtractor = {
+            
+                columnExtractors: [
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] },
+#+end_example
+
+which extracts format types given in the "Format" cell in the following formats
+
+#+begin_example
+8×12" Vinyl
+2xCD-R
+2xCD-R + DVD
+#+end_example
+
+into an new column for representation as
+
+#+begin_example
+12" Vinyl
+CD-R
+CD-R, DVD
+#+end_example
+
+So basically strip the numeric quantity factor like "8x" from the actual type like "12" Vinyl"
+If there multiple different occurences of type indictated with a " + " in between, change this to ", "
+
+** https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
+
+extract comment from the following columns
+ - Release title
+ - Label
+
+
+* TODO extract the VZ event disambiguation configurable in its constituents
+
+* TODO Add support for extracting "Primary alias" in disambiguation "comment"
+
+https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
+https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91/aliases
+
+#+begin_example
+<td>
+  <a class="wrap-anywhere" href="/event/26cead1c-a5fa-4677-873a-312412c6dc91">
+    <bdi>2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Southside Johnny &amp; The Asbury Jukes at The Stone Pony
+      </i>, Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+#+begin_example
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
 
