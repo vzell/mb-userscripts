@@ -1,5 +1,17 @@
 [
     {
+      "version": "9.99.74",
+      "date": "2026-03-08",
+      "sections": [
+        {
+          "label": "✨ Enhancements",
+          "items": [
+            "primaryAlias column extractor — new ColumnDataExtractor entry: extracts the MusicBrainz <i title=\"Primary alias\"> element from a source Title/Event cell into a dedicated synthetic 'Primary Alias' column; the <i> element is removed from the source cell (not cloned), and any orphaned leading \", \" text node left in the parent <bdi> is stripped so that a residual disambiguation comment stands alone; if the containing <span class=\"comment\"> is left empty after removal it is also discarded; registered for Artist-Events ('Event' column) and Artist-release-groups ('Title' column) page types"
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.73",
       "date": "2026-03-08",
       "sections": [

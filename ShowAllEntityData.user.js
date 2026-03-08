@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.73+2026-03-08
+// @version      9.99.74+2026-03-08
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1274,6 +1274,91 @@
             }
 
             return [tdCancelled];
+        },
+
+        /**
+         * primaryAlias — extracts the MusicBrainz "Primary alias" indicator from a
+         * title/event cell into a dedicated synthetic "Primary Alias" column, and
+         * removes it from the source cell.
+         *
+         * Source structure (optional — only present when a primary alias is set):
+         *
+         *   <span class="comment">(
+         *     <bdi>
+         *       <i title="Primary alias">Some Primary Alias Text
+         *       </i>[, Optional disambiguation text]
+         *     </bdi>)
+         *   </span>
+         *
+         * The extractor performs the following steps:
+         *   1. Finds the <i title="Primary alias"> element inside the source cell.
+         *      Returns an empty synthetic cell immediately when none is found.
+         *   2. Copies its trimmed text content into the synthetic "Primary Alias" cell.
+         *   3. Removes the <i> element from the source cell DOM.
+         *   4. Walks the text nodes remaining in the parent <bdi> and strips any
+         *      leading ", " prefix from the first non-empty text node encountered.
+         *      This comma-space is produced by MusicBrainz only when BOTH a primary
+         *      alias AND a disambiguation comment are present; once the <i> is gone the
+         *      leading separator becomes orphaned and must be removed so the residual
+         *      disambiguation text stands alone.
+         *   5. If the containing <span class="comment"> is left with no meaningful
+         *      visible text (i.e. only the outer parentheses remain), the entire
+         *      comment span is also removed from the source cell to keep it clean.
+         *
+         * Synthetic columns: ['Primary Alias']
+         *
+         * @param   {HTMLTableCellElement} sourceCell  The source <td> element.
+         * @returns {HTMLTableCellElement[]}            Array of one synthetic <td>.
+         */
+        primaryAlias(sourceCell) {
+            const tdAlias = document.createElement('td');
+
+            if (!sourceCell) return [tdAlias];
+
+            const iTag = sourceCell.querySelector('i[title="Primary alias"]');
+            if (!iTag) return [tdAlias];
+
+            // Step 1: capture the alias text before mutating the DOM.
+            tdAlias.textContent = iTag.textContent.trim();
+
+            // Step 2: find the containing <bdi> before removing the <i> so we can
+            // still walk its remaining child nodes afterward.
+            const parentBdi = iTag.closest('bdi');
+
+            // Step 3: remove the <i> from the source cell.
+            iTag.remove();
+
+            if (parentBdi) {
+                // Step 4: strip the orphaned leading ", " from the first non-whitespace
+                // text node that follows where the <i> used to be.
+                // MusicBrainz renders the comment bdi as:
+                //   <i title="Primary alias">…</i>, disambiguation text
+                // so after <i> removal the first substantive text node starts with ", ".
+                for (const node of parentBdi.childNodes) {
+                    if (node.nodeType !== Node.TEXT_NODE) continue;
+                    const raw = node.textContent;
+                    const trimmed = raw.trimStart();
+                    if (trimmed === '') continue;          // pure-whitespace node — skip
+                    if (trimmed.startsWith(', ')) {
+                        // Replace only the leading ", "; preserve any surrounding
+                        // indentation/newline whitespace so rendered spacing is intact.
+                        node.textContent = raw.replace(/, /, '');
+                    }
+                    break;                                 // first non-empty node handled
+                }
+
+                // Step 5: if the comment span now contains nothing beyond the literal
+                // parentheses wrapper, remove it entirely from the source cell.
+                const commentSpan = parentBdi.closest('span.comment');
+                if (commentSpan) {
+                    const remaining = commentSpan.textContent.replace(/[()]/g, '').trim();
+                    if (remaining === '') {
+                        commentSpan.remove();
+                    }
+                }
+            }
+
+            return [tdAlias];
         }
     };
 
