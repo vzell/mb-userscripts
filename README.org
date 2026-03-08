@@ -47201,31 +47201,11 @@ the variable "const pageDefinitions" has been enhanced with a new "columnExtract
                 ],
 #+end_example
 
-please implement the new extractor function "extractor: 'caa'" in the following way:
+please implement the new extractor function "extractor: 'primaryAlias'" in the following way:
 
-- remove the container '' with the rendered video icon from the "sourceColumn:" and extract the same container to the synthetic column 'CAA'
+- remove the container '<i title=' with the title="Primary alias" from the "sourceColumn:" and extract the same container to the synthetic column 'Primary Alias'
 
 In the following are examples how these look like currently:
-
-- for pages of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases, e.g.
-
-#+begin_example
-
-<td>
-  <a href="/release/c3f193ec-2d7d-41f3-baba-d8b1ba54bf1a/cover-art">
-    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
-    </span>
-  </a>
-  <a class="wrap-anywhere" href="/release/c3f193ec-2d7d-41f3-baba-d8b1ba54bf1a">
-    <bdi>Philadelphia: Music From the Motion Picture
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>Canadian music club release distributed by Columbia House
-    </bdi>)
-  </span>
-</td>
-#+end_example
 
 - for pages of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events, e.g.
 
@@ -47278,5 +47258,6 @@ or
 </td>
 #+end_example
 
-So basically remove the whole 'a href' anchor with the included '<span class="artwork-icon caa-icon"' for "Cover Art Archive"
+So basically remove the whole '<i title= ...</i>' AND if there is an additional text for "comment" like ", Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show" or ", Bleachers"
+additionally remove the prefix ", " (it's only there initiailly because IF there is a primary alias AND a disambiguation comment, they are initially render comma separated)
 
