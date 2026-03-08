@@ -47047,7 +47047,7 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 * TODO add the empty cell stuff to all unique drop down lists, especially for "Barcode" - https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
-* TODO add "caa" to
+* DONE add "caa" to
 
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709&page=1 - "Holds copyright (c) for"
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710&page=1 - "Holds copyright (p) for"
@@ -47066,9 +47066,7 @@ Add a new setting "sa_sidebar_collapsed" (By default it should be false) after
             default: true,
             description: "Render sidebar collabsable"
         },
-
 #+end_example
-
 
 * DONE new columns e.g. for labels
 ** initial
@@ -47184,6 +47182,7 @@ extract comment from the following columns
 * TODO extract the VZ event disambiguation configurable in its constituents
 
 * TODO Add support for extracting "Primary alias" in disambiguation "comment"
+** DONE initial
 
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
 
@@ -47260,4 +47259,23 @@ or
 
 So basically remove the whole '<i title= ...</i>' AND if there is an additional text for "comment" like ", Southside Johnny &amp; The Asbury Jukes Stone Pony 25th Anniversary Show" or ", Bleachers"
 additionally remove the prefix ", " (it's only there initiailly because IF there is a primary alias AND a disambiguation comment, they are initially render comma separated)
+
+** MB-Name, Comment last
+
+PLease extract the "MB-Name / Comment cells" last, when all other extractors have been run.
+
+#+begin_example
+                                // ── Shared synthetic-column pipeline ─────────────────────────────
+                                // Run MB-Name / Comment extraction (when extractMainColumn is
+                                // configured) and active column extractors using the same logic as
+                                // the generic else-branch below, so that features added to this
+                                // page type via `features.extractMainColumn` or `columnExtractors`
+                                // work correctly here too.
+
+                                // 1. MB-Name / Comment cells (only when configured)
+#+end_example
+
+For example, the just configured "primaryAlias" Extractor would remove the primary alias first, so leaving the real
+disambiguation comment in the "Comment" column. If the other way around, the "Comment" column would have both the actual
+primary alias AND the disambiguation comment
 
