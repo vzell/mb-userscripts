@@ -1913,6 +1913,9 @@
                 columnErasers: [
                     { sourceColumn: 'Title', erasers: ['▶', '➕'] }
                 ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
                 extractMainColumn: 'Title'
             },
             tableMode: 'single' // Paginated single list
@@ -1925,6 +1928,9 @@
             features: {
                 columnErasers: [
                     { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
                 extractMainColumn: 'Title'
             },
@@ -1962,7 +1968,8 @@
                     { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
                 ],
                 columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
                 ],
                 extractMainColumn: 'Title'
             },
@@ -2104,7 +2111,8 @@
                 columnExtractors: [
                     { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
                     { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
-                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                    { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
                 ],
                 collapsableColumns: [ 'Location' ],
                 extractMainColumn: 'Event'

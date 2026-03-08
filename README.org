@@ -47045,7 +47045,7 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 * The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
 
 
-* TODO add the empty cell stuff to all unique drop down lists
+* TODO add the empty cell stuff to all unique drop down lists, especially for "Barcode" - https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
 * TODO add "caa" to
 
@@ -47185,8 +47185,49 @@ extract comment from the following columns
 
 * TODO Add support for extracting "Primary alias" in disambiguation "comment"
 
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
 https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
 https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91/aliases
+
+In the uploaded userscript,
+
+the variable "const pageDefinitions" has been enhanced with a new "columnExtractors" feature for specific pageTypes.
+
+#+begin_example
+           features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+#+end_example
+
+please implement the new extractor function "extractor: 'caa'" in the following way:
+
+- remove the container '' with the rendered video icon from the "sourceColumn:" and extract the same container to the synthetic column 'CAA'
+
+In the following are examples how these look like currently:
+
+- for pages of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases, e.g.
+
+#+begin_example
+
+<td>
+  <a href="/release/c3f193ec-2d7d-41f3-baba-d8b1ba54bf1a/cover-art">
+    <span class="artwork-icon caa-icon" title="This release has artwork in the Cover Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/release/c3f193ec-2d7d-41f3-baba-d8b1ba54bf1a">
+    <bdi>Philadelphia: Music From the Motion Picture
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Canadian music club release distributed by Columbia House
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+- for pages of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events, e.g.
 
 #+begin_example
 <td>
@@ -47203,25 +47244,39 @@ https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91/aliases
 </td>
 #+end_example
 
+or
+
 #+begin_example
-#+begin_example
-        {
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
-            ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
-                ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi' // native tables, h3 headers
-        },
+<td>
+  <a class="wrap-anywhere" href="/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c">
+    <bdi>From the Studio to the Stage: New York
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">2024-10-04: Madison Square Garden, New York City, NY, USA
+      </i>, Bleachers
+    </bdi>)
+  </span>
+</td>
 #+end_example
+
+- for pages of type https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+  
+#+begin_example
+<td>
+  <a class="wrap-anywhere" href="/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2">
+    <bdi>1981‐01‐26: Athletic &amp; Convocation Center, University of Notre Dame, South Bend, IN, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>
+      <i title="Primary alias">Bruce Springsteen &amp; The E Street Band at Athletic &amp; Convocation Center
+      </i>
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+So basically remove the whole 'a href' anchor with the included '<span class="artwork-icon caa-icon"' for "Cover Art Archive"
 
