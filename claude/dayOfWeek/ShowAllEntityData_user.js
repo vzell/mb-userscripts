@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.77+2026-03-08
+// @version      9.99.76+2026-03-08
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -855,11 +855,11 @@
                         }
                         if (dateSpan) {
                             const li = document.createElement('li');
-                            // Clone the date span and strip any chaban-userscript
-                            // https://community.metabrainz.org/u/chaban day-of-week indicator (<span
-                            // class="mb-day-of-week …">) before reading the date text.  Without this,
-                            // dateSpan.textContent would include the abbreviated weekday (e.g. "Wed", "Tue", "Sat")
-                            // appended directly to the date string, e.g. "1995-11-22Wed" instead of "1995-11-22".
+                            // Clone the date span and strip any chaban-userscript day-of-week
+                            // indicator (<span class="mb-day-of-week …">) before reading the
+                            // date text.  Without this, dateSpan.textContent would include the
+                            // abbreviated weekday (e.g. "Wed", "Tue", "Sat") appended directly
+                            // to the date string, e.g. "1995-11-22Wed" instead of "1995-11-22".
                             const dateClone = dateSpan.cloneNode(true);
                             dateClone.querySelectorAll('.mb-day-of-week').forEach(el => el.remove());
                             li.textContent = dateClone.textContent.trim();
@@ -10336,12 +10336,7 @@
             if (f.isMultiRowFilter) {
                 const cell   = row.cells[f.idx];
                 const lis    = cell ? Array.from(cell.querySelectorAll('ul > li')) : [];
-                // hasEmpty: no ul>li structure AND no visible text content.
-                // Checking text content is essential for non-collapsable columns where
-                // lis.length === 0 is always true regardless of whether the cell is
-                // empty or contains plain text — without the text check every row in a
-                // non-collapsable column would be matched by the 'empty' filter mode.
-                const hasEmpty      = lis.length === 0 && !getCleanColumnText(cell);
+                const hasEmpty      = lis.length === 0;
                 const hasMultiRow   = lis.length >= 2;
                 const hasSingleRow  = lis.length === 1;
                 const rowIdx = row.dataset ? row.dataset.mbRowIdx : undefined;
@@ -13595,73 +13590,8 @@
         // Insert synBox right before listBox so it renders above regular values
         drop.insertBefore(synBox, listBox);
 
-        /**
-         * Creates and appends a single synthetic entry to synBox.
-         *
-         * Factored out of the collapsable-column guard so that '○ empty cells'
-         * can be surfaced for every column type (plain text, extractor synthetic,
-         * etc.), not only for columns with multi-row / collapsable structure.
-         *
-         * @param {string} mode    - 'empty' | 'single' | 'collapsed' | 'expanded' | 'any'
-         * @param {string} label   - Human-readable display text
-         * @param {number} count   - Number of visible rows matching this mode
-         */
-        const makeSynItem = (mode, label, count) => {
-            const item = document.createElement('div');
-            item.className = 'mb-col-uniq-item mb-col-uniq-multirow-item';
-            item.setAttribute('role', 'option');
-            item.title = label;
-            item.style.cssText = 'background:#f0f4f8; font-style:italic;';
-
-            const badge = document.createElement('span');
-            badge.className = 'mb-uniq-count-badge';
-            badge.textContent = `(${count})`;
-            badge.setAttribute('aria-hidden', 'true');
-            badge.style.color           = cntColor;
-            badge.style.backgroundColor = cntBg;
-            badge.style.fontWeight      = 'bold';
-            badge.style.fontFamily      = 'monospace';
-            badge.style.borderRadius    = '3px';
-            badge.style.padding         = '0 3px';
-            badge.style.marginRight     = '5px';
-            badge.style.fontSize        = '0.85em';
-            badge.style.display         = 'inline-block';
-            item.appendChild(badge);
-            item.appendChild(document.createTextNode(label));
-
-            item.addEventListener('mousedown', ev => ev.preventDefault());
-            item.addEventListener('click', () => {
-                applyMultiRowStateFilter(mode, table, colIndex);
-                closeUniqDrop();
-            });
-            synBox.appendChild(item);
-        };
-
-        /**
-         * Appends a thin horizontal rule between the synthetic section and the
-         * regular value list.  Only called when vals.length > 0 so the divider
-         * is never rendered as the last element in an otherwise empty panel.
-         */
-        const appendSynDivider = () => {
-            if (vals.length === 0) return;
-            const divider = document.createElement('div');
-            divider.style.cssText = 'border-top:1px solid #d0d0d0; margin:4px 0;';
-            divider.setAttribute('aria-hidden', 'true');
-            synBox.appendChild(divider);
-        };
-
-        // ── Synthetic entries ──────────────────────────────────────────────────
-        // Collapsable columns: show the full "Cell structure" section with all
-        // structural states (empty, single-row, collapsed multi-row, expanded
-        // multi-row, any multi-row) so the user can filter by collapse state.
-        //
-        // All other columns: show only '○ empty cells' when empty cells exist.
-        // Every column type can have genuinely empty cells (e.g. a primary-alias
-        // column where most events have no alias, a CAA column with no artwork,
-        // etc.) and being able to filter to those rows is universally useful.
         if (isCollapsableCol && (emptyCellCount > 0 || singleRowCount > 0 || totalMultiRow > 0)) {
-            // Section header — only shown for the multi-entry collapsable section
-            // so the single '○ empty cells' entry on plain columns stands alone.
+            // Section header label
             const synHdr = document.createElement('div');
             synHdr.textContent = 'Cell structure';
             synHdr.style.cssText = [
@@ -13670,19 +13600,71 @@
             ].join(' ');
             synBox.appendChild(synHdr);
 
-            // "empty cells" pinned first; remaining entries in ascending complexity order
-            if (emptyCellCount > 0)         makeSynItem('empty',     '○ empty cells',               emptyCellCount);
-            if (singleRowCount > 0)         makeSynItem('single',    '• single-row cells',           singleRowCount);
-            if (multiRowCollapsedCount > 0) makeSynItem('collapsed', '▶ collapsed multi-row cells',  multiRowCollapsedCount);
-            if (multiRowExpandedCount > 0)  makeSynItem('expanded',  '◀ expanded multi-row cells',   multiRowExpandedCount);
-            if (totalMultiRow > 1)          makeSynItem('any',       '▶◀ any multi-row cells',       totalMultiRow);
+            /**
+             * Creates and appends a single synthetic cell-structure entry to synBox.
+             * @param {string} mode    - 'empty' | 'single' | 'collapsed' | 'expanded' | 'any'
+             * @param {string} label   - Human-readable display text
+             * @param {number} count   - Number of visible rows matching this mode
+             */
+            const makeSynItem = (mode, label, count) => {
+                const item = document.createElement('div');
+                item.className = 'mb-col-uniq-item mb-col-uniq-multirow-item';
+                item.setAttribute('role', 'option');
+                item.title = label;
+                item.style.cssText = 'background:#f0f4f8; font-style:italic;';
 
-            appendSynDivider();
-        } else if (emptyCellCount > 0) {
-            // Non-collapsable column: only '○ empty cells' — no section header needed
-            // since this is the sole synthetic entry.
-            makeSynItem('empty', '○ empty cells', emptyCellCount);
-            appendSynDivider();
+                const badge = document.createElement('span');
+                badge.className = 'mb-uniq-count-badge';
+                badge.textContent = `(${count})`;
+                badge.setAttribute('aria-hidden', 'true');
+                badge.style.color           = cntColor;
+                badge.style.backgroundColor = cntBg;
+                badge.style.fontWeight      = 'bold';
+                badge.style.fontFamily      = 'monospace';
+                badge.style.borderRadius    = '3px';
+                badge.style.padding         = '0 3px';
+                badge.style.marginRight     = '5px';
+                badge.style.fontSize        = '0.85em';
+                badge.style.display         = 'inline-block';
+                item.appendChild(badge);
+                item.appendChild(document.createTextNode(label));
+
+                item.addEventListener('mousedown', ev => ev.preventDefault());
+                item.addEventListener('click', () => {
+                    applyMultiRowStateFilter(mode, table, colIndex);
+                    closeUniqDrop();
+                });
+                synBox.appendChild(item);
+            };
+
+            // ── Synthetic entries — empty first, single-row second, multi-row states last ──
+            // "empty cells" is pinned at the very top of synBox so it is the first entry
+            // the user sees; it matches rows where the collapsable column cell is completely
+            // blank (no ul>li items, no text content — e.g. a release with no Country/Date).
+            if (emptyCellCount > 0) {
+                makeSynItem('empty', '○ empty cells', emptyCellCount);
+            }
+            if (singleRowCount > 0) {
+                makeSynItem('single', '• single-row cells', singleRowCount);
+            }
+            if (multiRowCollapsedCount > 0) {
+                makeSynItem('collapsed', '▶ collapsed multi-row cells', multiRowCollapsedCount);
+            }
+            if (multiRowExpandedCount > 0) {
+                makeSynItem('expanded', '◀ expanded multi-row cells', multiRowExpandedCount);
+            }
+            if (totalMultiRow > 1) {
+                // "any" is useful only when both states coexist
+                makeSynItem('any', '▶◀ any multi-row cells', totalMultiRow);
+            }
+
+            // Thin divider between synthetic and regular items
+            if (vals.length > 0) {
+                const divider = document.createElement('div');
+                divider.style.cssText = 'border-top:1px solid #d0d0d0; margin:4px 0;';
+                divider.setAttribute('aria-hidden', 'true');
+                synBox.appendChild(divider);
+            }
         }
 
         if (vals.length === 0) {

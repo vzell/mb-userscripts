@@ -1,30 +1,12 @@
 [
     {
-      "version": "9.99.77",
+      "version": "9.99.76",
       "date": "2026-03-08",
       "sections": [
         {
           "label": "🐛 Bug Fixes",
           "items": [
             "splitCountryDate: strip chaban day-of-week span from Date synthetic column — the Date cell now clones the .release-date span and removes any <span class=\"mb-day-of-week …\"> child before reading textContent; without this fix the abbreviated weekday injected by chaban's userscript (e.g. \"Wed\", \"Tue\", \"Sat\") was concatenated directly onto the date string (\"1995-11-22Wed\") in the synthetic Date column; the Country column and the source cell are unaffected"
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.76",
-      "date": "2026-03-08",
-      "sections": [
-        {
-          "label": "✨ Enhancements",
-          "items": [
-            "synBox '○ empty cells' generalized to every column — the unique-value dropdown (📊) now shows the '○ empty cells' synthetic entry for all column types (plain text, extractor synthetic, CAA, Video, Primary Alias, …), not only for collapsable multi-row columns; for collapsable columns the full 'Cell structure' section (empty / single-row / collapsed / expanded / any) is preserved as before; for all other columns only the single '○ empty cells' entry is emitted (no section header, no unneeded clutter), making it easy to filter e.g. to events that have no primary alias or releases that have no cover art; makeSynItem is hoisted above the collapsable guard and a shared appendSynDivider helper avoids duplicating the divider logic"
-          ]
-        },
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "testRowMatch hasEmpty fix — the 'empty cells' multi-row state filter now evaluates hasEmpty as lis.length === 0 && !getCleanColumnText(cell) instead of the former lis.length === 0 alone; without this fix every row in a non-collapsable column (which never contains ul>li structure) would have matched the '○ empty cells' filter, returning the full unfiltered row set instead of only the genuinely empty ones"
           ]
         }
       ]
