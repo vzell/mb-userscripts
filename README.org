@@ -45284,7 +45284,7 @@ A last glich, the toggle icon per multi-row cell should be located at the very e
   page. It should again be rendered as long as there is at least one data cell with multi-row data. If pressing "Load
   from Disk" when we have already been on the final rendered page it's there
 
-** hide and hightlight toggle icons
+** DONE hide and hightlight toggle icons
 
 In the uploaded userscript,
 
@@ -45304,6 +45304,46 @@ please check the function "initCollapsableColumns" and its implementation and ad
 - also change the background color and text color of the global toggle button if at least one multi-row data cell has
   highlightning (doesn't matter if in the visible part, when uncollapsed or in the collpased invisible part, to give the
   end user a clue)
+
+** TODO multi-table mode
+
+When adding 
+
+#+begin_example
+collapsableColumns: [ 'Country/Date' ],
+#+end_example
+
+to a pageType of "multi"-tableMode, e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+#+begin_example
+        {
+            type: 'releasegroup-releases',
+            match: (path) => path.includes('/release-group/'),
+            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                collapsableColumns: [ 'Country/Date' ],
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+#+end_example
+
+it doesn't seem to be picked up. Is the the current "multi-row cell stuff in the function "initCollapsableColumns" only
+working in "single" table mode ? If yes, please extend the functionality also to "multi" table mode
 
 
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
