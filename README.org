@@ -46439,7 +46439,6 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 * DONE render as multi-row cells - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?tport=8000 - "Label, "Catalog"
 
-
 * DONE split column as multi-row cell
 ** DONE initial
 
@@ -46931,15 +46930,13 @@ So basically the comma "," should be used as the multi-row cell splitter and not
 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Master toggle: Showing all tables. 
 #+end_example
 
-
-* add a synthetic value for multi-row cells
+* DONE add a synthetic value for multi-row cells
 
 add a synthetic value to the unique column values drop-down menu which represents collapsed/uncollapsed multi-row cells
 (maybe by checking the "collapse/uncollapse" toggle icon) and when clicking on it all the table rows with multi-row
 cells should be filtered
 
-
-* multi-row cell column unvisible
+* DONE multi-row cell column unvisible
 
 when making a multi-row cell column unvisible by using the "Visible"-button and it's implementation, the global, and in
 the case of "multi" table pages the sub-table collapse/uncollpase toggle button (but only if ALL multi-row cell columns
@@ -47118,4 +47115,12 @@ Please recheck all the implementations for "single" and "multi"-table modes. For
 right approach.
 
 ** add synthetic entry for empty cells
+
+add a new synthetic "empty cells" value to the very beginning of the "unique column values drop-down"-menu in the
+"synBox" container. Also take the synthetic value into account when count the number of entries and all other code places where necessary.
+
+So basically account for complete empty cells in multi-row cell columns.
+
+For example in https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the "Country/Date" column has one row where that column is completely empty
+
 
