@@ -45352,31 +45352,53 @@ class="mb-subtable-controls">' with the same logic of getting colored background
 button for multi table pages (but with the colorization taken from the subtable filter field) and of course pressing
 this new button repeatedly should onyl toggle all columns inside that sub-table which have multi-rows cells
 
-** multi-row button text
 
-Is it possible to render the following button
+* DONE extract the "video" icon from recordings - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+
+* DONE Add guard if some action would leave the final rendered page and warn the user with an alert dialog
+
+* DONE synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header to distinguish them from standard columns
+* DONE filename fix: 
+** initial
+
+A couple of more fixes:
+
+- synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header, to
+  distinguish them from standard columns, when loaded back from the serialized data from disk (maybe this information
+  also needs to be stored in the serialized format somehow when pressing the "Save to Disk" button)
+
+- after loading data from disk, the action button, which would normally be used to load the data initially from the
+  paginated web pages, should turn it's background color to the same "#CCFFCC" background to give the enduser a visual
+  clue which data types are actually loaded
+
+- strip the leading "_" from the button text when constructing the filename for data serialization, so e.g.
 
 #+begin_example
-<button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle;">▶ Expand columns
-</button>
+MB-artist-releasegroups-_official_rgs-579-2026-03-06T12-12-15.json.gz
+MB-artist-releasegroups-_nonofficial_rgs-2120-2026-03-06T12-12-36.json.gz
+MB-artist-releases-_official_releases-8084-2026-03-06T12-58-05.json.gz
 #+end_example
 
-where right now the button text is in one row "▶ Expand columns" in such a way, that the string "columns" is replaced with a two row text which has "multi-rows" over "cells" and "▶ Expand" in front of it
+should acutally be
 
 #+begin_example
-<button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle;">▶ Expand columns
-</button>
-
-<button id="mb-col-collapse-all-btn" 
-        title="Expand all collapsed multi-row cells in every collapsable column" 
-        style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-flex; align-items: center; gap: 4px; background: initial;">
-  <span>▶ Expand</span>
-  <span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1; font-size: 0.9em;">
-    <span>multi-rows</span>
-    <span>cells</span>
-  </span>
-</button>
+MB-artist-releasegroups-official_rgs-579-2026-03-06T12-12-15.json.gz
+MB-artist-releasegroups-nonofficial_rgs-2120-2026-03-06T12-12-36.json.gz
+MB-artist-releases-official_releases-8084-2026-03-06T12-58-05.json.gz
 #+end_example
+
+- add guard if some action would leave the final rendered page and warn the user with an alert dialog, to make it clear
+  to the enduser he would loose all his customization (data loading, filtering, sorting, resizing etc.):
+
+for example, if the user would click a hyperlinked entry in a row of a rendered final table (single or multi table mode), the current page would be replaced by a newly rendered one
+
+** only the specific button should be green
+
+There is still a bug, when loading from "MB-artist-releasegroups-official_rgs-579-2026-03-06T16-28-02.json.gz" e.g. all
+4 action buttons turned green on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f, but it should
+actually be ONLY the one with the btton text "Official RGs"
+
+Still not, the button text is actually an icon, then a superscript and then the text
 
 
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
@@ -45934,8 +45956,6 @@ and only the "Primary alias:" stuff should be relocated as before
 ** From the Studio to the Stage: New York (2024-10-04) (2024-10-04: Madison Square Garden, New York City, NY, USA, Bleachers) - https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
 
 
-* DONE extract the "video" icon from recordings - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
-
 
 * TODO posting to MusicBrainz forum
 ** <2026-01-28 Wed 09:05>
@@ -46401,52 +46421,6 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 * TODO extract the VZ event disambiguation configurable in its constituents
 
 
-* DONE Add guard if some action would leave the final rendered page and warn the user with an alert dialog
-
-* DONE synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header to distinguish them from standard columns
-* DONE filename fix: 
-** initial
-
-A couple of more fixes:
-
-- synthetic columns like e.g. "MB-Name", "Comment" etc. are not restored with the same dark background column header, to
-  distinguish them from standard columns, when loaded back from the serialized data from disk (maybe this information
-  also needs to be stored in the serialized format somehow when pressing the "Save to Disk" button)
-
-- after loading data from disk, the action button, which would normally be used to load the data initially from the
-  paginated web pages, should turn it's background color to the same "#CCFFCC" background to give the enduser a visual
-  clue which data types are actually loaded
-
-- strip the leading "_" from the button text when constructing the filename for data serialization, so e.g.
-
-#+begin_example
-MB-artist-releasegroups-_official_rgs-579-2026-03-06T12-12-15.json.gz
-MB-artist-releasegroups-_nonofficial_rgs-2120-2026-03-06T12-12-36.json.gz
-MB-artist-releases-_official_releases-8084-2026-03-06T12-58-05.json.gz
-#+end_example
-
-should acutally be
-
-#+begin_example
-MB-artist-releasegroups-official_rgs-579-2026-03-06T12-12-15.json.gz
-MB-artist-releasegroups-nonofficial_rgs-2120-2026-03-06T12-12-36.json.gz
-MB-artist-releases-official_releases-8084-2026-03-06T12-58-05.json.gz
-#+end_example
-
-- add guard if some action would leave the final rendered page and warn the user with an alert dialog, to make it clear
-  to the enduser he would loose all his customization (data loading, filtering, sorting, resizing etc.):
-
-for example, if the user would click a hyperlinked entry in a row of a rendered final table (single or multi table mode), the current page would be replaced by a newly rendered one
-
-** only the specific button should be green
-
-There is still a bug, when loading from "MB-artist-releasegroups-official_rgs-579-2026-03-06T16-28-02.json.gz" e.g. all
-4 action buttons turned green on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f, but it should
-actually be ONLY the one with the btton text "Official RGs"
-
-Still not, the button text is actually an icon, then a superscript and then the text
-
-
 * TODO make the initial collapsing of the sidebar configurable, by default false
 
 
@@ -46466,7 +46440,7 @@ Still not, the button text is actually an icon, then a superscript and then the 
 * render as multi-row cells - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?tport=8000 - "Label, "Catalog"
 
 * split column as multi-row cell
-** initial
+** DONE initial
 
 In the uploaded userscript,
 
@@ -46626,7 +46600,7 @@ S 65480
 
 So basically the comma "," should be used as the multi-row cell splitter and not be renderd in the final data cell anymore
 
-** debug
+** DONE debug
 
 #+begin_example
 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.63+2026-03-08) loaded with external library (3.14.3+2026-03-04) active on MusicBrainz page: https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a?tport=8000 
@@ -46956,16 +46930,62 @@ So basically the comma "," should be used as the multi-row cell splitter and not
 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Master toggle: Showing all tables. 
 #+end_example
 
-g
+
 * add a synthetic value for multi-row cells
 
 add a synthetic value to the unique column values drow-down menu which represents collapsed/uncollapsed multi-row cells
 (maybe by checking the "collapse/uncollapse" toggle icon) and when clicking on it all the table rows with multi-row
 cells should be filtered
 
+
 * multi-row cell column unvisible
 
 when making a multi-row cell column unvisible by using the "Visible"-button and it's implementation, the global, and in
 the case of "multi" table pages the sub-table collapse/uncollpase toggle button (but only if ALL multi-row cell columns
-are unvisible per sub-table) should also not be rendered (onyl when the columns are made visible again)
+are unvisible per sub-table) should also not be rendered (only when the columns are made visible again)
+
+
+* TODO multi-row button text
+
+In the uploaded userscript,
+
+1.) Please render the global button
+
+#+begin_example
+<button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle;">▶ Expand columns
+</button>
+#+end_example
+
+where right now the button text is in one row "▶ Expand columns" in such a way, that the string "columns" is replaced
+with a two row text which has "multi-rows" over "cells" and "▶ Expand" in front of it, like n the following example
+
+#+begin_example
+<button id="mb-col-collapse-all-btn" 
+        title="Expand all collapsed multi-row cells in every collapsable column" 
+        style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-flex; align-items: center; gap: 4px; background: initial;">
+  <span>▶ Expand</span>
+  <span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1; font-size: 0.9em;">
+    <span>multi-rows</span>
+    <span>cells</span>
+  </span>
+</button>
+#+end_example
+
+Do the pendant for the "◀ Collapse columns" text after toggling
+
+2.) The same should be done for all the sub-table toggle buttons in "multi" table mode where the current button text is
+just "▶ Expand" and "◀ Collapse". So change it to the same button text like in the global case, but leave the tooltips
+intact, as they describe the subtable moire specifically.
+
+3.) The sub-table toggle buttons should be shifted a little bit more to the right of the container
+
+#+begin_example
+<label id="mb-stf-Official-ex-label" for="mb-stf-Official-ex-checkbox" title="Exclude matches (Filter for &quot;Official&quot;)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-Official-ex-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label>
+#+end_example
+
+as it overlaps especially when the button gets colorized during highlighting of multi-row cells
+
+4.) when making a multi-row cell column unvisible by using the "Visible"-button and it's implementation, the global, and
+in the case of "multi" table pages the sub-table collapse/uncollpase toggle button (but only if ALL multi-row cell
+columns are unvisible per sub-table) should also not be rendered (only when the columns are made visible again)
 

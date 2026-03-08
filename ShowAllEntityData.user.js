@@ -1503,7 +1503,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                 ],
-                collapsableColumns: [ 'Country/Date' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release' // Specific header
             },
             tableMode: 'single'
@@ -1596,7 +1596,7 @@
                         columnExtractors: [
                             { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                         ],
-                        collapsableColumns: [ 'Country/Date' ],
+                        collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                     }
                 },
                 {
@@ -1730,7 +1730,7 @@
                     },
                     { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
                 ],
-                collapsableColumns: [ 'Country/Date' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release'
             },
             tableMode: 'single'
@@ -1780,7 +1780,7 @@
                     },
                     { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
                 ],
-                collapsableColumns: [ 'Country/Date' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release'
             },
             tableMode: 'single'
@@ -1886,11 +1886,11 @@
                     { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                 ],
-                collapsableColumns: [ 'Country/Date' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release'
             },
-            collapsableColumns: [ 'Country/Date' ],
             renderMultiRowCell: [ 'Label', 'Catalog#' ],
+            collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
             tableMode: 'single'
         },
         {
@@ -1943,8 +1943,8 @@
                     },
                     { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
                 ],
-                collapsableColumns: [ 'Country/Date' ],
                 renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
                 extractMainColumn: 'Release'
             },
             tableMode: 'multi',
@@ -1989,7 +1989,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                 ],
-                collapsableColumns: [ 'Country/Date' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release title'
             },
             tableMode: 'multi',
