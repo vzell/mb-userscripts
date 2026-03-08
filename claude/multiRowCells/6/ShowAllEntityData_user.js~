@@ -1804,7 +1804,6 @@
                     },
                     { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
                 ],
-                collapsableColumns: [ 'Country/Date' ],
                 extractMainColumn: 'Release'
             },
             tableMode: 'multi',
