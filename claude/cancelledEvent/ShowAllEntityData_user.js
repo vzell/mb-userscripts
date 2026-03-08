@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.71+2026-03-08
+// @version      9.99.72+2026-03-08
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1063,6 +1063,76 @@
         },
 
         /**
+         * cancelledEvent — extracts the MusicBrainz cancelled-event indicator from
+         * an Event cell into a dedicated synthetic "Cancelled" column, and removes
+         * it from the source cell so the Event column stays uncluttered.
+         *
+         * Source structure (optional — absent for non-cancelled events):
+         *   <span class="cancelled">(
+         *     <bdi>cancelled</bdi>)
+         *   </span>
+         *
+         * The span is *moved* (not cloned) out of the source cell: the original DOM
+         * node is removed from sourceCell and re-parented into tdCancelled, so the
+         * Event column never shows a duplicate "(cancelled)" label.
+         *
+         * Sortability and dropdown filtering:
+         *   An invisible <span class="mb-cancelled-sort-key" style="display:none"> is
+         *   always appended to tdCancelled.  It contains the literal text "yes" when
+         *   the cancelled span was present, or "no" otherwise.  The span is not
+         *   rendered by the browser but IS walked by getCleanColumnText() and
+         *   getCleanVisibleText() (both use a TreeWalker that does not skip
+         *   display:none elements), so:
+         *     - Sorting ascending/descending works ("no" < "yes" alphabetically).
+         *     - The unique-values dropdown shows exactly "no" and "yes".
+         *     - Clicking "yes" in the dropdown filters to cancelled events only;
+         *       clicking "no" filters to events that were not cancelled.
+         *
+         * Synthetic columns: ['Cancelled']
+         *
+         * @param   {HTMLTableCellElement} sourceCell  The source <td> element.
+         * @returns {HTMLTableCellElement[]}            Array of one synthetic <td>.
+         */
+        cancelledEvent(sourceCell) {
+            const tdCancelled = document.createElement('td');
+
+            /**
+             * Appends an invisible text label used exclusively as a sort/filter key.
+             * The label is never rendered visually — style="display:none" hides it —
+             * but the TreeWalker inside getCleanColumnText() / getCleanVisibleText()
+             * does not skip display:none nodes, so sorting and the unique-values
+             * dropdown both pick it up correctly.
+             *
+             * @param {string} label - "yes" when the event is cancelled, "no" otherwise
+             */
+            const appendSortKey = (label) => {
+                const keySpan = document.createElement('span');
+                keySpan.className = 'mb-cancelled-sort-key';
+                keySpan.setAttribute('aria-hidden', 'true');
+                keySpan.style.display = 'none';
+                keySpan.textContent = label;
+                tdCancelled.appendChild(keySpan);
+            };
+
+            if (sourceCell) {
+                const cancelledSpan = sourceCell.querySelector('span.cancelled');
+                if (cancelledSpan) {
+                    // Move the node: detach from the Event cell so the title column
+                    // is clean, then re-parent the original into the synthetic cell.
+                    cancelledSpan.remove();
+                    tdCancelled.appendChild(cancelledSpan);
+                    appendSortKey('yes');
+                } else {
+                    appendSortKey('no');
+                }
+            } else {
+                appendSortKey('no');
+            }
+
+            return [tdCancelled];
+        },
+
+        /**
          * caa — extracts the Cover Art Archive (CAA) or Event Art Archive (EAA)
          * artwork anchor from a source cell into a dedicated synthetic "CAA" or "EAA" column,
          * and removes it from the source cell so the title/name column stays clean.
@@ -1378,15 +1448,9 @@
      *   a single <li> item.  Leading and trailing whitespace-only text nodes
      *   within each group are dropped before appending to the <li>.
      *
-     *   - Cells with zero logical rows (empty cells) are left unchanged.
-     *   - All non-empty cells — including those with exactly one logical row —
-     *     are wrapped in a <ul><li> so that initCollapsableColumns,
-     *     testRowMatch (hasSingleRow ≡ lis.length === 1), and the statistics
-     *     panel see a uniform structure regardless of how many entries the cell
-     *     contains.  This matches the behaviour of splitCountryDate, which also
-     *     always wraps even single-event cells in <ul><li>.
-     *   - Cells with ≥2 logical rows additionally receive a ▶/◀ cell toggle
-     *     from initCollapsableColumns (single-<li> cells are unaffected by it).
+     *   - Cells with zero or one logical row are left unchanged (no wrapping).
+     *   - Cells with ≥2 logical rows have their content replaced by a <ul>
+     *     whose <li> children contain cloned versions of the collected nodes.
      *
      * This function is compatible with the collapsableColumns mechanism: if the
      * same column names are also declared in `features.collapsableColumns`, the
@@ -1446,15 +1510,8 @@
                 return trimmed;
             }).filter(g => g.length > 0);
 
-            // ── Skip only truly empty cells; always wrap non-empty ones ──────
-            // Even a single logical row must be wrapped in <ul><li> so that
-            // initCollapsableColumns, testRowMatch (hasSingleRow check via
-            // lis.length === 1), and the statistics panel all see a consistent
-            // ul > li structure — matching the behaviour of splitCountryDate,
-            // which always wraps even single-event cells.
-            // initCollapsableColumns adds a ▶/◀ toggle only when lis.length ≥ 2,
-            // so single-<li> cells are left un-toggled, which is correct.
-            if (nonEmptyGroups.length < 1) continue;
+            // ── Only wrap when ≥2 logical rows exist ─────────────────────────
+            if (nonEmptyGroups.length < 2) continue;
 
             const ul = document.createElement('ul');
             nonEmptyGroups.forEach(group => {
@@ -1466,7 +1523,7 @@
             td.innerHTML = '';
             td.appendChild(ul);
 
-            Lib.debug('extract', `renderMultiRowCell: column "${entry.columnName}" (colIdx=${entry.colIdx}) — wrapped into ${nonEmptyGroups.length} li row(s)`);
+            Lib.debug('extract', `renderMultiRowCell: column "${entry.columnName}" (colIdx=${entry.colIdx}) — split into ${nonEmptyGroups.length} rows`);
         }
     }
 
@@ -1832,9 +1889,6 @@
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Relationships for Artist (specialised)' } ],
             features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
-                ],
                 extractMainColumn: 'Title'
             },
             tableMode: 'single' // Paginated single list
@@ -1846,7 +1900,7 @@
             buttons: [ { label: 'Show all Relationships for Artist' } ],
             features: {
                 columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                    { sourceColumn: 'Title', erasers: ['▶'] }
                 ],
                 extractMainColumn: 'Title'
             },
@@ -2025,7 +2079,7 @@
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Event', extractor: 'caa',            syntheticColumns: ['EAA'] },
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
                 ],
                 collapsableColumns: [ 'Location' ],
@@ -10146,16 +10200,13 @@
             if (f.isMultiRowFilter) {
                 const cell   = row.cells[f.idx];
                 const lis    = cell ? Array.from(cell.querySelectorAll('ul > li')) : [];
-                const hasEmpty      = lis.length === 0;
                 const hasMultiRow   = lis.length >= 2;
                 const hasSingleRow  = lis.length === 1;
                 const rowIdx = row.dataset ? row.dataset.mbRowIdx : undefined;
                 const ecKey  = rowIdx !== undefined ? `${rowIdx}:${f.idx}` : undefined;
                 const isExpanded = ecKey !== undefined && expandedCells.get(ecKey) === true;
                 let match = false;
-                if (f.multiRowMode === 'empty') {
-                    match = hasEmpty;
-                } else if (f.multiRowMode === 'any') {
+                if (f.multiRowMode === 'any') {
                     match = hasMultiRow;
                 } else if (f.multiRowMode === 'collapsed') {
                     match = hasMultiRow && !isExpanded;
@@ -13173,15 +13224,10 @@
 
         // ---- Collect distinct non-empty values with occurrence counts from visible tbody rows ----
         const valueCounts = new Map();
-        // Counts for synthetic cell-structure entries (only shown for collapsable columns):
-        //   emptyCellCount         -- rows where the cell has no ul>li AND no text content
-        //   singleRowCount         -- rows where ul>li count === 1
-        //   multiRowCollapsedCount -- rows where ul>li count >= 2 AND collapsed (toggle shows ▶)
-        //   multiRowExpandedCount  -- rows where ul>li count >= 2 AND expanded (toggle shows ◀)
-        // Derived from expandedCells (the authoritative source of truth) + ul>li count,
+        // Counts for synthetic multi-row state entries (collapsed ▶ / expanded ◀ / any / single-row)
+        // These are derived from expandedCells (the authoritative source of truth) + ul>li count,
         // NOT from the DOM toggle textContent which is reset to '▶' by initCollapsableColumns
         // after every renderFinalTable call.
-        let emptyCellCount         = 0;
         let multiRowCollapsedCount = 0;
         let multiRowExpandedCount  = 0;
         let singleRowCount         = 0;
@@ -13197,7 +13243,7 @@
                 //       consistently with what the column filter actually matches.
                 const v = getCleanColumnText(cell);
                 if (v) valueCounts.set(v, (valueCounts.get(v) || 0) + 1);
-                // Count cell-structure state using expandedCells as source of truth.
+                // Count multi-row / single-row state using expandedCells as source of truth.
                 // Counting from DOM toggle.textContent would give wrong results after a
                 // runFilter() cycle because initCollapsableColumns resets all toggles to '▶'.
                 const lis = cell.querySelectorAll('ul > li');
@@ -13211,11 +13257,6 @@
                     }
                 } else if (lis.length === 1) {
                     singleRowCount++;
-                } else {
-                    // lis.length === 0: no list structure at all.
-                    // Re-use the already-computed `v` (zero extra DOM work) to confirm
-                    // the cell is genuinely empty (no hidden text, no spurious whitespace).
-                    if (!v) emptyCellCount++;
                 }
             });
         }
@@ -13354,7 +13395,7 @@
             });
         }
 
-        // --- Synthetic cell-structure items (separate, pinned container) ---------
+        // --- Synthetic multi-row state items (separate, pinned container) ------
         // Lives in its own <div> that is added to `drop` BEFORE `listBox` so it
         // always appears at the top.  Critically, `renderItems()` only mutates
         // `listBox` (via listBox.innerHTML = ''), so the synthetic section is
@@ -13380,10 +13421,10 @@
         // Insert synBox right before listBox so it renders above regular values
         drop.insertBefore(synBox, listBox);
 
-        if (isCollapsableCol && (emptyCellCount > 0 || singleRowCount > 0 || totalMultiRow > 0)) {
+        if (isCollapsableCol && (singleRowCount > 0 || totalMultiRow > 0)) {
             // Section header label
             const synHdr = document.createElement('div');
-            synHdr.textContent = 'Cell structure';
+            synHdr.textContent = 'Multi-row cell state';
             synHdr.style.cssText = [
                 'font-size:0.75em; font-weight:600; color:#555;',
                 'padding:4px 8px 2px 8px; letter-spacing:0.03em; user-select:none;'
@@ -13391,8 +13432,8 @@
             synBox.appendChild(synHdr);
 
             /**
-             * Creates and appends a single synthetic cell-structure entry to synBox.
-             * @param {string} mode    - 'empty' | 'single' | 'collapsed' | 'expanded' | 'any'
+             * Creates and appends a single synthetic multi-row state entry to synBox.
+             * @param {string} mode    - 'single' | 'collapsed' | 'expanded' | 'any'
              * @param {string} label   - Human-readable display text
              * @param {number} count   - Number of visible rows matching this mode
              */
@@ -13427,13 +13468,9 @@
                 synBox.appendChild(item);
             };
 
-            // ── Synthetic entries — empty first, single-row second, multi-row states last ──
-            // "empty cells" is pinned at the very top of synBox so it is the first entry
-            // the user sees; it matches rows where the collapsable column cell is completely
-            // blank (no ul>li items, no text content — e.g. a release with no Country/Date).
-            if (emptyCellCount > 0) {
-                makeSynItem('empty', '○ empty cells', emptyCellCount);
-            }
+            // ── Synthetic entries — single-row first, then multi-row states ───
+            // "single-row cells" appears at the very top of synBox so it is the
+            // first entry the user sees in the dropdown.
             if (singleRowCount > 0) {
                 makeSynItem('single', '• single-row cells', singleRowCount);
             }
@@ -13600,11 +13637,10 @@
         const vw    = window.innerWidth;
         const vh    = window.innerHeight;
         const synItemCount = isCollapsableCol
-            ? (emptyCellCount          > 0 ? 1 : 0) +
-              (singleRowCount          > 0 ? 1 : 0) +
-              (multiRowCollapsedCount  > 0 ? 1 : 0) +
-              (multiRowExpandedCount   > 0 ? 1 : 0) +
-              (totalMultiRow > 1         ? 1 : 0)
+            ? (singleRowCount         > 0 ? 1 : 0) +
+              (multiRowCollapsedCount > 0 ? 1 : 0) +
+              (multiRowExpandedCount  > 0 ? 1 : 0) +
+              (totalMultiRow > 1        ? 1 : 0)
             : 0;
         const dropH = Math.min(320, (vals.length + synItemCount) * 29 + 50 + 38); // +50 syn header/divider, +38 qf bar
         const dropW = drop.offsetWidth || 200;
@@ -13665,12 +13701,10 @@
      * Unlike `applyUniqVal()` which puts a text string into the column filter
      * input, this function marks the input with `data-mb-multirow-mode` so that
      * `getColFilters()` can emit a special `{ isMultiRowFilter, multiRowMode }`
-     * descriptor and `testRowMatch()` can filter rows by the structural state of
-     * their cell rather than by text content.
+     * descriptor and `testRowMatch()` can filter rows by the collapse/expand
+     * state of their `.mb-cell-collapse-toggle` rather than by text content.
      *
-     * Five modes are supported:
-     *   'empty'      → keep rows where the column cell has no ul>li AND no text
-     *   'single'     → keep rows where the column cell has exactly one ul>li item
+     * Three modes are supported:
      *   'collapsed'  → keep rows where the column toggle shows ▶ (collapsed)
      *   'expanded'   → keep rows where the column toggle shows ◀ (expanded)
      *   'any'        → keep rows that have a multi-row cell in this column
@@ -13680,7 +13714,7 @@
      * If the user edits the field manually the 'input' event handler deletes
      * `dataset.mbMultirowMode` and the filter degrades to a normal text filter.
      *
-     * @param {string}           mode      - 'empty' | 'single' | 'collapsed' | 'expanded' | 'any'
+     * @param {string}           mode      - 'collapsed' | 'expanded' | 'any'
      * @param {HTMLTableElement} table     - The table owning the column.
      * @param {number}           colIndex  - Zero-based column index.
      */
@@ -13696,8 +13730,7 @@
         input.dataset.mbMultirowMode = mode;
 
         // Store a human-readable display label so the field looks intentionally set.
-        const label = mode === 'empty'    ? '○ empty cells'         :
-                      mode === 'collapsed' ? '▶ multi-row: collapsed' :
+        const label = mode === 'collapsed' ? '▶ multi-row: collapsed' :
                       mode === 'expanded'  ? '◀ multi-row: expanded'  :
                       mode === 'single'    ? '• single-row cells'     :
                                             '▶◀ multi-row: any';

@@ -45352,7 +45352,6 @@ class="mb-subtable-controls">' with the same logic of getting colored background
 button for multi table pages (but with the colorization taken from the subtable filter field) and of course pressing
 this new button repeatedly should onyl toggle all columns inside that sub-table which have multi-rows cells
 
-
 * DONE extract the "video" icon from recordings - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
 
 * DONE Add guard if some action would leave the final rendered page and warn the user with an alert dialog
@@ -45399,6 +45398,692 @@ There is still a bug, when loading from "MB-artist-releasegroups-official_rgs-57
 actually be ONLY the one with the btton text "Official RGs"
 
 Still not, the button text is actually an icon, then a superscript and then the text
+
+* DONE render as multi-row cells - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?tport=8000 - "Label, "Catalog"
+
+* DONE split column as multi-row cell
+** DONE initial
+
+In the uploaded userscript,
+
+1.) in the following function
+
+#+begin_example
+const ColumnDataExtractor = {
+#+end_example
+
+please change the implementation of splitting the "Country/Date" column, e.g.
+
+#+begin_example
+<td>
+  <script type="application/json">{"events":[{"country":{"last_updated":"2013-05-27T12:35:40Z","id":14,"name":"Austria","comment":"","iso_3166_3_codes":[],"begin_date":null,"primaryAlias":"Austria","editsPending":false,"ended":false,"country_code":"AT","gid":"caac77d1-a5c8-3e6e-8e27-90b44dcc1446","iso_3166_2_codes":[],"iso_3166_1_codes":["AT"],"entityType":"area","primary_code":"AT","typeID":1,"end_date":null},"date":{"day":null,"month":null,"year":1988}},{"country":{"primaryAlias":"Europe","begin_date":null,"editsPending":false,"ended":false,"country_code":"XE","gid":"89a675c2-3e37-3518-b83c-418bad59a85a","iso_3166_2_codes":[],"comment":"","iso_3166_3_codes":[],"id":241,"name":"Europe","last_updated":"2013-08-28T11:55:13Z","end_date":null,"typeID":null,"iso_3166_1_codes":["XE"],"primary_code":"XE","entityType":"area"},"date":{"year":1988,"month":null,"day":null}},{"country":{"iso_3166_3_codes":[],"comment":"","name":"France","id":73,"last_updated":"2013-05-27T12:50:32Z","editsPending":false,"primaryAlias":"France","begin_date":null,"gid":"08310658-51eb-3801-80de-5a0739207115","iso_3166_2_codes":[],"ended":false,"country_code":"FR","iso_3166_1_codes":["FR"],"primary_code":"FR","entityType":"area","typeID":1,"end_date":null},"date":{"day":null,"year":1988,"month":null}},{"date":{"day":null,"year":1988,"month":null},"country":{"editsPending":false,"begin_date":null,"gid":"85752fda-13c4-31a3-bee5-0e5cb1f51dad","iso_3166_2_codes":[],"country_code":"DE","ended":false,"id":81,"name":"Germany","last_updated":"2013-05-27T12:44:37Z","iso_3166_3_codes":[],"comment":"","end_date":null,"typeID":1,"iso_3166_1_codes":["DE"],"entityType":"area","primary_code":"DE"}}]}
+  </script>
+  <div class="release-events-container">
+    <ul aria-label="Release events" class="release-events abbreviated">
+      <li aria-label="Release event" class="release-event">
+	<span class="flag flag-AT release-country">
+	  <a href="/area/caac77d1-a5c8-3e6e-8e27-90b44dcc1446">
+	    <abbr title="Austria">AT
+	    </abbr>
+	  </a>
+	</span>
+	<span class="release-date">1988
+	</span>
+      </li>
+      <li aria-label="Release event" class="release-event">
+	<span class="flag flag-XE release-country">
+	  <a href="/area/89a675c2-3e37-3518-b83c-418bad59a85a">
+	    <abbr title="Europe">XE
+	    </abbr>
+	  </a>
+	</span>
+	<span class="release-date">1988
+	</span>
+      </li>
+      <li aria-label="Release event" class="release-event">
+	<span class="flag flag-FR release-country">
+	  <a href="/area/08310658-51eb-3801-80de-5a0739207115">
+	    <abbr title="France">FR
+	    </abbr>
+	  </a>
+	</span>
+	<span class="release-date">1988
+	</span>
+      </li>
+      <li aria-label="Release event" class="release-event">
+	<span class="flag flag-DE release-country">
+	  <a href="/area/85752fda-13c4-31a3-bee5-0e5cb1f51dad">
+	    <abbr title="Germany">DE
+	    </abbr>
+	  </a>
+	</span>
+	<span class="release-date">1988
+	</span>
+      </li>
+    </ul>
+  </div>
+</td>
+#+end_example
+
+from the current 'split into "comma separated" "Country" and "Date" synthetic columns'
+
+#+begin_example
+<td><script type="application/json">{"entityType":"release","gid":"88d5062b-499b-4281-a078-9f8c2d36e06d"}</script><span class="tagger-icon"><a class="tagger-icon" href="http://127.0.0.1:8000/openalbum?id=88d5062b-499b-4281-a078-9f8c2d36e06d" title="Open in tagger"><img alt="Tagger" src="https://static.metabrainz.org/MB/mblookup-tagger-5a66953.png"></a></span></td>
+#+end_example
+
+#+begin_example
+<td>1988, 1988, 1988, 1988</td>
+#+end_example
+
+to actually leave the data as multi-row cells in the "Country" and "Date" synthetic columns, as they already are in the source coulmn "Country/Date"
+
+2.) render the the columns in the new parameter definition
+
+#+begin_example
+renderMultiRowCell: [ 'Label', 'Catalog' ],
+#+end_example
+
+inside a pageDefinition
+
+#+begin_example
+        {
+            type: 'releasegroup-releases',
+            match: (path) => path.includes('/release-group/'),
+            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                collapsableColumns: [ 'Country/Date' ],
+                renderMultiRowCell: [ 'Label', 'Catalog' ],
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+#+end_example
+
+, e.g. the "Label" and "Catalog" columns in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases as multi-row cell columns instead of the
+initial comma separated display after rendering the final page.
+
+So the following current examples for a "Label" value
+
+#+begin_example
+<td>
+  <a href="/label/b8d33bec-92cc-40d9-bd92-4eb089b401a9">
+    <bdi>CBS
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>CBS Records’ international imprint from 1962–1990; renamed since 1991 as Columbia
+    </bdi>)
+  </span>,
+  <a href="/label/ea26814f-d648-41cc-8050-5373c90cdb4e">
+    <bdi>Direkt Records
+    </bdi>
+  </a>
+</td>
+#+end_example
+
+and a "Catalog" value
+
+#+begin_example
+<td>
+  <span class="catalog-number">CBS S 65480
+  </span>,
+  <span class="catalog-number">S 65480
+  </span>
+</td>
+#+end_example
+
+should instead be rendered as
+
+#+begin_example
+CBS (CBS Records’ international imprint from 1962–1990; renamed since 1991 as Columbia)
+Direkt Records
+#+end_example
+
+and
+
+#+begin_example
+CBS S 65480
+S 65480
+#+end_example
+
+So basically the comma "," should be used as the multi-row cell splitter and not be renderd in the final data cell anymore
+
+** DONE debug
+
+#+begin_example
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.63+2026-03-08) loaded with external library (3.14.3+2026-03-04) active on MusicBrainz page: https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a?tport=8000 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a?tport=8000 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /release-group/39b22944-7503-3937-8bba-09b17281cc6a 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters: tport=8000 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: releasegroup-releases 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+[VZ-ShowAllEntityData: releasegroup-releases] 🚀 Initializing script for path: /release-group/39b22944-7503-3937-8bba-09b17281cc6a
+[VZ-ShowAllEntityData: releasegroup-releases] 🚀 Blurred #headerid-query input on page entry 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Changelog source: remote — replaced 0 local entries with 237 remote entries (fromCache=true) 
+[VZ-ShowAllEntityData: releasegroup-releases] 🚀 columnErasers configured: "Release" → [▶] 
+[VZ-ShowAllEntityData: releasegroup-releases] 🚀 renderMultiRowCell configured: ["Label", "Catalog"] 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Signalling other scripts to stop... 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Starting fetch process... null
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 determineMaxPageFromDOM: Found "Next" link. Extracted page: 2 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Total pages to fetch: 2 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Removed 2 jesus2099 bigbox elements. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Page 1 is current page. Using existing document. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Detected indices → mainColIdx=1 (Release), extractors=[caa("Release"@1), splitCountryDate("Country/Date"@6), sumTracks("Tracks"@5), extractFormatTypes("Format"@4)], erasers=[[▶]@"Release"(colIdx=1)], renderMultiRow=["Label"@7, "Catalog"@-1], excluded=[2] for pageType: releasegroup-releases 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Table body found. Processing child nodes. Total nodes: 102 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Subgroup Change/Type: "Official". Rows so far: 0 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 3 rows 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Subgroup Change/Type: "Promotion". Rows so far: 96 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Page 1/2 processed in 0.02s. Rows on page: 100. Total: 100 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥   Summary: Official: +96 (Total: 96) | Promotion: +4 (Total: 4) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Fetching URL for page 2: https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a?tport=8000&page=2 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Initiating fetch for URL: https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a?tport=8000&page=2 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Page 2: No li.show-all elements found — nothing to expand. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Found matching table "[object HTMLTableElement]" on page 2 to process. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Detected indices → mainColIdx=1 (Release), extractors=[caa("Release"@1), splitCountryDate("Country/Date"@5), sumTracks("Tracks"@4), extractFormatTypes("Format"@3)], erasers=[[▶]@"Release"(colIdx=1)], renderMultiRow=["Label"@6, "Catalog"@-1], excluded=[] for pageType: releasegroup-releases 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Table body found. Processing child nodes. Total nodes: 5 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Subgroup Change/Type: "Official". Rows so far: 100 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: no matching elements found in column "Release" (colIdx=1), erasers=[▶] 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: no matching elements found in column "Release" (colIdx=1), erasers=[▶] 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: no matching elements found in column "Release" (colIdx=1), erasers=[▶] 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=6) — split into 2 rows 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: no matching elements found in column "Release" (colIdx=1), erasers=[▶] 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥 Page 2/2 processed in 22.86s. Rows on page: 4. Total: 104 
+[VZ-ShowAllEntityData: releasegroup-releases] 📥   Summary: Official: +4 (Total: 100) | Promotion: +0 (Total: 4) 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 DOM rendering starting... 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Starting updateH2Count: filtered=104, total=104, absoluteTotal=null 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Searching for target H2. Current pageType: releasegroup-releases 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Stopping H2 search at index 2: table no longer follows this header. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Target element identified: "Album..." 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Updated header/target Album count: (104) 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Starting renderGroupedTable with 2 categories. Query: "" 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Cloning table head for template. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 cleanupHeaders() called → existing headers=[ | Release | Relationships | Artist | Format | Tracks | Country/Date | Label | Catalog# | Barcode | Tagger] 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Marking column 2 ("Relationships") for removal. Match: "Relationships", Setting: "sa_remove_rel" 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Skipping removal of column 10 ("Tagger"). Setting "sa_remove_tagger" is disabled. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Removing 1 columns from table. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Successfully deleted column: Relationships 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: CAA (via extractor: caa) 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Country (via extractor: splitCountryDate) 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Date (via extractor: splitCountryDate) 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Total Tracks (via extractor: sumTracks) 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Format Types (via extractor: extractFormatTypes) 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: MB-Name 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Comment 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Searching for target H2. Current pageType: releasegroup-releases 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Stopping H2 search at index 2: table no longer follows this header. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 No query provided; performing initial cleanup of existing elements. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨  Injecting master toggle and filter container after target header Album(104). 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Processing group: "Official" with 100 rows. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Creating new table and H3 for group "Official". 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Group "Official" auto-expand status: false (singleSubTable=false) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: columns=[Country/Date] 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 ensureCollapseDelegate: delegation listener installed on tbody. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: "Country/Date" (col 5) — 1 multi-row cell(s). 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: done — 1 declared, 1 with multi-row cells. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Processing group: "Promotion" with 4 rows. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Creating new table and H3 for group "Promotion". 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Group "Promotion" auto-expand status: false (singleSubTable=false) 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: columns=[Country/Date] 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 ensureCollapseDelegate: delegation listener installed on tbody. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: "Country/Date" (col 5) — no multi-row cells found, skipping. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: done — 1 declared, 0 with multi-row cells. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 rewireGlobalCollapseButtonMulti: wired 1 column-header button(s). 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Finished renderGroupedTable. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Running final cleanup... 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Navigation guard installed. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Auto-resize button added to controls 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Made 17 columns resizable 
+[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Column visibility loaded for pageType "releasegroup-releases": Object
+[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Restored column visibility for pageType "releasegroup-releases" from GM storage. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Column visibility toggle added to controls 
+[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Density control button added to controls 
+[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Statistics button added to controls 
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Keyboard shortcuts initialized 
+[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Shortcuts help button already exists, skipping 
+[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Export button with dropdown menu added to controls 
+[VZ-ShowAllEntityData: releasegroup-releases] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 DOM rendering finished in 20.60ms 
+[VZ-ShowAllEntityData: releasegroup-releases] ✅ Process complete. Final Row Count: 104. Total Time: 22.89s 
+[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Auto-focused global filter input after final render 
+[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Master toggle: Showing all tables. 
+#+end_example
+
+* DONE add a synthetic value for multi-row cells
+
+add a synthetic value to the unique column values drop-down menu which represents collapsed/uncollapsed multi-row cells
+(maybe by checking the "collapse/uncollapse" toggle icon) and when clicking on it all the table rows with multi-row
+cells should be filtered
+
+* DONE multi-row cell column unvisible
+
+when making a multi-row cell column unvisible by using the "Visible"-button and it's implementation, the global, and in
+the case of "multi" table pages the sub-table collapse/uncollpase toggle button (but only if ALL multi-row cell columns
+are unvisible per sub-table) should also not be rendered (only when the columns are made visible again)
+
+* DONE multi-row button text + multi-row cell column unvisible + add synthetic entry for empty cells + add synthetic entry for "single-row cells"
+** initial
+
+In the uploaded userscript,
+
+1.) Please render the global button
+
+#+begin_example
+<button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle;">▶ Expand columns
+</button>
+#+end_example
+
+where right now the button text is in one row "▶ Expand columns" in such a way, that the string "columns" is replaced
+with a two row text which has "multi-rows" over "cells" and "▶ Expand" in front of it, like n the following example
+
+#+begin_example
+<button id="mb-col-collapse-all-btn" 
+        title="Expand all collapsed multi-row cells in every collapsable column" 
+        style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-flex; align-items: center; gap: 4px; background: initial;">
+  <span>▶ Expand</span>
+  <span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1; font-size: 0.9em;">
+    <span>multi-rows</span>
+    <span>cells</span>
+  </span>
+</button>
+#+end_example
+
+Do the pendant for the "◀ Collapse columns" text after toggling
+
+2.) The same should be done for all the sub-table toggle buttons in "multi" table mode where the current button text is
+just "▶ Expand" and "◀ Collapse". So change it to the same button text like in the global case, but leave the tooltips
+intact, as they describe the subtable moire specifically.
+
+3.) The sub-table toggle buttons should be shifted a little bit more to the right of the container
+
+#+begin_example
+<label id="mb-stf-Official-ex-label" for="mb-stf-Official-ex-checkbox" title="Exclude matches (Filter for &quot;Official&quot;)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-Official-ex-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label>
+#+end_example
+
+as it overlaps especially when the button gets colorized during highlighting of multi-row cells
+
+4.) when making a multi-row cell column unvisible by using the "Visible"-button and it's implementation, the global, and
+in the case of "multi" table pages the sub-table collapse/uncollpase toggle button (but only if ALL multi-row cell
+columns are unvisible per sub-table) should also not be rendered (only when the columns are made visible again)
+
+** bug
+
+1.) Almost, one bug left:
+
+in "multi"-table mode, when making multi-row cell column unvisible by using the "Visible"-button and it's
+implementation, the global and sub-table collapse/uncollpase toggle buttons corretly vanish as sonn as the last column
+which has multi-row cells is made unvisible, but when then reenable these columns again, ONLY the global toggle button gets visible again, the sub-table toggle button stays hidden
+
+2.) rename '<span>multi-rows</span>' into '<span>multi-row</span>' inside the "function makeCollapseExpandBtnHTML(expand)"
+
+3.) add the new additional functionality: 
+
+add a synthetic value to the unique column values drop-down menu which represents collapsed/uncollapsed multi-row cells
+(maybe by checking the "collapse/uncollapse" toggle icon) and when clicking on it all the table rows with multi-row
+cells in that column should be filtered
+
+** bug: protect the global toggle button to not collapse the h2 header row where its' located in
+
+2 bugs left:
+
+- protect the global toggle button to not collapse/uncollapse the whole h2 header row where its' located in (although
+  it's toggle functionality itself is working). The bug exists by either single clicking the button toggle or by
+  "Ctrl"-clicking it
+
+- the new additional functionality DOESN't work at all, there are no new entries visible in the unique column values
+  drop-down menu which represents collapsed/uncollapsed (or both) multi-row cells. Please fix or think about reimplementation
+  
+** bug
+
+Still one bug left:
+
+Although now the synthetic values for collapsed/uncollapsed/either are rendered in the "unique column values
+drop-down"-menu, when selecting such a synthetic value, it correctly gets copied to the filter field, but the actual
+corresponding rows are not filtered at all, so we always have a "no rows selected" state
+
+** add new synthetic "single-row cells" value to the very beginning of the "unique column values drop-down"-menu
+
+In the uploaded userscript,
+
+1.) add a new synthetic "single-row cells" value to the very beginning of the "unique column values drop-down"-menu in the
+"synBox" container. Also take the synthetic value into account when count the number of entries
+
+#+begin_example
+        // Counts for synthetic multi-row state entries (collapsed ▶ / expanded ◀ / any)
+        let multiRowCollapsedCount = 0;
+        let multiRowExpandedCount  = 0;
+#+end_example
+
+and all other code places where necessary
+
+2.) there is also a filtering bug with the current implementation when selecting synthetic values from the "unique column values drop-down"-menu
+
+For example when we start on the final rendered page of
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events with a total of 109 rows in the table (where 105 rows have multi-row cells).
+
+- clicking on the "unique column values drop-down"-menu in the "Artists" column correctly shows the following submenue for the synthetic entries
+
+#+begin_example
+(105) ▶ collapsed multi-row cells
+(105) ▶◀ any multi-row cells
+#+end_example
+
+- selecting either of this entries (and later claring the filter again) correctly filters all 105 rows with multi-row cells - also displays the count in the h2 header line correctly (105 of 109)
+
+- starting again from scratch and then uncollapsing two multi-row cells in the "Artists" column. When now clicking on
+  the "unique column values drop-down"-menu in the "Artists" column it still correctly shows the following submenue for
+  the synthetic entries
+
+#+begin_example
+(103) ▶ collapsed multi-row cells
+(2) ◀ expanded multi-row cells
+(105) ▶◀ any multi-row cells
+#+end_example
+
+- now when I select the entry "(2) ◀ expanded multi-row cells", it fills in the filter field and displays corretly the two filtered rows - also displays the count in the h2 header line correctly (2 of 109)
+
+- BUT now the BUG: when I clear the filter field, and when I click on the "unique column values drop-down"-menu in the "Artists" column, it again shows the right submenue
+
+#+begin_example
+(105) ▶ collapsed multi-row cells
+(105) ▶◀ any multi-row cells
+#+end_example
+
+but when now selecting for example "(105) ▶ collapsed multi-row cells" it shows just rows with collapsed multi-row cells
+but the count in the h2 header line is wrong - it says (103 of 109), somehow the previous two entries are taken into
+account
+
+- additionally when uncollapsing still more entries, the "unique column values drop-down"-menu in the "Artists" column
+  still shows the right entries with the right counts, but when selecting the newly uncollpased count entry, it still
+  filters the original TWO entries. It looks like this count is somehow persisted and not properly reset when changing
+  the collapse/uncollpase state of further entries
+
+** still bug in "multi" table pageType e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+Everything works fine now for the "single" table case,
+
+but there are still bugs in "multi" table pageTypes e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c - 119 total rows present on the final rendered page:
+
+- only for the very first multi-cell column "Country/Date" in the "Official" sub-table there is an entry for "(117) •single-row cells" (117 entries) and just one "(1) ▶ collapsed multi-row cells"; so there is ONE entry missing because
+  there should be 119 in total
+
+- all other multi-cell column columns like e.g. "Label" or "Catalog#" have NO "single-row cells" entries at all
+  
+- and it also somehow just counts the "▶ collapsed multi-row cells"/"▶◀ any multi-row cells" but never the "◀ expanded
+  multi-row cells" even if explicitly uncollpasing some of the mult-row cells
+
+Please fix, or better extend the current working "single" table implementation to "multiple" table mode (but DON't break the "single" table mode)
+
+Please also add changelog entries to the uplodaed file "ShowAllEntityData_CHANGELOG.json". you missed it already for the last bug fix, please reapply
+
+** bug fix
+
+In the uploaded userscript,
+
+There is still a bug with pageTypes which have
+
+#+begin_example
+renderMultiRowCell: [ 'Label', 'Catalog#' ],
+#+end_example
+
+All these multi-row cell type columns should be rendered in <li> containers in such a way that not only data cells which
+really have multiple rows, but also cells wich consists of just one row, so that the "collapsableColumns:" feature works with them
+
+Please recheck all the implementations for "single" and "multi"-table modes. For example the "Country/Date" column takes the
+right approach.
+
+** add synthetic entry for empty cells
+
+add a new synthetic "empty cells" value to the very beginning of the "unique column values drop-down"-menu in the
+"synBox" container. Also take the synthetic value into account when count the number of entries and all other code places where necessary.
+
+So basically account for complete empty cells in multi-row cell columns.
+
+For example in https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the "Country/Date" column has one row where that column is completely empty
+
 
 
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
@@ -46436,691 +47121,72 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 * extract "cancelled" from "Event" in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
 
-
-* DONE render as multi-row cells - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?tport=8000 - "Label, "Catalog"
-
-* DONE split column as multi-row cell
-** DONE initial
-
 In the uploaded userscript,
 
-1.) in the following function
+in the variable "const pageDefinitions" there is a new "columnExtractor" definition
+
+#+begin_example
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+#+end_example
+
+for the following pageType
+
+#+begin_example
+        {
+            type: 'events',
+            match: (path) => path.includes('/events'),
+            buttons: [ { label: 'Show all Events for Artist' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Canceled'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
+                ],
+                collapsableColumns: [ 'Location' ],
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        }
+#+end_example
+
+please add the new function "cancelledEvent" to the registry
 
 #+begin_example
 const ColumnDataExtractor = {
 #+end_example
 
-please change the implementation of splitting the "Country/Date" column, e.g.
+and implement the new functionality of extracting the cancelled status of an event in the following way:
+
+Here is an example entry which has the "cancelled" state at https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
 
 #+begin_example
-<td>
-  <script type="application/json">{"events":[{"country":{"last_updated":"2013-05-27T12:35:40Z","id":14,"name":"Austria","comment":"","iso_3166_3_codes":[],"begin_date":null,"primaryAlias":"Austria","editsPending":false,"ended":false,"country_code":"AT","gid":"caac77d1-a5c8-3e6e-8e27-90b44dcc1446","iso_3166_2_codes":[],"iso_3166_1_codes":["AT"],"entityType":"area","primary_code":"AT","typeID":1,"end_date":null},"date":{"day":null,"month":null,"year":1988}},{"country":{"primaryAlias":"Europe","begin_date":null,"editsPending":false,"ended":false,"country_code":"XE","gid":"89a675c2-3e37-3518-b83c-418bad59a85a","iso_3166_2_codes":[],"comment":"","iso_3166_3_codes":[],"id":241,"name":"Europe","last_updated":"2013-08-28T11:55:13Z","end_date":null,"typeID":null,"iso_3166_1_codes":["XE"],"primary_code":"XE","entityType":"area"},"date":{"year":1988,"month":null,"day":null}},{"country":{"iso_3166_3_codes":[],"comment":"","name":"France","id":73,"last_updated":"2013-05-27T12:50:32Z","editsPending":false,"primaryAlias":"France","begin_date":null,"gid":"08310658-51eb-3801-80de-5a0739207115","iso_3166_2_codes":[],"ended":false,"country_code":"FR","iso_3166_1_codes":["FR"],"primary_code":"FR","entityType":"area","typeID":1,"end_date":null},"date":{"day":null,"year":1988,"month":null}},{"date":{"day":null,"year":1988,"month":null},"country":{"editsPending":false,"begin_date":null,"gid":"85752fda-13c4-31a3-bee5-0e5cb1f51dad","iso_3166_2_codes":[],"country_code":"DE","ended":false,"id":81,"name":"Germany","last_updated":"2013-05-27T12:44:37Z","iso_3166_3_codes":[],"comment":"","end_date":null,"typeID":1,"iso_3166_1_codes":["DE"],"entityType":"area","primary_code":"DE"}}]}
-  </script>
-  <div class="release-events-container">
-    <ul aria-label="Release events" class="release-events abbreviated">
-      <li aria-label="Release event" class="release-event">
-	<span class="flag flag-AT release-country">
-	  <a href="/area/caac77d1-a5c8-3e6e-8e27-90b44dcc1446">
-	    <abbr title="Austria">AT
-	    </abbr>
-	  </a>
-	</span>
-	<span class="release-date">1988
-	</span>
-      </li>
-      <li aria-label="Release event" class="release-event">
-	<span class="flag flag-XE release-country">
-	  <a href="/area/89a675c2-3e37-3518-b83c-418bad59a85a">
-	    <abbr title="Europe">XE
-	    </abbr>
-	  </a>
-	</span>
-	<span class="release-date">1988
-	</span>
-      </li>
-      <li aria-label="Release event" class="release-event">
-	<span class="flag flag-FR release-country">
-	  <a href="/area/08310658-51eb-3801-80de-5a0739207115">
-	    <abbr title="France">FR
-	    </abbr>
-	  </a>
-	</span>
-	<span class="release-date">1988
-	</span>
-      </li>
-      <li aria-label="Release event" class="release-event">
-	<span class="flag flag-DE release-country">
-	  <a href="/area/85752fda-13c4-31a3-bee5-0e5cb1f51dad">
-	    <abbr title="Germany">DE
-	    </abbr>
-	  </a>
-	</span>
-	<span class="release-date">1988
-	</span>
-      </li>
-    </ul>
-  </div>
-</td>
+<tr class="even">
+  <td>
+    <input name="add-to-merge" type="checkbox" value="24355">
+  </td>
+  <td>
+    <a class="wrap-anywhere" href="/event/a3a46b48-2913-49c5-86f8-f98969a837fc">
+      <bdi>1978‐08‐08: Ryerson Theatre, Ryerson University, Toronto, ON, Canada
+      </bdi>
+    </a>
+    <span class="cancelled">(
+      <bdi>cancelled
+      </bdi>)
+    </span>
+  </td>
 #+end_example
 
-from the current 'split into "comma separated" "Country" and "Date" synthetic columns'
+so create the new synthetic column by extracting "cancelled" from the container bdi container inside '<span class="cancelled">'
 
 #+begin_example
-<td><script type="application/json">{"entityType":"release","gid":"88d5062b-499b-4281-a078-9f8c2d36e06d"}</script><span class="tagger-icon"><a class="tagger-icon" href="http://127.0.0.1:8000/openalbum?id=88d5062b-499b-4281-a078-9f8c2d36e06d" title="Open in tagger"><img alt="Tagger" src="https://static.metabrainz.org/MB/mblookup-tagger-5a66953.png"></a></span></td>
+    <span class="cancelled">(
+      <bdi>cancelled
+      </bdi>)
 #+end_example
 
-#+begin_example
-<td>1988, 1988, 1988, 1988</td>
-#+end_example
+Take the same approach as for the "caa" or "video" extractor, but in this case leave the "sourceColumn: Event" intact, so don't delete the extracted value 
 
-to actually leave the data as multi-row cells in the "Country" and "Date" synthetic columns, as they already are in the source coulmn "Country/Date"
 
-2.) render the the columns in the new parameter definition
-
-#+begin_example
-renderMultiRowCell: [ 'Label', 'Catalog' ],
-#+end_example
-
-inside a pageDefinition
-
-#+begin_example
-        {
-            type: 'releasegroup-releases',
-            match: (path) => path.includes('/release-group/'),
-            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Release', erasers: ['▶'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
-                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
-                    {
-                        sourceColumn:    'Tracks',
-                        extractor:       'sumTracks',
-                        syntheticColumns: ['Total Tracks']
-                    },
-                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
-                ],
-                collapsableColumns: [ 'Country/Date' ],
-                renderMultiRowCell: [ 'Label', 'Catalog' ],
-                extractMainColumn: 'Release'
-            },
-            tableMode: 'multi',
-            non_paginated: false
-        },
-#+end_example
-
-, e.g. the "Label" and "Catalog" columns in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases as multi-row cell columns instead of the
-initial comma separated display after rendering the final page.
-
-So the following current examples for a "Label" value
-
-#+begin_example
-<td>
-  <a href="/label/b8d33bec-92cc-40d9-bd92-4eb089b401a9">
-    <bdi>CBS
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>CBS Records’ international imprint from 1962–1990; renamed since 1991 as Columbia
-    </bdi>)
-  </span>,
-  <a href="/label/ea26814f-d648-41cc-8050-5373c90cdb4e">
-    <bdi>Direkt Records
-    </bdi>
-  </a>
-</td>
-#+end_example
-
-and a "Catalog" value
-
-#+begin_example
-<td>
-  <span class="catalog-number">CBS S 65480
-  </span>,
-  <span class="catalog-number">S 65480
-  </span>
-</td>
-#+end_example
-
-should instead be rendered as
-
-#+begin_example
-CBS (CBS Records’ international imprint from 1962–1990; renamed since 1991 as Columbia)
-Direkt Records
-#+end_example
-
-and
-
-#+begin_example
-CBS S 65480
-S 65480
-#+end_example
-
-So basically the comma "," should be used as the multi-row cell splitter and not be renderd in the final data cell anymore
-
-** DONE debug
-
-#+begin_example
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.63+2026-03-08) loaded with external library (3.14.3+2026-03-04) active on MusicBrainz page: https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a?tport=8000 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a?tport=8000 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /release-group/39b22944-7503-3937-8bba-09b17281cc6a 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters: tport=8000 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: releasegroup-releases 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
-[VZ-ShowAllEntityData: releasegroup-releases] 🚀 Initializing script for path: /release-group/39b22944-7503-3937-8bba-09b17281cc6a
-[VZ-ShowAllEntityData: releasegroup-releases] 🚀 Blurred #headerid-query input on page entry 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 Changelog source: remote — replaced 0 local entries with 237 remote entries (fromCache=true) 
-[VZ-ShowAllEntityData: releasegroup-releases] 🚀 columnErasers configured: "Release" → [▶] 
-[VZ-ShowAllEntityData: releasegroup-releases] 🚀 renderMultiRowCell configured: ["Label", "Catalog"] 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Signalling other scripts to stop... 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Starting fetch process... null
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 determineMaxPageFromDOM: Found "Next" link. Extracted page: 2 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Total pages to fetch: 2 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Starting clutter element removal. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Removed 2 jesus2099 bigbox elements. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Page 1 is current page. Using existing document. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 Page 1: No li.show-all elements found — nothing to expand. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 No targetHeader provided; returning all tables found in container. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 Detected indices → mainColIdx=1 (Release), extractors=[caa("Release"@1), splitCountryDate("Country/Date"@6), sumTracks("Tracks"@5), extractFormatTypes("Format"@4)], erasers=[[▶]@"Release"(colIdx=1)], renderMultiRow=["Label"@7, "Catalog"@-1], excluded=[2] for pageType: releasegroup-releases 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 Table body found. Processing child nodes. Total nodes: 102 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Subgroup Change/Type: "Official". Rows so far: 0 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 3 rows 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — split into 2 rows 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Subgroup Change/Type: "Promotion". Rows so far: 96 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Page 1/2 processed in 0.02s. Rows on page: 100. Total: 100 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥   Summary: Official: +96 (Total: 96) | Promotion: +4 (Total: 4) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Fetching URL for page 2: https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a?tport=8000&page=2 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Initiating fetch for URL: https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a?tport=8000&page=2 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 Page 2: No li.show-all elements found — nothing to expand. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 No targetHeader provided; returning all tables found in container. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Found matching table "[object HTMLTableElement]" on page 2 to process. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 Detected indices → mainColIdx=1 (Release), extractors=[caa("Release"@1), splitCountryDate("Country/Date"@5), sumTracks("Tracks"@4), extractFormatTypes("Format"@3)], erasers=[[▶]@"Release"(colIdx=1)], renderMultiRow=["Label"@6, "Catalog"@-1], excluded=[] for pageType: releasegroup-releases 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 Table body found. Processing child nodes. Total nodes: 5 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Subgroup Change/Type: "Official". Rows so far: 100 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: no matching elements found in column "Release" (colIdx=1), erasers=[▶] 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: no matching elements found in column "Release" (colIdx=1), erasers=[▶] 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: no matching elements found in column "Release" (colIdx=1), erasers=[▶] 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=6) — split into 2 rows 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: no matching elements found in column "Release" (colIdx=1), erasers=[▶] 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog" was not found in table headers — skipped 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥 Page 2/2 processed in 22.86s. Rows on page: 4. Total: 104 
-[VZ-ShowAllEntityData: releasegroup-releases] 📥   Summary: Official: +4 (Total: 100) | Promotion: +0 (Total: 4) 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 DOM rendering starting... 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Starting updateH2Count: filtered=104, total=104, absoluteTotal=null 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Searching for target H2. Current pageType: releasegroup-releases 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Stopping H2 search at index 2: table no longer follows this header. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Target element identified: "Album..." 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Updated header/target Album count: (104) 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Starting renderGroupedTable with 2 categories. Query: "" 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Cloning table head for template. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 cleanupHeaders() called → existing headers=[ | Release | Relationships | Artist | Format | Tracks | Country/Date | Label | Catalog# | Barcode | Tagger] 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Marking column 2 ("Relationships") for removal. Match: "Relationships", Setting: "sa_remove_rel" 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Skipping removal of column 10 ("Tagger"). Setting "sa_remove_tagger" is disabled. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Removing 1 columns from table. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Successfully deleted column: Relationships 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: CAA (via extractor: caa) 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Country (via extractor: splitCountryDate) 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Date (via extractor: splitCountryDate) 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Total Tracks (via extractor: sumTracks) 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Format Types (via extractor: extractFormatTypes) 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: MB-Name 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Comment 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Searching for target H2. Current pageType: releasegroup-releases 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Stopping H2 search at index 2: table no longer follows this header. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 No query provided; performing initial cleanup of existing elements. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨  Injecting master toggle and filter container after target header Album(104). 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Processing group: "Official" with 100 rows. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Creating new table and H3 for group "Official". 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Group "Official" auto-expand status: false (singleSubTable=false) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: columns=[Country/Date] 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 ensureCollapseDelegate: delegation listener installed on tbody. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: "Country/Date" (col 5) — 1 multi-row cell(s). 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: done — 1 declared, 1 with multi-row cells. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Processing group: "Promotion" with 4 rows. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Creating new table and H3 for group "Promotion". 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Group "Promotion" auto-expand status: false (singleSubTable=false) 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: columns=[Country/Date] 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 ensureCollapseDelegate: delegation listener installed on tbody. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: "Country/Date" (col 5) — no multi-row cells found, skipping. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: done — 1 declared, 0 with multi-row cells. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 rewireGlobalCollapseButtonMulti: wired 1 column-header button(s). 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Finished renderGroupedTable. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Running final cleanup... 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 No Sanojjonas elements found during final cleanup. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🧹 Final cleanup complete: No consecutive <br> tags found. 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 Navigation guard installed. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Initializing collapsible H2 headers... 
-[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
-[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Auto-resize button added to controls 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 Made 17 columns resizable 
-[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Column visibility loaded for pageType "releasegroup-releases": Object
-[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Restored column visibility for pageType "releasegroup-releases" from GM storage. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Column visibility toggle added to controls 
-[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Density control button added to controls 
-[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Statistics button added to controls 
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 Keyboard shortcuts initialized 
-[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Shortcuts help button already exists, skipping 
-[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Export button with dropdown menu added to controls 
-[VZ-ShowAllEntityData: releasegroup-releases] 🚀 Initializing aggressive full-width sidebar toggle. 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 DOM rendering finished in 20.60ms 
-[VZ-ShowAllEntityData: releasegroup-releases] ✅ Process complete. Final Row Count: 104. Total Time: 22.89s 
-[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Auto-focused global filter input after final render 
-[VZ-ShowAllEntityData: releasegroup-releases] 🎨 Master toggle: Showing all tables. 
-#+end_example
-
-* DONE add a synthetic value for multi-row cells
-
-add a synthetic value to the unique column values drop-down menu which represents collapsed/uncollapsed multi-row cells
-(maybe by checking the "collapse/uncollapse" toggle icon) and when clicking on it all the table rows with multi-row
-cells should be filtered
-
-* DONE multi-row cell column unvisible
-
-when making a multi-row cell column unvisible by using the "Visible"-button and it's implementation, the global, and in
-the case of "multi" table pages the sub-table collapse/uncollpase toggle button (but only if ALL multi-row cell columns
-are unvisible per sub-table) should also not be rendered (only when the columns are made visible again)
-
-
-* TODO multi-row button text + multi-row cell column unvisible
-** initial
-
-In the uploaded userscript,
-
-1.) Please render the global button
-
-#+begin_example
-<button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle;">▶ Expand columns
-</button>
-#+end_example
-
-where right now the button text is in one row "▶ Expand columns" in such a way, that the string "columns" is replaced
-with a two row text which has "multi-rows" over "cells" and "▶ Expand" in front of it, like n the following example
-
-#+begin_example
-<button id="mb-col-collapse-all-btn" 
-        title="Expand all collapsed multi-row cells in every collapsable column" 
-        style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-flex; align-items: center; gap: 4px; background: initial;">
-  <span>▶ Expand</span>
-  <span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1; font-size: 0.9em;">
-    <span>multi-rows</span>
-    <span>cells</span>
-  </span>
-</button>
-#+end_example
-
-Do the pendant for the "◀ Collapse columns" text after toggling
-
-2.) The same should be done for all the sub-table toggle buttons in "multi" table mode where the current button text is
-just "▶ Expand" and "◀ Collapse". So change it to the same button text like in the global case, but leave the tooltips
-intact, as they describe the subtable moire specifically.
-
-3.) The sub-table toggle buttons should be shifted a little bit more to the right of the container
-
-#+begin_example
-<label id="mb-stf-Official-ex-label" for="mb-stf-Official-ex-checkbox" title="Exclude matches (Filter for &quot;Official&quot;)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-Official-ex-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label>
-#+end_example
-
-as it overlaps especially when the button gets colorized during highlighting of multi-row cells
-
-4.) when making a multi-row cell column unvisible by using the "Visible"-button and it's implementation, the global, and
-in the case of "multi" table pages the sub-table collapse/uncollpase toggle button (but only if ALL multi-row cell
-columns are unvisible per sub-table) should also not be rendered (only when the columns are made visible again)
-
-** bug
-
-1.) Almost, one bug left:
-
-in "multi"-table mode, when making multi-row cell column unvisible by using the "Visible"-button and it's
-implementation, the global and sub-table collapse/uncollpase toggle buttons corretly vanish as sonn as the last column
-which has multi-row cells is made unvisible, but when then reenable these columns again, ONLY the global toggle button gets visible again, the sub-table toggle button stays hidden
-
-2.) rename '<span>multi-rows</span>' into '<span>multi-row</span>' inside the "function makeCollapseExpandBtnHTML(expand)"
-
-3.) add the new additional functionality: 
-
-add a synthetic value to the unique column values drop-down menu which represents collapsed/uncollapsed multi-row cells
-(maybe by checking the "collapse/uncollapse" toggle icon) and when clicking on it all the table rows with multi-row
-cells in that column should be filtered
-
-** bug: protect the global toggle button to not collapse the h2 header row where its' located in
-
-2 bugs left:
-
-- protect the global toggle button to not collapse/uncollapse the whole h2 header row where its' located in (although
-  it's toggle functionality itself is working). The bug exists by either single clicking the button toggle or by
-  "Ctrl"-clicking it
-
-- the new additional functionality DOESN't work at all, there are no new entries visible in the unique column values
-  drop-down menu which represents collapsed/uncollapsed (or both) multi-row cells. Please fix or think about reimplementation
-  
-** bug
-
-Still one bug left:
-
-Although now the synthetic values for collapsed/uncollapsed/either are rendered in the "unique column values
-drop-down"-menu, when selecting such a synthetic value, it correctly gets copied to the filter field, but the actual
-corresponding rows are not filtered at all, so we always have a "no rows selected" state
-
-** add new synthetic "single-row cells" value to the very beginning of the "unique column values drop-down"-menu
-
-In the uploaded userscript,
-
-1.) add a new synthetic "single-row cells" value to the very beginning of the "unique column values drop-down"-menu in the
-"synBox" container. Also take the synthetic value into account when count the number of entries
-
-#+begin_example
-        // Counts for synthetic multi-row state entries (collapsed ▶ / expanded ◀ / any)
-        let multiRowCollapsedCount = 0;
-        let multiRowExpandedCount  = 0;
-#+end_example
-
-and all other code places where necessary
-
-2.) there is also a filtering bug with the current implementation when selecting synthetic values from the "unique column values drop-down"-menu
-
-For example when we start on the final rendered page of
-https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events with a total of 109 rows in the table (where 105 rows have multi-row cells).
-
-- clicking on the "unique column values drop-down"-menu in the "Artists" column correctly shows the following submenue for the synthetic entries
-
-#+begin_example
-(105) ▶ collapsed multi-row cells
-(105) ▶◀ any multi-row cells
-#+end_example
-
-- selecting either of this entries (and later claring the filter again) correctly filters all 105 rows with multi-row cells - also displays the count in the h2 header line correctly (105 of 109)
-
-- starting again from scratch and then uncollapsing two multi-row cells in the "Artists" column. When now clicking on
-  the "unique column values drop-down"-menu in the "Artists" column it still correctly shows the following submenue for
-  the synthetic entries
-
-#+begin_example
-(103) ▶ collapsed multi-row cells
-(2) ◀ expanded multi-row cells
-(105) ▶◀ any multi-row cells
-#+end_example
-
-- now when I select the entry "(2) ◀ expanded multi-row cells", it fills in the filter field and displays corretly the two filtered rows - also displays the count in the h2 header line correctly (2 of 109)
-
-- BUT now the BUG: when I clear the filter field, and when I click on the "unique column values drop-down"-menu in the "Artists" column, it again shows the right submenue
-
-#+begin_example
-(105) ▶ collapsed multi-row cells
-(105) ▶◀ any multi-row cells
-#+end_example
-
-but when now selecting for example "(105) ▶ collapsed multi-row cells" it shows just rows with collapsed multi-row cells
-but the count in the h2 header line is wrong - it says (103 of 109), somehow the previous two entries are taken into
-account
-
-- additionally when uncollapsing still more entries, the "unique column values drop-down"-menu in the "Artists" column
-  still shows the right entries with the right counts, but when selecting the newly uncollpased count entry, it still
-  filters the original TWO entries. It looks like this count is somehow persisted and not properly reset when changing
-  the collapse/uncollpase state of further entries
-
-** still bug in "multi" table pageType e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-
-Everything works fine now for the "single" table case,
-
-but there are still bugs in "multi" table pageTypes e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c - 119 total rows present on the final rendered page:
-
-- only for the very first multi-cell column "Country/Date" in the "Official" sub-table there is an entry for "(117) •single-row cells" (117 entries) and just one "(1) ▶ collapsed multi-row cells"; so there is ONE entry missing because
-  there should be 119 in total
-
-- all other multi-cell column columns like e.g. "Label" or "Catalog#" have NO "single-row cells" entries at all
-  
-- and it also somehow just counts the "▶ collapsed multi-row cells"/"▶◀ any multi-row cells" but never the "◀ expanded
-  multi-row cells" even if explicitly uncollpasing some of the mult-row cells
-
-Please fix, or better extend the current working "single" table implementation to "multiple" table mode (but DON't break the "single" table mode)
-
-Please also add changelog entries to the uplodaed file "ShowAllEntityData_CHANGELOG.json". you missed it already for the last bug fix, please reapply
-
-** bug fix
-
-In the uploaded userscript,
-
-There is still a bug with pageTypes which have
-
-#+begin_example
-renderMultiRowCell: [ 'Label', 'Catalog#' ],
-#+end_example
-
-All these multi-row cell type columns should be rendered in <li> containers in such a way that not only data cells which
-really have multiple rows, but also cells wich consists of just one row, so that the "collapsableColumns:" feature works with them
-
-Please recheck all the implementations for "single" and "multi"-table modes. For example the "Country/Date" column takes the
-right approach.
-
-** add synthetic entry for empty cells
-
-add a new synthetic "empty cells" value to the very beginning of the "unique column values drop-down"-menu in the
-"synBox" container. Also take the synthetic value into account when count the number of entries and all other code places where necessary.
-
-So basically account for complete empty cells in multi-row cell columns.
-
-For example in https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the "Country/Date" column has one row where that column is completely empty
-
+* TODO add the empty cell stuff to all unique drop down lists
 
