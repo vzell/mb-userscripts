@@ -45302,8 +45302,9 @@ please check the function "initCollapsableColumns" and its implementation and ad
   toggle icon if uncollapse and so on.
 
 - also change the background color and text color of the global toggle button if at least one multi-row data cell has
-  highlighning (doesn't matter if in the visible part, when uncollapsed or in the collpased invisible part, to give the
+  highlightning (doesn't matter if in the visible part, when uncollapsed or in the collpased invisible part, to give the
   end user a clue)
+
 
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
 
