@@ -46337,3 +46337,27 @@ collapse/uncollapse all in the whole table (global) and all inside a column (per
 change it's direction depending on the current toggle state. The text in the global button also accordingly.
 
 A last glich, the toggle icon per multi-row cell should be located at the very end of the first column in a mult-row cell and NOT on a new row below
+
+** right aligned
+
+- the collapse toggle icon should be right aligned inside the column cell and NOT directly behind the first row column
+  values. It should also stay right aligned when the row gets either auto or manually resized. Initially when the final
+  page is rendered, the minimum width of columns with multi-row cells should at least account for the longest column
+  value over all rows in a table + the space for the toggle icon itself (right now for example on
+  https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events in almost all cells the collapse icon "▶" is
+  still rendered visually in the next row (although it's located after the first row value in a multi-row cell)
+
+- there is a bug that the toggling of collapsing/uncollapsing is NOT working anymore (clicking the toggle icon/button
+  has no effect) as soon as the table has been sorted either ascending or descending on whatever column (including the
+  multi-row column)
+
+- the same happens when serializing the table data to disk (either collapsed or uncollapsed) via "Save to Disk"-button and then load
+  back via "Load from Disk"-button, no more collapsing/uncollapsing possible (clicking the toggle icon/button has no effect)
+
+** global collpase icon "▶" missing after "Load from Disk"
+
+One bug left:
+
+the global toggle button for collapsing/uncollapsing is missing after "Load from Disk". It should again be rendered as
+long as there is at least one data cell with multi-row data
+

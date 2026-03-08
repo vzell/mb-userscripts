@@ -1,5 +1,21 @@
 [
     {
+      "version": "9.99.58",
+      "date": "2026-03-07",
+      "sections": [
+        {
+          "label": "🐛 Bugfix",
+          "items": [
+            "collapsableColumns cell toggle — alignment: toggle span is now appended directly to the <td> (not inside the first <li>) and positioned with CSS position:absolute; right:4px; top:4px — it is always anchored to the top-right corner of the cell, never wraps to a new line, and stays right-aligned under any column width (auto-resize or manual drag); the <td> receives class mb-has-collapse-toggle which sets position:relative and padding-right:22px so cell content never slides behind the toggle",
+            "collapsableColumns cell toggle — sort/load toggling broken: replaced per-element addEventListener on each cell toggle with a single event-delegation listener on <tbody> (new ensureCollapseDelegate() helper, guarded by table.dataset.mbCollapseDelegate for idempotency); delegation survives sort re-renders (tbody element persists, only its child rows are reordered), disk-load re-renders (tbody.innerHTML='' removes rows but NOT the listener on tbody itself), and filter re-renders; delegation handler resolves <ul>/<li> siblings dynamically from the clicked cell at event time — no stale closure references",
+            "collapsableColumns cell toggle — sort/load toggling broken: column-header and global toggle buttons now drive cell toggles via toggle.click() which is caught by the delegation listener, ensuring consistent state management through any re-render",
+            "collapsableColumns column header/global toggle — state: removed hidden _expanded properties; all toggle state is now read directly from element textContent (▶ = collapsed, ◀ = expanded) making state always consistent with visible DOM after sort, disk-load, or individual cell clicks",
+            "collapsableColumns column min-width: after processing each column, measures the maximum scrollWidth of the first <li> element (with white-space:nowrap temporarily applied for accurate unwrapped measurement) across all multi-row cells and sets th.style.minWidth to that value + 28px toggle clearance, preventing the first item from wrapping and visually pushing the toggle below the cell content"
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.57",
       "date": "2026-03-07",
       "sections": [
