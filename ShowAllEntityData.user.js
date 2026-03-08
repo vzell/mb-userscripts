@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.71+2026-03-08
+// @version      9.99.72+2026-03-08
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1196,6 +1196,77 @@
             }
 
             return [tdCaa];
+        },
+
+        /**
+         * cancelledEvent — extracts the cancellation indicator from a MusicBrainz
+         * event cell into a dedicated synthetic "Cancelled" column.
+         *
+         * Source structure (optional — only present for cancelled events):
+         *   <span class="cancelled">(
+         *     <bdi>cancelled
+         *     </bdi>)
+         *   </span>
+         *
+         * Unlike the `caa` and `video` extractors, the source element is NOT removed
+         * from the Event cell.  Instead the cancelled span is **cloned** into the
+         * synthetic cell so that the Event column continues to show the cancellation
+         * label alongside the event title, while the new Cancelled column provides a
+         * dedicated, sortable and filterable indicator.
+         *
+         * Sortability and dropdown filtering:
+         *   An invisible <span class="mb-cancelled-sort-key" style="display:none"> is
+         *   always appended to tdCancelled.  It contains "yes" when the cancellation
+         *   span was present, or "no" otherwise.  The span is not rendered by the
+         *   browser but IS walked by getCleanColumnText() and getCleanVisibleText()
+         *   (both use a TreeWalker that does not skip display:none elements), so:
+         *     - Sorting ascending/descending works ("no" < "yes" alphabetically).
+         *     - The unique-values dropdown shows exactly "no" and "yes".
+         *     - Clicking "yes" in the dropdown filters to cancelled events only;
+         *       clicking "no" filters to non-cancelled events only.
+         *
+         * Synthetic columns: ['Cancelled']
+         *
+         * @param   {HTMLTableCellElement} sourceCell  The source <td> element.
+         * @returns {HTMLTableCellElement[]}            Array of one synthetic <td>.
+         */
+        cancelledEvent(sourceCell) {
+            const tdCancelled = document.createElement('td');
+
+            /**
+             * Appends an invisible text label used exclusively as a sort/filter key.
+             * The label is never rendered — style="display:none" hides it visually —
+             * but the TreeWalker inside getCleanColumnText() and getCleanVisibleText()
+             * does not skip display:none nodes, so sorting and the unique-value
+             * dropdown both pick it up correctly.
+             *
+             * @param {string} label - "yes" when the event is cancelled, "no" otherwise
+             */
+            const appendSortKey = (label) => {
+                const keySpan = document.createElement('span');
+                keySpan.className = 'mb-cancelled-sort-key';
+                keySpan.setAttribute('aria-hidden', 'true');
+                keySpan.style.display = 'none';
+                keySpan.textContent = label;
+                tdCancelled.appendChild(keySpan);
+            };
+
+            if (sourceCell) {
+                const cancelledSpan = sourceCell.querySelector('span.cancelled');
+                if (cancelledSpan) {
+                    // Clone (not move) the cancelled span so the Event column retains
+                    // the cancellation label while the synthetic Cancelled column also
+                    // shows it as a dedicated filterable / sortable indicator.
+                    tdCancelled.appendChild(cancelledSpan.cloneNode(true));
+                    appendSortKey('yes');
+                } else {
+                    appendSortKey('no');
+                }
+            } else {
+                appendSortKey('no');
+            }
+
+            return [tdCancelled];
         }
     };
 

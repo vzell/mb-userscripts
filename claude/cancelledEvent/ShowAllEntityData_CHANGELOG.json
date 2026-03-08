@@ -6,7 +6,31 @@
         {
           "label": "✨ Enhancements",
           "items": [
-            "cancelledEvent extractor — new ColumnDataExtractor entry: extracts the MusicBrainz cancelled-event indicator (<span class=\"cancelled\"><bdi>cancelled</bdi></span>) from the Event column into a dedicated synthetic 'Cancelled' column; the span is *moved* (not cloned) out of the source cell so the Event column is never left with a duplicate '(cancelled)' label; an invisible <span class=\"mb-cancelled-sort-key\" style=\"display:none\"> is always appended to the synthetic cell containing 'yes' for cancelled events and 'no' otherwise, enabling correct sort order (no < yes alphabetically) and clean unique-values dropdown entries ('no' / 'yes') identical to the pattern already established by the video and caa extractors; the extractor is wired into the events page definition as the first columnExtractor entry (before caa / EAA and splitLocation) since it operates on the same 'Event' source column as caa and must run before extractMainColumn extraction so the cancelled span is already removed from the cell before MB-Name / Comment are derived from it"
+            "cancelledEvent column extractor — new ColumnDataExtractor entry for the 'events' page type: extracts the MusicBrainz cancellation indicator (<span class=\"cancelled\"><bdi>cancelled</bdi></span>) from the Event cell into a dedicated synthetic 'Cancelled' column; unlike the caa and video extractors the source span is cloned (not moved) so the Event column retains the cancellation label alongside the event title; an invisible <span class=\"mb-cancelled-sort-key\"> sort-key is always appended containing 'yes' for cancelled events and 'no' otherwise, making the column fully sortable and filterable via the unique-values dropdown"
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.71",
+      "date": "2026-03-08",
+      "sections": [
+        {
+          "label": "✨ Enhancements",
+          "items": [
+            "unique-values dropdown — new synthetic '○ empty cells' entry at the top of the Cell structure section: for collapsable columns (renderMultiRowCell and splitCountryDate columns such as Country, Date, Label, Catalog#), a new entry is prepended as the very first item in synBox showing how many visible rows have a completely blank cell (no ul>li items and no text content — e.g. a release-group row whose Country/Date column has no release events); counting reuses the already-computed getCleanColumnText result from the valueCounts pass (zero extra DOM work per row — just an additional else branch on the existing lis.length chain); selecting '○ empty cells' applies an 'empty' multiRowMode filter; testRowMatch() handles 'empty' by testing hasEmpty = lis.length === 0 (no list structure at all) and matching rows where that is true; applyMultiRowStateFilter updated with the 'empty' label '○ empty cells' and docstring updated to list all five modes (empty / single / collapsed / expanded / any); synItemCount height estimation gains a +(emptyCellCount > 0 ? 1 : 0) slot; the synBox section header was renamed from 'Multi-row cell state' to 'Cell structure' since the section now covers the full cell lifecycle (empty → single-row → multi-row collapsed/expanded)"
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.70",
+      "date": "2026-03-08",
+      "sections": [
+        {
+          "label": "🐛 Bugfix",
+          "items": [
+            "applyRenderMultiRowCells — single-row cells not wrapped in <ul><li>: the function skipped wrapping when a cell contained only one logical row (nonEmptyGroups.length < 2 guard caused a continue), leaving those cells as raw DOM nodes rather than <ul><li> containers; this broke (1) the collapsableColumns feature for renderMultiRowCell columns such as Label and Catalog# because initCollapsableColumns and testRowMatch both inspect ul > li count — lis.length === 1 signals a single-row cell but lis.length === 0 (un-wrapped) is invisible to both; (2) the '• single-row cells' synthetic filter entry in the unique-values dropdown never matched Label/Catalog# cells with exactly one entry; (3) the statistics panel counted them as neither single-row nor multi-row; fixed by changing the guard to nonEmptyGroups.length < 1 so only truly empty cells are skipped — all non-empty cells, including single-entry ones, are now always wrapped in <ul><li>, matching the long-established behaviour of splitCountryDate which has always wrapped even single-event cells; initCollapsableColumns correctly adds a ▶/◀ toggle only for lis.length ≥ 2 so single-<li> cells remain un-toggled; docstring updated to document the new wrapping contract"
           ]
         }
       ]

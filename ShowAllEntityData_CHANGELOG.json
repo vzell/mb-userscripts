@@ -1,5 +1,17 @@
 [
     {
+      "version": "9.99.72",
+      "date": "2026-03-08",
+      "sections": [
+        {
+          "label": "✨ Enhancements",
+          "items": [
+            "cancelledEvent column extractor — new ColumnDataExtractor entry for the 'events' page type: extracts the MusicBrainz cancellation indicator (<span class=\"cancelled\"><bdi>cancelled</bdi></span>) from the Event cell into a dedicated synthetic 'Cancelled' column; unlike the caa and video extractors the source span is cloned (not moved) so the Event column retains the cancellation label alongside the event title; an invisible <span class=\"mb-cancelled-sort-key\"> sort-key is always appended containing 'yes' for cancelled events and 'no' otherwise, making the column fully sortable and filterable via the unique-values dropdown"
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.71",
       "date": "2026-03-08",
       "sections": [
