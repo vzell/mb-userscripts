@@ -10,25 +10,9 @@
 // @licence      GPL-3.0-or-later; http://www.gnu.org/licenses/gpl-3.0.txt
 // @since        2012-12-19; https://web.archive.org/web/20131103163409/userscripts.org/scripts/show/154481 / https://web.archive.org/web/20141011084022/userscripts-mirror.org/scripts/show/154481
 // @icon         data:image/gif;base64,R0lGODlhEAAQAKEDAP+/3/9/vwAAAP///yH/C05FVFNDQVBFMi4wAwEAAAAh/glqZXN1czIwOTkAIfkEAQACAwAsAAAAABAAEAAAAkCcL5nHlgFiWE3AiMFkNnvBed42CCJgmlsnplhyonIEZ8ElQY8U66X+oZF2ogkIYcFpKI6b4uls3pyKqfGJzRYAACH5BAEIAAMALAgABQAFAAMAAAIFhI8ioAUAIfkEAQgAAwAsCAAGAAUAAgAAAgSEDHgFADs=
-// @require      https://github.com/jesus2099/konami-command/raw/de88f870c0e6c633e02f32695e32c4f50329fc3e/lib/SUPER.js?version=2022.3.24.224
 // @grant        GM_registerMenuCommand
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @include      /^https?:\/\/((beta|test)\.)?musicbrainz\.(org|eu)\/[^/]+\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\/(open_)?edits/
-// @include      /^https?:\/\/((beta|test)\.)?musicbrainz\.(org|eu)\/(artist|cdtoc|collection|label|recording|series|tag)\//
-// @include      /^https?:\/\/((beta|test)\.)?musicbrainz\.(org|eu)\/edit\/\d+/
-// @include      /^https?:\/\/((beta|test)\.)?musicbrainz\.(org|eu)\/release([-_]group)?\/.+$/
-// @include      /^https?:\/\/((beta|test)\.)?musicbrainz\.(org|eu)\/release\/merge(\?.*)?$/
-// @include      /^https?:\/\/((beta|test)\.)?musicbrainz\.(org|eu)\/search\/edits\?.+/
-// @include      /^https?:\/\/((beta|test)\.)?musicbrainz\.(org|eu)\/search\?.*type=(annotation|release(_group)?).*$/
-// @include      /^https?:\/\/((beta|test)\.)?musicbrainz\.(org|eu)\/user\/[^/]+\/edits/
-// @include      /^https?:\/\/((beta|test)\.)?musicbrainz\.(org|eu)\/user\/[^/]+\/(ratings|tag\/)/
-// @exclude      *.org/*/*/edit
-// @exclude      *.org/*/*/edit?*
-// @exclude      *.org/cdtoc/remove*
-// @exclude      *.eu/*/*/edit
-// @exclude      *.eu/*/*/edit?*
-// @exclude      *.eu/cdtoc/remove*
 // @run-at       document-idle
 // ==/UserScript==
 "use strict";

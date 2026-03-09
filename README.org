@@ -47590,7 +47590,7 @@ implement the same column visibility functionality, which right now exists only 
   configuation will be inherited by all sub-tables; if it's a per sub-table configuration that one wins on the sub-table
   level)
 
-** TODO add complete keyboard control alos on the sub-table "Visibility" menu
+** TODO add complete keyboard control also on the sub-table "Visibility" menu
 
 
 * TODO add chabans similar barcode highlightning (configurable)
@@ -47645,10 +47645,28 @@ same hight as e.g. the button '<button id="mb-visible-btn"'
 * TODO add jesu2099 artcode fetching (configurable)
 ** initial
 
-Inspect the uploaded userscript "funky.js" and extract the contents to include in our userscript as functions to run on the final rendered pages which match
+In the uploaded userscript,
+
+1.)
+
+- make the toggle barcode highlightning button '<button id="mb-barcode-highlight-btn"' smaller in horizontal size but the
+same hight as e.g. the button '<button id="mb-visible-btn"'
+
+- it should ONLY be visible on pageTypes where there is a "Barcode" column (data cells identified by the "barcode-cell" class in "Barcode" columns)
+
+2.)
+
+Inspect the uploaded userscript "funky.js" and extract the contents to include in our userscript as functions to run on
+the final rendered pages which have columns with name "CAA"
+
+Make the whole functionality configurable in a new section inside the variable "const configSchema". Also add
+configuration parameters for the "big" and "small" icon sizes. Map the
 
 #+begin_example
+var pics_settings = {
 #+end_example
+
+to the newly introduced variables in our own configuration dialog
 
 
 * TODO extract the VZ event disambiguation configurable in its constituents
