@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.93+2026-03-09
+// @version      9.99.92+2026-03-09
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -847,7 +847,7 @@
         sa_caa_pics_initially_collapsed: {
             label: 'Start with CAA picture strip collapsed',
             type: 'checkbox',
-            default: true,
+            default: false,
             description: 'When enabled, the big CAA picture strip is hidden immediately after rendering. ' +
                          'Cover art images are still downloaded in the background so that clicking the ' +
                          'CAA toggle button in the header reveals them instantly without a new network ' +
@@ -18960,41 +18960,7 @@
      *   count       — number of unique release/release-group anchors found.
      *   firstImgUrl — coverartarchive.org URL for the first image, or null if none.
      */
-    /**
-     * Builds (or rebuilds) the big-picture hover strip above `table` and wires
-     * row ↔ image hover highlighting.
-     *
-     * Algorithm (mirrors jesus2099's big-pics branch + updateA + updateBig):
-     *  1. Find or create a <div id="mb-caa-bigbox-N"> immediately before the table.
-     *  2. Walk every release / release-group anchor in tbody and, for each unique
-     *     href, append a lazy-loaded <img> (with ⌛ placeholder) to the box.
-     *  3. img:mouseover  → highlight matching anchors in the table (yellow border).
-     *  4. tbody tr:mouseover → highlight the matching strip image.
-     *  5. On re-render, stale images are cleared and the box is rebuilt in-place.
-     *     The user's current show/hide state (box.dataset.caaVisible) is preserved
-     *     so a manually collapsed strip stays collapsed after a filter re-render.
-     *
-     * Live badge update: each `img` load event looks up the toggle button by
-     * `btnId` and increments `.mb-caa-toggle-count` so the badge reflects the
-     * number of images *already downloaded*, not the total number of links.
-     * The badge starts at 0 and climbs toward `seen.size` as images arrive.
-     * Images that 404 (no artwork) don't increment the badge; their wrapper is
-     * removed from the strip silently.
-     *
-     * Initial visibility is controlled by `sa_caa_pics_initially_collapsed`:
-     *   false — strip visible on first render.
-     *   true  — strip hidden on first render; images download in the background
-     *           so they appear instantly when revealed.
-     *
-     * @param {HTMLTableElement} table
-     * @param {number}           tableIndex  — position among all table.tbl elements.
-     * @param {string|undefined} btnId       — ID of the toggle button whose badge
-     *                                         should be incremented on image load.
-     * @returns {{ count: number, firstImgUrl: string|null }}
-     *   count       — number of unique release/release-group anchors found.
-     *   firstImgUrl — coverartarchive.org URL for the first image, or null if none.
-     */
-    function caaInitBigPics(table, tableIndex, btnId) {
+    function caaInitBigPics(table, tableIndex) {
         if (!Lib.settings.sa_caa_pics_big) return { count: 0, firstImgUrl: null };
 
         const maxH   = (Lib.settings.sa_caa_big_max_height || 125) + 'px';
@@ -19067,24 +19033,6 @@
                             this.parentNode.removeChild(first);
                         }
                         this.style.display = 'inline';
-
-                        // Live-update the toggle button badge: increment by 1 per
-                        // successfully loaded image so the count reflects downloaded
-                        // images, not total links.
-                        if (btnId) {
-                            const toggleBtn = document.getElementById(btnId);
-                            if (toggleBtn) {
-                                const badge = toggleBtn.querySelector('.mb-caa-toggle-count');
-                                if (badge) {
-                                    badge.textContent = (parseInt(badge.textContent, 10) || 0) + 1;
-                                }
-                                // Also load the thumbnail src on first success if it hasn't loaded yet
-                                const thumb = toggleBtn.querySelector('.mb-caa-toggle-thumb');
-                                if (thumb && !thumb.complete) {
-                                    thumb.src = imgurl;
-                                }
-                            }
-                        }
                     });
                     img.addEventListener('error', function() {
                         // Remove the whole wrapper if the artwork does not exist
@@ -19165,34 +19113,11 @@
      * @param  {HTMLTableElement} table
      * @returns {Element|null}
      */
-    /**
-     * Returns the h2 (single-table mode) or h3.mb-toggle-h3 (multi-table mode)
-     * header element that logically "owns" this table, or null if none is found.
-     *
-     * Detection order:
-     *   1. Multi-table mode: walk backwards through `previousElementSibling`
-     *      (up to 5 steps) looking for `h3.mb-toggle-h3`.  We must walk, not just
-     *      check the immediate sibling, because `caaInitBigPics` inserts a
-     *      `div.mb-caa-bigbox` directly before the table — after that insertion
-     *      `table.previousElementSibling` is the bigbox, not the h3.
-     *   2. Single-table mode fallback: scan all `<h2>` elements in document order
-     *      and return the last one that precedes the table (same logic as
-     *      `updateH2Count`).
-     *
-     * @param  {HTMLTableElement} table
-     * @returns {Element|null}
-     */
     function caaFindHeaderForTable(table) {
-        // Multi-table mode — walk backwards past the bigbox (and any other
-        // injected elements) looking for the h3 that owns this table.
-        let prev = table.previousElementSibling;
-        let steps = 0;
-        while (prev && steps < 5) {
-            if (prev.tagName === 'H3' && prev.classList.contains('mb-toggle-h3')) {
-                return prev;
-            }
-            prev = prev.previousElementSibling;
-            steps++;
+        // Multi-table mode — h3 immediately precedes the table
+        const prev = table.previousElementSibling;
+        if (prev && prev.tagName === 'H3' && prev.classList.contains('mb-toggle-h3')) {
+            return prev;
         }
         // Single-table mode — find the last h2 that precedes the table
         const h2s = Array.from(document.querySelectorAll('h2'));
@@ -19215,22 +19140,20 @@
      * Button anatomy:
      *   [ <img first-cover-art> <span>N</span> ]
      *   — the thumbnail is a scaled-down version of the first CAA image.
-     *   — the badge starts at 0 and is incremented to reflect the number of
-     *     images *successfully downloaded* so far.  `caaInitBigPics()` receives
-     *     `btnId` and increments the badge inside each `img` load handler.
+     *   — the span holds the image count.
      *   — tooltip: "Toggle Cover Art Archive - Show" / "… Hide"
      *
-     * Idempotent: if the button already exists for this tableIndex its thumbnail
-     * src is kept (no flash) and the badge is reset to 0 because `caaInitBigPics`
-     * just rebuilt the bigbox — all images start loading again from scratch.
+     * Idempotent: if the button already exists for this tableIndex its content
+     * (image src + count) is updated in-place so the click handler, which holds
+     * a closure over the bigbox element, does not need to be re-attached.
      *
-     * Does nothing if count === 0 (no release links found) or bigbox absent.
+     * Does nothing if count === 0 (no release links found) or if the bigbox
+     * element is not yet in the DOM.
      *
      * @param {HTMLTableElement} table
      * @param {number}  tableIndex  — index used to derive the unique button ID.
-     * @param {number}  count       — total number of release/RG links in the bigbox.
+     * @param {number}  count       — number of release/RG links in the bigbox.
      * @param {string|null} firstImgUrl — URL of the first cover-art image, or null.
-     * @returns {string|undefined}  btnId when the button was created/updated, else undefined.
      */
     function caaCreateOrUpdateToggleButton(table, tableIndex, count, firstImgUrl) {
         if (count === 0 || !firstImgUrl) return;
@@ -19244,9 +19167,9 @@
         const isNew  = !btn;
 
         if (isNew) {
-            btn           = document.createElement('button');
-            btn.id        = btnId;
-            btn.type      = 'button';
+            btn          = document.createElement('button');
+            btn.id       = btnId;
+            btn.type     = 'button';
             btn.className = 'mb-caa-art-toggle-btn';
             btn.style.cssText =
                 'cursor:pointer; padding:1px 5px 1px 3px; border:1px solid #aaa;' +
@@ -19254,24 +19177,22 @@
                 ' font-size:0.8em; margin-left:5px; display:inline-flex;' +
                 ' align-items:center; gap:3px; line-height:1;';
 
-            // Thumbnail image inside the button — src set once, never reset
-            const thumb         = document.createElement('img');
-            thumb.className     = 'mb-caa-toggle-thumb';
-            thumb.src           = firstImgUrl;
+            // Thumbnail image inside the button
+            const thumb        = document.createElement('img');
+            thumb.className    = 'mb-caa-toggle-thumb';
             thumb.style.cssText = 'height:18px; width:18px; object-fit:cover;' +
                                    ' border-radius:2px; vertical-align:middle; display:block;';
             btn.appendChild(thumb);
 
-            // Badge — starts at 0; incremented by each img load event in caaInitBigPics
-            const badge         = document.createElement('span');
-            badge.className     = 'mb-caa-toggle-count';
-            badge.textContent   = '0';
+            // Count badge
+            const badge        = document.createElement('span');
+            badge.className    = 'mb-caa-toggle-count';
             btn.appendChild(badge);
 
             // Click: toggle bigbox visibility and update button title
             btn.addEventListener('click', function(e) {
                 e.stopPropagation(); // don't bubble to h3 collapse handler
-                const visible    = box.dataset.caaVisible !== 'false';
+                const visible = box.dataset.caaVisible !== 'false';
                 const nowVisible = !visible;
                 box.style.display      = nowVisible ? 'flex' : 'none';
                 box.dataset.caaVisible = nowVisible ? 'true' : 'false';
@@ -19280,25 +19201,13 @@
                     : 'Toggle Cover Art Archive - Show';
                 Lib.debug('caa', `CAA toggle btn ${btnId}: strip ${nowVisible ? 'shown' : 'hidden'}`);
             });
-
-            // Insert into header
-            const header    = caaFindHeaderForTable(table);
-            const countStat = header && header.querySelector('.mb-row-count-stat');
-            if (countStat) {
-                countStat.after(btn);
-            } else if (header) {
-                header.appendChild(btn);
-            } else {
-                // No header found — remove and give up for this render pass.
-                btn.remove();
-                Lib.debug('caa', `caaCreateOrUpdateToggleButton: no header found for table ${tableIndex} — button deferred`);
-                return;
-            }
-        } else {
-            // Re-render: reset badge to 0 — images are re-loading in caaInitBigPics
-            const badge = btn.querySelector('.mb-caa-toggle-count');
-            if (badge) badge.textContent = '0';
         }
+
+        // Update content (idempotent on re-render)
+        const thumb = btn.querySelector('.mb-caa-toggle-thumb');
+        const badge = btn.querySelector('.mb-caa-toggle-count');
+        if (thumb) thumb.src = firstImgUrl;
+        if (badge) badge.textContent = count;
 
         // Sync button title to current bigbox visibility state
         const visible = box.dataset.caaVisible !== 'false';
@@ -19306,8 +19215,24 @@
             ? 'Toggle Cover Art Archive - Hide'
             : 'Toggle Cover Art Archive - Show';
 
-        Lib.debug('caa', `caaCreateOrUpdateToggleButton: ${isNew ? 'created' : 'updated'} btn ${btnId} (${count} link(s))`);
-        return btnId;
+        // Insert into header (idempotent — skip if already parented correctly)
+        if (isNew) {
+            const header    = caaFindHeaderForTable(table);
+            const countStat = header && header.querySelector('.mb-row-count-stat');
+            if (countStat) {
+                countStat.after(btn);
+            } else if (header) {
+                header.appendChild(btn);
+            }
+            // If no header found, skip — button will be retried on next initCaaPics() call.
+            if (!header) {
+                btn.remove();
+                Lib.debug('caa', `caaCreateOrUpdateToggleButton: no header found for table ${tableIndex} — button deferred`);
+                return;
+            }
+        }
+
+        Lib.debug('caa', `caaCreateOrUpdateToggleButton: ${isNew ? 'created' : 'updated'} btn ${btnId} (${count} image(s))`);
     }
 
     /**
@@ -19343,11 +19268,7 @@
             }
             caaInitSmallPics(table);
             const { count, firstImgUrl } = caaInitBigPics(table, i);
-            const btnId = caaCreateOrUpdateToggleButton(table, i, count, firstImgUrl);
-            // Re-run caaInitBigPics with the now-known btnId so img load handlers
-            // can increment the badge.  The bigbox already exists so this rebuild
-            // is cheap: it clears innerHTML and repopulates from the same tbody rows.
-            if (btnId) caaInitBigPics(table, i, btnId);
+            caaCreateOrUpdateToggleButton(table, i, count, firstImgUrl);
             processed++;
         });
 

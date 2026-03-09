@@ -1,27 +1,5 @@
 [
 {
-    "version": "9.99.93",
-    "date": "2026-03-09",
-    "sections": [
-      {
-        "label": "🐛 Bug Fixes",
-        "items": [
-          "CAA toggle button landing on h2 in multi-table mode — root cause: caaInitBigPics inserts div.mb-caa-bigbox immediately before the table, so table.previousElementSibling was the bigbox div rather than the h3; caaFindHeaderForTable now walks backwards through up to 5 previousElementSibling steps looking for h3.mb-toggle-h3 before falling through to the h2 scan, so each sub-table button is correctly placed in its own h3 header",
-          "sa_caa_pics_initially_collapsed default changed from false to true — artwork strip is now hidden on first render by default; images still download in the background",
-          "CAA toggle button badge now shows downloaded image count, not total link count — badge starts at 0; each img load event in caaInitBigPics increments .mb-caa-toggle-count on the corresponding toggle button (identified by btnId passed as a third parameter); images that 404 do not increment the badge; on filter/sort re-renders the badge resets to 0 and climbs again as images reload"
-        ]
-      },
-      {
-        "label": "⚙️ Internal",
-        "items": [
-          "caaInitBigPics(table, tableIndex, btnId) — optional third parameter; when present, each img load handler does document.getElementById(btnId) and increments .mb-caa-toggle-count; also sets .mb-caa-toggle-thumb src on the first successful load if it has not loaded yet",
-          "initCaaPics() two-phase init — first pass calls caaInitBigPics without btnId (returns {count,firstImgUrl}) then calls caaCreateOrUpdateToggleButton (returns btnId); second pass calls caaInitBigPics again with btnId so load handlers can update the badge; the second call is a cheap rebuild because the bigbox already exists in the DOM",
-          "caaCreateOrUpdateToggleButton — badge initialised to '0' (not count); on re-render (isNew===false) badge is reset to '0' so it accurately reflects the current download progress; returns btnId string on success"
-        ]
-      }
-    ]
-  },
-{
     "version": "9.99.92",
     "date": "2026-03-09",
     "sections": [

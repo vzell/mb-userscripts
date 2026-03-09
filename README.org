@@ -47605,8 +47605,10 @@ What needs to be done to the following code to create the effect that the button
 - sort ascending
 - sort desxcending
 - unsorted
-- unique value drop-down
 - collapse/uncollapse multi-row cells    
+- unique value drop-down
+- redefine - resize and visible shortcuts to work on the subtable level when focus is either inside a subtable filter
+  field or a subtable specific column level filter field
 
   
 * TODO column "Visibility" per sub-table
@@ -47641,7 +47643,7 @@ implement the same column visibility functionality, which right now exists only 
 
 
 * TODO add jesu2099 artcode fetching (configurable)
-** initial
+** DONE initial
 
 In the uploaded userscript,
 
@@ -47656,8 +47658,7 @@ var pics_settings = {
 #+end_example
 
 to the newly introduced variables in our own configuration dialog
-
-** CAA not found
+** DONE CAA not found
 
 1.) PLease don't forget to also add changelog entries (you missed already)
 
@@ -47751,7 +47752,79 @@ initBarcodeHighlight();
 
 Why ?
 
-** add a toggle icon for the big-art
+** DONE add a toggle icon for the big-art
+
+In the uploaded userscript,
+
+For the "// ── CAA Illustrated Discography feature" (comment from inside the source code of the userscript),
+
+when there is CAA artwork available on the table level (either for "single" or "multi" table mode), add a new toggle
+button (give it a unique ID) with the very first CAA image from that table level + the number of CAA images available
+from the "Cover Art Archive" for the specific table, as the button content (tooltip text should be "Toggle Cover Art
+Archive - Show"/"Toggle Cover Art Archive - Hide", depending of the visibility state of the displayed cover art images)
+
+- add it right after the h2 level row container
+
+#+begin_example
+<span class="mb-row-count-stat">(<number of filtered table rows>)</span>
+#+end_example
+
+for "single" table mode
+
+- and add it right after the h3 level row container
+
+#+begin_example
+<span class="mb-row-count-stat">(<number of filtered table rows>)</span>
+#+end_example
+
+for "multi" table mode for each sub-table
+
+The functionality should be:
+
+- add a new boolean parameter "sa_caa_pics_initially_collapsed" (default: false) in the variable "const configSchema"
+  (in the "divider_caa_pics" section), meaning initially after rendering the final pages, the artwork images should be
+  downloaded in the background but stay hidden
+
+- when clicking the "CAA toggle" button, the artwork pictures currently available/downloaded (the download should happen
+  asychronously behind the scenes anyway, even if hidden) should be shown. Clicking it again should hide them again (and
+  so on)
+
+** DONE fix small glitches
+
+some small glitches:
+
+- I made the wrong instructions in the last conversation, I messed up the h2/h3 headers for single/multi row mode (see
+  the following clarifications)
+  
+- in the case of "multi"-table pageTypes e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+  the rendering of the CAA toggle buttons should be per sub-table on the sub-table specific h3 header (after the number
+  of rows inside the table) and NOT as it is right now on the h2 header row (all buttons display behind each other)
+- actually the new boolean parameter "sa_caa_pics_initially_collapsed" should have a default value of "true"
+- the number of CAA artwork images in the button text should be constantly updating , depending of how many artwork images are already dowloaded
+
+** last bug
+
+last two bugs with "multi" table pageTypes:
+
+- Initially after rendering the final page, there are double counts for CAA images in the h3 headers CAA toggle button
+  also only the half is really displayed when displaying them (actually the bug must be more subtle, as it sometimes is
+  higher than the actual rowcount in the table)
+
+- rename the tooltip text from
+
+#+begin_example
+"Toggle Cover Art Archive - Hide"/"Toggle Cover Art Archive - Show" 
+#+end_example
+  
+to
+
+#+begin_example
+"Toggle CAA cover art images - Hide"/"Toggle CAA cover art images - Show"
+#+end_example
+
+** test "Load from Disk"
+
+** https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column, somehow "CAA" column is missing
 
 ** TODO re-add "CAA" column to and render artwork also in front of table
 
@@ -47760,7 +47833,7 @@ https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" 
 
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - "Release groups" column
 
-** and jesus2099 feature about number of coveratr inmages in the bubbl or in the cells directly
+** TODO and jesus2099 feature about number of coverart images in the toolip or in the cells directly
 
 The feature about
 
@@ -47787,13 +47860,103 @@ in the code from "funky.js"
 
 is missing in the extracted code. Please add 
 
+** TODO and jesus2099 feature about number of coverart images in the "CAA" cells directly behind the image
+** TODO add an empty span in front of all titles and fill it with CCA images
+** TODO add artwork in front of the actual titles also, leave "CAA" column for counting puposes
 
-* add addRGsFromAbove.js configurable
+** NO small pic icons: caaInitSmallPics: queued thumbnails for 0 icon(s)
+
+Here is the debug log:
+
+#+begin_example
+[VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Restored column visibility for pageType "artist-releasegroups" from GM storage. 
+[VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Column visibility toggle added to controls 
+[VZ-ShowAllEntityData: artist-releasegroups] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+[VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Density control button added to controls 
+[VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Statistics button added to controls 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 Keyboard shortcuts initialized 
+[VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Shortcuts help button already exists, skipping 
+[VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Export button with dropdown menu added to controls 
+[VZ-ShowAllEntityData: artist-releasegroups] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ-ShowAllEntityData: artist-releasegroups] 🚀 Sidebar initially collapsed per sa_sidebar_collapsed setting. 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initExpandRGsFeature: injected 1160 expand button(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 0 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 1 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 2 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 3 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 4 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 5 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 6 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 7 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 8 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 9 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 10 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 11 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 12 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 13 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 14 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 15 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 16 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 0 with 21 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 1 with 36 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 2 with 33 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 3 with 362 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 4 with 5 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 5 with 3 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 6 with 5 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 7 with 2 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 8 with 90 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 9 with 3 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 10 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 11 with 14 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 12 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 13 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 14 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 15 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 16 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initCaaPics: processed 17 table(s) with CAA/EAA column 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 Unicode character picker initialised 
+[VZ-ShowAllEntityData: artist-releasegroups] 🎨 DOM rendering finished in 169.20ms 
+[VZ-ShowAllEntityData: artist-releasegroups] ✅ Process complete. Final Row Count: 580. Total Time: 9.31s 
+[VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Auto-focused global filter input after final render 
+[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: hidden 
+[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: visible 
+[VZ-ShowAllEntityData: artist-releasegroups] 🎨 All h3 headers (types) hidden via Ctrl+Click 
+[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: visible 
+[VZ-ShowAllEntityData: artist-releasegroups] 🎨 All h3 headers (types) hidden via Ctrl+Click 
+[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: visible 
+[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: hidden 
+[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: visible 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 Sub-table "Album": starting auto-resize 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 Sub-table "Album": resized 10 columns in 19ms 
+#+end_example
+
+
+* TODO add addRGsFromAbove.js configurable
 
 In the uploaded userscript,
 
 Inspect the uploaded userscript "addRGsFromAbove.js" and extract the contents to include in our userscript as functions to run on
 the final rendered pages which have columns with name "CAA"
+
 
 * TODO extract the VZ event disambiguation configurable in its constituents
 ** DONE initial
@@ -48138,5 +48301,15 @@ from "recorded at:	Tramps in Flatiron District, New York, New York, United State
 
 to the event parts extracted
 
+
 * "video" icon - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings - "shooting location for"
+
+
+* persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
+
+
+* !!!!!! TEST - run the erasers already on the initial page
+
+
+
 
