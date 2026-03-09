@@ -1516,123 +1516,66 @@
          * splits it into eight dedicated synthetic columns.
          *
          * Expected source format (all segments are optional):
+         * [Event-Type][, Event-Date][, Event-Detail][: Venue[, Venue-Detail][, City][, State][, Country]]
          *
-         *   [Event-Type][, Event-Date][, Event-Detail][: Venue[, Venue2][, City][, State][, Country]]
-         *
-         * Representative examples and their parsed output:
-         *
-         *   "live, 1975‑11‑01, early show: Robertson Gymnasium, University of California, Santa Barbara, CA, USA"
-         *     → Type=live  Date=1975-11-01  Detail=early show
-         *       Venue=Robertson Gymnasium  Venue2=University of California
-         *       City=Santa Barbara  State=CA  Country=USA
-         *
-         *   "live, 1995‑11‑26: Wiltern Theatre, Los Angeles, CA, USA"
-         *     → Type=live  Date=1995-11-26  (no Detail)
-         *       Venue=Wiltern Theatre  (no Venue2)  City=Los Angeles  State=CA  Country=USA
-         *
-         *   "live, 1995‑12‑08: Tower Theater, Upper Darby, Philadelphia, PA, USA"
-         *     → Type=live  Date=1995-12-08  (no Detail)
-         *       Venue=Tower Theater  Venue2=Upper Darby  City=Philadelphia  State=PA  Country=USA
-         *
-         *   "live, 1975: New Jersey, NJ, USA"
-         *     → Type=live  Date=1975  (no Detail, no Venue, no Venue2)
-         *       City=New Jersey  State=NJ  Country=USA
-         *
-         *   "soundcheck"
-         *     → Type=soundcheck  (all other columns empty)
-         *
-         *   "live: JP"
-         *     → Type=live  Country=JP  (all other columns empty)
-         *
-         * Parsing rules:
-         *   Pre-colon segment (Event-Type / Event-Date / Event-Detail):
-         *     - Split on ", ".  Part 0 is always Event-Type.
-         *     - Part 1, if it matches the date pattern (YYYY | YYYY-MM | YYYY-MM-DD,
-         *       accepting the Unicode non-breaking hyphen U+2010 as well as ASCII '-'),
-         *       becomes Event-Date and Part 2 (if present) becomes Event-Detail.
-         *     - If Part 1 does NOT match the date pattern it is treated as Event-Detail.
-         *   Post-colon location segment:
-         *     - Split on ", ".  Parts are mapped RIGHT-TO-LEFT so that the trailing
-         *       Country / State / City are always filled first; leading Venue2 / Venue
-         *       receive any remaining parts.
-         *     - 1 part  → Country only
-         *     - 2 parts → State, Country
-         *     - 3 parts → City, State, Country
-         *     - 4 parts → Venue, City, State, Country
-         *     - 5 parts → Venue, Venue2, City, State, Country
-         *
-         * Unicode note: The U+2010 NON-BREAKING HYPHEN used by MusicBrainz in date
-         * strings is normalised to ASCII '-' before date-pattern matching and before
-         * writing the Event-Date cell, so downstream sorting and filtering always sees
-         * a consistent '-' separator regardless of source encoding.
-         *
-         * Synthetic columns: ['Event-Type', 'Event-Date', 'Event-Detail',
-         *                      'Event-Venue', 'Event-Venue-Detail',
-         *                      'Event-City', 'Event-State', 'Event-Country']
-         *
-         * @param   {HTMLTableCellElement} sourceCell  Comment <td> (MB-Comment synthetic column).
-         * @returns {HTMLTableCellElement[]}            Eight synthetic <td> elements in declaration order.
+         * Location Parsing Rules:
+         * - USA / Canada / UK:
+         * - 5 parts: [Venue, Venue-Detail, City, State, Country]
+         * - 4 parts: [Venue, City, State, Country] (Venue-Detail empty)
+         * - Default: Right-to-Left fallback (Country, City, Venue, Venue-Detail)
          */
         eventParts(sourceCell) {
-            // Eight output cells in declaration order:
-            // [0] Event-Type  [1] Event-Date  [2] Event-Detail
-            // [3] Event-Venue [4] Event-Venue-Detail
-            // [5] Event-City  [6] Event-State  [7] Event-Country
             const tds = Array.from({ length: 8 }, () => document.createElement('td'));
 
             if (!sourceCell) return tds;
 
-            // Normalise Unicode NON-BREAKING HYPHEN (U+2010) → ASCII '-' throughout.
-            // MusicBrainz encodes dates with U+2010; normalising ensures the date regex
-            // and downstream sort / filter comparisons all see a consistent separator.
+            // Normalise Unicode NON-BREAKING HYPHEN (U+2010) → ASCII '-'
             const raw = sourceCell.textContent.trim().replace(/\u2010/g, '-');
             if (!raw) return tds;
 
-            // ── Split pre-colon (type / date / detail) from post-colon (location) ──
-            // indexOf(': ') — colon followed by a space — avoids false splits on
-            // time-like tokens or abbreviations that may contain a bare colon.
             const colonIdx = raw.indexOf(': ');
             const prePart  = colonIdx !== -1 ? raw.slice(0, colonIdx).trim() : raw;
             const postPart = colonIdx !== -1 ? raw.slice(colonIdx + 2).trim() : '';
 
-            // ── Pre-colon: Event-Type, Event-Date, Event-Detail ──────────────────
-            // Split on ', ' (comma + space) to keep multi-word tokens intact.
+            // ── Pre-colon extraction (Type, Date, Detail) ──────────────────────
             const preParts = prePart.split(', ').map(s => s.trim()).filter(s => s.length > 0);
+            if (preParts.length > 0) tds[0].textContent = preParts[0]; // Event-Type
 
-            // Part 0 — always Event-Type (e.g. "live", "soundcheck")
-            if (preParts.length > 0) {
-                tds[0].textContent = preParts[0];
-            }
-
-            // Date pattern: YYYY  |  YYYY-MM  |  YYYY-MM-DD  (ASCII '-' after normalisation)
             const DATE_RE = /^\d{4}(?:-\d{2}(?:-\d{2})?)?$/;
-
             if (preParts.length > 1) {
                 if (DATE_RE.test(preParts[1])) {
-                    // Part 1 is a date → Event-Date; Part 2 (optional) → Event-Detail
-                    tds[1].textContent = preParts[1];
-                    if (preParts.length > 2) {
-                        tds[2].textContent = preParts[2];
-                    }
+                    tds[1].textContent = preParts[1]; // Event-Date
+                    if (preParts.length > 2) tds[2].textContent = preParts[2]; // Event-Detail
                 } else {
-                    // Part 1 is not a date → treat as Event-Detail (no date present)
-                    tds[2].textContent = preParts[1];
+                    tds[2].textContent = preParts[1]; // Event-Detail
                 }
             }
 
-            // ── Post-colon: location parts mapped right-to-left ──────────────────
-            // Right-to-left mapping ensures trailing Country / State / City are
-            // always populated first; leading Venue2 / Venue receive surplus parts.
-            // Index mapping  (tds index → semantic column):
-            //   tds[7] Country  tds[6] State  tds[5] City  tds[4] Venue2  tds[3] Venue
+            // ── Post-colon (Location) extraction ──────────────────────────────
             if (postPart) {
-                const locParts = postPart.split(', ').map(s => s.trim()).filter(s => s.length > 0);
-                const n = locParts.length;
-                if (n >= 1) tds[7].textContent = locParts[n - 1]; // Country
-                if (n >= 2) tds[6].textContent = locParts[n - 2]; // State
-                if (n >= 3) tds[5].textContent = locParts[n - 3]; // City
-                if (n >= 4) tds[4].textContent = locParts[n - 4]; // Venue2
-                if (n >= 5) tds[3].textContent = locParts[n - 5]; // Venue
+                const loc = postPart.split(', ').map(s => s.trim()).filter(s => s.length > 0);
+                const n = loc.length;
+                const country = n >= 1 ? loc[n - 1] : '';
+
+                if (country === 'USA' || country === 'Canada' || country === 'UK') {
+                    tds[7].textContent = country; // Country
+                    if (n >= 2) tds[6].textContent = loc[n - 2]; // State
+                    if (n >= 3) tds[5].textContent = loc[n - 3]; // City
+
+                    if (n === 4) {
+                        tds[3].textContent = loc[0]; // Event-Venue
+                        // tds[4] (Event-Venue-Detail) remains empty
+                    } else if (n >= 5) {
+                        tds[3].textContent = loc[0]; // Event-Venue
+                        tds[4].textContent = loc[1]; // Event-Venue-Detail
+                    }
+                } else {
+                    // Default Right-to-Left fallback
+                    if (n >= 1) tds[7].textContent = loc[n - 1]; // Country
+                    if (n >= 2) tds[5].textContent = loc[n - 2]; // City
+                    if (n >= 3) tds[3].textContent = loc[n - 3]; // Event-Venue
+                    if (n >= 4) tds[4].textContent = loc[n - 4]; // Event-Venue-Detail
+                }
             }
 
             return tds;

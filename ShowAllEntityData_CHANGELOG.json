@@ -1,4 +1,16 @@
 [
+{
+      "version": "9.99.83",
+      "date": "2026-03-09",
+      "sections": [
+        {
+          "label": "✨ Enhancements",
+          "items": [
+            "eventParts synthetic extractor refined: improved right-to-left location parsing logic to specifically handle granular address structures for 'UK', 'USA', and 'Canada' (mapping Venue, Venue2, City, State, and Country); ensures consistent column population even when optional segments like Event-Detail or Venue2 are missing; normalized date handling for Unicode non-breaking hyphens."
+          ]
+        }
+      ]
+    },
     {
       "version": "9.99.82",
       "date": "2026-03-09",
