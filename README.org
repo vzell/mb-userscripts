@@ -47295,10 +47295,6 @@ to every column in every table ("single" and "multi" table mode), not only to ta
 
 for columns which have actual empty cells
 
-
-* TODO extract the VZ event disambiguation configurable in its constituents
-
-
 * DONE splitCountryDate  
 
 enhance the "splitCountryDate(sourceCell)" function to support the new userscript from "chaban" which adds abbreviated
@@ -47380,8 +47376,7 @@ see the following examples
 
 please remove the span before adding the "Date" value to the synthetic column "Date"
 
-
-* TODO further split "Date" -> dd mm yyyy day month
+* DONE further split "Date" -> dd mm yyyy day month
 
 
 
@@ -47443,6 +47438,82 @@ synthetic columns 'DD', 'MM', 'YYYY', 'Day' and 'Month'
 'Day' - day e.g., "Wednesday"
 'Month' - month e.g. "January"
 
+
+
+* TODO extract the VZ event disambiguation configurable in its constituents
+
+
+Add the following new "syntheticColumnExtractors" parameter
+
+#+begin_example
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+#+end_example
+
+to the 'work-recordings-filtered' pageType
+
+#+begin_example
+        {
+            type: 'work-recordings-filtered',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work (specialised)' } ],
+            features: {
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+#+end_example
+
+and implement the "eventParts" extractor the following way:
+
+A full example "Comment" value
+
+#+begin_example
+live, 1975‐11‐01, early show: Robertson Gymnasium, University of California, Santa Barbara, CA, USA
+#+end_example
+
+should be split into
+
+#+begin_example
+'Event-Type' - live
+'Event-Date' - 1975‐11‐01
+'Event-Detail' - early show
+'Event-Venue' - Robertson Gymnasium
+'Event-Venue2' - University of California
+'Event-City' - Santa Barbara
+'Event-State' - CA
+'Event-Country' - USA
+#+end_example
+
+All parts could actually be optional
+
+#+begin_example
+live, 1995‐11‐26: Wiltern Theatre, Los Angeles, CA, USA
+#+end_example
+
+#+begin_example
+live, 1995‐12‐08: Tower Theater, Upper Darby, Philadelphia, PA, USA
+#+end_example:
+
+#+begin_example
+live, 1975‐10‐18, early show: The Roxy Theatre, West Hollywood, CA, USA
+#+end_example
+
+#+begin_example
+live, 1975: New Jersey, NJ, USA
+#+end_example
+
+#+bein_example
+soundcheck
+#+end_example
+
+#+bein_example
+live: JP
+#+end_example
 
 
 * remove highlightning from chabans similar barcode userscript
