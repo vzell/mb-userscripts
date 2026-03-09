@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.90+2026-03-09
+// @version      9.99.89+2026-03-09
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -12110,7 +12110,6 @@
                 if (!headersText.includes(colName)) {
                     const th = document.createElement('th');
                     th.textContent = colName;
-                    th.dataset.colName = colName;
                     th.style.backgroundColor = headerBgColor;
                     Lib.debug('cleanup', `Injecting synthetic header: ${colName} (via extractor: ${entry.extractor})`);
                     theadRow.appendChild(th);
@@ -12127,7 +12126,6 @@
                 if (!headersText.includes(colName)) {
                     const th = document.createElement('th');
                     th.textContent = colName;
-                    th.dataset.colName = colName;
                     th.style.backgroundColor = headerBgColor;
                     Lib.debug('cleanup', `Injecting synthetic header: ${colName} (via synthetic extractor: ${entry.extractor})`);
                     theadRow.appendChild(th);
@@ -12145,7 +12143,6 @@
             if (!headersText.includes('MB-Name')) {
                 const thN = document.createElement('th');
                 thN.textContent = 'MB-Name';
-                thN.dataset.colName = 'MB-Name';
                 thN.style.backgroundColor = headerBgColor;
                 Lib.debug('cleanup', 'Injecting synthetic header: MB-Name');
                 theadRow.appendChild(thN);
@@ -12153,7 +12150,6 @@
             if (!headersText.includes('Comment')) {
                 const thC = document.createElement('th');
                 thC.textContent = 'Comment';
-                thC.dataset.colName = 'Comment';
                 thC.style.backgroundColor = headerBgColor;
                 Lib.debug('cleanup', 'Injecting synthetic header: Comment');
                 theadRow.appendChild(thC);
@@ -13391,8 +13387,6 @@
             // Initialise the Unicode character picker (builds menu DOM once, idempotent)
             initSaUnicodeCharsFeature();
 
-            totalRenderingTime = performance.now() - renderingTimeStart;
-
             // --- RENDERING END ---
             Lib.debug('render', `DOM rendering finished in ${totalRenderingTime.toFixed(2)}ms`);
 
@@ -14601,8 +14595,6 @@
 
         // Re-apply CAA illustrated discography across all freshly rendered sub-table rows.
         initCaaPics();
-
-        Lib.debug('render', 'Finished renderGroupedTable.');
 
         // Show the save button now that data is rendered
         if (Lib.settings.sa_enable_save_load) {
@@ -16522,7 +16514,6 @@
             // 📊 goes last; margin-left:auto (set via CSS) pushes it to the
             // right edge of the flex container.
             hdrFlex.appendChild(uniqBtn);
-            th.dataset.colName = colName;
             th.appendChild(hdrFlex);
         });
 
@@ -18809,15 +18800,6 @@
      * Returns the 0-based column index of the first "CAA" or "EAA" column in
      * `table`, or -1 when neither is present.
      *
-     * Detection uses (in priority order):
-     *   1. `th.dataset.colName` — stamped by makeTableSortableUnified and the
-     *      cleanupHeaders() synthetic-header injectors.  Reliable even after the
-     *      sort-icon UI (⇅▲▼📊) has been appended to the header cell, because
-     *      the attribute holds the *original* column name string.
-     *   2. Regex-stripped textContent — same `replace(/[⇅▲▼📊▶◀]/g,'').trim()`
-     *      pattern used by the column-visibility toggle and other SA helpers.
-     *      Fallback for th elements not yet processed by makeTableSortableUnified.
-     *
      * @param  {HTMLTableElement} table
      * @returns {number}
      */
@@ -18826,11 +18808,7 @@
                           table.querySelector('tr:has(th)');
         if (!headerRow) return -1;
         return Array.from(headerRow.children).findIndex(th => {
-            // Prefer the data attribute (authoritative, set at render time)
-            const named = th.dataset && th.dataset.colName;
-            if (named) return named === 'CAA' || named === 'EAA';
-            // Fallback: strip sort-icon glyphs and compare
-            const txt = th.textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim();
+            const txt = th.textContent.trim();
             return txt === 'CAA' || txt === 'EAA';
         });
     }

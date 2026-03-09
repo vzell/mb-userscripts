@@ -47496,6 +47496,74 @@ Implement a cleanup function and call it in
 function performClutterCleanup()
 #+end_example
 
+* DONE add chabans similar barcode highlightning (configurable)
+** DONE initial
+
+Inspect the uploaded userscript "barcodeHighlight.js" and extract the contents to include in our userscript as functions to run on the final rendered pages which match
+barcode column data cells identified by the "barcode-cell" class in "Barcode" columns
+
+#+begin_example
+<td class="barcode-cell" data-barcode-identifier="74643190312-12&quot; Vinyl" style="background-color: rgb(232, 171, 216); font-weight: bold; padding: 2px 4px; border-radius: 3px; cursor: pointer;">074643190312</td>
+#+end_example
+
+** DONE add barcode button
+
+Add a new toggle button with text "▌█▌▐█▐▌██▐▌█" and tooltip "Toggle barcode highlightning off"/"Toggle barcode highlightning on"
+
+together with a background color change to dark grey when highlighning is "Off", between the buttons
+
+#+begin_example
+<button id="mb-visible-btn" title="Show/hide table columns (Ctrl+M, then V)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>👁️ <span style="text-decoration:underline">V</span>isible</span></button>
+#+end_example
+
+and
+
+#+begin_example
+<button id="mb-density-btn" title="Change table density (spacing) (Ctrl+M, then D)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>📏 <span style="text-decoration:underline">D</span>ensity</span></button>
+#+end_example
+
+When clicked the first time, the highlightning of the similar barcodes should be turned "Off" and when clicking aǵain, it should be turned "On" again (and so on)
+
+#+begin_example
+▌█▌▐█▐▌██▐▌█
+#+end_example
+
+** DONE make the toggle barcode highlightning button smaller in horizontal size
+
+- make the toggle barcode highlightning button '<button id="mb-barcode-highlight-btn"' smaller in horizontal size but the
+same hight as e.g. the button '<button id="mb-visible-btn"'
+
+- it should ONLY be visible on pageTypes where there is a "Barcode" column (data cells identified by the "barcode-cell" class in "Barcode" columns)
+
+* DONE resize per sub-table - include button right after the (number of rows, before the "filter" icon)
+** initial
+
+In the uploaded userscript,
+
+implement the same auto-resize functionality, which right now exists only on the global level by clicking the
+"Resize"-button in the h1 header row, also in the case of "multi"-table mode for each sub-table:
+
+- add a new sub-table specific "Resize"/"Restore" toggle button right before the "mb-subtable-filter-toggle-icon"
+
+#+begin_example
+<span class="mb-subtable-filter-toggle-icon" title="Toggle filter elements on/off for this section" role="button" aria-label="Toggle sub-table filter for &quot;Official&quot;">🔍</span>
+#+end_example
+
+with the same logic as the global one, but acting ONLY on the specific sub-tables.
+
+- the global "Resize"/"Restore" toggle should also change its color and button text, as soon as at least one of the
+  sub-tables has been aute-resized
+  
+** fix
+
+small glitches,
+
+- when a column is manually resized in a sub-table, the sub-table resize button should also change it's color (and the
+  tooltip text to the wording about "Restore original column width...") to give the end-user a hint that a resize
+  actually happend on that specific subtable
+
+- the background color of the sub-table specific resize button should have a darker green than the curretn color to visually distinguish from the standard color
+
 
 * TODO all buttons need the pressing effect
 
@@ -47541,36 +47609,6 @@ What needs to be done to the following code to create the effect that the button
 - collapse/uncollapse multi-row cells    
 
   
-* DONE resize per sub-table - include button right after the (number of rows, before the "filter" icon)
-** initial
-
-In the uploaded userscript,
-
-implement the same auto-resize functionality, which right now exists only on the global level by clicking the
-"Resize"-button in the h1 header row, also in the case of "multi"-table mode for each sub-table:
-
-- add a new sub-table specific "Resize"/"Restore" toggle button right before the "mb-subtable-filter-toggle-icon"
-
-#+begin_example
-<span class="mb-subtable-filter-toggle-icon" title="Toggle filter elements on/off for this section" role="button" aria-label="Toggle sub-table filter for &quot;Official&quot;">🔍</span>
-#+end_example
-
-with the same logic as the global one, but acting ONLY on the specific sub-tables.
-
-- the global "Resize"/"Restore" toggle should also change its color and button text, as soon as at least one of the
-  sub-tables has been aute-resized
-  
-** fix
-
-small glitches,
-
-- when a column is manually resized in a sub-table, the sub-table resize button should also change it's color (and the
-  tooltip text to the wording about "Restore original column width...") to give the end-user a hint that a resize
-  actually happend on that specific subtable
-
-- the background color of the sub-table specific resize button should have a darker green than the curretn color to visually distinguish from the standard color
-
-
 * TODO column "Visibility" per sub-table
 ** DONE initial
 
@@ -47593,46 +47631,6 @@ implement the same column visibility functionality, which right now exists only 
 ** TODO add complete keyboard control also on the sub-table "Visibility" menu
 
 
-* TODO add chabans similar barcode highlightning (configurable)
-** DONE initial
-
-Inspect the uploaded userscript "barcodeHighlight.js" and extract the contents to include in our userscript as functions to run on the final rendered pages which match
-barcode column data cells identified by the "barcode-cell" class in "Barcode" columns
-
-#+begin_example
-<td class="barcode-cell" data-barcode-identifier="74643190312-12&quot; Vinyl" style="background-color: rgb(232, 171, 216); font-weight: bold; padding: 2px 4px; border-radius: 3px; cursor: pointer;">074643190312</td>
-#+end_example
-
-** DONE add barcode button
-
-Add a new toggle button with text "▌█▌▐█▐▌██▐▌█" and tooltip "Toggle barcode highlightning off"/"Toggle barcode highlightning on"
-
-together with a background color change to dark grey when highlighning is "Off", between the buttons
-
-#+begin_example
-<button id="mb-visible-btn" title="Show/hide table columns (Ctrl+M, then V)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>👁️ <span style="text-decoration:underline">V</span>isible</span></button>
-#+end_example
-
-and
-
-#+begin_example
-<button id="mb-density-btn" title="Change table density (spacing) (Ctrl+M, then D)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>📏 <span style="text-decoration:underline">D</span>ensity</span></button>
-#+end_example
-
-When clicked the first time, the highlightning of the similar barcodes should be turned "Off" and when clicking aǵain, it should be turned "On" again (and so on)
-
-#+begin_example
-▌█▌▐█▐▌██▐▌█
-#+end_example
-
-** TODO make the toggle barcode highlightning button smaller in horizontal size
-
-- make the toggle barcode highlightning button '<button id="mb-barcode-highlight-btn"' smaller in horizontal size but the
-same hight as e.g. the button '<button id="mb-visible-btn"'
-
-- it should ONLY be visible on pageTypes where there is a "Barcode" column (data cells identified by the "barcode-cell" class in "Barcode" columns)
-
-
 * add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
 
 
@@ -47647,15 +47645,6 @@ same hight as e.g. the button '<button id="mb-visible-btn"'
 
 In the uploaded userscript,
 
-1.)
-
-- make the toggle barcode highlightning button '<button id="mb-barcode-highlight-btn"' smaller in horizontal size but the
-same hight as e.g. the button '<button id="mb-visible-btn"'
-
-- it should ONLY be visible on pageTypes where there is a "Barcode" column (data cells identified by the "barcode-cell" class in "Barcode" columns)
-
-2.)
-
 Inspect the uploaded userscript "funky.js" and extract the contents to include in our userscript as functions to run on
 the final rendered pages which have columns with name "CAA"
 
@@ -47668,6 +47657,111 @@ var pics_settings = {
 
 to the newly introduced variables in our own configuration dialog
 
+** CAA not found
+
+1.) PLease don't forget to also add changelog entries (you missed already)
+
+2.) There is a bug:
+
+Here the debug log for the example URL: https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+#+begin_example
+[VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Column visibility loaded for pageType "releasegroup-releases": Object
+🖥️ Restored column visibility for pageType "releasegroup-releases" from GM storage. 
+🖥️ Column visibility toggle added to controls 
+🖥️ Barcode highlight toggle button added to controls 
+🖥️ Density control button added to controls 
+🖥️ Statistics button added to controls 
+📝 Keyboard shortcuts initialized 
+🖥️ Shortcuts help button already exists, skipping 
+🖥️ Export button with dropdown menu added to controls 
+🚀 Initializing aggressive full-width sidebar toggle. 
+🚀 Sidebar initially collapsed per sa_sidebar_collapsed setting. 
+📝 initExpandRGsFeature: injected 248 expand button(s) 
+📝 initBarcodeHighlight: processed table 0 
+📝 initBarcodeHighlight: processed table 1 
+📝 initBarcodeHighlight: processed table 2 
+📝 initCaaPics: table 0 has no CAA/EAA column — skipping 
+📝 initCaaPics: table 1 has no CAA/EAA column — skipping 
+📝 initCaaPics: table 2 has no CAA/EAA column — skipping 
+📝 initCaaPics: processed 0 table(s) with CAA/EAA column 
+📝 Unicode character picker initialised 
+🎨 DOM rendering finished in 0.00ms 
+✅ Process complete. Final Row Count: 124. Total Time: 2.23s 
+🖥️ Auto-focused global filter input after final render 
+🎨 Master toggle: Showing all tables. 
+📝 Barcode highlighting toggled OFF via button 
+📝 initBarcodeHighlight: processed table 0 
+📝 initBarcodeHighlight: processed table 1 
+📝 initBarcodeHighlight: processed table 2 
+📝 Barcode highlighting toggled ON via button 
+#+end_example
+
+It seems it can't find the "CAA" column. Here the rendered HTML
+
+#+begin_example
+<th style="background-color: rgb(211, 211, 211); cursor: default; position: relative;">
+  <div class="mb-col-hdr-flex">
+    <span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅
+    </span> CAA
+    <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+    </span>
+    <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+    </span>
+    <span class="mb-col-uniq-btn" title="Show unique column values — click or press Enter to apply as filter" tabindex="0" role="button" aria-label="Unique values for CAA">📊
+    </span>
+  </div>
+  <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+  </div>
+</th>
+#+end_example
+
+Probably it's a good idea when initially rendering the table with a "CAA" column, to give the column header container an
+unique ID, to better reference it later (or maybe even give each column header a unique generated ID)
+
+3.) Another thing:
+
+- the line
+
+#+begin_example
+totalRenderingTime = performance.now() - renderingTimeStart;
+#+end_example
+
+after the following function call
+
+#+begin_example
+// Initialise the Unicode character picker (builds menu DOM once, idempotent)
+initSaUnicodeCharsFeature();
+#+end_example
+
+is missing from the new code, why ?
+
+The same is true for the line
+
+#+begin_example
+Lib.debug('render', 'Finished renderGroupedTable.');
+#+end_example
+
+after the block
+
+#+begin_example
+// Re-apply barcode highlights across all freshly rendered sub-table rows.
+initBarcodeHighlight();
+#+end_example
+
+Why ?
+
+** add a toggle icon for the big-art
+
+** TODO re-add "CAA" column to and render artwork alos in fron of table
+
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 in the "Release title" column
+https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - "Release groups" column
+
+
+** and jesus2099 feature about number of coveratr inmages in the bubbl or in the cells directly
 
 * TODO extract the VZ event disambiguation configurable in its constituents
 ** DONE initial
@@ -48004,7 +48098,7 @@ In the uploaded userscript,
 
 ** TODO add MB lookup from https://musicbrainz.org/recording/f3f63c9e-c954-49a0-86f3-bd8ce0f32a31 - Thunder Road (live, 1995‐02‐21: Tramps, New York City, NY, USA)
 
-https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1 - Thunder Road (B. Springsteen 1974–1975)
+https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278 - Thunder Road (B. Springsteen 1974–1975)
 
 add MB lookup from https://musicbrainz.org/recording/f3f63c9e-c954-49a0-86f3-bd8ce0f32a31 - Thunder Road (live, 1995‐02‐21: Tramps, New York City, NY, USA)
 
@@ -48012,5 +48106,5 @@ from "recorded at:	Tramps in Flatiron District, New York, New York, United State
 
 to the event parts extracted
 
-
+* "video" icon - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings - "shooting location for"
 
