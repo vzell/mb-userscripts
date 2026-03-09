@@ -47541,13 +47541,13 @@ What needs to be done to the following code to create the effect that the button
 - collapse/uncollapse multi-row cells    
 
   
-* TODO resize per sub-table - include button right after the (number of rows, before the "filter" icon)
+* DONE resize per sub-table - include button right after the (number of rows, before the "filter" icon)
 ** initial
 
 In the uploaded userscript,
 
 implement the same auto-resize functionality, which right now exists only on the global level by clicking the
-"Resize"-button in the h1 header row also in the case of "multi"-table mode for each sub-table:
+"Resize"-button in the h1 header row, also in the case of "multi"-table mode for each sub-table:
 
 - add a new sub-table specific "Resize"/"Restore" toggle button right before the "mb-subtable-filter-toggle-icon"
 
@@ -47555,7 +47555,7 @@ implement the same auto-resize functionality, which right now exists only on the
 <span class="mb-subtable-filter-toggle-icon" title="Toggle filter elements on/off for this section" role="button" aria-label="Toggle sub-table filter for &quot;Official&quot;">🔍</span>
 #+end_example
 
-with the same logic as the global one, but acting ONLY on the specific sub-table.
+with the same logic as the global one, but acting ONLY on the specific sub-tables.
 
 - the global "Resize"/"Restore" toggle should also change its color and button text, as soon as at least one of the
   sub-tables has been aute-resized
@@ -47570,7 +47570,29 @@ small glitches,
 
 - the background color of the sub-table specific resize button should have a darker green than the curretn color to visually distinguish from the standard color
 
+
 * TODO column "Visibility" per sub-table
+** initial
+
+In the uploaded userscript,
+
+1.) make the toggle barcode highlightning button smaller in size
+
+
+2.) implement the same column visibility functionality, which right now exists only on the global level by clicking the
+"Visible"-button in the h1 header row, also in the case of "multi"-table mode for each sub-table:
+
+- add a new sub-table specific "Visible" button (use just the '👁️' as button text) right after the
+  "mb-stf-arranged-resize-btn" with the same logic as the global one, but acting ONLY on the specific sub-tables
+
+- the global "Visible" button when clicked and when a "visible-buttons configuration is choosen" should always override the sub-table specific configurations (basically resets them)
+
+- but it should still be possible to override on a sub-table level a "visible-buttons configuration" (this configuration should persist per sub-table when leaving the dialog)
+
+- so basically the last "visible-buttons configuration" choosen should always win (if its the global action, the
+  configuation will be inherited by all sub-tables; if it's a per sub-table configuration that one wins on the sub-table
+  level)
+
 
 * add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
 
@@ -47581,8 +47603,8 @@ small glitches,
 * TODO remove the experimental "(Show all)" functionality boolean as it's now strictl needed for the multi-row cell stuff
 
 
-* TODO add chabans similar barcode highlighning (configurable)
-** initial
+* TODO add chabans similar barcode highlightning (configurable)
+** DONE initial
 
 Inspect the uploaded userscript "barcodeHighlight.js" and extract the contents to include in our userscript as functions to run on the final rendered pages which match
 barcode column data cells identified by the "barcode-cell" class in "Barcode" columns
@@ -47591,6 +47613,29 @@ barcode column data cells identified by the "barcode-cell" class in "Barcode" co
 <td class="barcode-cell" data-barcode-identifier="74643190312-12&quot; Vinyl" style="background-color: rgb(232, 171, 216); font-weight: bold; padding: 2px 4px; border-radius: 3px; cursor: pointer;">074643190312</td>
 #+end_example
 
+** DONE add barcode button
+
+Add a new toggle button with text "▌█▌▐█▐▌██▐▌█" and tooltip "Toggle barcode highlightning off"/"Toggle barcode highlightning on"
+
+together with a background color change to dark grey when highlighning is "Off", between the buttons
+
+#+begin_example
+<button id="mb-visible-btn" title="Show/hide table columns (Ctrl+M, then V)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>👁️ <span style="text-decoration:underline">V</span>isible</span></button>
+#+end_example
+
+and
+
+#+begin_example
+<button id="mb-density-btn" title="Change table density (spacing) (Ctrl+M, then D)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>📏 <span style="text-decoration:underline">D</span>ensity</span></button>
+#+end_example
+
+When clicked the first time, the highlightning of the similar barcodes should be turned "Off" and when clicking aǵain, it should be turned "On" again (and so on)
+
+#+begin_example
+▌█▌▐█▐▌██▐▌█
+#+end_example
+
+** TODO make the toggle barcode highlightning button smaller in size
 
 * TODO add jesu2099 artcode fetching (configurable)
 ** initial
@@ -47599,6 +47644,7 @@ Inspect the uploaded userscript "funky.js" and extract the contents to include i
 
 #+begin_example
 #+end_example
+
 
 * TODO extract the VZ event disambiguation configurable in its constituents
 ** DONE initial
