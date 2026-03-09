@@ -41017,7 +41017,7 @@ I actually would want this for the uploaded userscript to happen, as it has the 
 * TODO Priority of script execution and interoperation
 ** talk to
 *** jesus2009 - render ing of coverimages befreo table and before each row
-*** xxx -for RGs read in all releases and make collapsable
+*** DONE xxx -for RGs read in all releases and make collapsable
 
 * TODO generalize special column handling (e.g. Tagger, jesus2099 image handling, collapsing RGs, Advance Relationship icons ==> discogs, SL, MB
 ** remove or fix "Tagger" column
@@ -46324,7 +46324,7 @@ Please fix
 ** userscript
 
 
-* Why is this
+* Why is this - global filter INFO output
 
 #+begin_example
 <span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span>
@@ -46600,21 +46600,6 @@ into a condensed format as one line "inlcude", something like
 // @include /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels)(?:\?.*)?$/
 #+end_example
 
-
-
-* TODO add unicode symbols back
-** initial
-
-The "Ctrl-M" key combination in this userscript is used as a prefixkey prefix map. But it seems that some other userscript or the MusicBrainz pages themthelves
-have registered an event handler that fires in addition to ours but only when inside text input fields (like the global or column specific filter fields) 
-
-It popsup a unicodechars Menu
-
-#+begin_example
-<div class="mbunicodecharsMenuShow" id="mbunicodecharsMenu" style="top: 364.219px; left: 31px;">
-#+end_example
-
-Could this somehow be prevented, or better yet, remapped to a different key combination
 
 
 * TODO Event-Alias handling - add the event alias int the next line
@@ -47516,12 +47501,10 @@ soundcheck
 live: JP
 #+end_example
 
-** refine extraction
+** TODO refine extraction
 
 
-* remove highlightning from chabans similar barcode userscript
-
-* TODO add MusicBrainz: Expand/collapse release groups
+* DONE add MusicBrainz: Expand/collapse release groups
 ** initial
 
 Inspect the uploaded userscript "expandRGs.js" and extract the contents to include in our userscript as functions to run on the final rendered pages which match
@@ -47569,3 +47552,18 @@ the other "▶" is just a no-op and sould be removed
 #+end_example
 
 ** check loading from disk
+
+* TODO add unicode symbols back
+** initial
+
+Inspect the uploaded userscript "unicode.js" and extract the contents to include in our userscript asa  function to run
+on ANY of our final rendered pages.
+
+The "Ctrl-M" key combination in the uploaded userscript should be made customizable with a default of "Ctrl-U".
+
+Please also adjust the keyboard shortcut section which can be called with a button click accordingly.
+
+
+
+* TODO remove highlightning from chabans similar barcode userscript
+
