@@ -47823,7 +47823,7 @@ to
 #+end_example
 
 ** DONE test "Load from Disk"
-** !!!!!! TEST - run the erasers already on the initial page
+** DONE !!!!!! TEST - run the erasers already on the initial page
 
 I need to test some new functionality:
 
@@ -47972,16 +47972,34 @@ g) for "'recording-releases'"
     }
 #+end_example
   
-
-** https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column, somehow "CAA" column is missing
-** TODO re-add "CAA" column to and render artwork also in front of table
+** DONE https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column, somehow "CAA" column is missing
+** DONE add an empty span in front of all titles and fill it with CAA images
+** DONE re-add "CAA" column to and render artwork also in front of table
 
 https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 in the "Release title" column
 
 https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - "Release groups" column
 
+** incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in fro of the release or release group title
+
+some more things to implement:
+
+- incorporate the functionality from the current "CAA" column, basically the addition of the "yes" (CAA image available)
+  and "no" (no CAA image) synthetic values to the "show unique column values"-dropdown menu, and add that same
+  functionality right to the columns defined as
+
+#+begin_example
+            features: {
+                addCAA: '<column name>'
+            },
+#+end_example
+  
+- leave for now the double implementation inside the "CAA column", we will get of rid of the whole "CAA" column approch later
+  
+** Do NOT render the CAA toggle button if none of the rows in a table/sub-table has actually CAA images
 ** TODO add jesus2099 feature about number of coverart images in the toolip or in the cells directly behind the generic CAA image
+*** initial
 
 The feature about
 
@@ -48008,12 +48026,115 @@ in the code from "funky.js"
 
 is missing in the extracted code. Please add 
 
-** TODO add an empty span in front of all titles and fill it with CAA images
+*** no tooltip
+
+#+begin_example
+[VZ-ShowAllEntityData: artist-recordings] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings?page=7 
+[VZ-ShowAllEntityData: artist-recordings] 📝 Page 7: No li.show-all elements found — nothing to expand. 
+[VZ-ShowAllEntityData: artist-recordings] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntityData: artist-recordings] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntityData: artist-recordings] 📥 Found matching table "[object HTMLTableElement]" on page 7 to process. 
+[VZ-ShowAllEntityData: artist-recordings] 📝 Detected indices → mainColIdx=1 (Name), extractors=[video("Name"@1)], syntheticExtractors=[none], erasers=[[▶,➕,jesus2099]@"Release groups"(colIdx=6)], renderMultiRow=[none], excluded=[] for pageType: artist-recordings 
+[VZ-ShowAllEntityData: artist-recordings] 📝 Table body found. Processing child nodes. Total nodes: 100 
+0 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+1 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+2 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+3 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+4 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+5 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+6 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+7 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+ [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+[VZ-ShowAllEntityData: artist-recordings] 📥 Page 7/740 processed in 1.03s. Rows on page: 100. Total: 700 
+[VZ-ShowAllEntityData: artist-recordings] 📥 Fetching URL for page 8: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings?page=8 
+[VZ-ShowAllEntityData: artist-recordings] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings?page=8 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 Stop requested by user. 
+[VZ-ShowAllEntityData: artist-recordings] 📝 Page 8: No li.show-all elements found — nothing to expand. 
+[VZ-ShowAllEntityData: artist-recordings] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntityData: artist-recordings] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntityData: artist-recordings] 📥 Found matching table "[object HTMLTableElement]" on page 8 to process. 
+[VZ-ShowAllEntityData: artist-recordings] 📝 Detected indices → mainColIdx=1 (Name), extractors=[video("Name"@1)], syntheticExtractors=[none], erasers=[[▶,➕,jesus2099]@"Release groups"(colIdx=6)], renderMultiRow=[none], excluded=[] for pageType: artist-recordings 
+[VZ-ShowAllEntityData: artist-recordings] 📝 Table body found. Processing child nodes. Total nodes: 100 
+ [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+ [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+ [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+9 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+0 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+1 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+ [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+ [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+ [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+5 [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+ [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+ [VZ-ShowAllEntityData: artist-recordings] 📝 columnEraser: no matching elements found in column "Release groups" (colIdx=6), erasers=[▶, ➕, jesus2099] 
+[VZ-ShowAllEntityData: artist-recordings] 📥 Page 8/740 processed in 0.98s. Rows on page: 100. Total: 800 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 Fetch loop stopped at page 9 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 DOM rendering starting... 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 Starting updateH2Count: filtered=800, total=800, absoluteTotal=null 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 Searching for target H2. Current pageType: artist-recordings 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 Target element identified: "Recordings..." 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 Appending filterContainer to targetH2. 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 Updated header/target Recordings count: (800) 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 Starting renderFinalTable with 800 rows. 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 Final table structure → headers=8, rowCells=10 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 Fast render: Injected 800 rows into DOM. 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 cleanupHeaders() called → existing headers=[ | Name | Artist | ISRCs | Rating | Length | Release groups | Performance Attributes] 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 Skipping removal of column 4 ("Rating"). Setting "sa_remove_rating" is disabled. 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 Marking column 7 ("Performance Attributes") for removal. Match: "Performance Attributes", Setting: "sa_remove_perf" 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 Removing 1 columns from table. 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 Successfully deleted column: Performance Attributes 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 Injecting synthetic header: Video (via extractor: video) 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 Injecting synthetic header: MB-Name 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 Injecting synthetic header: Comment 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 Running final cleanup... 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ-ShowAllEntityData: artist-recordings] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntityData: artist-recordings] 📝 Navigation guard installed. 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntityData: artist-recordings] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+[VZ-ShowAllEntityData: artist-recordings] 🖥️ Auto-resize button added to controls 
+[VZ-ShowAllEntityData: artist-recordings] 📝 Made 10 columns resizable 
+[VZ-ShowAllEntityData: artist-recordings] 🖥️ Column visibility loaded for pageType "artist-recordings": {Name: true, Artist: true, ISRCs: true, Rating: true, Length: true, …}
+[VZ-ShowAllEntityData: artist-recordings] 🖥️ Restored column visibility for pageType "artist-recordings" from GM storage. 
+[VZ-ShowAllEntityData: artist-recordings] 🖥️ Column visibility toggle added to controls 
+[VZ-ShowAllEntityData: artist-recordings] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+[VZ-ShowAllEntityData: artist-recordings] 🖥️ Density control button added to controls 
+[VZ-ShowAllEntityData: artist-recordings] 🖥️ Statistics button added to controls 
+[VZ-ShowAllEntityData: artist-recordings] 📝 Keyboard shortcuts initialized 
+[VZ-ShowAllEntityData: artist-recordings] 🖥️ Shortcuts help button already exists, skipping 
+[VZ-ShowAllEntityData: artist-recordings] 🖥️ Export button with dropdown menu added to controls 
+[VZ-ShowAllEntityData: artist-recordings] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ-ShowAllEntityData: artist-recordings] 🚀 Sidebar initially collapsed per sa_sidebar_collapsed setting. 
+[VZ-ShowAllEntityData: artist-recordings] 📝 initExpandRGsFeature: injected 815 expand button(s) 
+[VZ-ShowAllEntityData: artist-recordings] 📝 initCaaInlinePics: injected 799 inline placeholder(s) for column "Release groups" 
+[VZ-ShowAllEntityData: artist-recordings] 📝 initBarcodeHighlight: processed table 0 
+[VZ-ShowAllEntityData: artist-recordings] 📝 initCaaPics: table 0 has no CAA/EAA column — skipping 
+[VZ-ShowAllEntityData: artist-recordings] 📝 initCaaPics: processed 0 table(s) with CAA/EAA column 
+[VZ-ShowAllEntityData: artist-recordings] 📝 Unicode character picker initialised 
+[VZ-ShowAllEntityData: artist-recordings] 🎨 DOM rendering finished in 338.90ms 
+[VZ-ShowAllEntityData: artist-recordings] ✅ Process complete. Final Row Count: 800. Total Time: 8.55s 
+[VZ-ShowAllEntityData: artist-recordings] 🖥️ Auto-focused global filter input after final render 
+#+end_example
+
 ** TODO NO small pic icons: caaInitSmallPics: queued thumbnails for 0 icon(s)
+
+For the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f I get not CAA cover art rendered in the "CAA" column
 
 Here is the debug log:
 
 #+begin_example
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 Navigation guard installed. 
+[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+[VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Auto-resize button added to controls 
+ [VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
+ [VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
+ [VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
+ [VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
+[VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Column visibility loaded for pageType "artist-releasegroups": {Year: true, Title: true, Artist: true, Rating: true, Releases: true, …}
 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Restored column visibility for pageType "artist-releasegroups" from GM storage. 
 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Column visibility toggle added to controls 
 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ No Barcode column detected — barcode highlight button suppressed 
@@ -48025,6 +48146,7 @@ Here is the debug log:
 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 Initializing aggressive full-width sidebar toggle. 
 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 Sidebar initially collapsed per sa_sidebar_collapsed setting. 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initExpandRGsFeature: injected 1160 expand button(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 initCaaInlinePics: injected 0 inline placeholder(s) for column "Title" 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 0 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 1 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 2 
@@ -48043,55 +48165,61 @@ Here is the debug log:
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 15 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 16 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 0 with 21 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-0 (21 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 0 with 21 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 1 with 36 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-1 (36 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 1 with 36 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 2 with 33 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-2 (33 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 2 with 33 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 3 with 362 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-3 (362 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 3 with 362 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 4 with 5 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-4 (5 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 4 with 5 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 5 with 3 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-5 (3 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 5 with 3 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 6 with 5 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-6 (5 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 6 with 5 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 7 with 2 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-7 (2 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 7 with 2 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 8 with 90 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-8 (90 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 8 with 90 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 9 with 3 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-9 (3 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 9 with 3 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 10 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-10 (1 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 10 with 1 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 11 with 14 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-11 (14 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 11 with 14 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 12 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-12 (1 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 12 with 1 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 13 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-13 (1 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 13 with 1 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 14 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-14 (1 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 14 with 1 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 15 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-15 (1 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 15 with 1 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: queued thumbnails for 0 icon(s) 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 16 with 1 image(s) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-16 (1 link(s)) 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 16 with 1 image(s), initially hidden 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCaaPics: processed 17 table(s) with CAA/EAA column 
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Unicode character picker initialised 
-[VZ-ShowAllEntityData: artist-releasegroups] 🎨 DOM rendering finished in 169.20ms 
-[VZ-ShowAllEntityData: artist-releasegroups] ✅ Process complete. Final Row Count: 580. Total Time: 9.31s 
+[VZ-ShowAllEntityData: artist-releasegroups] 🎨 DOM rendering finished in 277.50ms 
+[VZ-ShowAllEntityData: artist-releasegroups] ✅ Process complete. Final Row Count: 580. Total Time: 9.21s 
 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Auto-focused global filter input after final render 
-[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: hidden 
-[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: visible 
-[VZ-ShowAllEntityData: artist-releasegroups] 🎨 All h3 headers (types) hidden via Ctrl+Click 
-[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: visible 
-[VZ-ShowAllEntityData: artist-releasegroups] 🎨 All h3 headers (types) hidden via Ctrl+Click 
-[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: visible 
-[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: hidden 
-[VZ-ShowAllEntityData: artist-releasegroups] 🎨 Toggling table for "Album". New state: visible 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 Sub-table "Album": starting auto-resize 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 Sub-table "Album": resized 10 columns in 19ms 
 #+end_example
 
 
@@ -48459,5 +48587,18 @@ to the event parts extracted
 * TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
 
 * !!! Remove CAA rendering AND  (Load more...) boolean
+
+* render coverart archive - https://dn710909.ca.archive.org/0/items/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json
+
+curl -v -L "https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" | jq
+curl -v -L https://archive.org/download/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json | jq
+
+
+* add a multi-row cell for the CAA info
+
+one row per coverart - type, comment, dimensions
+
+
+* add "Relationships" column support again, but with configurable 
 
 
