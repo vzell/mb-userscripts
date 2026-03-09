@@ -47802,7 +47802,7 @@ some small glitches:
 - actually the new boolean parameter "sa_caa_pics_initially_collapsed" should have a default value of "true"
 - the number of CAA artwork images in the button text should be constantly updating , depending of how many artwork images are already dowloaded
 
-** last bug
+** DONE last bug
 
 last two bugs with "multi" table pageTypes:
 
@@ -47822,18 +47822,166 @@ to
 "Toggle CAA cover art images - Hide"/"Toggle CAA cover art images - Show"
 #+end_example
 
-** test "Load from Disk"
+** DONE test "Load from Disk"
+** !!!!!! TEST - run the erasers already on the initial page
+
+I need to test some new functionality:
+
+1.)
+
+Please implement running the configured "columnErasers", e.g.
+
+#+begin_example
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+                ],
+#+end_example
+
+#+begin_example
+                                // ── Apply column erasers (remove marker spans) ────────────────────
+                                // Must run before extractors so that copied cell content is clean.
+                                applyColumnErasers(newRow, activeColumnErasers);
+#+end_example
+
+already during the iniatl page rendering, and NOT on the final rendered page, so that we can get rid of all craft right
+away.  Please also tell me if thats a good desing decision
+
+2.) Big picture: I want to render the CAA images not only in the synthetic "CAA" column, but also right in front of the
+actual "Release" or "ReleaseGroup"
+
+For this we need the following:
+
+- make sure to run the "// ── Expand Release Groups feature" first, so that the toggle icon "▶" e.g.
+
+#+begin_example
+<td data-erg-injected="1"><span data-erg-btn="1" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span><a class="wrap-anywhere" href="/release/46e5c6a9-b0a7-4e42-9162-8f412705b09d"><bdi>Born to Run</bdi></a></td>
+#+end_example
+
+is rendered before the release or releasegroup title (in the above example "Born to Run)
+
+- the '<span data-erg-btn' toggle icon "▶" needs a tooltip text of "Toggle display of underlying entity page"
+
+- in the variable "const pageDefinitions" create a new parameter for the following pageType definitions
+
+#+begin_example
+type: 'artist-releasegroups',
+type: 'artist-releases',
+type: 'releasegroup-releases',
+type: 'series-releases',
+type: 'label-releases',
+type: 'artist-recordings',
+type: 'recording-releases',
+#+end_example
+
+and the generic new feature per column name:
+
+#+begin_example
+            features: {
+                addCAA: '<column name>'
+            },
+#+end_example
+
+a) for "type: 'artist-releasegroups'"
+
+#+begin_example
+            features: {
+                addCAA: 'Title'
+            },
+#+end_example
+
+b) for "type: 'artist-releases'"
+
+#+begin_example
+            features: {
+                addCAA: 'Release'
+            },
+#+end_example
+
+c) for "'releasegroup-releases'"
+
+#+begin_example
+            features: {
+                addCAA: 'Release'
+            },
+#+end_example
+
+d) for "'series-releases'"
+
+#+begin_example
+            features: {
+                addCAA: 'Release'
+            },
+#+end_example
+
+e) for "label-releases'"
+
+#+begin_example
+            features: {
+                addCAA: 'Release'
+            },
+#+end_example
+
+f) for "'artist-recordings'"
+
+#+begin_example
+            features: {
+                addCAA: 'Release groups'
+            },
+#+end_example
+
+g) for "'recording-releases'"
+
+#+begin_example
+            features: {
+                addCAA: 'Release title'
+            },
+#+end_example
+
+- insert a new placeholder span container (not every row will have an actual CAA cover art image and we have to make
+  sure that titles are still aligned despite of absence or presence of artwork images) of a fixed width between the
+  toggle icon "▶" and the actual title of the release or releasegroup for EVERY row (it must occupy enough space to
+  later hold a miniature image of the release or releasegroup CAA cover art image) in each '<column name>' defined by
+
+#+begin_example
+            features: {
+                addCAA: '<column name>'
+            },
+#+end_example
+  
+- now render (additionally to the synthetic "CAA" column) the CAA image of the underlying release or releasegroup (if
+  available) in place with the placeholder (basically replace the placeholder)
+
+- for pageTypes of https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 to have the toggle icon "▶"
+  before the release title in the "Release title" column, the following block of code has probably be adjusted
+
+#+begin_example
+    /**
+     * Returns true when the current page matches the expandRGs @match / @exclude criteria:
+     *   artist/*                             (all artist sub-pages, no exclusions)
+     *   label/<UUID>                         (root label page only)
+     *   release-group/<UUID>                 (root release-group page only)
+     *   series/<UUID>                        (root series page only)
+     *
+     * @returns {boolean}
+     */
+    function isExpandRGsPage() {
+        const p    = window.location.pathname;
+        const mbid = MBID_REGEX.source;
+        if (new RegExp(`^/artist/${mbid}`).test(p)) return true;
+        return new RegExp(`^/(label|release-group|series)/${mbid}$`).test(p);
+    }
+#+end_example
+  
 
 ** https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column, somehow "CAA" column is missing
-
 ** TODO re-add "CAA" column to and render artwork also in front of table
 
 https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 in the "Release title" column
-https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column
 
+https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - "Release groups" column
 
-** TODO and jesus2099 feature about number of coverart images in the toolip or in the cells directly
+** TODO add jesus2099 feature about number of coverart images in the toolip or in the cells directly behind the generic CAA image
 
 The feature about
 
@@ -47860,11 +48008,8 @@ in the code from "funky.js"
 
 is missing in the extracted code. Please add 
 
-** TODO and jesus2099 feature about number of coverart images in the "CAA" cells directly behind the image
-** TODO add an empty span in front of all titles and fill it with CCA images
-** TODO add artwork in front of the actual titles also, leave "CAA" column for counting puposes
-
-** NO small pic icons: caaInitSmallPics: queued thumbnails for 0 icon(s)
+** TODO add an empty span in front of all titles and fill it with CAA images
+** TODO NO small pic icons: caaInitSmallPics: queued thumbnails for 0 icon(s)
 
 Here is the debug log:
 
@@ -48308,8 +48453,9 @@ to the event parts extracted
 * persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 
 
-* !!!!!! TEST - run the erasers already on the initial page
 
+* TODO add global show CAA images for multi-table mode
 
+* TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
 
 
