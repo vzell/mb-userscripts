@@ -1,5 +1,18 @@
 [
 {
+    "version": "9.99.91",
+    "date": "2026-03-09",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "CAA release-group image-count tooltip missing from small-pic icons — caaEnrichReleaseGroupIcon(anchor) added: fires an async fetch to https://coverartarchive.org/release-group/{GUID} for every release-group anchor inside the CAA column; on a successful 200 response with at least one image, sets anchor.title to 'N image(s) found in this release' (mirrors jesus2099's XHR branch for types[t]==\"release-group\" and its title: RGCAA.images.length + \" image\" + … expression); skips anchors that already carry a title (idempotent across re-renders); skips non-release-group anchors silently; logs failures at debug level only",
+          "caaInitSmallPics() updated to call caaEnrichReleaseGroupIcon(anchor) for every processed icon in addition to caaLoadIcon() — the two calls are independent: the image background loads immediately as before, and the API fetch for the title runs asynchronously without blocking the thumbnail"
+        ]
+      }
+    ]
+  },
+{
     "version": "9.99.90",
     "date": "2026-03-09",
     "sections": [
