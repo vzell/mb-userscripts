@@ -1,18 +1,5 @@
 [
     {
-      "version": "9.99.81",
-      "date": "2026-03-09",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "MBID_REGEX not defined — ReferenceError in ergInjectReleaseButton / ergInjectReleaseGroupButton: the MBID UUID pattern was declared as a local const string inside isExpandRGsPage() and was therefore inaccessible to the two inject functions; fixed by hoisting a module-level const MBID_REGEX into the erg-functions block and updating isExpandRGsPage to use MBID_REGEX.source",
-            "erg expand buttons dead after sort or filter, and double ▶▶ icons on re-render — two related root causes: (1) renderFinalTable / renderGroupedTable insert cloneNode(true) copies of allRows into the DOM; cloneNode copies DOM attributes (including data-erg-injected and data-erg-btn) but does NOT copy event listeners, so every ▶ button became inert; (2) the prior fix that stripped data-erg-injected from clones before appending correctly allowed re-injection but also reset the idempotency guard, so initExpandRGsFeature() was called once per sort/filter AND once from the initial render path, injecting a second button into the same <td>; fixed by: (a) adding data-erg-btn='1' to every button span created by ergCreateButton so stale clones are unambiguously identifiable, (b) removing the data-erg-injected strip from all clone-append sites (renderFinalTable fast/chunked paths and renderGroupedTable append paths) so the guard attribute is preserved across re-renders, (c) moving stale-button cleanup into initExpandRGsFeature itself — before the injection guard check, all [data-erg-btn] spans are removed from the parent <td>, then data-erg-injected is cleared so the guard is reset and exactly one fresh live button is injected per cell per render cycle, (d) calling initExpandRGsFeature() after initCollapsableColumns() in the single-table runFilter branch and after rewireGlobalCollapseButtonMulti() in renderGroupedTable"
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.80",
       "date": "2026-03-09",
       "sections": [

@@ -47441,6 +47441,7 @@ synthetic columns 'DD', 'MM', 'YYYY', 'Day' and 'Month'
 
 
 * TODO extract the VZ event disambiguation configurable in its constituents
+** DONE initial
 
 
 Add the following new "syntheticColumnExtractors" parameter
@@ -47515,5 +47516,56 @@ soundcheck
 live: JP
 #+end_example
 
+** refine extraction
+
 
 * remove highlightning from chabans similar barcode userscript
+
+* TODO add MusicBrainz: Expand/collapse release groups
+** initial
+
+Inspect the uploaded userscript "expandRGs.js" and extract the contents to include in our userscript as functions to run on the final rendered pages which match
+
+#+begin_example
+// @match        *://musicbrainz.org/artist/*
+// @match        *://musicbrainz.org/label/*
+// @match        *://musicbrainz.org/release-group/*
+// @match        *://musicbrainz.org/series/*
+// @exclude      *musicbrainz.org/label/*/*
+// @exclude      *musicbrainz.org/release-group/*/*
+// @exclude      *musicbrainz.org/series/*/*
+#+end_example
+
+** sorting doesn't work
+
+It works so far when entering the final rendered page, I can collapse/uncollapse the display of the fetched MusicBrainz
+pages. Even resizing works and I can still use the toggle icon.
+
+NOW the bug, it stops working as soon as a sorting action is done on whatever column, OR as soon as a filtering is
+down. Clicking on the toggle icon des NOTHING anymore
+
+** double arrows
+
+I get double collapse icons "▶ ▶", when either filtering or sorting. Clicking ONLY the leftmost "▶" actually toggles,
+the other "▶" is just a no-op and sould be removed
+
+#+begin_example
+<td data-erg-injected="1">
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <a class="wrap-anywhere" href="/release/fcd66ac6-9c4f-40ab-8b72-5b88cf000bd0">
+    <bdi>2014‐02‐01: FNB Stadium, Johannesburg, South Africa
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>www.
+      <span class="mb-column-filter-highlight">live
+      </span>nation.com
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+** check loading from disk

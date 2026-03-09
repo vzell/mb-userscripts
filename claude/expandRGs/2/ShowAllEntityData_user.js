@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.81+2026-03-09
+// @version      9.99.82+2026-03-09
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -10851,10 +10851,11 @@
             if (_collapseTable) initCollapsableColumns(_collapseTable);
 
             // Re-inject erg expand buttons into the freshly rendered DOM rows.
-            // renderFinalTable() inserts cloneNode(true) copies — event listeners are
-            // not cloned, so ▶ buttons are inert after every sort or filter re-render.
-            // initExpandRGsFeature() removes stale [data-erg-btn] clones and re-injects
-            // a fresh live button into each qualifying <td>.
+            // renderFinalTable() inserts *clones* of allRows — event listeners are
+            // not copied by cloneNode, so the ▶ buttons become inert after every
+            // sort or filter re-render.  data-erg-injected is stripped from clones
+            // inside renderFinalTable/renderRowsChunked so this call can freely
+            // re-inject live buttons into the new DOM rows.
             initExpandRGsFeature();
         }
         // Maintain scroll position after filtering or sorting.
@@ -12413,7 +12414,14 @@
 
         // For small datasets, use fast simple append
         if (chunkThreshold === 0 || rowCount < chunkThreshold) {
-            rows.forEach(r => tbody.appendChild(r));
+            rows.forEach(r => {
+                // Strip the erg-injection guard so initExpandRGsFeature() can
+                // re-inject live buttons into these freshly cloned DOM rows.
+                // (cloneNode copies data-* attributes but not event listeners, so
+                // the attribute must be cleared here or the erg guard skips the cell.)
+                r.querySelectorAll('[data-erg-injected]').forEach(td => delete td.dataset.ergInjected);
+                tbody.appendChild(r);
+            });
             Lib.debug('render', `Fast render: Injected ${rowCount} rows into DOM.`);
         } else {
             // For large datasets, use chunked async rendering with progress
@@ -12476,7 +12484,12 @@
 
             // Use DocumentFragment for efficient batch insert
             const fragment = document.createDocumentFragment();
-            chunk.forEach(row => fragment.appendChild(row));
+            chunk.forEach(row => {
+                // Strip erg-injection guard so initExpandRGsFeature() can re-inject
+                // live buttons into these freshly cloned DOM rows.
+                row.querySelectorAll('[data-erg-injected]').forEach(td => delete td.dataset.ergInjected);
+                fragment.appendChild(row);
+            });
             tbody.appendChild(fragment);
 
             rowsRendered += chunk.length;
@@ -13244,10 +13257,16 @@
             const chunkThreshold = Lib.settings.sa_chunked_render_threshold || 1000;
             if (chunkThreshold > 0 && group.rows.length >= chunkThreshold) {
                 const fragment = document.createDocumentFragment();
-                group.rows.forEach(r => fragment.appendChild(r));
+                group.rows.forEach(r => {
+                    r.querySelectorAll('[data-erg-injected]').forEach(td => delete td.dataset.ergInjected);
+                    fragment.appendChild(r);
+                });
                 tbody.appendChild(fragment);
             } else {
-                group.rows.forEach(r => tbody.appendChild(r));
+                group.rows.forEach(r => {
+                    r.querySelectorAll('[data-erg-injected]').forEach(td => delete td.dataset.ergInjected);
+                    tbody.appendChild(r);
+                });
             }
 
             // After rows are in the DOM: re-apply any active multi-sort tints for this table.
@@ -13487,8 +13506,9 @@
 
         // Re-inject erg expand buttons into freshly rendered rows.
         // Both sort and filter re-renders replace tbody content with cloneNode(true)
-        // copies whose event listeners are stripped.  initExpandRGsFeature() removes
-        // stale [data-erg-btn] clones and re-injects live ▶ buttons across all sub-tables.
+        // copies whose event listeners are stripped; data-erg-injected is cleared
+        // from every clone in the row-append loops above so this call can freely
+        // re-inject live ▶ buttons across all sub-tables.
         initExpandRGsFeature();
 
         Lib.debug('render', 'Finished renderGroupedTable.');
@@ -16801,11 +16821,10 @@
         const button = document.createElement('span');
         let toggled  = false;
 
-        button.dataset.ergBtn    = '1';   // marker used to remove stale clones on re-render
-        button.innerHTML         = '&#9654;';
-        button.style.cursor      = 'pointer';
+        button.innerHTML        = '&#9654;';
+        button.style.cursor     = 'pointer';
         button.style.marginRight = '4px';
-        button.style.color       = '#777';
+        button.style.color      = '#777';
 
         // Toggle glyph and trigger dom_callback on every click.
         button.addEventListener('mousedown', () => {
@@ -17075,18 +17094,7 @@
         let injected = 0;
         for (const link of links) {
             const parent = link.parentNode;
-
-            // Remove any stale erg button spans that were carried over by cloneNode(true).
-            // cloneNode copies data-erg-btn and data-erg-injected but NOT event listeners,
-            // so cloned buttons are inert.  We must remove them before the injection guard
-            // check so that the guard can be reset and a fresh live button is injected.
-            const staleButtons = parent.querySelectorAll('[data-erg-btn]');
-            if (staleButtons.length) {
-                staleButtons.forEach(stale => stale.remove());
-                delete parent.dataset.ergInjected; // reset guard so fresh injection proceeds
-            }
-
-            if (parent.dataset.ergInjected) continue; // idempotency guard (same render, already done)
+            if (parent.dataset.ergInjected) continue; // idempotency guard
             parent.dataset.ergInjected = '1';
 
             const href = link.getAttribute('href');

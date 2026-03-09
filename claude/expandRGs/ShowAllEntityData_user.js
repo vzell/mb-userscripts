@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.81+2026-03-09
+// @version      9.99.80+2026-03-09
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -10849,13 +10849,6 @@
             // this call is a cheap no-op on non-collapsable pages.
             const _collapseTable = document.querySelector('table.tbl');
             if (_collapseTable) initCollapsableColumns(_collapseTable);
-
-            // Re-inject erg expand buttons into the freshly rendered DOM rows.
-            // renderFinalTable() inserts cloneNode(true) copies — event listeners are
-            // not cloned, so ▶ buttons are inert after every sort or filter re-render.
-            // initExpandRGsFeature() removes stale [data-erg-btn] clones and re-injects
-            // a fresh live button into each qualifying <td>.
-            initExpandRGsFeature();
         }
         // Maintain scroll position after filtering or sorting.
         // __scrollX preserves any horizontal offset the user reached via the
@@ -13484,12 +13477,6 @@
         if (activeDefinition && activeDefinition.tableMode === 'multi') {
             rewireGlobalCollapseButtonMulti();
         }
-
-        // Re-inject erg expand buttons into freshly rendered rows.
-        // Both sort and filter re-renders replace tbody content with cloneNode(true)
-        // copies whose event listeners are stripped.  initExpandRGsFeature() removes
-        // stale [data-erg-btn] clones and re-injects live ▶ buttons across all sub-tables.
-        initExpandRGsFeature();
 
         Lib.debug('render', 'Finished renderGroupedTable.');
 
@@ -16686,15 +16673,6 @@
     // named inner function declarations so self-removal from event listeners works correctly.
 
     /**
-     * Matches a MusicBrainz UUID (MBID) anywhere in a string.
-     * Shared by ergInjectReleaseGroupButton, ergInjectReleaseButton (href extraction)
-     * and isExpandRGsPage (URL matching via .source).
-     *
-     * @type {RegExp}
-     */
-    const MBID_REGEX = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
-
-    /**
      * Returns true when the current page matches the expandRGs @match / @exclude criteria:
      *   artist/*                             (all artist sub-pages, no exclusions)
      *   label/<UUID>                         (root label page only)
@@ -16704,10 +16682,10 @@
      * @returns {boolean}
      */
     function isExpandRGsPage() {
-        const p    = window.location.pathname;
-        const mbid = MBID_REGEX.source;
-        if (new RegExp(`^/artist/${mbid}`).test(p)) return true;
-        return new RegExp(`^/(label|release-group|series)/${mbid}$`).test(p);
+        const p = window.location.pathname;
+        const MBID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+        if (new RegExp(`^/artist/${MBID}`).test(p)) return true;
+        return new RegExp(`^/(label|release-group|series)/${MBID}$`).test(p);
     }
 
     /**
@@ -16801,11 +16779,10 @@
         const button = document.createElement('span');
         let toggled  = false;
 
-        button.dataset.ergBtn    = '1';   // marker used to remove stale clones on re-render
-        button.innerHTML         = '&#9654;';
-        button.style.cursor      = 'pointer';
+        button.innerHTML        = '&#9654;';
+        button.style.cursor     = 'pointer';
         button.style.marginRight = '4px';
-        button.style.color       = '#777';
+        button.style.color      = '#777';
 
         // Toggle glyph and trigger dom_callback on every click.
         button.addEventListener('mousedown', () => {
@@ -17075,18 +17052,7 @@
         let injected = 0;
         for (const link of links) {
             const parent = link.parentNode;
-
-            // Remove any stale erg button spans that were carried over by cloneNode(true).
-            // cloneNode copies data-erg-btn and data-erg-injected but NOT event listeners,
-            // so cloned buttons are inert.  We must remove them before the injection guard
-            // check so that the guard can be reset and a fresh live button is injected.
-            const staleButtons = parent.querySelectorAll('[data-erg-btn]');
-            if (staleButtons.length) {
-                staleButtons.forEach(stale => stale.remove());
-                delete parent.dataset.ergInjected; // reset guard so fresh injection proceeds
-            }
-
-            if (parent.dataset.ergInjected) continue; // idempotency guard (same render, already done)
+            if (parent.dataset.ergInjected) continue; // idempotency guard
             parent.dataset.ergInjected = '1';
 
             const href = link.getAttribute('href');
