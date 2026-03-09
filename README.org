@@ -47553,6 +47553,7 @@ the other "▶" is just a no-op and sould be removed
 
 ** check loading from disk
 
+
 * TODO add unicode symbols back
 ** initial
 
@@ -47566,4 +47567,6 @@ Please also adjust the keyboard shortcut section which can be called with a butt
 
 
 * TODO remove highlightning from chabans similar barcode userscript
+
+* all buttons need the pressing effect
 

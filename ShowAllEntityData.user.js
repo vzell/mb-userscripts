@@ -1980,6 +1980,9 @@
                 columnExtractors: [
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                 ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release' // Specific header
             },
@@ -2072,6 +2075,9 @@
                     features: {
                         columnExtractors: [
                             { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                        ],
+                        syntheticColumnExtractors: [
+                            { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                         ],
                         renderMultiRowCell: [ 'Label', 'Catalog#' ],
                         collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
@@ -2208,6 +2214,9 @@
                     },
                     { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
                 ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release'
             },
@@ -2257,6 +2266,9 @@
                         syntheticColumns: ['Total Tracks']
                     },
                     { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release'
@@ -2377,6 +2389,9 @@
                     { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
                 ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
                 renderMultiRowCell: [ 'Label', 'Catalog#' ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
                 extractMainColumn: 'Release'
@@ -2484,6 +2499,9 @@
                 ],
                 columnExtractors: [
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release title'
