@@ -47572,14 +47572,11 @@ small glitches,
 
 
 * TODO column "Visibility" per sub-table
-** initial
+** DONE initial
 
 In the uploaded userscript,
 
-1.) make the toggle barcode highlightning button smaller in size
-
-
-2.) implement the same column visibility functionality, which right now exists only on the global level by clicking the
+implement the same column visibility functionality, which right now exists only on the global level by clicking the
 "Visible"-button in the h1 header row, also in the case of "multi"-table mode for each sub-table:
 
 - add a new sub-table specific "Visible" button (use just the '👁️' as button text) right after the
@@ -47593,14 +47590,7 @@ In the uploaded userscript,
   configuation will be inherited by all sub-tables; if it's a per sub-table configuration that one wins on the sub-table
   level)
 
-
-* add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
-
-
-* please check function documentations against it's implementatin again and fix if necessary
-
-
-* TODO remove the experimental "(Show all)" functionality boolean as it's now strictl needed for the multi-row cell stuff
+** TODO add complete keyboard control alos on the sub-table "Visibility" menu
 
 
 * TODO add chabans similar barcode highlightning (configurable)
@@ -47635,7 +47625,22 @@ When clicked the first time, the highlightning of the similar barcodes should be
 ▌█▌▐█▐▌██▐▌█
 #+end_example
 
-** TODO make the toggle barcode highlightning button smaller in size
+** TODO make the toggle barcode highlightning button smaller in horizontal size
+
+- make the toggle barcode highlightning button '<button id="mb-barcode-highlight-btn"' smaller in horizontal size but the
+same hight as e.g. the button '<button id="mb-visible-btn"'
+
+- it should ONLY be visible on pageTypes where there is a "Barcode" column (data cells identified by the "barcode-cell" class in "Barcode" columns)
+
+
+* add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
+
+
+* please check function documentations against it's implementatin again and fix if necessary
+
+
+* TODO remove the experimental "(Show all)" functionality boolean as it's now strictl needed for the multi-row cell stuff
+
 
 * TODO add jesu2099 artcode fetching (configurable)
 ** initial
