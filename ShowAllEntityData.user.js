@@ -1567,7 +1567,7 @@
          * a consistent '-' separator regardless of source encoding.
          *
          * Synthetic columns: ['Event-Type', 'Event-Date', 'Event-Detail',
-         *                      'Event-Venue', 'Event-Venue2',
+         *                      'Event-Venue', 'Event-Venue-Detail',
          *                      'Event-City', 'Event-State', 'Event-Country']
          *
          * @param   {HTMLTableCellElement} sourceCell  Comment <td> (MB-Comment synthetic column).
@@ -1576,7 +1576,7 @@
         eventParts(sourceCell) {
             // Eight output cells in declaration order:
             // [0] Event-Type  [1] Event-Date  [2] Event-Detail
-            // [3] Event-Venue [4] Event-Venue2
+            // [3] Event-Venue [4] Event-Venue-Detail
             // [5] Event-City  [6] Event-State  [7] Event-Country
             const tds = Array.from({ length: 8 }, () => document.createElement('td'));
 
@@ -2276,7 +2276,7 @@
             buttons: [ { label: 'Show all Recordings for Work (specialised)' } ],
             features: {
                 syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
                 ],
                 extractMainColumn: 'Title'
             },
