@@ -46629,7 +46629,7 @@ https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91
 
 In the uploaded userscript,
 
-in pages of type https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2 - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0&page=12
+- pages of type https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2 - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0&page=12
 
 https://musicbrainz.org/release-group/a17893f0-2dfa-4a2b-a004-02ba6a9f85c3 - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0&page=9
 
@@ -47382,6 +47382,66 @@ please remove the span before adding the "Date" value to the synthetic column "D
 
 
 * TODO further split "Date" -> dd mm yyyy day month
+
+
+
+In the uploaded userscript,
+
+generalize the column data extraction from the current "extracting from original columns" based approach to also support
+further extracting from the synthetic columns. These functions should als be part of a function registry but run after
+the extraction from the original columns has happened.
+
+There is a new "syntheticColumnExtractors" parameter in the variable "const pageDefinitions"
+
+#+begin_example
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+#+end_example
+
+e.g. for the pageType 'releasegroup-releases'
+
+#+begin_example
+        {
+            type: 'releasegroup-releases',
+            match: (path) => path.includes('/release-group/'),
+            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+#+end_example
+
+Please implement the "extractor: 'dateParts'" in the following way:
+
+Given either a complete or partial date expression, extract as much information as possible and fill in even more
+synthetic columns 'DD', 'MM', 'YYYY', 'Day' and 'Month'
+
+'DD - day of date as integer
+'MM' - month of date as integer
+'YYYY' - year of date as integer
+'Day' - day e.g., "Wednesday"
+'Month' - month e.g. "January"
 
 
 
