@@ -48458,4 +48458,6 @@ to the event parts extracted
 
 * TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
 
+* !!! Remove CAA rendering AND  (Load more...) boolean
+
 
