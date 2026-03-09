@@ -2055,7 +2055,7 @@
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/releases/) && params.has('link_type_id'),
             buttons: [
                 {
-                    label: 'Show all Release Relationships for Area (specialised)',
+                    label: 'Show all Release Relationships for Area (specialized)',
                     targetHeader: 'Relationships',
                     tableMode: 'single',
                     non_paginated: false,
@@ -2113,7 +2113,7 @@
         {
             type: 'area-recordings-filtered',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Area (specialised)' } ],
+            buttons: [ { label: 'Show all Recordings for Area (specialized)' } ],
             features: {
                 extractMainColumn: 'Title'
             },
@@ -2132,7 +2132,7 @@
         {
             type: 'area-works-filtered',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Works for Area (specialised)' } ],
+            buttons: [ { label: 'Show all Works for Area (specialized)' } ],
             features: {
                 extractMainColumn: 'Title'
             },
@@ -2171,7 +2171,7 @@
         {
             type: 'place-performances-filtered',
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (specialised)' } ],
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
             features: {
                 extractMainColumn: 'Title'
             },
@@ -2232,7 +2232,7 @@
         {
             type: 'label-relationships-filtered',
             match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Label (specialised)' } ],
+            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
             features: {
                 extractMainColumn: 'Title' // Specific header
             },
@@ -2285,7 +2285,7 @@
         {
             type: 'work-recordings-filtered',
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Work (specialised)' } ],
+            buttons: [ { label: 'Show all Recordings for Work (specialized)' } ],
             features: {
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
@@ -2309,7 +2309,7 @@
             type: 'artist-relationships-filtered',
             // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist (specialised)' } ],
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
             features: {
                 columnErasers: [
                     { sourceColumn: 'Title', erasers: ['▶', '➕'] }
