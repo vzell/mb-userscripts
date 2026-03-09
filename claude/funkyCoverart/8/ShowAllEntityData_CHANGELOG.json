@@ -1,17 +1,5 @@
 [
     {
-        "version": "9.99.97",
-        "date": "2026-03-10",
-        "sections": [
-            {
-                "label": "🐛 Bug fixes",
-                "items": [
-                    "CAA icon tooltip always showed the stock MusicBrainz title 'This release group has artwork in the Cover Art Archive' instead of the enriched count 'N image(s) found in this release': caaEnrichReleaseGroupIcon guarded with `if (anchor.title) return`, which fired immediately on every anchor because MusicBrainz pre-populates that string on all cover-art links; the API was actually called and returned correct counts (visible in debug log) but the title assignment was never reached. Fix: replaced the blunt non-empty guard with a pattern check (`/^\\d+ images? found/.test(anchor.title)`) that skips only anchors already enriched by a previous re-render pass, leaving the stock MB title transparent to the guard."
-                ]
-            }
-        ]
-    },
-    {
         "version": "9.99.96",
         "date": "2026-03-10",
         "sections": [

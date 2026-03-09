@@ -48121,7 +48121,7 @@ is missing in the extracted code. Please add
 
 ** TODO NO small pic icons: caaInitSmallPics: queued thumbnails for 0 icon(s)
 
-For the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f I get not CAA cover art rendered in the "CAA" column
+For the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f I get not CAA cover art rendered in the "CAA" column, all other 
 
 Here is the debug log:
 
@@ -48130,10 +48130,10 @@ Here is the debug log:
 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Initializing collapsible H2 headers... 
 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Auto-resize button added to controls 
- [VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
- [VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
- [VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
- [VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Column visibility loaded for pageType "artist-releasegroups": {Year: true, Title: true, Artist: true, Rating: true, Releases: true, …}
 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Restored column visibility for pageType "artist-releasegroups" from GM storage. 
 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Column visibility toggle added to controls 
@@ -48220,6 +48220,41 @@ Here is the debug log:
 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 DOM rendering finished in 277.50ms 
 [VZ-ShowAllEntityData: artist-releasegroups] ✅ Process complete. Final Row Count: 580. Total Time: 9.21s 
 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Auto-focused global filter input after final render 
+#+end_example
+
+** why NO count
+
+Why is the count not displayed as a tooltip on the CAA icon at
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in the "CAA" column, also it gets logged
+
+#+begin_example
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 4 image(s) for /release-group/d30fc12b-2437-3aa4-bfa6-4e3b0b3adef0 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 5 image(s) for /release-group/14aea9a8-a52a-4e45-aba7-cf51d83a29d3 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 4 image(s) for /release-group/c2b61525-979a-40af-b3a9-81dbf1265298 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 18 image(s) for /release-group/649414b1-a05f-48eb-bbb9-301e7fa4b84d 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 10 image(s) for /release-group/02fa8c5c-20f5-3b01-954d-ce765452f97f 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 12 image(s) for /release-group/f83d2211-dd81-4b1e-9a02-e89733891e1c 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 4 image(s) for /release-group/4c36506b-6717-4557-be73-1896b5d1e69a 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 6 image(s) for /release-group/06a2c0aa-c865-3899-bac0-d0d87307516b 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 5 image(s) for /release-group/f3528c02-dfa0-3b65-b12d-c252a6290770 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 2 image(s) for /release-group/3ee68846-8c74-4b34-9db6-3902f93e8da9 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 8 image(s) for /release-group/ea40e127-dbd5-44bf-b370-2e45ff242bf9 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/627b4010-94e5-48a7-a6d3-d143499351c0 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/fd0cb241-a69f-45d8-ad55-3eb3539b93d8 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/8f7592fa-3392-4fe1-913d-9109307a252e 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 2 image(s) for /release-group/58f09a0f-4106-4aa3-9edc-53f49ddfc4a5 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/60893eef-2440-44ee-9386-82a6876adcbd 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/77cabd9d-1b37-4f12-a492-023ea09c97df 
+#+end_example
+
+and this is the code
+
+#+begin_example
+            const count = Array.isArray(rgCaa.images) ? rgCaa.images.length : 0;
+            if (count > 0) {
+                anchor.title = count + ' image' + (count !== 1 ? 's' : '') + ' found in this release';
+                Lib.debug('caa', `caaEnrichReleaseGroupIcon: ${count} image(s) for ${entityPath}`);
+            }
 #+end_example
 
 
@@ -48602,3 +48637,18 @@ one row per coverart - type, comment, dimensions
 * add "Relationships" column support again, but with configurable 
 
 
+* TODO rename "type: 'events'," to "type: 'artist-events',
+
+* retry "Failed to fetch" - CAA cover artcode
+
+#+begin_example
+23:35:51.910 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: fetch error for /release-group/5cbee6ec-2cd2-4cc5-a41e-33d80140fe63: TypeError: Failed to fetch
+    at caaEnrichReleaseGroupIcon (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21214:32)
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21262:25
+    at NodeList.forEach (<anonymous>)
+    at caaInitSmallPics (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21258:15)
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21710:13
+    at NodeList.forEach (<anonymous>)
+    at initCaaPics (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21705:16)
+    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:15717:13)
+#+end_example

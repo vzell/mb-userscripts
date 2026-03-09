@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.97+2026-03-10
+// @version      9.99.96+2026-03-10
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -18929,22 +18929,16 @@
      * failure is logged at debug level — never at warn/error, because a missing
      * cover-art entry is a normal expected state for many release groups.
      *
-     * Re-render guard: the function skips the API call only when the anchor's
-     * title already matches the enriched-count pattern (/^\d+ images? found/)
-     * written by a previous pass.  It intentionally does NOT skip anchors whose
-     * title is the stock MusicBrainz string ("This release group has artwork in
-     * the Cover Art Archive"), because that string is pre-set by MB on every
-     * cover-art anchor and would otherwise permanently block enrichment.
+     * Skips anchors that already carry a non-empty title so that re-renders
+     * do not redundantly re-fetch the same data.
      *
      * @param {HTMLAnchorElement} anchor - A `<a href="…/cover-art">` whose `ref`
      *   attribute (or href after stripping "/cover-art") points to a release-group
      *   entity path, e.g. `/release-group/c497fc44-…`.
      */
     async function caaEnrichReleaseGroupIcon(anchor) {
-        // Skip only if a previous enrichment pass already wrote the count.
-        // The stock MB title ("This release group has artwork …") must NOT trigger
-        // this guard — it would silently suppress every tooltip update.
-        if (/^\d+ images? found/.test(anchor.title)) return;
+        // Skip if a previous pass already populated the title.
+        if (anchor.title) return;
 
         // The entity path is the release-group path, e.g. "/release-group/GUID".
         const entityPath = anchor.getAttribute('ref')
