@@ -1,5 +1,39 @@
 [
 {
+      "version": "9.99.85",
+      "date": "2026-03-09",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Sub-table resize button not updated on manual column drag — markSubTableAsManuallyResized(table) is now called from the makeColumnsResizable mousedown handler immediately after isManuallyResized is set; it snapshots the sub-table state into subTableOriginalStates (once), sets subTableResizedStates true for that table, calls applySubTableResizeBtnActiveState() to mark the button active, and calls updateGlobalResizeBtnFromSubTables() so the global 'Resize*' amber hint fires on the first drag just as it does for auto-resize",
+            "Sub-table resize button active colour was too pale — active state was #e8f5e9 bg / #4CAF50 border / #2e7d32 text, visually close to the default grey; replaced with dark solid green #1b5e20 bg / #0a3d12 border / #ffffff text via the new shared applySubTableResizeBtnActiveState() helper, clearly distinguishable from both the default button and the global Resize button's lighter active shade",
+            "applySubTableResizeBtnActiveState(btn, categoryName) — new shared helper that applies the dark-green active style and correct tooltip wording ('Restore original column widths…') in one place; used by both toggleSubTableAutoResize (auto-resize path) and markSubTableAsManuallyResized (manual-drag path)",
+            "resetSubTableResizeBtnState(btn, categoryName) — new shared helper that reverts button to default appearance and tooltip; replaces duplicated inline style assignments in toggleSubTableAutoResize restore path and the global-restore forEach loop"
+          ]
+        }
+      ]
+    },
+{
+      "version": "9.99.84",
+      "date": "2026-03-09",
+      "sections": [
+        {
+          "label": "✨ Enhancements",
+          "items": [
+            "cleanupBarcodeHighlights — new cleanup function called from performClutterCleanup() that removes inline highlight styles (background-color, font-weight, padding, border-radius, cursor) injected by chaban's 'Highlight identical barcodes and toggle merge checkboxes' userscript from all td.barcode-cell elements; only cells that actually carry the chaban highlight (non-empty background-color property) are touched, leaving all other inline styles intact; the count of cleaned cells is logged at debug level",
+            "Per-sub-table ↔️ Resize / Restore button in multi-table mode — createSubTableResizeButton(table, categoryName) factory creates a compact button inserted into each h3 sub-table header immediately before the 🔍 mb-subtable-filter-toggle-icon; the button mirrors the global Resize/Restore toggle but acts exclusively on the single sub-table it was created for",
+            "toggleSubTableAutoResize(table, btn, categoryName) — new function that performs a full measure-and-apply auto-resize cycle on one sub-table (sampling up to 100 tbody rows, measuring both headers and data cells via an off-screen div, applying widths through a colgroup, and optionally re-adding column-resizer handles); on the second call the sub-table is restored from the snapshot stored in subTableOriginalStates",
+            "subTableResizedStates / subTableOriginalStates — two new module-level Maps that track per-sub-table resize state and pre-resize snapshots; cleared automatically when the global Restore action runs so the two state systems stay in sync",
+            "updateGlobalResizeBtnFromSubTables — new function called after every per-sub-table toggle to update the global ↔️ Resize button: when at least one sub-table is resized and the global resize is inactive the button label changes to '↔️ Resize*' with an amber (#fff3e0 / #FF9800) colour scheme; when all sub-tables are restored and no global resize is active the button reverts to its default appearance",
+            "updateResizeButtonState extended — the else-branch now queries subTableResizedStates for any truthy entry before deciding the button label/colour so the amber 'Resize*' state is always applied consistently regardless of call site",
+            "Global Restore clears sub-table state — toggleAutoResizeColumns restore branch now calls subTableResizedStates.clear() and subTableOriginalStates.clear() and resets all .mb-subtable-resize-btn inline styles so the per-sub-table buttons revert to their default appearance when the user performs a global restore",
+            "Defensive code-paths patched — both 'Adding missing sub-table controls' branches in renderGroupedTable (reuse-existing-h3 and filtering case) now also inject a .mb-subtable-resize-btn when one is absent, positioning it before the 🔍 filter-toggle icon"
+          ]
+        }
+      ]
+    },
+{
       "version": "9.99.83",
       "date": "2026-03-09",
       "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.82+2026-03-09
+// @version      9.99.85+2026-03-09
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -6370,6 +6370,77 @@
     let isManuallyResized = false;
     const originalTableStates = new Map(); // Store original states per table
 
+    // ── Per-sub-table resize state (multi-table mode) ─────────────────────────
+    // Maps each sub-table HTMLTableElement to a boolean (true = currently resized).
+    const subTableResizedStates  = new Map();
+    // Maps each sub-table HTMLTableElement to the snapshot taken before resizing.
+    const subTableOriginalStates = new Map();
+
+    /**
+     * Applies the "resized / restore" visual state to the per-sub-table resize
+     * button that belongs to `table` (if one exists in the preceding h3).
+     * Also records a pre-drag snapshot in `subTableOriginalStates` so the
+     * button's Restore action can undo the manual drag later.
+     *
+     * Called from `makeColumnsResizable` on the first `mousedown` event on a
+     * column-resizer handle, so that manual drag operations in a sub-table are
+     * reflected immediately on the sub-table ↔️ button (and on the global button
+     * via `updateGlobalResizeBtnFromSubTables`).
+     *
+     * @param {HTMLTableElement} table - The table whose drag handle was grabbed.
+     */
+    function markSubTableAsManuallyResized(table) {
+        // Only relevant in multi-table mode where sub-table resize buttons exist.
+        const h3 = table.previousElementSibling;
+        if (!h3 || !h3.classList.contains('mb-toggle-h3')) return;
+
+        const btn = h3.querySelector('.mb-subtable-resize-btn');
+        if (!btn) return;
+
+        // Snapshot only once (before the first drag on this table).
+        if (!subTableOriginalStates.has(table)) {
+            subTableOriginalStates.set(table, storeOriginalTableState(table));
+        }
+
+        subTableResizedStates.set(table, true);
+        applySubTableResizeBtnActiveState(btn, table.dataset.categoryName ||
+            h3.textContent.split('(')[0].replace(/[▼▲]/g, '').trim());
+
+        updateGlobalResizeBtnFromSubTables();
+    }
+
+    /**
+     * Applies the active (resized) visual style to a per-sub-table resize button.
+     * Kept in a single place so both auto-resize and manual-drag paths use identical
+     * colours and tooltip wording.
+     *
+     * Active colours deliberately use a dark solid green to visually distinguish
+     * from the pale default (#f0f0f0) and from the global Resize button's light
+     * green (#e8f5e9) active state.
+     *
+     * @param {HTMLButtonElement} btn          The .mb-subtable-resize-btn element.
+     * @param {string}            categoryName Used in the tooltip text.
+     */
+    function applySubTableResizeBtnActiveState(btn, categoryName) {
+        btn.style.background  = '#1b5e20';   // dark solid green
+        btn.style.borderColor = '#0a3d12';
+        btn.style.color       = '#ffffff';
+        btn.title = `Restore original column widths for "${categoryName}"`;
+    }
+
+    /**
+     * Reverts a per-sub-table resize button to its default (un-resized) appearance.
+     *
+     * @param {HTMLButtonElement} btn          The .mb-subtable-resize-btn element.
+     * @param {string}            categoryName Used in the tooltip text.
+     */
+    function resetSubTableResizeBtnState(btn, categoryName) {
+        btn.style.background  = 'rgb(240,240,240)';
+        btn.style.borderColor = 'rgb(204,204,204)';
+        btn.style.color       = '';
+        btn.title = `Auto-resize columns for "${categoryName}"`;
+    }
+
     /**
      * Make table columns resizable with mouse drag
      * Adds resize handles to column headers
@@ -6431,8 +6502,12 @@
 
                 isManuallyResized = true;
 
-                // Update button to show restore option
+                // Update global button to show restore option
                 updateResizeButtonState(true);
+
+                // If this handle belongs to a sub-table, also update that
+                // sub-table's ↔️ resize button (and the global "Resize*" hint).
+                markSubTableAsManuallyResized(table);
 
                 document.addEventListener('mousemove', onMouseMove);
                 document.addEventListener('mouseup', onMouseUp);
@@ -6527,11 +6602,238 @@
             resizeBtn.style.background = '#e8f5e9';
             resizeBtn.style.borderColor = '#4CAF50';
         } else {
-            resizeBtn.innerHTML = makeButtonHTML('Resize', 'R', '↔️');
-            resizeBtn.title = `Auto-resize columns to optimal width (click to toggle / ${getPrefixDisplay()}, then R)`;
-            resizeBtn.style.background = '';
-            resizeBtn.style.borderColor = '';
+            // Even when the global resize is off, check whether any sub-table is
+            // still resized and tint the button amber to hint at the partial state.
+            const anySubResized = Array.from(subTableResizedStates.values()).some(Boolean);
+            if (anySubResized) {
+                resizeBtn.innerHTML = makeButtonHTML('Resize*', 'R', '↔️');
+                resizeBtn.title = `One or more sub-tables are auto-resized. Click to auto-resize all (${getPrefixDisplay()}, then R)`;
+                resizeBtn.style.background = '#fff3e0';
+                resizeBtn.style.borderColor = '#FF9800';
+            } else {
+                resizeBtn.innerHTML = makeButtonHTML('Resize', 'R', '↔️');
+                resizeBtn.title = `Auto-resize columns to optimal width (click to toggle / ${getPrefixDisplay()}, then R)`;
+                resizeBtn.style.background = '';
+                resizeBtn.style.borderColor = '';
+            }
         }
+    }
+
+    /**
+     * Re-evaluate the global Resize button state based on the current sub-table
+     * resize map.  Called after every per-sub-table resize toggle so the global
+     * button always reflects whether at least one sub-table has been auto-resized.
+     *
+     * Rules:
+     *   • If the global resize (`isAutoResized` or `isManuallyResized`) is active
+     *     the button is already showing "Restore" — leave it alone.
+     *   • If no sub-table is resized → reset the button to plain "Resize".
+     *   • If at least one sub-table is resized → show amber "Resize*" hint.
+     */
+    function updateGlobalResizeBtnFromSubTables() {
+        if (isAutoResized || isManuallyResized) return; // global state owns the button
+        // Delegate to updateResizeButtonState(false) which now checks the sub-table map.
+        updateResizeButtonState(false);
+    }
+
+    /**
+     * Creates a per-sub-table ↔️ Resize / Restore toggle button for multi-table
+     * mode.  The button is inserted into the h3 header immediately before the
+     * 🔍 `mb-subtable-filter-toggle-icon` span.
+     *
+     * Clicking the button:
+     *   • First click  — auto-resizes columns of `table` to optimal content width.
+     *   • Second click — restores `table` to its pre-resize state.
+     *
+     * After every toggle the global Resize button is also updated via
+     * `updateGlobalResizeBtnFromSubTables()`.
+     *
+     * @param  {HTMLTableElement} table        The sub-table this button controls.
+     * @param  {string}           categoryName Human-readable category name used
+     *                                         for logging and the button id.
+     * @returns {HTMLButtonElement}
+     */
+    function createSubTableResizeButton(table, categoryName) {
+        const safeId = categoryName.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const btn = document.createElement('button');
+        btn.id        = `mb-stf-${safeId}-resize-btn`;
+        btn.type      = 'button';
+        btn.className = 'mb-subtable-resize-btn';
+        btn.innerHTML = '↔️';
+        btn.title     = `Auto-resize columns for "${categoryName}"`;
+        btn.setAttribute('aria-label', `Auto-resize columns for: ${categoryName}`);
+        btn.style.cssText = [
+            'font-size:0.8em; padding:1px 5px; border-radius:4px;',
+            'background:rgb(240,240,240); border:1px solid rgb(204,204,204);',
+            'cursor:pointer; vertical-align:middle; margin-left:6px;',
+            'transition:background-color 0.2s, border-color 0.2s;'
+        ].join(' ');
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSubTableAutoResize(table, btn, categoryName);
+        });
+
+        return btn;
+    }
+
+    /**
+     * Toggles auto-resize for a single sub-table (multi-table mode counterpart of
+     * `toggleAutoResizeColumns`).
+     *
+     * On first call the table's current colgroup / layout is snapshotted into
+     * `subTableOriginalStates`, columns are measured and resized, and the button
+     * switches to "Restore" styling (green).
+     *
+     * On the second call the snapshot is restored and the button reverts to its
+     * default "↔️" appearance.
+     *
+     * The global Resize button is updated after every toggle via
+     * `updateGlobalResizeBtnFromSubTables()`.
+     *
+     * @param {HTMLTableElement}   table        The sub-table to resize / restore.
+     * @param {HTMLButtonElement}  btn          The per-sub-table resize button.
+     * @param {string}             categoryName Used for log messages.
+     */
+    function toggleSubTableAutoResize(table, btn, categoryName) {
+        const alreadyResized = !!subTableResizedStates.get(table);
+
+        if (alreadyResized) {
+            // ── Restore ──────────────────────────────────────────────────────
+            Lib.debug('resize', `Sub-table "${categoryName}": restoring original column widths`);
+
+            const state = subTableOriginalStates.get(table);
+            if (state) restoreOriginalTableState(table, state);
+
+            // Remove and optionally re-add manual resize handles
+            table.querySelectorAll('.column-resizer').forEach(r => r.remove());
+            if (Lib.settings.sa_enable_column_resizing) makeColumnsResizable(table);
+
+            subTableResizedStates.set(table, false);
+            subTableOriginalStates.delete(table);
+
+            // Revert button appearance via shared helper
+            resetSubTableResizeBtnState(btn, categoryName);
+
+            Lib.debug('resize', `Sub-table "${categoryName}": restored`);
+        } else {
+            // ── Auto-resize ───────────────────────────────────────────────────
+            Lib.debug('resize', `Sub-table "${categoryName}": starting auto-resize`);
+            const startTime = performance.now();
+
+            // Snapshot current state
+            subTableOriginalStates.set(table, storeOriginalTableState(table));
+
+            // Determine visible columns
+            const headers = table.querySelectorAll('thead tr:first-child th');
+            const columnCount = headers.length;
+            if (columnCount === 0) {
+                Lib.warn('resize', `Sub-table "${categoryName}": no header columns found`);
+                return;
+            }
+
+            const columnVisible = [];
+            headers.forEach((th, i) => {
+                columnVisible[i] = th.style.display !== 'none' &&
+                                   window.getComputedStyle(th).display !== 'none';
+            });
+
+            const columnWidths = new Array(columnCount).fill(0);
+
+            // ── Measurement div ───────────────────────────────────────────────
+            const measureDiv = document.createElement('div');
+            measureDiv.style.cssText = `
+                position: absolute; visibility: hidden; white-space: nowrap;
+                top: -9999px; left: -9999px; display: inline-block;
+                font-size: inherit; padding: 4px 8px;
+            `;
+            document.body.appendChild(measureDiv);
+
+            // Measure header widths
+            headers.forEach((th, colIndex) => {
+                if (!columnVisible[colIndex]) return;
+                const styles = window.getComputedStyle(th);
+                measureDiv.style.fontSize   = styles.fontSize;
+                measureDiv.style.fontWeight = styles.fontWeight;
+                measureDiv.style.padding    = styles.padding;
+                measureDiv.style.fontFamily = styles.fontFamily;
+                measureDiv.innerHTML = '';
+                Array.from(th.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
+                measureDiv.querySelectorAll('*').forEach(el => {
+                    el.style.whiteSpace   = 'nowrap';
+                    el.style.overflowWrap = 'normal';
+                    el.style.wordBreak    = 'normal';
+                });
+                columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
+            });
+
+            // Measure data-cell widths (sample up to 100 rows)
+            const rows       = table.querySelectorAll('tbody tr');
+            const sampleStep = Math.max(1, Math.floor(rows.length / Math.min(rows.length, 100)));
+            for (let i = 0; i < rows.length; i += sampleStep) {
+                const row = rows[i];
+                if (row.style.display === 'none') continue;
+                Array.from(row.cells).forEach((cell, colIndex) => {
+                    if (colIndex >= columnCount || !columnVisible[colIndex]) return;
+                    const styles = window.getComputedStyle(cell);
+                    measureDiv.style.fontSize   = styles.fontSize;
+                    measureDiv.style.fontWeight = styles.fontWeight;
+                    measureDiv.style.padding    = styles.padding;
+                    measureDiv.style.fontFamily = styles.fontFamily;
+                    measureDiv.innerHTML = '';
+                    Array.from(cell.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
+                    measureDiv.querySelectorAll('*').forEach(el => {
+                        el.style.whiteSpace   = 'nowrap';
+                        el.style.overflowWrap = 'normal';
+                        el.style.wordBreak    = 'normal';
+                    });
+                    columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
+                });
+            }
+            document.body.removeChild(measureDiv);
+
+            // Apply widths via colgroup
+            let colgroup = table.querySelector('colgroup');
+            if (!colgroup) {
+                colgroup = document.createElement('colgroup');
+                table.insertBefore(colgroup, table.firstChild);
+            } else {
+                colgroup.innerHTML = '';
+            }
+
+            let totalWidth = 0;
+            let visibleCount = 0;
+            columnWidths.forEach((width, index) => {
+                const col = document.createElement('col');
+                if (columnVisible[index]) {
+                    const finalWidth = Math.ceil(width + 20);
+                    col.style.width = `${finalWidth}px`;
+                    totalWidth += finalWidth;
+                    visibleCount++;
+                } else {
+                    col.style.width   = '0px';
+                    col.style.display = 'none';
+                }
+                colgroup.appendChild(col);
+            });
+
+            table.style.tableLayout = 'fixed';
+            table.style.width       = `${totalWidth}px`;
+            table.style.minWidth    = `${totalWidth}px`;
+
+            if (Lib.settings.sa_enable_column_resizing) makeColumnsResizable(table);
+
+            subTableResizedStates.set(table, true);
+
+            // Update button appearance to "active / restore" state via shared helper
+            applySubTableResizeBtnActiveState(btn, categoryName);
+
+            const duration = (performance.now() - startTime).toFixed(0);
+            Lib.debug('resize', `Sub-table "${categoryName}": resized ${visibleCount} columns in ${duration}ms`);
+        }
+
+        // Sync the global Resize button label/colour
+        updateGlobalResizeBtnFromSubTables();
     }
 
     /**
@@ -6660,6 +6962,16 @@
             originalTableStates.clear();
             isAutoResized = false;
             isManuallyResized = false;
+
+            // Also clear any per-sub-table resize state so the sub-table
+            // buttons and the global button revert to their default appearance.
+            subTableResizedStates.clear();
+            subTableOriginalStates.clear();
+            document.querySelectorAll('.mb-subtable-resize-btn').forEach(b => {
+                const h3 = b.closest('.mb-toggle-h3');
+                const cat = h3 ? h3.textContent.split('(')[0].replace(/[▼▲]/g, '').trim() : '';
+                resetSubTableResizeBtnState(b, cat);
+            });
 
             // Update button appearance
             updateResizeButtonState(false);
@@ -9455,6 +9767,46 @@
 
         if (pageType === 'events' || pageType === 'artist-releasegroups') {
             removeSanojjonasContainers();
+        }
+
+        // Remove highlights injected by chaban's "Highlight identical barcodes
+        // and toggle merge checkboxes" userscript from Barcode column cells.
+        cleanupBarcodeHighlights();
+    }
+
+    /**
+     * Removes inline highlight styles that chaban's "Highlight identical barcodes
+     * and toggle merge checkboxes" userscript applies to `.barcode-cell` elements.
+     *
+     * The script marks identical barcodes with a coloured `background-color`,
+     * `font-weight:bold`, `padding`, `border-radius`, and `cursor:pointer` inline
+     * style.  We reset exactly those properties so the cells revert to their
+     * default table-cell appearance, without touching any other inline style that
+     * may have been set by MB itself.
+     *
+     * Called from `performClutterCleanup()`.
+     */
+    function cleanupBarcodeHighlights() {
+        const cells = document.querySelectorAll('td.barcode-cell');
+        if (cells.length === 0) return;
+
+        let cleaned = 0;
+        cells.forEach(td => {
+            const s = td.style;
+            // Only touch cells that actually carry the chaban highlight style
+            // (background-color set to a non-empty value is the key indicator).
+            if (!s.backgroundColor) return;
+
+            s.removeProperty('background-color');
+            s.removeProperty('font-weight');
+            s.removeProperty('padding');
+            s.removeProperty('border-radius');
+            s.removeProperty('cursor');
+            cleaned++;
+        });
+
+        if (cleaned > 0) {
+            Lib.debug('cleanup', `Removed chaban barcode highlights from ${cleaned} of ${cells.length} .barcode-cell element(s).`);
         }
     }
 
@@ -13211,6 +13563,20 @@
                         const subCollapseBtn = createSubTableCollapseButton(table, categoryName);
                         h3.insertBefore(subCollapseBtn, subTableControls);
                     }
+
+                    // Also inject the per-subtable resize button if absent.
+                    if (!h3.querySelector('.mb-subtable-resize-btn')) {
+                        const subResizeBtn = createSubTableResizeButton(table, categoryName);
+                        const rowCountStat = h3.querySelector('.mb-row-count-stat');
+                        const filterToggleIcon = h3.querySelector('.mb-subtable-filter-toggle-icon');
+                        if (filterToggleIcon) {
+                            filterToggleIcon.before(subResizeBtn);
+                        } else if (rowCountStat) {
+                            rowCountStat.after(subResizeBtn);
+                        } else {
+                            h3.insertBefore(subResizeBtn, subTableControls);
+                        }
+                    }
                 }
             } else {
                 Lib.debug('render', `Creating new table and H3 for group "${categoryName}".`);
@@ -13296,11 +13662,17 @@
 
                 // ── Sub-table filter toggle icon + filter container ────────────────
                 const stfResult = createSubTableFilterContainer(categoryName, table);
-                // Insert toggle icon immediately after the mb-row-count-stat span
+                // Insert sub-table Resize button + filter toggle icon immediately
+                // after the mb-row-count-stat span.  Order in h3:
+                //   mb-toggle-icon | category text | mb-row-count-stat
+                //   | ↔️ (resize btn) | 🔍 (filter toggle) | filter container | …
+                const subResizeBtn = createSubTableResizeButton(table, categoryName);
                 const rowCountStat = h3.querySelector('.mb-row-count-stat');
                 if (rowCountStat) {
-                    rowCountStat.after(stfResult.toggleIcon);
+                    rowCountStat.after(subResizeBtn);
+                    subResizeBtn.after(stfResult.toggleIcon);
                 } else {
+                    h3.appendChild(subResizeBtn);
                     h3.appendChild(stfResult.toggleIcon);
                 }
                 // Append the filter container (initially hidden) to the h3
@@ -13466,6 +13838,20 @@
                     if (!h3.querySelector('.mb-subtable-collapse-btn')) {
                         const subCollapseBtn = createSubTableCollapseButton(table, categoryName);
                         h3.insertBefore(subCollapseBtn, subTableControls);
+                    }
+
+                    // Also inject the per-subtable resize button if absent.
+                    if (!h3.querySelector('.mb-subtable-resize-btn')) {
+                        const subResizeBtn = createSubTableResizeButton(table, categoryName);
+                        const rowCountStat = h3.querySelector('.mb-row-count-stat');
+                        const filterToggleIcon = h3.querySelector('.mb-subtable-filter-toggle-icon');
+                        if (filterToggleIcon) {
+                            filterToggleIcon.before(subResizeBtn);
+                        } else if (rowCountStat) {
+                            rowCountStat.after(subResizeBtn);
+                        } else {
+                            h3.insertBefore(subResizeBtn, subTableControls);
+                        }
                     }
                 }
             }

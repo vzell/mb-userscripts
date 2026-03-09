@@ -41016,7 +41016,7 @@ I actually would want this for the uploaded userscript to happen, as it has the 
 
 * TODO Priority of script execution and interoperation
 ** talk to
-*** jesus2009 - render ing of coverimages befreo table and before each row
+*** jesus2009 - rendering of coverimages before table and before each row
 *** DONE xxx -for RGs read in all releases and make collapsable
 
 * TODO generalize special column handling (e.g. Tagger, jesus2099 image handling, collapsing RGs, Advance Relationship icons ==> discogs, SL, MB
@@ -45953,7 +45953,6 @@ So basically account for complete empty cells in multi-row cell columns.
 
 For example in https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the "Country/Date" column has one row where that column is completely empty
 
-
 * DONE remove the "+" in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships in column "Title" for "Holds copyright (c) for"
 * DONE extract "cancelled" from "Event" in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
 
@@ -47280,7 +47279,7 @@ to every column in every table ("single" and "multi" table mode), not only to ta
 
 for columns which have actual empty cells
 
-* DONE splitCountryDate  
+* DONE splitCountryDate
 
 enhance the "splitCountryDate(sourceCell)" function to support the new userscript from "chaban" which adds abbreviated
 weekdays to date expressions
@@ -47421,7 +47420,185 @@ synthetic columns 'DD', 'MM', 'YYYY', 'Day' and 'Month'
 'Day' - day e.g., "Wednesday"
 'Month' - month e.g. "January"
 
+* DONE add MusicBrainz: Expand/collapse release groups
+** initial
 
+Inspect the uploaded userscript "expandRGs.js" and extract the contents to include in our userscript as functions to run on the final rendered pages which match
+
+#+begin_example
+// @match        *://musicbrainz.org/artist/*
+// @match        *://musicbrainz.org/label/*
+// @match        *://musicbrainz.org/release-group/*
+// @match        *://musicbrainz.org/series/*
+// @exclude      *musicbrainz.org/label/*/*
+// @exclude      *musicbrainz.org/release-group/*/*
+// @exclude      *musicbrainz.org/series/*/*
+#+end_example
+
+** sorting doesn't work
+
+It works so far when entering the final rendered page, I can collapse/uncollapse the display of the fetched MusicBrainz
+pages. Even resizing works and I can still use the toggle icon.
+
+NOW the bug, it stops working as soon as a sorting action is done on whatever column, OR as soon as a filtering is
+down. Clicking on the toggle icon des NOTHING anymore
+
+** double arrows
+
+I get double collapse icons "▶ ▶", when either filtering or sorting. Clicking ONLY the leftmost "▶" actually toggles,
+the other "▶" is just a no-op and sould be removed
+
+#+begin_example
+<td data-erg-injected="1">
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <a class="wrap-anywhere" href="/release/fcd66ac6-9c4f-40ab-8b72-5b88cf000bd0">
+    <bdi>2014‐02‐01: FNB Stadium, Johannesburg, South Africa
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>www.
+      <span class="mb-column-filter-highlight">live
+      </span>nation.com
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+** check loading from disk
+
+* DONE add unicode symbols back
+** initial
+
+Inspect the uploaded userscript "unicode.js" and extract the contents to include in our userscript asa  function to run
+on ANY of our final rendered pages.
+
+The "Ctrl-M" key combination in the uploaded userscript should be made customizable with a default of "Ctrl-U".
+
+Please also adjust the keyboard shortcut section which can be called with a button click accordingly.
+
+* DONE specialised => specialized
+
+* DONE remove highlightning from chabans similar barcode userscript
+
+Remove all highlights added by chaban's "Highlight identical barcodes and toggle merge checkboxes" userscript to similar
+barcode column data cells identified by the "barcode-cell" class in "Barcode" columns
+
+#+begin_example
+<td class="barcode-cell" data-barcode-identifier="74643190312-12&quot; Vinyl" style="background-color: rgb(232, 171, 216); font-weight: bold; padding: 2px 4px; border-radius: 3px; cursor: pointer;">074643190312</td>
+#+end_example
+
+Implement a cleanup function and call it in
+
+#+begin_example
+function performClutterCleanup()
+#+end_example
+
+
+* TODO all buttons need the pressing effect
+
+What needs to be done to the following code to create the effect that the button is actually pressed (it should kinda move down a little bit)
+#+begin_example
+    function makeButtonHTML(text, underlineChar, icon) {
+        const idx = text.indexOf(underlineChar);
+        let label;
+        if (idx === -1) {
+            label = text;
+        } else {
+            label = text.slice(0, idx) +
+                '<span style="text-decoration:underline">' + underlineChar + '</span>' +
+                text.slice(idx + underlineChar.length);
+        }
+        const content = icon ? icon + ' ' + label : label;
+        return '<span>' + content + '</span>';
+    }
+
+    function uiActionBtnBaseCSS() {
+        const defaults = '0.8em|2px 8px|24px|6px';
+        const [fontSize, padding, height, borderRadius] =
+            parseCondensedStyle(Lib.settings.sa_ui_action_btn_style, defaults);
+        return `font-size:${fontSize}; padding:${padding}; height:${height}; border-radius:${borderRadius}; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center;`;
+    }
+
+        // Create toggle button
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'mb-visible-btn';
+        toggleBtn.innerHTML = makeButtonHTML('Visible', 'V', '👁️');
+        toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then V)`;
+        toggleBtn.style.cssText = uiActionBtnBaseCSS();
+        toggleBtn.type = 'button';
+#+end_example
+
+
+* TODO keyboard shortcuts for
+
+- sort ascending
+- sort desxcending
+- unsorted
+- unique value drop-down
+- collapse/uncollapse multi-row cells    
+
+  
+* TODO resize per sub-table - include button right after the (number of rows, before the "filter" icon)
+** initial
+
+In the uploaded userscript,
+
+implement the same auto-resize functionality, which right now exists only on the global level by clicking the
+"Resize"-button in the h1 header row also in the case of "multi"-table mode for each sub-table:
+
+- add a new sub-table specific "Resize"/"Restore" toggle button right before the "mb-subtable-filter-toggle-icon"
+
+#+begin_example
+<span class="mb-subtable-filter-toggle-icon" title="Toggle filter elements on/off for this section" role="button" aria-label="Toggle sub-table filter for &quot;Official&quot;">🔍</span>
+#+end_example
+
+with the same logic as the global one, but acting ONLY on the specific sub-table.
+
+- the global "Resize"/"Restore" toggle should also change its color and button text, as soon as at least one of the
+  sub-tables has been aute-resized
+  
+** fix
+
+small glitches,
+
+- when a column is manually resized in a sub-table, the sub-table resize button should also change it's color (and the
+  tooltip text to the wording about "Restore original column width...") to give the end-user a hint that a resize
+  actually happend on that specific subtable
+
+- the background color of the sub-table specific resize button should have a darker green than the curretn color to visually distinguish from the standard color
+
+* TODO column "Visibility" per sub-table
+
+* add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
+
+
+* please check function documentations against it's implementatin again and fix if necessary
+
+
+* TODO remove the experimental "(Show all)" functionality boolean as it's now strictl needed for the multi-row cell stuff
+
+
+* TODO add chabans similar barcode highlighning (configurable)
+** initial
+
+Inspect the uploaded userscript "barcodeHighlight.js" and extract the contents to include in our userscript as functions to run on the final rendered pages which match
+barcode column data cells identified by the "barcode-cell" class in "Barcode" columns
+
+#+begin_example
+<td class="barcode-cell" data-barcode-identifier="74643190312-12&quot; Vinyl" style="background-color: rgb(232, 171, 216); font-weight: bold; padding: 2px 4px; border-radius: 3px; cursor: pointer;">074643190312</td>
+#+end_example
+
+
+* TODO add jesu2099 artcode fetching (configurable)
+** initial
+
+Inspect the uploaded userscript "funky.js" and extract the contents to include in our userscript as functions to run on the final rendered pages which match
+
+#+begin_example
+#+end_example
 
 * TODO extract the VZ event disambiguation configurable in its constituents
 ** DONE initial
@@ -47498,7 +47675,7 @@ soundcheck
 live: JP
 #+end_example
 
-** TODO refine extraction
+** DONE refine extraction
 
 In the uploaded userscript "ShowAllEntityData.user.js",
 
@@ -47752,131 +47929,19 @@ should split into (first part after the colon is the 'Event-Venue', second part 
 'Event-Country' - Canada
 #+end_example
 
-** make it configurable
+** TODO make it configurable
 
 In the uploaded userscript,
 
+** TODO add MB lookup from https://musicbrainz.org/recording/f3f63c9e-c954-49a0-86f3-bd8ce0f32a31 - Thunder Road (live, 1995‐02‐21: Tramps, New York City, NY, USA)
 
-* DONE add MusicBrainz: Expand/collapse release groups
-** initial
+https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1 - Thunder Road (B. Springsteen 1974–1975)
 
-Inspect the uploaded userscript "expandRGs.js" and extract the contents to include in our userscript as functions to run on the final rendered pages which match
+add MB lookup from https://musicbrainz.org/recording/f3f63c9e-c954-49a0-86f3-bd8ce0f32a31 - Thunder Road (live, 1995‐02‐21: Tramps, New York City, NY, USA)
 
-#+begin_example
-// @match        *://musicbrainz.org/artist/*
-// @match        *://musicbrainz.org/label/*
-// @match        *://musicbrainz.org/release-group/*
-// @match        *://musicbrainz.org/series/*
-// @exclude      *musicbrainz.org/label/*/*
-// @exclude      *musicbrainz.org/release-group/*/*
-// @exclude      *musicbrainz.org/series/*/*
-#+end_example
+from "recorded at:	Tramps in Flatiron District, New York, New York, United States (on 1995-02-21)"
 
-** sorting doesn't work
-
-It works so far when entering the final rendered page, I can collapse/uncollapse the display of the fetched MusicBrainz
-pages. Even resizing works and I can still use the toggle icon.
-
-NOW the bug, it stops working as soon as a sorting action is done on whatever column, OR as soon as a filtering is
-down. Clicking on the toggle icon des NOTHING anymore
-
-** double arrows
-
-I get double collapse icons "▶ ▶", when either filtering or sorting. Clicking ONLY the leftmost "▶" actually toggles,
-the other "▶" is just a no-op and sould be removed
-
-#+begin_example
-<td data-erg-injected="1">
-  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
-  </span>
-  <span style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
-  </span>
-  <a class="wrap-anywhere" href="/release/fcd66ac6-9c4f-40ab-8b72-5b88cf000bd0">
-    <bdi>2014‐02‐01: FNB Stadium, Johannesburg, South Africa
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>www.
-      <span class="mb-column-filter-highlight">live
-      </span>nation.com
-    </bdi>)
-  </span>
-</td>
-#+end_example
-
-** check loading from disk
-
-* DONE add unicode symbols back
-** initial
-
-Inspect the uploaded userscript "unicode.js" and extract the contents to include in our userscript asa  function to run
-on ANY of our final rendered pages.
-
-The "Ctrl-M" key combination in the uploaded userscript should be made customizable with a default of "Ctrl-U".
-
-Please also adjust the keyboard shortcut section which can be called with a button click accordingly.
+to the event parts extracted
 
 
-* TODO all buttons need the pressing effect
-
-* TODO keyboard shortcuts for
-
-- sort ascending
-- sort desxcending
-- unsorted
-- unique value drop-down
-- collapse/uncollapse multi-row cells    
-
-  
-* TODO remove highlightning from chabans similar barcode userscript
-
-Remove all highlights added by chaban's "Highlight identical barcodes and toggle merge checkboxes" userscript to similar
-barcode column data cells identified by the "barcode-cell" class in "Barcode" columns
-
-#+begin_example
-<td class="barcode-cell" data-barcode-identifier="74643190312-12&quot; Vinyl" style="background-color: rgb(232, 171, 216); font-weight: bold; padding: 2px 4px; border-radius: 3px; cursor: pointer;">074643190312</td>
-#+end_example
-
-Implement a cleanup function and call it in
-
-#+begin_example
-function performClutterCleanup()
-#+end_example
-
-
-* TODO resize per sub-table - include button right after the (number of rows, before the "filter" icon)
-
-In the uploaded userscript,
-
-1.) Remove all highlights added by chaban's "Highlight identical barcodes and toggle merge checkboxes" userscript to
-similar barcode column data cells identified by the "barcode-cell" class in "Barcode" columns
-
-#+begin_example
-<td class="barcode-cell" data-barcode-identifier="74643190312-12&quot; Vinyl" style="background-color: rgb(232, 171, 216); font-weight: bold; padding: 2px 4px; border-radius: 3px; cursor: pointer;">074643190312</td>
-#+end_example
-
-Implement a cleanup function and call it in
-
-#+begin_example
-function performClutterCleanup()
-#+end_example
-
-2.) implement the same auto-resize functionality, which right now exists only on the global level by clicking the
-"Resize"-button in the h1 header row also in the case of "multi"-table mode for each sub-table:
-
-- add a new sub-table specific "Resize"/"Restore" toggle button right before the "mb-subtable-filter-toggle-icon"
-
-#+begin_example
-<span class="mb-subtable-filter-toggle-icon" title="Toggle filter elements on/off for this section" role="button" aria-label="Toggle sub-table filter for &quot;Official&quot;">🔍</span>
-#+end_example
-
-with the same logic as the global one, but acting ONLY on the specific sub-table.
-
-- the global "Resize"/"Restore" toggle should also change its color and button text, as soon as at least one of the
-  sub-tables has been aute-resized
-  
-
-* specialised => specialized
-
-* add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
 
