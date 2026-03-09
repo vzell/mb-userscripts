@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.81+2026-03-09
+// @version      9.99.82+2026-03-09
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -286,6 +286,14 @@
             type: "keyboard_shortcut",
             default: "Ctrl+3",
             description: "Toggle collapse / expand of all h3 type headers (sub-tables) (default: Ctrl+3)"
+        },
+
+        sa_shortcut_unicode_chars: {
+            label: "Shortcut: Unicode Character Picker",
+            type: "keyboard_shortcut",
+            default: "Ctrl+U",
+            description: "Open the Unicode character picker popup in any focused text input or textarea (default: Ctrl+U). " +
+                         "Adapted from the 'mb.unicodechars' userscript by Smeulf."
         },
 
         // ============================================================
@@ -5291,6 +5299,15 @@
         // help dialog always reflects whatever the user has saved in Settings.
         const sections = [
             {
+                title: 'Input Assistance',
+                shortcuts: [
+                    { keys: getShortcutDisplay('sa_shortcut_unicode_chars', 'Ctrl+U'), desc: 'Open Unicode character picker (focus must be in a text input or textarea)' },
+                    { keys: '↑ / ↓',     desc: 'Navigate picker rows' },
+                    { keys: 'Enter',      desc: 'Insert highlighted character and close picker' },
+                    { keys: 'Escape',     desc: 'Close picker without inserting' },
+                ]
+            },
+            {
                 title: 'Filter & Search',
                 shortcuts: [
                     { keys: getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G'), desc: 'Focus global filter' },
@@ -5844,6 +5861,19 @@
                 e.preventDefault();
                 showShortcutsHelp();
             }
+
+            // Unicode character picker — open on configured shortcut (default Ctrl+U)
+            // when focus is inside a text input or textarea.
+            if (isShortcutEvent(e, 'sa_shortcut_unicode_chars', 'Ctrl+U') && isTyping) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                showSaUnicodeCharsMenu(e.target);
+                return;
+            }
+
+            // Unicode picker keyboard navigation — delegate to the feature handler
+            // while the menu is open (takes priority over other shortcuts).
+            if (_saUnicodeOpen && saUnicodeHandleKey(e)) return;
         });
 
         document._mbKeyboardShortcutsInitialized = true;
@@ -10852,7 +10882,7 @@
 
             // Re-inject erg expand buttons into the freshly rendered DOM rows.
             // renderFinalTable() inserts cloneNode(true) copies — event listeners are
-            // not cloned, so ▶ buttons are inert after every sort or filter re-render.
+            // not cloned, so ▶ buttons become inert after every sort or filter re-render.
             // initExpandRGsFeature() removes stale [data-erg-btn] clones and re-injects
             // a fresh live button into each qualifying <td>.
             initExpandRGsFeature();
@@ -12353,6 +12383,9 @@
                 initExpandRGsFeature();
             }
 
+            // Initialise the Unicode character picker (builds menu DOM once, idempotent)
+            initSaUnicodeCharsFeature();
+
             totalRenderingTime = performance.now() - renderingTimeStart;
 
             // --- RENDERING END ---
@@ -13485,10 +13518,10 @@
             rewireGlobalCollapseButtonMulti();
         }
 
-        // Re-inject erg expand buttons into freshly rendered rows.
+        // Re-inject erg expand buttons across all freshly rendered sub-table rows.
         // Both sort and filter re-renders replace tbody content with cloneNode(true)
-        // copies whose event listeners are stripped.  initExpandRGsFeature() removes
-        // stale [data-erg-btn] clones and re-injects live ▶ buttons across all sub-tables.
+        // copies whose event listeners are stripped; initExpandRGsFeature() removes
+        // stale [data-erg-btn] clones and re-injects live ▶ buttons.
         initExpandRGsFeature();
 
         Lib.debug('render', 'Finished renderGroupedTable.');
@@ -16678,6 +16711,315 @@
         }
     }
 
+    // ── Unicode Character Picker feature ─────────────────────────────────────
+    // Adapted from the "mb.unicodechars" userscript by Smeulf
+    // <https://github.com/Smeulf/userscripts>
+    // Integrated as a self-contained SA feature:
+    //   • No waitForKeyElements / jQuery scanning loop — SA calls
+    //     initSaUnicodeCharsFeature() once after the final render.
+    //   • No localStorage — the character list is kept in-memory.
+    //   • No unsafeWindow — plain window / document references.
+    //   • No GM_addStyle — styles injected via a <style> element.
+    //   • Trigger key is configurable via sa_shortcut_unicode_chars
+    //     (default Ctrl+U); handled inside initKeyboardShortcuts().
+
+    /**
+     * Catalogue of Unicode characters offered by the picker.
+     * Each entry: { code, name, default }
+     * "default" marks the item pre-highlighted when the menu opens.
+     *
+     * @type {Array<{code: string, name: string, default: boolean}>}
+     */
+    const SA_UNICODE_CHARS = [
+        { code: '\u2018',         name: 'Left Single Quote',                    offset: 1, default: false },
+        { code: '\u2019',         name: 'Apostrophe, Right Single Quote',        offset: 1, default: true  },
+        { code: '\u2018\u2019',   name: 'Left+Right Single Quotes',              offset: 1, default: false },
+        { code: '\u201C',         name: 'Left Double Quotes',                    offset: 1, default: false },
+        { code: '\u201D',         name: 'Right Double Quotes',                   offset: 1, default: false },
+        { code: '\u201C\u201D',   name: 'Left+Right Double Quotes',              offset: 1, default: false },
+        { code: '\u300C\u300D',   name: 'Left+Right Corner Brackets',            offset: 1, default: false },
+        { code: '\u300E\u300F',   name: 'Left+Right White Corner Brackets',      offset: 1, default: false },
+        { code: '\u2026',         name: 'Horizontal Ellipsis',                   offset: 1, default: false },
+        { code: '\u2010',         name: 'Hyphen',                                offset: 1, default: false },
+        { code: '\u2013',         name: 'En Dash',                               offset: 1, default: false },
+        { code: '\u2014',         name: 'Em Dash',                               offset: 1, default: false },
+        { code: '\u2012',         name: 'Figure Dash',                           offset: 1, default: false },
+        { code: '\u301C',         name: 'Wave Dash',                             offset: 1, default: false },
+        { code: '\u2032',         name: 'Prime',                                 offset: 1, default: false },
+        { code: '\u2033',         name: 'Double Prime',                          offset: 1, default: false },
+        { code: '\u2212',         name: 'Minus Sign',                            offset: 1, default: false },
+        { code: '\u00D7',         name: 'Multiplication Sign',                   offset: 1, default: false },
+    ];
+
+    /**
+     * Initialises the Unicode character picker feature.
+     * Injects the menu CSS once and builds the shared menu DOM element.
+     * Safe to call multiple times — idempotent.
+     *
+     * After initialisation, {@link showSaUnicodeCharsMenu} can be called from
+     * any focused `<input>` or `<textarea>` handler to display the picker.
+     */
+    function initSaUnicodeCharsFeature() {
+        // ── Idempotency guard ────────────────────────────────────────────────
+        if (document.getElementById('sa-unicode-menu')) return;
+
+        // ── CSS ──────────────────────────────────────────────────────────────
+        const style = document.createElement('style');
+        style.id    = 'sa-unicode-menu-style';
+        style.textContent = `
+#sa-unicode-menu {
+    display: none;
+    position: absolute;
+    z-index: 100000;
+    background: #d8d8d8;
+    border: 1px solid #4488cc;
+    border-radius: 4px;
+    padding: 2px;
+    font-family: sans-serif;
+    font-size: 0.92em;
+    box-shadow: 2px 4px 12px rgba(0,0,0,0.25);
+    min-width: 260px;
+    user-select: none;
+}
+#sa-unicode-menu.sa-unicode-menu-visible {
+    display: block;
+}
+.sa-unicode-row {
+    display: table-row;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.sa-unicode-row.sa-unicode-active {
+    background: #ffff00;
+}
+.sa-unicode-row:not(.sa-unicode-active):hover {
+    background: #e8e8e8;
+}
+.sa-unicode-cell-char {
+    display: table-cell;
+    width: 14%;
+    padding: 3px 6px;
+    font-size: 1.05em;
+}
+.sa-unicode-cell-name {
+    display: table-cell;
+    width: 86%;
+    padding: 3px 6px;
+    color: #333;
+}
+.sa-unicode-row-close .sa-unicode-cell-name,
+.sa-unicode-row-close .sa-unicode-cell-char {
+    color: #666;
+    font-size: 0.88em;
+}
+        `;
+        document.head.appendChild(style);
+
+        // ── Menu DOM ─────────────────────────────────────────────────────────
+        const menu = document.createElement('div');
+        menu.id = 'sa-unicode-menu';
+
+        // Close row
+        const closeRow = document.createElement('div');
+        closeRow.className = 'sa-unicode-row sa-unicode-row-close';
+        closeRow.dataset.saUnicodeIdx = '0';
+        closeRow.innerHTML =
+            '<span class="sa-unicode-cell-char"></span>' +
+            '<span class="sa-unicode-cell-name" style="text-align:right">✕ Close (Esc)</span>';
+        menu.appendChild(closeRow);
+
+        // Character rows
+        SA_UNICODE_CHARS.forEach((item, i) => {
+            const row = document.createElement('div');
+            row.className        = 'sa-unicode-row';
+            row.dataset.saUnicodeIdx    = String(i + 1);
+            row.dataset.saUnicodeCode   = item.code;
+            row.dataset.saUnicodeOffset = String(item.offset ?? item.code.length);
+            row.innerHTML =
+                `<span class="sa-unicode-cell-char">${item.code}</span>` +
+                `<span class="sa-unicode-cell-name">${item.name}</span>`;
+            menu.appendChild(row);
+        });
+
+        document.body.appendChild(menu);
+
+        // ── Single delegated event listener for all row clicks ───────────────
+        menu.addEventListener('mousedown', (e) => {
+            const row = e.target.closest('.sa-unicode-row');
+            if (!row) return;
+            e.preventDefault(); // keep focus in the source input
+            if (row.classList.contains('sa-unicode-row-close')) {
+                _saUnicodeClose();
+            } else {
+                _saUnicodeInsert(row.dataset.saUnicodeCode, Number(row.dataset.saUnicodeOffset));
+            }
+        });
+
+        // ── Hover → highlight ────────────────────────────────────────────────
+        menu.addEventListener('mouseover', (e) => {
+            const row = e.target.closest('.sa-unicode-row');
+            if (row) _saUnicodeSetActive(Number(row.dataset.saUnicodeIdx));
+        });
+
+        Lib.debug('unicode', 'Unicode character picker initialised');
+    }
+
+    // ── Unicode picker internal state (module-level, shared across calls) ────
+    /** @type {HTMLElement|null} The input/textarea the menu was opened for. */
+    let _saUnicodeTarget     = null;
+    /** @type {number} selectionStart snapshot when the menu opened. */
+    let _saUnicodeSelStart   = 0;
+    /** @type {number} selectionEnd snapshot when the menu opened. */
+    let _saUnicodeSelEnd     = 0;
+    /** @type {boolean} Whether the menu is currently visible. */
+    let _saUnicodeOpen       = false;
+    /** @type {number} Index of the currently highlighted row (0 = close row). */
+    let _saUnicodeActiveIdx  = 1;
+
+    /**
+     * Opens the Unicode character picker below the given input element.
+     * Captures the current selection so the chosen character can be inserted
+     * at the correct cursor position.
+     *
+     * @param {HTMLInputElement|HTMLTextAreaElement} inputEl - The focused input.
+     */
+    function showSaUnicodeCharsMenu(inputEl) {
+        initSaUnicodeCharsFeature(); // ensure DOM is ready (idempotent)
+
+        const menu = document.getElementById('sa-unicode-menu');
+        if (!menu) return;
+
+        _saUnicodeTarget   = inputEl;
+        _saUnicodeSelStart = inputEl.selectionStart;
+        _saUnicodeSelEnd   = inputEl.selectionEnd;
+
+        // Position below the input
+        const rect = inputEl.getBoundingClientRect();
+        menu.style.top  = `${rect.bottom + window.scrollY + 2}px`;
+        menu.style.left = `${rect.left   + window.scrollX}px`;
+
+        // Default highlight: the first item marked default, else row 1
+        const defaultIdx = SA_UNICODE_CHARS.findIndex(c => c.default);
+        _saUnicodeActiveIdx = defaultIdx >= 0 ? defaultIdx + 1 : 1;
+        _saUnicodeSetActive(_saUnicodeActiveIdx);
+
+        menu.classList.add('sa-unicode-menu-visible');
+        _saUnicodeOpen = true;
+        Lib.debug('unicode', `Unicode menu opened for <${inputEl.tagName.toLowerCase()}>`);
+    }
+
+    /**
+     * Closes the Unicode picker and restores focus + cursor to the source input.
+     */
+    function _saUnicodeClose() {
+        const menu = document.getElementById('sa-unicode-menu');
+        if (menu) menu.classList.remove('sa-unicode-menu-visible');
+        _saUnicodeOpen = false;
+        if (_saUnicodeTarget) {
+            _saUnicodeTarget.focus();
+            _saUnicodeTarget.setSelectionRange(_saUnicodeSelStart, _saUnicodeSelEnd);
+        }
+        Lib.debug('unicode', 'Unicode menu closed');
+    }
+
+    /**
+     * Inserts `code` at the saved cursor position in the target input and places
+     * the cursor at `selectionStart + offset` afterwards (matching the original
+     * script's behaviour: offset=1 lands the cursor after the first character of
+     * a pair, e.g. between « and » so the user can type inside the quotes).
+     * Fires synthetic 'input' and 'change' events to notify React / MB listeners.
+     *
+     * @param {string} code   - Unicode character(s) to insert.
+     * @param {number} offset - Cursor advance from selectionStart after insert (default: code.length).
+     */
+    function _saUnicodeInsert(code, offset) {
+        if (!_saUnicodeTarget) return;
+        const el       = _saUnicodeTarget;
+        const val      = el.value;
+        const advance  = (offset !== undefined) ? offset : code.length;
+        el.value       = val.slice(0, _saUnicodeSelStart) + code + val.slice(_saUnicodeSelEnd);
+
+        const newPos = _saUnicodeSelStart + advance;
+        _saUnicodeOpen = false;
+        const menu = document.getElementById('sa-unicode-menu');
+        if (menu) menu.classList.remove('sa-unicode-menu-visible');
+
+        el.focus();
+        el.setSelectionRange(newPos, newPos);
+
+        // Notify React / other listeners about the value change
+        el.dispatchEvent(new Event('input',  { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        Lib.debug('unicode', `Unicode char inserted: U+${code.codePointAt(0).toString(16).toUpperCase()}, cursor +${advance}`);
+    }
+
+    /**
+     * Highlights the row at `index` and scrolls it into view if needed.
+     *
+     * @param {number} index - Zero-based row index (0 = close row).
+     */
+    function _saUnicodeSetActive(index) {
+        const menu = document.getElementById('sa-unicode-menu');
+        if (!menu) return;
+        const rows = menu.querySelectorAll('.sa-unicode-row');
+        const clampedIdx = Math.max(0, Math.min(index, rows.length - 1));
+        rows.forEach(r => r.classList.remove('sa-unicode-active'));
+        if (rows[clampedIdx]) {
+            rows[clampedIdx].classList.add('sa-unicode-active');
+            rows[clampedIdx].scrollIntoView({ block: 'nearest' });
+        }
+        _saUnicodeActiveIdx = clampedIdx;
+    }
+
+    /**
+     * Keyboard handler for the Unicode picker — called from initKeyboardShortcuts().
+     * Handles ArrowUp / ArrowDown / Enter / Escape while the menu is open.
+     *
+     * @param {KeyboardEvent} e
+     * @returns {boolean} true if the event was consumed.
+     */
+    function saUnicodeHandleKey(e) {
+        if (!_saUnicodeOpen) return false;
+        const menu = document.getElementById('sa-unicode-menu');
+        if (!menu) return false;
+        const rows = menu.querySelectorAll('.sa-unicode-row');
+
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            _saUnicodeClose();
+            return true;
+        }
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            _saUnicodeSetActive(_saUnicodeActiveIdx + 1);
+            return true;
+        }
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            _saUnicodeSetActive(_saUnicodeActiveIdx - 1);
+            return true;
+        }
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            const activeRow = rows[_saUnicodeActiveIdx];
+            if (activeRow) {
+                if (activeRow.classList.contains('sa-unicode-row-close')) {
+                    _saUnicodeClose();
+                } else {
+                    _saUnicodeInsert(activeRow.dataset.saUnicodeCode, Number(activeRow.dataset.saUnicodeOffset));
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // ── end Unicode Character Picker feature ──────────────────────────────────
+
     // ── Expand Release Groups feature ────────────────────────────────────────
     // Adapted from "MusicBrainz: Expand/collapse release groups" by Michael Wiencek
     // <https://github.com/murdos/musicbrainz-userscripts/blob/master/expand-collapse-release-groups.user.js>
@@ -17076,14 +17418,14 @@
         for (const link of links) {
             const parent = link.parentNode;
 
-            // Remove any stale erg button spans that were carried over by cloneNode(true).
-            // cloneNode copies data-erg-btn and data-erg-injected but NOT event listeners,
-            // so cloned buttons are inert.  We must remove them before the injection guard
-            // check so that the guard can be reset and a fresh live button is injected.
+            // Remove any stale erg button spans carried over by cloneNode(true).
+            // cloneNode copies data-erg-btn + data-erg-injected but NOT event listeners,
+            // so cloned buttons are inert.  Strip them and reset the injection guard so
+            // a fresh live button is injected into this render's DOM rows.
             const staleButtons = parent.querySelectorAll('[data-erg-btn]');
             if (staleButtons.length) {
                 staleButtons.forEach(stale => stale.remove());
-                delete parent.dataset.ergInjected; // reset guard so fresh injection proceeds
+                delete parent.dataset.ergInjected;
             }
 
             if (parent.dataset.ergInjected) continue; // idempotency guard (same render, already done)

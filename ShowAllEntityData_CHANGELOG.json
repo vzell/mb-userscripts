@@ -1,5 +1,17 @@
 [
     {
+      "version": "9.99.82",
+      "date": "2026-03-09",
+      "sections": [
+        {
+          "label": "✨ Enhancements",
+          "items": [
+            "Unicode character picker integrated from 'mb.unicodechars' userscript by Smeulf: pressing the configurable shortcut (default Ctrl+U) while a text input or textarea has focus opens a floating picker menu listing 18 Unicode characters (quotes, dashes, ellipsis, primes, multiplication sign, etc.); the menu is positioned directly below the focused field; clicking a row or pressing Enter inserts the character at the cursor position and closes the menu; ArrowUp/ArrowDown navigate rows; Escape closes without inserting; the trigger key is configurable via the new 'Shortcut: Unicode Character Picker' (sa_shortcut_unicode_chars) setting in the Keyboard Shortcuts config section (default Ctrl+U); the picker is documented in a new 'Input Assistance' section of the 🎹 Keyboard Shortcuts help dialog; integrated as a self-contained SA feature: no jQuery scanning loop, no localStorage, no unsafeWindow, no GM_addStyle — CSS is injected via a <style> element, state is module-level, and the menu is built once via initSaUnicodeCharsFeature() at render completion"
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.81",
       "date": "2026-03-09",
       "sections": [
