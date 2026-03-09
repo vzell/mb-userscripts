@@ -47753,15 +47753,47 @@ Why ?
 
 ** add a toggle icon for the big-art
 
-** TODO re-add "CAA" column to and render artwork alos in fron of table
+** TODO re-add "CAA" column to and render artwork also in front of table
 
 https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 in the "Release title" column
 https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column
 
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - "Release groups" column
 
-
 ** and jesus2099 feature about number of coveratr inmages in the bubbl or in the cells directly
+
+The feature about
+
+#+begin_example
+title: RGCAA.images.length + " image" + (RGCAA.images.length != 1 ? "s" : "") + " found in this release"
+#+end_example
+
+in the code from "funky.js"
+
+#+begin_example
+									loadCaaIcon(releaseGroupOrSpanMp.parentNode.insertBefore(
+										createTag("a",
+											{a: {
+												href: RGCAA.release + "/cover-art",
+												ref: this.releaseGroup.getAttribute("href"),
+												title: RGCAA.images.length + " image" + (RGCAA.images.length != 1 ? "s" : "") + " found in this release"
+											}},
+											createTag("span", {a: {class: "caa-icon " + userjs}})
+										),
+										insertPoint).firstChild
+									);
+								}
+#+end_example
+
+is missing in the extracted code. Please add 
+
+
+* add addRGsFromAbove.js configurable
+
+In the uploaded userscript,
+
+Inspect the uploaded userscript "addRGsFromAbove.js" and extract the contents to include in our userscript as functions to run on
+the final rendered pages which have columns with name "CAA"
 
 * TODO extract the VZ event disambiguation configurable in its constituents
 ** DONE initial
