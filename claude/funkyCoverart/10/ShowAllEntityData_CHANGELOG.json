@@ -1,30 +1,5 @@
 [
     {
-        "version": "9.99.100",
-        "date": "2026-03-10",
-        "sections": [
-            {
-                "label": "🔧 Changes",
-                "items": [
-                    "CAA count badge: removed custom font-size/color/margin styling — count is now rendered as plain normal-weight inline text after the cover-art anchor in the CAA cell.",
-                    "CAA icon tooltip: fixed tooltip not appearing when hovering the thumbnail — anchor.title alone was insufficient because the browser shows the title of the element directly under the pointer; the icon span (which carries the CSS background-image) may shadow the anchor's title if it has its own (pre-populated or stale) title attribute. The tooltip is now set on both the wrapping anchor and the child span.caa-icon / span.eaa-icon / span.artwork-icon directly."
-                ]
-            }
-        ]
-    },
-    {
-        "version": "9.99.99",
-        "date": "2026-03-10",
-        "sections": [
-            {
-                "label": "🔧 Changes",
-                "items": [
-                    "caaEnrichReleaseGroupIcon: removed count prefix span prepended before the title link in the addCAA column cell — the count is now only surfaced as: (1) tooltip on the cover-art anchor in the CAA cell, (2) inline count badge after the anchor in the CAA cell, and (3) tooltip on the .mb-caa-inline-ph placeholder in the addCAA column cell (e.g. Title). No text is injected into the Title column."
-                ]
-            }
-        ]
-    },
-    {
         "version": "9.99.98",
         "date": "2026-03-10",
         "sections": [

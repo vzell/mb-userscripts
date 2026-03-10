@@ -47639,10 +47639,10 @@ implement the same column visibility functionality, which right now exists only 
 * please check function documentations against it's implementatin again and fix if necessary
 
 
-* TODO remove the experimental "(Show all)" functionality boolean as it's now strictl needed for the multi-row cell stuff
+* TODO remove the experimental "(Show all)" functionality boolean as it's now strictly needed for the multi-row cell stuff
 
 
-* TODO add jesu2099 artcode fetching (configurable)
+* TODO add jesus2099 artcode fetching (configurable)
 ** DONE initial
 
 In the uploaded userscript,
@@ -48118,6 +48118,27 @@ is missing in the extracted code. Please add
 [VZ-ShowAllEntityData: artist-recordings] ✅ Process complete. Final Row Count: 800. Total Time: 8.55s 
 [VZ-ShowAllEntityData: artist-recordings] 🖥️ Auto-focused global filter input after final render 
 #+end_example
+
+*** add the CAA cover art image count stored in the variable "count" as a value after the actual CAA icon inside the "CAA" column
+
+add the CAA cover art image count stored in the variable "count"
+
+#+begin_example
+            const count = Array.isArray(rgCaa.images) ? rgCaa.images.length : 0;
+            if (count > 0) {
+                anchor.title = count + ' image' + (count !== 1 ? 's' : '') + ' found in this release';
+                Lib.debug('caa', `caaEnrichReleaseGroupIcon: ${count} image(s) for ${entityPath}`);
+            }
+#+end_example
+
+as a value after the actual CAA cover art inside the synthetic "CAA" column and as the tooltip to the CAA cover art
+prepended to the actual release or release group title in the column reference by the parameter
+
+#+begin_src bash
+addCAA: 'Title',
+#+end_src
+
+in the variable "const pageDefinitions"
 
 ** TODO NO small pic icons: caaInitSmallPics: queued thumbnails for 0 icon(s)
 
@@ -48629,15 +48650,17 @@ curl -v -L "https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d0
 curl -v -L https://archive.org/download/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json | jq
 
 
-* add a multi-row cell for the CAA info
+* TODO add a multi-row cell for the CAA info
 
 one row per coverart - type, comment, dimensions
 
+* TODO remove the toggle icon from the "CAA" column 
 
 * add "Relationships" column support again, but with configurable 
 
 
-* TODO rename "type: 'events'," to "type: 'artist-events',
+* DONE rename "type: 'events'," to "type: 'artist-events',
+
 
 * retry "Failed to fetch" - CAA cover artcode
 
@@ -48652,3 +48675,4 @@ one row per coverart - type, comment, dimensions
     at initCaaPics (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21705:16)
     at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:15717:13)
 #+end_example
+

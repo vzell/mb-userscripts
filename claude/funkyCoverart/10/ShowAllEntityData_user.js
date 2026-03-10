@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.100+2026-03-10
+// @version      9.99.98+2026-03-10
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -18926,12 +18926,14 @@
      *
      *   1. Sets the cover-art anchor's `title` tooltip to
      *      "N image(s) found in this release".
-     *   2. Appends a plain-text count (`<span class="mb-caa-count-badge">N</span>`)
+     *   2. Appends a small count badge (`<span class="mb-caa-count-badge">N</span>`)
      *      inside the synthetic CAA column cell, immediately after the anchor.
-     *      The span carries the same tooltip as the anchor.
-     *   3. Sets the same tooltip on the inline thumbnail placeholder
-     *      (`<span class="mb-caa-inline-ph">`) in the addCAA column cell
-     *      (e.g. "Title") of the same row, if one is present.
+     *      The badge carries the same tooltip as the anchor.
+     *   3. Prepends a count label (`<span class="mb-caa-count-prefix">N</span>`)
+     *      inside the addCAA column cell (e.g. "Title") of the same row, placed
+     *      immediately before the primary entity title link.  The label also
+     *      carries the tooltip so hovering the count anywhere reveals the full
+     *      "N image(s) found in this release" string.
      *
      * This mirrors the XHR branch inside jesus2099's small-pics loop that fires
      * specifically for `types[t] == "release-group"`:
@@ -19004,44 +19006,35 @@
 
         const tooltip = count + ' image' + (count !== 1 ? 's' : '') + ' found in this release';
 
-        // ── 1. Tooltip on the cover-art anchor and its icon span ─────────────
-        //
-        // Set on both the wrapping <a> and the child icon span directly, because
-        // browsers show the title of the element under the pointer — the span
-        // (which carries the background-image thumbnail) may shadow the anchor's
-        // title if the span already carries a stale or pre-populated title
-        // attribute of its own.
+        // ── 1. Tooltip on the cover-art anchor ───────────────────────────────
         anchor.title = tooltip;
-        const iconSpan = anchor.querySelector(
-            'span.caa-icon, span.eaa-icon, span.artwork-icon'
-        );
-        if (iconSpan) iconSpan.title = tooltip;
 
-        // ── 2. Count text in the CAA column cell ─────────────────────────────
+        // ── 2. Count badge in the CAA column cell ────────────────────────────
         //
-        // Appended after the anchor as plain normal-weight text so the layout
-        // reads: [icon] N
-        // The span carries the tooltip so hovering the count also shows the
-        // full "N image(s) found in this release" string.
+        // Appended after the anchor so the layout reads: [icon] N
         // Guarded by `.mb-caa-count-badge` presence so DOM-reusing re-renders
-        // (sort/filter that keep live <tr> nodes) don't duplicate the text.
+        // (sort/filter that keep live <tr> nodes) don't duplicate the badge.
         const caaCell = anchor.closest('td');
         if (caaCell && !caaCell.querySelector('.mb-caa-count-badge')) {
             const badge       = document.createElement('span');
             badge.className   = 'mb-caa-count-badge';
             badge.textContent = count;
             badge.title       = tooltip;
+            badge.style.cssText =
+                'font-size:0.75em; color:#555; margin-left:3px;' +
+                ' vertical-align:middle; font-variant-numeric:tabular-nums;';
             anchor.after(badge);
         }
 
-        // ── 3. Tooltip on the inline thumbnail in the addCAA column cell ─────
+        // ── 3. Count prefix in the addCAA column cell ────────────────────────
         //
-        // The addCAA inline placeholder (.mb-caa-inline-ph) inserted by
-        // initCaaInlinePics() shares the same row as this CAA anchor.
-        // Setting its title here gives the user the count tooltip when hovering
-        // the tiny inline artwork thumbnail in the Title column.
+        // addCAA is the column name (e.g. "Title") configured per page definition.
+        // We walk up to the <tr>, find the table, resolve the column index, and
+        // prepend a label immediately before the primary entity title link in that
+        // cell so the layout reads: [▶] [inline-img] N Title link
         //
-        // No DOM insertion — tooltip only, no text rendered in the cell.
+        // Guarded by `.mb-caa-count-prefix` presence — same idempotency rationale
+        // as the badge above.
         const addCAAColName = activeDefinition &&
                               activeDefinition.features &&
                               activeDefinition.features.addCAA;
@@ -19049,11 +19042,27 @@
             const tr    = anchor.closest('tr');
             const table = anchor.closest('table');
             if (tr && table) {
-                const colIdx    = caaFindColumnByName(table, addCAAColName);
+                const colIdx   = caaFindColumnByName(table, addCAAColName);
                 const titleCell = colIdx !== -1 ? tr.cells[colIdx] : null;
-                if (titleCell) {
-                    const inlinePh = titleCell.querySelector('.mb-caa-inline-ph');
-                    if (inlinePh) inlinePh.title = tooltip;
+                if (titleCell && !titleCell.querySelector('.mb-caa-count-prefix')) {
+                    const prefix       = document.createElement('span');
+                    prefix.className   = 'mb-caa-count-prefix';
+                    prefix.textContent = count;
+                    prefix.title       = tooltip;
+                    prefix.style.cssText =
+                        'font-size:0.75em; color:#555; margin-right:4px;' +
+                        ' vertical-align:middle; font-variant-numeric:tabular-nums;';
+
+                    // Insert immediately before the primary entity title link
+                    // (skips ERG ▶ button and inline thumbnail placeholder).
+                    const titleLink = titleCell.querySelector(
+                        'a[href*="/release-group/"], a[href*="/release/"]:not([href$="/cover-art"])'
+                    );
+                    if (titleLink) {
+                        titleLink.before(prefix);
+                    } else {
+                        titleCell.prepend(prefix);
+                    }
                 }
             }
         }
