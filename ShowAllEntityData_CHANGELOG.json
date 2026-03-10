@@ -1,5 +1,81 @@
 [
     {
+        "version": "9.99.109",
+        "date": "2026-03-10",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "initCaaInlinePics: fixed call-order regression that caused every single inline thumbnail request to bypass the concurrency queue introduced in v9.99.108. At all 4 render-completion call sites (renderFinalTable, renderGroupedTable, filter/sort re-render, load-from-disk), initCaaInlinePics() was being called BEFORE initCaaPics(). Because _caaQueue is created at the top of initCaaPics(), _caaQueue was still null every time initCaaInlinePics ran — the fallback 'unthrottled' path fired for 100% of inline requests. Debug log symptom: every inline thumbnail line read '_caaQueue unavailable — fetching <url> unthrottled'. Fix: swapped the call order at all 4 sites so initCaaPics() always runs first (creating the queue), then initCaaInlinePics() (consuming it). The ERG constraint (initExpandRGsFeature must precede initCaaInlinePics so the ▶ button is already present) is unaffected as initExpandRGsFeature still runs before both."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.108",
+        "date": "2026-03-10",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "initCaaInlinePics (addCAA inline thumbnail path): applied the same concurrency fix as caaInitSmallPics received in v9.99.107. The function previously assigned img.src synchronously inside a forEach loop, firing all inline-thumbnail requests simultaneously on large artist-releases / artist-recordings / artist-releasegroups pages. This caused the identical CDN burst / CORS-header-missing / ERR_INSUFFICIENT_RESOURCES failure pattern. Fix: the DOM injection (placeholder span + img element creation and insertion into the cell) remains synchronous so layout is stable immediately; the img.src assignment that triggers the browser request is deferred inside a Promise that is enqueued through the shared _caaQueue. All inline-thumbnail requests now share the same sa_caa_fetch_concurrency budget as the caaInitSmallPics icon loads.",
+                    "initCaaInlinePics: added onerror handler on each inline img element. Previously a failed image load was entirely silent — the placeholder stayed as a spacer with no logging whatsoever, even with debug logging enabled. The handler now logs at debug level ('initCaaInlinePics: failed to load <url> — placeholder stays as spacer'), and also calls resolve() to release the queue slot so a single failure does not stall all subsequent requests."
+                ]
+            },
+            {
+                "label": "✨ Enhancements",
+                "items": [
+                    "initCaaInlinePics: added comprehensive debug logging throughout the function. New log points (all at debug level, channel 'caa'): (1) early-exit when no addCAA column is configured for the active page type, now explicitly logged rather than silent; (2) the resolved addCAA column name at function entry; (3) early-exit when no table.tbl is found; (4) per-table: column name and resolved index; (5) per-row: URL being enqueued; (6) per-load success: 'loaded OK — <url>'; (7) per-load failure: 'failed to load <url>'; (8) stale-clone-marker clearance; (9) rows skipped due to missing entity link or GUID; (10) final summary line with injected / enqueued / skipped(done|noLink|noGuid) counts, column name, and live queue state (running/pending).",
+                    "initCaaInlinePics: warn-level log added for the fallback path where _caaQueue is unexpectedly null (should not occur in normal flow, but if it does the function now logs 'initCaaInlinePics: _caaQueue unavailable — fetching <url> unthrottled' rather than silently bypassing throttling)."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.107",
+        "date": "2026-03-10",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "CAA thumbnails and icon enrichment: eliminated the root cause of intermittent CORS errors and ERR_INSUFFICIENT_RESOURCES failures on large artist pages. The script was firing all Cover Art Archive requests simultaneously in a tight forEach loop — on pages with hundreds of release groups this produced 400+ concurrent fetch() and img-load requests. The CAA CDN (Internet Archive) responded to the burst via its fast error path, which omits the Access-Control-Allow-Origin header; the browser blocked every one of those responses as a CORS violation. At the same time the browser's per-host connection pool (~6 slots) was exhausted, causing ERR_INSUFFICIENT_RESOURCES for the img elements. After the initial burst subsided, later requests (with the server back to normal load) completed successfully — explaining why some icons loaded and others did not. Fix: all CAA requests are now serialised through a shared fixed-concurrency FIFO queue (makeCaaQueue / _caaQueue) that enforces the new sa_caa_fetch_concurrency limit (default: 4). caaLoadIcon now returns a Promise (defers img.src until the queue grants a slot); caaInitSmallPics enqueues both the load and the enrich call per icon."
+                ]
+            },
+            {
+                "label": "✨ Enhancements",
+                "items": [
+                    "New setting sa_caa_fetch_concurrency (CAA ILLUSTRATED DISCOGRAPHY section, default: 4, range: 1–20): controls the maximum number of simultaneous Cover Art Archive requests. All CAA image loads and JSON API calls share this single concurrency budget. Increase for faster loading on stable connections with small tables; decrease if CORS errors still appear with particularly large tables or slow CDN nodes.",
+                    "caaLoadIcon: img.src is now assigned inside the Promise executor rather than immediately on function entry, so the browser does not start the request until the queue grants a slot. This is the key change that makes throttling effective for image requests, which previously bypassed any wrapping control because src assignment is a synchronous side-effect.",
+                    "initCaaPics: the shared _caaQueue is recreated at the start of every render pass (main fetch, filter, sort, load-from-disk) so that the sa_caa_fetch_concurrency setting is always applied fresh and any leftover pending tasks from a previous (now-stale) DOM pass are discarded."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.106",
+        "date": "2026-03-10",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "CAA extractor Path B (bare artwork-icon span, no wrapping anchor — occurs on artist-relationships pages): fixed broken coverartarchive.org URL construction caused by assigning the synthetic anchor URL via the `.href` DOM property instead of `setAttribute()`. The `.href` property normalises a relative path like `/release-group/GUID/cover-art` to an absolute `https://musicbrainz.org/release-group/GUID/cover-art`, which was then prepended with `//coverartarchive.org`, producing the completely invalid URL `//coverartarchive.orghttps://musicbrainz.org/…`. The result was a silent 404 — the default MusicBrainz artwork icon stayed visible even when cover art actually exists — with no console error because `caaLoadIcon` had no `onerror` handler. Fix: use `syntheticAnchor.setAttribute('href', …)` to preserve the relative path; also update the subsequent debug log to use `getAttribute('href')` for consistency.",
+                    "Artist-relationships-filtered page definition (`artist-relationships-filtered`, URL pattern `/artist/GUID/relationships?…&link_type_id=…`): added missing `addCAA: 'Title'` feature key. Without it `initCaaInlinePics()` was a no-op on these pages (the guard `activeDefinition.features.addCAA` evaluated to undefined), so the inline cover-art thumbnail was never injected into the Title column even though the CAA column itself was correctly populated."
+                ]
+            },
+            {
+                "label": "✨ Enhancements",
+                "items": [
+                    "caaLoadIcon: added `onerror` event handler on the hidden probe `<img>`. Previously, any failed image load (404 for releases with no 'Front'-typed image, 429, 5xx, or network error) was completely silent — the default MusicBrainz artwork icon stayed and nothing was logged even with debug logging enabled. The handler now logs at `debug` level (`caaLoadIcon: failed to load <url> — icon stays in default state`), making failures visible when `sa_enable_debug_logging` is on.",
+                    "caaLoadIcon: the constructed coverartarchive.org URL is now logged at `debug` level before the request is issued (`caaLoadIcon: fetching <url>`), and a success message is logged on `load` (`caaLoadIcon: loaded OK — <url>`). Together with the new `onerror` log, every icon fetch now has an observable start / success / failure trace in the console when debug logging is active.",
+                    "caaLoadIcon: the `if (!anchor) return` no-op branch now logs a `debug` message (`caaLoadIcon: skipped — no wrapping anchor found for icon`) instead of returning silently, making it easier to spot mis-extracted icons that were placed in the CAA cell without a cover-art anchor wrapper.",
+                    "caaEnrichReleaseGroupIcon: HTTP errors are now split into two severity levels — 404 ('no CAA entry') stays at `debug` (expected noise for release-groups with no artwork at all), while 429 and any 5xx status code is promoted to `Lib.warn` so it surfaces in the console without enabling full debug mode.",
+                    "caaEnrichReleaseGroupIcon: network-level failures (offline, DNS, CORS abort) are now logged at `Lib.warn` instead of `Lib.debug`, since they are unexpected and actionable.",
+                    "caaEnrichReleaseGroupIcon: HTTP error branches (non-200 responses) now write a sentinel value of 0 to `_caaRgCountCache` and set `anchor.dataset.caaEnriched = '1'` before returning. Previously neither was done, causing every filter/sort re-render that rebuilds the DOM from clones to issue a fresh network request to an endpoint that had already returned an error — potentially dozens of repeated failed requests per page interaction. Network-level failures (catch block) are intentionally not cached, as they may be transient."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.105",
         "date": "2026-03-10",
         "sections": [

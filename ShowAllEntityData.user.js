@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.105+2026-03-10
+// @version      9.99.109+2026-03-10
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -945,6 +945,22 @@
             description: 'Background colour applied to a release link when its big cover art image is ' +
                          'hovered, and the border colour applied to the big image when the matching table ' +
                          'row is hovered. Maps to jesus2099\'s var colour = "yellow".'
+        },
+
+        sa_caa_fetch_concurrency: {
+            label: 'CAA request concurrency limit',
+            type: 'number',
+            default: 4,
+            min: 1,
+            max: 20,
+            description: 'Maximum number of simultaneous Cover Art Archive requests (both image loads and ' +
+                         'JSON API calls). All CAA requests are serialised through a shared FIFO queue ' +
+                         'that enforces this limit. Firing too many requests simultaneously causes the ' +
+                         'CAA CDN to return responses without the required CORS header, which the browser ' +
+                         'blocks entirely. A value of 4 stays safely below the typical browser per-host ' +
+                         'connection limit (6) and avoids triggering CDN rate-limiting. Increase if your ' +
+                         'network is fast and you see thumbnails loading slowly on very large tables; ' +
+                         'decrease if CORS errors still appear in the console.'
         }
 
     };
@@ -1432,11 +1448,17 @@
                             // synthesised cover-art URL is always a clean path.
                             const entityPath = entityAnchor.getAttribute('href').split('?')[0];
                             const syntheticAnchor = document.createElement('a');
-                            syntheticAnchor.href  = entityPath + '/cover-art';
+                            // IMPORTANT: use setAttribute (not the .href property) so the
+                            // browser does NOT normalise the relative path to an absolute URL.
+                            // Assigning syntheticAnchor.href = "/release-group/GUID/cover-art"
+                            // would store "https://musicbrainz.org/release-group/GUID/cover-art"
+                            // in the attribute, causing caaLoadIcon() to build a broken URL:
+                            //   //coverartarchive.orghttps://musicbrainz.org/…
+                            syntheticAnchor.setAttribute('href', entityPath + '/cover-art');
                             syntheticAnchor.appendChild(bareIconSpan);
                             tdCaa.appendChild(syntheticAnchor);
                             Lib.debug('extract',
-                                `caa extractor: wrapped bare span in synthetic anchor (${syntheticAnchor.href})`);
+                                `caa extractor: wrapped bare span in synthetic anchor (${syntheticAnchor.getAttribute('href')})`);
                         } else {
                             // No entity link found — fall back to bare placement.
                             // caaLoadIcon will silently skip this span, which is the
@@ -2478,6 +2500,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
+                addCAA: 'Title',
                 extractMainColumn: 'Title'
             },
             tableMode: 'single' // Paginated single list
@@ -2494,6 +2517,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
+                addCAA: 'Title',
                 extractMainColumn: 'Title'
             },
             tableMode: 'multi',
@@ -12271,14 +12295,17 @@
             // initExpandRGsFeature() removes stale [data-erg-btn] clones and re-injects
             // a fresh live button into each qualifying <td>.
             initExpandRGsFeature();
-            // Inline CAA thumbnails must run after ERG so the ▶ button is already present.
-            initCaaInlinePics();
 
             // Re-apply barcode highlights after every filter / sort re-render.
             initBarcodeHighlight();
 
             // Re-apply CAA illustrated discography after every filter / sort re-render.
+            // initCaaPics() MUST run before initCaaInlinePics() — it creates _caaQueue
+            // which initCaaInlinePics() uses for throttled image requests.
             initCaaPics();
+            // Inline CAA thumbnails must run after ERG (▶ button already present) and
+            // after initCaaPics() (so _caaQueue is initialised).
+            initCaaInlinePics();
         }
         // Maintain scroll position after filtering or sorting.
         // __scrollX preserves any horizontal offset the user reached via the
@@ -13782,14 +13809,17 @@
             if (Lib.settings.sa_enable_expand_rgs) {
                 initExpandRGsFeature();
             }
-            // Inline CAA thumbnails must run after ERG so the ▶ button is already present.
-            initCaaInlinePics();
 
             // Highlight identical barcodes in Barcode columns (post-render)
             initBarcodeHighlight();
 
-            // Load CAA cover art thumbnails and big-pic strip (post-render)
+            // Load CAA cover art thumbnails and big-pic strip (post-render).
+            // initCaaPics() MUST run before initCaaInlinePics() — it creates _caaQueue
+            // which initCaaInlinePics() uses for throttled image requests.
             initCaaPics();
+            // Inline CAA thumbnails must run after ERG (▶ button already present) and
+            // after initCaaPics() (so _caaQueue is initialised).
+            initCaaInlinePics();
 
             // Initialise the Unicode character picker (builds menu DOM once, idempotent)
             initSaUnicodeCharsFeature();
@@ -14998,14 +15028,17 @@
         // copies whose event listeners are stripped; initExpandRGsFeature() removes
         // stale [data-erg-btn] clones and re-injects live ▶ buttons.
         initExpandRGsFeature();
-        // Inline CAA thumbnails must run after ERG so the ▶ button is already present.
-        initCaaInlinePics();
 
         // Re-apply barcode highlights across all freshly rendered sub-table rows.
         initBarcodeHighlight();
 
         // Re-apply CAA illustrated discography across all freshly rendered sub-table rows.
+        // initCaaPics() MUST run before initCaaInlinePics() — it creates _caaQueue
+        // which initCaaInlinePics() uses for throttled image requests.
         initCaaPics();
+        // Inline CAA thumbnails must run after ERG (▶ button already present) and
+        // after initCaaPics() (so _caaQueue is initialised).
+        initCaaInlinePics();
 
         Lib.debug('render', 'Finished renderGroupedTable.');
 
@@ -18112,14 +18145,17 @@
                 if (Lib.settings.sa_enable_expand_rgs) {
                     initExpandRGsFeature();
                 }
-                // Inline CAA thumbnails must run after ERG so the ▶ button is already present.
-                initCaaInlinePics();
 
                 // Highlight identical barcodes in Barcode columns (post-render)
                 initBarcodeHighlight();
 
-                // Load CAA cover art thumbnails and big-pic strip (post-render)
+                // Load CAA cover art thumbnails and big-pic strip (post-render).
+                // initCaaPics() MUST run before initCaaInlinePics() — it creates _caaQueue
+                // which initCaaInlinePics() uses for throttled image requests.
                 initCaaPics();
+                // Inline CAA thumbnails must run after ERG (▶ button already present) and
+                // after initCaaPics() (so _caaQueue is initialised).
+                initCaaInlinePics();
 
                 updateH2Count(loadedRowCount, loadedRowCount);
 
@@ -19164,6 +19200,76 @@
     // is reloaded when the user navigates away).
     const _caaRgCountCache = new Map();
 
+    /**
+     * Creates a fixed-concurrency async FIFO request queue.
+     *
+     * All CAA network requests — both `<img>` loads (caaLoadIcon) and `fetch()`
+     * JSON calls (caaEnrichReleaseGroupIcon) — are serialised through a shared
+     * instance of this queue.  Without throttling, a table with hundreds of rows
+     * fires all requests simultaneously: the CAA CDN (Internet Archive) responds
+     * to the burst with error responses that omit the `Access-Control-Allow-Origin`
+     * header, and the browser blocks every one of them as a CORS violation.
+     * At the same time the browser's per-host connection pool (typically 6 slots)
+     * is exhausted and emits ERR_INSUFFICIENT_RESOURCES for the img elements.
+     * Limiting concurrency to 4 keeps both problems from occurring.
+     *
+     * Algorithm:
+     *   - `running` tracks how many async tasks are currently executing.
+     *   - `queue`   is a FIFO array of { fn, resolve, reject } entries.
+     *   - `_next()` drains the queue while `running < maxConcurrent`, incrementing
+     *     `running` before each launch and decrementing (then calling `_next()`
+     *     again) in the `.finally()` handler so the slot is recycled immediately
+     *     when a task finishes regardless of success or failure.
+     *
+     * @param   {number} maxConcurrent  Maximum simultaneous in-flight tasks.
+     * @returns {{ enqueue: function(function(): Promise): Promise,
+     *             pendingCount: number,
+     *             runningCount: number }}
+     */
+    function makeCaaQueue(maxConcurrent) {
+        let running = 0;
+        const pending = [];
+
+        /**
+         * Internal pump: starts as many queued tasks as the concurrency budget allows.
+         */
+        function _next() {
+            while (running < maxConcurrent && pending.length > 0) {
+                running++;
+                const { fn, resolve, reject } = pending.shift();
+                fn().then(resolve, reject).finally(() => {
+                    running--;
+                    _next();
+                });
+            }
+        }
+
+        return {
+            /**
+             * Enqueues `fn` for execution.  Returns a Promise that resolves/rejects
+             * with the return value of `fn` once it has been executed.
+             *
+             * @param   {function(): Promise} fn  Async task to run.
+             * @returns {Promise}
+             */
+            enqueue(fn) {
+                return new Promise((resolve, reject) => {
+                    pending.push({ fn, resolve, reject });
+                    _next();
+                });
+            },
+            /** Number of tasks waiting for a free slot. */
+            get pendingCount() { return pending.length; },
+            /** Number of tasks currently executing. */
+            get runningCount() { return running; }
+        };
+    }
+
+    // Shared CAA request queue — recreated by initCaaPics() before each render
+    // pass so the concurrency setting is always picked up fresh.
+    // Null before the first render; never accessed outside the CAA feature block.
+    let _caaQueue = null;
+
     // ── CAA Illustrated Discography feature ───────────────────────────────────
     //
     // Adapted from "mb. FUNKEY ILLUSTRATED RECORDS" by jesus2099
@@ -19208,12 +19314,33 @@
      *
      * Mirrors jesus2099's loadCaaIcon().
      *
-     * @param {HTMLElement} caaIcon - A <span class="caa-icon"> (or eaa-icon /
-     *                                artwork-icon) element inside a CAA/EAA cell.
+     * Returns a Promise that resolves when the image either loads successfully or
+     * fails (always resolves, never rejects), so callers can await completion or
+     * enqueue through _caaQueue without needing a try/catch.  The `img.src`
+     * assignment is deferred to the body of the Promise executor so that the
+     * browser does not start the request until the queue grants a slot.
+     *
+     * Diagnostics:
+     *   - The constructed image URL is logged at debug level before the request.
+     *   - A successful load is confirmed at debug level.
+     *   - A failed load (4xx, 5xx, network error) is also logged at debug level.
+     *     A 404 is normal for release-groups whose only images are not typed
+     *     "Front"; other HTTP errors are unexpected but still logged at debug
+     *     level (the browser's Network tab remains the primary diagnostic for
+     *     per-image failures).
+     *   - No retry is performed — the browser already handles a limited number of
+     *     automatic retries for transient network errors.
+     *
+     * @param   {HTMLElement} caaIcon - A <span class="caa-icon"> (or eaa-icon /
+     *                                  artwork-icon) element inside a CAA/EAA cell.
+     * @returns {Promise<void>}         Always resolves (never rejects).
      */
     function caaLoadIcon(caaIcon) {
         const anchor = caaIcon.closest('a[href]');
-        if (!anchor) return; // bare span — no URL available, silently skip
+        if (!anchor) {
+            Lib.debug('caa', 'caaLoadIcon: skipped — no wrapping anchor found for icon', caaIcon);
+            return Promise.resolve();
+        }
 
         // jesus2099's own icons carry a `ref` attribute containing the entity path.
         // Standard MB anchors use `href` of the form "/release/GUID/cover-art".
@@ -19223,13 +19350,30 @@
         const size   = Lib.settings.sa_caa_small_img_size || 250;
         const imgurl = '//coverartarchive.org' + entityPath + '/front-' + size;
 
-        const img    = document.createElement('img');
-        img.src      = imgurl;
-        img.addEventListener('load', function() {
-            caaIcon.style.setProperty('background-size',  'contain');
-            caaIcon.style.setProperty('background-image', 'url(' + this.src + ')');
+        Lib.debug('caa', `caaLoadIcon: fetching ${imgurl}`);
+
+        // Return a Promise that resolves once the image request completes (either
+        // way).  src is set inside the executor so the browser request is not
+        // started until _caaQueue grants a slot.
+        return new Promise(resolve => {
+            const img = document.createElement('img');
+            img.addEventListener('load', function() {
+                caaIcon.style.setProperty('background-size',  'contain');
+                caaIcon.style.setProperty('background-image', 'url(' + this.src + ')');
+                Lib.debug('caa', `caaLoadIcon: loaded OK — ${imgurl}`);
+                resolve();
+            });
+            img.addEventListener('error', function() {
+                // A 404 is the normal outcome when the release/release-group has CAA
+                // images but none are typed "Front".  Other failures (network, 429,
+                // 5xx) are less expected.  All are logged at debug level — this event
+                // fires for every row without front art, which would be very noisy at
+                // warn level.  Inspect the browser Network tab for HTTP status codes.
+                Lib.debug('caa', `caaLoadIcon: failed to load ${imgurl} — icon stays in default state`);
+                resolve();
+            });
+            img.src = imgurl; // triggers the browser request
         });
-        // On error leave the icon in its default state — no removal, no noise.
     }
 
     /**
@@ -19326,7 +19470,21 @@
             try {
                 const resp = await fetch(apiUrl);
                 if (!resp.ok) {
-                    Lib.debug('caa', `caaEnrichReleaseGroupIcon: HTTP ${resp.status} for ${entityPath}`);
+                    // 404 — no CAA entry at all for this release-group: expected,
+                    //   debug only to avoid console noise.
+                    // 429 / 5xx — server-side problems: warn so they surface even
+                    //   when debug logging is disabled.
+                    if (resp.status === 404) {
+                        Lib.debug('caa', `caaEnrichReleaseGroupIcon: HTTP 404 (no CAA entry) for ${entityPath}`);
+                    } else {
+                        Lib.warn('caa', `caaEnrichReleaseGroupIcon: HTTP ${resp.status} for ${entityPath} — icon enrichment skipped`);
+                    }
+                    // Cache a sentinel (0) so that filter / sort re-renders that
+                    // produce fresh clone nodes do not fire repeated network requests
+                    // for an endpoint that already returned an error.  For transient
+                    // server problems (429, 503) the page must be reloaded to retry.
+                    _caaRgCountCache.set(entityPath, 0);
+                    anchor.dataset.caaEnriched = '1';
                     return;
                 }
                 const rgCaa = await resp.json();
@@ -19334,7 +19492,11 @@
                 _caaRgCountCache.set(entityPath, count);
                 Lib.debug('caa', `caaEnrichReleaseGroupIcon: ${count} image(s) for ${entityPath}`);
             } catch (err) {
-                Lib.debug('caa', `caaEnrichReleaseGroupIcon: fetch error for ${entityPath}:`, err);
+                // Network-level failure (offline, DNS, CORS abort).  Warn so it is
+                // visible without enabling debug mode.  Do NOT cache a sentinel —
+                // the failure may be transient and a re-render after connectivity is
+                // restored should retry.
+                Lib.warn('caa', `caaEnrichReleaseGroupIcon: network error for ${entityPath}:`, err);
                 return;
             }
         }
@@ -19433,13 +19595,30 @@
             'td a[href$="/cover-art"] > span.eaa-icon,' +
             'td a[href$="/cover-art"] > span.artwork-icon'
         );
+
+        // Serialise all requests through the shared CAA queue.
+        // Without throttling, a table with hundreds of rows fires all image loads
+        // and all fetch() JSON calls simultaneously.  The CDN responds to the burst
+        // without the CORS header (fast error path), causing the browser to block
+        // every fetch() as a CORS violation.  At the same time the browser's
+        // per-host connection pool overflows and emits ERR_INSUFFICIENT_RESOURCES
+        // for the img elements.  The queue (created/reset by initCaaPics()) keeps
+        // both problems from occurring by limiting concurrency to sa_caa_fetch_concurrency.
         icons.forEach(icon => {
-            caaLoadIcon(icon);
-            // Enrich release-group icons with the CAA API image-count title.
-            const anchor = icon.closest('a[href]');
-            if (anchor) caaEnrichReleaseGroupIcon(anchor);
+            if (_caaQueue) {
+                _caaQueue.enqueue(() => caaLoadIcon(icon));
+                const anchor = icon.closest('a[href]');
+                if (anchor) _caaQueue.enqueue(() => caaEnrichReleaseGroupIcon(anchor));
+            } else {
+                // Fallback (should not happen in normal flow): fire unthrottled.
+                caaLoadIcon(icon);
+                const anchor = icon.closest('a[href]');
+                if (anchor) caaEnrichReleaseGroupIcon(anchor);
+            }
         });
-        Lib.debug('caa', `caaInitSmallPics: queued thumbnails for ${icons.length} icon(s)`);
+
+        Lib.debug('caa', `caaInitSmallPics: enqueued ${icons.length * 2} request(s) for ${icons.length} icon(s) ` +
+            `(queue: ${_caaQueue ? _caaQueue.runningCount + ' running, ' + _caaQueue.pendingCount + ' pending' : 'unavailable'})`);
     }
 
     /**
@@ -19873,6 +20052,16 @@
     function initCaaPics() {
         if (!Lib.settings.sa_enable_caa_pics) return;
 
+        // (Re-)create the shared request queue so the current sa_caa_fetch_concurrency
+        // setting is picked up on every render pass.  Any previously queued requests
+        // from a prior render are abandoned — their DOM nodes no longer exist after
+        // renderFinalTable rebuilds the tbody, so completing them would be a no-op
+        // anyway.  The idempotency guards in caaLoadIcon / caaEnrichReleaseGroupIcon
+        // (data-caa-inline-done / data-caa-enriched) ensure re-runs stay cheap.
+        const concurrency = Math.max(1, Math.min(20, Lib.settings.sa_caa_fetch_concurrency || 4));
+        _caaQueue = makeCaaQueue(concurrency);
+        Lib.debug('caa', `initCaaPics: request queue created (concurrency=${concurrency})`);
+
         const tables = document.querySelectorAll('table.tbl');
         if (!tables.length) {
             Lib.debug('caa', 'initCaaPics: no table.tbl found — skipping');
@@ -19950,6 +20139,16 @@
      * markers on cloned rows are cleared in the same pass so fresh injection occurs
      * when `renderFinalTable` / `renderGroupedTable` rebuilds the DOM.
      *
+     * Concurrency:
+     *   Like `caaInitSmallPics`, this function enqueues image requests through the
+     *   shared `_caaQueue` (created by `initCaaPics` using `sa_caa_fetch_concurrency`).
+     *   The DOM injection (placeholder + img element creation and insertion) is
+     *   performed synchronously so layout is stable immediately.  Only the `img.src`
+     *   assignment — which triggers the actual browser request — is deferred until
+     *   the queue grants a slot.  Without this deferral a large artist-releases page
+     *   would fire hundreds of simultaneous image requests, causing the same CDN
+     *   burst / CORS / ERR_INSUFFICIENT_RESOURCES failures seen in caaInitSmallPics.
+     *
      * Guards:
      *   - `Lib.settings.sa_enable_caa_pics` master toggle.
      *   - `Lib.settings.sa_caa_pics_inline` per-feature toggle.
@@ -19964,10 +20163,18 @@
         if (!Lib.settings.sa_caa_pics_inline)  return;
 
         const colName = activeDefinition && activeDefinition.features && activeDefinition.features.addCAA;
-        if (!colName) return;
+        if (!colName) {
+            Lib.debug('caa', 'initCaaInlinePics: no addCAA column configured for this page type — skipping');
+            return;
+        }
+
+        Lib.debug('caa', `initCaaInlinePics: addCAA column = "${colName}"`);
 
         const tables = document.querySelectorAll('table.tbl');
-        if (!tables.length) return;
+        if (!tables.length) {
+            Lib.debug('caa', 'initCaaInlinePics: no table.tbl found — skipping');
+            return;
+        }
 
         const GUID_RE = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/;
         const size    = Lib.settings.sa_caa_small_img_size || 250;
@@ -19975,14 +20182,20 @@
         // fit inline without distorting row height.
         const PH = 20;
 
-        let injected = 0;
+        let injected   = 0;
+        let skippedNoLink  = 0;
+        let skippedNoGuid  = 0;
+        let skippedDone    = 0;
+        let enqueued   = 0;
 
-        tables.forEach(table => {
+        tables.forEach((table, tblIdx) => {
             const colIdx = caaFindColumnByName(table, colName);
             if (colIdx === -1) {
-                Lib.debug('caa', `initCaaInlinePics: column "${colName}" not found — skipping table`);
+                Lib.debug('caa', `initCaaInlinePics: column "${colName}" not found in table ${tblIdx} — skipping table`);
                 return;
             }
+
+            Lib.debug('caa', `initCaaInlinePics: processing table ${tblIdx}, column "${colName}" at index ${colIdx}`);
 
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const td = tr.cells[colIdx];
@@ -19996,7 +20209,9 @@
                 if (td.dataset.caaInlineDone) {
                     if (!td.querySelector('.mb-caa-inline-ph')) {
                         delete td.dataset.caaInlineDone; // stale clone — allow re-injection
+                        Lib.debug('caa', 'initCaaInlinePics: cleared stale clone marker — will re-inject');
                     } else {
+                        skippedDone++;
                         return; // genuinely already processed
                     }
                 }
@@ -20004,17 +20219,33 @@
                 // Find the primary entity link: prefer /release/ or /release-group/ paths;
                 // skip /cover-art links (they're CAA column links, not entity links).
                 const link = td.querySelector('a[href*="/release-group/"], a[href*="/release/"]:not([href$="/cover-art"])');
-                if (!link) return;
+                if (!link) {
+                    skippedNoLink++;
+                    Lib.debug('caa', `initCaaInlinePics: no release/release-group link found in "${colName}" cell — skipping row`);
+                    return;
+                }
 
                 const href      = link.getAttribute('href');
                 const guidMatch = href.match(GUID_RE);
-                if (!guidMatch) return;
+                if (!guidMatch) {
+                    skippedNoGuid++;
+                    Lib.debug('caa', `initCaaInlinePics: no GUID found in href "${href}" — skipping row`);
+                    return;
+                }
 
-                const isRG      = href.includes('/release-group/');
+                const isRG       = href.includes('/release-group/');
                 const entityType = isRG ? 'release-group' : 'release';
-                const imgurl    = '//coverartarchive.org/' + entityType + '/' + guidMatch[0] + '/front-' + size;
+                const imgurl     = '//coverartarchive.org/' + entityType + '/' + guidMatch[0] + '/front-' + size;
 
-                // ── Build placeholder + async image ───────────────────────────
+                Lib.debug('caa', `initCaaInlinePics: will fetch inline thumbnail: ${imgurl}`);
+
+                // ── Build placeholder + img element ───────────────────────────
+                //
+                // DOM injection is synchronous (placeholder goes into the cell
+                // immediately so layout is stable).  The actual img.src assignment
+                // that triggers the network request is deferred through _caaQueue
+                // so all inline-thumbnail requests share the same concurrency budget
+                // as the caaInitSmallPics icon loads.
                 const ph = document.createElement('span');
                 ph.className     = 'mb-caa-inline-ph';
                 ph.style.cssText =
@@ -20023,14 +20254,12 @@
                     ` overflow:hidden; border-radius:2px;`;
 
                 const img         = document.createElement('img');
-                img.src           = imgurl;
+                // img.src is NOT set here — deferred to the queue task below so the
+                // browser does not start the request until a slot is available.
                 img.alt           = '';
                 img.style.cssText =
                     `width:${PH}px; height:${PH}px; object-fit:cover;` +
                     ` display:none; border-radius:2px;`;
-
-                img.addEventListener('load',  function() { this.style.display = 'inline'; });
-                // On error: placeholder stays as an invisible spacer — alignment preserved.
 
                 ph.appendChild(img);
 
@@ -20044,10 +20273,46 @@
 
                 td.dataset.caaInlineDone = '1';
                 injected++;
+
+                // ── Enqueue the actual network request ────────────────────────
+                //
+                // The closure captures `img` and `imgurl`.  When the queue grants a
+                // slot the Promise executor assigns `img.src`, which starts the
+                // browser fetch.  The Promise resolves on both load and error so the
+                // queue slot is recycled in either case.
+                const loadTask = () => new Promise(resolve => {
+                    img.addEventListener('load', function() {
+                        this.style.display = 'inline';
+                        Lib.debug('caa', `initCaaInlinePics: loaded OK — ${imgurl}`);
+                        resolve();
+                    });
+                    img.addEventListener('error', function() {
+                        // Placeholder stays as an invisible spacer — alignment preserved.
+                        // A 404 is normal (no "Front" image), other errors are unexpected
+                        // but handled identically.  Debug only — this fires for every
+                        // row without front art and would be noisy at warn level.
+                        Lib.debug('caa', `initCaaInlinePics: failed to load ${imgurl} — placeholder stays as spacer`);
+                        resolve();
+                    });
+                    img.src = imgurl; // triggers the browser request
+                });
+
+                if (_caaQueue) {
+                    _caaQueue.enqueue(loadTask);
+                    enqueued++;
+                } else {
+                    // Fallback (should not happen in normal flow — _caaQueue is
+                    // created by initCaaPics before initCaaInlinePics is called).
+                    Lib.warn('caa', `initCaaInlinePics: _caaQueue unavailable — fetching ${imgurl} unthrottled`);
+                    loadTask();
+                }
             });
         });
 
-        Lib.debug('caa', `initCaaInlinePics: injected ${injected} inline placeholder(s) for column "${colName}"`);
+        Lib.debug('caa', `initCaaInlinePics: done — injected=${injected} enqueued=${enqueued} ` +
+            `skipped(done=${skippedDone} noLink=${skippedNoLink} noGuid=${skippedNoGuid}) ` +
+            `column="${colName}" ` +
+            `(queue: ${_caaQueue ? _caaQueue.runningCount + ' running, ' + _caaQueue.pendingCount + ' pending' : 'unavailable'})`);
     }
 
     // ── end CAA Illustrated Discography feature ───────────────────────────────
