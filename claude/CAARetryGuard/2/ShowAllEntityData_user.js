@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.107+2026-03-10
+// @version      9.99.106+2026-03-10
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -17,9 +17,6 @@
 // @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels)(?:\?.*)?$/
 // @match        *://*.musicbrainz.org/search?query=*
 // @connect      raw.githubusercontent.com
-// @connect      coverartarchive.org
-// @connect      archive.org
-// @connect      *.archive.org
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_setValue
@@ -1435,11 +1432,17 @@
                             // synthesised cover-art URL is always a clean path.
                             const entityPath = entityAnchor.getAttribute('href').split('?')[0];
                             const syntheticAnchor = document.createElement('a');
-                            syntheticAnchor.href  = entityPath + '/cover-art';
+                            // IMPORTANT: use setAttribute (not the .href property) so the
+                            // browser does NOT normalise the relative path to an absolute URL.
+                            // Assigning syntheticAnchor.href = "/release-group/GUID/cover-art"
+                            // would store "https://musicbrainz.org/release-group/GUID/cover-art"
+                            // in the attribute, causing caaLoadIcon() to build a broken URL:
+                            //   //coverartarchive.orghttps://musicbrainz.org/…
+                            syntheticAnchor.setAttribute('href', entityPath + '/cover-art');
                             syntheticAnchor.appendChild(bareIconSpan);
                             tdCaa.appendChild(syntheticAnchor);
                             Lib.debug('extract',
-                                `caa extractor: wrapped bare span in synthetic anchor (${syntheticAnchor.href})`);
+                                `caa extractor: wrapped bare span in synthetic anchor (${syntheticAnchor.getAttribute('href')})`);
                         } else {
                             // No entity link found — fall back to bare placement.
                             // caaLoadIcon will silently skip this span, which is the
@@ -2498,7 +2501,6 @@
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
-                addCAA: 'Title',
                 extractMainColumn: 'Title'
             },
             tableMode: 'multi',
@@ -19213,12 +19215,26 @@
      *
      * Mirrors jesus2099's loadCaaIcon().
      *
+     * Diagnostics:
+     *   - The constructed image URL is logged at debug level before the request.
+     *   - A successful load is confirmed at debug level.
+     *   - A failed load (4xx, 5xx, network error) is also logged at debug level.
+     *     A 404 is normal for release-groups whose only images are not typed
+     *     "Front"; other HTTP errors are unexpected but still logged at debug
+     *     level (the browser's Network tab remains the primary diagnostic for
+     *     per-image failures).
+     *   - No retry is performed — the browser already handles a limited number of
+     *     automatic retries for transient network errors.
+     *
      * @param {HTMLElement} caaIcon - A <span class="caa-icon"> (or eaa-icon /
      *                                artwork-icon) element inside a CAA/EAA cell.
      */
     function caaLoadIcon(caaIcon) {
         const anchor = caaIcon.closest('a[href]');
-        if (!anchor) return; // bare span — no URL available, silently skip
+        if (!anchor) {
+            Lib.debug('caa', 'caaLoadIcon: skipped — no wrapping anchor found for icon', caaIcon);
+            return;
+        }
 
         // jesus2099's own icons carry a `ref` attribute containing the entity path.
         // Standard MB anchors use `href` of the form "/release/GUID/cover-art".
@@ -19228,13 +19244,23 @@
         const size   = Lib.settings.sa_caa_small_img_size || 250;
         const imgurl = '//coverartarchive.org' + entityPath + '/front-' + size;
 
+        Lib.debug('caa', `caaLoadIcon: fetching ${imgurl}`);
+
         const img    = document.createElement('img');
         img.src      = imgurl;
         img.addEventListener('load', function() {
             caaIcon.style.setProperty('background-size',  'contain');
             caaIcon.style.setProperty('background-image', 'url(' + this.src + ')');
+            Lib.debug('caa', `caaLoadIcon: loaded OK — ${imgurl}`);
         });
-        // On error leave the icon in its default state — no removal, no noise.
+        img.addEventListener('error', function() {
+            // A 404 is the normal outcome when the release/release-group has CAA
+            // images but none are typed "Front".  Other failures (network, 429,
+            // 5xx) are less expected.  All are logged at debug level — this event
+            // fires for every row without front art, which would be very noisy at
+            // warn level.  Inspect the browser Network tab for HTTP status codes.
+            Lib.debug('caa', `caaLoadIcon: failed to load ${imgurl} — icon stays in default state`);
+        });
     }
 
     /**
@@ -19266,274 +19292,6 @@
             return txt === 'CAA' || txt === 'EAA';
         });
     }
-
-    // ── CAA fetch-retry infrastructure ───────────────────────────────────────
-    //
-    // Root cause of "TypeError: Failed to fetch":
-    //   coverartarchive.org's JSON API does not include an
-    //   Access-Control-Allow-Origin header, so the browser blocks any call
-    //   made with window.fetch() from the musicbrainz.org page context.
-    //   GM_xmlhttpRequest runs in the userscript sandbox and is completely
-    //   exempt from CORS, so all CAA JSON fetches use it exclusively.
-    //
-    // The retry mechanism handles the residual case where GM_xmlhttpRequest
-    // itself encounters a network error (e.g. coverartarchive.org is briefly
-    // unreachable):
-    //
-    //   • Up to CAA_MAX_RETRIES additional attempts per release-group path.
-    //   • Multiple anchors referencing the same path share ONE retry sequence
-    //     (deduplication via _caaRetryState).
-    //   • Each retry is preceded by a visible countdown rendered as an SVG
-    //     data-URI in the caa/eaa/artwork-icon span's background-image — the
-    //     same CSS property that caaLoadIcon() normally uses for the thumbnail.
-    //   • On success: caaLoadIcon() re-fires (re-loads the artwork thumbnail)
-    //     and caaEnrichReleaseGroupIcon() re-runs (serves from cache — no extra
-    //     network round-trip).
-    //   • On final failure: a permanent red "?" SVG replaces the countdown so
-    //     the user can see that retries were at least attempted.
-    //
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Fetches a URL via GM_xmlhttpRequest (CORS-exempt) and resolves with a
-     * minimal Fetch-API-compatible response object:
-     *   { ok: boolean, status: number, json: () => Promise<any> }
-     *
-     * Uses the same GM_xmlhttpRequest pattern as the existing fetchHtml()
-     * helper.  Rejects on network error (onerror / ontimeout callbacks).
-     *
-     * @param  {string} url
-     * @returns {Promise<{ok:boolean, status:number, json:()=>Promise<any>}>}
-     */
-    function caaGmFetch(url) {
-        return new Promise(function(resolve, reject) {
-            GM_xmlhttpRequest({
-                method:    'GET',
-                url:       url,
-                timeout:   15000,
-                onload: function(res) {
-                    resolve({
-                        ok:     res.status >= 200 && res.status < 300,
-                        status: res.status,
-                        json:   function() {
-                            return new Promise(function(res2, rej2) {
-                                try   { res2(JSON.parse(res.responseText)); }
-                                catch (e) { rej2(e); }
-                            });
-                        }
-                    });
-                },
-                onerror:   reject,
-                ontimeout: function() { reject(new Error('GM_xmlhttpRequest timeout for ' + url)); }
-            });
-        });
-    }
-
-    /** Maximum number of retry attempts after the initial fetch failure. */
-    const CAA_MAX_RETRIES      = 3;
-    /** Seconds to count down before each retry attempt. */
-    const CAA_RETRY_DELAY_SECS = 5;
-
-    /**
-     * Per release-group path retry state.
-     * Value shape: { attempts: number, anchors: Set<HTMLAnchorElement>,
-     *                timerId: number|null, countdown: number }
-     */
-    const _caaRetryState = new Map();
-
-    /**
-     * Paints a countdown SVG into the background-image of `iconSpan`.
-     * Uses the same CSS properties as caaLoadIcon() so the two never conflict.
-     *
-     * @param {HTMLElement}  iconSpan  – caa-icon / eaa-icon / artwork-icon span.
-     * @param {number|string} n        – Value to display (0–9 or a string).
-     */
-    function caaSetRetryIndicator(iconSpan, n) {
-        const label = String(n);
-        const svg =
-            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">' +
-            '<rect width="16" height="16" rx="2" fill="#fff0f0" stroke="#c0392b" stroke-width="1.2"/>' +
-            '<text x="8" y="12" text-anchor="middle" ' +
-            'font-family="monospace,sans-serif" font-size="10" font-weight="bold" fill="#c0392b">' +
-            label + '</text></svg>';
-        const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        iconSpan.style.setProperty('background-image',    'url("' + url + '")');
-        iconSpan.style.setProperty('background-size',     'contain');
-        iconSpan.style.setProperty('background-repeat',   'no-repeat');
-        iconSpan.style.setProperty('background-position', 'center');
-        if (typeof n === 'number') {
-            iconSpan.title = 'CAA fetch failed – retrying in ' + n + 's\u2026';
-        }
-    }
-
-    /**
-     * Paints a permanent red "?" SVG into `iconSpan` once all retries are gone.
-     *
-     * @param {HTMLElement} iconSpan – caa-icon / eaa-icon / artwork-icon span.
-     */
-    function caaSetFailedIndicator(iconSpan) {
-        const svg =
-            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">' +
-            '<rect width="16" height="16" rx="2" fill="#ffe0e0" stroke="#c0392b" stroke-width="1.2"/>' +
-            '<text x="8" y="12" text-anchor="middle" ' +
-            'font-family="monospace,sans-serif" font-size="13" font-weight="bold" fill="#c0392b">' +
-            '?</text></svg>';
-        const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        iconSpan.style.setProperty('background-image',    'url("' + url + '")');
-        iconSpan.style.setProperty('background-size',     'contain');
-        iconSpan.style.setProperty('background-repeat',   'no-repeat');
-        iconSpan.style.setProperty('background-position', 'center');
-        iconSpan.title = 'CAA artwork unavailable \u2013 all retries exhausted';
-    }
-
-    /**
-     * Marks every icon for `entityPath` as permanently failed, clears any
-     * pending timer, and removes the entry from _caaRetryState.
-     *
-     * @param {string} entityPath – e.g. "/release-group/GUID"
-     */
-    function caaMarkRetryFailed(entityPath) {
-        const state = _caaRetryState.get(entityPath);
-        if (!state) return;
-        if (state.timerId !== null) { clearTimeout(state.timerId); state.timerId = null; }
-        state.anchors.forEach(anchor => {
-            if (!anchor.isConnected) return;
-            const icon = anchor.querySelector('span.caa-icon, span.eaa-icon, span.artwork-icon');
-            if (icon) caaSetFailedIndicator(icon);
-        });
-        _caaRetryState.delete(entityPath);
-        Lib.debug('caa', 'caaRetry: all retries exhausted for ' + entityPath);
-    }
-
-    /**
-     * Ticks the countdown for `entityPath` one second at a time, updating every
-     * registered icon span.  When the counter reaches 0 it fires `caaDoRetry()`.
-     *
-     * @param {string} entityPath
-     * @param {number} remaining  – seconds left before the next fetch attempt.
-     */
-    function caaTickCountdown(entityPath, remaining) {
-        const state = _caaRetryState.get(entityPath);
-        if (!state) return;
-
-        state.countdown = remaining;
-
-        // Paint the current countdown onto every live icon span
-        state.anchors.forEach(anchor => {
-            if (!anchor.isConnected) return;
-            const icon = anchor.querySelector('span.caa-icon, span.eaa-icon, span.artwork-icon');
-            if (icon) caaSetRetryIndicator(icon, remaining);
-        });
-
-        if (remaining > 0) {
-            state.timerId = setTimeout(function() {
-                state.timerId = null;
-                caaTickCountdown(entityPath, remaining - 1);
-            }, 1000);
-        } else {
-            // Countdown has reached zero — fire the retry fetch
-            caaDoRetry(entityPath);
-        }
-    }
-
-    /**
-     * Performs one retry fetch for `entityPath`.
-     *
-     *   • HTTP success  → populate cache, enrich all pending anchors (re-loads
-     *                      artwork thumbnail via caaLoadIcon), delete state.
-     *   • HTTP error    → definitive failure; mark all icons with red "?".
-     *   • Network error → if retries remain, start the next countdown; otherwise
-     *                      mark all icons with red "?".
-     *
-     * @param {string} entityPath
-     */
-    async function caaDoRetry(entityPath) {
-        const state = _caaRetryState.get(entityPath);
-        if (!state) return;
-
-        Lib.debug('caa', 'caaRetry: attempt ' + state.attempts + ' for ' + entityPath);
-
-        const apiUrl = 'https://coverartarchive.org' + entityPath;
-        try {
-            const resp = await caaGmFetch(apiUrl);
-            if (!resp.ok) {
-                // Definitive HTTP error — no point retrying
-                Lib.debug('caa', 'caaRetry: HTTP ' + resp.status + ' for ' + entityPath + ' — giving up');
-                caaMarkRetryFailed(entityPath);
-                return;
-            }
-            const rgCaa = await resp.json();
-            const count = Array.isArray(rgCaa.images) ? rgCaa.images.length : 0;
-            _caaRgCountCache.set(entityPath, count);
-
-            Lib.debug('caa', 'caaRetry: success for ' + entityPath + ' — ' + count +
-                      ' image(s) after ' + state.attempts + ' attempt(s)');
-
-            // Snapshot the anchor set before deleting state (enrichment callbacks
-            // may re-enter caaEnrichReleaseGroupIcon which checks _caaRetryState).
-            const pendingAnchors = Array.from(state.anchors);
-            _caaRetryState.delete(entityPath);
-
-            pendingAnchors.forEach(function(anchor) {
-                if (!anchor.isConnected) return;
-                // Re-load the artwork thumbnail (clears the countdown SVG overlay)
-                const icon = anchor.querySelector('span.caa-icon, span.eaa-icon, span.artwork-icon');
-                if (icon) caaLoadIcon(icon);
-                // Re-run enrichment — result is now in cache, no extra network hit
-                caaEnrichReleaseGroupIcon(anchor);
-            });
-        } catch (err) {
-            Lib.debug('caa', 'caaRetry: fetch error for ' + entityPath +
-                      ' (attempt ' + state.attempts + '):', err);
-            if (state.attempts >= CAA_MAX_RETRIES) {
-                caaMarkRetryFailed(entityPath);
-            } else {
-                state.attempts++;
-                caaTickCountdown(entityPath, CAA_RETRY_DELAY_SECS);
-            }
-        }
-    }
-
-    /**
-     * Entry point called from caaEnrichReleaseGroupIcon's catch block.
-     *
-     * Registers `anchor` in the retry queue for `entityPath`.  If a countdown
-     * is already ticking (another anchor for the same path failed earlier), the
-     * new anchor is simply added to the pending set and shown the current
-     * countdown value — no second timer is started.
-     *
-     * @param {string}           entityPath
-     * @param {HTMLAnchorElement} anchor
-     */
-    function caaScheduleRetry(entityPath, anchor) {
-        let state = _caaRetryState.get(entityPath);
-
-        if (!state) {
-            state = {
-                attempts:  1,
-                anchors:   new Set(),
-                timerId:   null,
-                countdown: CAA_RETRY_DELAY_SECS
-            };
-            _caaRetryState.set(entityPath, state);
-        }
-
-        state.anchors.add(anchor);
-
-        if (state.timerId !== null) {
-            // A countdown is already running — just paint the current value on
-            // this anchor's icon and return; do not start a second timer.
-            const icon = anchor.querySelector('span.caa-icon, span.eaa-icon, span.artwork-icon');
-            if (icon) caaSetRetryIndicator(icon, state.countdown);
-            return;
-        }
-
-        Lib.debug('caa', 'caaRetry: scheduling retry #' + state.attempts +
-                  ' for ' + entityPath + ' in ' + CAA_RETRY_DELAY_SECS + 's');
-        caaTickCountdown(entityPath, CAA_RETRY_DELAY_SECS);
-    }
-
-    // ── end CAA fetch-retry infrastructure ───────────────────────────────────
 
     /**
      * Fetches the Cover Art Archive JSON for one release-group anchor and, when
@@ -19589,20 +19347,6 @@
         // because the anchor already points to the correct cover-art URL.
         if (!entityPath.includes('/release-group/')) return;
 
-        // If a retry countdown is already running for this path (e.g. a sort/filter
-        // re-render produced a fresh anchor clone while we are waiting to retry),
-        // register the new anchor so it receives countdown updates and enrichment
-        // on success — do not start a second fetch sequence.
-        if (_caaRetryState.has(entityPath)) {
-            const retryState = _caaRetryState.get(entityPath);
-            if (!retryState.anchors.has(anchor)) {
-                retryState.anchors.add(anchor);
-                const icon = anchor.querySelector('span.caa-icon, span.eaa-icon, span.artwork-icon');
-                if (icon) caaSetRetryIndicator(icon, retryState.countdown);
-            }
-            return;
-        }
-
         // ── Resolve count — from cache or network ────────────────────────────
         let count;
         if (_caaRgCountCache.has(entityPath)) {
@@ -19611,9 +19355,23 @@
         } else {
             const apiUrl = 'https://coverartarchive.org' + entityPath;
             try {
-                const resp = await caaGmFetch(apiUrl);
+                const resp = await fetch(apiUrl);
                 if (!resp.ok) {
-                    Lib.debug('caa', `caaEnrichReleaseGroupIcon: HTTP ${resp.status} for ${entityPath}`);
+                    // 404 — no CAA entry at all for this release-group: expected,
+                    //   debug only to avoid console noise.
+                    // 429 / 5xx — server-side problems: warn so they surface even
+                    //   when debug logging is disabled.
+                    if (resp.status === 404) {
+                        Lib.debug('caa', `caaEnrichReleaseGroupIcon: HTTP 404 (no CAA entry) for ${entityPath}`);
+                    } else {
+                        Lib.warn('caa', `caaEnrichReleaseGroupIcon: HTTP ${resp.status} for ${entityPath} — icon enrichment skipped`);
+                    }
+                    // Cache a sentinel (0) so that filter / sort re-renders that
+                    // produce fresh clone nodes do not fire repeated network requests
+                    // for an endpoint that already returned an error.  For transient
+                    // server problems (429, 503) the page must be reloaded to retry.
+                    _caaRgCountCache.set(entityPath, 0);
+                    anchor.dataset.caaEnriched = '1';
                     return;
                 }
                 const rgCaa = await resp.json();
@@ -19621,8 +19379,11 @@
                 _caaRgCountCache.set(entityPath, count);
                 Lib.debug('caa', `caaEnrichReleaseGroupIcon: ${count} image(s) for ${entityPath}`);
             } catch (err) {
-                Lib.debug('caa', `caaEnrichReleaseGroupIcon: fetch error for ${entityPath}:`, err);
-                caaScheduleRetry(entityPath, anchor);
+                // Network-level failure (offline, DNS, CORS abort).  Warn so it is
+                // visible without enabling debug mode.  Do NOT cache a sentinel —
+                // the failure may be transient and a re-render after connectivity is
+                // restored should retry.
+                Lib.warn('caa', `caaEnrichReleaseGroupIcon: network error for ${entityPath}:`, err);
                 return;
             }
         }

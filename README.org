@@ -48801,4 +48801,249 @@ Where the CAA artwork icon would normally be rendered show a replacement icon wi
 backwards for each retry. Replace that icon with the actual download CA artwork image or leave a red questiomnark in
 place for a visual clue that retries have at least been tried
 
+
 * add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
+
+
+* CAA
+
+#+begin_example
+Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES
+#+end_example
+
+#+begin_example
+Access to fetch at 'https://coverartarchive.org/release-group/08e0c4c1-5ebc-47e0-bf69-4c68a3513f1a' from origin 'https://musicbrainz.org' has been blocked by CORS policy: 
+No 'Access-Control-Allow-Origin' header is present on the requested resource.
+#+end_example
+
+#+begin_example
+Access to fetch at 'https://coverartarchive.org/release-group/08e0c4c1-5ebc-47e0-bf69-4c68a3513f1a' from origin 'https://musicbrainz.org' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+#+end_example
+
+#+begin_example
+If your goal is only to know whether artwork exists or how many images exist, you do not need to download the full JSON from the Cover Art Archive endpoint.
+
+There is a much faster trick used in many advanced scripts for MusicBrainz.
+
+1. The Normal (Slow) Method
+
+Typical request:
+
+https://coverartarchive.org/release-group/<MBID>
+
+Example:
+
+https://coverartarchive.org/release-group/08e0c4c1-5ebc-47e0-bf69-4c68a3513f1a
+
+Response:
+
+{
+  "images": [
+    {...},
+    {...}
+  ]
+}
+
+To get the count you do:
+
+count = json.images.length;
+
+Problems:
+
+downloads the entire JSON
+
+slower
+
+heavy when doing hundreds of queries
+
+2. Fast Artwork-Existence Check (HEAD Request)
+
+You can query the front cover image URL:
+
+https://coverartarchive.org/release-group/<MBID>/front
+
+If artwork exists:
+
+HTTP 200
+
+If none exists:
+
+HTTP 404
+
+No JSON download required.
+
+Example (Tampermonkey)
+async function hasFrontCover(mbid) {
+  try {
+    await GM.xmlHttpRequest({
+      method: "HEAD",
+      url: `https://coverartarchive.org/release-group/${mbid}/front`
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+Result:
+
+true  → artwork exists
+false → no artwork
+3. Extremely Fast Bulk Check
+
+This is ideal when scanning many release groups:
+
+async function hasCover(mbid) {
+  const r = await GM.xmlHttpRequest({
+    method: "HEAD",
+    url: `https://coverartarchive.org/release-group/${mbid}/front`
+  });
+
+  return r.status === 200;
+}
+
+Advantages:
+
+Method	Data transferred
+Full JSON	~1–5 KB
+HEAD check	~200 bytes
+
+Speed improvement when scanning hundreds of MBIDs can be 10–30×.
+
+4. If You Need the Exact Image Count
+
+Then you must still call:
+
+https://coverartarchive.org/release-group/<MBID>
+
+But you can rate-limit requests.
+
+Example queue:
+
+async function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+async function getImageCount(mbid) {
+  const r = await GM.xmlHttpRequest({
+    method: "GET",
+    url: `https://coverartarchive.org/release-group/${mbid}`
+  });
+
+  const json = JSON.parse(r.responseText);
+  return json.images.length;
+}
+5. Ultra-Efficient Strategy (Used by Power Scripts)
+
+1️⃣ HEAD request → detect artwork quickly
+2️⃣ Only fetch JSON if artwork exists
+
+Example flow:
+
+HEAD /front
+   ↓
+200 → GET JSON
+404 → skip
+
+This can reduce requests by 80–90%.
+
+💡 Bonus trick:
+There is an even more obscure endpoint trick that lets you estimate the number of images without downloading JSON by probing numbered image URLs like:
+
+/release-group/<MBID>/front-250
+
+Some high-performance MusicBrainz tools use it to count covers with log₂ probing (binary search). If you're doing large scans (thousands of release groups), I can show that method too.
+#+end_example
+
+#+begin_example
+[VZ-ShowAllEntityData: artist-releases] 📝 renderMultiRowCell: column "Label" (colIdx=6) — wrapped into 1 li row(s) 
+[VZ-ShowAllEntityData: artist-releases] 📥 Page 6/9 processed in 1.54s. Rows on page: 100. Total: 600 
+[VZ-ShowAllEntityData: artist-releases] 📥 Fetching URL for page 7: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1&tport=8000&page=7 
+[VZ-ShowAllEntityData: artist-releases] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1&tport=8000&page=7 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: Found 5 li.show-all element(s). Expanding from inline <script type="application/json"> data. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [0] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [1] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [2] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [3] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [4] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: expandShowAllCells complete — expanded: 0, skipped: 5. 
+[VZ-ShowAllEntityData: artist-releases] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntityData: artist-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntityData: artist-releases] 📥 Found matching table "[object HTMLTableElement]" on page 7 to process. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Detected indices → mainColIdx=1 (Release), extractors=[caa("Release"@1), splitCountryDate("Country/Date"@5)], syntheticExtractors=[dateParts("Date"→[DD,MM,YYYY,Day,Month])], erasers=[none], renderMultiRow=["Label"@6, "Catalog#"@7], excluded=[] for pageType: artist-releases 
+[VZ-ShowAllEntityData: artist-releases] 📝 Table body found. Processing child nodes. Total nodes: 100 
+[VZ-ShowAllEntityData: artist-releases] 📝 renderMultiRowCell: column "Label" (colIdx=6) — wrapped into 1 li row(s) 
+[VZ-ShowAllEntityData: artist-releases] 📝 renderMultiRowCell: column "Catalog#" (colIdx=7) — wrapped into 1 li row(s)
+#+end_example
+
+#+begin_example
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/58594df1-8d67-4dcf-91a1-2df1675c18da 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/513f6311-43c6-4a6c-ba12-eeca4db2fc1e 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/f625dc8e-7c3d-42ef-aaec-19a3e15eb709 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 2 image(s) for /release-group/963303c0-96a6-4879-b126-eeda4d71d39f 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 3 image(s) for /release-group/8e24d79e-ae3e-4b79-a932-30f38f9cac0f 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 3 image(s) for /release-group/0108f7d8-eae9-3505-8a78-0690cec6c4f8 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 3 image(s) for /release-group/9b23df6c-cda5-425b-a88c-9dae20e24f09 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaRetry: success for /release-group/f3528c02-dfa0-3b65-b12d-c252a6290770 — 5 image(s) after 1 attempt(s) 
+#+end_example
+
+#+begin_example
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/bf285261-5d56-4b30-8af6-edc018b03518
+#+end_example
+
+* Why
+** initial
+
+In the uploaded userscript,
+
+on the following URLs https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709&page=1
+
+on the final rendered page in the column "CAA"
+why do I get the default MusicBrainz icon (which gets shown when a release or release group has artwork in the CAA
+(Cover Art Archive) in general, but there actually IS artwork (so why isn't it downloaded as the other entries) and the real artwork shown ?
+
+I would at least expect an error in the console log. Is this plausible from the code, do we need more debug statements ?
+
+Isn't there a retry mechanism implemented ?
+
+** debug
+
+Please also add debug statements in the CAA artwork loading when e.g.
+
+#+begin_example
+addCAA: '<column name>',
+#+end_example
+
+is configured for a pageType
+
+e.g.
+
+#+begin_example
+        {
+            type: 'artist-releases',
+            // Artist Releases page (Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
+            buttons: [
+                { label: '🧮 Official releases', params: { va: '0' } },
+                { label: '🧮 VA releases', params: { va: '1' } }
+            ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                addCAA: 'Release',
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+Do we also need something like the "sa_caa_fetch_concurrency" concurrency for this load path ?
+
+
