@@ -47655,8 +47655,7 @@ debug log
 01:29:25.075 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Global visible-columns menu opened via Ctrl+V (global fallback from column filter focus) 
 #+end_example
 
-
-* TODO column "Visibility" per sub-table
+* DONE column "Visibility" per sub-table
 ** DONE initial
 
 In the uploaded userscript,
@@ -47675,8 +47674,9 @@ implement the same column visibility functionality, which right now exists only 
   configuation will be inherited by all sub-tables; if it's a per sub-table configuration that one wins on the sub-table
   level)
 
+** DONE add complete keyboard control also on the sub-table "Visibility" menu
 
-** TODO add complete keyboard control also on the sub-table "Visibility" menu
+In the uploaded userscript,
 
 add the same complete keyboard control (keyboard movement commands and restricting the movement just inside the menu) on
 the sub-table specific "Visible columns" menu reachable with the button
@@ -47695,16 +47695,72 @@ for the global one reachable via the button
 
 Probably try to refactor to not double the code
 
+* TODO add keyboard control to each "Show unique column values" menu
+** DONE initial
+
+
+add complete keyboard control (keyboard movement commands and restricting the movement just inside the menu) to each
+"Show unique column values" menu in each column header specifically
+
+- pressing the TAB key when the quick filter box inside the "Show unique column values" menu has the focus, should move
+  out of the quick filter field and highlight/focus the the first entry in the "cell structure"
+
+- from there by either pressing the TAB key again or using the <Down-Arrow">-key repeatedly the next row in the menu
+  should get the focus, until the last one in the menu, from there (because the movement inside the whole menu should be
+  confined, for an implementation check the global "Visibility" menu and its action) we finally enter and focus the filter field again
+
+- pressing Shift-TAB or the <Up-Arrow> key when outside the filter field moves in the opposite direction then the TAB key or <Down-Arrow">-key
+
+- when a menu element has the fous and "Enter" is pressed, the underlying element should get copied to the column level
+  filter field and the table filtering should immediately start with that value as input
+
+** bugs
+
+In the uploaded userscript,
+
+- when pressing enter on a unique column value in the "Show unique column values" menu in one of the table column
+  headers, the value is copied to the filter field, but the filter field should stay focused and the curser positioned
+  after the copied value. The filtering should still be performed immediately
+
+- when either moving with the keyboard or hovering over with the mouse over a specific value inside the special "Cell
+  structure" area (like for example "single-row cells"), the current background color of these special "Cell structure"
+  entries is ALWAYS visible, so there is NO indication that one of these entries actually has the focus (also it has and
+  works when pressing the ENTER key)
+  
+Please fix
+
 * add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
 
 
 * please check function documentations against it's implementatin again and fix if necessary
 
 
-* TODO remove the experimental "(Show all)" functionality boolean as it's now strictly needed for the multi-row cell stuff
+* DONE remove the experimental "(Show all)" functionality boolean as it's now strictly needed for the multi-row cell stuff
+* DONE !!! Remove CAA rendering AND  (Load more...) boolean
 
+remove the "sa_expand_show_all_cells" boolean (and all it's references) as this feature is now integral to the
+functioning of the userscript
 
-* TODO add jesus2099 artcode fetching (configurable)
+#+begin_example
+        sa_expand_show_all_cells: {
+            label: 'Auto-expand "(show N more)" cells before row extraction',
+            type: "checkbox",
+            default: true,
+            description: 'On pages such as "Place-Events" and "Artist-Works", MusicBrainz truncates certain columns and hides ' +
+                         'remaining entries behind a "(show N more)" toggle (li.show-all). ' +
+                         'The complete data for ALL entries is always present in a <script type="application/json"> element ' +
+                         'inside the same <td> — React just limits how many <li> items it renders. ' +
+                         'When enabled, the script reads that JSON, detects its shape by the top-level key ' +
+                         '("relations" for Place-Events Artists, "artists" for Artist-Works Recording artists, ' +
+                         '"attributes" for Artist-Works Attributes, "iswcs" for Artist-Works ISWC), reconstructs the missing <li> elements, ' +
+                         'and removes both li.show-all and li.show-less. ' +
+                         'Works identically on the live page and on DOMParser-fetched subsequent pages — no iframes or extra network requests required. ' +
+                         'New JSON shapes (future MB columns) can be added to the SHOW_ALL_JSON_HANDLERS registry in the source.'
+        },
+
+#+end_example
+
+* DONE add jesus2099 artcode fetching (configurable)
 ** DONE initial
 
 In the uploaded userscript,
@@ -48060,7 +48116,7 @@ some more things to implement:
 - leave for now the double implementation inside the "CAA column", we will get of rid of the whole "CAA" column approch later
   
 ** Do NOT render the CAA toggle button if none of the rows in a table/sub-table has actually CAA images
-** TODO add jesus2099 feature about number of coverart images in the toolip or in the cells directly behind the generic CAA image
+** DONE add jesus2099 feature about number of coverart images in the toolip or in the cells directly behind the generic CAA image
 *** initial
 
 The feature about
@@ -48202,7 +48258,7 @@ addCAA: 'Title',
 
 in the variable "const pageDefinitions"
 
-** TODO NO small pic icons: caaInitSmallPics: queued thumbnails for 0 icon(s)
+** DONE NO small pic icons: caaInitSmallPics: queued thumbnails for 0 icon(s)
 
 For the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f I get not CAA cover art rendered in the "CAA" column, all other 
 
@@ -48696,7 +48752,7 @@ to the event parts extracted
 * "video" icon - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings - "shooting location for"
 
 
-* persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
+* TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 
 
 
@@ -48704,43 +48760,17 @@ to the event parts extracted
 
 * TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
 
-
-* DONE !!! Remove CAA rendering AND  (Load more...) boolean
-
-remove the "sa_expand_show_all_cells" boolean (and all it's references) as this feature is now integral to the
-functioning of the userscript
-
-#+begin_example
-        sa_expand_show_all_cells: {
-            label: 'Auto-expand "(show N more)" cells before row extraction',
-            type: "checkbox",
-            default: true,
-            description: 'On pages such as "Place-Events" and "Artist-Works", MusicBrainz truncates certain columns and hides ' +
-                         'remaining entries behind a "(show N more)" toggle (li.show-all). ' +
-                         'The complete data for ALL entries is always present in a <script type="application/json"> element ' +
-                         'inside the same <td> — React just limits how many <li> items it renders. ' +
-                         'When enabled, the script reads that JSON, detects its shape by the top-level key ' +
-                         '("relations" for Place-Events Artists, "artists" for Artist-Works Recording artists, ' +
-                         '"attributes" for Artist-Works Attributes, "iswcs" for Artist-Works ISWC), reconstructs the missing <li> elements, ' +
-                         'and removes both li.show-all and li.show-less. ' +
-                         'Works identically on the live page and on DOMParser-fetched subsequent pages — no iframes or extra network requests required. ' +
-                         'New JSON shapes (future MB columns) can be added to the SHOW_ALL_JSON_HANDLERS registry in the source.'
-        },
-
-#+end_example
-
-
-* render coverart archive - https://dn710909.ca.archive.org/0/items/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json
+* TODO render coverart archive - https://dn710909.ca.archive.org/0/items/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json
 
 curl -v -L "https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" | jq
 curl -v -L https://archive.org/download/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json | jq
-
 
 * TODO add a multi-row cell for the CAA info
 
 one row per coverart - type, comment, dimensions
 
 * TODO remove the toggle icon from the "CAA" column 
+
 
 * add "Relationships" column support again, but with configurable 
 
@@ -48762,3 +48792,5 @@ one row per coverart - type, comment, dimensions
     at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:15717:13)
 #+end_example
 
+
+* add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
