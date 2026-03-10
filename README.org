@@ -47600,7 +47600,7 @@ What needs to be done to the following code to create the effect that the button
 #+end_example
 
 
-* TODO sub-table specific keyboard shortcuts for
+* DONE sub-table specific keyboard shortcuts for
 
 In the uploaded userscript,
 
@@ -47655,6 +47655,7 @@ debug log
 01:29:25.075 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Global visible-columns menu opened via Ctrl+V (global fallback from column filter focus) 
 #+end_example
 
+
 * TODO column "Visibility" per sub-table
 ** DONE initial
 
@@ -47674,8 +47675,25 @@ implement the same column visibility functionality, which right now exists only 
   configuation will be inherited by all sub-tables; if it's a per sub-table configuration that one wins on the sub-table
   level)
 
+
 ** TODO add complete keyboard control also on the sub-table "Visibility" menu
 
+add the same complete keyboard control (keyboard movement commands and restricting the movement just inside the menu) on
+the sub-table specific "Visible columns" menu reachable with the button
+
+#+begin_example
+<button id="mb-stf-Official-vis-btn" type="button" 
+#+end_example
+
+like
+
+for the global one reachable via the button
+
+#+begin_example
+<button id="mb-visible-btn" title="Show/hide table columns (Ctrl+M, then V)" type="button"
+#+end_example
+
+Probably try to refactor to not double the code
 
 * add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
 
