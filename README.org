@@ -47564,42 +47564,6 @@ small glitches,
 
 - the background color of the sub-table specific resize button should have a darker green than the curretn color to visually distinguish from the standard color
 
-
-* TODO all buttons need the pressing effect
-
-What needs to be done to the following code to create the effect that the button is actually pressed (it should kinda move down a little bit)
-#+begin_example
-    function makeButtonHTML(text, underlineChar, icon) {
-        const idx = text.indexOf(underlineChar);
-        let label;
-        if (idx === -1) {
-            label = text;
-        } else {
-            label = text.slice(0, idx) +
-                '<span style="text-decoration:underline">' + underlineChar + '</span>' +
-                text.slice(idx + underlineChar.length);
-        }
-        const content = icon ? icon + ' ' + label : label;
-        return '<span>' + content + '</span>';
-    }
-
-    function uiActionBtnBaseCSS() {
-        const defaults = '0.8em|2px 8px|24px|6px';
-        const [fontSize, padding, height, borderRadius] =
-            parseCondensedStyle(Lib.settings.sa_ui_action_btn_style, defaults);
-        return `font-size:${fontSize}; padding:${padding}; height:${height}; border-radius:${borderRadius}; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center;`;
-    }
-
-        // Create toggle button
-        const toggleBtn = document.createElement('button');
-        toggleBtn.id = 'mb-visible-btn';
-        toggleBtn.innerHTML = makeButtonHTML('Visible', 'V', '👁️');
-        toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then V)`;
-        toggleBtn.style.cssText = uiActionBtnBaseCSS();
-        toggleBtn.type = 'button';
-#+end_example
-
-
 * DONE sub-table specific keyboard shortcuts for
 
 In the uploaded userscript,
@@ -47695,7 +47659,7 @@ for the global one reachable via the button
 
 Probably try to refactor to not double the code
 
-* TODO add keyboard control to each "Show unique column values" menu
+* DONE add keyboard control to each "Show unique column values" menu
 ** DONE initial
 
 
@@ -47714,7 +47678,7 @@ add complete keyboard control (keyboard movement commands and restricting the mo
 - when a menu element has the fous and "Enter" is pressed, the underlying element should get copied to the column level
   filter field and the table filtering should immediately start with that value as input
 
-** bugs
+** DONE bugs
 
 In the uploaded userscript,
 
@@ -47728,12 +47692,6 @@ In the uploaded userscript,
   works when pressing the ENTER key)
   
 Please fix
-
-* add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
-
-
-* please check function documentations against it's implementatin again and fix if necessary
-
 
 * DONE remove the experimental "(Show all)" functionality boolean as it's now strictly needed for the multi-row cell stuff
 * DONE !!! Remove CAA rendering AND  (Load more...) boolean
@@ -48397,6 +48355,49 @@ and this is the code
 #+end_example
 
 
+* TODO all buttons need the pressing effect
+
+What needs to be done to the following code to create the effect that the button is actually pressed (it should kinda move down a little bit)
+#+begin_example
+    function makeButtonHTML(text, underlineChar, icon) {
+        const idx = text.indexOf(underlineChar);
+        let label;
+        if (idx === -1) {
+            label = text;
+        } else {
+            label = text.slice(0, idx) +
+                '<span style="text-decoration:underline">' + underlineChar + '</span>' +
+                text.slice(idx + underlineChar.length);
+        }
+        const content = icon ? icon + ' ' + label : label;
+        return '<span>' + content + '</span>';
+    }
+
+    function uiActionBtnBaseCSS() {
+        const defaults = '0.8em|2px 8px|24px|6px';
+        const [fontSize, padding, height, borderRadius] =
+            parseCondensedStyle(Lib.settings.sa_ui_action_btn_style, defaults);
+        return `font-size:${fontSize}; padding:${padding}; height:${height}; border-radius:${borderRadius}; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center;`;
+    }
+
+        // Create toggle button
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'mb-visible-btn';
+        toggleBtn.innerHTML = makeButtonHTML('Visible', 'V', '👁️');
+        toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then V)`;
+        toggleBtn.style.cssText = uiActionBtnBaseCSS();
+        toggleBtn.type = 'button';
+#+end_example
+
+
+
+* add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
+
+
+* please check function documentations against it's implementatin again and fix if necessary
+
+
+
 * TODO add addRGsFromAbove.js configurable
 
 In the uploaded userscript,
@@ -48780,6 +48781,10 @@ one row per coverart - type, comment, dimensions
 
 * retry "Failed to fetch" - CAA cover artcode
 
+In the CAA cover art fetching code
+
+implement a queued retry mechanisms to workaround the following "Failed to fetch" errors
+
 #+begin_example
 23:35:51.910 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: fetch error for /release-group/5cbee6ec-2cd2-4cc5-a41e-33d80140fe63: TypeError: Failed to fetch
     at caaEnrichReleaseGroupIcon (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21214:32)
@@ -48792,5 +48797,8 @@ one row per coverart - type, comment, dimensions
     at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:15717:13)
 #+end_example
 
+Where the CAA artwork icon would normally be rendered show a replacement icon with a red text which counts from 5 to 0
+backwards for each retry. Replace that icon with the actual download CA artwork image or leave a red questiomnark in
+place for a visual clue that retries have at least been tried
 
 * add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
