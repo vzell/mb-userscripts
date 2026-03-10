@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.103+2026-03-10
+// @version      9.99.101+2026-03-10
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -303,11 +303,10 @@
         sa_shortcut_col_unsort: {
             label: "Shortcut: Restore Original Sort Order (column filter focused)",
             type: "keyboard_shortcut",
-            default: "Ctrl+#",
+            default: "Ctrl+Shift+=",
             description: "When a column filter field has focus: restore the original (unsorted) row order — " +
-                         "emulates clicking the ⇅ sort icon in the column header (default: Ctrl+#). " +
-                         "The '#' key is Shift+3 on US/UK keyboards; the browser always reports e.key='#' " +
-                         "so no shifted-key ambiguity arises and isShortcutEvent() matches it directly."
+                         "emulates clicking the ⇅ sort icon in the column header (default: Ctrl+Shift+=). " +
+                         "Note: because Shift+= produces '+' on US keyboards the handler matches both = and + with Ctrl+Shift held."
         },
 
         sa_shortcut_col_toggle_collapse: {
@@ -5910,12 +5909,12 @@
                 shortcuts: [
                     { keys: getShortcutDisplay('sa_shortcut_col_sort_asc',        'Ctrl+↑'),        desc: 'Sort column ascending (emulates clicking ▲ in the column header)' },
                     { keys: getShortcutDisplay('sa_shortcut_col_sort_desc',       'Ctrl+↓'),        desc: 'Sort column descending (emulates clicking ▼ in the column header)' },
-                    { keys: getShortcutDisplay('sa_shortcut_col_unsort',          'Ctrl+#'),        desc: 'Restore original sort order (emulates clicking ⇅ in the column header)' },
+                    { keys: getShortcutDisplay('sa_shortcut_col_unsort',          'Ctrl+Shift+='),  desc: 'Restore original sort order (emulates clicking ⇅ in the column header)' },
                     { keys: getShortcutDisplay('sa_shortcut_col_toggle_collapse', 'Ctrl+O'),        desc: 'Toggle collapse / expand multi-row cells in this column (emulates ▶/◀ header icon)' },
                     { keys: getShortcutDisplay('sa_shortcut_col_unique_dropdown', 'Ctrl+Q'),        desc: 'Open unique-values dropdown for this column (emulates 📊 header icon)' },
                     { keys: getShortcutDisplay('sa_shortcut_col_toggle_caa',      'Ctrl+A'),        desc: 'Toggle CAA cover art images for the enclosing table (emulates the CAA toggle button)' },
                     { keys: getShortcutDisplay('sa_shortcut_auto_resize',         'Ctrl+R'),        desc: 'Resize columns of the enclosing sub-table (falls back to global resize in single-table mode)' },
-                    { keys: getShortcutDisplay('sa_shortcut_open_visible_columns','Ctrl+V'),        desc: 'Open the per-sub-table visible-columns menu (mb-stf-…-vis-btn in the h3 header); falls back to global visible-columns menu in single-table mode' }
+                    { keys: getShortcutDisplay('sa_shortcut_open_visible_columns','Ctrl+V'),        desc: 'Open visible columns menu (same as global Ctrl+V, consumed at column-filter level)' }
                 ]
             },
             {
@@ -6033,8 +6032,8 @@
         note.style.cssText = 'margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.85em; color: #666; font-style: italic;';
         note.innerHTML = '<strong>Note:</strong> Ctrl shortcuts work everywhere, even in input fields.<br>' +
                          '? and / only work when not typing in input fields.<br>' +
-                         'Column filter shortcuts (Ctrl+↑/↓, Ctrl+#, Ctrl+O, Ctrl+Q, Ctrl+A) are only active when a column filter field has focus.<br>' +
-                         'Ctrl+R and Ctrl+V target the per-sub-table resize / visible-columns buttons when focus is in a sub-table column filter (fall back to global buttons in single-table mode).';
+                         'Column filter shortcuts (Ctrl+↑/↓, Ctrl+O, Ctrl+Q, Ctrl+A, Ctrl+R, Ctrl+V, Ctrl+Shift+=) ' +
+                         'are only active when a column filter field has focus.';
         scrollArea.appendChild(note);
 
         Lib.debug('shortcuts', 'Keyboard shortcuts help displayed');
@@ -6198,25 +6197,6 @@
                 const _cfHeaderRow  = _cfTable ? _cfTable.querySelector('thead tr:first-child') : null;
                 const _cfTh         = (_cfHeaderRow && _cfColIdx >= 0) ? _cfHeaderRow.cells[_cfColIdx] : null;
 
-                // Walk backwards from the table to find the owning h3.mb-toggle-h3,
-                // skipping injected elements such as div.mb-caa-bigbox that may sit
-                // between the h3 and the table in multi-table mode.  Mirrors the logic
-                // used by caaFindHeaderForTable() — max 5 steps to avoid runaway walks.
-                const _findOwningH3 = (tbl) => {
-                    if (!tbl) return null;
-                    let _prev = tbl.previousElementSibling;
-                    let _steps = 0;
-                    while (_prev && _steps < 5) {
-                        if (_prev.tagName === 'H3' && _prev.classList.contains('mb-toggle-h3')) {
-                            return _prev;
-                        }
-                        _prev = _prev.previousElementSibling;
-                        _steps++;
-                    }
-                    return null;
-                };
-                const _cfH3 = _findOwningH3(_cfTable);
-
                 /**
                  * Click the sort-icon-btn whose bare text (stripped of superscript
                  * priority digits) equals `bare` (one of '⇅', '▲', '▼').
@@ -6262,20 +6242,34 @@
                     return;
                 }
 
-                // Restore original sort order: Ctrl+# (configurable via sa_shortcut_col_unsort)
-                // '#' is the character produced by Shift+3 on US/UK keyboards; browsers always
-                // report e.key='#' regardless of platform, so isShortcutEvent() matches directly
-                // without any shifted-key workaround.
-                if (isShortcutEvent(e, 'sa_shortcut_col_unsort', 'Ctrl+#')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (_clickSortIcon('⇅')) {
-                        Lib.debug('shortcuts', 'Column sort restored (⇅) triggered via ' +
-                            getShortcutDisplay('sa_shortcut_col_unsort', 'Ctrl+#'));
-                    } else {
-                        Lib.warn('shortcuts', 'No ⇅ sort icon found in column header');
+                // Restore original sort order: Ctrl+Shift+=
+                // On US keyboards Shift+= produces '+', so we match both characters.
+                // isShortcutEvent is intentionally bypassed here because it compares
+                // e.key ('+'  when shifted) against the stored key ('='), which would
+                // never match.  We detect the modifier pattern directly instead.
+                {
+                    const _unsortCfg = (typeof Lib !== 'undefined' && Lib.settings &&
+                                        Lib.settings.sa_shortcut_col_unsort)
+                        ? Lib.settings.sa_shortcut_col_unsort
+                        : 'Ctrl+Shift+=';
+                    const _up = parsePrefixShortcut(_unsortCfg);
+                    const _ctrlOk  = _up.ctrl  ? (e.ctrlKey || e.metaKey) : (!e.ctrlKey && !e.metaKey);
+                    const _altOk   = _up.alt   ? e.altKey                  : !e.altKey;
+                    const _shiftOk = _up.shift ? e.shiftKey                : !e.shiftKey;
+                    // Accept '=' or '+' for the Equal key so the shortcut works regardless
+                    // of whether the browser reports the shifted ('+'  ) or unshifted ('=') value.
+                    const _keyOk   = e.key === _up.key || e.key === '=' || e.key === '+' || e.code === 'Equal';
+                    if (_ctrlOk && _altOk && _shiftOk && _keyOk &&
+                        (_up.key === '=' || _up.key === '+' || e.code === 'Equal')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (_clickSortIcon('⇅')) {
+                            Lib.debug('shortcuts', 'Column sort restored (⇅) triggered via ' + _unsortCfg);
+                        } else {
+                            Lib.warn('shortcuts', 'No ⇅ sort icon found in column header');
+                        }
+                        return;
                     }
-                    return;
                 }
 
                 // Toggle multi-row cell collapse: Ctrl+O (configurable via sa_shortcut_col_toggle_collapse)
@@ -6333,7 +6327,8 @@
                 if (isShortcutEvent(e, 'sa_shortcut_auto_resize', 'Ctrl+R') && _cfTable) {
                     e.preventDefault();
                     e.stopPropagation();
-                    const _subResizeBtn = _cfH3
+                    const _cfH3        = _cfTable.previousElementSibling;
+                    const _subResizeBtn = (_cfH3 && _cfH3.classList.contains('mb-toggle-h3'))
                         ? _cfH3.querySelector('.mb-subtable-resize-btn')
                         : null;
                     if (_subResizeBtn) {
@@ -6351,33 +6346,20 @@
                     return;
                 }
 
-                // Sub-table Visible Columns: Ctrl+V — when focus is in a sub-table column
-                // filter, click the per-sub-table `.mb-subtable-vis-btn` button (id pattern
-                // `mb-stf-${safeId}-vis-btn`) that lives in the preceding h3 header.
-                // Falls back to the global `mb-visible-btn` when no per-sub-table button
-                // is found (single-table mode).
+                // Sub-table Visible Columns: Ctrl+V — opens the global visible-columns
+                // menu (no per-subtable variant exists) but only when focus is in a
+                // column filter so the key is consumed before reaching the global handler.
                 if (isShortcutEvent(e, 'sa_shortcut_open_visible_columns', 'Ctrl+V') && _cfTable) {
                     e.preventDefault();
                     e.stopPropagation();
-                    const _subVisBtn = _cfH3
-                        ? _cfH3.querySelector('.mb-subtable-vis-btn')
-                        : null;
-                    if (_subVisBtn) {
-                        _subVisBtn.click();
-                        Lib.debug('shortcuts', 'Sub-table visible-columns menu opened via ' +
+                    const _visBtn = document.getElementById('mb-visible-btn');
+                    if (_visBtn) {
+                        _visBtn.click();
+                        Lib.debug('shortcuts', 'Visible columns menu opened via ' +
                             getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V') +
-                            ' (sub-table context, btn=' + _subVisBtn.id + ')');
+                            ' (from column filter focus)');
                     } else {
-                        // Single-table mode — no per-sub-table vis-btn; fall back to global
-                        const _globalVisBtn = document.getElementById('mb-visible-btn');
-                        if (_globalVisBtn) {
-                            _globalVisBtn.click();
-                            Lib.debug('shortcuts', 'Global visible-columns menu opened via ' +
-                                getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V') +
-                                ' (global fallback from column filter focus)');
-                        } else {
-                            Lib.warn('shortcuts', 'No visible-columns button found (neither sub-table nor global)');
-                        }
+                        Lib.warn('shortcuts', 'Visible columns button not found');
                     }
                     return;
                 }

@@ -1,17 +1,5 @@
 [
     {
-        "version": "9.99.103",
-        "date": "2026-03-10",
-        "sections": [
-            {
-                "label": "🐛 Bug Fixes",
-                "items": [
-                    "Ctrl+V and Ctrl+R (column-filter-focused) always fell back to the global button — root cause: the h3 lookup used `_cfTable.previousElementSibling` directly, but in multi-table mode when CAA big-pics are active a `div.mb-caa-bigbox` sits between the h3 and the table, so `previousElementSibling` returned the bigbox (not the h3) and the `classList.contains('mb-toggle-h3')` guard evaluated to false. Fix: replaced the single-step lookup with a `_findOwningH3()` helper that walks up to 5 `previousElementSibling` steps (mirrors the identical strategy used by `caaFindHeaderForTable()`). Both Ctrl+R and Ctrl+V now share this single resolved `_cfH3` variable computed once at the top of the column-filter-focused block."
-                ]
-            }
-        ]
-    },
-    {
         "version": "9.99.102",
         "date": "2026-03-10",
         "sections": [

@@ -1,31 +1,5 @@
 [
     {
-        "version": "9.99.103",
-        "date": "2026-03-10",
-        "sections": [
-            {
-                "label": "🐛 Bug Fixes",
-                "items": [
-                    "Ctrl+V and Ctrl+R (column-filter-focused) always fell back to the global button — root cause: the h3 lookup used `_cfTable.previousElementSibling` directly, but in multi-table mode when CAA big-pics are active a `div.mb-caa-bigbox` sits between the h3 and the table, so `previousElementSibling` returned the bigbox (not the h3) and the `classList.contains('mb-toggle-h3')` guard evaluated to false. Fix: replaced the single-step lookup with a `_findOwningH3()` helper that walks up to 5 `previousElementSibling` steps (mirrors the identical strategy used by `caaFindHeaderForTable()`). Both Ctrl+R and Ctrl+V now share this single resolved `_cfH3` variable computed once at the top of the column-filter-focused block."
-                ]
-            }
-        ]
-    },
-    {
-        "version": "9.99.102",
-        "date": "2026-03-10",
-        "sections": [
-            {
-                "label": "🔧 Changes",
-                "items": [
-                    "Unsort column shortcut changed from Ctrl+Shift+= to Ctrl+# — '#' (Shift+3 on US/UK keyboards) is reported by the browser as e.key='#' without any shifted-key ambiguity, so the handler is now a plain isShortcutEvent() call; the complex parsePrefixShortcut() + multi-key fallback workaround has been removed. Config key: sa_shortcut_col_unsort, new default: 'Ctrl+#'.",
-                    "Ctrl+V (Visible Columns) now targets the per-sub-table visible-columns button (id pattern mb-stf-${safeId}-vis-btn, class .mb-subtable-vis-btn) in the preceding h3.mb-toggle-h3 header when focus is inside a sub-table column filter field; falls back to the global #mb-visible-btn in single-table mode (no per-sub-table button present). Previously the sub-table handler always used the global button.",
-                    "showShortcutsHelp(): updated help-dialog entry for Ctrl+V (column filter context) to document the per-sub-table-first lookup; updated Ctrl+# entry; updated footer note to list Ctrl+# and describe Ctrl+R/Ctrl+V sub-table-vs-global fallback logic."
-                ]
-            }
-        ]
-    },
-    {
         "version": "9.99.101",
         "date": "2026-03-10",
         "sections": [

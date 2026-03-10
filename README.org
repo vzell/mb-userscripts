@@ -47600,42 +47600,18 @@ What needs to be done to the following code to create the effect that the button
 #+end_example
 
 
-* TODO keyboard shortcuts for
+* TODO sub-table specific keyboard shortcuts for
+
+In the uploaded userscript,
 
 add the following
-
-1.)
-
-remove the "sa_expand_show_all_cells" boolean (and all it's references) as this feature is now integral to the
-functioning of the userscript
-
-#+begin_example
-        sa_expand_show_all_cells: {
-            label: 'Auto-expand "(show N more)" cells before row extraction',
-            type: "checkbox",
-            default: true,
-            description: 'On pages such as "Place-Events" and "Artist-Works", MusicBrainz truncates certain columns and hides ' +
-                         'remaining entries behind a "(show N more)" toggle (li.show-all). ' +
-                         'The complete data for ALL entries is always present in a <script type="application/json"> element ' +
-                         'inside the same <td> — React just limits how many <li> items it renders. ' +
-                         'When enabled, the script reads that JSON, detects its shape by the top-level key ' +
-                         '("relations" for Place-Events Artists, "artists" for Artist-Works Recording artists, ' +
-                         '"attributes" for Artist-Works Attributes, "iswcs" for Artist-Works ISWC), reconstructs the missing <li> elements, ' +
-                         'and removes both li.show-all and li.show-less. ' +
-                         'Works identically on the live page and on DOMParser-fetched subsequent pages — no iframes or extra network requests required. ' +
-                         'New JSON shapes (future MB columns) can be added to the SHOW_ALL_JSON_HANDLERS registry in the source.'
-        },
-
-#+end_example
-
-2.)
 
 in "single" or "multi" table mode, when a column filter field has the focus add the following (enduser configurable via
 "// KEYBOARD SHORTCUTS SECTION" in the configuration variable "const configSchema") keyboard shortcuts for 
 
 - sort ascending - Ctrl+<up> (emulate pressing the sort ascending icon in the column header)
 - sort desxcending - Ctrl+<down> (emulate pressing the sort descending icon in the column header)
-- unsorted - Ctrl+Shift+= (emulate pressing the restore original sort order icon in the column header)
+- unsorted - Ctrl+# (emulate pressing the restore original sort order icon in the column header)
 - collapse/uncollapse multi-row cells - Ctrl-O (emulate pressing the collapse/uncollapse multi-row cells toggle icon in the column header)
 - unique value drop-down - Ctrl-Q (emulate clicking the "Show unique column values" icon in the column header)
 - Toggle CAA cover art images - Ctrl-A (emulate clicking the "Toggle CAA cover art images" button for the sub-table/singe-table)
@@ -47645,7 +47621,40 @@ in "single" or "multi" table mode, when a column filter field has the focus add 
 
 Also document them in the shortcut help reachable via the "Show keyboard shortcuts" button
 
-  
+** change key and add new key combo
+
+actually change the following key combination
+
+#+begin_example
+- unsorted - Ctrl+Shift+= (emulate pressing the restore original sort order icon in the column header)
+#+end_example
+
+to
+
+#+begin_example
+- unsorted - Ctrl+# (emulate pressing the restore original sort order icon in the column header)
+#+end_example
+
+and redefine the global "Visible columns" (Ctrl+V) shortcuts to work on the subtable level button
+
+#+begin_example
+<button id="mb-stf-Official-vis-btn" type="button" 
+#+end_example
+
+when focus is inside a subtable specific column level filter field 
+
+Please also document
+
+** Ctrl-V
+
+Ctrl-V doesn't work on the sub-table level "Column Visibility" button
+
+debug log
+
+#+begin_example
+01:29:25.075 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Global visible-columns menu opened via Ctrl+V (global fallback from column filter focus) 
+#+end_example
+
 * TODO column "Visibility" per sub-table
 ** DONE initial
 
@@ -48677,7 +48686,8 @@ to the event parts extracted
 
 * TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
 
-* !!! Remove CAA rendering AND  (Load more...) boolean
+
+* DONE !!! Remove CAA rendering AND  (Load more...) boolean
 
 remove the "sa_expand_show_all_cells" boolean (and all it's references) as this feature is now integral to the
 functioning of the userscript

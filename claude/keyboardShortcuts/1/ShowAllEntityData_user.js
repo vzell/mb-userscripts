@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.103+2026-03-10
+// @version      9.99.102+2026-03-10
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -6198,25 +6198,6 @@
                 const _cfHeaderRow  = _cfTable ? _cfTable.querySelector('thead tr:first-child') : null;
                 const _cfTh         = (_cfHeaderRow && _cfColIdx >= 0) ? _cfHeaderRow.cells[_cfColIdx] : null;
 
-                // Walk backwards from the table to find the owning h3.mb-toggle-h3,
-                // skipping injected elements such as div.mb-caa-bigbox that may sit
-                // between the h3 and the table in multi-table mode.  Mirrors the logic
-                // used by caaFindHeaderForTable() — max 5 steps to avoid runaway walks.
-                const _findOwningH3 = (tbl) => {
-                    if (!tbl) return null;
-                    let _prev = tbl.previousElementSibling;
-                    let _steps = 0;
-                    while (_prev && _steps < 5) {
-                        if (_prev.tagName === 'H3' && _prev.classList.contains('mb-toggle-h3')) {
-                            return _prev;
-                        }
-                        _prev = _prev.previousElementSibling;
-                        _steps++;
-                    }
-                    return null;
-                };
-                const _cfH3 = _findOwningH3(_cfTable);
-
                 /**
                  * Click the sort-icon-btn whose bare text (stripped of superscript
                  * priority digits) equals `bare` (one of '⇅', '▲', '▼').
@@ -6333,7 +6314,8 @@
                 if (isShortcutEvent(e, 'sa_shortcut_auto_resize', 'Ctrl+R') && _cfTable) {
                     e.preventDefault();
                     e.stopPropagation();
-                    const _subResizeBtn = _cfH3
+                    const _cfH3        = _cfTable.previousElementSibling;
+                    const _subResizeBtn = (_cfH3 && _cfH3.classList.contains('mb-toggle-h3'))
                         ? _cfH3.querySelector('.mb-subtable-resize-btn')
                         : null;
                     if (_subResizeBtn) {
@@ -6359,7 +6341,8 @@
                 if (isShortcutEvent(e, 'sa_shortcut_open_visible_columns', 'Ctrl+V') && _cfTable) {
                     e.preventDefault();
                     e.stopPropagation();
-                    const _subVisBtn = _cfH3
+                    const _cfH3        = _cfTable.previousElementSibling;
+                    const _subVisBtn   = (_cfH3 && _cfH3.classList.contains('mb-toggle-h3'))
                         ? _cfH3.querySelector('.mb-subtable-vis-btn')
                         : null;
                     if (_subVisBtn) {
