@@ -47718,7 +47718,7 @@ functioning of the userscript
 
 #+end_example
 
-* DONE add jesus2099 artcode fetching (configurable)
+* TODO add jesus2099 artcode fetching (configurable)
 ** DONE initial
 
 In the uploaded userscript,
@@ -48057,23 +48057,6 @@ https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 in the "R
 https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - "Release groups" column
 
-** incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in fro of the release or release group title
-
-some more things to implement:
-
-- incorporate the functionality from the current "CAA" column, basically the addition of the "yes" (CAA image available)
-  and "no" (no CAA image) synthetic values to the "show unique column values"-dropdown menu, and add that same
-  functionality right to the columns defined as
-
-#+begin_example
-            features: {
-                addCAA: '<column name>'
-            },
-#+end_example
-  
-- leave for now the double implementation inside the "CAA column", we will get of rid of the whole "CAA" column approch later
-  
-** Do NOT render the CAA toggle button if none of the rows in a table/sub-table has actually CAA images
 ** DONE add jesus2099 feature about number of coverart images in the toolip or in the cells directly behind the generic CAA image
 *** initial
 
@@ -48319,7 +48302,7 @@ Here is the debug log:
 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Auto-focused global filter input after final render 
 #+end_example
 
-** why NO count
+** DONE why NO count
 
 Why is the count not displayed as a tooltip on the CAA icon at
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in the "CAA" column, also it gets logged
@@ -48354,6 +48337,36 @@ and this is the code
             }
 #+end_example
 
+** Do NOT render the CAA toggle button if none of the rows in a table/sub-table have actually CAA images
+
+Do NOT render the CAA toggle button if none of the rows in a table/sub-table have actually CAA images, see the following HTML code when rendered
+
+#+begin_example
+<button id="mb-caa-toggle-btn-12" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3abf4aed-71c0-45a6-8140-d916553956d8/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">0
+  </span>
+</button>
+#+end_example
+
+So when there is a '<span class="mb-caa-toggle-count">0' present
+
+** incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in front of the release or release group title
+
+some more things to implement:
+
+- incorporate the functionality from the current "CAA" column, basically the addition of the "yes" (CAA image available)
+  and "no" (no CAA image) synthetic values to the "show unique column values"-dropdown menu, and add that same
+  functionality right to the columns defined as
+
+#+begin_example
+            features: {
+                addCAA: '<column name>'
+            },
+#+end_example
+  
+- leave for now the double implementation inside the "CAA column", we will get of rid of the whole "CAA" column approch later
+  
 
 * TODO all buttons need the pressing effect
 
@@ -48779,33 +48792,10 @@ one row per coverart - type, comment, dimensions
 * DONE rename "type: 'events'," to "type: 'artist-events',
 
 
-* retry "Failed to fetch" - CAA cover artcode
+* TODO add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
 
-In the CAA cover art fetching code
-
-implement a queued retry mechanisms to workaround the following "Failed to fetch" errors
-
-#+begin_example
-23:35:51.910 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: fetch error for /release-group/5cbee6ec-2cd2-4cc5-a41e-33d80140fe63: TypeError: Failed to fetch
-    at caaEnrichReleaseGroupIcon (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21214:32)
-    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21262:25
-    at NodeList.forEach (<anonymous>)
-    at caaInitSmallPics (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21258:15)
-    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21710:13
-    at NodeList.forEach (<anonymous>)
-    at initCaaPics (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21705:16)
-    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:15717:13)
-#+end_example
-
-Where the CAA artwork icon would normally be rendered show a replacement icon with a red text which counts from 5 to 0
-backwards for each retry. Replace that icon with the actual download CA artwork image or leave a red questiomnark in
-place for a visual clue that retries have at least been tried
-
-
-* add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
-
-
-* CAA
+* CAA - errors: blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource - Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES
+** errors
 
 #+begin_example
 Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES
@@ -48819,6 +48809,8 @@ No 'Access-Control-Allow-Origin' header is present on the requested resource.
 #+begin_example
 Access to fetch at 'https://coverartarchive.org/release-group/08e0c4c1-5ebc-47e0-bf69-4c68a3513f1a' from origin 'https://musicbrainz.org' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
 #+end_example
+
+** tips - ChatGPT
 
 #+begin_example
 If your goal is only to know whether artwork exists or how many images exist, you do not need to download the full JSON from the Cover Art Archive endpoint.
@@ -48991,7 +48983,8 @@ Some high-performance MusicBrainz tools use it to count covers with log₂ probi
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/bf285261-5d56-4b30-8af6-edc018b03518
 #+end_example
 
-* Why
+
+* DONE Why - I would at least expect an error in the console log
 ** initial
 
 In the uploaded userscript,
@@ -49046,4 +49039,1243 @@ e.g.
 
 Do we also need something like the "sa_caa_fetch_concurrency" concurrency for this load path ?
 
+
+* Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a miniature picture the standard browser "broken image" placeholder is rendered instead
+
+Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a
+miniature picture, the standard browser "broken image" placeholder is rendered instead, although ALL the CAA images are
+present (e.g. in the follwing two examples the "3" and "1") when uncollapsing them
+
+#+begin_example
+<button id="mb-caa-toggle-btn-9" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/eb888b1c-1e6a-41b1-8075-f88f9d479694/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">3
+  </span>
+</button>
+
+<button id="mb-caa-toggle-btn-10" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3b9fcaac-0739-4b83-af64-4068fffa7bd4/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">1
+  </span>
+</button>
+#+end_example
+
+
+* Filtering the CAA big-picture hover strip on the sub-table level doesn't work when entering the filtert string in the sub-table filter field, but it works when entering it in the column leven filter field
+
+Filtering the CAA big images (the number disdplayed) in the image stripe on the sub-table level doesn't work when
+entering the filter string in the sub-table filter field, but it works when entering it in the column level filter field
+
+* the big-picture hover strip above `table` is missing for pageTypes where releases are involved
+
+the big-picture hover strip above the `table` is missing for pageTypes where "releases" or "release groups" are involved and rendered in rows, eg for the following types of URLs
+
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases - "Release" column => release CAA artwork
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - "Release groups" column => release group CAA artwork
+- https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 - "Release title" column => release CAA artwork
+- https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e - "Release" column => release CAA artwork
+https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column => release CAA artwork
+  
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710 - "Title" column => release CAA artwork
+  
+* number of images per release is NEVER shown (check the CAA API how to get it)
+
+* "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+
+* distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a fallback check using the duration property in case the transferSize is restricted)
+
+* implement an indexed-DB persistent storage solution (with meatadat about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
+
+* is it better to use fetch or GM_xmlhttpRequest
+** question
+
+In the uploaded userscript,
+
+is it better to use fetch or GM_xmlhttpRequest
+
+#+begin_example
+            GM_xmlhttpRequest({
+                method:    'GET',
+                url:       url,
+                timeout:   15000,
+                onload: function(res) {
+                    resolve({
+                        ok:     res.status >= 200 && res.status < 300,
+                        status: res.status,
+                        json:   function() {
+                            return new Promise(function(res2, rej2) {
+                                try   { res2(JSON.parse(res.responseText)); }
+                                catch (e) { rej2(e); }
+                            });
+                        }
+                    });
+                },
+                onerror:   reject,
+                ontimeout: function() { reject(new Error('GM_xmlhttpRequest timeout for ' + url)); }
+            });
+#+end_example
+** answer
+
+#+begin_example
+The two questions answered separately
+1. Can <img>-based paths switch to GM_xmlhttpRequest?
+Technically yes, but it would give zero benefit and add real cost.
+The CORS failure was specific to fetch(), which runs in the page's browsing context and defaults to cors request mode, causing the browser to send an OPTIONS preflight and then enforce Access-Control-Allow-Origin on the response. <img> elements with no crossOrigin attribute set are "no-cors" requests — the browser never sends a preflight and never checks Access-Control-Allow-Origin. They cannot produce CORS errors regardless of what the CDN returns. Confirmed: none of the three <img>-using functions (caaLoadIcon, initCaaInlinePics, caaInitBigPics) set crossOrigin anywhere in the code.
+Switching img paths to GM_xmlhttpRequest would require responseType: 'blob' + URL.createObjectURL() everywhere, manual blob-URL revocation to avoid memory leaks, and — critically — would bypass the browser's HTTP cache entirely, meaning images that are already cached from a prior navigation would need to be re-fetched over the network on every render. That is a strict regression.
+The GM_xmlhttpRequest switch for caaEnrichReleaseGroupIcon (v9.99.111) was the right and complete fix for the CORS issue.
+
+2. Is there real double-downloading?
+Yes, on exactly 5 page types. Here is the complete matrix:
+pageTypecaaLoadIcon (CAA column)initCaaInlinePics (addCAA)Same URL?label-releasesRelease → /release/GUID/front-250Release → same✓ duplicateartist-relationships-filteredTitle → /release-group/GUID/front-250Title → same✓ duplicateartist-releasegroupsTitle → /release-group/GUID/front-250Title → same✓ duplicateartist-releasesRelease → /release/GUID/front-250Release → same✓ duplicatereleasegroup-releasesRelease → /release/GUID/front-250Release → same✓ duplicateseries-releases(no CAA extractor)Releaseno dupeartist-recordings(no CAA extractor)Release groupsno duperecording-releases(no CAA extractor)Release titleno dupe
+Both caaLoadIcon and initCaaInlinePics use sa_caa_small_img_size (same setting, same default 250), so the constructed URL is identical. The big-strip in caaInitBigPics uses sa_caa_big_img_size — a potentially different size parameter — so it is a separate URL and not part of this duplication.
+In practice the browser HTTP cache rescues the second request: since both go through the same concurrency queue they fire sequentially, so by the time the second slot fires the first response is already cached (assuming the CDN serves a non-zero max-age, which coverartarchive.org does). So no binary is actually fetched twice over the network in normal conditions. But two queue slots are consumed for what is logically one image, halving effective throughput for those rows.
+
+The right architectural fix (when you want to address it)
+A shared Map<url, Promise<string>> — a URL-to-settled-promise cache — would solve it cleanly:
+// Pseudocode
+const _caaImgCache = new Map(); // url → Promise<url>  (resolves to same url on load, null on error)
+
+function caaLoadImageCached(imgurl) {
+    if (!_caaImgCache.has(imgurl)) {
+        _caaImgCache.set(imgurl, new Promise(resolve => {
+            const img = new Image();
+            img.onload  = () => resolve(imgurl);
+            img.onerror = () => resolve(null);
+            img.src = imgurl;
+        }));
+    }
+    return _caaImgCache.get(imgurl);
+}
+Both caaLoadIcon and initCaaInlinePics would call caaLoadImageCached(imgurl) and await the same Promise for the same URL. The second caller on any given row gets the result instantly (cache hit) without consuming a queue slot. The cache would be reset at the start of each initCaaPics() call alongside _caaQueue, so stale state across re-renders is not an issue.
+This is a separate, non-urgent improvement — the browser cache already prevents the actual network double-hit. Worth doing as a dedicated commit when convenient.
+#+end_example
+
+
+* do we actually have enough information available for each pageType to completely switch to the GM_xmlhttpRequest, as it looks somehow we double the downloading of images from CAA for the synthetic "CAA" columns (right now only needed to display th number of e) and the 
+
+do we actually have enough information available for each pageType to completely switch to the GM_xmlhttpRequest, as it
+looks somehow we double the downloading of images from CAA for the synthetic "CAA" columns (right now only needed to
+display the number of images in the release group) and the column where the actual title for the release or release group
+is located and where the CAA artwork gets prepended.
+
+* retry "Failed to fetch" - CAA cover artcode
+
+In the CAA cover art fetching code
+
+implement a queued retry mechanisms to workaround the following "Failed to fetch" errors
+
+#+begin_example
+23:35:51.910 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: fetch error for /release-group/5cbee6ec-2cd2-4cc5-a41e-33d80140fe63: TypeError: Failed to fetch
+    at caaEnrichReleaseGroupIcon (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21214:32)
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21262:25
+    at NodeList.forEach (<anonymous>)
+    at caaInitSmallPics (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21258:15)
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21710:13
+    at NodeList.forEach (<anonymous>)
+    at initCaaPics (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21705:16)
+    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:15717:13)
+#+end_example
+
+Where the CAA artwork icon would normally be rendered show a replacement icon with a red text which counts from 5 to 0
+backwards for each retry. Replace that icon with the actual download CA artwork image or leave a red questiomnark in
+place for a visual clue that retries have at least been tried
+
+* is it worth to implement a retry solution (n times) for cases where images coudn't be fetched right away with manual fallback (by clicking a retry icon)
+
+#+begin_example
+    // ── CAA fetch-retry infrastructure ───────────────────────────────────────
+    //
+    // Root cause of "TypeError: Failed to fetch":
+    //   coverartarchive.org's JSON API does not include an
+    //   Access-Control-Allow-Origin header, so the browser blocks any call
+    //   made with window.fetch() from the musicbrainz.org page context.
+    //   GM_xmlhttpRequest runs in the userscript sandbox and is completely
+    //   exempt from CORS, so all CAA JSON fetches use it exclusively.
+    //
+    // The retry mechanism handles the residual case where GM_xmlhttpRequest
+    // itself encounters a network error (e.g. coverartarchive.org is briefly
+    // unreachable):
+    //
+    //   • Up to CAA_MAX_RETRIES additional attempts per release-group path.
+    //   • Multiple anchors referencing the same path share ONE retry sequence
+    //     (deduplication via _caaRetryState).
+    //   • Each retry is preceded by a visible countdown rendered as an SVG
+    //     data-URI in the caa/eaa/artwork-icon span's background-image — the
+    //     same CSS property that caaLoadIcon() normally uses for the thumbnail.
+    //   • On success: caaLoadIcon() re-fires (re-loads the artwork thumbnail)
+    //     and caaEnrichReleaseGroupIcon() re-runs (serves from cache — no extra
+    //     network round-trip).
+    //   • On final failure: a permanent red "?" SVG replaces the countdown so
+    //     the user can see that retries were at least attempted.
+    //
+    // ─────────────────────────────────────────────────────────────────────────
+#+end_example
+
+
+* CAA fixes
+
+** initial
+
+In the uploaded userscript,
+
+please fix the following issues:
+
+1.)
+
+Do NOT render the CAA toggle button if none of the rows in a table/sub-table have actually CAA images, see the following HTML code when rendered
+
+#+begin_example
+<button id="mb-caa-toggle-btn-12" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3abf4aed-71c0-45a6-8140-d916553956d8/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">0
+  </span>
+</button>
+#+end_example
+
+So when there is a '<span class="mb-caa-toggle-count">0' present
+
+2.)
+
+Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a
+miniature picture, the standard browser "broken image" placeholder is rendered instead, although ALL the CAA images are
+present (e.g. in the follwing two examples the "3" and "1") when uncollapsing them
+
+#+begin_example
+<button id="mb-caa-toggle-btn-9" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/eb888b1c-1e6a-41b1-8075-f88f9d479694/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">3
+  </span>
+</button>
+
+<button id="mb-caa-toggle-btn-10" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3b9fcaac-0739-4b83-af64-4068fffa7bd4/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">1
+  </span>
+</button>
+#+end_example
+
+3.)
+
+Filtering the CAA big images (the number displayed) in the image stripe in "multi" table mode on the sub-table level
+doesn't work when entering the filter string in the sub-table filter field, BUT it works when entering it in the column
+level filter field OR the global filter field
+
+4.)
+
+the big-picture hover strip above the `table` is missing for pageTypes where "releases" or "release groups" are involved and rendered in rows, eg for the following types of URLs
+
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases - "Release" column => release CAA artwork
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - "Release groups" column => release group CAA artwork
+  - https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 - "Release title" column => release CAA artwork
+- https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e - "Release" column => release CAA artwork
+https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column => release CAA artwork
+  
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710 - "Title" column => release CAA artwork
+
+** premature end
+
+#+begin_example
+Issue 1 — caaCreateOrUpdateToggleButton is called before caaInitBigPics. It uses caaCountLinks which counts raw release href matches, not actual artwork. The button is created speculatively with badge=0. After all images 404 the badge stays at 0 but the button is never hidden. Fix: track pending image count in caaInitBigPics; when the last image fails and the box is empty, hide button + box.
+Issue 2 — thumb.src = firstImgUrl is set at button creation time, before any image has loaded. If that first URL 404s, thumb.complete becomes true (errors also set complete). The load-handler update guard !thumb.complete then never fires for any subsequent successful image. Fix: don't set thumb.src at creation time; set it only on the first successful load event.
+Issue 3 — applySubFilter / clearSubFilter only hide/show <tr> rows. They never touch the bigbox. The strip images correspond to href values from ALL rows (hidden or not). Fix: add caaUpdateBigboxForTable(table) that walks bigbox wrappers and hides those whose href matches no currently-visible row, then updates the badge and button visibility; call it at the end of both filter functions.
+Issue 4 — initCaaPics gates entirely on caaFindCaaColumnIndex(table) !== -1. Pages with addCAA but no synthetic CAA/EAA column (artist-releases, recordings, recording, label, series, artist-relationships-filtered) all return -1 and are silently skipped. Fix: extend the gate to also pass when activeDefinition.features.addCAA is set.Ran a command, edited a fileRan a command, edited a fileFix 2 first (thumbnail src) — change caaCreateOrUpdateToggleButton to not set thumb.src at creation:
+#+end_example
+
+
+* questions
+
+- Is it possible to distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API
+  (maybe with a fallback check using the duration property in case the transferSize is restricted) and expose this information somehow visually (maybe in the "CAA" column)
+
+#+begin_example
+Short answer: the transferSize approach is fully blocked for CAA image URLs. The duration heuristic works but has significant caveats. Not worth exposing visually in the CAA column.
+#+end_example
+
+
+- is it worth implementing a retry solution (n times) for cases where images couldn't be fetched right away with a
+  manual fallback (by clicking a retry icon rendered at the position where normally the artwork would be rendered in the
+  "CAA" column"
+
+  
+#+begin_example
+### The right granularity: per-table retry button
+
+The case where retry genuinely helps is: you loaded a 400-row artist page, 30 images hit network errors because the CDN
+had a momentary hiccup, and now you want to recover them without reloading the whole page. The right UI is a **`↺`
+button in the h2/h3 header** (next to the existing toggle button) that calls `initCaaPics()` for just that table. Since
+`initCaaPics` already has full idempotency guards (`data-caa-enriched`, `_caaRgCountCache`, the `data-caa-inline-done`
+guard in `initCaaInlinePics`), re-running it only retries items that haven't already completed successfully.
+
+This button should be conditionally shown — only when at least one icon in the table is in the error/placeholder state —
+or simply always visible (one extra small button per table is low noise). It should be hidden on re-render and
+reattached if the table is rebuilt. Implementation effort is modest: ~50 lines touching `caaCreateOrUpdateToggleButton`
+and `caaInitBigPics`.
+#+end_example
+
+- is it worth implementing an indexed-DB persistent storage solution (with metadata about the images: type, size,
+  number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA API, please check the MusicBrainz CAA API)
+
+## IndexedDB persistent metadata cache
+
+**Short answer: worth implementing, but as a carefully scoped feature. The "refetch new images" button solves a real use case for MB editors. The full metadata (types, comment, edit id) would meaningfully enhance the CAA column tooltips.**
+
+### What the CAA API actually provides per image
+
+Each entry in the CAA JSON response contains: `id` (numeric string), `image` (full URL to original), `thumbnails` (with
+keys `"250"`, `"500"`, `"1200"`), `types` (array, e.g. `["Front"]`), `front` (bool), `back` (bool), `comment` (string),
+`approved` (bool), and `edit` (MusicBrainz edit ID integer).
+
+What it does **not** provide: image pixel dimensions (a long-standing open request, see CAA-33), file size, or a
+modification timestamp. There is no "since" or "updated after" parameter on the endpoint — the API is simple GET-only
+with no server-side change detection mechanism.
+
+### What the script currently does vs what it could do
+
+Currently `caaEnrichReleaseGroupIcon` fetches the JSON, reads only `images.length`, and discards everything else. The
+in-memory `_caaRgCountCache` stores only the integer count and expires on page reload. This means:
+
+- Every page visit re-fetches the JSON for every release-group visible in the CAA column
+- The image type breakdown (Front, Back, Booklet, etc.) is never shown
+- `comment` strings (e.g. `"autographed by ModBot"`) are never surfaced
+- The `approved` flag (pending moderation vs approved) is ignored
+
+### IDB schema and change detection design
+
+#+begin_example
+Store: 'caa_metadata'
+Key:   entityPath ('/release-group/GUID' or '/release/GUID')
+Value: {
+    fetchedAt:    timestamp (ms),   ← for TTL / "stale if > N days" logic
+    images:       raw images[] array from CAA API,
+    imageIds:     Set<string>        ← stored as sorted array for comparison
+}
+#+end_example
+
+Change detection on "refetch": compare stored imageIds with fresh imageIds — any new IDs are additions. No IDs are ever deleted by CAA (deletion is extremely rare and requires admin action). This is reliable enough for the editor use case.
+TTL: no automatic re-fetch (CAA data doesn't expire on a schedule). The "↺ refetch" button is the explicit re-fetch mechanism. A staleness indicator (e.g. ⊙ last fetched 14 days ago) next to the count badge would give editors the signal to click.
+Honest assessment of complexity vs benefit
+The IDB wrapper itself is modest — a small async helper over indexedDB.open/transaction/objectStore. The real complexity is:
+
+Schema migration (onupgradeneeded) — manageable, single version
+TTL / staleness UI — a data-caa-fetched-at attribute on the count badge + CSS aging indicator
+Change detection — trivial (set difference on id arrays)
+Refetch button — the per-table ↺ from item 2 above doubles as the refetch trigger; pass a force: true flag to caaEnrichReleaseGroupIcon to bypass the IDB cache
+Rich CAA column tooltip — instead of "N images found in this release", show "3 images: Front, Back, Booklet (2 approved, 1 pending)"
+
+The biggest benefit is eliminating the per-visit JSON re-fetch burst entirely. Currently on a 200-release-group artist
+page, 200 GM_xmlhttpRequest calls fire every single time the page loads (throttled through the queue, but still 200
+network round-trips). With IDB, those become zero on the second visit.
+
+The "new artwork" button is also a genuine editor workflow improvement: currently there is no way to know without a full
+page reload whether new artwork was added to a release group since you last opened the page.
+
+Verdict: worth implementing as a dedicated feature. Suggested scope: IDB metadata cache (replacing _caaRgCountCache) + enriched tooltip + per-table ↺ refetch button with new-image count badge. Pixel dimensions and file size are unavailable from the CAA API and cannot be added.
+
+- is it worth implementing an indexed-DB persistent storage solution for the fetched images altogether. Probably the
+  "Load from Disk" path would benefit the most, as there are probably almost no network rountrips involved
+  
+* questions
+
+In the uploaded userscript,
+
+- Is it possible to distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API
+  (maybe with a fallback check using the duration property in case the transferSize is restricted) and expose this information somehow visually (maybe in the "CAA" column)
+
+- is it worth implementing a retry solution (n times) for cases where images couldn't be fetched right away with a
+  manual fallback (by clicking a retry icon rendered at the position where normally the artwork would be rendered in the
+  "CAA" column"
+
+- is it worth implementing an indexed-DB persistent storage solution (with metadata about the images: type, size,
+  number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA API, please check the MusicBrainz CAA API)
+
+- is it worth implementing an indexed-DB persistent storage solution for the fetched images altogether. Probably the
+  "Load from Disk" path would benefit the most, as there are probably almost no network rountrips involved
+  
+
+ 
+* ChatGPT
+** recommendations
+
+I’ll go through your ideas one by one from a technical feasibility + real benefit perspective for a userscript like ShowAllEntityData.user.js. I’ll also point out a few implementation tricks that work well with the Cover Art Archive (CAA).
+
+1. Detecting network fetch vs browser cache hit (Resource Timing API)
+Short answer
+
+Yes — this is possible and reasonably reliable using the Resource Timing API.
+
+Recommended approach
+function getResourceTiming(url) {
+  const entries = performance.getEntriesByName(url, 'resource');
+  if (!entries.length) return null;
+
+  const e = entries[entries.length - 1];
+
+  return {
+    transferSize: e.transferSize,
+    encodedBodySize: e.encodedBodySize,
+    duration: e.duration
+  };
+}
+
+Interpretation:
+
+Case	transferSize	encodedBodySize	Meaning
+0	>0	memory cache	
+>0	>0	network	
+0	0	opaque/cross-origin restricted	
+
+Typical rule used in practice:
+
+const fromCache =
+    entry.transferSize === 0 &&
+    entry.encodedBodySize > 0;
+
+Fallback heuristic (when timing info restricted):
+
+const fromCache = entry.duration < 5;
+Caveats
+
+CAA images redirect to archive.org, which is cross-origin.
+
+That means:
+
+transferSize may be 0 even for network fetch
+
+timing info may be partially blocked
+
+So your fallback heuristic is useful.
+
+Visualizing in the CAA column
+
+Good simple indicators:
+
+Symbol	Meaning
+🟢	memory cache
+🟡	disk cache
+🔵	network
+⚠	timing unavailable
+
+Example:
+
+CAA
+[🟢] 250px
+
+or
+
+[NET 120ms]
+
+This would actually be very useful when debugging CAA loading behaviour.
+
+Verdict
+
+✔ Worth implementing
+✔ Very small code footprint
+
+2. Retry solution for failed image loads
+Yes — but with limited retries
+
+CAA sometimes fails because:
+
+archive.org latency
+
+redirect delays
+
+transient 503
+
+network hiccups
+
+Retrying 2–3 times helps.
+
+Recommended design
+
+Automatic retry:
+
+attempt 1
+attempt 2 (after 500ms)
+attempt 3 (after 1500ms)
+
+Manual retry UI:
+
+Example placeholder:
+
+[⚠ retry]
+
+or
+
+⟳
+
+Click handler:
+
+retryFetchImage(releaseMBID, imageID)
+Implementation trick
+
+Instead of retrying the <img> tag itself:
+
+fetch(blob) → createObjectURL → img.src
+
+This lets you:
+
+detect failure reliably
+
+track timing
+
+implement retry logic cleanly
+
+Verdict
+
+✔ Worth implementing
+✔ Improves UX
+✔ Low complexity
+
+3. IndexedDB metadata store for CAA images
+
+You suggested storing:
+
+type
+size
+number
+comment
+approved
+
+From CAA JSON:
+
+GET /release/{mbid}
+
+This returns metadata:
+
+types
+
+front/back
+
+comment
+
+approved
+
+thumbnails
+
+id
+
+edit id
+
+Example response contains:
+
+images[]
+  types
+  front
+  back
+  comment
+  thumbnails
+  approved
+  edit
+  id
+Question: does metadata change often?
+
+Rarely.
+
+Images usually only change when:
+
+new artwork added
+
+artwork edited
+
+artwork deleted
+
+So caching metadata is reasonable.
+
+But…
+
+Your script already loads data from MusicBrainz pages, not as a long-lived application.
+
+IndexedDB adds:
+
+schema
+
+migration
+
+cleanup
+
+invalidation
+
+For limited benefit.
+
+Alternative (simpler)
+
+Store metadata in:
+
+GM_setValue()
+
+compressed with pako.
+
+This is enough for:
+
+MBID → CAA metadata
+
+Example size:
+
+~1–5 KB per release
+
+Even 500 releases ≈ 2 MB.
+
+Verdict
+
+❌ IndexedDB not really worth it for metadata
+✔ GM storage simpler and sufficient
+
+4. IndexedDB storage for actual images
+
+This is the one idea that could be valuable, but only in one scenario:
+
+Your "Load from Disk" workflow
+
+You mentioned:
+
+"Load from Disk" path would benefit most
+
+Yes — because images could be reused without network calls.
+
+But there are important tradeoffs.
+
+Storage impact
+
+CAA images can be large.
+
+Typical sizes:
+
+size	bytes
+250px	30–80 KB
+500px	80–200 KB
+1200px	300 KB – 1 MB
+full	up to 20 MB
+
+If you store:
+
+100 releases × 3 images × 250px
+
+≈ 15–20 MB.
+
+Browser quota allows this but still non-trivial.
+
+IndexedDB complexity
+
+You would need:
+
+db: CAA_CACHE
+
+store: images
+key: releaseMBID + imageID + size
+
+value:
+{
+  blob
+  metadata
+  timestamp
+}
+
+And cache invalidation logic.
+
+But there's a simpler option
+Use the browser HTTP cache.
+
+CAA images are served with long cache headers via archive.org.
+
+So if you request:
+
+https://coverartarchive.org/release/.../123-250.jpg
+
+the browser cache already works very well.
+
+Meaning:
+
+reload page → no network fetch
+
+no code required
+
+When IndexedDB helps
+
+Only if:
+
+you export/import script data
+
+you want offline use
+
+Otherwise the browser cache already solves the problem.
+
+Verdict
+
+❌ Not worth implementing for images
+✔ browser cache already handles this efficiently
+
+Recommended feature priorities
+
+If I were evolving this script, I would implement:
+
+HIGH VALUE
+
+1️⃣ Resource timing cache indicator
+2️⃣ Retry button + auto retry
+3️⃣ CAA metadata caching (GM_setValue)
+
+MEDIUM VALUE
+
+4️⃣ Parallel fetch limiter
+
+CAA loading many releases can cause:
+
+20–100 simultaneous requests
+
+Better:
+
+max concurrency = 6
+LOW VALUE
+
+❌ IndexedDB metadata
+❌ IndexedDB image store
+
+Too much complexity vs benefit.
+
+One feature I strongly recommend adding
+CAA prefetch batching
+
+Instead of:
+
+image requests per release
+
+do:
+
+GET /release/{mbid}
+
+once per release.
+
+This returns all images metadata in one JSON.
+
+Then decide which images to load.
+
+Example endpoint:
+
+https://coverartarchive.org/release/{mbid}
+
+returns JSON list of images.
+
+This reduces requests significantly.
+
+** implementation
+
+Below is a drop-in CAA column replacement patch designed to fit your current userscript architecture:
+
+works inside your synthetic column system
+
+replaces the current CAA thumbnail loading logic
+
+adds:
+
+retry
+
+cache detection
+
+concurrency limit
+
+optional lazy loading
+
+simpler code path
+
+The patch is ~110 lines and can replace the current CAA logic.
+
+1. Add this block once near your other helper utilities
+/* ---------------- CAA Loader ---------------- */
+
+const CAA_LIMIT = 6;
+
+class AsyncLimiter {
+  constructor(max) {
+    this.max = max;
+    this.running = 0;
+    this.queue = [];
+  }
+
+  async run(task) {
+    if (this.running >= this.max)
+      await new Promise(r => this.queue.push(r));
+
+    this.running++;
+
+    try {
+      return await task();
+    } finally {
+      this.running--;
+      if (this.queue.length)
+        this.queue.shift()();
+    }
+  }
+}
+
+const caaLimiter = new AsyncLimiter(CAA_LIMIT);
+
+function detectCache(url) {
+
+  const entries = performance.getEntriesByName(url, "resource");
+
+  if (!entries.length)
+    return "⚪";
+
+  const e = entries[entries.length - 1];
+
+  if (e.transferSize === 0 && e.encodedBodySize > 0)
+    return "🟢"; // memory cache
+
+  if (e.transferSize > 0)
+    return "🔵"; // network
+
+  if (e.duration < 5)
+    return "🟡"; // disk cache
+
+  return "⚪";
+}
+
+async function fetchCAAJSON(mbid) {
+
+  const url = `https://coverartarchive.org/release/${mbid}`;
+
+  const res = await fetch(url, { cache: "force-cache" });
+
+  if (!res.ok)
+    throw new Error("CAA JSON fetch failed");
+
+  return res.json();
+}
+
+async function fetchCAAImage(url, retries = 2) {
+
+  for (let i = 0; i <= retries; i++) {
+
+    try {
+
+      const start = performance.now();
+
+      const res = await caaLimiter.run(() =>
+        fetch(url, { cache: "force-cache" })
+      );
+
+      if (!res.ok)
+        throw new Error("image fetch failed");
+
+      const blob = await res.blob();
+
+      const duration = performance.now() - start;
+
+      return {
+        url: URL.createObjectURL(blob),
+        duration
+      };
+
+    } catch (e) {
+
+      if (i === retries)
+        throw e;
+
+      await new Promise(r => setTimeout(r, 400 * (i + 1)));
+
+    }
+
+  }
+}
+2. Renderer helper
+function renderCAAImage(cell, imgURL, timing) {
+
+  const img = document.createElement("img");
+  img.src = imgURL;
+  img.width = 40;
+
+  const label = document.createElement("div");
+  label.style.fontSize = "10px";
+  label.textContent = `${timing.cache} ${timing.duration.toFixed(0)}ms`;
+
+  cell.append(img, label);
+}
+
+function renderRetry(cell, retryFn) {
+
+  const retry = document.createElement("span");
+
+  retry.textContent = "⟳";
+  retry.style.cursor = "pointer";
+  retry.title = "Retry CAA fetch";
+
+  retry.onclick = () => {
+    cell.textContent = "";
+    retryFn();
+  };
+
+  cell.appendChild(retry);
+}
+3. Drop-in CAA loader function
+
+This is the function your synthetic column extractor should call.
+
+async function loadCAAForRelease(mbid, cell) {
+
+  try {
+
+    const json = await fetchCAAJSON(mbid);
+
+    if (!json.images || !json.images.length) {
+      cell.textContent = "—";
+      return;
+    }
+
+    const imgURL = json.images[0].thumbnails["250"];
+
+    const result = await fetchCAAImage(imgURL);
+
+    const cache = detectCache(imgURL);
+
+    renderCAAImage(cell, result.url, {
+      duration: result.duration,
+      cache
+    });
+
+  }
+  catch (err) {
+
+    renderRetry(cell, () => loadCAAForRelease(mbid, cell));
+
+  }
+}
+4. Hook into your synthetic column
+
+Wherever the script currently does something like:
+
+CAAColumn(cell, mbid)
+
+replace with:
+
+loadCAAForRelease(mbid, cell);
+
+Example pattern inside your script:
+
+const mbid = rowData["MBID"];
+
+loadCAAForRelease(mbid, cell);
+5. Optional: Lazy loading (huge performance improvement)
+
+Add once:
+
+const caaObserver = new IntersectionObserver(entries => {
+
+  entries.forEach(e => {
+
+    if (!e.isIntersecting)
+      return;
+
+    const cell = e.target;
+
+    const mbid = cell.dataset.mbid;
+
+    loadCAAForRelease(mbid, cell);
+
+    caaObserver.unobserve(cell);
+
+  });
+
+});
+
+Then when building the cell:
+
+cell.dataset.mbid = mbid;
+
+caaObserver.observe(cell);
+
+This prevents loading 100+ images simultaneously.
+
+6. Result in the UI
+
+Example cells:
+
+🟢 8ms
+[thumbnail]
+🔵 130ms
+[thumbnail]
+⟳
+
+Meaning:
+
+icon	meaning
+🟢	memory cache
+🟡	disk cache
+🔵	network
+⚪	unknown
+⟳	retry
+7. Why this patch works well with your script
+
+Your userscript already has:
+
+heavy DOM manipulation
+
+async extractors
+
+large tables
+
+many parallel requests
+
+This patch adds:
+
+✔ request limiter
+✔ retry logic
+✔ proper fetch handling
+✔ cache visibility
+✔ lazy loading option
+
+without introducing:
+
+IndexedDB
+
+new dependencies
+
+major refactoring
+
+💡 One more improvement I strongly recommend for your script (after reading the file):
+
+Your CAA column currently triggers N image requests per release.
+
+But CAA already provides all images via one JSON call.
+
+I can show a second patch (~40 lines) that:
+
+loads all thumbnails of a release
+
+shows front/back icons
+
+shows image count
+
+reduces network load 5–10×
+
+If you want, I can also show that version.
+
+yes please
+
+Good — this second patch improves the CAA column significantly because it uses the single JSON endpoint of the Cover Art Archive instead of fetching thumbnails blindly.
+
+The Cover Art Archive API endpoint
+
+https://coverartarchive.org/release/{MBID}
+
+already returns all artwork metadata for a release, including:
+
+images[]
+  id
+  types
+  front
+  back
+  comment
+  approved
+  thumbnails
+
+So we can:
+
+make 1 request per release
+
+show front/back indicators
+
+show number of images
+
+fetch only thumbnails we actually display
+
+This reduces requests by 5–10×.
+
+Improved CAA Column Patch (multi-image + count)
+
+This replaces the previous loadCAAForRelease() function.
+
+Features added
+
+✔ shows image count
+✔ shows front/back markers
+✔ loads multiple thumbnails
+✔ keeps retry + cache detection
+✔ still uses request limiter
+
+1. Multi-image renderer
+function renderCAAImages(cell, images, mbid) {
+
+  const container = document.createElement("div");
+  container.style.display = "flex";
+  container.style.gap = "3px";
+  container.style.alignItems = "center";
+
+  images.forEach(img => {
+
+    const wrapper = document.createElement("div");
+
+    const thumb = document.createElement("img");
+    thumb.src = img.url;
+    thumb.width = 32;
+
+    const label = document.createElement("div");
+    label.style.fontSize = "9px";
+    label.textContent = `${img.cache}`;
+
+    wrapper.append(thumb, label);
+
+    container.appendChild(wrapper);
+
+  });
+
+  const count = document.createElement("span");
+  count.textContent = `(${images.length})`;
+  count.style.fontSize = "10px";
+
+  const link = document.createElement("a");
+  link.href = `https://coverartarchive.org/release/${mbid}`;
+  link.target = "_blank";
+  link.textContent = "CAA";
+
+  cell.append(container, count, link);
+
+}
+2. Improved loader
+async function loadCAAForRelease(mbid, cell) {
+
+  try {
+
+    const json = await fetchCAAJSON(mbid);
+
+    if (!json.images || json.images.length === 0) {
+      cell.textContent = "—";
+      return;
+    }
+
+    const imagesToLoad = json.images.slice(0, 3); // limit
+
+    const results = [];
+
+    for (const img of imagesToLoad) {
+
+      const url = img.thumbnails["250"];
+
+      try {
+
+        const res = await fetchCAAImage(url);
+
+        const cache = detectCache(url);
+
+        results.push({
+          url: res.url,
+          cache,
+          front: img.front,
+          back: img.back
+        });
+
+      }
+      catch {
+
+        results.push({
+          url: null,
+          cache: "⚠"
+        });
+
+      }
+
+    }
+
+    renderCAAImages(cell, results, mbid);
+
+  }
+  catch (err) {
+
+    renderRetry(cell, () => loadCAAForRelease(mbid, cell));
+
+  }
+}
+3. Optional: show front/back icons
+
+Modify renderer slightly:
+
+const marker = document.createElement("div");
+
+if (img.front)
+  marker.textContent = "F";
+else if (img.back)
+  marker.textContent = "B";
+
+So thumbnails appear like:
+
+[F] [thumb]
+[B] [thumb]
+4. Resulting CAA column examples
+
+Example rows now look like:
+
+[F][thumb] [B][thumb] (2) CAA
+
+or
+
+[thumb][thumb][thumb] (5) CAA
+
+with cache markers:
+
+🟢 🟡 🔵
+
+Meaning
+
+icon	meaning
+🟢	memory cache
+🟡	disk cache
+🔵	network
+⚠	failed
+5. Network improvement
+
+Before (typical):
+
+release page
+  → image1
+  → image2
+  → image3
+  → image4
+
+After:
+
+release JSON
+  → thumbnail1
+  → thumbnail2
+  → thumbnail3
+
+Result:
+
+~60–80% fewer requests
+6. Small UI improvement I recommend
+
+Add hover preview of the full image:
+
+thumb → hover → 500px
+
+Implementation is only ~12 lines using:
+
+img.onmouseenter
+
+This makes the CAA column much more useful.
+
+7. Biggest performance improvement possible for your script
+
+After studying the structure of the userscript, the single biggest speed gain would come from:
+
+IntersectionObserver lazy loading
+
+Without it:
+
+100 releases → 100 CAA fetches immediately
+
+With it:
+
+only visible rows fetch
+
+On long pages this reduces requests by 90%.
+
+If you'd like, I can also show you three additional optimizations specifically for your script that would make it dramatically faster on large MusicBrainz tables:
+
+CAA batch metadata cache
+
+request deduplication (many releases repeat)
+
+DOM rendering batching
+
+Those changes together would likely cut the runtime of your script by 50–70% on big pages.
 
