@@ -18,6 +18,8 @@
 // @match        *://*.musicbrainz.org/search?query=*
 // @connect      raw.githubusercontent.com
 // @connect      coverartarchive.org
+// @connect      archive.org
+// @connect      *.archive.org
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_setValue
