@@ -49040,6 +49040,14 @@ e.g.
 Do we also need something like the "sa_caa_fetch_concurrency" concurrency for this load path ?
 
 
+* DONE in "function initCaaInlinePics" - rename to initAaInlinePics and call either "initCaaInlinePics" or "initEaaInlinePics"
+
+also change the URLs from /coverartarchive.org/release ==> /eventartarchive.org/event/
+
+https://musicbrainz.org/doc/Cover_Art_Archive/API
+https://musicbrainz.org/doc/Event_Art_Archive/API
+
+
 * Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a miniature picture the standard browser "broken image" placeholder is rendered instead
 
 Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a
@@ -49213,7 +49221,6 @@ place for a visual clue that retries have at least been tried
 
 
 * CAA fixes
-
 ** initial
 
 In the uploaded userscript,
@@ -50279,3 +50286,93 @@ DOM rendering batching
 
 Those changes together would likely cut the runtime of your script by 50–70% on big pages.
 
+
+* cancelled event
+
+In the uploaded userscript,
+
+1.)
+
+in the function "cancelledEvent(sourceCell)"
+
+#+begin_example
+        /**
+         * cancelledEvent — extracts the cancellation indicator from a MusicBrainz
+         * event cell into a dedicated synthetic "Cancelled" column.
+         *
+         * Source structure (optional — only present for cancelled events):
+         *   <span class="cancelled">(
+         *     <bdi>cancelled
+         *     </bdi>)
+         *   </span>
+         *
+         * Unlike the `caa` and `video` extractors, the source element is NOT removed
+         * from the Event cell.  Instead the cancelled span is **cloned** into the
+         * synthetic cell so that the Event column continues to show the cancellation
+         * label alongside the event title, while the new Cancelled column provides a
+         * dedicated, sortable and filterable indicator.
+         *
+         * Sortability and dropdown filtering:
+         *   An invisible <span class="mb-cancelled-sort-key" style="display:none"> is
+         *   always appended to tdCancelled.  It contains "yes" when the cancellation
+         *   span was present, or "no" otherwise.  The span is not rendered by the
+         *   browser but IS walked by getCleanColumnText() and getCleanVisibleText()
+         *   (both use a TreeWalker that does not skip display:none elements), so:
+         *     - Sorting ascending/descending works ("no" < "yes" alphabetically).
+         *     - The unique-values dropdown shows exactly "no" and "yes".
+         *     - Clicking "yes" in the dropdown filters to cancelled events only;
+         *       clicking "no" filters to non-cancelled events only.
+         *
+         * Synthetic columns: ['Cancelled']
+         *
+         * @param   {HTMLTableCellElement} sourceCell  The source <td> element.
+         * @returns {HTMLTableCellElement[]}            Array of one synthetic <td>.
+         */
+        cancelledEvent(sourceCell) {
+#+end_example
+
+instead of extracting "(cancelled)" from e.g.
+
+#+begin_example
+<span class="cancelled">(
+  <bdi>cancelled
+  </bdi>)
+</span>
+#+end_example
+
+it should only be the word "cancelled" without the brackets, so only the contents of the "<bdi>" container
+
+2.)
+
+refactor the whole "// ── CAA Illustrated Discography feature" functionality into the "CAA (Cover Art Archive)" and "EAA
+(Event Art Archive)" features
+
+Right now only the "CAA" functionality is implemented (also some comments also talk about EAA)
+
+The CAA API is documented at https://musicbrainz.org/doc/Cover_Art_Archive/API and uses URLs of type /coverartarchive.org/release or /coverartarchive.org/release-group
+
+The EAA API is documented at https://musicbrainz.org/doc/Event_Art_Archive/API and uses URLS of type /eventartarchive.org/event/
+
+The "function initCaaInlinePics" ONLY works right now for CAA
+
+We need another one "initEaaInlinePics" for the case of EAA (see the API spec). It should use of course instead of
+
+#+begin_example
+                const link = td.querySelector('a[href*="/release-group/"], a[href*="/release/"]:not([href$="/cover-art"])');
+#+end_example
+
+a variant for the EAA
+
+We also need equivalent functions for
+
+#+begin_example
+function caaInitSmallPics(table) {
+function caaInitBigPics(table, tableIndex, btnId) {
+function caaCountLinks(table) {
+function caaLoadIcon(caaIcon) {
+etc.
+#+end_example
+
+which reference an "event" and the "/eventartarchive.org/" URL for fetching instead of "release" or release-groups" and "/coverartarchive.org/"
+
+Please implement...

@@ -2223,7 +2223,6 @@
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
                 ],
                 collapsableColumns: [ 'Artists', 'Location' ],
-                addEAA: 'Event',
                 extractMainColumn: 'Event'
             },
             tableMode: 'single'
@@ -2354,7 +2353,6 @@
                     { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] }
                 ],
                 collapsableColumns: [ 'Artists' ],
-                addEAA: 'Event',
                 extractMainColumn: 'Event'
             },
             tableMode: 'single'
