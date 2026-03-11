@@ -1,5 +1,15 @@
 [
     {
+      "version": "9.99.117",
+      "date": "2026-03-11",
+      "changes": {
+        "🐛 Bug Fixes": [
+          "renderGroupedTable (multi-table filter re-render): subtable control buttons (resize ↔️, column-visibility 👁️, collapse ▶, .mb-subtable-controls span) were being injected INTO the CAA/EAA bigbox div instead of the h3 header on filter re-renders. Root cause: the reuse branch resolves the h3 via `table.previousElementSibling`, but after the initial render `_artInitBigPics` inserts a div.mb-caa-bigbox directly before the table, so `table.previousElementSibling` returns the bigbox — not the real h3. All subsequent `h3.querySelector('.mb-subtable-controls')` checks succeeded (bigbox has none), causing every subtable button to be appended to the bigbox. The same bare `table.previousElementSibling` pattern existed in 13 call sites across the codebase (renderGroupedTable, runFilter, updateSubTableRowCount, updateSubTableCollapseButton, markSubTableAsManuallyResized, clearColumnFilters, getTableFilterStatusSpan, makeTableSortableUnified, the subtable-filter regex-error/ok handlers, and the artist-releasegroups fetch path). Fix: introduced a new shared `findH3ForTable(table)` function that walks backwards past any injected art-bigbox elements (up to 5 steps) to find the h3.mb-toggle-h3 that logically owns the table. All 13 bare `table.previousElementSibling` call sites have been replaced with `findH3ForTable(table)`. `caaFindHeaderForTable` is updated to delegate to `findH3ForTable` for its multi-table path.",
+          "_artInitPics (CAA / EAA bigbox): when a global filter reduces a sub-table to 0 matching rows, the bigbox div built during the previous (unfiltered) render was left in the DOM, still displaying all its stale artwork images. Root cause: `_artInitPics` returned early when `_artCountLinks` reported 0 links, without touching the pre-existing bigbox. Fix: before returning, `_artInitPics` now locates any bigbox with the expected id pattern (`ctx.boxPrefix + '-' + tableIndex`), clears its innerHTML and hides it (`display:none`), and also hides the corresponding toggle button to remove any ghost badge from the h3 header."
+        ]
+      }
+    },
+    {
       "version": "9.99.116",
       "date": "2026-03-11",
       "changes": {

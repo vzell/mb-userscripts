@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.117+2026-03-11
+// @version      9.99.118+2026-03-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -13165,8 +13165,19 @@
 
                 if (pageType === 'artist-releasegroups') {
                     doc.querySelectorAll('table.tbl').forEach(table => {
-                        const h3 = findH3ForTable(table);
-                        const category = h3 ? h3.textContent.trim() : 'Other';
+                        // Fetched XHR pages contain native MusicBrainz <h3> elements
+                        // (e.g. "Album", "Single", "EP") that do NOT carry the
+                        // mb-toggle-h3 class injected by renderGroupedTable().
+                        // findH3ForTable() requires that class and always returns null
+                        // here, collapsing every group into "Other".  Use a plain
+                        // backwards walk with no class restriction instead.
+                        let _prev = table.previousElementSibling, _steps = 0, _h3 = null;
+                        while (_prev && _steps < 5) {
+                            if (_prev.tagName === 'H3') { _h3 = _prev; break; }
+                            _prev = _prev.previousElementSibling;
+                            _steps++;
+                        }
+                        const category = _h3 ? _h3.textContent.trim() : 'Other';
 
                         // Logic to handle grouped data and repeating headers over multiple paginated pages (e.g. "Album + Live")
                         if (category !== lastCategorySeenAcrossPages) {

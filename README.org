@@ -50609,6 +50609,7 @@ Those changes together would likely cut the runtime of your script by 50–70% o
 
   
 * bug with filtering und strange button rendering - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+** initial
 
 On the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships there is a strange
 filtering and rendering bug for the following cases
@@ -50675,7 +50676,27 @@ Two additional 'icons buttons' "Auto-resize columns for ..." and "Show/Hide colu
 the only cover art image width the same heigth as the CAA image itself (first of all they shouldn't een be render at all
 in that place)
 
-The last behavious happens for all sub-tables with just 1 row initially
+The last behaviour happens for all sub-tables with just 1 row initially
+
+** another bug
+
+We introduced now another bug, visible on the page
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships. That page has a couple of sub-table
+which have "release" and "release group" CAA images in their rows.
+
+- after rendering the initial final page (and after all the CAA images have been loaded), all the sub-tables which have
+  CAA icons SHOW the CAA toggle button, but the image count is doubled on the button text compared to when I check (by
+  toggling the visibility) the actual renderd images in the stripe (e.g.) "button text count=8", but only 4 images
+  visible which also matches the actual 4 rows
+
+- when I now enter a gobal filter string which should only select in all the sub-tables with images exactly one
+  sub-table with one filtered row, it works and the button text now even displays the rigth count (so "1" corresponding
+  to the one displayed row)
+
+- if I now remove the global filter again, all the rows in all sub-tables show up again (we can check by uncollapsing
+  the hidden h3 table sections), but now the BUG: the CAA toggle buttons DO NOT show up again for the-subtables with CAA
+  images, except when a sub-table was uncollapsed BEFORE entering the filter string. In that case the CAA toggle button
+  stays visible for that specific sub-table (even with the right button row count)
 
 * TODO distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a fallback check using the duration property in case the transferSize is restricted)
 
@@ -50751,3 +50772,193 @@ Verdict
 
 ✔ Worth implementing
 ✔ Very small code footprint
+
+* GOOD versions
+** /doubleCAAimages
+
+* function findH3ForTable(table)
+** init
+
+In the uploaded userscript "ShowAllEntityData.user.js",
+
+it looks like the introduction of the function "findH3ForTable(table)"
+
+#+begin_example
+    /**
+     * Returns the h3.mb-toggle-h3 element that logically owns `table` in
+     * multi-table mode, walking backwards past any injected elements
+     * (e.g. div.mb-caa-bigbox, div.mb-eaa-bigbox) that may sit between the
+     * h3 and the table after `_artInitBigPics` has run.
+     *
+     * IMPORTANT: always use this helper instead of bare `table.previousElementSibling`
+     * whenever an h3 is expected.  After the initial render, `_artInitBigPics` inserts
+     * a div.mb-{caa|eaa}-bigbox directly before the table, so
+     * `table.previousElementSibling` returns the bigbox — not the h3.  Any code that
+     * then treats the bigbox as the h3 will mutate it (inserting subtable-controls
+     * buttons into the bigbox, silently losing row-count updates, etc.).
+     *
+     * Returns null when no qualifying h3 is found within 5 backward steps
+     * (single-table mode, or an unexpected DOM structure).
+     *
+     * @param  {Element|null} table
+     * @returns {Element|null}
+     */
+    function findH3ForTable(table) {
+        if (!table) return null;
+        let prev  = table.previousElementSibling;
+        let steps = 0;
+        while (prev && steps < 5) {
+            if (prev.tagName === 'H3' && prev.classList.contains('mb-toggle-h3')) {
+                return prev;
+            }
+            prev = prev.previousElementSibling;
+            steps++;
+        }
+        return null;
+    }
+#+end_example
+
+introduced two more bugs which manifests on:
+
+1.) "multi"-table mode: (uploaded debug log as "multi-table_Arist-ReleaseGroups-Bug")
+
+- on pageTyp="'artist-releasegroups'" URLSs e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+there is ONLY one subtable named "Other" in the h3 header which gets rendered with ALL rows instead of splitting them
+under different sub-tables as it used to be.
+
+2.) "single" table mode: (uploaded debug log as "single-table-Bug")
+
+- on e.g. https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
+
+NO CAA cover art gets rendered at all
+
+** abandoned reply from claude
+
+#+begin_example
+Please fix
+
+findH3ForTable checks for h3.mb-toggle-h3. But in the fetched pages (parsed via XHR), the h3 elements are raw
+MusicBrainz h3 elements (NOT mb-toggle-h3). So findH3ForTable always returns null and every group is named "Other".
+
+The fix is to replace that function call with a simple backwards walk through sibling elements to find the nearest h3,
+which will correctly identify the category labels for each table group.
+
+Now I can see Bug #1 clearly. The fix is to use a plain h3 walk (no class restriction) for fetched XHR pages. Let me
+also look at the single-table CAA bug.
+#+end_example
+
+** why additional generated code
+
+Yes that fixes the bug for Artist-Releasegroup pages
+
+BUT one question, here is the diff between the current code base (with your fix) and the previous
+
+#+begin_example
+modified   claude/caa1rowrenderingbug/1/ShowAllEntityData_user.js
+@@ -13165,8 +13165,19 @@
+ 
+                 if (pageType === 'artist-releasegroups') {
+                     doc.querySelectorAll('table.tbl').forEach(table => {
+-                        const h3 = findH3ForTable(table);
+-                        const category = h3 ? h3.textContent.trim() : 'Other';
++                        // Fetched XHR pages contain native MusicBrainz <h3> elements
++                        // (e.g. "Album", "Single", "EP") that do NOT carry the
++                        // mb-toggle-h3 class injected by renderGroupedTable().
++                        // findH3ForTable() requires that class and always returns null
++                        // here, collapsing every group into "Other".  Use a plain
++                        // backwards walk with no class restriction instead.
++                        let _prev = table.previousElementSibling, _steps = 0, _h3 = null;
++                        while (_prev && _steps < 5) {
++                            if (_prev.tagName === 'H3') { _h3 = _prev; break; }
++                            _prev = _prev.previousElementSibling;
++                            _steps++;
++                        }
++                        const category = _h3 ? _h3.textContent.trim() : 'Other';
+ 
+                         // Logic to handle grouped data and repeating headers over multiple paginated pages (e.g. "Album + Live")
+                         if (category !== lastCategorySeenAcrossPages) {
+@@ -13820,13 +13831,15 @@
+             // Highlight identical barcodes in Barcode columns (post-render)
+             initBarcodeHighlight();
+ 
+-            // NOTE: initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics are
+-            // NOT called here.  renderGroupedTable() calls them at its own tail (just
+-            // before "Finished renderGroupedTable"), so calling them again here would
+-            // produce doubled badge counts: the first set of <img> elements is detached
+-            // by the second _artInitBigPics pass but keeps firing load events via the
+-            // still-live btnId closure, so every successfully-loaded image increments the
+-            // badge twice.
++            // Load CAA/EAA art thumbnails and big-pic strip (post-render).
++            // initCaaPics() MUST run before initEaaPics() and the inline variants —
++            // it creates _caaQueue used by all three.
++            initCaaPics();
++            initEaaPics();
++            // Inline CAA/EAA thumbnails must run after ERG (▶ button already present)
++            // and after initCaaPics() (so _caaQueue is initialised).
++            initCaaInlinePics();
++            initEaaInlinePics();
+ 
+             // Initialise the Unicode character picker (builds menu DOM once, idempotent)
+             initSaUnicodeCharsFeature();
+@@ -20146,12 +20159,9 @@
+                 return;
+             }
+         } else {
+-            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics.
+-            // Also restore display in case the button was hidden by the stale-bigbox
+-            // clear path (count=0 on a previous filter pass) and is now valid again.
++            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics
+             const badge = btn.querySelector('.' + ctx.countClass);
+             if (badge) badge.textContent = '0';
+-            btn.style.display = '';
+         }
+ 
+         // Sync button title to current bigbox visibility (box may not exist yet)
+#+end_example
+
+what is the diff code block
+
+#+begin_example
+@@ -13820,13 +13831,15 @@
+             // Highlight identical barcodes in Barcode columns (post-render)
+             initBarcodeHighlight();
+ 
+-            // NOTE: initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics are
+-            // NOT called here.  renderGroupedTable() calls them at its own tail (just
+-            // before "Finished renderGroupedTable"), so calling them again here would
+-            // produce doubled badge counts: the first set of <img> elements is detached
+-            // by the second _artInitBigPics pass but keeps firing load events via the
+-            // still-live btnId closure, so every successfully-loaded image increments the
+-            // badge twice.
++            // Load CAA/EAA art thumbnails and big-pic strip (post-render).
++            // initCaaPics() MUST run before initEaaPics() and the inline variants —
++            // it creates _caaQueue used by all three.
++            initCaaPics();
++            initEaaPics();
++            // Inline CAA/EAA thumbnails must run after ERG (▶ button already present)
++            // and after initCaaPics() (so _caaQueue is initialised).
++            initCaaInlinePics();
++            initEaaInlinePics();
+ 
+             // Initialise the Unicode character picker (builds menu DOM once, idempotent)
+             initSaUnicodeCharsFeature();
+@@ -20146,12 +20159,9 @@
+                 return;
+             }
+         } else {
+-            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics.
+-            // Also restore display in case the button was hidden by the stale-bigbox
+-            // clear path (count=0 on a previous filter pass) and is now valid again.
++            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics
+             const badge = btn.querySelector('.' + ctx.countClass);
+             if (badge) badge.textContent = '0';
+-            btn.style.display = '';
+         }
+ 
+         // Sync button title to current bigbox visibility (box may not exist yet)
+#+end_example
+
+good for, does it belong to the bug fix too ?
+
+Also you forgot to produce a changelog entry
