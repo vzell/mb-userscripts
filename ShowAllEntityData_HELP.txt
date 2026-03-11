@@ -170,6 +170,8 @@ KEYBOARD SHORTCUTS  (all configurable in ⚙️ → Keyboard Shortcuts section)
 --------------------------------------------------------------------------
   ? or /           Show keyboard shortcuts reference
   Ctrl+K           Show keyboard shortcuts reference (direct, not configurable)
+  Ctrl+U           Open Unicode character picker (only when a text input or
+                   textarea is focused; configurable)
   Ctrl+G           Focus global filter
   Ctrl+C           Focus first column filter (cycles through tables)
   Ctrl+Shift+G     Clear all filters (configurable; tooltip on "✕ Clear ALL
@@ -188,6 +190,24 @@ KEYBOARD SHORTCUTS  (all configurable in ⚙️ → Keyboard Shortcuts section)
   Escape           Clear focused filter / close open menus
                    (first press clears text, second press removes focus)
 
+COLUMN FILTER FOCUS SHORTCUTS  (active only when a column filter has focus)
+---------------------------------------------------------------------------
+  Ctrl+↑           Sort the column ascending (emulates clicking ▲ in header)
+  Ctrl+↓           Sort the column descending (emulates clicking ▼ in header)
+  Ctrl+#           Restore original row order (emulates clicking ⇅ in header)
+                   ('#' is Shift+3 on US/UK keyboards)
+  Ctrl+O           Toggle collapse/expand of multi-row cells in this column
+                   (emulates the ▶/◀ collapse icon in the column header)
+  Ctrl+Q           Open the unique-values dropdown for this column
+                   (emulates the 📊 icon in the column header)
+  Ctrl+A           Toggle CAA/EAA cover-art images for the enclosing table
+                   (emulates the CAA/EAA toggle button in the sub-table header)
+  Ctrl+R           Resize columns of the enclosing sub-table (falls back to
+                   global resize in single-table mode)
+  Ctrl+V           Open the per-sub-table visible-columns menu (falls back to
+                   global visible-columns menu in single-table mode)
+  Note: all column-filter focus shortcuts are configurable in ⚙️ Settings.
+
 PREFIX-MODE SHORTCUTS  (configurable prefix, default: Ctrl+M)
 --------------------------------------------------------------
   Press the prefix key, release, then press:
@@ -196,7 +216,7 @@ PREFIX-MODE SHORTCUTS  (configurable prefix, default: Ctrl+M)
     r   Toggle Resize Columns
     v   Open Visible menu
     d   Open Density menu
-    t   Show Statistics panel
+    i   Show Statistics panel
     e   Open Export menu
     k   Show keyboard shortcuts reference
     ,   Open Settings dialog
@@ -326,9 +346,13 @@ labels and descriptions.  Major setting groups:
 • 🎹 KEYBOARD SHORTCUTS
     — Enable / disable keyboard shortcuts and prefix-mode tooltip overlay
     — Configure the prefix key (default: Ctrl+M)
-    — 12 configurable direct-chord shortcuts (Save, Load, Resize, Visible,
-      Density, Statistics, Export, Settings, Global Filter, Column Filter,
-      Clear Filters, Toggle h2, Toggle h3)
+    — 20 configurable direct-chord shortcuts:
+         Global: Save, Load, Resize, Visible, Density, Statistics, Export,
+                 Settings, Global Filter, Column Filter, Clear Filters,
+                 Toggle h2, Toggle h3, Unicode Character Picker
+         Column-filter-focused: Sort Ascending, Sort Descending, Unsort,
+                 Toggle Multi-Row Collapse, Unique-Values Dropdown,
+                 Toggle CAA/EAA Cover Art
 
 • 🎨 FILTER HIGHLIGHT COLORS
     — Pre-filter, global filter, and column filter highlight foreground and
