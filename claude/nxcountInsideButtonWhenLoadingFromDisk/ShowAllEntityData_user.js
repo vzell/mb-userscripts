@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.120+2026-03-11
+// @version      9.99.121+2026-03-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -18208,15 +18208,27 @@
                 // Highlight identical barcodes in Barcode columns (post-render)
                 initBarcodeHighlight();
 
-                // Load CAA/EAA art thumbnails and big-pic strip (post-render).
-                // initCaaPics() MUST run before initEaaPics() and the inline variants —
-                // it creates _caaQueue used by all three.
-                initCaaPics();
-                initEaaPics();
-                // Inline CAA/EAA thumbnails must run after ERG (▶ button already present)
-                // and after initCaaPics() (so _caaQueue is initialised).
-                initCaaInlinePics();
-                initEaaInlinePics();
+                // CAA / EAA art thumbnails and big-pic strip:
+                // Do NOT call initCaaPics / initEaaPics / initCaaInlinePics /
+                // initEaaInlinePics here.
+                //
+                // For multi-table pages renderGroupedTable() calls them at its own
+                // tail — once for the initial `await renderGroupedTable(groupedRows)`
+                // above, and once more inside the `runFilter()` call below (which
+                // also calls renderGroupedTable).  Any additional explicit call here
+                // would create a third set of pending img.onload closures; because
+                // all three sets are async (browser image loads are never synchronous
+                // even for cache hits) they all fire after JS yields, incrementing
+                // the badge three times over — tripling the displayed count.
+                //
+                // For single-table pages the runFilter() call below takes the
+                // single-table branch of runFilter(), which calls initCaaPics() /
+                // initEaaPics() / initCaaInlinePics() / initEaaInlinePics()
+                // directly.  An extra call here would double the badge count for
+                // the same reason.
+                //
+                // In both cases runFilter() (or renderGroupedTable via runFilter)
+                // is the authoritative and sufficient call site.
 
                 updateH2Count(loadedRowCount, loadedRowCount);
 
@@ -19882,10 +19894,16 @@
             box = document.createElement('div');
             box.id        = boxId;
             box.className = ctx.boxClass;
-            table.parentNode.insertBefore(box, table);
         } else {
             box.innerHTML = '';
         }
+        // Always (re-)position the bigbox immediately before `table`, even when
+        // reusing an existing element.  Node.insertBefore moves an already-in-DOM
+        // node, so this is a no-op when the box is already in the correct position
+        // and a reposition when it is orphaned (e.g. after renderGroupedTable's
+        // initial cleanup removes h3 + table.tbl but leaves div.mb-{caa|eaa}-bigbox
+        // elements in place, then recreates fresh h3/table pairs alongside them).
+        table.parentNode.insertBefore(box, table);
 
         box.style.cssText       = 'display:' + (currentlyVisible ? 'flex' : 'none') +
                                    '; flex-wrap:wrap; gap:4px; padding:4px 0 4px 0; min-height:0;';

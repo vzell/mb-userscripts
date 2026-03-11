@@ -50972,3 +50972,37 @@ the CAA loading is completely broken for "single"-table mode pages, also with qu
 see the uploaded ..-bug files
 
 Please fix and provide a changelog
+
+* after filtering the first time and then clearing the filter again
+
+One last glitch,
+
+after starting typing in whatever filter field (global, column specific or in the case of sub-tables, the sub-table filter field), the CAA toggle buttons get renderded visually in such
+a way that the number of CAA images is centered below the CAA image icon inside the button
+
+Please fix and add a changelog
+
+* "single"-table mode: when loading from disk when already on the final rendered page, the CAA count inside the button doubles, but asson nas we start filtering, it resets to the actual filtered count
+
+Some more glitches
+
+- "single"-table mode: when loading data from disk when already on the final rendered page, the CAA count inside the button
+doubles, but as soon as we start filtering, it resets to the actual filtered count
+
+-" multi"-table mode: when loading data from disk when already on the final rendered page, the CAA count inside the button
+triples, but as soon as we start filtering, it resets to the actual filtered count
+
+-" multi"-table mode: when loading data from disk when already on the final rendered page, and then toggle the display
+of the CAA images of one ore more sub-tables, the CAA image big boxes are rendered below the table instead of below the
+h3 sub-header (as what happens when loading from the net). They are also visually stacked below each other in the same
+order as the sub-tables appear on the whole page
+
+* still a glitch
+
+In the uploaded userscript "ShowAllEntityData.user.js",
+
+- on "single"-table and "multi"-table mode: when loading data from disk when already on the final rendered page, the CAA count inside the button
+doubles, but as soon as we start filtering, it resets to the actual filtered count
+
+please fix and a dd a changelog entry
+
