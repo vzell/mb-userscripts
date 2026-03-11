@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.113+2026-03-11
+// @version      9.99.114+2026-03-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -829,7 +829,7 @@
         },
 
         // ============================================================
-        // CAA ILLUSTRATED DISCOGRAPHY SECTION
+        // CAA/EAA ILLUSTRATED DISCOGRAPHY SECTION
         // Adapted from "mb. FUNKEY ILLUSTRATED RECORDS" by jesus2099
         // (CC-BY-NC-SA-4.0 / GPL-3.0-or-later).
         //
@@ -848,11 +848,11 @@
         // ============================================================
         divider_caa_pics: {
             type: 'divider',
-            label: '🖼️ CAA ILLUSTRATED DISCOGRAPHY'
+            label: '🖼️ CAA/EAA ILLUSTRATED DISCOGRAPHY'
         },
 
         sa_enable_caa_pics: {
-            label: 'Enable CAA Illustrated Discography',
+            label: 'Enable CAA/EAA Illustrated Discography',
             type: 'checkbox',
             default: true,
             description: 'After the consolidated table is rendered, load cover art thumbnails into CAA/EAA ' +
@@ -864,16 +864,16 @@
         },
 
         sa_caa_pics_small: {
-            label: 'Enable small CAA thumbnails',
+            label: 'Enable small CAA/EAA thumbnails',
             type: 'checkbox',
             default: true,
-            description: 'Load cover art thumbnails into the background-image of every caa-icon / eaa-icon / ' +
+            description: 'Load cover/event art thumbnails into the background-image of every caa-icon / eaa-icon / ' +
                          'artwork-icon span found inside the CAA and EAA columns. ' +
                          'Maps to jesus2099\'s pics_settings.small.'
         },
 
         sa_caa_pics_big: {
-            label: 'Enable big CAA picture strip',
+            label: 'Enable big CAA/EAA picture strip',
             type: 'checkbox',
             default: true,
             description: 'Display a strip of large cover art images directly above each table that has a ' +
@@ -883,53 +883,53 @@
         },
 
         sa_caa_pics_initially_collapsed: {
-            label: 'Start with CAA picture strip collapsed',
+            label: 'Start with CAA/EAA picture strip collapsed',
             type: 'checkbox',
             default: true,
-            description: 'When enabled, the big CAA picture strip is hidden immediately after rendering. ' +
-                         'Cover art images are still downloaded in the background so that clicking the ' +
-                         'CAA toggle button in the header reveals them instantly without a new network ' +
+            description: 'When enabled, the big CAA/EAA picture strip is hidden immediately after rendering. ' +
+                         'Cover/event art images are still downloaded in the background so that clicking the ' +
+                         'CAA/EAA toggle button in the header reveals them instantly without a new network ' +
                          'round-trip. The toggle button always shows the first available cover art ' +
                          'thumbnail and the total image count for that table.'
         },
 
         sa_caa_pics_inline: {
-            label: 'Enable inline CAA thumbnails in Release/Title column',
+            label: 'Enable inline CAA/EAA thumbnails in Release/Title column',
             type: 'checkbox',
             default: true,
-            description: 'For page types with a configured addCAA column (Release, Title, Release groups, ' +
-                         'Release title), render a small cover-art thumbnail directly inside that column ' +
+            description: 'For page types with a configured addCAA/addEAA column (Release, Title, Release groups, ' +
+                         'Release title/Event), render a small cover/event-art thumbnail directly inside that column ' +
                          'cell, between the ▶ expand button and the entity title.  A fixed-width ' +
                          'placeholder is inserted in every row so that titles stay aligned regardless ' +
                          'of whether artwork is available.  Images are fetched asynchronously from the ' +
-                         'Cover Art Archive in the background.'
+                         'Cover/Event Art Archive in the background.'
         },
 
         sa_caa_small_img_size: {
-            label: 'Small CAA image fetch size (250 / 500 / 1200)',
+            label: 'Small CAA/EAA image fetch size (250 / 500 / 1200)',
             type: 'number',
             default: 250,
             min: 250,
             max: 1200,
             description: 'Size suffix appended to the coverartarchive.org URL when fetching small ' +
-                         'CAA thumbnails (e.g. …/front-250). Valid values are 250, 500, and 1200. ' +
+                         'CAA/EAA thumbnails (e.g. …/front-250). Valid values are 250, 500, and 1200. ' +
                          'Maps to the hardcoded "/front-250" in jesus2099\'s loadCaaIcon().'
         },
 
         sa_caa_big_img_size: {
-            label: 'Big CAA image fetch size (250 / 500 / 1200)',
+            label: 'Big CAA/EAA image fetch size (250 / 500 / 1200)',
             type: 'number',
             default: 250,
             min: 250,
             max: 1200,
-            description: 'Size suffix appended to the coverartarchive.org URL when fetching big ' +
-                         'CAA images in the picture strip above the table (e.g. …/front-250). ' +
+            description: 'Size suffix appended to the coverartarchive.org/eventartarchive.org URL when fetching big ' +
+                         'CAA/EAA images in the picture strip above the table (e.g. …/front-250). ' +
                          'Valid values are 250, 500, and 1200. ' +
                          'Maps to the hardcoded "/front-250" in jesus2099\'s big-pics loop.'
         },
 
         sa_caa_big_max_height: {
-            label: 'Big CAA image max display height (px)',
+            label: 'Big CAA/EAA image max display height (px)',
             type: 'number',
             default: 125,
             min: 50,
@@ -939,24 +939,24 @@
         },
 
         sa_caa_highlight_colour: {
-            label: 'CAA hover highlight colour',
+            label: 'CAA/EAA hover highlight colour',
             type: 'color_picker',
             default: '#ffff00',
-            description: 'Background colour applied to a release link when its big cover art image is ' +
+            description: 'Background colour applied to a release/release-group/event link when its big cover art image is ' +
                          'hovered, and the border colour applied to the big image when the matching table ' +
                          'row is hovered. Maps to jesus2099\'s var colour = "yellow".'
         },
 
         sa_caa_fetch_concurrency: {
-            label: 'CAA request concurrency limit',
+            label: 'CAA/EAA request concurrency limit',
             type: 'number',
             default: 4,
             min: 1,
             max: 20,
-            description: 'Maximum number of simultaneous Cover Art Archive requests (both image loads and ' +
-                         'JSON API calls). All CAA requests are serialised through a shared FIFO queue ' +
+            description: 'Maximum number of simultaneous Cover/Event Art Archive requests (both image loads and ' +
+                         'JSON API calls). All CAA/EAA requests are serialised through a shared FIFO queue ' +
                          'that enforces this limit. Firing too many requests simultaneously causes the ' +
-                         'CAA CDN to return responses without the required CORS header, which the browser ' +
+                         'CAA/EAA CDN to return responses without the required CORS header, which the browser ' +
                          'blocks entirely. A value of 4 stays safely below the typical browser per-host ' +
                          'connection limit (6) and avoids triggering CDN rate-limiting. Increase if your ' +
                          'network is fast and you see thumbnails loading slowly on very large tables; ' +
@@ -1431,7 +1431,7 @@
                         // Context: the jesus2099 columnEraser removed the original
                         // <a href="…/cover-art"> wrapper before this extractor ran,
                         // so the bare span carries no URL.  Without a wrapping anchor
-                        // caaLoadIcon() and caaInitSmallPics() are both no-ops (they
+                        // _artLoadIcon() and _artInitSmallPics() are both no-ops (they
                         // require `a[href$="/cover-art"] > span.*`).
                         //
                         // By synthesising a <a href="ENTITY_PATH/cover-art"> here we
@@ -1452,7 +1452,7 @@
                             // browser does NOT normalise the relative path to an absolute URL.
                             // Assigning syntheticAnchor.href = "/release-group/GUID/cover-art"
                             // would store "https://musicbrainz.org/release-group/GUID/cover-art"
-                            // in the attribute, causing caaLoadIcon() to build a broken URL:
+                            // in the attribute, causing _artLoadIcon() to build a broken URL:
                             //   //coverartarchive.orghttps://musicbrainz.org/…
                             syntheticAnchor.setAttribute('href', entityPath + '/cover-art');
                             syntheticAnchor.appendChild(bareIconSpan);
@@ -1461,7 +1461,7 @@
                                 `caa extractor: wrapped bare span in synthetic anchor (${syntheticAnchor.getAttribute('href')})`);
                         } else {
                             // No entity link found — fall back to bare placement.
-                            // caaLoadIcon will silently skip this span, which is the
+                            // _artLoadIcon will silently skip this span, which is the
                             // same behaviour as before this fix.
                             tdCaa.appendChild(bareIconSpan);
                             Lib.debug('extract',
@@ -10983,14 +10983,9 @@
     }
 
     /**
-     * Updates the H2 header row count display to show filtered vs total rows.
-     * When absoluteTotal is supplied (multi-table pages where a pre-render filter
-     * reduced the dataset), the header shows "filtered / prefiltered / absolute"
-     * so the user can see all three counts at once.
-     * @param {number}      filteredCount  - Number of rows currently visible after filtering
-     * @param {number}      totalCount     - Total number of rows in the (possibly pre-filtered) dataset
-     * @param {number|null} [absoluteTotal=null] - Grand total before any pre-filter was applied;
-     *                                             pass null (default) when no pre-filter is active
+     * Updates the H2 header row count display to show filtered vs total rows
+     * @param {number} filteredCount - Number of rows currently visible after filtering
+     * @param {number} totalCount - Total number of rows in the table
      */
     function updateH2Count(filteredCount, totalCount, absoluteTotal = null) {
         Lib.debug('render', `Starting updateH2Count: filtered=${filteredCount}, total=${totalCount}, absoluteTotal=${absoluteTotal}`);
@@ -11732,6 +11727,9 @@
                 break;
         }
     }
+
+    /** @deprecated Use guardFilterPrefixKeydown() directly for new code. */
+    const guardColFilterPrefixKeydown = guardFilterPrefixKeydown;
 
     /**
      * Attach a real-time mouse-selection guard to a filter input so that the
@@ -19236,7 +19234,7 @@
     }
 
     // In-memory cache: release-group entity path → image count (integer).
-    // Populated by caaEnrichReleaseGroupIcon so that re-renders triggered by
+    // Populated by _artEnrichIcon so that re-renders triggered by
     // filter / sort do not repeat the same network round-trips to the CAA API.
     // The cache lives for the lifetime of the page (no expiry needed — the page
     // is reloaded when the user navigates away).
@@ -19245,8 +19243,8 @@
     /**
      * Creates a fixed-concurrency async FIFO request queue.
      *
-     * All CAA network requests — both `<img>` loads (caaLoadIcon) and `fetch()`
-     * JSON calls (caaEnrichReleaseGroupIcon) — are serialised through a shared
+     * All art-archive network requests — both `<img>` loads (_artLoadIcon) and `fetch()`
+     * JSON calls (_artEnrichIcon) — are serialised through a shared
      * instance of this queue.  Without throttling, a table with hundreds of rows
      * fires all requests simultaneously: the CAA CDN (Internet Archive) responds
      * to the burst with error responses that omit the `Access-Control-Allow-Origin`
@@ -19312,715 +19310,202 @@
     // Null before the first render; never accessed outside the CAA feature block.
     let _caaQueue = null;
 
-    // ── CAA Illustrated Discography feature ───────────────────────────────────
+    // ── Art Archive (CAA / EAA) shared feature engine ─────────────────────────
     //
-    // Adapted from "mb. FUNKEY ILLUSTRATED RECORDS" by jesus2099
-    // (CC-BY-NC-SA-4.0 / GPL-3.0-or-later)
-    // https://github.com/jesus2099/konami-command
+    // CAA = Cover Art Archive  (coverartarchive.org)
+    //   • Targets release / release-group anchors; reads the "CAA" column.
+    //   • Adapted from "mb. FUNKEY ILLUSTRATED RECORDS" by jesus2099
+    //     (CC-BY-NC-SA-4.0 / GPL-3.0-or-later)
+    //     https://github.com/jesus2099/konami-command
+    //   • API: https://musicbrainz.org/doc/Cover_Art_Archive/API
     //
-    // Applied post-render to SA-consolidated tables that contain a "CAA" or
-    // "EAA" column.  Provides two independent visual enhancements:
+    // EAA = Event Art Archive  (eventartarchive.org)
+    //   • Mirrors the CAA feature but targets event anchors; reads the "EAA" column.
+    //   • API: https://musicbrainz.org/doc/Event_Art_Archive/API
     //
-    //   • Small pics — loads a cover-art thumbnail into the background-image of
-    //     every caa-icon / eaa-icon / artwork-icon span in the CAA/EAA column.
-    //     Mirrors jesus2099's loadCaaIcon() / small-pics branch.
+    // Both archives share:
+    //   • The same _caaQueue concurrency budget (sa_caa_fetch_concurrency).
+    //   • The same settings switches (sa_enable_caa_pics, sa_caa_pics_small, …).
+    //   • A single set of generic _art* implementations parameterised by an
+    //     archive context descriptor (CAA_CTX / EAA_CTX), eliminating ~450 lines
+    //     of structural duplication.
     //
-    //   • Big pics  — builds a hoverable strip of large cover-art images directly
-    //     above each qualifying table.  Hovering a table row highlights its image
-    //     in the strip; hovering a strip image highlights the matching row link.
-    //     Mirrors jesus2099's big-pics branch / updateA / updateBig.
+    // Public API (unchanged — called from 4 render-completion sites):
+    //   initCaaPics()            initEaaPics()
+    //   initCaaInlinePics()      initEaaInlinePics()
+    //   caaUpdateBigBoxForTable  eaaUpdateBigBoxForTable   (called from STF)
     //
-    // Configuration (all in configSchema under "🖼️ CAA ILLUSTRATED DISCOGRAPHY"):
-    //   sa_enable_caa_pics        master on/off guard
-    //   sa_caa_pics_small         toggle small thumbnails  (→ pics_settings.small)
-    //   sa_caa_pics_big           toggle big strip         (→ pics_settings.big)
-    //   sa_caa_small_img_size     coverartarchive size for small pics (→ "front-250")
-    //   sa_caa_big_img_size       coverartarchive size for big strip  (→ "front-250")
-    //   sa_caa_big_max_height     px cap for big images    (→ maxHeight:"125px")
-    //   sa_caa_highlight_colour   hover highlight colour   (→ var colour="yellow")
+    // Call-order contract (enforced at all 4 render-completion call sites):
+    //   1. initCaaPics()         — creates _caaQueue first.
+    //   2. initEaaPics()         — consumes _caaQueue.
+    //   3. initCaaInlinePics()   — consumes _caaQueue.
+    //   4. initEaaInlinePics()   — consumes _caaQueue.
     //
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Loads a cover-art thumbnail into the background of one caa/eaa/artwork-icon
-     * span.  The URL is derived from the wrapping <a href="…/cover-art"> anchor
-     * (standard SA CAA extractor output) or its optional `ref` attribute (set by
-     * jesus2099's own icon injections).
-     *
-     * Since the Path B fix in the `caa` extractor, bare spans on
-     * artist-releasegroups pages are now wrapped in a synthetic
-     * <a href="ENTITY_PATH/cover-art"> before being placed in the CAA cell, so
-     * this function receives a valid anchor in the normal case.  If — for any
-     * unforeseen reason — no wrapping anchor is present, the call is a silent
-     * no-op (the icon stays in its default CSS state).
-     *
-     * Mirrors jesus2099's loadCaaIcon().
-     *
-     * Returns a Promise that resolves when the image either loads successfully or
-     * fails (always resolves, never rejects), so callers can await completion or
-     * enqueue through _caaQueue without needing a try/catch.  The `img.src`
-     * assignment is deferred to the body of the Promise executor so that the
-     * browser does not start the request until the queue grants a slot.
-     *
-     * Diagnostics:
-     *   - The constructed image URL is logged at debug level before the request.
-     *   - A successful load is confirmed at debug level.
-     *   - A failed load (4xx, 5xx, network error) is also logged at debug level.
-     *     A 404 is normal for release-groups whose only images are not typed
-     *     "Front"; other HTTP errors are unexpected but still logged at debug
-     *     level (the browser's Network tab remains the primary diagnostic for
-     *     per-image failures).
-     *   - No retry is performed — the browser already handles a limited number of
-     *     automatic retries for transient network errors.
-     *
-     * @param   {HTMLElement} caaIcon - A <span class="caa-icon"> (or eaa-icon /
-     *                                  artwork-icon) element inside a CAA/EAA cell.
-     * @returns {Promise<void>}         Always resolves (never rejects).
+     * Shared GUID pattern string reused in all RegExp constructors throughout
+     * this section.  Avoids repeating the literal six times.
      */
-    function caaLoadIcon(caaIcon) {
-        const anchor = caaIcon.closest('a[href]');
-        if (!anchor) {
-            Lib.debug('caa', 'caaLoadIcon: skipped — no wrapping anchor found for icon', caaIcon);
-            return Promise.resolve();
-        }
+    const _ART_GUID_RE_STR =
+        '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
 
-        // jesus2099's own icons carry a `ref` attribute containing the entity path.
-        // Standard MB anchors use `href` of the form "/release/GUID/cover-art".
-        const entityPath = anchor.getAttribute('ref')
-            || anchor.getAttribute('href').replace(/\/cover-art$/, '');
-
-        const size   = Lib.settings.sa_caa_small_img_size || 250;
-        const imgurl = '//coverartarchive.org' + entityPath + '/front-' + size;
-
-        Lib.debug('caa', `caaLoadIcon: fetching ${imgurl}`);
-
-        // Return a Promise that resolves once the image request completes (either
-        // way).  src is set inside the executor so the browser request is not
-        // started until _caaQueue grants a slot.
-        return new Promise(resolve => {
-            const img = document.createElement('img');
-            img.addEventListener('load', function() {
-                caaIcon.style.setProperty('background-size',  'contain');
-                caaIcon.style.setProperty('background-image', 'url(' + this.src + ')');
-                Lib.debug('caa', `caaLoadIcon: loaded OK — ${imgurl}`);
-                resolve();
-            });
-            img.addEventListener('error', function() {
-                // A 404 is the normal outcome when the release/release-group has CAA
-                // images but none are typed "Front".  Other failures (network, 429,
-                // 5xx) are less expected.  All are logged at debug level — this event
-                // fires for every row without front art, which would be very noisy at
-                // warn level.  Inspect the browser Network tab for HTTP status codes.
-                Lib.debug('caa', `caaLoadIcon: failed to load ${imgurl} — icon stays in default state`);
-                resolve();
-            });
-            img.src = imgurl; // triggers the browser request
-        });
-    }
 
     /**
-     * Returns the 0-based column index of the first "CAA" column in
-     * `table`, or -1 when not present.
+     * Per-entity count caches — avoid repeat API calls across sort/filter
+     * re-renders for the same entity.  Populated by _artEnrichIcon.
+     * The CAA cache lives here; the EAA cache is declared alongside it so both
+     * are available when the context descriptors (CAA_CTX / EAA_CTX) are built.
+     */
+    const _eaaEventCountCache = new Map();
+
+    // ── Archive context descriptors ───────────────────────────────────────────
+    //
+    // All variant data between CAA and EAA is captured in these plain objects.
+    // Every _art* generic function receives the appropriate descriptor as its
+    // first argument (`ctx`) so it behaves correctly for whichever archive is
+    // being processed.
+
+    /**
+     * Context descriptor for the Cover Art Archive (CAA).
+     *
+     * @typedef  {Object}   ArtCtx
+     * @property {string}   key            Short identifier ('caa'|'eaa') used in
+     *                                     log messages and to derive dynamic strings.
+     * @property {string}   column         Expected column header ('CAA'|'EAA').
+     * @property {string}   artSuffix      Suffix stripped from anchor hrefs to
+     *                                     derive the entity path ('/cover-art'|'/event-art').
+     * @property {string}   archiveHost    Protocol-relative base for thumbnail URLs.
+     * @property {string}   apiHost        Full HTTPS base for JSON API requests.
+     * @property {string[]} entityTypes    Entity path segments scanned by artCountLinks /
+     *                                     _artInitBigPics (e.g. ['release-group','release']).
+     * @property {Function} entityGuard    Returns true when an entity path should trigger
+     *                                     the JSON count-enrichment API call.
+     * @property {Map}      countCache     Per-render count cache (populated by _artEnrichIcon).
+     * @property {Function} tooltip        Builds the tooltip string: (n: number) => string.
+     * @property {string}   badgeClass     CSS class for the per-cell count badge span.
+     * @property {string}   inlinePh       CSS class for the inline thumbnail placeholder span.
+     * @property {string}   inlineDoneAttr dataset key name for the per-cell idempotency marker.
+     * @property {string}   enrichedAttr   dataset key name for the per-anchor enrichment marker.
+     * @property {string}   addFeature     activeDefinition.features key that names the inline
+     *                                     thumbnail column (e.g. 'addCAA', 'addEAA').
+     * @property {string}   iconSel        Selector for artwork-icon spans inside art anchors.
+     * @property {string}   inlineLinkSel  Selector for the primary entity link per row (inline pics).
+     * @property {string}   boxPrefix      ID prefix for the per-table bigbox element.
+     * @property {string}   boxClass       CSS class applied to the bigbox div.
+     * @property {string}   visAttr        dataset key on the bigbox storing visibility state.
+     * @property {string}   btnPrefix      ID prefix for the per-table toggle button.
+     * @property {string}   btnClass       CSS class for the toggle button.
+     * @property {string}   thumbClass     CSS class for the thumbnail inside the toggle button.
+     * @property {string}   countClass     CSS class for the download-count badge inside the button.
+     * @property {string}   hrefAttrName   HTML attribute name used on bigbox wrapper anchors
+     *                                     to store the entity href (e.g. 'data-caa-href').
+     * @property {string}   tbodyOver      Property key for storing the mouseover handler on tbody.
+     * @property {string}   tbodyOut       Property key for storing the mouseout handler on tbody.
+     * @property {string}   rowLinkSel     Selector for the primary entity anchor inside a tbody row
+     *                                     (used by the row→strip hover handler).
+     * @property {string}   toggleLabel    Human-readable label used in toggle button tooltips.
+     */
+    const CAA_CTX = {
+        key:           'caa',
+        column:        'CAA',
+        artSuffix:     '/cover-art',
+        archiveHost:   '//coverartarchive.org',
+        apiHost:       'https://coverartarchive.org',
+        entityTypes:   ['release-group', 'release'],
+        entityGuard:   (p) => p.includes('/release-group/'),
+        countCache:    _caaRgCountCache,
+        tooltip:       (n) => n + ' image' + (n !== 1 ? 's' : '') + ' found in this release',
+        badgeClass:    'mb-caa-count-badge',
+        inlinePh:      'mb-caa-inline-ph',
+        inlineDoneAttr:'caaInlineDone',
+        enrichedAttr:  'caaEnriched',
+        addFeature:    'addCAA',
+        iconSel:       'td a[href$="/cover-art"] > span.caa-icon,' +
+                       'td a[href$="/cover-art"] > span.eaa-icon,' +
+                       'td a[href$="/cover-art"] > span.artwork-icon',
+        inlineLinkSel: 'a[href*="/release-group/"], a[href*="/release/"]:not([href$="/cover-art"])',
+        boxPrefix:     'mb-caa-bigbox',
+        boxClass:      'mb-caa-bigbox',
+        visAttr:       'caaVisible',
+        btnPrefix:     'mb-caa-toggle-btn',
+        btnClass:      'mb-caa-art-toggle-btn',
+        thumbClass:    'mb-caa-toggle-thumb',
+        countClass:    'mb-caa-toggle-count',
+        hrefAttrName:  'data-caa-href',
+        tbodyOver:     '_caaMouseover',
+        tbodyOut:      '_caaMouseout',
+        rowLinkSel:    'td a[href^="/release"]:not([href$="/cover-art"])',
+        toggleLabel:   'CAA cover art images',
+    };
+
+    /**
+     * Context descriptor for the Event Art Archive (EAA).
+     * All fields have the same semantics as {@link CAA_CTX}; see that definition.
+     */
+    const EAA_CTX = {
+        key:           'eaa',
+        column:        'EAA',
+        artSuffix:     '/event-art',
+        archiveHost:   '//eventartarchive.org',
+        apiHost:       'https://eventartarchive.org',
+        entityTypes:   ['event'],
+        entityGuard:   (p) => p.includes('/event/'),
+        countCache:    _eaaEventCountCache,
+        tooltip:       (n) => n + ' image' + (n !== 1 ? 's' : '') + ' found for this event',
+        badgeClass:    'mb-eaa-count-badge',
+        inlinePh:      'mb-eaa-inline-ph',
+        inlineDoneAttr:'eaaInlineDone',
+        enrichedAttr:  'eaaEnriched',
+        addFeature:    'addEAA',
+        iconSel:       'td a[href$="/event-art"] > span.eaa-icon,' +
+                       'td a[href$="/event-art"] > span.artwork-icon',
+        inlineLinkSel: 'a[href*="/event/"]:not([href$="/event-art"])',
+        boxPrefix:     'mb-eaa-bigbox',
+        boxClass:      'mb-eaa-bigbox',
+        visAttr:       'eaaVisible',
+        btnPrefix:     'mb-eaa-toggle-btn',
+        btnClass:      'mb-eaa-art-toggle-btn',
+        thumbClass:    'mb-eaa-toggle-thumb',
+        countClass:    'mb-eaa-toggle-count',
+        hrefAttrName:  'data-eaa-href',
+        tbodyOver:     '_eaaMouseover',
+        tbodyOut:      '_eaaMouseout',
+        rowLinkSel:    'td a[href^="/event"]:not([href$="/event-art"])',
+        toggleLabel:   'EAA event art images',
+    };
+
+    // ── Generic shared utilities ──────────────────────────────────────────────
+
+    /**
+     * Returns the 0-based column index of the first column whose name matches
+     * `name` in `table`'s header row, or -1 when not found.
      *
      * Detection uses (in priority order):
      *   1. `th.dataset.colName` — stamped by makeTableSortableUnified and the
      *      cleanupHeaders() synthetic-header injectors.  Reliable even after the
-     *      sort-icon UI (⇅▲▼📊) has been appended to the header cell, because
-     *      the attribute holds the *original* column name string.
-     *   2. Regex-stripped textContent — same `replace(/[⇅▲▼📊▶◀]/g,'').trim()`
-     *      pattern used by the column-visibility toggle and other SA helpers.
-     *      Fallback for th elements not yet processed by makeTableSortableUnified.
+     *      sort-icon UI (⇅▲▼📊) has been appended to the header cell.
+     *   2. Regex-stripped textContent — fallback for th elements not yet
+     *      processed by makeTableSortableUnified.
+     *
+     * Used by both CAA and EAA helpers (previously duplicated as
+     * caaFindCaaColumnIndex / eaaFindEaaColumnIndex, which were each just
+     * caaFindColumnByName(table, 'CAA'/'EAA') in disguise).
      *
      * @param  {HTMLTableElement} table
+     * @param  {string}           name  — e.g. 'CAA', 'EAA', 'Release', 'Title'
      * @returns {number}
      */
-    function caaFindCaaColumnIndex(table) {
-        const headerRow = table.querySelector('thead tr') ||
-                          table.querySelector('tr:has(th)');
-        if (!headerRow) return -1;
-        return Array.from(headerRow.children).findIndex(th => {
-            // Prefer the data attribute (authoritative, set at render time)
-            const named = th.dataset && th.dataset.colName;
-            if (named) return named === 'CAA';
-            // Fallback: strip sort-icon glyphs and compare
-            const txt = th.textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim();
-            return txt === 'CAA';
-        });
-    }
-
-    /**
-     * Returns the 0-based column index of the first "EAA" column in
-     * `table`, or -1 when not present.
-     *
-     * Detection uses the same priority-order strategy as `caaFindCaaColumnIndex`:
-     *   1. `th.dataset.colName` (authoritative attribute set at render time).
-     *   2. Regex-stripped textContent fallback.
-     *
-     * @param  {HTMLTableElement} table
-     * @returns {number}
-     */
-    function eaaFindEaaColumnIndex(table) {
+    function caaFindColumnByName(table, name) {
         const headerRow = table.querySelector('thead tr') ||
                           table.querySelector('tr:has(th)');
         if (!headerRow) return -1;
         return Array.from(headerRow.children).findIndex(th => {
             const named = th.dataset && th.dataset.colName;
-            if (named) return named === 'EAA';
+            if (named) return named === name;
             const txt = th.textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim();
-            return txt === 'EAA';
+            return txt === name;
         });
-    }
-
-    /**
-     * Fetches the Cover Art Archive JSON for one release-group anchor and, when
-     * the API returns images:
-     *
-     *   1. Sets the cover-art anchor's `title` tooltip to
-     *      "N image(s) found in this release".
-     *   2. Appends a plain-text count (`<span class="mb-caa-count-badge">N</span>`)
-     *      inside the synthetic CAA column cell, immediately after the anchor.
-     *      The span carries the same tooltip as the anchor.
-     *   3. Sets the same tooltip on the inline thumbnail placeholder
-     *      (`<span class="mb-caa-inline-ph">`) in the addCAA column cell
-     *      (e.g. "Title") of the same row, if one is present.
-     *
-     * This mirrors the XHR branch inside jesus2099's small-pics loop that fires
-     * specifically for `types[t] == "release-group"`:
-     *
-     *   title: RGCAA.images.length + " image" +
-     *          (RGCAA.images.length != 1 ? "s" : "") + " found in this release"
-     *
-     * The function is fire-and-forget (async, no return value).  On network
-     * errors or non-200 responses all three decorations are left in their default
-     * state; the failure is logged at debug level — never at warn/error, because a
-     * missing cover-art entry is a normal expected state for many release groups.
-     *
-     * Re-render guard:
-     *   The CAA anchor's `data-caa-enriched` attribute is set to "1" after a
-     *   successful enrichment.  Subsequent calls on the same anchor node (e.g.
-     *   from a sort/filter re-render that reuses live DOM nodes) return early.
-     *   When the DOM is fully rebuilt from clones (renderFinalTable), fresh anchor
-     *   nodes start without the attribute, so enrichment runs again — but the
-     *   result is served from `_caaRgCountCache` without a network round-trip.
-     *
-     *   The function intentionally does NOT guard on `anchor.title` being non-empty:
-     *   MusicBrainz pre-populates every cover-art anchor with
-     *   "This release group has artwork in the Cover Art Archive", which would
-     *   permanently block enrichment if used as a guard condition.
-     *
-     * @param {HTMLAnchorElement} anchor - A `<a href="…/cover-art">` inside the
-     *   synthetic CAA cell, whose `ref` attribute (or href after stripping
-     *   "/cover-art") points to a release-group entity path,
-     *   e.g. `/release-group/c497fc44-…`.
-     */
-    async function caaEnrichReleaseGroupIcon(anchor) {
-        // Idempotency: skip if this exact DOM node was already enriched.
-        if (anchor.dataset.caaEnriched === '1') return;
-
-        // The entity path is the release-group path, e.g. "/release-group/GUID".
-        const entityPath = anchor.getAttribute('ref')
-            || anchor.getAttribute('href').replace(/\/cover-art$/, '');
-
-        // Only enrich release-group anchors — releases don't need the API call
-        // because the anchor already points to the correct cover-art URL.
-        if (!entityPath.includes('/release-group/')) return;
-
-        // ── Resolve count — from cache or network ────────────────────────────
-        let count;
-        if (_caaRgCountCache.has(entityPath)) {
-            count = _caaRgCountCache.get(entityPath);
-            Lib.debug('caa', `caaEnrichReleaseGroupIcon: ${count} image(s) for ${entityPath} (cached)`);
-        } else {
-            const apiUrl = 'https://coverartarchive.org' + entityPath;
-            try {
-                const resp = await fetch(apiUrl);
-                if (!resp.ok) {
-                    // 404 — no CAA entry at all for this release-group: expected,
-                    //   debug only to avoid console noise.
-                    // 429 / 5xx — server-side problems: warn so they surface even
-                    //   when debug logging is disabled.
-                    if (resp.status === 404) {
-                        Lib.debug('caa', `caaEnrichReleaseGroupIcon: HTTP 404 (no CAA entry) for ${entityPath}`);
-                    } else {
-                        Lib.warn('caa', `caaEnrichReleaseGroupIcon: HTTP ${resp.status} for ${entityPath} — icon enrichment skipped`);
-                    }
-                    // Cache a sentinel (0) so that filter / sort re-renders that
-                    // produce fresh clone nodes do not fire repeated network requests
-                    // for an endpoint that already returned an error.  For transient
-                    // server problems (429, 503) the page must be reloaded to retry.
-                    _caaRgCountCache.set(entityPath, 0);
-                    anchor.dataset.caaEnriched = '1';
-                    return;
-                }
-                const rgCaa = await resp.json();
-                count = Array.isArray(rgCaa.images) ? rgCaa.images.length : 0;
-                _caaRgCountCache.set(entityPath, count);
-                Lib.debug('caa', `caaEnrichReleaseGroupIcon: ${count} image(s) for ${entityPath}`);
-            } catch (err) {
-                // Network-level failure (offline, DNS, CORS abort).  Warn so it is
-                // visible without enabling debug mode.  Do NOT cache a sentinel —
-                // the failure may be transient and a re-render after connectivity is
-                // restored should retry.
-                Lib.warn('caa', `caaEnrichReleaseGroupIcon: network error for ${entityPath}:`, err);
-                return;
-            }
-        }
-
-        if (count <= 0) {
-            anchor.dataset.caaEnriched = '1'; // nothing to show, but don't retry
-            return;
-        }
-
-        const tooltip = count + ' image' + (count !== 1 ? 's' : '') + ' found in this release';
-
-        // ── 1. Tooltip on the cover-art anchor and its icon span ─────────────
-        //
-        // Set on both the wrapping <a> and the child icon span directly, because
-        // browsers show the title of the element under the pointer — the span
-        // (which carries the background-image thumbnail) may shadow the anchor's
-        // title if the span already carries a stale or pre-populated title
-        // attribute of its own.
-        anchor.title = tooltip;
-        const iconSpan = anchor.querySelector(
-            'span.caa-icon, span.eaa-icon, span.artwork-icon'
-        );
-        if (iconSpan) iconSpan.title = tooltip;
-
-        // ── 2. Count text in the CAA column cell ─────────────────────────────
-        //
-        // Appended after the anchor as plain normal-weight text so the layout
-        // reads: [icon] N
-        // The span carries the tooltip so hovering the count also shows the
-        // full "N image(s) found in this release" string.
-        // Guarded by `.mb-caa-count-badge` presence so DOM-reusing re-renders
-        // (sort/filter that keep live <tr> nodes) don't duplicate the text.
-        const caaCell = anchor.closest('td');
-        if (caaCell && !caaCell.querySelector('.mb-caa-count-badge')) {
-            const badge       = document.createElement('span');
-            badge.className   = 'mb-caa-count-badge';
-            badge.textContent = count;
-            badge.title       = tooltip;
-            anchor.after(badge);
-        }
-
-        // ── 3. Tooltip on the inline thumbnail in the addCAA column cell ─────
-        //
-        // The addCAA inline placeholder (.mb-caa-inline-ph) inserted by
-        // initCaaInlinePics() shares the same row as this CAA anchor.
-        // Setting its title here gives the user the count tooltip when hovering
-        // the tiny inline artwork thumbnail in the Title column.
-        //
-        // No DOM insertion — tooltip only, no text rendered in the cell.
-        const addCAAColName = activeDefinition &&
-                              activeDefinition.features &&
-                              activeDefinition.features.addCAA;
-        if (addCAAColName) {
-            const tr    = anchor.closest('tr');
-            const table = anchor.closest('table');
-            if (tr && table) {
-                const colIdx    = caaFindColumnByName(table, addCAAColName);
-                const titleCell = colIdx !== -1 ? tr.cells[colIdx] : null;
-                if (titleCell) {
-                    const inlinePh = titleCell.querySelector('.mb-caa-inline-ph');
-                    if (inlinePh) inlinePh.title = tooltip;
-                }
-            }
-        }
-
-        // Mark this anchor node as fully enriched so re-renders that reuse the
-        // same live DOM node don't repeat the work.
-        anchor.dataset.caaEnriched = '1';
-    }
-
-    /**
-     * Loads thumbnails into all caa/eaa/artwork-icon spans in `table` and, for
-     * release-group anchors, asynchronously enriches each icon's title attribute
-     * with the image count fetched from the Cover Art Archive API.
-     *
-     * Two passes per qualifying icon:
-     *   1. `caaLoadIcon(icon)`                    — starts the img background load
-     *      immediately (synchronous queue; no network round-trip beyond the image).
-     *   2. `caaEnrichReleaseGroupIcon(anchor)`    — fires an async fetch to the
-     *      CAA JSON endpoint and, when the response arrives, sets the anchor title
-     *      to "N image(s) found in this release" (mirrors jesus2099's XHR branch
-     *      for `types[t] == "release-group"`).
-     *
-     * Only spans inside `<a href="…/cover-art">` anchors are processed.
-     * Since the Path B fix in the `caa` extractor, bare spans on
-     * artist-releasegroups pages are now wrapped in a synthetic anchor before
-     * being placed in the CAA cell, so they are included in this sweep too.
-     *
-     * @param {HTMLTableElement} table
-     */
-    function caaInitSmallPics(table) {
-        if (!Lib.settings.sa_caa_pics_small) return;
-
-        const icons = table.querySelectorAll(
-            'td a[href$="/cover-art"] > span.caa-icon,' +
-            'td a[href$="/cover-art"] > span.eaa-icon,' +
-            'td a[href$="/cover-art"] > span.artwork-icon'
-        );
-
-        // Serialise all requests through the shared CAA queue.
-        // Without throttling, a table with hundreds of rows fires all image loads
-        // and all fetch() JSON calls simultaneously.  The CDN responds to the burst
-        // without the CORS header (fast error path), causing the browser to block
-        // every fetch() as a CORS violation.  At the same time the browser's
-        // per-host connection pool overflows and emits ERR_INSUFFICIENT_RESOURCES
-        // for the img elements.  The queue (created/reset by initCaaPics()) keeps
-        // both problems from occurring by limiting concurrency to sa_caa_fetch_concurrency.
-        icons.forEach(icon => {
-            if (_caaQueue) {
-                _caaQueue.enqueue(() => caaLoadIcon(icon));
-                const anchor = icon.closest('a[href]');
-                if (anchor) _caaQueue.enqueue(() => caaEnrichReleaseGroupIcon(anchor));
-            } else {
-                // Fallback (should not happen in normal flow): fire unthrottled.
-                caaLoadIcon(icon);
-                const anchor = icon.closest('a[href]');
-                if (anchor) caaEnrichReleaseGroupIcon(anchor);
-            }
-        });
-
-        Lib.debug('caa', `caaInitSmallPics: enqueued ${icons.length * 2} request(s) for ${icons.length} icon(s) ` +
-            `(queue: ${_caaQueue ? _caaQueue.runningCount + ' running, ' + _caaQueue.pendingCount + ' pending' : 'unavailable'})`);
-    }
-
-    /**
-     * Builds (or rebuilds) the big-picture hover strip above `table` and wires
-     * row ↔ image hover highlighting.
-     *
-     * Algorithm (mirrors jesus2099's big-pics branch + updateA + updateBig):
-     *  1. Find or create a <div id="mb-caa-bigbox-N"> immediately before the table.
-     *  2. Walk every release / release-group anchor in tbody and, for each unique
-     *     href, append a lazy-loaded <img> (with ⌛ placeholder) to the box.
-     *  3. img:mouseover  → highlight matching anchors in the table (yellow border).
-     *  4. tbody tr:mouseover → highlight the matching strip image.
-     *  5. On re-render, stale images are cleared and the box is rebuilt in-place.
-     *     The user's current show/hide state (box.dataset.caaVisible) is preserved
-     *     so a manually collapsed strip stays collapsed after a filter re-render.
-     *
-     * Initial visibility is controlled by `sa_caa_pics_initially_collapsed`:
-     *   false (default) — strip visible on first render.
-     *   true            — strip hidden on first render; images download in the
-     *                     background so they appear instantly when revealed.
-     *
-     * @param {HTMLTableElement} table
-     * @param {number}           tableIndex  — position among all table.tbl elements.
-     * @returns {{ count: number, firstImgUrl: string|null }}
-     *   count       — number of unique release/release-group anchors found.
-     *   firstImgUrl — coverartarchive.org URL for the first image, or null if none.
-     */
-    /**
-     * Builds (or rebuilds) the big-picture hover strip above `table` and wires
-     * row ↔ image hover highlighting.
-     *
-     * Algorithm (mirrors jesus2099's big-pics branch + updateA + updateBig):
-     *  1. Find or create a <div id="mb-caa-bigbox-N"> immediately before the table.
-     *  2. Walk every release / release-group anchor in tbody and, for each unique
-     *     href, append a lazy-loaded <img> (with ⌛ placeholder) to the box.
-     *  3. img:mouseover  → highlight matching anchors in the table (yellow border).
-     *  4. tbody tr:mouseover → highlight the matching strip image.
-     *  5. On re-render, stale images are cleared and the box is rebuilt in-place.
-     *     The user's current show/hide state (box.dataset.caaVisible) is preserved
-     *     so a manually collapsed strip stays collapsed after a filter re-render.
-     *
-     * Live badge update: each `img` load event looks up the toggle button by
-     * `btnId` and increments `.mb-caa-toggle-count` so the badge reflects the
-     * number of images *already downloaded*, not the total number of links.
-     * The badge starts at 0 and climbs toward `seen.size` as images arrive.
-     * Images that 404 (no artwork) don't increment the badge; their wrapper is
-     * removed from the strip silently.
-     *
-     * Initial visibility is controlled by `sa_caa_pics_initially_collapsed`:
-     *   false — strip visible on first render.
-     *   true  — strip hidden on first render; images download in the background
-     *           so they appear instantly when revealed.
-     *
-     * @param {HTMLTableElement} table
-     * @param {number}           tableIndex  — position among all table.tbl elements.
-     * @param {string|undefined} btnId       — ID of the toggle button whose badge
-     *                                         should be incremented on image load.
-     * @returns {{ count: number, firstImgUrl: string|null }}
-     *   count       — number of unique release/release-group anchors found.
-     *   firstImgUrl — coverartarchive.org URL for the first image, or null if none.
-     */
-    function caaInitBigPics(table, tableIndex, btnId) {
-        if (!Lib.settings.sa_caa_pics_big) return { count: 0, firstImgUrl: null };
-
-        const maxH   = (Lib.settings.sa_caa_big_max_height || 125) + 'px';
-        const size   = Lib.settings.sa_caa_big_img_size   || 250;
-        const colour = Lib.settings.sa_caa_highlight_colour || '#ffff00';
-        const GUID   = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
-        const types  = ['release-group', 'release'];
-
-        // ── 1. Create / reuse the bigbox ──────────────────────────────────────
-        const boxId = 'mb-caa-bigbox-' + tableIndex;
-        let   box   = document.getElementById(boxId);
-
-        // Preserve the user's current show/hide choice across re-renders.
-        // On the very first render the attribute does not exist yet — fall back to
-        // the initial-collapsed setting.
-        const initiallyCollapsed = !!(Lib.settings.sa_caa_pics_initially_collapsed);
-        const currentlyVisible   = box
-            ? box.dataset.caaVisible !== 'false'   // preserve existing state
-            : !initiallyCollapsed;                  // first render: honour setting
-
-        if (!box) {
-            box = document.createElement('div');
-            box.id        = boxId;
-            box.className = 'mb-caa-bigbox';
-            table.parentNode.insertBefore(box, table);
-        } else {
-            // Clear stale images from a prior render pass before rebuilding.
-            box.innerHTML = '';
-        }
-
-        box.style.cssText      = 'display:' + (currentlyVisible ? 'flex' : 'none') +
-                                  '; flex-wrap:wrap; gap:4px; padding:4px 0 4px 0; min-height:0;';
-        box.dataset.caaVisible = currentlyVisible ? 'true' : 'false';
-
-        // ── Reset the toggle button badge atomically with the box rebuild ─────
-        // Must happen HERE — before images are created and src is set — so that
-        // cached images whose load event fires synchronously (or near-synchronously)
-        // during the forEach below start incrementing from 0, not from a stale value.
-        if (btnId) {
-            const existingBtn = document.getElementById(btnId);
-            if (existingBtn) {
-                const badge = existingBtn.querySelector('.mb-caa-toggle-count');
-                if (badge) badge.textContent = '0';
-            }
-        }
-
-        // ── 2. Collect unique release / release-group links ───────────────────
-        const seen        = new Set();
-        let   firstImgUrl = null;
-
-        table.querySelectorAll('tbody td a[href]').forEach(a => {
-            const href = a.getAttribute('href');
-            for (const type of types) {
-                const m = href.match(new RegExp('^/' + type + '/(' + GUID + ')$'));
-                if (m && !seen.has(href)) {
-                    seen.add(href);
-
-                    const imgurl = '//coverartarchive.org/' + type + '/' + m[1] + '/front-' + size;
-                    if (!firstImgUrl) firstImgUrl = imgurl; // record for toggle button
-
-                    // Wrapper anchor mirrors jesus2099's inline-block anchor in bigbox
-                    const wrapper           = document.createElement('a');
-                    wrapper.href            = href;
-                    wrapper.title           = a.textContent.trim();
-                    wrapper.dataset.caaHref = href;
-                    wrapper.style.cssText   = 'display:inline-block; height:100%; margin:8px 8px 4px 4px;';
-
-                    // ⌛ placeholder text node
-                    wrapper.appendChild(document.createTextNode('⌛'));
-
-                    const img         = document.createElement('img');
-                    img.src           = imgurl; // src always set → background download even when box hidden
-                    img.alt           = a.textContent.trim();
-                    img.style.cssText = 'vertical-align:middle; display:none;' +
-                                        ' max-height:' + maxH + ';' +
-                                        ' box-shadow:1px 1px 4px black;';
-
-                    img.addEventListener('load', function() {
-                        // Remove the ⌛ text node once the image arrives
-                        const first = this.parentNode.firstChild;
-                        if (first && first.nodeType === Node.TEXT_NODE) {
-                            this.parentNode.removeChild(first);
-                        }
-                        this.style.display = 'inline';
-
-                        // Live-update the toggle button badge: increment by 1 per
-                        // successfully loaded image so the count reflects downloaded
-                        // images, not total links.
-                        if (btnId) {
-                            const toggleBtn = document.getElementById(btnId);
-                            if (toggleBtn) {
-                                const badge = toggleBtn.querySelector('.mb-caa-toggle-count');
-                                if (badge) {
-                                    badge.textContent = (parseInt(badge.textContent, 10) || 0) + 1;
-                                }
-                                // Also load the thumbnail src on first success if it hasn't loaded yet
-                                const thumb = toggleBtn.querySelector('.mb-caa-toggle-thumb');
-                                if (thumb && !thumb.complete) {
-                                    thumb.src = imgurl;
-                                }
-                            }
-                        }
-                    });
-                    img.addEventListener('error', function() {
-                        // Remove the whole wrapper if the artwork does not exist
-                        const w = this.parentNode;
-                        if (w && w.parentNode) w.parentNode.removeChild(w);
-                    });
-
-                    // ── 3. img:mouseover / mouseout — highlight row links ─────
-                    img.addEventListener('mouseover', function() {
-                        const ah = this.parentNode.dataset.caaHref;
-                        table.querySelectorAll('tbody td a[href="' + ah + '"]').forEach(
-                            rel => rel.style.setProperty('background-color', colour)
-                        );
-                    });
-                    img.addEventListener('mouseout', function() {
-                        const ah = this.parentNode.dataset.caaHref;
-                        table.querySelectorAll('tbody td a[href="' + ah + '"]').forEach(
-                            rel => rel.style.removeProperty('background-color')
-                        );
-                    });
-
-                    wrapper.appendChild(img);
-                    box.appendChild(wrapper);
-                    break; // matched one type for this href — move on
-                }
-            }
-        });
-
-        // ── 4. tbody tr:mouseover / mouseout — highlight strip image ─────────
-        //
-        // Event delegation on tbody avoids per-row listener overhead and
-        // automatically covers rows added by filter re-renders.
-        const tbody = table.querySelector('tbody');
-        if (tbody) {
-            // Remove stale delegated listeners added in previous passes.
-            // We store the handlers on tbody itself so they can be cleanly removed.
-            if (tbody._caaMouseover) tbody.removeEventListener('mouseover', tbody._caaMouseover);
-            if (tbody._caaMouseout)  tbody.removeEventListener('mouseout',  tbody._caaMouseout);
-
-            tbody._caaMouseover = function(event) {
-                const tr = event.target.closest('tr');
-                if (!tr) return;
-                const a  = tr.querySelector('td a[href^="/release"]:not([href$="/cover-art"])');
-                if (!a)  return;
-                const w  = box.querySelector('a[data-caa-href="' + a.getAttribute('href') + '"]');
-                if (!w)  return;
-                w.style.setProperty('border',  '4px solid ' + colour);
-                w.style.setProperty('margin', '4px 4px 0px 0px');
-            };
-            tbody._caaMouseout = function(event) {
-                const tr = event.target.closest('tr');
-                if (!tr) return;
-                const a  = tr.querySelector('td a[href^="/release"]:not([href$="/cover-art"])');
-                if (!a)  return;
-                const w  = box.querySelector('a[data-caa-href="' + a.getAttribute('href') + '"]');
-                if (!w)  return;
-                w.style.removeProperty('border');
-                w.style.setProperty('margin', '8px 8px 4px 4px');
-            };
-
-            tbody.addEventListener('mouseover', tbody._caaMouseover);
-            tbody.addEventListener('mouseout',  tbody._caaMouseout);
-        }
-
-        Lib.debug('caa', `caaInitBigPics: built bigbox for table ${tableIndex} with ${seen.size} image(s), initially ${currentlyVisible ? 'visible' : 'hidden'}`);
-        return { count: seen.size, firstImgUrl };
-    }
-
-    /**
-     * Scans `table`'s tbody for unique release / release-group anchor hrefs that
-     * would produce a CAA big-pic image and returns the count and the URL of the
-     * first image — without creating any DOM elements.
-     *
-     * This pure read-only pre-flight lets `initCaaPics()` create the toggle button
-     * (and thus obtain its `btnId`) BEFORE calling `caaInitBigPics()`, so the
-     * bigbox is built in a single pass where every img load handler already has
-     * the button ID and can increment the badge directly.
-     *
-     * @param  {HTMLTableElement} table
-     * @returns {{ count: number, firstImgUrl: string|null }}
-     */
-    function caaCountLinks(table) {
-        const GUID  = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
-        const types = ['release-group', 'release'];
-        const size  = Lib.settings.sa_caa_big_img_size || 250;
-        const seen  = new Set();
-        let   firstImgUrl = null;
-
-        table.querySelectorAll('tbody td a[href]').forEach(a => {
-            const href = a.getAttribute('href');
-            for (const type of types) {
-                const m = href.match(new RegExp('^/' + type + '/(' + GUID + ')$'));
-                if (m && !seen.has(href)) {
-                    seen.add(href);
-                    if (!firstImgUrl) {
-                        firstImgUrl = '//coverartarchive.org/' + type + '/' + m[1] + '/front-' + size;
-                    }
-                    break;
-                }
-            }
-        });
-
-        return { count: seen.size, firstImgUrl };
-    }
-
-    /**
-     * Synchronises the CAA big-picture strip above `table` so that only images
-     * whose corresponding release / release-group row is currently visible (i.e.
-     * not hidden by any filter — global, column, or sub-table) are shown in the
-     * strip.  The toggle-button badge is updated to reflect the number of images
-     * that are both visible in the strip AND already downloaded.
-     *
-     * Called after every sub-table-filter (STF) pass so that the strip tracks
-     * the same row set as the table itself.  Also called when the STF is cleared
-     * so that all wrappers are restored.
-     *
-     * Guards:
-     *   - `Lib.settings.sa_enable_caa_pics` master toggle.
-     *   - `Lib.settings.sa_caa_pics_big` per-feature toggle.
-     *   - The bigbox element (`mb-caa-bigbox-N`) must already exist.
-     *
-     * @param {HTMLTableElement} table
-     * @param {number}           tableIndex  — must match the index used by initCaaPics.
-     */
-    function caaUpdateBigBoxForTable(table, tableIndex) {
-        if (!Lib.settings.sa_enable_caa_pics) return;
-        if (!Lib.settings.sa_caa_pics_big)   return;
-
-        const box = document.getElementById('mb-caa-bigbox-' + tableIndex);
-        if (!box) return;
-
-        // Collect hrefs of release / release-group anchors in currently visible rows.
-        // A row is visible when its display is not 'none' (regardless of which filter
-        // hid it — global, column, or STF — the result is the same: display:'none').
-        const GUID  = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
-        const types = ['release-group', 'release'];
-        const visibleHrefs = new Set();
-
-        table.querySelectorAll('tbody tr').forEach(row => {
-            if (row.style.display === 'none') return;
-            row.querySelectorAll('td a[href]').forEach(a => {
-                const href = a.getAttribute('href');
-                for (const type of types) {
-                    if (new RegExp('^/' + type + '/' + GUID + '$').test(href)) {
-                        visibleHrefs.add(href);
-                        break;
-                    }
-                }
-            });
-        });
-
-        // Show/hide bigbox wrapper elements; count those with a loaded image
-        // for the badge (mirrors the live-increment logic in caaInitBigPics).
-        let loadedVisible = 0;
-        box.querySelectorAll('a[data-caa-href]').forEach(wrapper => {
-            if (visibleHrefs.has(wrapper.dataset.caaHref)) {
-                wrapper.style.display = '';
-                const img = wrapper.querySelector('img');
-                if (img && img.style.display === 'inline') loadedVisible++;
-            } else {
-                wrapper.style.display = 'none';
-            }
-        });
-
-        // Update the badge on the toggle button.
-        const btn = document.getElementById('mb-caa-toggle-btn-' + tableIndex);
-        if (btn) {
-            const badge = btn.querySelector('.mb-caa-toggle-count');
-            if (badge) badge.textContent = loadedVisible;
-        }
-
-        Lib.debug('caa', `caaUpdateBigBoxForTable: table ${tableIndex} — ` +
-            `${visibleHrefs.size} visible href(s), ${loadedVisible} loaded image(s) shown`);
     }
 
     /**
@@ -20030,8 +19515,8 @@
      * Detection order:
      *   1. Multi-table mode: walk backwards through `previousElementSibling`
      *      (up to 5 steps) looking for `h3.mb-toggle-h3`.  We must walk, not just
-     *      check the immediate sibling, because `caaInitBigPics` inserts a
-     *      `div.mb-caa-bigbox` directly before the table — after that insertion
+     *      check the immediate sibling, because `_artInitBigPics` inserts a
+     *      div.mb-{caa|eaa}-bigbox directly before the table — after that insertion
      *      `table.previousElementSibling` is the bigbox, not the h3.
      *   2. Single-table mode fallback: scan all `<h2>` elements in document order
      *      and return the last one that precedes the table (same logic as
@@ -20043,6 +19528,7 @@
     function caaFindHeaderForTable(table) {
         // Multi-table mode — walk backwards past the bigbox (and any other
         // injected elements) looking for the h3 that owns this table.
+        // used by caaFindHeaderForTable() — max 5 steps to avoid runaway walks.
         let prev = table.previousElementSibling;
         let steps = 0;
         while (prev && steps < 5) {
@@ -20065,92 +19551,571 @@
         return target;
     }
 
+    // ── Generic _art* implementations ─────────────────────────────────────────
+
     /**
-     * Creates or updates the per-table CAA toggle button and inserts it
+     * Loads an art thumbnail into the background of one artwork-icon span.
+     *
+     * Derives the entity path from the wrapping anchor's `ref` attribute (set by
+     * jesus2099's own icon injections) or from the `href` attribute after stripping
+     * `ctx.artSuffix`.  If no wrapping anchor is present the call is a silent no-op.
+     *
+     * Returns a Promise that always resolves (never rejects), so callers can safely
+     * enqueue through `_caaQueue`.  The `img.src` assignment is deferred into the
+     * Promise executor so the browser request does not start until the queue grants
+     * a slot.
+     *
+     * @param   {ArtCtx}      ctx     Archive context descriptor (CAA_CTX or EAA_CTX).
+     * @param   {HTMLElement} artIcon Artwork-icon span inside an art anchor cell.
+     * @returns {Promise<void>}       Always resolves.
+     */
+    function _artLoadIcon(ctx, artIcon) {
+        const anchor = artIcon.closest('a[href]');
+        if (!anchor) {
+            Lib.debug(ctx.key, `${ctx.key}LoadIcon: skipped — no wrapping anchor found for icon`, artIcon);
+            return Promise.resolve();
+        }
+
+        const entityPath = anchor.getAttribute('ref')
+            || anchor.getAttribute('href').replace(new RegExp(ctx.artSuffix + '$'), '');
+
+        const size   = Lib.settings.sa_caa_small_img_size || 250;
+        const imgurl = ctx.archiveHost + entityPath + '/front-' + size;
+
+        Lib.debug(ctx.key, `${ctx.key}LoadIcon: fetching ${imgurl}`);
+
+        return new Promise(resolve => {
+            const img = document.createElement('img');
+            img.addEventListener('load', function() {
+                artIcon.style.setProperty('background-size',  'contain');
+                artIcon.style.setProperty('background-image', 'url(' + this.src + ')');
+                Lib.debug(ctx.key, `${ctx.key}LoadIcon: loaded OK — ${imgurl}`);
+                resolve();
+            });
+            img.addEventListener('error', function() {
+                // A 404 is the normal outcome when the entity has no "Front" image.
+                // All failures are logged at debug level — this event fires for every
+                // row without front art and would be noisy at warn level.
+                Lib.debug(ctx.key, `${ctx.key}LoadIcon: failed to load ${imgurl} — icon stays in default state`);
+                resolve();
+            });
+            img.src = imgurl; // triggers the browser request
+        });
+    }
+
+    /**
+     * Fetches the archive JSON for one entity anchor and enriches the icon with
+     * the image count.
+     *
+     * Decorations applied on a successful (non-zero) response:
+     *   1. `anchor.title` set to ctx.tooltip(n).
+     *   2. `<span class="ctx.badgeClass">N</span>` appended inside the art cell.
+     *   3. Tooltip set on the inline thumbnail placeholder in the addFeature column.
+     *
+     * Re-render guard: `anchor.dataset[ctx.enrichedAttr] === '1'` after enrichment.
+     * Fresh clone nodes (renderFinalTable) start without the attribute and receive
+     * enrichment served from `ctx.countCache` without a network round-trip.
+     *
+     * For CAA, enrichment is only performed for release-group anchors
+     * (ctx.entityGuard filters these).  For EAA all event anchors are enriched.
+     *
+     * @param   {ArtCtx}          ctx    Archive context descriptor.
+     * @param   {HTMLAnchorElement} anchor Art anchor inside a CAA/EAA cell.
+     * @returns {Promise<void>}
+     */
+    async function _artEnrichIcon(ctx, anchor) {
+        if (anchor.dataset[ctx.enrichedAttr] === '1') return;
+
+        const entityPath = anchor.getAttribute('ref')
+            || anchor.getAttribute('href').replace(new RegExp(ctx.artSuffix + '$'), '');
+
+        if (!ctx.entityGuard(entityPath)) return;
+
+        // ── Resolve count — from cache or network ────────────────────────────
+        let count;
+        if (ctx.countCache.has(entityPath)) {
+            count = ctx.countCache.get(entityPath);
+            Lib.debug(ctx.key, `${ctx.key}EnrichIcon: ${count} image(s) for ${entityPath} (cached)`);
+        } else {
+            const apiUrl = ctx.apiHost + entityPath;
+            try {
+                const resp = await fetch(apiUrl);
+                if (!resp.ok) {
+                    // 404 — no archive entry at all: expected, debug only.
+                    // 429 / 5xx — server-side problems: warn so they surface.
+                    if (resp.status === 404) {
+                        Lib.debug(ctx.key, `${ctx.key}EnrichIcon: HTTP 404 (no entry) for ${entityPath}`);
+                    } else {
+                        Lib.warn(ctx.key, `${ctx.key}EnrichIcon: HTTP ${resp.status} for ${entityPath} — enrichment skipped`);
+                    }
+                    // Cache sentinel (0) to suppress repeated failed requests
+                    // across sort/filter re-renders for the same entity.
+                    ctx.countCache.set(entityPath, 0);
+                    anchor.dataset[ctx.enrichedAttr] = '1';
+                    return;
+                }
+                const json = await resp.json();
+                count = Array.isArray(json.images) ? json.images.length : 0;
+                ctx.countCache.set(entityPath, count);
+                Lib.debug(ctx.key, `${ctx.key}EnrichIcon: ${count} image(s) for ${entityPath}`);
+            } catch (err) {
+                // Network-level failure — do NOT cache so connectivity-restored
+                // re-renders can retry.
+                Lib.warn(ctx.key, `${ctx.key}EnrichIcon: network error for ${entityPath}:`, err);
+                return;
+            }
+        }
+
+        if (count <= 0) {
+            anchor.dataset[ctx.enrichedAttr] = '1';
+            return;
+        }
+
+        const tooltip = ctx.tooltip(count);
+
+        // ── 1. Tooltip on the art anchor and its icon span ───────────────────
+        anchor.title = tooltip;
+        const iconSpan = anchor.querySelector(
+            'span.caa-icon, span.eaa-icon, span.artwork-icon'
+        );
+        if (iconSpan) iconSpan.title = tooltip;
+
+        // ── 2. Count badge in the art cell ───────────────────────────────────
+        const artCell = anchor.closest('td');
+        if (artCell && !artCell.querySelector('.' + ctx.badgeClass)) {
+            const badge       = document.createElement('span');
+            badge.className   = ctx.badgeClass;
+            badge.textContent = count;
+            badge.title       = tooltip;
+            anchor.after(badge);
+        }
+
+        // ── 3. Tooltip on the inline thumbnail in the addFeature column ──────
+        const addColName = activeDefinition &&
+                           activeDefinition.features &&
+                           activeDefinition.features[ctx.addFeature];
+        if (addColName) {
+            const tr    = anchor.closest('tr');
+            const table = anchor.closest('table');
+            if (tr && table) {
+                const colIdx    = caaFindColumnByName(table, addColName);
+                const titleCell = colIdx !== -1 ? tr.cells[colIdx] : null;
+                if (titleCell) {
+                    const inlinePh = titleCell.querySelector('.' + ctx.inlinePh);
+                    if (inlinePh) inlinePh.title = tooltip;
+                }
+            }
+        }
+
+        anchor.dataset[ctx.enrichedAttr] = '1';
+    }
+
+    /**
+     * Loads thumbnails into all artwork-icon spans in `table` that are wrapped in
+     * art-anchor elements, and asynchronously enriches each icon's tooltip with the
+     * image count fetched from the archive JSON API.
+     *
+     * Two passes per qualifying icon:
+     *   1. `_artLoadIcon(ctx, icon)`   — starts the img background load via the queue.
+     *   2. `_artEnrichIcon(ctx, anchor)` — fires an async fetch for the image count.
+     *
+     * All requests are serialised through `_caaQueue`; without throttling large
+     * pages cause the CDN burst / CORS / ERR_INSUFFICIENT_RESOURCES failure pattern.
+     *
+     * @param {ArtCtx}           ctx    Archive context descriptor.
+     * @param {HTMLTableElement} table
+     */
+    function _artInitSmallPics(ctx, table) {
+        if (!Lib.settings.sa_caa_pics_small) return;
+
+        const icons = table.querySelectorAll(ctx.iconSel);
+
+        icons.forEach(icon => {
+            if (_caaQueue) {
+                _caaQueue.enqueue(() => _artLoadIcon(ctx, icon));
+                const anchor = icon.closest('a[href]');
+                if (anchor) _caaQueue.enqueue(() => _artEnrichIcon(ctx, anchor));
+            } else {
+                _artLoadIcon(ctx, icon);
+                const anchor = icon.closest('a[href]');
+                if (anchor) _artEnrichIcon(ctx, anchor);
+            }
+        });
+
+        Lib.debug(ctx.key, `${ctx.key}InitSmallPics: enqueued ${icons.length * 2} request(s) ` +
+            `for ${icons.length} icon(s) ` +
+            `(queue: ${_caaQueue ? _caaQueue.runningCount + ' running, ' + _caaQueue.pendingCount + ' pending' : 'unavailable'})`);
+    }
+
+    /**
+     * Scans `table`'s tbody for unique entity anchor hrefs and returns the count
+     * and the URL of the first thumbnail image — without creating any DOM elements.
+     *
+     * This pure read-only pre-flight lets `_artInitPics` create the toggle button
+     * (and thus obtain its `btnId`) BEFORE calling `_artInitBigPics`, so the
+     * bigbox is built in a single pass with every img load handler already having
+     * the button ID and able to increment the badge directly.  This avoids the
+     * double-count bug that arose from the old two-phase approach (two sets of
+     * `<img>` elements started loading with the same src; detached elements still
+     * fired their load events).
+     *
+     * @param  {ArtCtx}           ctx   Archive context descriptor.
+     * @param  {HTMLTableElement} table
+     * @returns {{ count: number, firstImgUrl: string|null }}
+     */
+    function _artCountLinks(ctx, table) {
+        const size = Lib.settings.sa_caa_big_img_size || 250;
+        const seen = new Set();
+        let firstImgUrl = null;
+
+        table.querySelectorAll('tbody td a[href]').forEach(a => {
+            const href = a.getAttribute('href');
+            for (const type of ctx.entityTypes) {
+                const m = href.match(
+                    new RegExp('^/' + type + '/(' + _ART_GUID_RE_STR + ')$')
+                );
+                if (m && !seen.has(href)) {
+                    seen.add(href);
+                    if (!firstImgUrl) {
+                        firstImgUrl = ctx.archiveHost + '/' + type + '/' + m[1] + '/front-' + size;
+                    }
+                    break;
+                }
+            }
+        });
+
+        return { count: seen.size, firstImgUrl };
+    }
+
+    /**
+     * Builds (or rebuilds) the big-picture hover strip above `table` and wires
+     * row ↔ image hover highlighting.
+     *
+     * Algorithm (mirrors jesus2099's big-pics branch + updateA + updateBig):
+     *  1. Find or create a <div id="{ctx.boxPrefix}-N"> immediately before the table.
+     *  2. Walk every entity anchor in tbody and, for each unique href, append a
+     *     lazy-loaded <img> (with ⌛ placeholder) to the box.
+     *  3. img:mouseover  → highlight matching anchors in the table (yellow border).
+     *  4. tbody tr:mouseover → highlight the matching strip image.
+     *  5. On re-render, stale images are cleared and the box is rebuilt in-place.
+     *     The user's current show/hide state (box.dataset[ctx.visAttr]) is preserved
+     *     so a manually collapsed strip stays collapsed after a filter re-render.
+     *
+     * Live badge update: each `img` load event increments `.ctx.countClass` on the
+     * toggle button so the badge reflects *downloaded* images, not total links.
+     * Images that 404 (no artwork) are removed silently.
+     *
+     * Initial visibility is controlled by `sa_caa_pics_initially_collapsed`:
+     *   false (default) — strip visible on first render.
+     *   true            — strip hidden; images download in background.
+     *
+     * @param {ArtCtx}           ctx        Archive context descriptor.
+     * @param {HTMLTableElement} table
+     * @param {number}           tableIndex Position among all table.tbl elements.
+     * @param {string|undefined} btnId      ID of the toggle button whose badge
+     *                                      should be incremented on image load.
+     * @returns {{ count: number, firstImgUrl: string|null }}
+     */
+    function _artInitBigPics(ctx, table, tableIndex, btnId) {
+        if (!Lib.settings.sa_caa_pics_big) return { count: 0, firstImgUrl: null };
+
+        const maxH   = (Lib.settings.sa_caa_big_max_height || 125) + 'px';
+        const size   = Lib.settings.sa_caa_big_img_size   || 250;
+        const colour = Lib.settings.sa_caa_highlight_colour || '#ffff00';
+
+        // ── 1. Create / reuse the bigbox ──────────────────────────────────────
+        const boxId = ctx.boxPrefix + '-' + tableIndex;
+        let   box   = document.getElementById(boxId);
+
+        // Preserve the user's current show/hide choice across re-renders.
+        const initiallyCollapsed = !!(Lib.settings.sa_caa_pics_initially_collapsed);
+        const currentlyVisible   = box
+            ? box.dataset[ctx.visAttr] !== 'false'
+            : !initiallyCollapsed;
+
+        if (!box) {
+            box = document.createElement('div');
+            box.id        = boxId;
+            box.className = ctx.boxClass;
+            table.parentNode.insertBefore(box, table);
+        } else {
+            box.innerHTML = '';
+        }
+
+        box.style.cssText       = 'display:' + (currentlyVisible ? 'flex' : 'none') +
+                                   '; flex-wrap:wrap; gap:4px; padding:4px 0 4px 0; min-height:0;';
+        box.dataset[ctx.visAttr] = currentlyVisible ? 'true' : 'false';
+
+        // ── Reset the toggle button badge atomically with the box rebuild ─────
+        // Must happen before any img.src is set so badge increments start from 0.
+        if (btnId) {
+            const existingBtn = document.getElementById(btnId);
+            if (existingBtn) {
+                const badge = existingBtn.querySelector('.' + ctx.countClass);
+                if (badge) badge.textContent = '0';
+            }
+        }
+
+        // ── 2. Collect unique entity links ────────────────────────────────────
+        const seen        = new Set();
+        let   firstImgUrl = null;
+
+        table.querySelectorAll('tbody td a[href]').forEach(a => {
+            const href = a.getAttribute('href');
+            for (const type of ctx.entityTypes) {
+                const m = href.match(
+                    new RegExp('^/' + type + '/(' + _ART_GUID_RE_STR + ')$')
+                );
+                if (m && !seen.has(href)) {
+                    seen.add(href);
+
+                    const imgurl = ctx.archiveHost + '/' + type + '/' + m[1] + '/front-' + size;
+                    if (!firstImgUrl) firstImgUrl = imgurl;
+
+                    // Wrapper anchor mirrors jesus2099's inline-block anchor in bigbox
+                    const wrapper = document.createElement('a');
+                    wrapper.href  = href;
+                    wrapper.title = a.textContent.trim();
+                    wrapper.setAttribute(ctx.hrefAttrName, href);
+                    wrapper.style.cssText = 'display:inline-block; height:100%; margin:8px 8px 4px 4px;';
+
+                    wrapper.appendChild(document.createTextNode('⌛'));
+
+                    const img         = document.createElement('img');
+                    img.src           = imgurl; // always set → background download even when box hidden
+                    img.alt           = a.textContent.trim();
+                    img.style.cssText = 'vertical-align:middle; display:none;' +
+                                        ' max-height:' + maxH + ';' +
+                                        ' box-shadow:1px 1px 4px black;';
+
+                    img.addEventListener('load', function() {
+                        // Remove the ⌛ text node once the image arrives
+                        const first = this.parentNode.firstChild;
+                        if (first && first.nodeType === Node.TEXT_NODE) {
+                            this.parentNode.removeChild(first);
+                        }
+                        this.style.display = 'inline';
+
+                        // Live-update the toggle button badge
+                        if (btnId) {
+                            const toggleBtn = document.getElementById(btnId);
+                            if (toggleBtn) {
+                                const badge = toggleBtn.querySelector('.' + ctx.countClass);
+                                if (badge) {
+                                    badge.textContent = (parseInt(badge.textContent, 10) || 0) + 1;
+                                }
+                                const thumb = toggleBtn.querySelector('.' + ctx.thumbClass);
+                                if (thumb && !thumb.complete) {
+                                    thumb.src = imgurl;
+                                }
+                            }
+                        }
+                    });
+                    img.addEventListener('error', function() {
+                        const w = this.parentNode;
+                        if (w && w.parentNode) w.parentNode.removeChild(w);
+                    });
+
+                    // ── 3. img:mouseover / mouseout — highlight row links ─────
+                    img.addEventListener('mouseover', function() {
+                        const ah = this.parentNode.getAttribute(ctx.hrefAttrName);
+                        table.querySelectorAll('tbody td a[href="' + ah + '"]').forEach(
+                            rel => rel.style.setProperty('background-color', colour)
+                        );
+                    });
+                    img.addEventListener('mouseout', function() {
+                        const ah = this.parentNode.getAttribute(ctx.hrefAttrName);
+                        table.querySelectorAll('tbody td a[href="' + ah + '"]').forEach(
+                            rel => rel.style.removeProperty('background-color')
+                        );
+                    });
+
+                    wrapper.appendChild(img);
+                    box.appendChild(wrapper);
+                    break; // matched one type for this href — move on
+                }
+            }
+        });
+
+        // ── 4. tbody tr:mouseover / mouseout — highlight strip image ─────────
+        //
+        // Event delegation on tbody avoids per-row listener overhead and
+        // automatically covers rows added by filter re-renders.
+        const tbody = table.querySelector('tbody');
+        if (tbody) {
+            // Remove stale delegated listeners added in previous passes.
+            if (tbody[ctx.tbodyOver]) tbody.removeEventListener('mouseover', tbody[ctx.tbodyOver]);
+            if (tbody[ctx.tbodyOut])  tbody.removeEventListener('mouseout',  tbody[ctx.tbodyOut]);
+
+            tbody[ctx.tbodyOver] = function(event) {
+                const tr = event.target.closest('tr');
+                if (!tr) return;
+                const a  = tr.querySelector(ctx.rowLinkSel);
+                if (!a)  return;
+                const w  = box.querySelector(
+                    'a[' + ctx.hrefAttrName + '="' + a.getAttribute('href') + '"]'
+                );
+                if (!w)  return;
+                w.style.setProperty('border',  '4px solid ' + colour);
+                w.style.setProperty('margin', '4px 4px 0px 0px');
+            };
+            tbody[ctx.tbodyOut] = function(event) {
+                const tr = event.target.closest('tr');
+                if (!tr) return;
+                const a  = tr.querySelector(ctx.rowLinkSel);
+                if (!a)  return;
+                const w  = box.querySelector(
+                    'a[' + ctx.hrefAttrName + '="' + a.getAttribute('href') + '"]'
+                );
+                if (!w)  return;
+                w.style.removeProperty('border');
+                w.style.setProperty('margin', '8px 8px 4px 4px');
+            };
+
+            tbody.addEventListener('mouseover', tbody[ctx.tbodyOver]);
+            tbody.addEventListener('mouseout',  tbody[ctx.tbodyOut]);
+        }
+
+        Lib.debug(ctx.key, `${ctx.key}InitBigPics: built bigbox for table ${tableIndex} ` +
+            `with ${seen.size} image(s), initially ${currentlyVisible ? 'visible' : 'hidden'}`);
+        return { count: seen.size, firstImgUrl };
+    }
+
+    /**
+     * Synchronises the big-picture strip above `table` so that only images
+     * whose corresponding entity row is currently visible are shown, and updates
+     * the toggle-button badge to reflect the loaded-and-visible count.
+     *
+     * Called after every sub-table-filter (STF) apply/clear pass so the strip
+     * tracks the same row set as the table.
+     *
+     * Guards: `sa_enable_caa_pics` and `sa_caa_pics_big` must both be true;
+     *         the bigbox element must already exist.
+     *
+     * @param {ArtCtx}           ctx        Archive context descriptor.
+     * @param {HTMLTableElement} table
+     * @param {number}           tableIndex Must match the index used by _artInitPics.
+     */
+    function _artUpdateBigBoxForTable(ctx, table, tableIndex) {
+        if (!Lib.settings.sa_enable_caa_pics) return;
+        if (!Lib.settings.sa_caa_pics_big)   return;
+
+        const box = document.getElementById(ctx.boxPrefix + '-' + tableIndex);
+        if (!box) return;
+
+        // Collect hrefs of entity anchors in currently visible rows.
+        const visibleHrefs = new Set();
+        table.querySelectorAll('tbody tr').forEach(row => {
+            if (row.style.display === 'none') return;
+            row.querySelectorAll('td a[href]').forEach(a => {
+                const href = a.getAttribute('href');
+                for (const type of ctx.entityTypes) {
+                    if (new RegExp('^/' + type + '/' + _ART_GUID_RE_STR + '$').test(href)) {
+                        visibleHrefs.add(href);
+                        break;
+                    }
+                }
+            });
+        });
+
+        // Show/hide bigbox wrappers; count loaded-and-visible for the badge
+        let loadedVisible = 0;
+        box.querySelectorAll('a[' + ctx.hrefAttrName + ']').forEach(wrapper => {
+            if (visibleHrefs.has(wrapper.getAttribute(ctx.hrefAttrName))) {
+                wrapper.style.display = '';
+                const img = wrapper.querySelector('img');
+                if (img && img.style.display === 'inline') loadedVisible++;
+            } else {
+                wrapper.style.display = 'none';
+            }
+        });
+
+        // Update the toggle button badge
+        const btn = document.getElementById(ctx.btnPrefix + '-' + tableIndex);
+        if (btn) {
+            const badge = btn.querySelector('.' + ctx.countClass);
+            if (badge) badge.textContent = loadedVisible;
+        }
+
+        Lib.debug(ctx.key, `${ctx.key}UpdateBigBoxForTable: table ${tableIndex} — ` +
+            `${visibleHrefs.size} visible href(s), ${loadedVisible} loaded image(s) shown`);
+    }
+
+    /**
+     * Creates or updates the per-table art toggle button and inserts it
      * immediately after the `.mb-row-count-stat` span inside the table's
      * header element (h2 for single-table mode; h3.mb-toggle-h3 for multi).
      *
      * Button anatomy:
-     *   [ <img first-cover-art> <span>N</span> ]
-     *   — the thumbnail is a scaled-down version of the first CAA image.
-     *   — the badge starts at 0 and is incremented to reflect the number of
-     *     images *successfully downloaded* so far.  `caaInitBigPics()` receives
-     *     `btnId` and increments the badge inside each `img` load handler.
-     *   — tooltip: "Toggle CAA cover art images - Show" / "… Hide"
+     *   [ <img first-art-thumbnail> <span>N</span> ]
+     *   — thumbnail is scaled-down version of the first art image.
+     *   — badge starts at 0 and increments as images load in `_artInitBigPics`.
+     *   — tooltip: "Toggle {ctx.toggleLabel} - Show" / "… Hide"
      *
      * Idempotent: if the button already exists for this tableIndex its thumbnail
-     * src is kept (no flash) and the badge is reset to 0 because `caaInitBigPics`
-     * just rebuilt the bigbox — all images start loading again from scratch.
+     * src is kept (no flash) and the badge is reset to 0.
      *
-     * Does nothing if count === 0 (no release links found) or bigbox absent.
+     * NOTE: intentionally called BEFORE `_artInitBigPics` so the returned `btnId`
+     * can be captured into each img.load handler inside `_artInitBigPics`.  All
+     * references to the bigbox inside the click handler resolve lazily at click
+     * time via `document.getElementById` — the box does not yet exist on the
+     * very first render pass.
      *
+     * @param {ArtCtx}      ctx
      * @param {HTMLTableElement} table
-     * @param {number}  tableIndex  — index used to derive the unique button ID.
-     * @param {number}  count       — total number of release/RG links in the bigbox.
-     * @param {string|null} firstImgUrl — URL of the first cover-art image, or null.
-     * @returns {string|undefined}  btnId when the button was created/updated, else undefined.
+     * @param {number}      tableIndex  Index used to derive the unique button ID.
+     * @param {number}      count       Total entity links found by _artCountLinks.
+     * @param {string|null} firstImgUrl URL of the first art thumbnail.
+     * @returns {string|undefined}      btnId when created/updated, else undefined.
      */
-    function caaCreateOrUpdateToggleButton(table, tableIndex, count, firstImgUrl) {
+    function _artCreateOrUpdateToggleButton(ctx, table, tableIndex, count, firstImgUrl) {
         if (count === 0 || !firstImgUrl) return;
 
-        // NOTE: we deliberately do NOT check for the bigbox here.
-        // `caaCreateOrUpdateToggleButton` is intentionally called BEFORE
-        // `caaInitBigPics` so that the returned btnId can be wired into the
-        // img.onload closures inside `caaInitBigPics`.  The bigbox does not
-        // exist yet on the very first render — guarding on its presence caused
-        // the toggle button to never be inserted (the box-doesn't-exist path
-        // returned undefined, `caaInitBigPics` then created the box but without
-        // a valid btnId so the badge never incremented and the button was never
-        // shown).  All references to the box inside the click handler use
-        // `document.getElementById(boxId)` so they resolve lazily at click time.
-        const boxId = 'mb-caa-bigbox-' + tableIndex;
-
-        const btnId  = 'mb-caa-toggle-btn-' + tableIndex;
-        let   btn    = document.getElementById(btnId);
-        const isNew  = !btn;
+        const boxId = ctx.boxPrefix + '-' + tableIndex;
+        const btnId = ctx.btnPrefix + '-' + tableIndex;
+        let   btn   = document.getElementById(btnId);
+        const isNew = !btn;
 
         if (isNew) {
             btn           = document.createElement('button');
             btn.id        = btnId;
             btn.type      = 'button';
-            btn.className = 'mb-caa-art-toggle-btn';
+            btn.className = ctx.btnClass;
             btn.style.cssText =
                 'cursor:pointer; padding:1px 5px 1px 3px; border:1px solid #aaa;' +
                 ' border-radius:3px; background:#f5f5f5; vertical-align:middle;' +
                 ' font-size:0.8em; margin-left:5px; display:inline-flex;' +
                 ' align-items:center; gap:3px; line-height:1;';
 
-            // Thumbnail image inside the button — src set once, never reset
             const thumb         = document.createElement('img');
-            thumb.className     = 'mb-caa-toggle-thumb';
+            thumb.className     = ctx.thumbClass;
             thumb.src           = firstImgUrl;
             thumb.style.cssText = 'height:18px; width:18px; object-fit:cover;' +
                                    ' border-radius:2px; vertical-align:middle; display:block;';
             btn.appendChild(thumb);
 
-            // Badge — starts at 0; incremented by each img load event in caaInitBigPics
-            const badge         = document.createElement('span');
-            badge.className     = 'mb-caa-toggle-count';
-            badge.textContent   = '0';
+            // Badge — starts at 0; incremented by each img.load in _artInitBigPics
+            const badge       = document.createElement('span');
+            badge.className   = ctx.countClass;
+            badge.textContent = '0';
             btn.appendChild(badge);
 
-            // Click: toggle bigbox visibility and update button title.
-            // Use getElementById (not a captured variable) so the lookup is
-            // deferred to click time — the box may not exist yet when this
-            // handler is registered (first render, box created by caaInitBigPics
-            // which runs after this function).
+            // Click: toggle bigbox visibility.
+            // getElementById is deferred to click time — the box may not exist yet
+            // on the very first render pass (it is created by _artInitBigPics which
+            // runs after this function).
             btn.addEventListener('click', function(e) {
                 e.stopPropagation(); // don't bubble to h3 collapse handler
                 const liveBox = document.getElementById(boxId);
                 if (!liveBox) return;
-                const visible    = liveBox.dataset.caaVisible !== 'false';
+                const visible    = liveBox.dataset[ctx.visAttr] !== 'false';
                 const nowVisible = !visible;
-                liveBox.style.display      = nowVisible ? 'flex' : 'none';
-                liveBox.dataset.caaVisible = nowVisible ? 'true' : 'false';
+                liveBox.style.display        = nowVisible ? 'flex' : 'none';
+                liveBox.dataset[ctx.visAttr] = nowVisible ? 'true' : 'false';
                 btn.title = nowVisible
-                    ? 'Toggle CAA cover art images - Hide'
-                    : 'Toggle CAA cover art images - Show';
-                Lib.debug('caa', `CAA toggle btn ${btnId}: strip ${nowVisible ? 'shown' : 'hidden'}`);
+                    ? 'Toggle ' + ctx.toggleLabel + ' - Hide'
+                    : 'Toggle ' + ctx.toggleLabel + ' - Show';
+                Lib.debug(ctx.key, `${ctx.key} toggle btn ${btnId}: strip ${nowVisible ? 'shown' : 'hidden'}`);
             });
 
             // Insert into header
@@ -20161,970 +20126,133 @@
             } else if (header) {
                 header.appendChild(btn);
             } else {
-                // No header found — remove and give up for this render pass.
                 btn.remove();
-                Lib.debug('caa', `caaCreateOrUpdateToggleButton: no header found for table ${tableIndex} — button deferred`);
+                Lib.debug(ctx.key, `${ctx.key}CreateOrUpdateToggleButton: no header found for table ${tableIndex} — button deferred`);
                 return;
             }
         } else {
-            // Re-render: reset badge to 0 — images are re-loading in caaInitBigPics
-            const badge = btn.querySelector('.mb-caa-toggle-count');
+            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics
+            const badge = btn.querySelector('.' + ctx.countClass);
             if (badge) badge.textContent = '0';
         }
 
-        // Sync button title to current bigbox visibility state (box may not
-        // exist yet on first render — default to 'Show' in that case).
+        // Sync button title to current bigbox visibility (box may not exist yet)
         const liveBoxForTitle = document.getElementById(boxId);
-        const visible = liveBoxForTitle ? liveBoxForTitle.dataset.caaVisible !== 'false' : false;
+        const visible = liveBoxForTitle
+            ? liveBoxForTitle.dataset[ctx.visAttr] !== 'false'
+            : false;
         btn.title = visible
-            ? 'Toggle CAA cover art images - Hide'
-            : 'Toggle CAA cover art images - Show';
+            ? 'Toggle ' + ctx.toggleLabel + ' - Hide'
+            : 'Toggle ' + ctx.toggleLabel + ' - Show';
 
-        Lib.debug('caa', `caaCreateOrUpdateToggleButton: ${isNew ? 'created' : 'updated'} btn ${btnId} (${count} link(s))`);
+        Lib.debug(ctx.key, `${ctx.key}CreateOrUpdateToggleButton: ${isNew ? 'created' : 'updated'} btn ${btnId} (${count} link(s))`);
         return btnId;
     }
 
     /**
-     * Entry point for the CAA Illustrated Discography feature.
+     * Generic entry point — iterates every table.tbl and applies the small-pic
+     * and big-pic features for the archive described by `ctx`.
      *
-     * Iterates every table.tbl in the document and applies small-pic thumbnail
-     * loading and the big-pic hover strip to tables that contain a CAA column.
-     * Tables without a CAA column are silently skipped (EAA tables are handled
-     * by the separate `initEaaPics()` entry point).
+     * Tables without the archive's column AND without the addFeature override
+     * are silently skipped.  The addFeature override lets pages that carry
+     * features.addCAA / features.addEAA but no dedicated archive column still
+     * get a bigbox (e.g. series-releases for CAA, artist-events for EAA).
      *
-     * Guards:
-     *   - `Lib.settings.sa_enable_caa_pics` must be true.
-     *
-     * Called from:
-     *   - The main fetch pipeline, after initBarcodeHighlight().
-     *   - runFilter() single-table branch, after initBarcodeHighlight().
-     *   - renderGroupedTable() (multi-table re-renders), after initBarcodeHighlight().
-     *   - The load-from-disk pipeline, after initBarcodeHighlight().
-     *
-     * Side-effect: creates/resets the shared `_caaQueue` used by both
-     * `initCaaInlinePics()` and `initEaaInlinePics()` / `initEaaPics()`, so it
-     * MUST be called before any of those functions.
+     * @param {ArtCtx} ctx  Archive context descriptor.
      */
-    function initCaaPics() {
-        if (!Lib.settings.sa_enable_caa_pics) return;
-
-        // (Re-)create the shared request queue so the current sa_caa_fetch_concurrency
-        // setting is picked up on every render pass.  Any previously queued requests
-        // from a prior render are abandoned — their DOM nodes no longer exist after
-        // renderFinalTable rebuilds the tbody, so completing them would be a no-op
-        // anyway.  The idempotency guards in caaLoadIcon / caaEnrichReleaseGroupIcon
-        // (data-caa-inline-done / data-caa-enriched) ensure re-runs stay cheap.
-        const concurrency = Math.max(1, Math.min(20, Lib.settings.sa_caa_fetch_concurrency || 4));
-        _caaQueue = makeCaaQueue(concurrency);
-        Lib.debug('caa', `initCaaPics: request queue created (concurrency=${concurrency})`);
-
+    function _artInitPics(ctx) {
         const tables = document.querySelectorAll('table.tbl');
         if (!tables.length) {
-            Lib.debug('caa', 'initCaaPics: no table.tbl found — skipping');
+            Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}Pics: no table.tbl found — skipping`);
             return;
         }
 
         let processed = 0;
         tables.forEach((table, i) => {
-            const hasCaaColumn = caaFindCaaColumnIndex(table) !== -1;
-            // Also build the bigbox for tables that have no dedicated 'CAA' column header
-            // but whose page definition carries features.addCAA — these pages (e.g.
-            // series-releases, artist-recordings) have no caa extractor and therefore
-            // no 'CAA' header, yet their Release / Release-groups column contains
-            // release or release-group links that the bigbox can visualise.
-            const hasAddCaa = !!(activeDefinition && activeDefinition.features &&
-                                  activeDefinition.features.addCAA);
-            if (!hasCaaColumn && !hasAddCaa) {
-                Lib.debug('caa', `initCaaPics: table ${i} has no CAA column and no addCAA feature — skipping`);
+            const hasColumn     = caaFindColumnByName(table, ctx.column) !== -1;
+            const hasAddFeature = !!(activeDefinition &&
+                                     activeDefinition.features &&
+                                     activeDefinition.features[ctx.addFeature]);
+
+            if (!hasColumn && !hasAddFeature) {
+                Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}Pics: table ${i} has no ${ctx.column} column and no ${ctx.addFeature} feature — skipping`);
                 return;
-            }
-            // Small-pic icon loading only applies when there is a dedicated 'CAA' column
-            // containing artwork-icon spans inside cover-art anchors.
-            if (hasCaaColumn) {
-                caaInitSmallPics(table);
             }
 
-            // Single-pass strategy: scan links first (no DOM creation), create the
-            // toggle button so its btnId is known, then build the bigbox exactly once
-            // with that btnId wired into every img load handler.  This avoids the
-            // double-count bug that arose from the previous two-phase approach where
-            // caaInitBigPics was called twice (once without btnId, once with), causing
-            // two sets of <img> elements to start loading with the same src — even
-            // after the first set was detached via box.innerHTML = '', browsers still
-            // fire their load events on the detached elements.
-            const { count, firstImgUrl } = caaCountLinks(table);
+            // Small-pic icon loading only applies when there is a dedicated column
+            // containing artwork-icon spans inside art-anchor elements.
+            if (hasColumn) {
+                _artInitSmallPics(ctx, table);
+            }
+
+            // Single-pass strategy: scan links first (read-only), create the
+            // toggle button so its btnId is known, then build the bigbox exactly
+            // once with that btnId wired into every img.load handler.
+            const { count, firstImgUrl } = _artCountLinks(ctx, table);
             if (count === 0) {
-                Lib.debug('caa', `initCaaPics: table ${i} — no release/release-group links found, skipping bigbox`);
+                Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}Pics: table ${i} — no ${ctx.entityTypes.join('/')} links found, skipping bigbox`);
                 return;
             }
-            const btnId = caaCreateOrUpdateToggleButton(table, i, count, firstImgUrl);
-            caaInitBigPics(table, i, btnId); // btnId may be undefined if no button (count=0)
+
+            const btnId = _artCreateOrUpdateToggleButton(ctx, table, i, count, firstImgUrl);
+            _artInitBigPics(ctx, table, i, btnId);
             processed++;
         });
 
-        Lib.debug('caa', `initCaaPics: processed ${processed} table(s) with CAA column`);
+        Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}Pics: processed ${processed} table(s) with ${ctx.column} column`);
     }
 
     /**
-     * Returns the 0-based column index of the first column whose name matches
-     * `name` in `table`'s header row, or -1 when not found.
+     * Generic inline-thumbnail feature.
      *
-     * Detection is identical to `caaFindCaaColumnIndex` — prefers
-     * `th.dataset.colName` (set by makeTableSortableUnified) then falls back to
-     * regex-stripped textContent.
+     * For page definitions that carry `features[ctx.addFeature] = '<column name>'`,
+     * inserts a fixed-size thumbnail placeholder span into every tbody cell of that
+     * column.  The placeholder is positioned after the ERG ▶ button (if present)
+     * or at the very start of the cell.  The art image is fetched asynchronously
+     * from the archive using the GUID extracted from the entity link href.
      *
-     * @param  {HTMLTableElement} table
-     * @param  {string}           name  — e.g. 'Release', 'Title', 'Release groups'
-     * @returns {number}
-     */
-    function caaFindColumnByName(table, name) {
-        const headerRow = table.querySelector('thead tr') ||
-                          table.querySelector('tr:has(th)');
-        if (!headerRow) return -1;
-        return Array.from(headerRow.children).findIndex(th => {
-            const named = th.dataset && th.dataset.colName;
-            if (named) return named === name;
-            const txt = th.textContent.replace(/[⇅▲▼📊▶◀]/g, '').trim();
-            return txt === name;
-        });
-    }
-
-    /**
-     * Inline CAA thumbnail feature.
+     * A fixed width/height placeholder is always injected so titles remain visually
+     * aligned across all rows regardless of whether artwork exists.  A 404 leaves
+     * the placeholder as an invisible spacer.
      *
-     * For page definitions that carry `features.addCAA = '<column name>'`, inserts
-     * a fixed-size thumbnail placeholder span into every tbody cell of that column,
-     * positioned between the ERG expand button (▶, `[data-erg-btn]`) and the entity
-     * title link.  If no expand button is present (ERG disabled or not applicable)
-     * the placeholder is inserted at the very start of the cell.
+     * Idempotency: processed cells receive `td.dataset[ctx.inlineDoneAttr] = '1'`.
+     * Stale markers on cloned rows are cleared so fresh injection occurs when
+     * renderFinalTable / renderGroupedTable rebuilds the DOM.
      *
-     * A fixed width/height is used for the placeholder regardless of whether artwork
-     * is available, so that titles remain visually aligned across all rows.
-     *
-     * The cover-art image is fetched asynchronously from the Cover Art Archive using
-     * the GUID extracted from the entity link's href.  On success the img element
-     * inside the placeholder becomes visible.  On error the placeholder remains as
-     * an empty spacer — never removed, never noisy.
-     *
-     * Idempotency: processed cells receive `data-caa-inline-done="1"` so re-renders
-     * that reuse existing `<tr>` elements (filter/sort) do not re-inject.  Stale
-     * markers on cloned rows are cleared in the same pass so fresh injection occurs
-     * when `renderFinalTable` / `renderGroupedTable` rebuilds the DOM.
-     *
-     * Concurrency:
-     *   Like `caaInitSmallPics`, this function enqueues image requests through the
-     *   shared `_caaQueue` (created by `initCaaPics` using `sa_caa_fetch_concurrency`).
-     *   The DOM injection (placeholder + img element creation and insertion) is
-     *   performed synchronously so layout is stable immediately.  Only the `img.src`
-     *   assignment — which triggers the actual browser request — is deferred until
-     *   the queue grants a slot.  Without this deferral a large artist-releases page
-     *   would fire hundreds of simultaneous image requests, causing the same CDN
-     *   burst / CORS / ERR_INSUFFICIENT_RESOURCES failures seen in caaInitSmallPics.
+     * Concurrency: the actual `img.src` assignment is deferred through `_caaQueue`
+     * so all inline-thumbnail requests share the same concurrency budget as the
+     * _artInitSmallPics icon loads.
      *
      * Guards:
      *   - `Lib.settings.sa_enable_caa_pics` master toggle.
      *   - `Lib.settings.sa_caa_pics_inline` per-feature toggle.
-     *   - `activeDefinition.features.addCAA` must be set to a column name string.
-     *     (For events the equivalent is `features.addEAA`, handled by initEaaInlinePics.)
+     *   - `activeDefinition.features[ctx.addFeature]` must be set.
      *
-     * Called from all 4 render-completion paths, right after `initExpandRGsFeature()`
-     * so that the ERG ▶ button (if any) is already present before the placeholder
-     * is inserted.
+     * @param {ArtCtx} ctx  Archive context descriptor.
      */
-    function initCaaInlinePics() {
-        if (!Lib.settings.sa_enable_caa_pics)  return;
-        if (!Lib.settings.sa_caa_pics_inline)  return;
+    function _artInitInlinePics(ctx) {
+        if (!Lib.settings.sa_enable_caa_pics) return;
+        if (!Lib.settings.sa_caa_pics_inline) return;
 
-        const colName = activeDefinition && activeDefinition.features && activeDefinition.features.addCAA;
+        const colName = activeDefinition &&
+                        activeDefinition.features &&
+                        activeDefinition.features[ctx.addFeature];
         if (!colName) {
-            Lib.debug('caa', 'initCaaInlinePics: no addCAA column configured for this page type — skipping');
+            Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: no ${ctx.addFeature} column configured for this page type — skipping`);
             return;
         }
 
-        Lib.debug('caa', `initCaaInlinePics: addCAA column = "${colName}"`);
+        Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: ${ctx.addFeature} column = "${colName}"`);
 
         const tables = document.querySelectorAll('table.tbl');
         if (!tables.length) {
-            Lib.debug('caa', 'initCaaInlinePics: no table.tbl found — skipping');
+            Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: no table.tbl found — skipping`);
             return;
         }
 
         const GUID_RE = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/;
         const size    = Lib.settings.sa_caa_small_img_size || 250;
-        // Display dimensions for the fixed-size placeholder — compact enough to
-        // fit inline without distorting row height.
-        const PH = 20;
-
-        let injected   = 0;
-        let skippedNoLink  = 0;
-        let skippedNoGuid  = 0;
-        let skippedDone    = 0;
-        let enqueued   = 0;
-
-        tables.forEach((table, tblIdx) => {
-            const colIdx = caaFindColumnByName(table, colName);
-            if (colIdx === -1) {
-                Lib.debug('caa', `initCaaInlinePics: column "${colName}" not found in table ${tblIdx} — skipping table`);
-                return;
-            }
-
-            Lib.debug('caa', `initCaaInlinePics: processing table ${tblIdx}, column "${colName}" at index ${colIdx}`);
-
-            table.querySelectorAll('tbody tr').forEach(tr => {
-                const td = tr.cells[colIdx];
-                if (!td) return;
-
-                // Clear stale clone markers so re-renders inject afresh.
-                // (cloneNode copies data attributes but not live state.)
-                // We detect stale clones by the absence of a live placeholder element
-                // while the done-marker is already set — this happens when
-                // renderFinalTable replaces tbody content with fresh clones.
-                if (td.dataset.caaInlineDone) {
-                    if (!td.querySelector('.mb-caa-inline-ph')) {
-                        delete td.dataset.caaInlineDone; // stale clone — allow re-injection
-                        Lib.debug('caa', 'initCaaInlinePics: cleared stale clone marker — will re-inject');
-                    } else {
-                        skippedDone++;
-                        return; // genuinely already processed
-                    }
-                }
-
-                // Find the primary entity link: prefer /release/ or /release-group/ paths;
-                // skip /cover-art links (they're CAA column links, not entity links).
-                const link = td.querySelector('a[href*="/release-group/"], a[href*="/release/"]:not([href$="/cover-art"])');
-                if (!link) {
-                    skippedNoLink++;
-                    Lib.debug('caa', `initCaaInlinePics: no release/release-group link found in "${colName}" cell — skipping row`);
-                    return;
-                }
-
-                const href      = link.getAttribute('href');
-                const guidMatch = href.match(GUID_RE);
-                if (!guidMatch) {
-                    skippedNoGuid++;
-                    Lib.debug('caa', `initCaaInlinePics: no GUID found in href "${href}" — skipping row`);
-                    return;
-                }
-
-                const isRG       = href.includes('/release-group/');
-                const entityType = isRG ? 'release-group' : 'release';
-                const imgurl     = '//coverartarchive.org/' + entityType + '/' + guidMatch[0] + '/front-' + size;
-
-                Lib.debug('caa', `initCaaInlinePics: will fetch inline thumbnail: ${imgurl}`);
-
-                // ── Build placeholder + img element ───────────────────────────
-                //
-                // DOM injection is synchronous (placeholder goes into the cell
-                // immediately so layout is stable).  The actual img.src assignment
-                // that triggers the network request is deferred through _caaQueue
-                // so all inline-thumbnail requests share the same concurrency budget
-                // as the caaInitSmallPics icon loads.
-                const ph = document.createElement('span');
-                ph.className     = 'mb-caa-inline-ph';
-                ph.style.cssText =
-                    `display:inline-block; width:${PH}px; height:${PH}px;` +
-                    ` margin-right:3px; vertical-align:middle; flex-shrink:0;` +
-                    ` overflow:hidden; border-radius:2px;`;
-
-                const img         = document.createElement('img');
-                // img.src is NOT set here — deferred to the queue task below so the
-                // browser does not start the request until a slot is available.
-                img.alt           = '';
-                img.style.cssText =
-                    `width:${PH}px; height:${PH}px; object-fit:cover;` +
-                    ` display:none; border-radius:2px;`;
-
-                ph.appendChild(img);
-
-                // ── Insert after ERG ▶ button if present, else at cell start ──
-                const ergBtn = td.querySelector('[data-erg-btn]');
-                if (ergBtn) {
-                    ergBtn.after(ph);
-                } else {
-                    td.insertBefore(ph, td.firstChild);
-                }
-
-                td.dataset.caaInlineDone = '1';
-                injected++;
-
-                // ── Enqueue the actual network request ────────────────────────
-                //
-                // The closure captures `img` and `imgurl`.  When the queue grants a
-                // slot the Promise executor assigns `img.src`, which starts the
-                // browser fetch.  The Promise resolves on both load and error so the
-                // queue slot is recycled in either case.
-                const loadTask = () => new Promise(resolve => {
-                    img.addEventListener('load', function() {
-                        this.style.display = 'inline';
-                        Lib.debug('caa', `initCaaInlinePics: loaded OK — ${imgurl}`);
-                        resolve();
-                    });
-                    img.addEventListener('error', function() {
-                        // Placeholder stays as an invisible spacer — alignment preserved.
-                        // A 404 is normal (no "Front" image), other errors are unexpected
-                        // but handled identically.  Debug only — this fires for every
-                        // row without front art and would be noisy at warn level.
-                        Lib.debug('caa', `initCaaInlinePics: failed to load ${imgurl} — placeholder stays as spacer`);
-                        resolve();
-                    });
-                    img.src = imgurl; // triggers the browser request
-                });
-
-                if (_caaQueue) {
-                    _caaQueue.enqueue(loadTask);
-                    enqueued++;
-                } else {
-                    // Fallback (should not happen in normal flow — _caaQueue is
-                    // created by initCaaPics before initCaaInlinePics is called).
-                    Lib.warn('caa', `initCaaInlinePics: _caaQueue unavailable — fetching ${imgurl} unthrottled`);
-                    loadTask();
-                }
-            });
-        });
-
-        Lib.debug('caa', `initCaaInlinePics: done — injected=${injected} enqueued=${enqueued} ` +
-            `skipped(done=${skippedDone} noLink=${skippedNoLink} noGuid=${skippedNoGuid}) ` +
-            `column="${colName}" ` +
-            `(queue: ${_caaQueue ? _caaQueue.runningCount + ' running, ' + _caaQueue.pendingCount + ' pending' : 'unavailable'})`);
-    }
-
-    // ── end CAA Illustrated Discography feature ───────────────────────────────
-
-    // ── EAA (Event Art Archive) Illustrated Events feature ────────────────────
-    //
-    // Mirrors the CAA Illustrated Discography feature above, but targets the
-    // Event Art Archive (eventartarchive.org) and the "EAA" synthetic column
-    // produced by the `caa` extractor for MusicBrainz event rows.
-    //
-    // API:   https://musicbrainz.org/doc/Event_Art_Archive/API
-    //   Thumbnail:   //eventartarchive.org/event/{mbid}/front-{size}
-    //   JSON index:  https://eventartarchive.org/event/{mbid}
-    //
-    // EAA icon anchors in the synthetic EAA cell use href="…/event-art"
-    // (produced by the native MB event pages).
-    //
-    // All EAA image requests share the same `_caaQueue` created by `initCaaPics()`
-    // so CAA and EAA requests are throttled through a single concurrency budget.
-    // `initCaaPics()` MUST therefore run before `initEaaPics()`.
-    //
-    // Configuration keys (shared with CAA — same settings panel):
-    //   sa_enable_caa_pics        master on/off guard
-    //   sa_caa_pics_small         toggle small EAA thumbnails
-    //   sa_caa_pics_big           toggle big EAA strip
-    //   sa_caa_small_img_size     eventartarchive size for small pics
-    //   sa_caa_big_img_size       eventartarchive size for big strip
-    //   sa_caa_big_max_height     px cap for big images
-    //   sa_caa_highlight_colour   hover highlight colour
-    //   sa_caa_pics_inline        toggle inline EAA thumbnails  (initEaaInlinePics)
-    //   sa_caa_fetch_concurrency  shared request-queue concurrency
-    //
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Loads an event-art thumbnail into the background of one eaa/artwork-icon span.
-     *
-     * Mirrors `caaLoadIcon()` but targets `eventartarchive.org` and strips
-     * "/event-art" (instead of "/cover-art") from the anchor href to derive the
-     * entity path.
-     *
-     * The wrapping anchor href is expected to be "/event/GUID/event-art" (native
-     * MB form) or carry a `ref` attribute with the raw entity path.
-     *
-     * Returns a Promise that always resolves (never rejects) so the caller can
-     * safely enqueue through `_caaQueue`.
-     *
-     * @param   {HTMLElement} eaaIcon  A <span class="eaa-icon"> (or artwork-icon)
-     *                                 element inside an EAA cell.
-     * @returns {Promise<void>}         Always resolves (never rejects).
-     */
-    function eaaLoadIcon(eaaIcon) {
-        const anchor = eaaIcon.closest('a[href]');
-        if (!anchor) {
-            Lib.debug('eaa', 'eaaLoadIcon: skipped — no wrapping anchor found for icon', eaaIcon);
-            return Promise.resolve();
-        }
-
-        // `ref` attribute (jesus2099 style) contains the raw entity path;
-        // native MB anchors use href "/event/GUID/event-art" — strip the suffix.
-        const entityPath = anchor.getAttribute('ref')
-            || anchor.getAttribute('href').replace(/\/event-art$/, '');
-
-        const size   = Lib.settings.sa_caa_small_img_size || 250;
-        const imgurl = '//eventartarchive.org' + entityPath + '/front-' + size;
-
-        Lib.debug('eaa', `eaaLoadIcon: fetching ${imgurl}`);
-
-        return new Promise(resolve => {
-            const img = document.createElement('img');
-            img.addEventListener('load', function() {
-                eaaIcon.style.setProperty('background-size',  'contain');
-                eaaIcon.style.setProperty('background-image', 'url(' + this.src + ')');
-                Lib.debug('eaa', `eaaLoadIcon: loaded OK — ${imgurl}`);
-                resolve();
-            });
-            img.addEventListener('error', function() {
-                // 404 is normal (no "Front" image for this event).
-                Lib.debug('eaa', `eaaLoadIcon: failed to load ${imgurl} — icon stays in default state`);
-                resolve();
-            });
-            img.src = imgurl;
-        });
-    }
-
-    /**
-     * Per-event-GUID count cache — avoids repeat API calls across sort/filter
-     * re-renders for the same event.  Mirrors `_caaRgCountCache` for CAA.
-     */
-    const _eaaEventCountCache = new Map();
-
-    /**
-     * Fetches the Event Art Archive JSON for one event anchor and enriches the
-     * EAA icon tooltip with the image count.  Mirrors `caaEnrichReleaseGroupIcon()`
-     * but targets `eventartarchive.org/event/{mbid}`.
-     *
-     * Decorations applied on a successful (non-zero) response:
-     *   1. `anchor.title` set to "N image(s) found for this event".
-     *   2. `<span class="mb-eaa-count-badge">N</span>` appended inside the EAA cell.
-     *   3. Tooltip set on the inline EAA thumbnail placeholder in the addEAA column.
-     *
-     * Re-render guard: `anchor.dataset.eaaEnriched === '1'` after first enrichment.
-     * Fresh clone nodes (renderFinalTable) start without the attribute and receive
-     * enrichment served from `_eaaEventCountCache` without a network round-trip.
-     *
-     * @param {HTMLAnchorElement} anchor - A `<a href="…/event-art">` inside the
-     *   synthetic EAA cell.
-     */
-    async function eaaEnrichEventIcon(anchor) {
-        if (anchor.dataset.eaaEnriched === '1') return;
-
-        const entityPath = anchor.getAttribute('ref')
-            || anchor.getAttribute('href').replace(/\/event-art$/, '');
-
-        if (!entityPath.includes('/event/')) return;
-
-        // ── Resolve count — from cache or network ────────────────────────────
-        let count;
-        if (_eaaEventCountCache.has(entityPath)) {
-            count = _eaaEventCountCache.get(entityPath);
-            Lib.debug('eaa', `eaaEnrichEventIcon: ${count} image(s) for ${entityPath} (cached)`);
-        } else {
-            const apiUrl = 'https://eventartarchive.org' + entityPath;
-            try {
-                const resp = await fetch(apiUrl);
-                if (!resp.ok) {
-                    if (resp.status === 404) {
-                        Lib.debug('eaa', `eaaEnrichEventIcon: HTTP 404 (no EAA entry) for ${entityPath}`);
-                    } else {
-                        Lib.warn('eaa', `eaaEnrichEventIcon: HTTP ${resp.status} for ${entityPath} — enrichment skipped`);
-                    }
-                    _eaaEventCountCache.set(entityPath, 0);
-                    anchor.dataset.eaaEnriched = '1';
-                    return;
-                }
-                const eventEaa = await resp.json();
-                count = Array.isArray(eventEaa.images) ? eventEaa.images.length : 0;
-                _eaaEventCountCache.set(entityPath, count);
-                Lib.debug('eaa', `eaaEnrichEventIcon: ${count} image(s) for ${entityPath}`);
-            } catch (err) {
-                Lib.warn('eaa', `eaaEnrichEventIcon: network error for ${entityPath}:`, err);
-                return;
-            }
-        }
-
-        if (count <= 0) {
-            anchor.dataset.eaaEnriched = '1';
-            return;
-        }
-
-        const tooltip = count + ' image' + (count !== 1 ? 's' : '') + ' found for this event';
-
-        // ── 1. Tooltip on the event-art anchor and its icon span ─────────────
-        anchor.title = tooltip;
-        const iconSpan = anchor.querySelector('span.eaa-icon, span.artwork-icon');
-        if (iconSpan) iconSpan.title = tooltip;
-
-        // ── 2. Count badge in the EAA cell ───────────────────────────────────
-        const eaaCell = anchor.closest('td');
-        if (eaaCell && !eaaCell.querySelector('.mb-eaa-count-badge')) {
-            const badge       = document.createElement('span');
-            badge.className   = 'mb-eaa-count-badge';
-            badge.textContent = count;
-            badge.title       = tooltip;
-            anchor.after(badge);
-        }
-
-        // ── 3. Tooltip on the inline EAA thumbnail in the addEAA column ──────
-        const addEAAColName = activeDefinition &&
-                              activeDefinition.features &&
-                              activeDefinition.features.addEAA;
-        if (addEAAColName) {
-            const tr    = anchor.closest('tr');
-            const table = anchor.closest('table');
-            if (tr && table) {
-                const colIdx    = caaFindColumnByName(table, addEAAColName);
-                const titleCell = colIdx !== -1 ? tr.cells[colIdx] : null;
-                if (titleCell) {
-                    const inlinePh = titleCell.querySelector('.mb-eaa-inline-ph');
-                    if (inlinePh) inlinePh.title = tooltip;
-                }
-            }
-        }
-
-        anchor.dataset.eaaEnriched = '1';
-    }
-
-    /**
-     * Loads thumbnails into all eaa/artwork-icon spans in `table` that are
-     * wrapped in `<a href="…/event-art">` anchors.  Mirrors `caaInitSmallPics()`
-     * for the EAA column.
-     *
-     * All requests are serialised through the shared `_caaQueue`.
-     *
-     * @param {HTMLTableElement} table
-     */
-    function eaaInitSmallPics(table) {
-        if (!Lib.settings.sa_caa_pics_small) return;
-
-        const icons = table.querySelectorAll(
-            'td a[href$="/event-art"] > span.eaa-icon,' +
-            'td a[href$="/event-art"] > span.artwork-icon'
-        );
-
-        icons.forEach(icon => {
-            if (_caaQueue) {
-                _caaQueue.enqueue(() => eaaLoadIcon(icon));
-                const anchor = icon.closest('a[href]');
-                if (anchor) _caaQueue.enqueue(() => eaaEnrichEventIcon(anchor));
-            } else {
-                eaaLoadIcon(icon);
-                const anchor = icon.closest('a[href]');
-                if (anchor) eaaEnrichEventIcon(anchor);
-            }
-        });
-
-        Lib.debug('eaa', `eaaInitSmallPics: enqueued ${icons.length * 2} request(s) for ${icons.length} icon(s) ` +
-            `(queue: ${_caaQueue ? _caaQueue.runningCount + ' running, ' + _caaQueue.pendingCount + ' pending' : 'unavailable'})`);
-    }
-
-    /**
-     * Builds (or rebuilds) the big-picture hover strip above `table` for event
-     * art and wires row ↔ image hover highlighting.  Mirrors `caaInitBigPics()`
-     * but targets `eventartarchive.org/event/` URLs and `/event/` anchors.
-     *
-     * @param {HTMLTableElement} table
-     * @param {number}           tableIndex  — position among all table.tbl elements.
-     * @param {string|undefined} btnId       — ID of the toggle button whose badge
-     *                                         should be incremented on image load.
-     * @returns {{ count: number, firstImgUrl: string|null }}
-     */
-    function eaaInitBigPics(table, tableIndex, btnId) {
-        if (!Lib.settings.sa_caa_pics_big) return { count: 0, firstImgUrl: null };
-
-        const maxH   = (Lib.settings.sa_caa_big_max_height || 125) + 'px';
-        const size   = Lib.settings.sa_caa_big_img_size   || 250;
-        const colour = Lib.settings.sa_caa_highlight_colour || '#ffff00';
-        const GUID   = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
-
-        // ── 1. Create / reuse the EAA bigbox ──────────────────────────────────
-        const boxId = 'mb-eaa-bigbox-' + tableIndex;
-        let   box   = document.getElementById(boxId);
-
-        const initiallyCollapsed = !!(Lib.settings.sa_caa_pics_initially_collapsed);
-        const currentlyVisible   = box
-            ? box.dataset.eaaVisible !== 'false'
-            : !initiallyCollapsed;
-
-        if (!box) {
-            box = document.createElement('div');
-            box.id        = boxId;
-            box.className = 'mb-eaa-bigbox';
-            table.parentNode.insertBefore(box, table);
-        } else {
-            box.innerHTML = '';
-        }
-
-        box.style.cssText      = 'display:' + (currentlyVisible ? 'flex' : 'none') +
-                                  '; flex-wrap:wrap; gap:4px; padding:4px 0 4px 0; min-height:0;';
-        box.dataset.eaaVisible = currentlyVisible ? 'true' : 'false';
-
-        // Reset the toggle button badge before images start loading.
-        if (btnId) {
-            const existingBtn = document.getElementById(btnId);
-            if (existingBtn) {
-                const badge = existingBtn.querySelector('.mb-eaa-toggle-count');
-                if (badge) badge.textContent = '0';
-            }
-        }
-
-        // ── 2. Collect unique event links ─────────────────────────────────────
-        const seen        = new Set();
-        let   firstImgUrl = null;
-
-        table.querySelectorAll('tbody td a[href]').forEach(a => {
-            const href = a.getAttribute('href');
-            const m = href.match(new RegExp('^/event/(' + GUID + ')$'));
-            if (m && !seen.has(href)) {
-                seen.add(href);
-
-                const imgurl = '//eventartarchive.org/event/' + m[1] + '/front-' + size;
-                if (!firstImgUrl) firstImgUrl = imgurl;
-
-                const wrapper           = document.createElement('a');
-                wrapper.href            = href;
-                wrapper.title           = a.textContent.trim();
-                wrapper.dataset.eaaHref = href;
-                wrapper.style.cssText   = 'display:inline-block; height:100%; margin:8px 8px 4px 4px;';
-
-                wrapper.appendChild(document.createTextNode('⌛'));
-
-                const img         = document.createElement('img');
-                img.src           = imgurl;
-                img.alt           = a.textContent.trim();
-                img.style.cssText = 'vertical-align:middle; display:none;' +
-                                    ' max-height:' + maxH + ';' +
-                                    ' box-shadow:1px 1px 4px black;';
-
-                img.addEventListener('load', function() {
-                    const first = this.parentNode.firstChild;
-                    if (first && first.nodeType === Node.TEXT_NODE) {
-                        this.parentNode.removeChild(first);
-                    }
-                    this.style.display = 'inline';
-
-                    if (btnId) {
-                        const toggleBtn = document.getElementById(btnId);
-                        if (toggleBtn) {
-                            const badge = toggleBtn.querySelector('.mb-eaa-toggle-count');
-                            if (badge) {
-                                badge.textContent = (parseInt(badge.textContent, 10) || 0) + 1;
-                            }
-                            const thumb = toggleBtn.querySelector('.mb-eaa-toggle-thumb');
-                            if (thumb && !thumb.complete) {
-                                thumb.src = imgurl;
-                            }
-                        }
-                    }
-                });
-                img.addEventListener('error', function() {
-                    const w = this.parentNode;
-                    if (w && w.parentNode) w.parentNode.removeChild(w);
-                });
-
-                // ── 3. img:mouseover / mouseout — highlight row links ─────────
-                img.addEventListener('mouseover', function() {
-                    const ah = this.parentNode.dataset.eaaHref;
-                    table.querySelectorAll('tbody td a[href="' + ah + '"]').forEach(
-                        rel => rel.style.setProperty('background-color', colour)
-                    );
-                });
-                img.addEventListener('mouseout', function() {
-                    const ah = this.parentNode.dataset.eaaHref;
-                    table.querySelectorAll('tbody td a[href="' + ah + '"]').forEach(
-                        rel => rel.style.removeProperty('background-color')
-                    );
-                });
-
-                wrapper.appendChild(img);
-                box.appendChild(wrapper);
-            }
-        });
-
-        // ── 4. tbody tr:mouseover / mouseout — highlight strip image ─────────
-        const tbody = table.querySelector('tbody');
-        if (tbody) {
-            if (tbody._eaaMouseover) tbody.removeEventListener('mouseover', tbody._eaaMouseover);
-            if (tbody._eaaMouseout)  tbody.removeEventListener('mouseout',  tbody._eaaMouseout);
-
-            tbody._eaaMouseover = function(event) {
-                const tr = event.target.closest('tr');
-                if (!tr) return;
-                const a  = tr.querySelector('td a[href^="/event"]:not([href$="/event-art"])');
-                if (!a)  return;
-                const w  = box.querySelector('a[data-eaa-href="' + a.getAttribute('href') + '"]');
-                if (!w)  return;
-                w.style.setProperty('border',  '4px solid ' + colour);
-                w.style.setProperty('margin', '4px 4px 0px 0px');
-            };
-            tbody._eaaMouseout = function(event) {
-                const tr = event.target.closest('tr');
-                if (!tr) return;
-                const a  = tr.querySelector('td a[href^="/event"]:not([href$="/event-art"])');
-                if (!a)  return;
-                const w  = box.querySelector('a[data-eaa-href="' + a.getAttribute('href') + '"]');
-                if (!w)  return;
-                w.style.removeProperty('border');
-                w.style.setProperty('margin', '8px 8px 4px 4px');
-            };
-
-            tbody.addEventListener('mouseover', tbody._eaaMouseover);
-            tbody.addEventListener('mouseout',  tbody._eaaMouseout);
-        }
-
-        Lib.debug('eaa', `eaaInitBigPics: built bigbox for table ${tableIndex} with ${seen.size} image(s), initially ${currentlyVisible ? 'visible' : 'hidden'}`);
-        return { count: seen.size, firstImgUrl };
-    }
-
-    /**
-     * Scans `table`'s tbody for unique event anchor hrefs that would produce an
-     * EAA big-pic image and returns the count and the URL of the first image —
-     * without creating any DOM elements.
-     *
-     * Mirrors `caaCountLinks()` for the EAA column.
-     *
-     * @param  {HTMLTableElement} table
-     * @returns {{ count: number, firstImgUrl: string|null }}
-     */
-    function eaaCountLinks(table) {
-        const GUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
-        const size = Lib.settings.sa_caa_big_img_size || 250;
-        const seen = new Set();
-        let   firstImgUrl = null;
-
-        table.querySelectorAll('tbody td a[href]').forEach(a => {
-            const href = a.getAttribute('href');
-            const m = href.match(new RegExp('^/event/(' + GUID + ')$'));
-            if (m && !seen.has(href)) {
-                seen.add(href);
-                if (!firstImgUrl) {
-                    firstImgUrl = '//eventartarchive.org/event/' + m[1] + '/front-' + size;
-                }
-            }
-        });
-
-        return { count: seen.size, firstImgUrl };
-    }
-
-    /**
-     * Synchronises the EAA big-picture strip above `table` so that only images
-     * whose corresponding event row is currently visible are shown in the strip,
-     * and updates the toggle-button badge to reflect loaded-and-visible count.
-     *
-     * Mirrors `caaUpdateBigBoxForTable()` for the EAA (Event Art Archive) strip.
-     * Called from STF `applySubFilter` and `clearSubFilter` so the strip tracks
-     * the same row set as the sub-table itself.
-     *
-     * @param {HTMLTableElement} table
-     * @param {number}           tableIndex  — must match the index used by initEaaPics.
-     */
-    function eaaUpdateBigBoxForTable(table, tableIndex) {
-        if (!Lib.settings.sa_enable_caa_pics) return;
-        if (!Lib.settings.sa_caa_pics_big)   return;
-
-        const box = document.getElementById('mb-eaa-bigbox-' + tableIndex);
-        if (!box) return;
-
-        const GUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
-        const visibleHrefs = new Set();
-
-        table.querySelectorAll('tbody tr').forEach(row => {
-            if (row.style.display === 'none') return;
-            row.querySelectorAll('td a[href]').forEach(a => {
-                const href = a.getAttribute('href');
-                if (new RegExp('^/event/' + GUID + '$').test(href)) {
-                    visibleHrefs.add(href);
-                }
-            });
-        });
-
-        let loadedVisible = 0;
-        box.querySelectorAll('a[data-eaa-href]').forEach(wrapper => {
-            if (visibleHrefs.has(wrapper.dataset.eaaHref)) {
-                wrapper.style.display = '';
-                const img = wrapper.querySelector('img');
-                if (img && img.style.display === 'inline') loadedVisible++;
-            } else {
-                wrapper.style.display = 'none';
-            }
-        });
-
-        const btn = document.getElementById('mb-eaa-toggle-btn-' + tableIndex);
-        if (btn) {
-            const badge = btn.querySelector('.mb-eaa-toggle-count');
-            if (badge) badge.textContent = loadedVisible;
-        }
-
-        Lib.debug('eaa', `eaaUpdateBigBoxForTable: table ${tableIndex} — ` +
-            `${visibleHrefs.size} visible href(s), ${loadedVisible} loaded image(s) shown`);
-    }
-
-    /**
-     * Creates or updates the per-table EAA toggle button, mirroring
-     * `caaCreateOrUpdateToggleButton()` but using EAA-specific IDs, class names,
-     * and button tooltip text ("Toggle EAA event art images").
-     *
-     * @param {HTMLTableElement} table
-     * @param {number}  tableIndex
-     * @param {number}  count
-     * @param {string|null} firstImgUrl
-     * @returns {string|undefined}  btnId when created/updated, else undefined.
-     */
-    function eaaCreateOrUpdateToggleButton(table, tableIndex, count, firstImgUrl) {
-        if (count === 0 || !firstImgUrl) return;
-
-        // NOTE: same deferred-lookup pattern as caaCreateOrUpdateToggleButton —
-        // do NOT guard on the box existing here; it is created by eaaInitBigPics
-        // which runs after this function.  All box references inside the click
-        // handler use document.getElementById so they resolve at click time.
-        const boxId = 'mb-eaa-bigbox-' + tableIndex;
-
-        const btnId  = 'mb-eaa-toggle-btn-' + tableIndex;
-        let   btn    = document.getElementById(btnId);
-        const isNew  = !btn;
-
-        if (isNew) {
-            btn           = document.createElement('button');
-            btn.id        = btnId;
-            btn.type      = 'button';
-            btn.className = 'mb-eaa-art-toggle-btn';
-            btn.style.cssText =
-                'cursor:pointer; padding:1px 5px 1px 3px; border:1px solid #aaa;' +
-                ' border-radius:3px; background:#f5f5f5; vertical-align:middle;' +
-                ' font-size:0.8em; margin-left:5px; display:inline-flex;' +
-                ' align-items:center; gap:3px; line-height:1;';
-
-            const thumb         = document.createElement('img');
-            thumb.className     = 'mb-eaa-toggle-thumb';
-            thumb.src           = firstImgUrl;
-            thumb.style.cssText = 'height:18px; width:18px; object-fit:cover;' +
-                                   ' border-radius:2px; vertical-align:middle; display:block;';
-            btn.appendChild(thumb);
-
-            const badge         = document.createElement('span');
-            badge.className     = 'mb-eaa-toggle-count';
-            badge.textContent   = '0';
-            btn.appendChild(badge);
-
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const liveBox = document.getElementById(boxId);
-                if (!liveBox) return;
-                const visible    = liveBox.dataset.eaaVisible !== 'false';
-                const nowVisible = !visible;
-                liveBox.style.display      = nowVisible ? 'flex' : 'none';
-                liveBox.dataset.eaaVisible = nowVisible ? 'true' : 'false';
-                btn.title = nowVisible
-                    ? 'Toggle EAA event art images - Hide'
-                    : 'Toggle EAA event art images - Show';
-                Lib.debug('eaa', `EAA toggle btn ${btnId}: strip ${nowVisible ? 'shown' : 'hidden'}`);
-            });
-
-            const header    = caaFindHeaderForTable(table);
-            const countStat = header && header.querySelector('.mb-row-count-stat');
-            if (countStat) {
-                countStat.after(btn);
-            } else if (header) {
-                header.appendChild(btn);
-            } else {
-                btn.remove();
-                Lib.debug('eaa', `eaaCreateOrUpdateToggleButton: no header found for table ${tableIndex} — button deferred`);
-                return;
-            }
-        } else {
-            const badge = btn.querySelector('.mb-eaa-toggle-count');
-            if (badge) badge.textContent = '0';
-        }
-
-        const liveBoxForTitle = document.getElementById(boxId);
-        const visible = liveBoxForTitle ? liveBoxForTitle.dataset.eaaVisible !== 'false' : false;
-        btn.title = visible
-            ? 'Toggle EAA event art images - Hide'
-            : 'Toggle EAA event art images - Show';
-
-        Lib.debug('eaa', `eaaCreateOrUpdateToggleButton: ${isNew ? 'created' : 'updated'} btn ${btnId} (${count} link(s))`);
-        return btnId;
-    }
-
-    /**
-     * Entry point for the EAA (Event Art Archive) Illustrated Events feature.
-     *
-     * Iterates every table.tbl in the document and applies small-pic thumbnail
-     * loading and the big-pic hover strip to tables that contain an EAA column.
-     * Tables without an EAA column are silently skipped.
-     *
-     * Guards:
-     *   - `Lib.settings.sa_enable_caa_pics` must be true (shared master toggle).
-     *
-     * MUST be called AFTER `initCaaPics()` because that function creates the
-     * shared `_caaQueue` used here for throttled image requests.
-     *
-     * Called from all render-completion paths immediately after `initCaaPics()`.
-     */
-    function initEaaPics() {
-        if (!Lib.settings.sa_enable_caa_pics) return;
-
-        // _caaQueue must already exist — it is created by initCaaPics().
-        if (!_caaQueue) {
-            Lib.warn('eaa', 'initEaaPics: _caaQueue not initialised — initCaaPics() must run first');
-            return;
-        }
-
-        const tables = document.querySelectorAll('table.tbl');
-        if (!tables.length) {
-            Lib.debug('eaa', 'initEaaPics: no table.tbl found — skipping');
-            return;
-        }
-
-        let processed = 0;
-        tables.forEach((table, i) => {
-            if (eaaFindEaaColumnIndex(table) === -1) {
-                Lib.debug('eaa', `initEaaPics: table ${i} has no EAA column — skipping`);
-                return;
-            }
-            eaaInitSmallPics(table);
-
-            const { count, firstImgUrl } = eaaCountLinks(table);
-            const btnId = eaaCreateOrUpdateToggleButton(table, i, count, firstImgUrl);
-            eaaInitBigPics(table, i, btnId);
-            processed++;
-        });
-
-        Lib.debug('eaa', `initEaaPics: processed ${processed} table(s) with EAA column`);
-    }
-
-    /**
-     * Inline EAA thumbnail feature — Event Art Archive equivalent of
-     * `initCaaInlinePics()`.
-     *
-     * For page definitions that carry `features.addEAA = '<column name>'`, inserts
-     * a fixed-size thumbnail placeholder span into every tbody cell of that column,
-     * positioned between the ERG expand button (if present) and the entity title
-     * link.  The event-art image is fetched asynchronously from
-     * `eventartarchive.org` using the GUID extracted from the `/event/` link.
-     *
-     * The placeholder (`<span class="mb-eaa-inline-ph">`) is always a fixed width
-     * so event names stay visually aligned across all rows regardless of whether
-     * artwork exists.  A 404 leaves the placeholder as an invisible spacer.
-     *
-     * Idempotency: processed cells receive `data-eaa-inline-done="1"`.
-     *
-     * Concurrency: all requests are enqueued through `_caaQueue` (shared with CAA).
-     *
-     * Guards:
-     *   - `Lib.settings.sa_enable_caa_pics` master toggle.
-     *   - `Lib.settings.sa_caa_pics_inline` per-feature toggle.
-     *   - `activeDefinition.features.addEAA` must be set to a column name string.
-     */
-    function initEaaInlinePics() {
-        if (!Lib.settings.sa_enable_caa_pics)  return;
-        if (!Lib.settings.sa_caa_pics_inline)  return;
-
-        const colName = activeDefinition && activeDefinition.features && activeDefinition.features.addEAA;
-        if (!colName) {
-            Lib.debug('eaa', 'initEaaInlinePics: no addEAA column configured for this page type — skipping');
-            return;
-        }
-
-        Lib.debug('eaa', `initEaaInlinePics: addEAA column = "${colName}"`);
-
-        const size  = Lib.settings.sa_caa_small_img_size || 250;
-        const PH    = 20; // placeholder side length in pixels
-        const GUID_RE = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/;
-
-        const tables = document.querySelectorAll('table.tbl');
-        if (!tables.length) {
-            Lib.debug('eaa', 'initEaaInlinePics: no table.tbl found — skipping');
-            return;
-        }
+        const PH      = 20; // placeholder side length in pixels
 
         let injected = 0, enqueued = 0;
         let skippedDone = 0, skippedNoLink = 0, skippedNoGuid = 0;
@@ -21132,34 +20260,31 @@
         tables.forEach((table, tblIdx) => {
             const colIdx = caaFindColumnByName(table, colName);
             if (colIdx === -1) {
-                Lib.debug('eaa', `initEaaInlinePics: column "${colName}" not found in table ${tblIdx} — skipping table`);
+                Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: column "${colName}" not found in table ${tblIdx} — skipping table`);
                 return;
             }
 
-            Lib.debug('eaa', `initEaaInlinePics: processing table ${tblIdx}, column "${colName}" at index ${colIdx}`);
+            Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: processing table ${tblIdx}, column "${colName}" at index ${colIdx}`);
 
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const td = tr.cells[colIdx];
                 if (!td) return;
 
-                if (td.dataset.eaaInlineDone === '1') {
-                    // Clear stale marker on cloned rows — dataset attributes are
-                    // copied by cloneNode(true), so a freshly injected clone from
-                    // renderFinalTable would falsely look already-processed.
-                    if (!td.querySelector('.mb-eaa-inline-ph')) {
-                        delete td.dataset.eaaInlineDone;
-                        Lib.debug('eaa', 'initEaaInlinePics: cleared stale clone marker — will re-inject');
+                // Clear stale clone markers (cloneNode copies dataset but not live state).
+                if (td.dataset[ctx.inlineDoneAttr]) {
+                    if (!td.querySelector('.' + ctx.inlinePh)) {
+                        delete td.dataset[ctx.inlineDoneAttr];
+                        Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: cleared stale clone marker — will re-inject`);
                     } else {
                         skippedDone++;
-                        return; // genuinely already processed
+                        return;
                     }
                 }
 
-                // Find the event entity link.
-                const link = td.querySelector('a[href*="/event/"]:not([href$="/event-art"])');
+                const link = td.querySelector(ctx.inlineLinkSel);
                 if (!link) {
                     skippedNoLink++;
-                    Lib.debug('eaa', `initEaaInlinePics: no event link found in "${colName}" cell — skipping row`);
+                    Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: no entity link found in "${colName}" cell — skipping row`);
                     return;
                 }
 
@@ -21167,16 +20292,19 @@
                 const guidMatch = href.match(GUID_RE);
                 if (!guidMatch) {
                     skippedNoGuid++;
-                    Lib.debug('eaa', `initEaaInlinePics: no GUID found in href "${href}" — skipping row`);
+                    Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: no GUID found in href "${href}" — skipping row`);
                     return;
                 }
 
-                const imgurl = '//eventartarchive.org/event/' + guidMatch[0] + '/front-' + size;
+                // Derive entity type from the href (first matching entityType segment)
+                const entityType = ctx.entityTypes.find(t => href.includes('/' + t + '/')) || ctx.entityTypes[0];
+                const imgurl = ctx.archiveHost + '/' + entityType + '/' + guidMatch[0] + '/front-' + size;
 
-                Lib.debug('eaa', `initEaaInlinePics: will fetch inline thumbnail: ${imgurl}`);
+                Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: will fetch inline thumbnail: ${imgurl}`);
 
+                // ── Build placeholder + img element (synchronous — layout stable) ───
                 const ph = document.createElement('span');
-                ph.className     = 'mb-eaa-inline-ph';
+                ph.className     = ctx.inlinePh;
                 ph.style.cssText =
                     `display:inline-block; width:${PH}px; height:${PH}px;` +
                     ` margin-right:3px; vertical-align:middle; flex-shrink:0;` +
@@ -21190,6 +20318,7 @@
 
                 ph.appendChild(img);
 
+                // Insert after ERG ▶ button if present, else at cell start
                 const ergBtn = td.querySelector('[data-erg-btn]');
                 if (ergBtn) {
                     ergBtn.after(ph);
@@ -21197,17 +20326,18 @@
                     td.insertBefore(ph, td.firstChild);
                 }
 
-                td.dataset.eaaInlineDone = '1';
+                td.dataset[ctx.inlineDoneAttr] = '1';
                 injected++;
 
+                // ── Defer img.src assignment through _caaQueue ────────────────
                 const loadTask = () => new Promise(resolve => {
                     img.addEventListener('load', function() {
                         this.style.display = 'inline';
-                        Lib.debug('eaa', `initEaaInlinePics: loaded OK — ${imgurl}`);
+                        Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: loaded OK — ${imgurl}`);
                         resolve();
                     });
                     img.addEventListener('error', function() {
-                        Lib.debug('eaa', `initEaaInlinePics: failed to load ${imgurl} — placeholder stays as spacer`);
+                        Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: failed to load ${imgurl} — placeholder stays as spacer`);
                         resolve();
                     });
                     img.src = imgurl;
@@ -21217,19 +20347,96 @@
                     _caaQueue.enqueue(loadTask);
                     enqueued++;
                 } else {
-                    Lib.warn('eaa', `initEaaInlinePics: _caaQueue unavailable — fetching ${imgurl} unthrottled`);
+                    Lib.warn(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: _caaQueue unavailable — fetching ${imgurl} unthrottled`);
                     loadTask();
                 }
             });
         });
 
-        Lib.debug('eaa', `initEaaInlinePics: done — injected=${injected} enqueued=${enqueued} ` +
+        Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: done — injected=${injected} enqueued=${enqueued} ` +
             `skipped(done=${skippedDone} noLink=${skippedNoLink} noGuid=${skippedNoGuid}) ` +
             `column="${colName}" ` +
             `(queue: ${_caaQueue ? _caaQueue.runningCount + ' running, ' + _caaQueue.pendingCount + ' pending' : 'unavailable'})`);
     }
 
-    // ── end EAA (Event Art Archive) Illustrated Events feature ────────────────
+    // ── Public entry points ───────────────────────────────────────────────────
+
+    /**
+     * Entry point for the CAA Illustrated Discography feature.
+     *
+     * (Re-)creates the shared `_caaQueue` — which is also consumed by
+     * initEaaPics / initCaaInlinePics / initEaaInlinePics — so this MUST be called
+     * before any of those functions at every render-completion site.
+     *
+     * Guards: `Lib.settings.sa_enable_caa_pics` must be true.
+     *
+     * Called from: main fetch pipeline, runFilter() single-table branch,
+     *              renderGroupedTable() multi-table re-renders, load-from-disk pipeline.
+     */
+    function initCaaPics() {
+        if (!Lib.settings.sa_enable_caa_pics) return;
+
+        // (Re-)create the shared request queue so the current sa_caa_fetch_concurrency
+        // setting is picked up on every render pass.  Any previously queued requests
+        // from a prior render are abandoned — their DOM nodes no longer exist after
+        // renderFinalTable rebuilds the tbody.
+        const concurrency = Math.max(1, Math.min(20, Lib.settings.sa_caa_fetch_concurrency || 4));
+        _caaQueue = makeCaaQueue(concurrency);
+        Lib.debug('caa', `initCaaPics: request queue created (concurrency=${concurrency})`);
+
+        _artInitPics(CAA_CTX);
+    }
+
+    /**
+     * Entry point for the EAA Illustrated Events feature.
+     *
+     * Guards: `Lib.settings.sa_enable_caa_pics` (shared master toggle) must be true;
+     *         `_caaQueue` must already be initialised (initCaaPics() must run first).
+     *
+     * Called from: same 4 render-completion sites as initCaaPics(), immediately after.
+     */
+    function initEaaPics() {
+        if (!Lib.settings.sa_enable_caa_pics) return;
+        if (!_caaQueue) {
+            Lib.warn('eaa', 'initEaaPics: _caaQueue not initialised — initCaaPics() must run first');
+            return;
+        }
+        _artInitPics(EAA_CTX);
+    }
+
+    /**
+     * Inline CAA thumbnail feature entry point.
+     * @see _artInitInlinePics
+     */
+    function initCaaInlinePics() { _artInitInlinePics(CAA_CTX); }
+
+    /**
+     * Inline EAA thumbnail feature entry point.
+     * @see _artInitInlinePics
+     */
+    function initEaaInlinePics() { _artInitInlinePics(EAA_CTX); }
+
+    /**
+     * Synchronises the CAA bigbox for `table` after a sub-table filter change.
+     * Called from applySubFilter / clearSubFilter at two STF call sites.
+     * @param {HTMLTableElement} table
+     * @param {number}           tableIndex
+     */
+    function caaUpdateBigBoxForTable(table, tableIndex) {
+        _artUpdateBigBoxForTable(CAA_CTX, table, tableIndex);
+    }
+
+    /**
+     * Synchronises the EAA bigbox for `table` after a sub-table filter change.
+     * Called from applySubFilter / clearSubFilter at two STF call sites.
+     * @param {HTMLTableElement} table
+     * @param {number}           tableIndex
+     */
+    function eaaUpdateBigBoxForTable(table, tableIndex) {
+        _artUpdateBigBoxForTable(EAA_CTX, table, tableIndex);
+    }
+
+    // ── end Art Archive (CAA / EAA) shared feature engine ─────────────────────
 
     /**
      * Entry point for the Barcode Highlight feature.

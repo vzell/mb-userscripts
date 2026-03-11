@@ -1,5 +1,19 @@
 [
     {
+      "version": "9.99.114",
+      "date": "2026-03-11",
+      "changes": {
+        "♻️ Refactor": [
+          "Unified the CAA Illustrated Discography and EAA Illustrated Events features into a single shared generic engine (_art* functions) parameterised by archive context descriptors (CAA_CTX / EAA_CTX).",
+          "Eliminated ~450 lines of structural duplication: caaLoadIcon / eaaLoadIcon → _artLoadIcon(ctx), caaEnrichReleaseGroupIcon / eaaEnrichEventIcon → _artEnrichIcon(ctx), caaInitSmallPics / eaaInitSmallPics → _artInitSmallPics(ctx), caaCountLinks / eaaCountLinks → _artCountLinks(ctx), caaInitBigPics / eaaInitBigPics → _artInitBigPics(ctx), caaUpdateBigBoxForTable / eaaUpdateBigBoxForTable → _artUpdateBigBoxForTable(ctx), caaCreateOrUpdateToggleButton / eaaCreateOrUpdateToggleButton → _artCreateOrUpdateToggleButton(ctx), initCaaPics / initEaaPics → _artInitPics(ctx), initCaaInlinePics / initEaaInlinePics → _artInitInlinePics(ctx).",
+          "Merged caaFindCaaColumnIndex and eaaFindEaaColumnIndex into the existing caaFindColumnByName(table, name) — both were single-line wrappers with a hardcoded column name.",
+          "Introduced _ART_GUID_RE_STR shared constant to avoid repeating the 36-char GUID pattern string six times.",
+          "All public call-site names (initCaaPics, initEaaPics, initCaaInlinePics, initEaaInlinePics, caaUpdateBigBoxForTable, eaaUpdateBigBoxForTable) are unchanged; no call sites required modification.",
+          "Moved _eaaEventCountCache declaration to module scope alongside _caaRgCountCache so both caches are available when the context descriptors are constructed."
+        ]
+      }
+    },
+    {
         "version": "9.99.113",
         "date": "2026-03-11",
         "sections": [
