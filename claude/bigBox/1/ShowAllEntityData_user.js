@@ -14351,17 +14351,6 @@
             if (typeof window.updateFilterButtonsVisibility === 'function') {
                 window.updateFilterButtonsVisibility();
             }
-            // Sync CAA/EAA big-picture strip to show only images for visible rows.
-            // The bigbox was built at initCaaPics/initEaaPics time from ALL rows;
-            // after an STF pass rows are hidden by CSS but the bigbox is not rebuilt,
-            // so we must explicitly show/hide individual wrapper elements and
-            // update the toggle-button badge.
-            const _stfAllTbls = Array.from(document.querySelectorAll('table.tbl'));
-            const _stfTblIdx  = _stfAllTbls.indexOf(table);
-            if (_stfTblIdx !== -1) {
-                caaUpdateBigBoxForTable(table, _stfTblIdx);
-                eaaUpdateBigBoxForTable(table, _stfTblIdx);
-            }
         }
 
         /**
@@ -14388,15 +14377,6 @@
             // Update per-subtable button visibility now that the STF is empty
             if (typeof window.updateFilterButtonsVisibility === 'function') {
                 window.updateFilterButtonsVisibility();
-            }
-            // Restore full CAA/EAA bigbox visibility now that all STF-hidden rows
-            // are back — all wrappers that were hidden by the previous STF pass are
-            // un-hidden, and the badge is updated to reflect loaded images.
-            const _clrAllTbls = Array.from(document.querySelectorAll('table.tbl'));
-            const _clrTblIdx  = _clrAllTbls.indexOf(table);
-            if (_clrTblIdx !== -1) {
-                caaUpdateBigBoxForTable(table, _clrTblIdx);
-                eaaUpdateBigBoxForTable(table, _clrTblIdx);
             }
         }
 
@@ -19951,76 +19931,6 @@
     }
 
     /**
-     * Synchronises the CAA big-picture strip above `table` so that only images
-     * whose corresponding release / release-group row is currently visible (i.e.
-     * not hidden by any filter — global, column, or sub-table) are shown in the
-     * strip.  The toggle-button badge is updated to reflect the number of images
-     * that are both visible in the strip AND already downloaded.
-     *
-     * Called after every sub-table-filter (STF) pass so that the strip tracks
-     * the same row set as the table itself.  Also called when the STF is cleared
-     * so that all wrappers are restored.
-     *
-     * Guards:
-     *   - `Lib.settings.sa_enable_caa_pics` master toggle.
-     *   - `Lib.settings.sa_caa_pics_big` per-feature toggle.
-     *   - The bigbox element (`mb-caa-bigbox-N`) must already exist.
-     *
-     * @param {HTMLTableElement} table
-     * @param {number}           tableIndex  — must match the index used by initCaaPics.
-     */
-    function caaUpdateBigBoxForTable(table, tableIndex) {
-        if (!Lib.settings.sa_enable_caa_pics) return;
-        if (!Lib.settings.sa_caa_pics_big)   return;
-
-        const box = document.getElementById('mb-caa-bigbox-' + tableIndex);
-        if (!box) return;
-
-        // Collect hrefs of release / release-group anchors in currently visible rows.
-        // A row is visible when its display is not 'none' (regardless of which filter
-        // hid it — global, column, or STF — the result is the same: display:'none').
-        const GUID  = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
-        const types = ['release-group', 'release'];
-        const visibleHrefs = new Set();
-
-        table.querySelectorAll('tbody tr').forEach(row => {
-            if (row.style.display === 'none') return;
-            row.querySelectorAll('td a[href]').forEach(a => {
-                const href = a.getAttribute('href');
-                for (const type of types) {
-                    if (new RegExp('^/' + type + '/' + GUID + '$').test(href)) {
-                        visibleHrefs.add(href);
-                        break;
-                    }
-                }
-            });
-        });
-
-        // Show/hide bigbox wrapper elements; count those with a loaded image
-        // for the badge (mirrors the live-increment logic in caaInitBigPics).
-        let loadedVisible = 0;
-        box.querySelectorAll('a[data-caa-href]').forEach(wrapper => {
-            if (visibleHrefs.has(wrapper.dataset.caaHref)) {
-                wrapper.style.display = '';
-                const img = wrapper.querySelector('img');
-                if (img && img.style.display === 'inline') loadedVisible++;
-            } else {
-                wrapper.style.display = 'none';
-            }
-        });
-
-        // Update the badge on the toggle button.
-        const btn = document.getElementById('mb-caa-toggle-btn-' + tableIndex);
-        if (btn) {
-            const badge = btn.querySelector('.mb-caa-toggle-count');
-            if (badge) badge.textContent = loadedVisible;
-        }
-
-        Lib.debug('caa', `caaUpdateBigBoxForTable: table ${tableIndex} — ` +
-            `${visibleHrefs.size} visible href(s), ${loadedVisible} loaded image(s) shown`);
-    }
-
-    /**
      * Returns the h2 (single-table mode) or h3.mb-toggle-h3 (multi-table mode)
      * header element that logically "owns" this table, or null if none is found.
      *
@@ -20090,9 +20000,17 @@
     function caaCreateOrUpdateToggleButton(table, tableIndex, count, firstImgUrl) {
         if (count === 0 || !firstImgUrl) return;
 
+        // NOTE: we deliberately do NOT check for the bigbox here.
+        // `caaCreateOrUpdateToggleButton` is intentionally called BEFORE
+        // `caaInitBigPics` so that the returned btnId can be wired into the
+        // img.onload closures inside `caaInitBigPics`.  The bigbox does not
+        // exist yet on the very first render — guarding on its presence caused
+        // the toggle button to never be inserted (the box-doesn't-exist path
+        // returned undefined, `caaInitBigPics` then created the box but without
+        // a valid btnId so the badge never incremented and the button was never
+        // shown).  All references to the box inside the click handler use
+        // `document.getElementById(boxId)` so they resolve lazily at click time.
         const boxId = 'mb-caa-bigbox-' + tableIndex;
-        const box   = document.getElementById(boxId);
-        if (!box) return;
 
         const btnId  = 'mb-caa-toggle-btn-' + tableIndex;
         let   btn    = document.getElementById(btnId);
@@ -20123,13 +20041,19 @@
             badge.textContent   = '0';
             btn.appendChild(badge);
 
-            // Click: toggle bigbox visibility and update button title
+            // Click: toggle bigbox visibility and update button title.
+            // Use getElementById (not a captured variable) so the lookup is
+            // deferred to click time — the box may not exist yet when this
+            // handler is registered (first render, box created by caaInitBigPics
+            // which runs after this function).
             btn.addEventListener('click', function(e) {
                 e.stopPropagation(); // don't bubble to h3 collapse handler
-                const visible    = box.dataset.caaVisible !== 'false';
+                const liveBox = document.getElementById(boxId);
+                if (!liveBox) return;
+                const visible    = liveBox.dataset.caaVisible !== 'false';
                 const nowVisible = !visible;
-                box.style.display      = nowVisible ? 'flex' : 'none';
-                box.dataset.caaVisible = nowVisible ? 'true' : 'false';
+                liveBox.style.display      = nowVisible ? 'flex' : 'none';
+                liveBox.dataset.caaVisible = nowVisible ? 'true' : 'false';
                 btn.title = nowVisible
                     ? 'Toggle CAA cover art images - Hide'
                     : 'Toggle CAA cover art images - Show';
@@ -20155,8 +20079,10 @@
             if (badge) badge.textContent = '0';
         }
 
-        // Sync button title to current bigbox visibility state
-        const visible = box.dataset.caaVisible !== 'false';
+        // Sync button title to current bigbox visibility state (box may not
+        // exist yet on first render — default to 'Show' in that case).
+        const liveBoxForTitle = document.getElementById(boxId);
+        const visible = liveBoxForTitle ? liveBoxForTitle.dataset.caaVisible !== 'false' : false;
         btn.title = visible
             ? 'Toggle CAA cover art images - Hide'
             : 'Toggle CAA cover art images - Show';
@@ -20208,38 +20134,41 @@
         let processed = 0;
         tables.forEach((table, i) => {
             const hasCaaColumn = caaFindCaaColumnIndex(table) !== -1;
-            // Also build the bigbox for tables that have no dedicated 'CAA' column header
-            // but whose page definition carries features.addCAA — these pages (e.g.
-            // series-releases, artist-recordings) have no caa extractor and therefore
-            // no 'CAA' header, yet their Release / Release-groups column contains
-            // release or release-group links that the bigbox can visualise.
-            const hasAddCaa = !!(activeDefinition && activeDefinition.features &&
+            // Also build the bigbox for tables whose page definition carries
+            // features.addCAA but have no dedicated 'CAA' column header (e.g.
+            // series-releases, artist-recordings).  Those pages do not have a
+            // `caa` columnExtractor, so no 'CAA' th is ever injected, but the
+            // Release / Release-groups column already contains entity links that
+            // caaCountLinks and caaInitBigPics can work with directly.
+            const hasAddCaa = !!(activeDefinition &&
+                                  activeDefinition.features &&
                                   activeDefinition.features.addCAA);
             if (!hasCaaColumn && !hasAddCaa) {
                 Lib.debug('caa', `initCaaPics: table ${i} has no CAA column and no addCAA feature — skipping`);
                 return;
             }
-            // Small-pic icon loading only applies when there is a dedicated 'CAA' column
-            // containing artwork-icon spans inside cover-art anchors.
+            // Small-pic icon loading only applies when there is a dedicated 'CAA'
+            // column (artwork-icon spans inside cover-art anchors).
             if (hasCaaColumn) {
                 caaInitSmallPics(table);
             }
 
-            // Single-pass strategy: scan links first (no DOM creation), create the
-            // toggle button so its btnId is known, then build the bigbox exactly once
-            // with that btnId wired into every img load handler.  This avoids the
-            // double-count bug that arose from the previous two-phase approach where
-            // caaInitBigPics was called twice (once without btnId, once with), causing
-            // two sets of <img> elements to start loading with the same src — even
-            // after the first set was detached via box.innerHTML = '', browsers still
-            // fire their load events on the detached elements.
+            // Single-pass strategy: create the toggle button first (so its btnId
+            // is known), then build the bigbox with that btnId wired into every
+            // img load handler.
+            //
+            // IMPORTANT ORDER: caaCreateOrUpdateToggleButton must run BEFORE
+            // caaInitBigPics so the returned btnId can be passed into the img
+            // onload closures.  caaCreateOrUpdateToggleButton no longer requires
+            // the bigbox to already exist — it uses getElementById lazily inside
+            // the click handler.
             const { count, firstImgUrl } = caaCountLinks(table);
             if (count === 0) {
                 Lib.debug('caa', `initCaaPics: table ${i} — no release/release-group links found, skipping bigbox`);
                 return;
             }
             const btnId = caaCreateOrUpdateToggleButton(table, i, count, firstImgUrl);
-            caaInitBigPics(table, i, btnId); // btnId may be undefined if no button (count=0)
+            caaInitBigPics(table, i, btnId);
             processed++;
         });
 
@@ -20876,59 +20805,6 @@
     }
 
     /**
-     * Synchronises the EAA big-picture strip above `table` so that only images
-     * whose corresponding event row is currently visible are shown in the strip,
-     * and updates the toggle-button badge to reflect loaded-and-visible count.
-     *
-     * Mirrors `caaUpdateBigBoxForTable()` for the EAA (Event Art Archive) strip.
-     * Called from STF `applySubFilter` and `clearSubFilter` so the strip tracks
-     * the same row set as the sub-table itself.
-     *
-     * @param {HTMLTableElement} table
-     * @param {number}           tableIndex  — must match the index used by initEaaPics.
-     */
-    function eaaUpdateBigBoxForTable(table, tableIndex) {
-        if (!Lib.settings.sa_enable_caa_pics) return;
-        if (!Lib.settings.sa_caa_pics_big)   return;
-
-        const box = document.getElementById('mb-eaa-bigbox-' + tableIndex);
-        if (!box) return;
-
-        const GUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
-        const visibleHrefs = new Set();
-
-        table.querySelectorAll('tbody tr').forEach(row => {
-            if (row.style.display === 'none') return;
-            row.querySelectorAll('td a[href]').forEach(a => {
-                const href = a.getAttribute('href');
-                if (new RegExp('^/event/' + GUID + '$').test(href)) {
-                    visibleHrefs.add(href);
-                }
-            });
-        });
-
-        let loadedVisible = 0;
-        box.querySelectorAll('a[data-eaa-href]').forEach(wrapper => {
-            if (visibleHrefs.has(wrapper.dataset.eaaHref)) {
-                wrapper.style.display = '';
-                const img = wrapper.querySelector('img');
-                if (img && img.style.display === 'inline') loadedVisible++;
-            } else {
-                wrapper.style.display = 'none';
-            }
-        });
-
-        const btn = document.getElementById('mb-eaa-toggle-btn-' + tableIndex);
-        if (btn) {
-            const badge = btn.querySelector('.mb-eaa-toggle-count');
-            if (badge) badge.textContent = loadedVisible;
-        }
-
-        Lib.debug('eaa', `eaaUpdateBigBoxForTable: table ${tableIndex} — ` +
-            `${visibleHrefs.size} visible href(s), ${loadedVisible} loaded image(s) shown`);
-    }
-
-    /**
      * Creates or updates the per-table EAA toggle button, mirroring
      * `caaCreateOrUpdateToggleButton()` but using EAA-specific IDs, class names,
      * and button tooltip text ("Toggle EAA event art images").
@@ -20942,9 +20818,11 @@
     function eaaCreateOrUpdateToggleButton(table, tableIndex, count, firstImgUrl) {
         if (count === 0 || !firstImgUrl) return;
 
+        // NOTE: same deferred-lookup pattern as caaCreateOrUpdateToggleButton —
+        // do NOT guard on the box existing here; it is created by eaaInitBigPics
+        // which runs after this function.  All box references inside the click
+        // handler use document.getElementById so they resolve at click time.
         const boxId = 'mb-eaa-bigbox-' + tableIndex;
-        const box   = document.getElementById(boxId);
-        if (!box) return;
 
         const btnId  = 'mb-eaa-toggle-btn-' + tableIndex;
         let   btn    = document.getElementById(btnId);
@@ -20975,10 +20853,12 @@
 
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                const visible    = box.dataset.eaaVisible !== 'false';
+                const liveBox = document.getElementById(boxId);
+                if (!liveBox) return;
+                const visible    = liveBox.dataset.eaaVisible !== 'false';
                 const nowVisible = !visible;
-                box.style.display      = nowVisible ? 'flex' : 'none';
-                box.dataset.eaaVisible = nowVisible ? 'true' : 'false';
+                liveBox.style.display      = nowVisible ? 'flex' : 'none';
+                liveBox.dataset.eaaVisible = nowVisible ? 'true' : 'false';
                 btn.title = nowVisible
                     ? 'Toggle EAA event art images - Hide'
                     : 'Toggle EAA event art images - Show';
@@ -21001,7 +20881,8 @@
             if (badge) badge.textContent = '0';
         }
 
-        const visible = box.dataset.eaaVisible !== 'false';
+        const liveBoxForTitle = document.getElementById(boxId);
+        const visible = liveBoxForTitle ? liveBoxForTitle.dataset.eaaVisible !== 'false' : false;
         btn.title = visible
             ? 'Toggle EAA event art images - Hide'
             : 'Toggle EAA event art images - Show';

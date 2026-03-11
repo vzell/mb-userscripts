@@ -48768,8 +48768,6 @@ to the event parts extracted
 
 * TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 
-
-
 * TODO add global show CAA images for multi-table mode
 
 * TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
@@ -49070,9 +49068,57 @@ present (e.g. in the follwing two examples the "3" and "1") when uncollapsing th
 
 
 * Filtering the CAA big-picture hover strip on the sub-table level doesn't work when entering the filtert string in the sub-table filter field, but it works when entering it in the column leven filter field
+** initial
 
-Filtering the CAA big images (the number disdplayed) in the image stripe on the sub-table level doesn't work when
-entering the filter string in the sub-table filter field, but it works when entering it in the column level filter field
+In the NEWLY uploaded userscript (I made some additional changes),
+
+there are 2 issues
+
+1.)
+
+in "multi" table mode, e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f when filtering either on
+the "global" level with
+
+#+begin_example
+<input id="mb-global-filter-input"
+#+end_example
+
+or with one of the "sub-table specific filter columns" below the sub-table header line,
+
+filtering the CAA big images in the image stripe above the sub-table (initially collapsed, but it can be uncollapsed by
+clicking the "CAA-toggle"-button with the miniature artwork icon in it and the number of CAA artwork imges displayed
+inside the stripe) automagically ALSO works: the artwork number after the miniature icon changes depending how many
+artwork images fit the filter string; also when uncollapsing ONLY the filtered ones are really displayed
+
+NOW the bug: the filtering doesn't work when entering the filter string in the sub-table filter fields
+
+#+begin_example
+<input id="mb-stf-....-input" type="text"
+#+end_example
+
+2.)
+
+In the uploaded userscript,
+
+in "single" table mode, e.g. for
+
+ - https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e - CAA release images are in the "Release" column
+ - https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - CAA release images are in the "Release" column
+ - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - CAA release-group images are in the "Release groups" column
+ - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases -  - CAA release images are in the "Release" column
+
+the whole CAA big image stripe with either release or release-group images above the table is missing
+
+Please investigate and fix.. also add a changelog
+
+** still
+
+issue 1 is fixed, but in "single" table mode there is STILL NO big image stripe.
+
+Do you want to introduce some debug statements to get enlighted ? please fix
+
+
+
 
 * the big-picture hover strip above `table` is missing for pageTypes where releases are involved
 
@@ -50287,11 +50333,9 @@ DOM rendering batching
 Those changes together would likely cut the runtime of your script by 50–70% on big pages.
 
 
-* cancelled event
+* DONE cancelled event
 
 In the uploaded userscript,
-
-1.)
 
 in the function "cancelledEvent(sourceCell)"
 
@@ -50342,7 +50386,7 @@ instead of extracting "(cancelled)" from e.g.
 
 it should only be the word "cancelled" without the brackets, so only the contents of the "<bdi>" container
 
-2.)
+* DONE refactor the whole "// ── CAA Illustrated Discography feature" functionality into the "CAA (Cover Art Archive)" and "EAA
 
 refactor the whole "// ── CAA Illustrated Discography feature" functionality into the "CAA (Cover Art Archive)" and "EAA
 (Event Art Archive)" features

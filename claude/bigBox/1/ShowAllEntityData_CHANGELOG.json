@@ -1,0 +1,15 @@
+[
+    {
+        "version": "9.99.111",
+        "date": "2026-03-11",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "CAA big-picture strip (all single-table pages — label-releases, artist-releases, series-releases, artist-recordings, and any other single-table type with cover-art): the toggle button and bigbox strip were never shown on the initial page load. Root cause: caaCreateOrUpdateToggleButton started with `const box = document.getElementById(boxId); if (!box) return;`, but the bigbox element is created by caaInitBigPics which runs *after* caaCreateOrUpdateToggleButton in the initCaaPics pipeline. On every first render the box didn't exist yet, so caaCreateOrUpdateToggleButton bailed out returning undefined, caaInitBigPics then created the box but received btnId=undefined so the img load callbacks could never increment the badge and the toggle button was never inserted in the header. The strip only appeared after the first filter or sort operation (which re-ran the pipeline with the box already in the DOM). Fix: removed the premature box-existence guard from caaCreateOrUpdateToggleButton. All references to the box inside the click handler are now resolved lazily with document.getElementById(boxId) at click time, so the button can be created and inserted in the header before the bigbox exists. Same fix applied to eaaCreateOrUpdateToggleButton.",
+                    "CAA big-picture strip (single-table pages without a dedicated CAA column — series-releases, artist-recordings): even after fixing the toggle-button timing bug above, the bigbox was still not built for page types that have features.addCAA in their definition but no `caa` columnExtractor (and therefore no CAA th in the table header). caaFindCaaColumnIndex returned -1 and initCaaPics skipped the table entirely. Fix: initCaaPics now accepts a table when EITHER a CAA column header is present OR activeDefinition.features.addCAA is set. caaInitSmallPics (which loads thumbnails into CAA-column icon spans) continues to be gated on hasCaaColumn only. An additional early-return is added when caaCountLinks finds zero links so genuinely empty tables are still skipped."
+                ]
+            }
+        ]
+    }
+]
