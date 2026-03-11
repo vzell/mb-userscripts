@@ -50962,3 +50962,13 @@ what is the diff code block
 good for, does it belong to the bug fix too ?
 
 Also you forgot to produce a changelog entry
+
+* CAA loading completely broken
+
+In the uploaded userscript "ShowAllEntityData.user.js",
+
+the CAA loading is completely broken for "single"-table mode pages, also with query parameters https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&link_type_id=278
+
+see the uploaded ..-bug files
+
+Please fix and provide a changelog
