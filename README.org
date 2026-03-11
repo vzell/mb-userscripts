@@ -49067,14 +49067,10 @@ present (e.g. in the follwing two examples the "3" and "1") when uncollapsing th
 #+end_example
 
 
-* Filtering the CAA big-picture hover strip on the sub-table level doesn't work when entering the filtert string in the sub-table filter field, but it works when entering it in the column leven filter field
+* DONE Filtering the CAA big-picture hover strip on the sub-table level doesn't work when entering the filtert string in the sub-table filter field, but it works when entering it in the column leven filter field
 ** initial
 
 In the NEWLY uploaded userscript (I made some additional changes),
-
-there are 2 issues
-
-1.)
 
 in "multi" table mode, e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f when filtering either on
 the "global" level with
@@ -49096,7 +49092,8 @@ NOW the bug: the filtering doesn't work when entering the filter string in the s
 <input id="mb-stf-....-input" type="text"
 #+end_example
 
-2.)
+
+* DONE the big-picture hover strip above `table` is missing for pageTypes where releases are involved
 
 In the uploaded userscript,
 
@@ -49106,6 +49103,7 @@ in "single" table mode, e.g. for
  - https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - CAA release images are in the "Release" column
  - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - CAA release-group images are in the "Release groups" column
  - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases -  - CAA release images are in the "Release" column
+ - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710 - "Title" column => release CAA artwork
 
 the whole CAA big image stripe with either release or release-group images above the table is missing
 
@@ -49119,19 +49117,8 @@ Do you want to introduce some debug statements to get enlighted ? please fix
 
 
 
-
-* the big-picture hover strip above `table` is missing for pageTypes where releases are involved
-
 the big-picture hover strip above the `table` is missing for pageTypes where "releases" or "release groups" are involved and rendered in rows, eg for the following types of URLs
 
-- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases - "Release" column => release CAA artwork
-- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - "Release groups" column => release group CAA artwork
-- https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 - "Release title" column => release CAA artwork
-- https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e - "Release" column => release CAA artwork
-https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column => release CAA artwork
-  
-- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710 - "Title" column => release CAA artwork
-  
 * number of images per release is NEVER shown (check the CAA API how to get it)
 
 * "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.111+2026-03-11
+// @version      9.99.112+2026-03-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -20090,9 +20090,17 @@
     function caaCreateOrUpdateToggleButton(table, tableIndex, count, firstImgUrl) {
         if (count === 0 || !firstImgUrl) return;
 
+        // NOTE: we deliberately do NOT check for the bigbox here.
+        // `caaCreateOrUpdateToggleButton` is intentionally called BEFORE
+        // `caaInitBigPics` so that the returned btnId can be wired into the
+        // img.onload closures inside `caaInitBigPics`.  The bigbox does not
+        // exist yet on the very first render — guarding on its presence caused
+        // the toggle button to never be inserted (the box-doesn't-exist path
+        // returned undefined, `caaInitBigPics` then created the box but without
+        // a valid btnId so the badge never incremented and the button was never
+        // shown).  All references to the box inside the click handler use
+        // `document.getElementById(boxId)` so they resolve lazily at click time.
         const boxId = 'mb-caa-bigbox-' + tableIndex;
-        const box   = document.getElementById(boxId);
-        if (!box) return;
 
         const btnId  = 'mb-caa-toggle-btn-' + tableIndex;
         let   btn    = document.getElementById(btnId);
@@ -20123,13 +20131,19 @@
             badge.textContent   = '0';
             btn.appendChild(badge);
 
-            // Click: toggle bigbox visibility and update button title
+            // Click: toggle bigbox visibility and update button title.
+            // Use getElementById (not a captured variable) so the lookup is
+            // deferred to click time — the box may not exist yet when this
+            // handler is registered (first render, box created by caaInitBigPics
+            // which runs after this function).
             btn.addEventListener('click', function(e) {
                 e.stopPropagation(); // don't bubble to h3 collapse handler
-                const visible    = box.dataset.caaVisible !== 'false';
+                const liveBox = document.getElementById(boxId);
+                if (!liveBox) return;
+                const visible    = liveBox.dataset.caaVisible !== 'false';
                 const nowVisible = !visible;
-                box.style.display      = nowVisible ? 'flex' : 'none';
-                box.dataset.caaVisible = nowVisible ? 'true' : 'false';
+                liveBox.style.display      = nowVisible ? 'flex' : 'none';
+                liveBox.dataset.caaVisible = nowVisible ? 'true' : 'false';
                 btn.title = nowVisible
                     ? 'Toggle CAA cover art images - Hide'
                     : 'Toggle CAA cover art images - Show';
@@ -20155,8 +20169,10 @@
             if (badge) badge.textContent = '0';
         }
 
-        // Sync button title to current bigbox visibility state
-        const visible = box.dataset.caaVisible !== 'false';
+        // Sync button title to current bigbox visibility state (box may not
+        // exist yet on first render — default to 'Show' in that case).
+        const liveBoxForTitle = document.getElementById(boxId);
+        const visible = liveBoxForTitle ? liveBoxForTitle.dataset.caaVisible !== 'false' : false;
         btn.title = visible
             ? 'Toggle CAA cover art images - Hide'
             : 'Toggle CAA cover art images - Show';
@@ -20942,9 +20958,11 @@
     function eaaCreateOrUpdateToggleButton(table, tableIndex, count, firstImgUrl) {
         if (count === 0 || !firstImgUrl) return;
 
+        // NOTE: same deferred-lookup pattern as caaCreateOrUpdateToggleButton —
+        // do NOT guard on the box existing here; it is created by eaaInitBigPics
+        // which runs after this function.  All box references inside the click
+        // handler use document.getElementById so they resolve at click time.
         const boxId = 'mb-eaa-bigbox-' + tableIndex;
-        const box   = document.getElementById(boxId);
-        if (!box) return;
 
         const btnId  = 'mb-eaa-toggle-btn-' + tableIndex;
         let   btn    = document.getElementById(btnId);
@@ -20975,10 +20993,12 @@
 
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                const visible    = box.dataset.eaaVisible !== 'false';
+                const liveBox = document.getElementById(boxId);
+                if (!liveBox) return;
+                const visible    = liveBox.dataset.eaaVisible !== 'false';
                 const nowVisible = !visible;
-                box.style.display      = nowVisible ? 'flex' : 'none';
-                box.dataset.eaaVisible = nowVisible ? 'true' : 'false';
+                liveBox.style.display      = nowVisible ? 'flex' : 'none';
+                liveBox.dataset.eaaVisible = nowVisible ? 'true' : 'false';
                 btn.title = nowVisible
                     ? 'Toggle EAA event art images - Hide'
                     : 'Toggle EAA event art images - Show';
@@ -21001,7 +21021,8 @@
             if (badge) badge.textContent = '0';
         }
 
-        const visible = box.dataset.eaaVisible !== 'false';
+        const liveBoxForTitle = document.getElementById(boxId);
+        const visible = liveBoxForTitle ? liveBoxForTitle.dataset.eaaVisible !== 'false' : false;
         btn.title = visible
             ? 'Toggle EAA event art images - Hide'
             : 'Toggle EAA event art images - Show';
