@@ -48367,6 +48367,468 @@ some more things to implement:
   
 - leave for now the double implementation inside the "CAA column", we will get of rid of the whole "CAA" column approch later
   
+* DONE rename "type: 'events'," to "type: 'artist-events',
+
+* DONE Why - I would at least expect an error in the console log
+** initial
+
+In the uploaded userscript,
+
+on the following URLs https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709&page=1
+
+on the final rendered page in the column "CAA"
+why do I get the default MusicBrainz icon (which gets shown when a release or release group has artwork in the CAA
+(Cover Art Archive) in general, but there actually IS artwork (so why isn't it downloaded as the other entries) and the real artwork shown ?
+
+I would at least expect an error in the console log. Is this plausible from the code, do we need more debug statements ?
+
+Isn't there a retry mechanism implemented ?
+
+** debug
+
+Please also add debug statements in the CAA artwork loading when e.g.
+
+#+begin_example
+addCAA: '<column name>',
+#+end_example
+
+is configured for a pageType
+
+e.g.
+
+#+begin_example
+        {
+            type: 'artist-releases',
+            // Artist Releases page (Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
+            buttons: [
+                { label: '🧮 Official releases', params: { va: '0' } },
+                { label: '🧮 VA releases', params: { va: '1' } }
+            ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                addCAA: 'Release',
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+Do we also need something like the "sa_caa_fetch_concurrency" concurrency for this load path ?
+
+* DONE in "function initCaaInlinePics" - rename to initAaInlinePics and call either "initCaaInlinePics" or "initEaaInlinePics"
+
+also change the URLs from /coverartarchive.org/release ==> /eventartarchive.org/event/
+
+https://musicbrainz.org/doc/Cover_Art_Archive/API
+https://musicbrainz.org/doc/Event_Art_Archive/API
+
+* DONE Filtering the CAA big-picture hover strip on the sub-table level doesn't work when entering the filtert string in the sub-table filter field, but it works when entering it in the column leven filter field
+** initial
+
+In the NEWLY uploaded userscript (I made some additional changes),
+
+in "multi" table mode, e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f when filtering either on
+the "global" level with
+
+#+begin_example
+<input id="mb-global-filter-input"
+#+end_example
+
+or with one of the "sub-table specific filter columns" below the sub-table header line,
+
+filtering the CAA big images in the image stripe above the sub-table (initially collapsed, but it can be uncollapsed by
+clicking the "CAA-toggle"-button with the miniature artwork icon in it and the number of CAA artwork imges displayed
+inside the stripe) automagically ALSO works: the artwork number after the miniature icon changes depending how many
+artwork images fit the filter string; also when uncollapsing ONLY the filtered ones are really displayed
+
+NOW the bug: the filtering doesn't work when entering the filter string in the sub-table filter fields
+
+#+begin_example
+<input id="mb-stf-....-input" type="text"
+#+end_example
+
+* DONE the big-picture hover strip above `table` is missing for pageTypes where releases are involved
+
+In the uploaded userscript,
+
+in "single" table mode, e.g. for
+
+ - https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e - CAA release images are in the "Release" column
+ - https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - CAA release images are in the "Release" column
+ - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - CAA release-group images are in the "Release groups" column
+ - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases -  - CAA release images are in the "Release" column
+ - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710 - "Title" column => release CAA artwork
+
+the whole CAA big image stripe with either release or release-group images above the table is missing
+
+Please investigate and fix.. also add a changelog
+
+** still
+
+issue 1 is fixed, but in "single" table mode there is STILL NO big image stripe.
+
+Do you want to introduce some debug statements to get enlighted ? please fix
+
+
+
+the big-picture hover strip above the `table` is missing for pageTypes where "releases" or "release groups" are involved and rendered in rows, eg for the following types of URLs
+
+* DONE CAA fixes
+** initial
+
+In the uploaded userscript,
+
+please fix the following issues:
+
+1.)
+
+Do NOT render the CAA toggle button if none of the rows in a table/sub-table have actually CAA images, see the following HTML code when rendered
+
+#+begin_example
+<button id="mb-caa-toggle-btn-12" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3abf4aed-71c0-45a6-8140-d916553956d8/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">0
+  </span>
+</button>
+#+end_example
+
+So when there is a '<span class="mb-caa-toggle-count">0' present
+
+2.)
+
+Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a
+miniature picture, the standard browser "broken image" placeholder is rendered instead, although ALL the CAA images are
+present (e.g. in the follwing two examples the "3" and "1") when uncollapsing them
+
+#+begin_example
+<button id="mb-caa-toggle-btn-9" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/eb888b1c-1e6a-41b1-8075-f88f9d479694/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">3
+  </span>
+</button>
+
+<button id="mb-caa-toggle-btn-10" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3b9fcaac-0739-4b83-af64-4068fffa7bd4/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">1
+  </span>
+</button>
+#+end_example
+
+3.)
+
+Filtering the CAA big images (the number displayed) in the image stripe in "multi" table mode on the sub-table level
+doesn't work when entering the filter string in the sub-table filter field, BUT it works when entering it in the column
+level filter field OR the global filter field
+
+4.)
+
+the big-picture hover strip above the `table` is missing for pageTypes where "releases" or "release groups" are involved and rendered in rows, eg for the following types of URLs
+
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases - "Release" column => release CAA artwork
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - "Release groups" column => release group CAA artwork
+  - https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 - "Release title" column => release CAA artwork
+- https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e - "Release" column => release CAA artwork
+https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column => release CAA artwork
+  
+- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710 - "Title" column => release CAA artwork
+
+** premature end
+
+#+begin_example
+Issue 1 — caaCreateOrUpdateToggleButton is called before caaInitBigPics. It uses caaCountLinks which counts raw release href matches, not actual artwork. The button is created speculatively with badge=0. After all images 404 the badge stays at 0 but the button is never hidden. Fix: track pending image count in caaInitBigPics; when the last image fails and the box is empty, hide button + box.
+Issue 2 — thumb.src = firstImgUrl is set at button creation time, before any image has loaded. If that first URL 404s, thumb.complete becomes true (errors also set complete). The load-handler update guard !thumb.complete then never fires for any subsequent successful image. Fix: don't set thumb.src at creation time; set it only on the first successful load event.
+Issue 3 — applySubFilter / clearSubFilter only hide/show <tr> rows. They never touch the bigbox. The strip images correspond to href values from ALL rows (hidden or not). Fix: add caaUpdateBigboxForTable(table) that walks bigbox wrappers and hides those whose href matches no currently-visible row, then updates the badge and button visibility; call it at the end of both filter functions.
+Issue 4 — initCaaPics gates entirely on caaFindCaaColumnIndex(table) !== -1. Pages with addCAA but no synthetic CAA/EAA column (artist-releases, recordings, recording, label, series, artist-relationships-filtered) all return -1 and are silently skipped. Fix: extend the gate to also pass when activeDefinition.features.addCAA is set.Ran a command, edited a fileRan a command, edited a fileFix 2 first (thumbnail src) — change caaCreateOrUpdateToggleButton to not set thumb.src at creation:
+#+end_example
+
+* DONE cancelled event
+
+In the uploaded userscript,
+
+in the function "cancelledEvent(sourceCell)"
+
+#+begin_example
+        /**
+         * cancelledEvent — extracts the cancellation indicator from a MusicBrainz
+         * event cell into a dedicated synthetic "Cancelled" column.
+         *
+         * Source structure (optional — only present for cancelled events):
+         *   <span class="cancelled">(
+         *     <bdi>cancelled
+         *     </bdi>)
+         *   </span>
+         *
+         * Unlike the `caa` and `video` extractors, the source element is NOT removed
+         * from the Event cell.  Instead the cancelled span is **cloned** into the
+         * synthetic cell so that the Event column continues to show the cancellation
+         * label alongside the event title, while the new Cancelled column provides a
+         * dedicated, sortable and filterable indicator.
+         *
+         * Sortability and dropdown filtering:
+         *   An invisible <span class="mb-cancelled-sort-key" style="display:none"> is
+         *   always appended to tdCancelled.  It contains "yes" when the cancellation
+         *   span was present, or "no" otherwise.  The span is not rendered by the
+         *   browser but IS walked by getCleanColumnText() and getCleanVisibleText()
+         *   (both use a TreeWalker that does not skip display:none elements), so:
+         *     - Sorting ascending/descending works ("no" < "yes" alphabetically).
+         *     - The unique-values dropdown shows exactly "no" and "yes".
+         *     - Clicking "yes" in the dropdown filters to cancelled events only;
+         *       clicking "no" filters to non-cancelled events only.
+         *
+         * Synthetic columns: ['Cancelled']
+         *
+         * @param   {HTMLTableCellElement} sourceCell  The source <td> element.
+         * @returns {HTMLTableCellElement[]}            Array of one synthetic <td>.
+         */
+        cancelledEvent(sourceCell) {
+#+end_example
+
+instead of extracting "(cancelled)" from e.g.
+
+#+begin_example
+<span class="cancelled">(
+  <bdi>cancelled
+  </bdi>)
+</span>
+#+end_example
+
+it should only be the word "cancelled" without the brackets, so only the contents of the "<bdi>" container
+
+* DONE refactor the whole "// ── CAA Illustrated Discography feature" functionality into the "CAA (Cover Art Archive)" and "EAA
+
+refactor the whole "// ── CAA Illustrated Discography feature" functionality into the "CAA (Cover Art Archive)" and "EAA
+(Event Art Archive)" features
+
+Right now only the "CAA" functionality is implemented (also some comments also talk about EAA)
+
+The CAA API is documented at https://musicbrainz.org/doc/Cover_Art_Archive/API and uses URLs of type /coverartarchive.org/release or /coverartarchive.org/release-group
+
+The EAA API is documented at https://musicbrainz.org/doc/Event_Art_Archive/API and uses URLS of type /eventartarchive.org/event/
+
+The "function initCaaInlinePics" ONLY works right now for CAA
+
+We need another one "initEaaInlinePics" for the case of EAA (see the API spec). It should use of course instead of
+
+#+begin_example
+                const link = td.querySelector('a[href*="/release-group/"], a[href*="/release/"]:not([href$="/cover-art"])');
+#+end_example
+
+a variant for the EAA
+
+We also need equivalent functions for
+
+#+begin_example
+function caaInitSmallPics(table) {
+function caaInitBigPics(table, tableIndex, btnId) {
+function caaCountLinks(table) {
+function caaLoadIcon(caaIcon) {
+etc.
+#+end_example
+
+which reference an "event" and the "/eventartarchive.org/" URL for fetching instead of "release" or release-groups" and "/coverartarchive.org/"
+
+Please implement...
+
+
+
+* DONE CAA - errors: blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource - Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES
+** errors
+
+#+begin_example
+Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES
+#+end_example
+
+#+begin_example
+Access to fetch at 'https://coverartarchive.org/release-group/08e0c4c1-5ebc-47e0-bf69-4c68a3513f1a' from origin 'https://musicbrainz.org' has been blocked by CORS policy: 
+No 'Access-Control-Allow-Origin' header is present on the requested resource.
+#+end_example
+
+#+begin_example
+Access to fetch at 'https://coverartarchive.org/release-group/08e0c4c1-5ebc-47e0-bf69-4c68a3513f1a' from origin 'https://musicbrainz.org' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+#+end_example
+
+** tips - ChatGPT
+
+#+begin_example
+If your goal is only to know whether artwork exists or how many images exist, you do not need to download the full JSON from the Cover Art Archive endpoint.
+
+There is a much faster trick used in many advanced scripts for MusicBrainz.
+
+1. The Normal (Slow) Method
+
+Typical request:
+
+https://coverartarchive.org/release-group/<MBID>
+
+Example:
+
+https://coverartarchive.org/release-group/08e0c4c1-5ebc-47e0-bf69-4c68a3513f1a
+
+Response:
+
+{
+  "images": [
+    {...},
+    {...}
+  ]
+}
+
+To get the count you do:
+
+count = json.images.length;
+
+Problems:
+
+downloads the entire JSON
+
+slower
+
+heavy when doing hundreds of queries
+
+2. Fast Artwork-Existence Check (HEAD Request)
+
+You can query the front cover image URL:
+
+https://coverartarchive.org/release-group/<MBID>/front
+
+If artwork exists:
+
+HTTP 200
+
+If none exists:
+
+HTTP 404
+
+No JSON download required.
+
+Example (Tampermonkey)
+async function hasFrontCover(mbid) {
+  try {
+    await GM.xmlHttpRequest({
+      method: "HEAD",
+      url: `https://coverartarchive.org/release-group/${mbid}/front`
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+Result:
+
+true  → artwork exists
+false → no artwork
+3. Extremely Fast Bulk Check
+
+This is ideal when scanning many release groups:
+
+async function hasCover(mbid) {
+  const r = await GM.xmlHttpRequest({
+    method: "HEAD",
+    url: `https://coverartarchive.org/release-group/${mbid}/front`
+  });
+
+  return r.status === 200;
+}
+
+Advantages:
+
+Method	Data transferred
+Full JSON	~1–5 KB
+HEAD check	~200 bytes
+
+Speed improvement when scanning hundreds of MBIDs can be 10–30×.
+
+4. If You Need the Exact Image Count
+
+Then you must still call:
+
+https://coverartarchive.org/release-group/<MBID>
+
+But you can rate-limit requests.
+
+Example queue:
+
+async function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+async function getImageCount(mbid) {
+  const r = await GM.xmlHttpRequest({
+    method: "GET",
+    url: `https://coverartarchive.org/release-group/${mbid}`
+  });
+
+  const json = JSON.parse(r.responseText);
+  return json.images.length;
+}
+5. Ultra-Efficient Strategy (Used by Power Scripts)
+
+1️⃣ HEAD request → detect artwork quickly
+2️⃣ Only fetch JSON if artwork exists
+
+Example flow:
+
+HEAD /front
+   ↓
+200 → GET JSON
+404 → skip
+
+This can reduce requests by 80–90%.
+
+💡 Bonus trick:
+There is an even more obscure endpoint trick that lets you estimate the number of images without downloading JSON by probing numbered image URLs like:
+
+/release-group/<MBID>/front-250
+
+Some high-performance MusicBrainz tools use it to count covers with log₂ probing (binary search). If you're doing large scans (thousands of release groups), I can show that method too.
+#+end_example
+
+#+begin_example
+[VZ-ShowAllEntityData: artist-releases] 📝 renderMultiRowCell: column "Label" (colIdx=6) — wrapped into 1 li row(s) 
+[VZ-ShowAllEntityData: artist-releases] 📥 Page 6/9 processed in 1.54s. Rows on page: 100. Total: 600 
+[VZ-ShowAllEntityData: artist-releases] 📥 Fetching URL for page 7: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1&tport=8000&page=7 
+[VZ-ShowAllEntityData: artist-releases] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1&tport=8000&page=7 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: Found 5 li.show-all element(s). Expanding from inline <script type="application/json"> data. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [0] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [1] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [2] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [3] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [4] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: expandShowAllCells complete — expanded: 0, skipped: 5. 
+[VZ-ShowAllEntityData: artist-releases] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntityData: artist-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntityData: artist-releases] 📥 Found matching table "[object HTMLTableElement]" on page 7 to process. 
+[VZ-ShowAllEntityData: artist-releases] 📝 Detected indices → mainColIdx=1 (Release), extractors=[caa("Release"@1), splitCountryDate("Country/Date"@5)], syntheticExtractors=[dateParts("Date"→[DD,MM,YYYY,Day,Month])], erasers=[none], renderMultiRow=["Label"@6, "Catalog#"@7], excluded=[] for pageType: artist-releases 
+[VZ-ShowAllEntityData: artist-releases] 📝 Table body found. Processing child nodes. Total nodes: 100 
+[VZ-ShowAllEntityData: artist-releases] 📝 renderMultiRowCell: column "Label" (colIdx=6) — wrapped into 1 li row(s) 
+[VZ-ShowAllEntityData: artist-releases] 📝 renderMultiRowCell: column "Catalog#" (colIdx=7) — wrapped into 1 li row(s)
+#+end_example
+
+#+begin_example
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/58594df1-8d67-4dcf-91a1-2df1675c18da 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/513f6311-43c6-4a6c-ba12-eeca4db2fc1e 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/f625dc8e-7c3d-42ef-aaec-19a3e15eb709 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 2 image(s) for /release-group/963303c0-96a6-4879-b126-eeda4d71d39f 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 3 image(s) for /release-group/8e24d79e-ae3e-4b79-a932-30f38f9cac0f 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 3 image(s) for /release-group/0108f7d8-eae9-3505-8a78-0690cec6c4f8 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 3 image(s) for /release-group/9b23df6c-cda5-425b-a88c-9dae20e24f09 
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaRetry: success for /release-group/f3528c02-dfa0-3b65-b12d-c252a6290770 — 5 image(s) after 1 attempt(s) 
+#+end_example
+
+#+begin_example
+[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/bf285261-5d56-4b30-8af6-edc018b03518
+#+end_example
+
 
 * TODO all buttons need the pressing effect
 
@@ -48769,7 +49231,6 @@ to the event parts extracted
 * TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 
 * TODO add global show CAA images for multi-table mode
-
 * TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
 
 * TODO render coverart archive - https://dn710909.ca.archive.org/0/items/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json
@@ -48783,267 +49244,16 @@ one row per coverart - type, comment, dimensions
 
 * TODO remove the toggle icon from the "CAA" column 
 
-
 * add "Relationships" column support again, but with configurable 
-
-
-* DONE rename "type: 'events'," to "type: 'artist-events',
 
 
 * TODO add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
 
-* CAA - errors: blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource - Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES
-** errors
-
-#+begin_example
-Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES
-#+end_example
-
-#+begin_example
-Access to fetch at 'https://coverartarchive.org/release-group/08e0c4c1-5ebc-47e0-bf69-4c68a3513f1a' from origin 'https://musicbrainz.org' has been blocked by CORS policy: 
-No 'Access-Control-Allow-Origin' header is present on the requested resource.
-#+end_example
-
-#+begin_example
-Access to fetch at 'https://coverartarchive.org/release-group/08e0c4c1-5ebc-47e0-bf69-4c68a3513f1a' from origin 'https://musicbrainz.org' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
-#+end_example
-
-** tips - ChatGPT
-
-#+begin_example
-If your goal is only to know whether artwork exists or how many images exist, you do not need to download the full JSON from the Cover Art Archive endpoint.
-
-There is a much faster trick used in many advanced scripts for MusicBrainz.
-
-1. The Normal (Slow) Method
-
-Typical request:
-
-https://coverartarchive.org/release-group/<MBID>
-
-Example:
-
-https://coverartarchive.org/release-group/08e0c4c1-5ebc-47e0-bf69-4c68a3513f1a
-
-Response:
-
-{
-  "images": [
-    {...},
-    {...}
-  ]
-}
-
-To get the count you do:
-
-count = json.images.length;
-
-Problems:
-
-downloads the entire JSON
-
-slower
-
-heavy when doing hundreds of queries
-
-2. Fast Artwork-Existence Check (HEAD Request)
-
-You can query the front cover image URL:
-
-https://coverartarchive.org/release-group/<MBID>/front
-
-If artwork exists:
-
-HTTP 200
-
-If none exists:
-
-HTTP 404
-
-No JSON download required.
-
-Example (Tampermonkey)
-async function hasFrontCover(mbid) {
-  try {
-    await GM.xmlHttpRequest({
-      method: "HEAD",
-      url: `https://coverartarchive.org/release-group/${mbid}/front`
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-Result:
-
-true  → artwork exists
-false → no artwork
-3. Extremely Fast Bulk Check
-
-This is ideal when scanning many release groups:
-
-async function hasCover(mbid) {
-  const r = await GM.xmlHttpRequest({
-    method: "HEAD",
-    url: `https://coverartarchive.org/release-group/${mbid}/front`
-  });
-
-  return r.status === 200;
-}
-
-Advantages:
-
-Method	Data transferred
-Full JSON	~1–5 KB
-HEAD check	~200 bytes
-
-Speed improvement when scanning hundreds of MBIDs can be 10–30×.
-
-4. If You Need the Exact Image Count
-
-Then you must still call:
-
-https://coverartarchive.org/release-group/<MBID>
-
-But you can rate-limit requests.
-
-Example queue:
-
-async function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
-
-async function getImageCount(mbid) {
-  const r = await GM.xmlHttpRequest({
-    method: "GET",
-    url: `https://coverartarchive.org/release-group/${mbid}`
-  });
-
-  const json = JSON.parse(r.responseText);
-  return json.images.length;
-}
-5. Ultra-Efficient Strategy (Used by Power Scripts)
-
-1️⃣ HEAD request → detect artwork quickly
-2️⃣ Only fetch JSON if artwork exists
-
-Example flow:
-
-HEAD /front
-   ↓
-200 → GET JSON
-404 → skip
-
-This can reduce requests by 80–90%.
-
-💡 Bonus trick:
-There is an even more obscure endpoint trick that lets you estimate the number of images without downloading JSON by probing numbered image URLs like:
-
-/release-group/<MBID>/front-250
-
-Some high-performance MusicBrainz tools use it to count covers with log₂ probing (binary search). If you're doing large scans (thousands of release groups), I can show that method too.
-#+end_example
-
-#+begin_example
-[VZ-ShowAllEntityData: artist-releases] 📝 renderMultiRowCell: column "Label" (colIdx=6) — wrapped into 1 li row(s) 
-[VZ-ShowAllEntityData: artist-releases] 📥 Page 6/9 processed in 1.54s. Rows on page: 100. Total: 600 
-[VZ-ShowAllEntityData: artist-releases] 📥 Fetching URL for page 7: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1&tport=8000&page=7 
-[VZ-ShowAllEntityData: artist-releases] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1&tport=8000&page=7 
-[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: Found 5 li.show-all element(s). Expanding from inline <script type="application/json"> data. 
-[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [0] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
-[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [1] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
-[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [2] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
-[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [3] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
-[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: [4] Unknown or empty JSON shape at col-index=5, header="Country/Date" (top-level key: "events"). Known keys: relations, artists, attributes, iswcs. Skipping. 
-[VZ-ShowAllEntityData: artist-releases] 📝 Page 7: expandShowAllCells complete — expanded: 0, skipped: 5. 
-[VZ-ShowAllEntityData: artist-releases] 📝 No targetHeader provided; returning all tables found in container. 
-[VZ-ShowAllEntityData: artist-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
-[VZ-ShowAllEntityData: artist-releases] 📥 Found matching table "[object HTMLTableElement]" on page 7 to process. 
-[VZ-ShowAllEntityData: artist-releases] 📝 Detected indices → mainColIdx=1 (Release), extractors=[caa("Release"@1), splitCountryDate("Country/Date"@5)], syntheticExtractors=[dateParts("Date"→[DD,MM,YYYY,Day,Month])], erasers=[none], renderMultiRow=["Label"@6, "Catalog#"@7], excluded=[] for pageType: artist-releases 
-[VZ-ShowAllEntityData: artist-releases] 📝 Table body found. Processing child nodes. Total nodes: 100 
-[VZ-ShowAllEntityData: artist-releases] 📝 renderMultiRowCell: column "Label" (colIdx=6) — wrapped into 1 li row(s) 
-[VZ-ShowAllEntityData: artist-releases] 📝 renderMultiRowCell: column "Catalog#" (colIdx=7) — wrapped into 1 li row(s)
-#+end_example
-
-#+begin_example
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/58594df1-8d67-4dcf-91a1-2df1675c18da 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/513f6311-43c6-4a6c-ba12-eeca4db2fc1e 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/f625dc8e-7c3d-42ef-aaec-19a3e15eb709 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 2 image(s) for /release-group/963303c0-96a6-4879-b126-eeda4d71d39f 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 3 image(s) for /release-group/8e24d79e-ae3e-4b79-a932-30f38f9cac0f 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 3 image(s) for /release-group/0108f7d8-eae9-3505-8a78-0690cec6c4f8 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 3 image(s) for /release-group/9b23df6c-cda5-425b-a88c-9dae20e24f09 
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaRetry: success for /release-group/f3528c02-dfa0-3b65-b12d-c252a6290770 — 5 image(s) after 1 attempt(s) 
-#+end_example
-
-#+begin_example
-[VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/bf285261-5d56-4b30-8af6-edc018b03518
-#+end_example
-
-
-* DONE Why - I would at least expect an error in the console log
-** initial
-
 In the uploaded userscript,
 
-on the following URLs https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709&page=1
+add more guards (notify user with an alert box) before leaving the final rendered page:
 
-on the final rendered page in the column "CAA"
-why do I get the default MusicBrainz icon (which gets shown when a release or release group has artwork in the CAA
-(Cover Art Archive) in general, but there actually IS artwork (so why isn't it downloaded as the other entries) and the real artwork shown ?
-
-I would at least expect an error in the console log. Is this plausible from the code, do we need more debug statements ?
-
-Isn't there a retry mechanism implemented ?
-
-** debug
-
-Please also add debug statements in the CAA artwork loading when e.g.
-
-#+begin_example
-addCAA: '<column name>',
-#+end_example
-
-is configured for a pageType
-
-e.g.
-
-#+begin_example
-        {
-            type: 'artist-releases',
-            // Artist Releases page (Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
-            buttons: [
-                { label: '🧮 Official releases', params: { va: '0' } },
-                { label: '🧮 VA releases', params: { va: '1' } }
-            ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
-                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
-                ],
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                ],
-                renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
-                addCAA: 'Release',
-                extractMainColumn: 'Release'
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-Do we also need something like the "sa_caa_fetch_concurrency" concurrency for this load path ?
-
-
-* DONE in "function initCaaInlinePics" - rename to initAaInlinePics and call either "initCaaInlinePics" or "initEaaInlinePics"
-
-also change the URLs from /coverartarchive.org/release ==> /eventartarchive.org/event/
-
-https://musicbrainz.org/doc/Cover_Art_Archive/API
-https://musicbrainz.org/doc/Event_Art_Archive/API
+- even the TAB key pressed repeatedly should never leave the page up to native browser controls
 
 
 * Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a miniature picture the standard browser "broken image" placeholder is rendered instead
@@ -49066,58 +49276,6 @@ present (e.g. in the follwing two examples the "3" and "1") when uncollapsing th
 </button>
 #+end_example
 
-
-* DONE Filtering the CAA big-picture hover strip on the sub-table level doesn't work when entering the filtert string in the sub-table filter field, but it works when entering it in the column leven filter field
-** initial
-
-In the NEWLY uploaded userscript (I made some additional changes),
-
-in "multi" table mode, e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f when filtering either on
-the "global" level with
-
-#+begin_example
-<input id="mb-global-filter-input"
-#+end_example
-
-or with one of the "sub-table specific filter columns" below the sub-table header line,
-
-filtering the CAA big images in the image stripe above the sub-table (initially collapsed, but it can be uncollapsed by
-clicking the "CAA-toggle"-button with the miniature artwork icon in it and the number of CAA artwork imges displayed
-inside the stripe) automagically ALSO works: the artwork number after the miniature icon changes depending how many
-artwork images fit the filter string; also when uncollapsing ONLY the filtered ones are really displayed
-
-NOW the bug: the filtering doesn't work when entering the filter string in the sub-table filter fields
-
-#+begin_example
-<input id="mb-stf-....-input" type="text"
-#+end_example
-
-
-* DONE the big-picture hover strip above `table` is missing for pageTypes where releases are involved
-
-In the uploaded userscript,
-
-in "single" table mode, e.g. for
-
- - https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e - CAA release images are in the "Release" column
- - https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - CAA release images are in the "Release" column
- - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - CAA release-group images are in the "Release groups" column
- - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases -  - CAA release images are in the "Release" column
- - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710 - "Title" column => release CAA artwork
-
-the whole CAA big image stripe with either release or release-group images above the table is missing
-
-Please investigate and fix.. also add a changelog
-
-** still
-
-issue 1 is fixed, but in "single" table mode there is STILL NO big image stripe.
-
-Do you want to introduce some debug statements to get enlighted ? please fix
-
-
-
-the big-picture hover strip above the `table` is missing for pageTypes where "releases" or "release groups" are involved and rendered in rows, eg for the following types of URLs
 
 * number of images per release is NEVER shown (check the CAA API how to get it)
 
@@ -49221,6 +49379,7 @@ Where the CAA artwork icon would normally be rendered show a replacement icon wi
 backwards for each retry. Replace that icon with the actual download CA artwork image or leave a red questiomnark in
 place for a visual clue that retries have at least been tried
 
+
 * is it worth to implement a retry solution (n times) for cases where images coudn't be fetched right away with manual fallback (by clicking a retry icon)
 
 #+begin_example
@@ -49253,76 +49412,24 @@ place for a visual clue that retries have at least been tried
 #+end_example
 
 
-* CAA fixes
-** initial
+* questions
 
 In the uploaded userscript,
 
-please fix the following issues:
+- Is it possible to distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API
+  (maybe with a fallback check using the duration property in case the transferSize is restricted) and expose this information somehow visually (maybe in the "CAA" column)
 
-1.)
+- is it worth implementing a retry solution (n times) for cases where images couldn't be fetched right away with a
+  manual fallback (by clicking a retry icon rendered at the position where normally the artwork would be rendered in the
+  "CAA" column"
 
-Do NOT render the CAA toggle button if none of the rows in a table/sub-table have actually CAA images, see the following HTML code when rendered
+- is it worth implementing an indexed-DB persistent storage solution (with metadata about the images: type, size,
+  number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA API, please check the MusicBrainz CAA API)
 
-#+begin_example
-<button id="mb-caa-toggle-btn-12" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
-  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3abf4aed-71c0-45a6-8140-d916553956d8/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
-  <span class="mb-caa-toggle-count">0
-  </span>
-</button>
-#+end_example
-
-So when there is a '<span class="mb-caa-toggle-count">0' present
-
-2.)
-
-Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a
-miniature picture, the standard browser "broken image" placeholder is rendered instead, although ALL the CAA images are
-present (e.g. in the follwing two examples the "3" and "1") when uncollapsing them
-
-#+begin_example
-<button id="mb-caa-toggle-btn-9" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
-  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/eb888b1c-1e6a-41b1-8075-f88f9d479694/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
-  <span class="mb-caa-toggle-count">3
-  </span>
-</button>
-
-<button id="mb-caa-toggle-btn-10" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
-  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3b9fcaac-0739-4b83-af64-4068fffa7bd4/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
-  <span class="mb-caa-toggle-count">1
-  </span>
-</button>
-#+end_example
-
-3.)
-
-Filtering the CAA big images (the number displayed) in the image stripe in "multi" table mode on the sub-table level
-doesn't work when entering the filter string in the sub-table filter field, BUT it works when entering it in the column
-level filter field OR the global filter field
-
-4.)
-
-the big-picture hover strip above the `table` is missing for pageTypes where "releases" or "release groups" are involved and rendered in rows, eg for the following types of URLs
-
-- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases - "Release" column => release CAA artwork
-- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - "Release groups" column => release group CAA artwork
-  - https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 - "Release title" column => release CAA artwork
-- https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e - "Release" column => release CAA artwork
-https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290 - "Release" column => release CAA artwork
+- is it worth implementing an indexed-DB persistent storage solution for the fetched images altogether. Probably the
+  "Load from Disk" path would benefit the most, as there are probably almost no network rountrips involved
   
-- https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=710 - "Title" column => release CAA artwork
-
-** premature end
-
-#+begin_example
-Issue 1 — caaCreateOrUpdateToggleButton is called before caaInitBigPics. It uses caaCountLinks which counts raw release href matches, not actual artwork. The button is created speculatively with badge=0. After all images 404 the badge stays at 0 but the button is never hidden. Fix: track pending image count in caaInitBigPics; when the last image fails and the box is empty, hide button + box.
-Issue 2 — thumb.src = firstImgUrl is set at button creation time, before any image has loaded. If that first URL 404s, thumb.complete becomes true (errors also set complete). The load-handler update guard !thumb.complete then never fires for any subsequent successful image. Fix: don't set thumb.src at creation time; set it only on the first successful load event.
-Issue 3 — applySubFilter / clearSubFilter only hide/show <tr> rows. They never touch the bigbox. The strip images correspond to href values from ALL rows (hidden or not). Fix: add caaUpdateBigboxForTable(table) that walks bigbox wrappers and hides those whose href matches no currently-visible row, then updates the badge and button visibility; call it at the end of both filter functions.
-Issue 4 — initCaaPics gates entirely on caaFindCaaColumnIndex(table) !== -1. Pages with addCAA but no synthetic CAA/EAA column (artist-releases, recordings, recording, label, series, artist-relationships-filtered) all return -1 and are silently skipped. Fix: extend the gate to also pass when activeDefinition.features.addCAA is set.Ran a command, edited a fileRan a command, edited a fileFix 2 first (thumbnail src) — change caaCreateOrUpdateToggleButton to not set thumb.src at creation:
-#+end_example
-
-
-* questions
+* questions + answers
 
 - Is it possible to distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API
   (maybe with a fallback check using the duration property in case the transferSize is restricted) and expose this information somehow visually (maybe in the "CAA" column)
@@ -49414,25 +49521,6 @@ Verdict: worth implementing as a dedicated feature. Suggested scope: IDB metadat
 - is it worth implementing an indexed-DB persistent storage solution for the fetched images altogether. Probably the
   "Load from Disk" path would benefit the most, as there are probably almost no network rountrips involved
   
-* questions
-
-In the uploaded userscript,
-
-- Is it possible to distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API
-  (maybe with a fallback check using the duration property in case the transferSize is restricted) and expose this information somehow visually (maybe in the "CAA" column)
-
-- is it worth implementing a retry solution (n times) for cases where images couldn't be fetched right away with a
-  manual fallback (by clicking a retry icon rendered at the position where normally the artwork would be rendered in the
-  "CAA" column"
-
-- is it worth implementing an indexed-DB persistent storage solution (with metadata about the images: type, size,
-  number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA API, please check the MusicBrainz CAA API)
-
-- is it worth implementing an indexed-DB persistent storage solution for the fetched images altogether. Probably the
-  "Load from Disk" path would benefit the most, as there are probably almost no network rountrips involved
-  
-
- 
 * ChatGPT
 ** recommendations
 
@@ -50320,90 +50408,11 @@ DOM rendering batching
 Those changes together would likely cut the runtime of your script by 50–70% on big pages.
 
 
-* DONE cancelled event
+* In the uploaded userscript "ShowAllEntityData.user.js" and library "ShowAllEntityData_CHANGELOG.json"
 
-In the uploaded userscript,
+- check for all unused variables and function definitions, create a report and fix
+- check the current function documentations against their implementation, where the doc is differing, please fix
+- resync the uploaded HELP file "ShowAllEntityData_HELP.txt" against the current code base and keyboard shortcuts
+- add a changelog entry
 
-in the function "cancelledEvent(sourceCell)"
-
-#+begin_example
-        /**
-         * cancelledEvent — extracts the cancellation indicator from a MusicBrainz
-         * event cell into a dedicated synthetic "Cancelled" column.
-         *
-         * Source structure (optional — only present for cancelled events):
-         *   <span class="cancelled">(
-         *     <bdi>cancelled
-         *     </bdi>)
-         *   </span>
-         *
-         * Unlike the `caa` and `video` extractors, the source element is NOT removed
-         * from the Event cell.  Instead the cancelled span is **cloned** into the
-         * synthetic cell so that the Event column continues to show the cancellation
-         * label alongside the event title, while the new Cancelled column provides a
-         * dedicated, sortable and filterable indicator.
-         *
-         * Sortability and dropdown filtering:
-         *   An invisible <span class="mb-cancelled-sort-key" style="display:none"> is
-         *   always appended to tdCancelled.  It contains "yes" when the cancellation
-         *   span was present, or "no" otherwise.  The span is not rendered by the
-         *   browser but IS walked by getCleanColumnText() and getCleanVisibleText()
-         *   (both use a TreeWalker that does not skip display:none elements), so:
-         *     - Sorting ascending/descending works ("no" < "yes" alphabetically).
-         *     - The unique-values dropdown shows exactly "no" and "yes".
-         *     - Clicking "yes" in the dropdown filters to cancelled events only;
-         *       clicking "no" filters to non-cancelled events only.
-         *
-         * Synthetic columns: ['Cancelled']
-         *
-         * @param   {HTMLTableCellElement} sourceCell  The source <td> element.
-         * @returns {HTMLTableCellElement[]}            Array of one synthetic <td>.
-         */
-        cancelledEvent(sourceCell) {
-#+end_example
-
-instead of extracting "(cancelled)" from e.g.
-
-#+begin_example
-<span class="cancelled">(
-  <bdi>cancelled
-  </bdi>)
-</span>
-#+end_example
-
-it should only be the word "cancelled" without the brackets, so only the contents of the "<bdi>" container
-
-* DONE refactor the whole "// ── CAA Illustrated Discography feature" functionality into the "CAA (Cover Art Archive)" and "EAA
-
-refactor the whole "// ── CAA Illustrated Discography feature" functionality into the "CAA (Cover Art Archive)" and "EAA
-(Event Art Archive)" features
-
-Right now only the "CAA" functionality is implemented (also some comments also talk about EAA)
-
-The CAA API is documented at https://musicbrainz.org/doc/Cover_Art_Archive/API and uses URLs of type /coverartarchive.org/release or /coverartarchive.org/release-group
-
-The EAA API is documented at https://musicbrainz.org/doc/Event_Art_Archive/API and uses URLS of type /eventartarchive.org/event/
-
-The "function initCaaInlinePics" ONLY works right now for CAA
-
-We need another one "initEaaInlinePics" for the case of EAA (see the API spec). It should use of course instead of
-
-#+begin_example
-                const link = td.querySelector('a[href*="/release-group/"], a[href*="/release/"]:not([href$="/cover-art"])');
-#+end_example
-
-a variant for the EAA
-
-We also need equivalent functions for
-
-#+begin_example
-function caaInitSmallPics(table) {
-function caaInitBigPics(table, tableIndex, btnId) {
-function caaCountLinks(table) {
-function caaLoadIcon(caaIcon) {
-etc.
-#+end_example
-
-which reference an "event" and the "/eventartarchive.org/" URL for fetching instead of "release" or release-groups" and "/coverartarchive.org/"
-
-Please implement...
+  
