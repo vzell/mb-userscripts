@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.117+2026-03-11
+// @version      9.99.118+2026-03-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -13820,15 +13820,13 @@
             // Highlight identical barcodes in Barcode columns (post-render)
             initBarcodeHighlight();
 
-            // Load CAA/EAA art thumbnails and big-pic strip (post-render).
-            // initCaaPics() MUST run before initEaaPics() and the inline variants —
-            // it creates _caaQueue used by all three.
-            initCaaPics();
-            initEaaPics();
-            // Inline CAA/EAA thumbnails must run after ERG (▶ button already present)
-            // and after initCaaPics() (so _caaQueue is initialised).
-            initCaaInlinePics();
-            initEaaInlinePics();
+            // NOTE: initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics are
+            // NOT called here.  renderGroupedTable() calls them at its own tail (just
+            // before "Finished renderGroupedTable"), so calling them again here would
+            // produce doubled badge counts: the first set of <img> elements is detached
+            // by the second _artInitBigPics pass but keeps firing load events via the
+            // still-live btnId closure, so every successfully-loaded image increments the
+            // badge twice.
 
             // Initialise the Unicode character picker (builds menu DOM once, idempotent)
             initSaUnicodeCharsFeature();
@@ -20148,9 +20146,12 @@
                 return;
             }
         } else {
-            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics
+            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics.
+            // Also restore display in case the button was hidden by the stale-bigbox
+            // clear path (count=0 on a previous filter pass) and is now valid again.
             const badge = btn.querySelector('.' + ctx.countClass);
             if (badge) badge.textContent = '0';
+            btn.style.display = '';
         }
 
         // Sync button title to current bigbox visibility (box may not exist yet)

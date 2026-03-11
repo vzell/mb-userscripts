@@ -1,5 +1,15 @@
 [
     {
+      "version": "9.99.118",
+      "date": "2026-03-11",
+      "changes": {
+        "🐛 Bug Fixes": [
+          "CAA/EAA toggle button: image count badge showed doubled values on the initial multi-table render (e.g. 8 instead of 4 for a 4-row table). Root cause: `initCaaPics()` / `initEaaPics()` / `initCaaInlinePics()` / `initEaaInlinePics()` were called TWICE on every initial multi-table render — once at the tail of `renderGroupedTable()` (where they have always lived) and a second time in the post-render pipeline that follows the `await renderGroupedTable(groupedRows, ...)` call. The second `_artInitBigPics` pass rebuilt each bigbox (`box.innerHTML = ''`), detaching the first set of `<img>` elements from the DOM. Those detached images had already started loading; their `onload` closures captured `btnId` by value and incremented the badge via `document.getElementById(btnId)` even though their wrapper anchors were no longer in the tree. The second set of images also loaded and incremented the badge, yielding exactly 2× the true count. Fix: removed the duplicate `initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics` block from the post-render pipeline. A prominent comment explains why these must NOT be called there.",
+          "CAA/EAA toggle button: buttons did not reappear for sub-tables after a global filter was cleared (when the filter had previously reduced those sub-tables to 0 matching rows). Root cause: the stale-bigbox cleanup added in v9.99.117 correctly hides the toggle button via `staleBtn.style.display = 'none'` when a table's link count drops to 0. However, the re-render path in `_artCreateOrUpdateToggleButton` (`isNew = false` branch) only reset the badge counter — it never restored `btn.style.display` to `''`. Any button previously hidden by the count=0 path therefore remained hidden even after rows were restored. Fix: added `btn.style.display = ''` to the re-render branch of `_artCreateOrUpdateToggleButton`, ensuring the button is unconditionally made visible whenever it is updated with a non-zero link count."
+        ]
+      }
+    },
+    {
       "version": "9.99.117",
       "date": "2026-03-11",
       "changes": {
