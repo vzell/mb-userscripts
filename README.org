@@ -50416,3 +50416,39 @@ Those changes together would likely cut the runtime of your script by 50–70% o
 - add a changelog entry
 
   
+* find
+
+find double comment header blocks and fix
+
+#+begin_example
+    /**
+     * Reads column filter inputs from a table, applies the active boxShadow indicator,
+     * and returns a ready-to-use colFilters array (empty array when table is null).
+     *
+     * @param {HTMLElement|null} table         - The <table> element containing .mb-col-filter-input elements.
+     * @param {boolean}          isCaseSensitive
+     * @param {boolean}          isRegExp
+     * @returns {{ val: string, idx: number }[]}
+     */
+    /**
+     * Helper: find the .mb-filter-status span for a given <table> element.
+     * Returns null when the h3 / span cannot be found.
+     */
+#+end_example
+
+* please refactor
+
+please refactor
+
+#+begin_example
+// ── EAA (Event Art Archive) Illustrated Events feature
+#+end_example
+
+and
+
+#+begin_example
+// ── CAA Illustrated Discography feature
+#+end_example
+
+in the uploaded userscript
+
