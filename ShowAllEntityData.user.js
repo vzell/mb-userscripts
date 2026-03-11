@@ -2606,6 +2606,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
                 ],
+                collapsableColumns: [ 'Release groups' ],
                 addCAA: 'Release groups',
                 extractMainColumn: 'Name'
             },
