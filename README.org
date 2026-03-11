@@ -48636,7 +48636,6 @@ which reference an "event" and the "/eventartarchive.org/" URL for fetching inst
 Please implement...
 
 
-
 * DONE CAA - errors: blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource - Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES
 ** errors
 
@@ -48825,6 +48824,195 @@ Some high-performance MusicBrainz tools use it to count covers with log₂ probi
 #+begin_example
 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: 1 image(s) for /release-group/bf285261-5d56-4b30-8af6-edc018b03518
 #+end_example
+
+* DONE find double comment header blocks
+
+find double comment header blocks and fix
+
+#+begin_example
+    /**
+     * Reads column filter inputs from a table, applies the active boxShadow indicator,
+     * and returns a ready-to-use colFilters array (empty array when table is null).
+     *
+     * @param {HTMLElement|null} table         - The <table> element containing .mb-col-filter-input elements.
+     * @param {boolean}          isCaseSensitive
+     * @param {boolean}          isRegExp
+     * @returns {{ val: string, idx: number }[]}
+     */
+    /**
+     * Helper: find the .mb-filter-status span for a given <table> element.
+     * Returns null when the h3 / span cannot be found.
+     */
+#+end_example
+
+* DONE please refactor
+
+please refactor
+
+#+begin_example
+// ── EAA (Event Art Archive) Illustrated Events feature
+#+end_example
+
+and
+
+#+begin_example
+// ── CAA Illustrated Discography feature
+#+end_example
+
+in the uploaded userscript
+
+* DONE when loading data from disk with "Load from Disk" button, there are double artwork icons in the column where the entity title has a CAA artwork prepended
+
+In the uploaded userscript,
+
+a couple issues to fix, please also add a changelog entry
+
+1.)
+
+when loading data from disk with "Load from Disk" button, there are double artwork icons in the column where the entity
+title has a CAA artwork prepended, e.g. for URLs of type https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
+here is an example
+
+#+begin_example
+<td data-caa-inline-done="1" data-erg-injected="1">
+  <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px;">
+    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="//coverartarchive.org/release/bbaa8ad0-35b1-4415-afbc-c624adbfa3d0/front-250">
+  </span>
+  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px;">
+    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="//coverartarchive.org/release/bbaa8ad0-35b1-4415-afbc-c624adbfa3d0/front-250">
+  </span>
+  <a class="wrap-anywhere" href="/release/bbaa8ad0-35b1-4415-afbc-c624adbfa3d0">
+    <bdi>Wild Cathedral Evening
+    </bdi>
+  </a>
+</td>
+#+end_example
+
+2.)
+
+find double comment header blocks and fix (leave only the relevant one, or merge them to describe the function best)
+
+#+begin_example
+    /**
+     * Reads column filter inputs from a table, applies the active boxShadow indicator,
+     * and returns a ready-to-use colFilters array (empty array when table is null).
+     *
+     * @param {HTMLElement|null} table         - The <table> element containing .mb-col-filter-input elements.
+     * @param {boolean}          isCaseSensitive
+     * @param {boolean}          isRegExp
+     * @returns {{ val: string, idx: number }[]}
+     */
+    /**
+     * Helper: find the .mb-filter-status span for a given <table> element.
+     * Returns null when the h3 / span cannot be found.
+     */
+#+end_example
+
+* DONE for pageType type: 'artist-recordings' enable rendering multiple CAA images per multi-row cell
+
+for pageType "type: 'artist-recordings'" enable rendering multiple CAA images per multi-row cell
+
+#+begin_example
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release groups' ],
+                addCAA: 'Release groups',
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+the following is an exmple data cell in the column "Release groups" in
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+
+#+begin_example
+<td class="mb-has-collapse-toggle" data-caa-inline-done="1">
+  <ul>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px;">
+	<img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="//coverartarchive.org/release-group/e4c25037-2864-4419-96bf-48ee4c65d0a0/front-250">
+      </span>
+      <a href="/release-group/e4c25037-2864-4419-96bf-48ee4c65d0a0">
+	<bdi>The Best of Rock and Roll Hall of Fame Live
+	</bdi>
+      </a>
+    </li>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <a href="/release-group/d4fdf2e5-625d-4a8f-8a5d-51373f11790b">
+	<bdi>The Best of Rock and Roll Hall of Fame + Museum Live
+	</bdi>
+      </a>
+    </li>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <a href="/release-group/cf4bbe3e-80b9-4994-975c-9b87eb4c1e4a">
+	<bdi>Rock and Roll Hall of Fame Volume 1: 1986–1991
+	</bdi>
+      </a>
+    </li>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <a href="/release-group/462d98a1-99f0-44e8-aae2-c93e33d11dd0">
+	<bdi>Rock &amp; Roll Hall of Fame: Live, Volume 1
+	</bdi>
+      </a>
+    </li>
+  </ul>
+  <span class="mb-cell-collapse-toggle" title="Collapse back to first item (4 total)" role="button" aria-expanded="true" aria-label="Collapse: showing all 4 items">◀
+  </span>
+</td>
+#+end_example
+
+Only the first has the '<span class="mb-caa-inline-ph"', please fix
+
+* DONE For CAA, enrichment is only performed for release-group anchors - also add for release
+
+For CAA, enrichment is only performed for release-group anchors - please also add for release anchors
+
+#+begin_example
+    /**
+     * Fetches the archive JSON for one entity anchor and enriches the icon with
+     * the image count.
+     *
+     * Decorations applied on a successful (non-zero) response:
+     *   1. `anchor.title` set to ctx.tooltip(n).
+     *   2. `<span class="ctx.badgeClass">N</span>` appended inside the art cell.
+     *   3. Tooltip set on the inline thumbnail placeholder in the addFeature column.
+     *
+     * Re-render guard: `anchor.dataset[ctx.enrichedAttr] === '1'` after enrichment.
+     * Fresh clone nodes (renderFinalTable) start without the attribute and receive
+     * enrichment served from `ctx.countCache` without a network round-trip.
+     *
+     * For CAA, enrichment is only performed for release-group anchors
+     * (ctx.entityGuard filters these).  For EAA all event anchors are enriched.
+     *
+     * @param   {ArtCtx}          ctx    Archive context descriptor.
+     * @param   {HTMLAnchorElement} anchor Art anchor inside a CAA/EAA cell.
+     * @returns {Promise<void>}
+     */
+    async function _artEnrichIcon(ctx, anchor) {
+#+end_example
+
+
+* DONE number of images per release is NEVER shown (check the CAA API how to get it)
 
 
 * TODO all buttons need the pressing effect
@@ -49227,21 +49415,27 @@ to the event parts extracted
 
 * TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 
+
 * TODO add global show CAA images for multi-table mode
+
 * TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
+
 
 * TODO render coverart archive - https://dn710909.ca.archive.org/0/items/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json
 
 curl -v -L "https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" | jq
 curl -v -L https://archive.org/download/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json | jq
 
+
 * TODO add a multi-row cell for the CAA info
 
 one row per coverart - type, comment, dimensions
 
+
 * TODO remove the toggle icon from the "CAA" column 
 
-* add "Relationships" column support again, but with configurable 
+
+* TODO add "Relationships" column support again, but with configurable 
 
 
 * TODO add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
@@ -49253,7 +49447,7 @@ add more guards (notify user with an alert box) before leaving the final rendere
 - even the TAB key pressed repeatedly should never leave the page up to native browser controls
 
 
-* Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a miniature picture the standard browser "broken image" placeholder is rendered instead
+* TODO Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a miniature picture the standard browser "broken image" placeholder is rendered instead
 
 Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a
 miniature picture, the standard browser "broken image" placeholder is rendered instead, although ALL the CAA images are
@@ -49274,13 +49468,14 @@ present (e.g. in the follwing two examples the "3" and "1") when uncollapsing th
 #+end_example
 
 
-* number of images per release is NEVER shown (check the CAA API how to get it)
 
-* "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 
-* distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a fallback check using the duration property in case the transferSize is restricted)
 
-* implement an indexed-DB persistent storage solution (with meatadat about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
+
+
+* TODO implement an indexed-DB persistent storage solution (with meatadat about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
+
 
 * is it better to use fetch or GM_xmlhttpRequest
 ** question
@@ -50413,137 +50608,146 @@ Those changes together would likely cut the runtime of your script by 50–70% o
 - add a changelog entry
 
   
-* find double comment header blocks
+* bug with filtering und strange button rendering - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 
-find double comment header blocks and fix
+On the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships there is a strange
+filtering and rendering bug for the following cases
+
+- it looks like sub-tables with 1 row initially are being involved
+- it looks like sub-tables which have overflow "Show all <number of rows>" buttons in the h3 header line. e.g.
 
 #+begin_example
-    /**
-     * Reads column filter inputs from a table, applies the active boxShadow indicator,
-     * and returns a ready-to-use colFilters array (empty array when table is null).
-     *
-     * @param {HTMLElement|null} table         - The <table> element containing .mb-col-filter-input elements.
-     * @param {boolean}          isCaseSensitive
-     * @param {boolean}          isRegExp
-     * @returns {{ val: string, idx: number }[]}
-     */
-    /**
-     * Helper: find the .mb-filter-status span for a given <table> element.
-     * Returns null when the h3 / span cannot be found.
-     */
+<button class="mb-show-all-subtable-btn" type="button">Show all 500</button>
 #+end_example
+  
+are also invloved.
 
+Here the bug:
 
-* DONE please refactor
+For example: globel filter: "guitar"
 
-please refactor
+"Instruments" (lots of rows initially, filtering OK): sub-table OK
+"Instruments-2" (lots of rows initially, filtering OK): - sub-table OK
 
-#+begin_example
-// ── EAA (Event Art Archive) Illustrated Events feature
-#+end_example
+"Holds copyright (C) for" (100) [icon 99] <Show all 500>-overflow button: sub-table - NOT OK ==> when uncollapsing sub-table to check the number of rows -> "no rows" selected, but toggling the CAA button ==> artwork images are shown
 
-and
-
-#+begin_example
-// ── CAA Illustrated Discography feature
-#+end_example
-
-in the uploaded userscript
-
-* when loading data from disk with "Load from Disk" button, there are double artwork icons in the column where the entity title has a CAA artwork prepended
-
-In the uploaded userscript,
-
-a couple issues to fix, please also add a changelog entry
-
-1.)
-
-when loading data from disk with "Load from Disk" button, there are double artwork icons in the column where the entity
-title has a CAA artwork prepended, e.g. for URLs of type https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
-here is an example
+"Lyrics" (1) [icon 1]:  sub-table - NOT OK
+  - when uncollapsing sub-table ==> "no rows" selected
+  - when uncollapsing CAA toggle ==> rendering bug
 
 #+begin_example
-<td data-caa-inline-done="1" data-erg-injected="1">
-  <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
-  </span>
-  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px;">
-    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="//coverartarchive.org/release/bbaa8ad0-35b1-4415-afbc-c624adbfa3d0/front-250">
-  </span>
-  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px;">
-    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="//coverartarchive.org/release/bbaa8ad0-35b1-4415-afbc-c624adbfa3d0/front-250">
-  </span>
-  <a class="wrap-anywhere" href="/release/bbaa8ad0-35b1-4415-afbc-c624adbfa3d0">
-    <bdi>Wild Cathedral Evening
-    </bdi>
+<div id="mb-caa-bigbox-12" class="mb-caa-bigbox" data-caa-visible="true" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 0px; min-height: 0px;">
+  <a href="/release/73118778-3815-432b-b3bc-823fbf06d467" title="Streets of Philadelphia" data-caa-href="/release/73118778-3815-432b-b3bc-823fbf06d467" style="display: inline-block; height: 100%; margin: 8px 8px 4px 4px;">
+    <img src="//coverartarchive.org/release/73118778-3815-432b-b3bc-823fbf06d467/front-250" alt="Streets of Philadelphia" style="vertical-align: middle; display: inline; max-height: 125px; box-shadow: black 1px 1px 4px;">
   </a>
-</td>
+  <button id="mb-stf-lyrics-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand all collapsed multi-row cells in &quot;lyrics&quot;" aria-label="Expand all collapsed multi-row cells in: lyrics" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: none;">
+    <span>▶ Expand
+    </span>
+    <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;">
+      <span>multi-row
+      </span>
+      <span>cells
+      </span>
+    </span>
+  </button>
+  <button id="mb-stf-lyrics-resize-btn" type="button" class="mb-subtable-resize-btn" title="Auto-resize columns for &quot;lyrics&quot;" aria-label="Auto-resize columns for: lyrics" style="font-size: 0.8em; padding: 1px 5px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; transition: background-color 0.2s, border-color 0.2s;">↔️
+  </button>
+  <button id="mb-stf-lyrics-vis-btn" type="button" class="mb-subtable-vis-btn" title="Show/hide columns for &quot;lyrics&quot;" aria-label="Column visibility for: lyrics" style="font-size: 0.85em; padding: 1px 5px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; transition: background-color 0.2s, border-color 0.2s;">👁️
+  </button>
+  <span class="mb-subtable-controls">
+    <button class="mb-subtable-clear-btn" type="button" title="Clear all COLUMN filters for this sub-table" style="display: none;">
+      <span style="color: red; font-size: 1em; font-weight: bold;">✗
+      </span>
+      <span class="mb-subtable-clear-btn-label">Clear all COLUMN filters
+      </span>
+    </button>
+    <button id="mb-stf-lyrics-toggle-filter-highlight-btn" type="button" title="Toggle filter highlighting on/off (sub-table filter and column filters)" data-highlight-enabled="true" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting
+    </button>
+    <span class="mb-filter-status" data-table-name="lyrics" data-table-index="12">
+    </span>
+    <span class="mb-sort-status" data-table-name="lyrics" data-table-index="12">
+    </span>
+  </span>
+</div>
 #+end_example
 
-2.)
+Two additional 'icons buttons' "Auto-resize columns for ..." and "Show/Hide columns for ..." are rendered right after
+the only cover art image width the same heigth as the CAA image itself (first of all they shouldn't een be render at all
+in that place)
 
-find double comment header blocks and fix (leave only the relevant one, or merge them to describe the function best)
+The last behavious happens for all sub-tables with just 1 row initially
 
-#+begin_example
-    /**
-     * Reads column filter inputs from a table, applies the active boxShadow indicator,
-     * and returns a ready-to-use colFilters array (empty array when table is null).
-     *
-     * @param {HTMLElement|null} table         - The <table> element containing .mb-col-filter-input elements.
-     * @param {boolean}          isCaseSensitive
-     * @param {boolean}          isRegExp
-     * @returns {{ val: string, idx: number }[]}
-     */
-    /**
-     * Helper: find the .mb-filter-status span for a given <table> element.
-     * Returns null when the h3 / span cannot be found.
-     */
-#+end_example
+* TODO distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a fallback check using the duration property in case the transferSize is restricted)
 
+1. Detecting network fetch vs browser cache hit (Resource Timing API)
+Short answer
 
-* For CAA, enrichment is only performed for release-group anchors - also add for release
+Yes — this is possible and reasonably reliable using the Resource Timing API.
 
-#+begin_example
-    /**
-     * Fetches the archive JSON for one entity anchor and enriches the icon with
-     * the image count.
-     *
-     * Decorations applied on a successful (non-zero) response:
-     *   1. `anchor.title` set to ctx.tooltip(n).
-     *   2. `<span class="ctx.badgeClass">N</span>` appended inside the art cell.
-     *   3. Tooltip set on the inline thumbnail placeholder in the addFeature column.
-     *
-     * Re-render guard: `anchor.dataset[ctx.enrichedAttr] === '1'` after enrichment.
-     * Fresh clone nodes (renderFinalTable) start without the attribute and receive
-     * enrichment served from `ctx.countCache` without a network round-trip.
-     *
-     * For CAA, enrichment is only performed for release-group anchors
-     * (ctx.entityGuard filters these).  For EAA all event anchors are enriched.
-     *
-     * @param   {ArtCtx}          ctx    Archive context descriptor.
-     * @param   {HTMLAnchorElement} anchor Art anchor inside a CAA/EAA cell.
-     * @returns {Promise<void>}
-     */
-    async function _artEnrichIcon(ctx, anchor) {
-#+end_example
+Recommended approach
+function getResourceTiming(url) {
+  const entries = performance.getEntriesByName(url, 'resource');
+  if (!entries.length) return null;
 
-* for pageType type: 'artist-recordings' enable rendering multiple CAA images per multi-row cell
+  const e = entries[entries.length - 1];
 
-#+begin_example
-        {
-            type: 'artist-recordings',
-            match: (path) => path.includes('/recordings'),
-            buttons: [ { label: 'Show all Recordings for Artist' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                collapsableColumns: [ 'Release groups' ],
-                addCAA: 'Release groups',
-                extractMainColumn: 'Name'
-            },
-            tableMode: 'single'
-        },
-#+end_example
+  return {
+    transferSize: e.transferSize,
+    encodedBodySize: e.encodedBodySize,
+    duration: e.duration
+  };
+}
+
+Interpretation:
+
+Case	transferSize	encodedBodySize	Meaning
+0	>0	memory cache	
+>0	>0	network	
+0	0	opaque/cross-origin restricted	
+
+Typical rule used in practice:
+
+const fromCache =
+    entry.transferSize === 0 &&
+    entry.encodedBodySize > 0;
+
+Fallback heuristic (when timing info restricted):
+
+const fromCache = entry.duration < 5;
+Caveats
+
+CAA images redirect to archive.org, which is cross-origin.
+
+That means:
+
+transferSize may be 0 even for network fetch
+
+timing info may be partially blocked
+
+So your fallback heuristic is useful.
+
+Visualizing in the CAA column
+
+Good simple indicators:
+
+Symbol	Meaning
+🟢	memory cache
+🟡	disk cache
+🔵	network
+⚠	timing unavailable
+
+Example:
+
+CAA
+[🟢] 250px
+
+or
+
+[NET 120ms]
+
+This would actually be very useful when debugging CAA loading behaviour.
+
+Verdict
+
+✔ Worth implementing
+✔ Very small code footprint

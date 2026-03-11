@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.116+2026-03-11
+// @version      9.99.117+2026-03-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3893,8 +3893,11 @@
      *   • When no highlights are found the inline overrides are cleared so the
      *     button reverts to its default (grey) appearance.
      *
-     * The button is located via the h3 element that is `table.previousElementSibling`,
+     * The button is located via the h3 element found by `findH3ForTable(table)`,
      * so no `categoryName` is needed at call sites.
+     *
+     * NOTE: `table.previousElementSibling` must NOT be used here — after
+     * `_artInitBigPics` runs it returns the bigbox div, not the h3.
      *
      * Called from:
      *   • `renderGroupedTable` — after every `initCollapsableColumns(table)` call
@@ -3905,7 +3908,7 @@
      * @param {HTMLTableElement} table
      */
     function updateSubTableCollapseButton(table) {
-        const h3 = table.previousElementSibling;
+        const h3 = findH3ForTable(table);
         if (!h3 || !h3.classList.contains('mb-toggle-h3')) return;
 
         const btn = h3.querySelector('.mb-subtable-collapse-btn');
@@ -7492,7 +7495,7 @@
      */
     function markSubTableAsManuallyResized(table) {
         // Only relevant in multi-table mode where sub-table resize buttons exist.
-        const h3 = table.previousElementSibling;
+        const h3 = findH3ForTable(table);
         if (!h3 || !h3.classList.contains('mb-toggle-h3')) return;
 
         const btn = h3.querySelector('.mb-subtable-resize-btn');
@@ -9532,7 +9535,7 @@
         // Also clear the sub-table (STF) filter input for this table and restore
         // any rows it was hiding, so that clicking the button while only the STF
         // is active produces a complete reset without leaving orphaned stf-hidden rows.
-        const h3stf = table.previousElementSibling;
+        const h3stf = findH3ForTable(table);
         if (h3stf && h3stf.classList.contains('mb-toggle-h3')) {
             const stfInput = h3stf.querySelector('.mb-subtable-filter-container input[type="text"]');
             if (stfInput && stfInput.value.trim() !== '') {
@@ -9560,7 +9563,7 @@
         Lib.debug('filter', `Column filters cleared for table: ${tableName}`);
 
         // Show feedback in the sub-table specific filter status display
-        const h3 = table.previousElementSibling;
+        const h3 = findH3ForTable(table);
         if (h3 && h3.classList.contains('mb-toggle-h3')) {
             const filterStatusDisplay = h3.querySelector('.mb-filter-status');
             if (filterStatusDisplay) {
@@ -11905,7 +11908,7 @@
      * Returns null when the h3 / span cannot be found.
      */
     function getTableFilterStatusSpan(tbl) {
-        const h3 = tbl ? tbl.previousElementSibling : null;
+        const h3 = findH3ForTable(tbl);
         return h3 ? h3.querySelector('.mb-filter-status') : null;
     }
 
@@ -12221,7 +12224,7 @@
                 // .mb-subtable-filter-container) which controls BOTH the sub-table filter
                 // string AND the column-level filters of that same sub-table.
                 const _subTable = tables[groupIdx];
-                const _subH3    = _subTable ? _subTable.previousElementSibling : null;
+                const _subH3    = findH3ForTable(_subTable);
                 const _subRxCb  = _subH3
                     ? _subH3.querySelector('.mb-subtable-filter-container input[id$="-rx-checkbox"]')
                     : null;
@@ -12364,7 +12367,7 @@
                     .filter(t => t.querySelector('.mb-col-filter-row'));
 
                 tables.forEach((table, tableIdx) => {
-                    const h3 = table.previousElementSibling;
+                    const h3 = findH3ForTable(table);
                     if (h3 && h3.classList.contains('mb-toggle-h3')) {
                         const subFilterStatus = h3.querySelector('.mb-filter-status');
                         if (subFilterStatus) {
@@ -13162,8 +13165,7 @@
 
                 if (pageType === 'artist-releasegroups') {
                     doc.querySelectorAll('table.tbl').forEach(table => {
-                        let h3 = table.previousElementSibling;
-                        while (h3 && h3.nodeName !== 'H3') h3 = h3.previousElementSibling;
+                        const h3 = findH3ForTable(table);
                         const category = h3 ? h3.textContent.trim() : 'Other';
 
                         // Logic to handle grouped data and repeating headers over multiple paginated pages (e.g. "Album + Live")
@@ -14184,7 +14186,7 @@
          * "locally_filtered" (numerator) = rows currently visible (not hidden by anything).
          */
         function updateSubTableRowCount() {
-            const h3 = table.previousElementSibling;
+            const h3 = findH3ForTable(table);
             if (!h3) return;
             const countStat = h3.querySelector('.mb-row-count-stat');
             if (!countStat) return;
@@ -14264,7 +14266,7 @@
                     // Valid regexp — restore active border (may have previously been error)
                     setSubTableFilterBorder(filterInput, stfBorderActive());
                     // Clear any previous regexp error from the sub-table status span
-                    const _h3ok = table ? table.previousElementSibling : null;
+                    const _h3ok = findH3ForTable(table);
                     const _stOk = _h3ok ? _h3ok.querySelector('.mb-filter-status') : null;
                     if (_stOk && _stOk.dataset.rxError) {
                         _stOk.textContent = '';
@@ -14274,7 +14276,7 @@
                     // Invalid regexp — bold 4 px error border + message in the sub-table status span
                     setSubTableFilterBorder(filterInput, filterBorderError(), '4px');
                     filterInput.style.boxShadow = '';
-                    const _h3err = table ? table.previousElementSibling : null;
+                    const _h3err = findH3ForTable(table);
                     const _stErr = _h3err ? _h3err.querySelector('.mb-filter-status') : null;
                     if (_stErr) {
                         _stErr.textContent = `⚠ Invalid regexp: ${e.message}`;
@@ -14663,7 +14665,7 @@
             Lib.debug('render', `Filtering: Cleaning up overflow tables beyond data length (${dataArray.length}).`);
             existingTables.forEach((table, idx) => {
                 if (idx >= dataArray.length) {
-                    const h3 = table.previousElementSibling;
+                    const h3 = findH3ForTable(table);
                     if (h3 && h3.classList.contains('mb-toggle-h3')) h3.remove();
                     table.remove();
                 }
@@ -14681,7 +14683,7 @@
             if (query && existingTables[index]) {
                 Lib.debug('render', `Reusing existing table at index ${index} for group "${categoryName}".`);
                 table = existingTables[index];
-                h3 = table.previousElementSibling;
+                h3 = findH3ForTable(table);
                 tbody = table.querySelector('tbody');
                 tbody.innerHTML = '';
 
@@ -16889,7 +16891,7 @@
                             if (sortStatusDisplay) {
                                 if (isMultiTable) {
                                     // Sub-table sort status written into the h3's own .mb-sort-status span
-                                    const h3 = table.previousElementSibling;
+                                    const h3 = findH3ForTable(table);
                                     if (h3 && h3.classList.contains('mb-toggle-h3')) {
                                         const subSortStatus = h3.querySelector('.mb-sort-status');
                                         if (subSortStatus) {
@@ -19503,27 +19505,27 @@
     }
 
     /**
-     * Returns the h2 (single-table mode) or h3.mb-toggle-h3 (multi-table mode)
-     * header element that logically "owns" this table, or null if none is found.
+     * Returns the h3.mb-toggle-h3 element that logically owns `table` in
+     * multi-table mode, walking backwards past any injected elements
+     * (e.g. div.mb-caa-bigbox, div.mb-eaa-bigbox) that may sit between the
+     * h3 and the table after `_artInitBigPics` has run.
      *
-     * Detection order:
-     *   1. Multi-table mode: walk backwards through `previousElementSibling`
-     *      (up to 5 steps) looking for `h3.mb-toggle-h3`.  We must walk, not just
-     *      check the immediate sibling, because `_artInitBigPics` inserts a
-     *      div.mb-{caa|eaa}-bigbox directly before the table — after that insertion
-     *      `table.previousElementSibling` is the bigbox, not the h3.
-     *   2. Single-table mode fallback: scan all `<h2>` elements in document order
-     *      and return the last one that precedes the table (same logic as
-     *      `updateH2Count`).
+     * IMPORTANT: always use this helper instead of bare `table.previousElementSibling`
+     * whenever an h3 is expected.  After the initial render, `_artInitBigPics` inserts
+     * a div.mb-{caa|eaa}-bigbox directly before the table, so
+     * `table.previousElementSibling` returns the bigbox — not the h3.  Any code that
+     * then treats the bigbox as the h3 will mutate it (inserting subtable-controls
+     * buttons into the bigbox, silently losing row-count updates, etc.).
      *
-     * @param  {HTMLTableElement} table
+     * Returns null when no qualifying h3 is found within 5 backward steps
+     * (single-table mode, or an unexpected DOM structure).
+     *
+     * @param  {Element|null} table
      * @returns {Element|null}
      */
-    function caaFindHeaderForTable(table) {
-        // Multi-table mode — walk backwards past the bigbox (and any other
-        // injected elements) looking for the h3 that owns this table.
-        // used by caaFindHeaderForTable() — max 5 steps to avoid runaway walks.
-        let prev = table.previousElementSibling;
+    function findH3ForTable(table) {
+        if (!table) return null;
+        let prev  = table.previousElementSibling;
         let steps = 0;
         while (prev && steps < 5) {
             if (prev.tagName === 'H3' && prev.classList.contains('mb-toggle-h3')) {
@@ -19532,6 +19534,27 @@
             prev = prev.previousElementSibling;
             steps++;
         }
+        return null;
+    }
+
+    /**
+     * Returns the h2 (single-table mode) or h3.mb-toggle-h3 (multi-table mode)
+     * header element that logically "owns" this table, or null if none is found.
+     *
+     * Detection order:
+     *   1. Multi-table mode: delegate to `findH3ForTable()` which walks backwards
+     *      past any injected bigbox divs to find the h3.
+     *   2. Single-table mode fallback: scan all `<h2>` elements in document order
+     *      and return the last one that precedes the table (same logic as
+     *      `updateH2Count`).
+     *
+     * @param  {HTMLTableElement} table
+     * @returns {Element|null}
+     */
+    function caaFindHeaderForTable(table) {
+        // Multi-table mode — delegate to the shared helper.
+        const h3 = findH3ForTable(table);
+        if (h3) return h3;
         // Single-table mode — find the last h2 that precedes the table
         const h2s = Array.from(document.querySelectorAll('h2'));
         let target = null;
@@ -20185,6 +20208,19 @@
             const { count, firstImgUrl } = _artCountLinks(ctx, table);
             if (count === 0) {
                 Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}Pics: table ${i} — no ${ctx.entityTypes.join('/')} links found, skipping bigbox`);
+                // Clear any bigbox that may have been built in a previous render pass
+                // (e.g. the table had images before a global filter removed all rows).
+                // Leaving it visible would show stale artwork for rows that no longer exist.
+                const staleBox = document.getElementById(ctx.boxPrefix + '-' + i);
+                if (staleBox) {
+                    staleBox.innerHTML = '';
+                    staleBox.style.display = 'none';
+                    Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}Pics: cleared stale bigbox for table ${i} (now 0 links)`);
+                }
+                // Also hide the toggle button so no ghost badge remains in the h3 header.
+                const btnPrefix = ctx.btnPrefix + '-' + i;
+                const staleBtn  = document.getElementById(btnPrefix);
+                if (staleBtn) staleBtn.style.display = 'none';
                 return;
             }
 
