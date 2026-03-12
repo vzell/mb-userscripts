@@ -14801,7 +14801,7 @@
                     });
                 };
 
-                let suffixText = ' all Types';
+                let suffixText = ' all Sections';
                 masterToggle.appendChild(document.createTextNode('[ '));
                 masterToggle.appendChild(showSpan);
                 masterToggle.appendChild(document.createTextNode(' | '));
@@ -15336,7 +15336,7 @@
                 // the toggle rather than be silently blocked.
                 // This mirrors the h3 handler pattern (isStatusSpan / !isStatusSpan guard).
                 //
-                // Detect a click on the ".mb-master-toggle" text label ("all Types") BEFORE the guard.
+                // Detect a click on the ".mb-master-toggle" text label ("all Sections") BEFORE the guard.
                 // The interactive Show/Hide child <span>s each call e.stopPropagation() so they never
                 // reach this handler; only clicks on the surrounding text node (whose event target is
                 // the .mb-master-toggle element itself, not a child) arrive here.
