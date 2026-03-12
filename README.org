@@ -49547,6 +49547,7 @@ looks somehow we double the downloading of images from CAA for the synthetic "CA
 display the number of images in the release group) and the column where the actual title for the release or release group
 is located and where the CAA artwork gets prepended.
 
+
 * retry "Failed to fetch" - CAA cover artcode
 
 In the CAA cover art fetching code
@@ -50698,6 +50699,7 @@ which have "release" and "release group" CAA images in their rows.
 
 
 * TODO distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a fallback check using the duration property in case the transferSize is restricted)
+** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
@@ -50774,6 +50776,17 @@ CAA
 or
 
 [NET 120ms]
+
+** configurable
+
+add the following functionality
+
+- introduce a new "Resource Timing API" section in the config schema "const configSchema"
+- make the whole "Resource Timing API" feature you just introduced configurable (default "true"
+- make all 3 display options for the visual indicators separately configurable with a boolean (default "true")
+- inside the "CAA" column the indicator icon is currently prepended to the artwork icon, please change this in such a
+  way that it is appended to the artwork icon above the artwork count (in the same virtual column) as the artwork count
+  visully already looks like a subscript, so the indicator could act as a supersript above it
 
 
 * GOOD versions
@@ -51061,3 +51074,58 @@ Lets assume we are on the final rendered page by reading all data from the net o
 
 please fix  
    
+
+* Add a spacer between the artwork icon and the artwork count to make it visually more appealing
+
+* Reintroduce jesus2099 "Release events"
+
+#+begin_example
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+#+end_example
+
+#+begin_example
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relatinships
+#+end_example
