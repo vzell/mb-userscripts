@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.127+2026-03-12
+// @version      9.99.126+2026-03-12
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -985,24 +985,16 @@
         // Classification heuristic:
         //   transferSize === 0 AND encodedBodySize > 0  → memory cache (🟢)
         //   transferSize > 0                            → network      (🔵)
-        //   both === 0 AND duration < 5 ms              → disk cache   (🟡)
-        //   both === 0 AND duration >= 5 ms             → network      (🔵)
+        //   both === 0 AND duration < 5 ms              → disk cache   (🟡)  ← cross-origin fallback
+        //   both === 0 AND duration >= 5 ms             → network      (🔵)  ← cross-origin opaque
         //   no PerformanceResourceEntry found           → unavailable  (⚠️)
         //
-        // IMPORTANT LIMITATION — WHY 🟡 IS NEVER SEEN FOR CAA/EAA:
-        //   coverartarchive.org and eventartarchive.org serve their images
-        //   via a non-cacheable 302 redirect to archive.org.  The browser
-        //   MUST re-fetch this redirect on every page load, so the
-        //   PerformanceResourceEntry duration always includes a full network
-        //   RTT (~2–4 s), keeping it well above the 5 ms disk-cache threshold.
-        //   Even if the final image bytes are already in the browser's disk
-        //   cache, 🟡 will not appear because the redirect itself is never
-        //   cached.  The only reliably detectable cached state is 🟢 (memory
-        //   cache), which appears when the same image URL is loaded twice in
-        //   the same page session (e.g. bigbox strip and inline thumbnail both
-        //   request the same /front-250 URL for the same release GUID).
-        //   ⚠️ only appears when the Performance buffer is full or the API
-        //   is absent.
+        // Note: archive.org responses are cross-origin so transferSize /
+        // encodedBodySize are both forced to 0 by the browser.  The duration-
+        // based split distinguishes disk cache (< 5 ms) from a network fetch
+        // (>= 5 ms).  'unavailable' (⚠️) is therefore only shown when the
+        // Resource Timing API has NO entry at all for the URL — which can happen
+        // if the performance buffer is full or the image never actually loaded.
         // ============================================================
         divider_resource_timing: {
             type: 'divider',
@@ -1014,15 +1006,14 @@
             type: 'checkbox',
             default: true,
             description: 'After each CAA/EAA image loads, probe the browser\'s Resource Timing API to ' +
-                         'classify the load source: 🟢 memory cache, 🟡 disk cache, 🔵 network, ⚠️ no data. ' +
-                         'Important limitation: coverartarchive.org and eventartarchive.org serve images via ' +
-                         'a non-cacheable 302 redirect to archive.org. The browser must re-fetch this redirect ' +
-                         'on every page load, so the timing entry always shows a 2–4 s network duration even ' +
-                         'when the final image bytes are already cached. As a result 🟡 (disk cache) is ' +
-                         'NEVER observable for CAA/EAA archive URLs — you will only ever see 🟢 (memory, ' +
-                         'when the same image is loaded twice in the same session) or 🔵 (network/redirect). ' +
-                         '⚠️ appears only when the Performance buffer is full or the API is absent. ' +
-                         'The three display locations can each be toggled independently below.'
+                         'classify whether the image was served from memory cache (🟢), disk cache (🟡), ' +
+                         'the network (🔵), or whether no timing entry exists at all (⚠️). ' +
+                         'archive.org is cross-origin, so transferSize/encodedBodySize are always 0; ' +
+                         'duration < 5 ms → disk cache (🟡), duration >= 5 ms → network (🔵). ' +
+                         '⚠️ is shown only when the Resource Timing API has no entry for the URL at all ' +
+                         '(e.g. performance buffer full). ' +
+                         'The three display locations (CAA/EAA icon column, big-picture strip, inline thumbnails) ' +
+                         'can each be toggled independently below.'
         },
 
         sa_rt_show_icon_column: {
@@ -19558,41 +19549,31 @@
     /**
      * Probes the Resource Timing API for the most recent PerformanceResourceEntry
      * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
-     * network fetch, or "timing unavailable" (no entry / API absent).
+     * network fetch, or "timing unavailable" (cross-origin / opaque / API absent).
      *
      * Classification rules (in priority order):
      *
      *   1. transferSize === 0 AND encodedBodySize > 0
-     *        → Memory cache (🟢).  Browser served from RAM; size is known even
-     *          for cross-origin resources when served from memory.
+     *        → Memory cache (browser served from RAM, no bytes transferred).
      *
-     *   2. transferSize > 0
-     *        → Network fetch (🔵).  Actual bytes received over the wire.
+     *   2. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
+     *        → Disk cache heuristic (opaque/cross-origin response but suspiciously
+     *          fast; archive.org redirects fall into this bucket because
+     *          cross-origin responses expose zero for both sizes).
      *
-     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
-     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
-     *          the response arrived in under 5 ms — consistent with a disk-cached
-     *          redirect chain where BOTH the redirect and the final resource are
-     *          served from cache.
-     *          NOTE: this path is NEVER triggered for coverartarchive.org /
-     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
-     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
-     *          always adds 2–4 s of network latency and duration never drops below
-     *          5 ms on a page reload.  🟡 is therefore only observable for image
-     *          URLs that are served directly (no redirect) or whose redirect chain
-     *          is genuinely disk-cached.
+     *   3. transferSize > 0
+     *        → Network fetch (actual bytes received over the wire).
      *
      *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
-     *        → Network / redirect chain (🔵).  This is the only outcome ever
-     *          produced for CAA/EAA archive URLs on any repeated page load, because
-     *          the non-cacheable redirect to archive.org always requires a fresh
-     *          network round-trip.  Even if the final image bytes are already in
-     *          the disk cache, the redirect latency keeps duration > 5 ms.
+     *        → Network fetch (cross-origin opaque).  coverartarchive.org redirects
+     *          via archive.org (cross-origin); the browser zeroes out both size
+     *          fields for the opaque response even on a real network hit.  Duration
+     *          >= 5 ms is slow enough to rule out any cache path.
      *
-     *   5. No matching entry, or Performance API absent
+     *   5. No matching entry, or PerformanceObserver API absent
      *        → Timing unavailable (⚠️).  This is the ONLY case that returns
-     *          'unavailable'; every case where an entry exists resolves to one of
-     *          the three statuses above.
+     *          'unavailable'; all cases where a PerformanceResourceEntry exists
+     *          resolve to one of the three cache/network statuses above.
      *
      * Returned object shape:
      * ```
@@ -19600,83 +19581,55 @@
      *   status:          'memory' | 'disk' | 'network' | 'unavailable',
      *   transferSize:    number | null,
      *   encodedBodySize: number | null,
-     *   duration:        number | null,
-     *   redirectStart:   number | null,   // 0 for opaque cross-origin
-     *   responseStart:   number | null,   // 0 for opaque cross-origin
+     *   duration:        number | null
      * }
      * ```
      *
      * @param  {string} url  The exact URL to look up (matched against entry.name).
-     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
-     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
+     * @returns {{ status: string, transferSize: number|null,
+     *             encodedBodySize: number|null, duration: number|null }}
      */
     function getResourceTimingHint(url) {
         if (typeof performance === 'undefined' || typeof performance.getEntriesByName !== 'function') {
-            return {
-                status: 'unavailable', transferSize: null, encodedBodySize: null,
-                duration: null, redirectStart: null, responseStart: null,
-            };
+            return { status: 'unavailable', transferSize: null, encodedBodySize: null, duration: null };
         }
         const entries = performance.getEntriesByName(url, 'resource');
         if (!entries.length) {
-            return {
-                status: 'unavailable', transferSize: null, encodedBodySize: null,
-                duration: null, redirectStart: null, responseStart: null,
-            };
+            return { status: 'unavailable', transferSize: null, encodedBodySize: null, duration: null };
         }
         const e = entries[entries.length - 1];
         const ts  = e.transferSize;
         const ebs = e.encodedBodySize;
         const dur = e.duration;
-        // redirectStart and responseStart are zeroed-out by the browser for
-        // cross-origin opaque responses (no Timing-Allow-Origin header), but we
-        // capture them anyway so debug logs can confirm this.
-        const redirectStart  = e.redirectStart  || 0;
-        const responseStart  = e.responseStart  || 0;
 
         let status;
         if (ts === 0 && ebs > 0) {
             // Unambiguous memory-cache: size is known but nothing was transferred.
-            // This IS visible even for cross-origin resources because the browser
-            // exposes encodedBodySize for memory-cache hits.
             status = 'memory';
         } else if (ts > 0) {
             // Bytes actually received over the network.
             status = 'network';
         } else if (dur < 5) {
-            // Both sizes are 0 (opaque / cross-origin restriction).
-            // Duration < 5 ms is consistent with a disk-cache hit where the
-            // redirect itself was also served from cache.
-            //
-            // NOTE: for coverartarchive.org / eventartarchive.org this path is
-            // practically unreachable — their CDN intentionally serves the 302
-            // redirect with Cache-Control: no-store (or max-age=0), so the
-            // redirect round-trip always costs 2–4 seconds of network latency
-            // and `duration` never drops below 5 ms on repeated page loads.
-            // 🟡 therefore only appears for direct image URLs that are truly
-            // disk-cached (no redirect chain, or a redirect chain where the
-            // redirect response itself carries a positive max-age).
+            // Both sizes are 0 (opaque / cross-origin restriction) but the response
+            // arrived in under 5 ms — consistent with a disk-cache retrieval.
             status = 'disk';
         } else {
             // transferSize=0, encodedBodySize=0, duration >= 5 ms.
             //
-            // coverartarchive.org (and eventartarchive.org) CDN issues a
-            // non-cacheable 302 redirect to archive.org on every request.
-            // The browser MUST re-resolve the redirect on every page load, so
-            // `duration` always includes a full network RTT to the redirect
-            // server (~2–4 s).  Even when the final image bytes are already in
-            // the browser's disk cache, the redirect round-trip keeps `duration`
-            // well above 5 ms, making 🟡 permanently unreachable for these URLs.
+            // coverartarchive.org (and eventartarchive.org) responses go through a
+            // cross-origin redirect chain to archive.org.  The browser enforces the
+            // Timing-Allow-Origin policy and ZEROS OUT both transferSize and
+            // encodedBodySize for opaque cross-origin responses even when the image
+            // was fetched over the network.  The only discriminator left is duration:
+            //   < 5 ms  → disk cache  (handled above)
+            //   >= 5 ms → genuine network fetch (slow enough to rule out cache)
             //
-            // Cross-origin Timing-Allow-Origin restriction means BOTH
-            // transferSize and encodedBodySize are forced to 0 for opaque
-            // responses — so 'network' (🔵) is the only visible outcome for
-            // every repeated reload of a CAA/EAA archive URL.
+            // 'unavailable' is reserved exclusively for the no-entry case above
+            // (performance.getEntriesByName returned nothing at all).
             status = 'network';
         }
 
-        return { status, transferSize: ts, encodedBodySize: ebs,
-                 duration: dur, redirectStart, responseStart };
+        return { status, transferSize: ts, encodedBodySize: ebs, duration: dur };
     }
 
     /**
@@ -20164,11 +20117,9 @@
 
                     Lib.debug(ctx.key,
                         `${ctx.key}LoadIcon: cache-hint=${hint.status} ` +
-                        `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
-                        `dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'} ` +
-                        `redirectStart=${hint.redirectStart !== null ? Math.round(hint.redirectStart) + 'ms' : 'n/a'} ` +
-                        `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
-                        ` — ${imgurl}`);
+                        `(transferSize=${hint.transferSize} encodedBodySize=${hint.encodedBodySize} ` +
+                        `duration=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'}) ` +
+                        `— ${imgurl}`);
                 }
                 Lib.debug(ctx.key, `${ctx.key}LoadIcon: loaded OK — ${imgurl}`);
                 resolve();
@@ -20595,10 +20546,7 @@
                             }
                             Lib.debug(ctx.key,
                                 `${ctx.key}InitBigPics: cache-hint=${hint.status} ` +
-                                `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
-                                `dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'} ` +
-                                `redirectStart=${hint.redirectStart !== null ? Math.round(hint.redirectStart) + 'ms' : 'n/a'} ` +
-                                `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
+                                `(dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'})` +
                                 ` — ${imgurl}`);
                         }
                     });
@@ -21152,10 +21100,7 @@
                                 }
                                 Lib.debug(ctx.key,
                                     `init${ctx.key.toUpperCase()}InlinePics: cache-hint=${hint.status} ` +
-                                    `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
-                                    `dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'} ` +
-                                    `redirectStart=${hint.redirectStart !== null ? Math.round(hint.redirectStart) + 'ms' : 'n/a'} ` +
-                                    `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
+                                    `(dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'})` +
                                     ` — ${imgurl}`);
                             }
                             Lib.debug(ctx.key,

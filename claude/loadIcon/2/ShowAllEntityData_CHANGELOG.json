@@ -1,14 +1,6 @@
 [
     {
-      "version": "9.99.127",
-      "date": "2026-03-12",
-      "changes": {
-        "📖 Documentation / Diagnostics": [
-          "Resource Timing cache-hint — 🟡 disk cache is never observed for CAA/EAA archive URLs (documentation and diagnostic enhancement): coverartarchive.org and eventartarchive.org serve their images via a non-cacheable 302 redirect chain to archive.org. The browser must re-resolve this redirect on every page load because the redirect response itself carries Cache-Control: no-store (or equivalent). The PerformanceResourceEntry for the coverartarchive.org URL therefore always records a duration of 2–4 s (the full redirect round-trip plus image transfer), which is permanently above the 5 ms disk-cache threshold. As a consequence, 🟡 (disk cache) will never appear for any CAA/EAA URL regardless of how many times the page is reloaded. The only reliably detectable cached state is 🟢 (memory cache), which appears when the same /front-250 URL for the same release GUID is loaded twice within the same page session (e.g. the big-picture strip and the inline thumbnail both request the same URL). 🔵 (network/redirect) is therefore the expected and correct indicator for every page reload. No classification logic was changed. Changes made: (1) getResourceTimingHint() now also returns redirectStart and responseStart fields (both are 0 for opaque cross-origin responses, confirming the TAO restriction is active). (2) All three debug log lines (icon column, bigbox, inline) now emit the full diagnostic tuple — ts=, ebs=, dur=, redirectStart=, responseStart= — instead of just dur=, making the opaque/redirect nature of the response immediately visible in the developer console. (3) The JSDoc for getResourceTimingHint, the RESOURCE TIMING API settings comment block, and the sa_rt_enable setting description all now document the non-cacheable redirect limitation explicitly."
-        ]
-      }
-    },
-    {
+      "version": "9.99.126",
       "date": "2026-03-12",
       "changes": {
         "🐛 Bug Fixes": [

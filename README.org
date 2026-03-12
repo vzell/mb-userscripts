@@ -49416,6 +49416,8 @@ to the event parts extracted
 
 * TODO add global show CAA images for multi-table mode
 
+
+
 * TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
 
 
@@ -50698,7 +50700,7 @@ which have "release" and "release group" CAA images in their rows.
   stays visible for that specific sub-table (even with the right button row count)
 
 
-* TODO distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a fallback check using the duration property in case the transferSize is restricted)
+* DONE distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a fallback check using the duration property in case the transferSize is restricted)
 ** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -50790,9 +50792,11 @@ add the following functionality
 
 ** hover
 
+In the uploaded userscript "ShowAllEntityData.user.js",
+
 1.)
    
-actually the the indicator icon is now rendered after the artwork count inistead of above it
+actually the the indicator icon is now rendered after the artwork count instead of above it
 
 #+begin_example
 <td data-erg-injected="1"><a href="/release/3b6b3148-68f4-47be-94b3-18fbbbb27ed7/cover-art" title="6 images found for this release / release-group" data-caa-enriched="1"><span class="artwork-icon caa-icon" title="6 images found for this release / release-group" data-cache-hint="unavailable" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/3b6b3148-68f4-47be-94b3-18fbbbb27ed7/front-250&quot;);"></span></a><span class="mb-caa-count-badge" title="6 images found for this release / release-group">6</span><span class="mb-art-cache-hint-col-wrap"><span class="mb-art-cache-hint-col" title="Timing unavailable">⚠️</span></span><span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes</span></td>
@@ -50810,6 +50814,28 @@ Please implement the additional functionality:
 Add hover preview of the full image which is displayed in the big picture stripe when hovering over the artwork in
 BOTH the "CAA" column or the column which has the artwork prepended to the release/release-group title
 
+** why not disk fetch
+
+There is NEVER a disk fetch, even if the page gets reloaded a couple of times
+
+#+begin_example
+12:40:05.002 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=2914ms) — //coverartarchive.org/release/22426cff-05b0-4219-8c50-cb3a3b278d93/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.043 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=2954ms) — //coverartarchive.org/release/baef42e5-76e8-4017-a06f-b39690b4ecfa/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.137 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3048ms) — //coverartarchive.org/release/0fac5146-1101-47cc-84cb-d84b3f23815d/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.163 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3075ms) — //coverartarchive.org/release/cc5c8a11-9970-4cd8-88ee-ae14db4b860e/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.250 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3162ms) — //coverartarchive.org/release/e008bf6f-468f-4535-a237-26e610d9093d/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.271 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3182ms) — //coverartarchive.org/release/b0ab1e0d-9890-47dd-b050-3e22c930e974/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.345 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3256ms) — //coverartarchive.org/release/755eec4f-d7d7-4fec-9b97-3be7a9ad5012/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.432 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3343ms) — //coverartarchive.org/release/bb2890f8-d3cb-425d-be25-bddc403cecf4/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.541 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3452ms) — //coverartarchive.org/release/83d45d1b-5dda-40e9-96b2-93ead5e9b969/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.583 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3495ms) — //coverartarchive.org/release/6d3d93d6-c7aa-4d00-96c9-6a5d06e5ca67/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.634 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3546ms) — //coverartarchive.org/release/809f63c8-4459-4bcc-9a81-a5d4543a7e93/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.825 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3737ms) — //coverartarchive.org/release/6fa88ae2-5f05-4e3d-9372-c47c711dd90a/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.829 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3741ms) — //coverartarchive.org/release/01687d8c-c702-4a0f-bef4-a002949ab678/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:06.049 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3960ms) — //coverartarchive.org/release/594db9cf-77e3-4b90-8a75-cd38fc88935c/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:06.052 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3961ms) — //coverartarchive.org/release/782b2731-af95-4e39-be75-a7889d8d85da/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:06.110 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=4021ms) — //coverartarchive.org/release/40af322b-b91a-4566-941c-5ec4b7d535cd/front-250
+#+end_example
 
 
 * GOOD versions
@@ -51098,7 +51124,51 @@ Lets assume we are on the final rendered page by reading all data from the net o
 please fix  
    
 
-* Add a spacer between the artwork icon and the artwork count to make it visually more appealing
+* TODO Add a spacer between the artwork icon and the artwork count to make it visually more appealing
+
+- on "multi"-table pageTypes for each sub-table, add a little bit more space between the artwork icon and the artwork count in all their CAA toggle buttons
+
+#+begin_example
+<button id="mb-caa-toggle-btn-0" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;" data-art-render-gen="1"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">114</span></button>
+#+end_example
+
+- on "multi"-table pageTypes, add a new CAA toggle button (the text should be the same as for the sub-label toggle
+  buttons but woth "Globally " prepended) inside the h2 header line before the sub-tables sections right after the total
+  row count of all sub-tables (with the same spacing as in the previous section for the sub-table CAA toggle buttons)
+
+#+begin_example
+<span class="mb-row-count-stat">(<number of rows>)</span>
+#+end_example
+
+When repeatedly clicked, this toggle button should emulate toggling the display of ALL sub-table CAA image stripes by clicking their toggle button (so toggle between displaying/hiding of ALL CAA images )
+
+- fix the discrepancy for collapsing/uncollapsing h3 header sections in "multi"-table mode compared to the "single"-table mode where it behaves OK
+
+So, in "single"-table mode when we start all collapsed (all table rows AND all CAA images collapsed) and then a.) toggle
+the display of the CAA images to ON, b). afterwards toggle the display of all table rows to ON (click on the h2 header
+row), when I now click again on the h2 header row to toggle the display of the table rows to OFF, the CAA images are
+also NOT displayed ==> This is exactly what I want
+
+In "multi"-table mode, when we start all collapsed as an example for a specific sub-table (all table rows AND all CAA
+images collapsed) and then a.) toggle the display of the CAA images on the sub-table level to ON, b). afterwards toggle
+the display of all sub-table rows to ON (click on the h3 header row), when I now click again on the h3 header row to
+toggle the display of the sub-table rows to OFF, the CAA images are STILL displayed - thats the bug, they should be
+hidden when the corresponding sub-table rows are hidden (but not collapsed internally, so when uncollapsing the
+sub-table rows again, they should still be visible)
+
+- Rename the "suffixText" (and all code/documentatin references to it) from
+
+#+begin_example
+let suffixText = ' all Types';
+#+end_example
+
+to
+
+#+begin_example
+let suffixText = ' all Sections';
+#+end_example
+
+* TODO fix the collapsing/uncollapsing behaviour with "Ctrl"-click on h2/h3 header rows
 
 * Reintroduce jesus2099 "Release events"
 
