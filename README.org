@@ -51083,7 +51083,6 @@ Where the CAA artwork icon would normally be rendered show a replacement icon wi
 backwards for each retry. Replace that icon with the actual download CA artwork image or leave a red questiomnark in
 place for a visual clue that retries have at least been tried
 
-
 * TODO is it worth to implement a retry solution (n times) for cases where images coudn't be fetched right away with manual fallback (by clicking a retry icon)
 
 #+begin_example
@@ -51116,14 +51115,7 @@ place for a visual clue that retries have at least been tried
 #+end_example
 
 
-* TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
-
-* TODO add global show CAA images for multi-table mode
-* TODO fix the collapsing/uncollapsing behaviour with "Ctrl"-click on h2/h3 header rows
-
-* TODO Add a spacer between the artwork icon and the artwork count to make it visually more appealing
-
-In the uploaded userscript "ShowAllEntityData.user.js",
+* DONE add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
 
 - on "multi"-table pageTypes for each sub-table, add a little bit more space between the artwork icon and the artwork
   count in all their CAA toggle buttons to make it visually more appealing
@@ -51131,6 +51123,8 @@ In the uploaded userscript "ShowAllEntityData.user.js",
 #+begin_example
 <button id="mb-caa-toggle-btn-0" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;" data-art-render-gen="1"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">114</span></button>
 #+end_example
+
+* DONE add global show CAA images for multi-table mode
 
 - on "multi"-table pageTypes, add a new CAA toggle button (the text should be the same as for the sub-label toggle
   buttons but woth "Globally " prepended) inside the h2 header line before the sub-tables sections right after the total
@@ -51141,6 +51135,8 @@ In the uploaded userscript "ShowAllEntityData.user.js",
 #+end_example
 
 When repeatedly clicked, this toggle button should emulate toggling the display of ALL sub-table CAA image stripes by clicking their toggle button (so toggle between displaying/hiding of ALL CAA images )
+
+* DONE fix the collapsing/uncollapsing behaviour with "Ctrl"-click on h2/h3 header rows
 
 - fix the discrepancy for collapsing/uncollapsing h3 header sections in "multi"-table mode compared to the "single"-table mode where it behaves OK
 
@@ -51156,6 +51152,14 @@ toggle the display of the sub-table rows to OFF, the CAA images are STILL displa
 hidden when the corresponding sub-table rows are hidden (but not collapsed internally, so when uncollapsing the
 sub-table rows again, they should still be visible)
 
+
+* fix count on global button
+
+One last bug
+
+The CAA count on the global CAA toggle button is always 0
+
+Please fix
 
 * Reintroduce jesus2099 "Release events"
 
@@ -51212,4 +51216,6 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 
 
 * TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
+
+* for RGs CAA artwork also display the Release fom where it's sourced
 
