@@ -50699,12 +50699,21 @@ which have "release" and "release group" CAA images in their rows.
 
 * TODO distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a fallback check using the duration property in case the transferSize is restricted)
 
-1. Detecting network fetch vs browser cache hit (Resource Timing API)
-Short answer
+In the uploaded userscript "ShowAllEntityData.user.js"
 
-Yes — this is possible and reasonably reliable using the Resource Timing API.
+Implement the following:
+
+- distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a
+fallback check using the duration property in case the transferSize is restricted)
+
+- expose this information visually in the "CAA" column by prepending an icon like "[🟢] artwork icon"
+
+see more below
+
+1. Detecting network fetch vs browser cache hit (Resource Timing API)
 
 Recommended approach
+
 function getResourceTiming(url) {
   const entries = performance.getEntriesByName(url, 'resource');
   if (!entries.length) return null;
@@ -50734,6 +50743,7 @@ const fromCache =
 Fallback heuristic (when timing info restricted):
 
 const fromCache = entry.duration < 5;
+
 Caveats
 
 CAA images redirect to archive.org, which is cross-origin.
@@ -50764,13 +50774,6 @@ CAA
 or
 
 [NET 120ms]
-
-This would actually be very useful when debugging CAA loading behaviour.
-
-Verdict
-
-✔ Worth implementing
-✔ Very small code footprint
 
 
 * GOOD versions
@@ -51044,7 +51047,7 @@ In the example pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-e
 
 please fix and add a changelog entry
 
-* highlighning still on after load from disk
+* DONE highlighning still on after load from disk
 
 In the uploaded userscript "ShowAllEntityData.user.js",
 
