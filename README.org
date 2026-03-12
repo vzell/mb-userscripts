@@ -48635,7 +48635,6 @@ which reference an "event" and the "/eventartarchive.org/" URL for fetching inst
 
 Please implement...
 
-
 * DONE CAA - errors: blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource - Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES
 ** errors
 
@@ -49010,7 +49009,6 @@ For CAA, enrichment is only performed for release-group anchors - please also ad
      */
     async function _artEnrichIcon(ctx, anchor) {
 #+end_example
-
 
 * DONE number of images per release is NEVER shown (check the CAA API how to get it)
 
@@ -49435,7 +49433,7 @@ one row per coverart - type, comment, dimensions
 * TODO remove the toggle icon from the "CAA" column 
 
 
-* TODO add "Relationships" column support again, but with configurable 
+* TODO add "Relationships" column support again, but configurable 
 
 
 * TODO add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
@@ -50608,7 +50606,7 @@ Those changes together would likely cut the runtime of your script by 50–70% o
 - add a changelog entry
 
   
-* bug with filtering und strange button rendering - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+* DONE bug with filtering und strange button rendering - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 ** initial
 
 On the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships there is a strange
@@ -50698,6 +50696,7 @@ which have "release" and "release group" CAA images in their rows.
   images, except when a sub-table was uncollapsed BEFORE entering the filter string. In that case the CAA toggle button
   stays visible for that specific sub-table (even with the right button row count)
 
+
 * TODO distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a fallback check using the duration property in case the transferSize is restricted)
 
 1. Detecting network fetch vs browser cache hit (Resource Timing API)
@@ -50773,10 +50772,12 @@ Verdict
 ✔ Worth implementing
 ✔ Very small code footprint
 
+
 * GOOD versions
 ** /doubleCAAimages
 
-* function findH3ForTable(table)
+
+* DONE function findH3ForTable(table)
 ** init
 
 In the uploaded userscript "ShowAllEntityData.user.js",
@@ -50963,7 +50964,7 @@ good for, does it belong to the bug fix too ?
 
 Also you forgot to produce a changelog entry
 
-* CAA loading completely broken
+* DONE CAA loading completely broken
 
 In the uploaded userscript "ShowAllEntityData.user.js",
 
@@ -50973,7 +50974,7 @@ see the uploaded ..-bug files
 
 Please fix and provide a changelog
 
-* after filtering the first time and then clearing the filter again
+* DONE after filtering the first time and then clearing the filter again
 
 One last glitch,
 
@@ -50982,7 +50983,8 @@ a way that the number of CAA images is centered below the CAA image icon inside 
 
 Please fix and add a changelog
 
-* "single"-table mode: when loading from disk when already on the final rendered page, the CAA count inside the button doubles, but asson nas we start filtering, it resets to the actual filtered count
+* DONE "single"-table mode: when loading from disk when already on the final rendered page, the CAA count inside the button doubles, but asson nas we start filtering, it resets to the actual filtered count
+** initial
 
 Some more glitches
 
@@ -50997,12 +50999,62 @@ of the CAA images of one ore more sub-tables, the CAA image big boxes are render
 h3 sub-header (as what happens when loading from the net). They are also visually stacked below each other in the same
 order as the sub-tables appear on the whole page
 
-* still a glitch
+** still a glitch
 
 In the uploaded userscript "ShowAllEntityData.user.js",
+
+two bugs are present:
+
+1.)
 
 - on "single"-table and "multi"-table mode: when loading data from disk when already on the final rendered page, the CAA count inside the button
 doubles, but as soon as we start filtering, it resets to the actual filtered count
 
-please fix and a dd a changelog entry
 
+2.)
+
+On "multi"-table pages when toggling the filter elements on for a specific sub-table/section and entering a filter string in the sub-table h3 filter
+field, the following is expected:
+
+The following "mb-subtable-controls" container should be rendered with buttons for clearing the filter field and toggle highlighning + filter information
+
+ #+begin_example
+<span class="mb-subtable-controls">
+  <button class="mb-subtable-clear-btn" type="button" title="Clear all filters for this sub-table (column filters and sub-table filter)" style="display: none;">
+    <span style="color: red; font-size: 1em; font-weight: bold;">✗
+    </span>
+    <span class="mb-subtable-clear-btn-label">Clear all filters
+    </span>
+  </button>
+  <button id="mb-stf-Bootleag-toggle-filter-highlight-btn" type="button" title="Toggle filter highlighting on/off (sub-table filter and column filters)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting
+  </button>
+  <span class="mb-filter-status" data-table-name="Bootleg" data-table-index="1" style="color: green;">
+  </span>
+  <span class="mb-sort-status" data-table-name="Bootleg" data-table-index="1">
+  </span>
+</span>
+#+end_example
+
+In the example pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
+- When the sub-table doesn't have any CAA artworks (no release or release-group column present), for example for the sub-table "Vocals", this really happens   
+
+- NOW the bug: When the sub-table DOES have CAA artworks e.g. the "Liner notes for", the "mb-subtable-controls" container IS NOT rendered 
+
+
+please fix and add a changelog entry
+
+* highlighning still on after load from disk
+
+In the uploaded userscript "ShowAllEntityData.user.js",
+
+There is a bug in "multi"-table mode when loading data from disk:
+
+Lets assume we are on the final rendered page by reading all data from the net on pageType https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
+
+- then save the data with "Save to Disk"-button to the filessystem
+- then filter on one sub-table, e.g. "Promotion" in the table specific filter field with lets say the string "AR" ==> the filter string will be highlighted in the matching rows
+- NOW the bug: when now loading data from disk with "Load from Disk" button, the rows still have the filter string from before the loading higlighted after rendering
+
+please fix  
+   

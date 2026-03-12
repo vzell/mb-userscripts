@@ -1,5 +1,14 @@
 [
     {
+      "version": "9.99.123",
+      "date": "2026-03-12",
+      "changes": {
+        "🐛 Bug Fixes": [
+          "saveTableDataToDisk / highlight spans baked into saved file (multi-table and single-table): after saving data to disk while any filter was active (global filter, sub-table filter, column filter, or pre-filter), the downloaded file contained ephemeral highlight <span> elements inside the serialized cell HTML. On a subsequent 'Load from Disk', those spans were reconstructed verbatim into the new <td> elements by td.innerHTML = cellData.html, causing rows to appear highlighted even though no filter was active after the load. Root cause: saveTableDataToDisk serialized cell data with html: cell.innerHTML which captured the live DOM as-is, including any .mb-subtable-filter-highlight, .mb-global-filter-highlight, .mb-column-filter-highlight, and .prefilter-highlight spans injected by the filter/highlight pipeline. Fix: introduced the helper function getCleanCellHtml(cell) which deep-clones the cell, removes all four highlight span classes from the clone via querySelectorAll + replaceWith(textNode), and returns the cleaned innerHTML. All data-row serialization paths (multi-table group rows and single-table allRows) now call getCleanCellHtml(cell) instead of cell.innerHTML directly. Header cells continue to use raw innerHTML since they never receive highlight spans."
+        ]
+      }
+    },
+    {
       "version": "9.99.122",
       "date": "2026-03-12",
       "changes": {
