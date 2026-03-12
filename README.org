@@ -50788,6 +50788,29 @@ add the following functionality
   way that it is appended to the artwork icon above the artwork count (in the same virtual column) as the artwork count
   visully already looks like a subscript, so the indicator could act as a supersript above it
 
+** hover
+
+1.)
+   
+actually the the indicator icon is now rendered after the artwork count inistead of above it
+
+#+begin_example
+<td data-erg-injected="1"><a href="/release/3b6b3148-68f4-47be-94b3-18fbbbb27ed7/cover-art" title="6 images found for this release / release-group" data-caa-enriched="1"><span class="artwork-icon caa-icon" title="6 images found for this release / release-group" data-cache-hint="unavailable" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/3b6b3148-68f4-47be-94b3-18fbbbb27ed7/front-250&quot;);"></span></a><span class="mb-caa-count-badge" title="6 images found for this release / release-group">6</span><span class="mb-art-cache-hint-col-wrap"><span class="mb-art-cache-hint-col" title="Timing unavailable">⚠️</span></span><span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes</span></td>
+#+end_example
+
+2.)
+
+check the uploaded file "cache" why "Timing unavailable" is displayed for EVERY artwork, at least if I call the page 2
+times, I would expect the browser reading the icons from its' disk cache eventually. Does the output make sense
+
+3.)
+
+Please implement the additional functionality:
+
+Add hover preview of the full image which is displayed in the big picture stripe when hovering over the artwork in
+BOTH the "CAA" column or the column which has the artwork prepended to the release/release-group title
+
+
 
 * GOOD versions
 ** /doubleCAAimages
