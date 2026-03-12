@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.122+2026-03-12
+// @version      9.99.123+2026-03-12
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -17580,6 +17580,43 @@
     }
 
     /**
+     * Returns the innerHTML of a table cell with all ephemeral highlight spans removed.
+     *
+     * When any filter (global, sub-table, column, or prefilter) is active, matching text
+     * inside <td> elements is wrapped in classed <span> elements for visual highlighting.
+     * These spans are purely UI decorations and must NOT be persisted to disk — the saved
+     * data must always reflect the raw, un-decorated cell content so that:
+     *   (a) the file is free from transient UI state, and
+     *   (b) rows loaded from disk do not show stale highlights before any filter is applied.
+     *
+     * The function clones the cell node (deep) to avoid mutating the live DOM, then
+     * removes all highlight spans in the clone by replacing each span with a plain text
+     * node containing the span's textContent.
+     *
+     * Highlight class names that are stripped:
+     *   - mb-subtable-filter-highlight  (per-sub-table STF filter)
+     *   - mb-global-filter-highlight    (global filter bar)
+     *   - mb-column-filter-highlight    (per-column filter)
+     *   - prefilter-highlight           (pre-filter query)
+     *
+     * @param {HTMLTableCellElement} cell - The live <td> or <th> to serialize.
+     * @returns {string} Clean innerHTML with no highlight wrapper spans.
+     */
+    function getCleanCellHtml(cell) {
+        const clone = cell.cloneNode(true);
+        const HIGHLIGHT_SELECTOR = [
+            '.mb-subtable-filter-highlight',
+            '.mb-global-filter-highlight',
+            '.mb-column-filter-highlight',
+            '.prefilter-highlight'
+        ].join(',');
+        clone.querySelectorAll(HIGHLIGHT_SELECTOR).forEach(span => {
+            span.replaceWith(document.createTextNode(span.textContent));
+        });
+        return clone.innerHTML;
+    }
+
+    /**
      * Serializes current table data (allRows or groupedRows) to JSON and triggers download
      */
     function saveTableDataToDisk() {
@@ -17623,13 +17660,16 @@
 
             // Serialize based on table mode
             if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
-                // Multi-table mode: serialize grouped data
+                // Multi-table mode: serialize grouped data.
+                // getCleanCellHtml() strips any ephemeral highlight spans that may be
+                // present when a filter is active at save time, so the stored data is
+                // always free from transient UI decoration.
                 dataToSave.groups = groupedRows.map(group => ({
                     key: group.key,
                     category: group.category,
                     rows: group.rows.map(row => {
                         return Array.from(row.cells).map(cell => ({
-                            html: cell.innerHTML,
+                            html: getCleanCellHtml(cell),
                             colSpan: cell.colSpan || 1,
                             rowSpan: cell.rowSpan || 1
                         }));
@@ -17638,10 +17678,12 @@
                 dataToSave.rowCount = groupedRows.reduce((sum, g) => sum + g.rows.length, 0);
                 Lib.debug('cache', `Serialized ${dataToSave.groups.length} groups with ${dataToSave.rowCount} total rows.`);
             } else if (allRows.length > 0) {
-                // Single-table mode: serialize allRows
+                // Single-table mode: serialize allRows.
+                // Same rationale as above — use getCleanCellHtml() to avoid persisting
+                // highlight spans that are active at the moment the user clicks "Save".
                 dataToSave.rows = allRows.map(row => {
                     return Array.from(row.cells).map(cell => ({
-                        html: cell.innerHTML,
+                        html: getCleanCellHtml(cell),
                         colSpan: cell.colSpan || 1,
                         rowSpan: cell.rowSpan || 1
                     }));
