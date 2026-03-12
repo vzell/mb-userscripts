@@ -49013,9 +49013,26 @@ For CAA, enrichment is only performed for release-group anchors - please also ad
 * DONE number of images per release is NEVER shown (check the CAA API how to get it)
 
 
+* please check function documentations against it's implementation again and fix if necessary + rebuild HELP + CHANGLOG
+
+In the uploaded userscript "ShowAllEntityData.user.js" and library "ShowAllEntityData_CHANGELOG.json"
+
+- check for all unused variables and function definitions, create a report and fix
+- check the current function documentations against their implementation, where the doc is differing, please fix
+- resync the uploaded HELP file "ShowAllEntityData_HELP.txt" against the current code base and keyboard shortcuts
+- add a changelog entry
+
+
+* TODO render coverart archive - https://dn710909.ca.archive.org/0/items/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json
+
+curl -v -L "https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" | jq
+curl -v -L https://archive.org/download/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json | jq
+
+
 * TODO all buttons need the pressing effect
 
 What needs to be done to the following code to create the effect that the button is actually pressed (it should kinda move down a little bit)
+
 #+begin_example
     function makeButtonHTML(text, underlineChar, icon) {
         const idx = text.indexOf(underlineChar);
@@ -49048,12 +49065,7 @@ What needs to be done to the following code to create the effect that the button
 #+end_example
 
 
-
 * add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
-
-
-* please check function documentations against it's implementatin again and fix if necessary
-
 
 
 * TODO add addRGsFromAbove.js configurable
@@ -49062,6 +49074,8 @@ In the uploaded userscript,
 
 Inspect the uploaded userscript "addRGsFromAbove.js" and extract the contents to include in our userscript as functions to run on
 the final rendered pages which have columns with name "CAA"
+
+* TODO add "Relationships" column support again, but configurable 
 
 
 * TODO extract the VZ event disambiguation configurable in its constituents
@@ -49411,43 +49425,9 @@ to the event parts extracted
 * "video" icon - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings - "shooting location for"
 
 
-* TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
+* remove the toggle icon from the "CAA" column 
 
-
-* TODO add global show CAA images for multi-table mode
-
-
-
-* TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
-
-
-* TODO render coverart archive - https://dn710909.ca.archive.org/0/items/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json
-
-curl -v -L "https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" | jq
-curl -v -L https://archive.org/download/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json | jq
-
-
-* TODO add a multi-row cell for the CAA info
-
-one row per coverart - type, comment, dimensions
-
-
-* TODO remove the toggle icon from the "CAA" column 
-
-
-* TODO add "Relationships" column support again, but configurable 
-
-
-* TODO add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
-
-In the uploaded userscript,
-
-add more guards (notify user with an alert box) before leaving the final rendered page:
-
-- even the TAB key pressed repeatedly should never leave the page up to native browser controls
-
-
-* TODO Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a miniature picture the standard browser "broken image" placeholder is rendered instead
+* DONE Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a miniature picture the standard browser "broken image" placeholder is rendered instead
 
 Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a
 miniature picture, the standard browser "broken image" placeholder is rendered instead, although ALL the CAA images are
@@ -49468,13 +49448,515 @@ present (e.g. in the follwing two examples the "3" and "1") when uncollapsing th
 #+end_example
 
 
+* DONE bug with filtering und strange button rendering - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+** initial
 
-* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+On the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships there is a strange
+filtering and rendering bug for the following cases
+
+- it looks like sub-tables with 1 row initially are being involved
+- it looks like sub-tables which have overflow "Show all <number of rows>" buttons in the h3 header line. e.g.
+
+#+begin_example
+<button class="mb-show-all-subtable-btn" type="button">Show all 500</button>
+#+end_example
+  
+are also invloved.
+
+Here the bug:
+
+For example: globel filter: "guitar"
+
+"Instruments" (lots of rows initially, filtering OK): sub-table OK
+"Instruments-2" (lots of rows initially, filtering OK): - sub-table OK
+
+"Holds copyright (C) for" (100) [icon 99] <Show all 500>-overflow button: sub-table - NOT OK ==> when uncollapsing sub-table to check the number of rows -> "no rows" selected, but toggling the CAA button ==> artwork images are shown
+
+"Lyrics" (1) [icon 1]:  sub-table - NOT OK
+  - when uncollapsing sub-table ==> "no rows" selected
+  - when uncollapsing CAA toggle ==> rendering bug
+
+#+begin_example
+<div id="mb-caa-bigbox-12" class="mb-caa-bigbox" data-caa-visible="true" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 0px; min-height: 0px;">
+  <a href="/release/73118778-3815-432b-b3bc-823fbf06d467" title="Streets of Philadelphia" data-caa-href="/release/73118778-3815-432b-b3bc-823fbf06d467" style="display: inline-block; height: 100%; margin: 8px 8px 4px 4px;">
+    <img src="//coverartarchive.org/release/73118778-3815-432b-b3bc-823fbf06d467/front-250" alt="Streets of Philadelphia" style="vertical-align: middle; display: inline; max-height: 125px; box-shadow: black 1px 1px 4px;">
+  </a>
+  <button id="mb-stf-lyrics-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand all collapsed multi-row cells in &quot;lyrics&quot;" aria-label="Expand all collapsed multi-row cells in: lyrics" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: none;">
+    <span>▶ Expand
+    </span>
+    <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;">
+      <span>multi-row
+      </span>
+      <span>cells
+      </span>
+    </span>
+  </button>
+  <button id="mb-stf-lyrics-resize-btn" type="button" class="mb-subtable-resize-btn" title="Auto-resize columns for &quot;lyrics&quot;" aria-label="Auto-resize columns for: lyrics" style="font-size: 0.8em; padding: 1px 5px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; transition: background-color 0.2s, border-color 0.2s;">↔️
+  </button>
+  <button id="mb-stf-lyrics-vis-btn" type="button" class="mb-subtable-vis-btn" title="Show/hide columns for &quot;lyrics&quot;" aria-label="Column visibility for: lyrics" style="font-size: 0.85em; padding: 1px 5px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; transition: background-color 0.2s, border-color 0.2s;">👁️
+  </button>
+  <span class="mb-subtable-controls">
+    <button class="mb-subtable-clear-btn" type="button" title="Clear all COLUMN filters for this sub-table" style="display: none;">
+      <span style="color: red; font-size: 1em; font-weight: bold;">✗
+      </span>
+      <span class="mb-subtable-clear-btn-label">Clear all COLUMN filters
+      </span>
+    </button>
+    <button id="mb-stf-lyrics-toggle-filter-highlight-btn" type="button" title="Toggle filter highlighting on/off (sub-table filter and column filters)" data-highlight-enabled="true" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting
+    </button>
+    <span class="mb-filter-status" data-table-name="lyrics" data-table-index="12">
+    </span>
+    <span class="mb-sort-status" data-table-name="lyrics" data-table-index="12">
+    </span>
+  </span>
+</div>
+#+end_example
+
+Two additional 'icons buttons' "Auto-resize columns for ..." and "Show/Hide columns for ..." are rendered right after
+the only cover art image width the same heigth as the CAA image itself (first of all they shouldn't een be render at all
+in that place)
+
+The last behaviour happens for all sub-tables with just 1 row initially
+
+** another bug
+
+We introduced now another bug, visible on the page
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships. That page has a couple of sub-table
+which have "release" and "release group" CAA images in their rows.
+
+- after rendering the initial final page (and after all the CAA images have been loaded), all the sub-tables which have
+  CAA icons SHOW the CAA toggle button, but the image count is doubled on the button text compared to when I check (by
+  toggling the visibility) the actual renderd images in the stripe (e.g.) "button text count=8", but only 4 images
+  visible which also matches the actual 4 rows
+
+- when I now enter a gobal filter string which should only select in all the sub-tables with images exactly one
+  sub-table with one filtered row, it works and the button text now even displays the rigth count (so "1" corresponding
+  to the one displayed row)
+
+- if I now remove the global filter again, all the rows in all sub-tables show up again (we can check by uncollapsing
+  the hidden h3 table sections), but now the BUG: the CAA toggle buttons DO NOT show up again for the-subtables with CAA
+  images, except when a sub-table was uncollapsed BEFORE entering the filter string. In that case the CAA toggle button
+  stays visible for that specific sub-table (even with the right button row count)
+
+* DONE distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a fallback check using the duration property in case the transferSize is restricted)
+** initial
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+Implement the following:
+
+- distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a
+fallback check using the duration property in case the transferSize is restricted)
+
+- expose this information visually in the "CAA" column by prepending an icon like "[🟢] artwork icon"
+
+see more below
+
+1. Detecting network fetch vs browser cache hit (Resource Timing API)
+
+Recommended approach
+
+function getResourceTiming(url) {
+  const entries = performance.getEntriesByName(url, 'resource');
+  if (!entries.length) return null;
+
+  const e = entries[entries.length - 1];
+
+  return {
+    transferSize: e.transferSize,
+    encodedBodySize: e.encodedBodySize,
+    duration: e.duration
+  };
+}
+
+Interpretation:
+
+Case	transferSize	encodedBodySize	Meaning
+0	>0	memory cache	
+>0	>0	network	
+0	0	opaque/cross-origin restricted	
+
+Typical rule used in practice:
+
+const fromCache =
+    entry.transferSize === 0 &&
+    entry.encodedBodySize > 0;
+
+Fallback heuristic (when timing info restricted):
+
+const fromCache = entry.duration < 5;
+
+Caveats
+
+CAA images redirect to archive.org, which is cross-origin.
+
+That means:
+
+transferSize may be 0 even for network fetch
+
+timing info may be partially blocked
+
+So your fallback heuristic is useful.
+
+Visualizing in the CAA column
+
+Good simple indicators:
+
+Symbol	Meaning
+🟢	memory cache
+🟡	disk cache
+🔵	network
+⚠	timing unavailable
+
+Example:
+
+CAA
+[🟢] 250px
+
+or
+
+[NET 120ms]
+
+** configurable
+
+add the following functionality
+
+- introduce a new "Resource Timing API" section in the config schema "const configSchema"
+- make the whole "Resource Timing API" feature you just introduced configurable (default "true"
+- make all 3 display options for the visual indicators separately configurable with a boolean (default "true")
+- inside the "CAA" column the indicator icon is currently prepended to the artwork icon, please change this in such a
+  way that it is appended to the artwork icon above the artwork count (in the same virtual column) as the artwork count
+  visully already looks like a subscript, so the indicator could act as a supersript above it
+
+** hover
+
+In the uploaded userscript "ShowAllEntityData.user.js",
+
+1.)
+   
+actually the the indicator icon is now rendered after the artwork count instead of above it
+
+#+begin_example
+<td data-erg-injected="1"><a href="/release/3b6b3148-68f4-47be-94b3-18fbbbb27ed7/cover-art" title="6 images found for this release / release-group" data-caa-enriched="1"><span class="artwork-icon caa-icon" title="6 images found for this release / release-group" data-cache-hint="unavailable" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/3b6b3148-68f4-47be-94b3-18fbbbb27ed7/front-250&quot;);"></span></a><span class="mb-caa-count-badge" title="6 images found for this release / release-group">6</span><span class="mb-art-cache-hint-col-wrap"><span class="mb-art-cache-hint-col" title="Timing unavailable">⚠️</span></span><span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes</span></td>
+#+end_example
+
+2.)
+
+check the uploaded file "cache" why "Timing unavailable" is displayed for EVERY artwork, at least if I call the page 2
+times, I would expect the browser reading the icons from its' disk cache eventually. Does the output make sense
+
+3.)
+
+Please implement the additional functionality:
+
+Add hover preview of the full image which is displayed in the big picture stripe when hovering over the artwork in
+BOTH the "CAA" column or the column which has the artwork prepended to the release/release-group title
+
+** why not disk fetch
+
+There is NEVER a disk fetch, even if the page gets reloaded a couple of times
+
+#+begin_example
+12:40:05.002 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=2914ms) — //coverartarchive.org/release/22426cff-05b0-4219-8c50-cb3a3b278d93/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.043 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=2954ms) — //coverartarchive.org/release/baef42e5-76e8-4017-a06f-b39690b4ecfa/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.137 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3048ms) — //coverartarchive.org/release/0fac5146-1101-47cc-84cb-d84b3f23815d/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.163 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3075ms) — //coverartarchive.org/release/cc5c8a11-9970-4cd8-88ee-ae14db4b860e/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.250 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3162ms) — //coverartarchive.org/release/e008bf6f-468f-4535-a237-26e610d9093d/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.271 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3182ms) — //coverartarchive.org/release/b0ab1e0d-9890-47dd-b050-3e22c930e974/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.345 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3256ms) — //coverartarchive.org/release/755eec4f-d7d7-4fec-9b97-3be7a9ad5012/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.432 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3343ms) — //coverartarchive.org/release/bb2890f8-d3cb-425d-be25-bddc403cecf4/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.541 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3452ms) — //coverartarchive.org/release/83d45d1b-5dda-40e9-96b2-93ead5e9b969/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.583 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3495ms) — //coverartarchive.org/release/6d3d93d6-c7aa-4d00-96c9-6a5d06e5ca67/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.634 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3546ms) — //coverartarchive.org/release/809f63c8-4459-4bcc-9a81-a5d4543a7e93/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.825 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3737ms) — //coverartarchive.org/release/6fa88ae2-5f05-4e3d-9372-c47c711dd90a/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.829 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3741ms) — //coverartarchive.org/release/01687d8c-c702-4a0f-bef4-a002949ab678/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:06.049 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3960ms) — //coverartarchive.org/release/594db9cf-77e3-4b90-8a75-cd38fc88935c/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:06.052 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3961ms) — //coverartarchive.org/release/782b2731-af95-4e39-be75-a7889d8d85da/front-250 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:06.110 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=4021ms) — //coverartarchive.org/release/40af322b-b91a-4566-941c-5ec4b7d535cd/front-250
+#+end_example
+
+* DONE function findH3ForTable(table)
+** init
+
+In the uploaded userscript "ShowAllEntityData.user.js",
+
+it looks like the introduction of the function "findH3ForTable(table)"
+
+#+begin_example
+    /**
+     * Returns the h3.mb-toggle-h3 element that logically owns `table` in
+     * multi-table mode, walking backwards past any injected elements
+     * (e.g. div.mb-caa-bigbox, div.mb-eaa-bigbox) that may sit between the
+     * h3 and the table after `_artInitBigPics` has run.
+     *
+     * IMPORTANT: always use this helper instead of bare `table.previousElementSibling`
+     * whenever an h3 is expected.  After the initial render, `_artInitBigPics` inserts
+     * a div.mb-{caa|eaa}-bigbox directly before the table, so
+     * `table.previousElementSibling` returns the bigbox — not the h3.  Any code that
+     * then treats the bigbox as the h3 will mutate it (inserting subtable-controls
+     * buttons into the bigbox, silently losing row-count updates, etc.).
+     *
+     * Returns null when no qualifying h3 is found within 5 backward steps
+     * (single-table mode, or an unexpected DOM structure).
+     *
+     * @param  {Element|null} table
+     * @returns {Element|null}
+     */
+    function findH3ForTable(table) {
+        if (!table) return null;
+        let prev  = table.previousElementSibling;
+        let steps = 0;
+        while (prev && steps < 5) {
+            if (prev.tagName === 'H3' && prev.classList.contains('mb-toggle-h3')) {
+                return prev;
+            }
+            prev = prev.previousElementSibling;
+            steps++;
+        }
+        return null;
+    }
+#+end_example
+
+introduced two more bugs which manifests on:
+
+1.) "multi"-table mode: (uploaded debug log as "multi-table_Arist-ReleaseGroups-Bug")
+
+- on pageTyp="'artist-releasegroups'" URLSs e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+there is ONLY one subtable named "Other" in the h3 header which gets rendered with ALL rows instead of splitting them
+under different sub-tables as it used to be.
+
+2.) "single" table mode: (uploaded debug log as "single-table-Bug")
+
+- on e.g. https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
+
+NO CAA cover art gets rendered at all
+
+** abandoned reply from claude
+
+#+begin_example
+Please fix
+
+findH3ForTable checks for h3.mb-toggle-h3. But in the fetched pages (parsed via XHR), the h3 elements are raw
+MusicBrainz h3 elements (NOT mb-toggle-h3). So findH3ForTable always returns null and every group is named "Other".
+
+The fix is to replace that function call with a simple backwards walk through sibling elements to find the nearest h3,
+which will correctly identify the category labels for each table group.
+
+Now I can see Bug #1 clearly. The fix is to use a plain h3 walk (no class restriction) for fetched XHR pages. Let me
+also look at the single-table CAA bug.
+#+end_example
+
+** why additional generated code
+
+Yes that fixes the bug for Artist-Releasegroup pages
+
+BUT one question, here is the diff between the current code base (with your fix) and the previous
+
+#+begin_example
+modified   claude/caa1rowrenderingbug/1/ShowAllEntityData_user.js
+@@ -13165,8 +13165,19 @@
+ 
+                 if (pageType === 'artist-releasegroups') {
+                     doc.querySelectorAll('table.tbl').forEach(table => {
+-                        const h3 = findH3ForTable(table);
+-                        const category = h3 ? h3.textContent.trim() : 'Other';
++                        // Fetched XHR pages contain native MusicBrainz <h3> elements
++                        // (e.g. "Album", "Single", "EP") that do NOT carry the
++                        // mb-toggle-h3 class injected by renderGroupedTable().
++                        // findH3ForTable() requires that class and always returns null
++                        // here, collapsing every group into "Other".  Use a plain
++                        // backwards walk with no class restriction instead.
++                        let _prev = table.previousElementSibling, _steps = 0, _h3 = null;
++                        while (_prev && _steps < 5) {
++                            if (_prev.tagName === 'H3') { _h3 = _prev; break; }
++                            _prev = _prev.previousElementSibling;
++                            _steps++;
++                        }
++                        const category = _h3 ? _h3.textContent.trim() : 'Other';
+ 
+                         // Logic to handle grouped data and repeating headers over multiple paginated pages (e.g. "Album + Live")
+                         if (category !== lastCategorySeenAcrossPages) {
+@@ -13820,13 +13831,15 @@
+             // Highlight identical barcodes in Barcode columns (post-render)
+             initBarcodeHighlight();
+ 
+-            // NOTE: initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics are
+-            // NOT called here.  renderGroupedTable() calls them at its own tail (just
+-            // before "Finished renderGroupedTable"), so calling them again here would
+-            // produce doubled badge counts: the first set of <img> elements is detached
+-            // by the second _artInitBigPics pass but keeps firing load events via the
+-            // still-live btnId closure, so every successfully-loaded image increments the
+-            // badge twice.
++            // Load CAA/EAA art thumbnails and big-pic strip (post-render).
++            // initCaaPics() MUST run before initEaaPics() and the inline variants —
++            // it creates _caaQueue used by all three.
++            initCaaPics();
++            initEaaPics();
++            // Inline CAA/EAA thumbnails must run after ERG (▶ button already present)
++            // and after initCaaPics() (so _caaQueue is initialised).
++            initCaaInlinePics();
++            initEaaInlinePics();
+ 
+             // Initialise the Unicode character picker (builds menu DOM once, idempotent)
+             initSaUnicodeCharsFeature();
+@@ -20146,12 +20159,9 @@
+                 return;
+             }
+         } else {
+-            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics.
+-            // Also restore display in case the button was hidden by the stale-bigbox
+-            // clear path (count=0 on a previous filter pass) and is now valid again.
++            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics
+             const badge = btn.querySelector('.' + ctx.countClass);
+             if (badge) badge.textContent = '0';
+-            btn.style.display = '';
+         }
+ 
+         // Sync button title to current bigbox visibility (box may not exist yet)
+#+end_example
+
+what is the diff code block
+
+#+begin_example
+@@ -13820,13 +13831,15 @@
+             // Highlight identical barcodes in Barcode columns (post-render)
+             initBarcodeHighlight();
+ 
+-            // NOTE: initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics are
+-            // NOT called here.  renderGroupedTable() calls them at its own tail (just
+-            // before "Finished renderGroupedTable"), so calling them again here would
+-            // produce doubled badge counts: the first set of <img> elements is detached
+-            // by the second _artInitBigPics pass but keeps firing load events via the
+-            // still-live btnId closure, so every successfully-loaded image increments the
+-            // badge twice.
++            // Load CAA/EAA art thumbnails and big-pic strip (post-render).
++            // initCaaPics() MUST run before initEaaPics() and the inline variants —
++            // it creates _caaQueue used by all three.
++            initCaaPics();
++            initEaaPics();
++            // Inline CAA/EAA thumbnails must run after ERG (▶ button already present)
++            // and after initCaaPics() (so _caaQueue is initialised).
++            initCaaInlinePics();
++            initEaaInlinePics();
+ 
+             // Initialise the Unicode character picker (builds menu DOM once, idempotent)
+             initSaUnicodeCharsFeature();
+@@ -20146,12 +20159,9 @@
+                 return;
+             }
+         } else {
+-            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics.
+-            // Also restore display in case the button was hidden by the stale-bigbox
+-            // clear path (count=0 on a previous filter pass) and is now valid again.
++            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics
+             const badge = btn.querySelector('.' + ctx.countClass);
+             if (badge) badge.textContent = '0';
+-            btn.style.display = '';
+         }
+ 
+         // Sync button title to current bigbox visibility (box may not exist yet)
+#+end_example
+
+good for, does it belong to the bug fix too ?
+
+Also you forgot to produce a changelog entry
+
+* DONE CAA loading completely broken
+
+In the uploaded userscript "ShowAllEntityData.user.js",
+
+the CAA loading is completely broken for "single"-table mode pages, also with query parameters https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&link_type_id=278
+
+see the uploaded ..-bug files
+
+Please fix and provide a changelog
+
+* DONE after filtering the first time and then clearing the filter again
+
+One last glitch,
+
+after starting typing in whatever filter field (global, column specific or in the case of sub-tables, the sub-table filter field), the CAA toggle buttons get renderded visually in such
+a way that the number of CAA images is centered below the CAA image icon inside the button
+
+Please fix and add a changelog
+
+* DONE "single"-table mode: when loading from disk when already on the final rendered page, the CAA count inside the button doubles, but asson nas we start filtering, it resets to the actual filtered count
+** initial
+
+Some more glitches
+
+- "single"-table mode: when loading data from disk when already on the final rendered page, the CAA count inside the button
+doubles, but as soon as we start filtering, it resets to the actual filtered count
+
+-" multi"-table mode: when loading data from disk when already on the final rendered page, the CAA count inside the button
+triples, but as soon as we start filtering, it resets to the actual filtered count
+
+-" multi"-table mode: when loading data from disk when already on the final rendered page, and then toggle the display
+of the CAA images of one ore more sub-tables, the CAA image big boxes are rendered below the table instead of below the
+h3 sub-header (as what happens when loading from the net). They are also visually stacked below each other in the same
+order as the sub-tables appear on the whole page
+
+** still a glitch
+
+In the uploaded userscript "ShowAllEntityData.user.js",
+
+two bugs are present:
+
+1.)
+
+- on "single"-table and "multi"-table mode: when loading data from disk when already on the final rendered page, the CAA count inside the button
+doubles, but as soon as we start filtering, it resets to the actual filtered count
 
 
+2.)
+
+On "multi"-table pages when toggling the filter elements on for a specific sub-table/section and entering a filter string in the sub-table h3 filter
+field, the following is expected:
+
+The following "mb-subtable-controls" container should be rendered with buttons for clearing the filter field and toggle highlighning + filter information
+
+ #+begin_example
+<span class="mb-subtable-controls">
+  <button class="mb-subtable-clear-btn" type="button" title="Clear all filters for this sub-table (column filters and sub-table filter)" style="display: none;">
+    <span style="color: red; font-size: 1em; font-weight: bold;">✗
+    </span>
+    <span class="mb-subtable-clear-btn-label">Clear all filters
+    </span>
+  </button>
+  <button id="mb-stf-Bootleag-toggle-filter-highlight-btn" type="button" title="Toggle filter highlighting on/off (sub-table filter and column filters)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting
+  </button>
+  <span class="mb-filter-status" data-table-name="Bootleg" data-table-index="1" style="color: green;">
+  </span>
+  <span class="mb-sort-status" data-table-name="Bootleg" data-table-index="1">
+  </span>
+</span>
+#+end_example
+
+In the example pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
+- When the sub-table doesn't have any CAA artworks (no release or release-group column present), for example for the sub-table "Vocals", this really happens   
+
+- NOW the bug: When the sub-table DOES have CAA artworks e.g. the "Liner notes for", the "mb-subtable-controls" container IS NOT rendered 
 
 
-* TODO implement an indexed-DB persistent storage solution (with meatadat about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
+please fix and add a changelog entry
+
+* DONE highlighning still on after load from disk
+
+In the uploaded userscript "ShowAllEntityData.user.js",
+
+There is a bug in "multi"-table mode when loading data from disk:
+
+Lets assume we are on the final rendered page by reading all data from the net on pageType https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
+
+- then save the data with "Save to Disk"-button to the filessystem
+- then filter on one sub-table, e.g. "Promotion" in the table specific filter field with lets say the string "AR" ==> the filter string will be highlighted in the matching rows
+- NOW the bug: when now loading data from disk with "Load from Disk" button, the rows still have the filter string from before the loading higlighted after rendering
+
+please fix  
+   
+
 
 
 * is it better to use fetch or GM_xmlhttpRequest
@@ -49505,17 +49987,22 @@ is it better to use fetch or GM_xmlhttpRequest
                 ontimeout: function() { reject(new Error('GM_xmlhttpRequest timeout for ' + url)); }
             });
 #+end_example
+
 ** answer
 
 #+begin_example
+
 The two questions answered separately
+
 1. Can <img>-based paths switch to GM_xmlhttpRequest?
+
 Technically yes, but it would give zero benefit and add real cost.
 The CORS failure was specific to fetch(), which runs in the page's browsing context and defaults to cors request mode, causing the browser to send an OPTIONS preflight and then enforce Access-Control-Allow-Origin on the response. <img> elements with no crossOrigin attribute set are "no-cors" requests — the browser never sends a preflight and never checks Access-Control-Allow-Origin. They cannot produce CORS errors regardless of what the CDN returns. Confirmed: none of the three <img>-using functions (caaLoadIcon, initCaaInlinePics, caaInitBigPics) set crossOrigin anywhere in the code.
 Switching img paths to GM_xmlhttpRequest would require responseType: 'blob' + URL.createObjectURL() everywhere, manual blob-URL revocation to avoid memory leaks, and — critically — would bypass the browser's HTTP cache entirely, meaning images that are already cached from a prior navigation would need to be re-fetched over the network on every render. That is a strict regression.
 The GM_xmlhttpRequest switch for caaEnrichReleaseGroupIcon (v9.99.111) was the right and complete fix for the CORS issue.
 
 2. Is there real double-downloading?
+
 Yes, on exactly 5 page types. Here is the complete matrix:
 pageTypecaaLoadIcon (CAA column)initCaaInlinePics (addCAA)Same URL?label-releasesRelease → /release/GUID/front-250Release → same✓ duplicateartist-relationships-filteredTitle → /release-group/GUID/front-250Title → same✓ duplicateartist-releasegroupsTitle → /release-group/GUID/front-250Title → same✓ duplicateartist-releasesRelease → /release/GUID/front-250Release → same✓ duplicatereleasegroup-releasesRelease → /release/GUID/front-250Release → same✓ duplicateseries-releases(no CAA extractor)Releaseno dupeartist-recordings(no CAA extractor)Release groupsno duperecording-releases(no CAA extractor)Release titleno dupe
 Both caaLoadIcon and initCaaInlinePics use sa_caa_small_img_size (same setting, same default 250), so the constructed URL is identical. The big-strip in caaInitBigPics uses sa_caa_big_img_size — a potentially different size parameter — so it is a separate URL and not part of this duplication.
@@ -49541,68 +50028,12 @@ Both caaLoadIcon and initCaaInlinePics would call caaLoadImageCached(imgurl) and
 This is a separate, non-urgent improvement — the browser cache already prevents the actual network double-hit. Worth doing as a dedicated commit when convenient.
 #+end_example
 
-
 * do we actually have enough information available for each pageType to completely switch to the GM_xmlhttpRequest, as it looks somehow we double the downloading of images from CAA for the synthetic "CAA" columns (right now only needed to display th number of e) and the 
 
 do we actually have enough information available for each pageType to completely switch to the GM_xmlhttpRequest, as it
 looks somehow we double the downloading of images from CAA for the synthetic "CAA" columns (right now only needed to
 display the number of images in the release group) and the column where the actual title for the release or release group
 is located and where the CAA artwork gets prepended.
-
-
-* retry "Failed to fetch" - CAA cover artcode
-
-In the CAA cover art fetching code
-
-implement a queued retry mechanisms to workaround the following "Failed to fetch" errors
-
-#+begin_example
-23:35:51.910 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: fetch error for /release-group/5cbee6ec-2cd2-4cc5-a41e-33d80140fe63: TypeError: Failed to fetch
-    at caaEnrichReleaseGroupIcon (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21214:32)
-    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21262:25
-    at NodeList.forEach (<anonymous>)
-    at caaInitSmallPics (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21258:15)
-    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21710:13
-    at NodeList.forEach (<anonymous>)
-    at initCaaPics (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21705:16)
-    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:15717:13)
-#+end_example
-
-Where the CAA artwork icon would normally be rendered show a replacement icon with a red text which counts from 5 to 0
-backwards for each retry. Replace that icon with the actual download CA artwork image or leave a red questiomnark in
-place for a visual clue that retries have at least been tried
-
-
-* is it worth to implement a retry solution (n times) for cases where images coudn't be fetched right away with manual fallback (by clicking a retry icon)
-
-#+begin_example
-    // ── CAA fetch-retry infrastructure ───────────────────────────────────────
-    //
-    // Root cause of "TypeError: Failed to fetch":
-    //   coverartarchive.org's JSON API does not include an
-    //   Access-Control-Allow-Origin header, so the browser blocks any call
-    //   made with window.fetch() from the musicbrainz.org page context.
-    //   GM_xmlhttpRequest runs in the userscript sandbox and is completely
-    //   exempt from CORS, so all CAA JSON fetches use it exclusively.
-    //
-    // The retry mechanism handles the residual case where GM_xmlhttpRequest
-    // itself encounters a network error (e.g. coverartarchive.org is briefly
-    // unreachable):
-    //
-    //   • Up to CAA_MAX_RETRIES additional attempts per release-group path.
-    //   • Multiple anchors referencing the same path share ONE retry sequence
-    //     (deduplication via _caaRetryState).
-    //   • Each retry is preceded by a visible countdown rendered as an SVG
-    //     data-URI in the caa/eaa/artwork-icon span's background-image — the
-    //     same CSS property that caaLoadIcon() normally uses for the thumbnail.
-    //   • On success: caaLoadIcon() re-fires (re-loads the artwork thumbnail)
-    //     and caaEnrichReleaseGroupIcon() re-runs (serves from cache — no extra
-    //     network round-trip).
-    //   • On final failure: a permanent red "?" SVG replaces the countdown so
-    //     the user can see that retries were at least attempted.
-    //
-    // ─────────────────────────────────────────────────────────────────────────
-#+end_example
 
 
 * questions
@@ -50601,532 +51032,101 @@ DOM rendering batching
 Those changes together would likely cut the runtime of your script by 50–70% on big pages.
 
 
-* In the uploaded userscript "ShowAllEntityData.user.js" and library "ShowAllEntityData_CHANGELOG.json"
-
-- check for all unused variables and function definitions, create a report and fix
-- check the current function documentations against their implementation, where the doc is differing, please fix
-- resync the uploaded HELP file "ShowAllEntityData_HELP.txt" against the current code base and keyboard shortcuts
-- add a changelog entry
-
-  
-* DONE bug with filtering und strange button rendering - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-** initial
-
-On the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships there is a strange
-filtering and rendering bug for the following cases
-
-- it looks like sub-tables with 1 row initially are being involved
-- it looks like sub-tables which have overflow "Show all <number of rows>" buttons in the h3 header line. e.g.
-
-#+begin_example
-<button class="mb-show-all-subtable-btn" type="button">Show all 500</button>
-#+end_example
-  
-are also invloved.
-
-Here the bug:
-
-For example: globel filter: "guitar"
-
-"Instruments" (lots of rows initially, filtering OK): sub-table OK
-"Instruments-2" (lots of rows initially, filtering OK): - sub-table OK
-
-"Holds copyright (C) for" (100) [icon 99] <Show all 500>-overflow button: sub-table - NOT OK ==> when uncollapsing sub-table to check the number of rows -> "no rows" selected, but toggling the CAA button ==> artwork images are shown
-
-"Lyrics" (1) [icon 1]:  sub-table - NOT OK
-  - when uncollapsing sub-table ==> "no rows" selected
-  - when uncollapsing CAA toggle ==> rendering bug
-
-#+begin_example
-<div id="mb-caa-bigbox-12" class="mb-caa-bigbox" data-caa-visible="true" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 0px; min-height: 0px;">
-  <a href="/release/73118778-3815-432b-b3bc-823fbf06d467" title="Streets of Philadelphia" data-caa-href="/release/73118778-3815-432b-b3bc-823fbf06d467" style="display: inline-block; height: 100%; margin: 8px 8px 4px 4px;">
-    <img src="//coverartarchive.org/release/73118778-3815-432b-b3bc-823fbf06d467/front-250" alt="Streets of Philadelphia" style="vertical-align: middle; display: inline; max-height: 125px; box-shadow: black 1px 1px 4px;">
-  </a>
-  <button id="mb-stf-lyrics-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand all collapsed multi-row cells in &quot;lyrics&quot;" aria-label="Expand all collapsed multi-row cells in: lyrics" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: none;">
-    <span>▶ Expand
-    </span>
-    <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;">
-      <span>multi-row
-      </span>
-      <span>cells
-      </span>
-    </span>
-  </button>
-  <button id="mb-stf-lyrics-resize-btn" type="button" class="mb-subtable-resize-btn" title="Auto-resize columns for &quot;lyrics&quot;" aria-label="Auto-resize columns for: lyrics" style="font-size: 0.8em; padding: 1px 5px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; transition: background-color 0.2s, border-color 0.2s;">↔️
-  </button>
-  <button id="mb-stf-lyrics-vis-btn" type="button" class="mb-subtable-vis-btn" title="Show/hide columns for &quot;lyrics&quot;" aria-label="Column visibility for: lyrics" style="font-size: 0.85em; padding: 1px 5px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; transition: background-color 0.2s, border-color 0.2s;">👁️
-  </button>
-  <span class="mb-subtable-controls">
-    <button class="mb-subtable-clear-btn" type="button" title="Clear all COLUMN filters for this sub-table" style="display: none;">
-      <span style="color: red; font-size: 1em; font-weight: bold;">✗
-      </span>
-      <span class="mb-subtable-clear-btn-label">Clear all COLUMN filters
-      </span>
-    </button>
-    <button id="mb-stf-lyrics-toggle-filter-highlight-btn" type="button" title="Toggle filter highlighting on/off (sub-table filter and column filters)" data-highlight-enabled="true" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting
-    </button>
-    <span class="mb-filter-status" data-table-name="lyrics" data-table-index="12">
-    </span>
-    <span class="mb-sort-status" data-table-name="lyrics" data-table-index="12">
-    </span>
-  </span>
-</div>
-#+end_example
-
-Two additional 'icons buttons' "Auto-resize columns for ..." and "Show/Hide columns for ..." are rendered right after
-the only cover art image width the same heigth as the CAA image itself (first of all they shouldn't een be render at all
-in that place)
-
-The last behaviour happens for all sub-tables with just 1 row initially
-
-** another bug
-
-We introduced now another bug, visible on the page
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships. That page has a couple of sub-table
-which have "release" and "release group" CAA images in their rows.
-
-- after rendering the initial final page (and after all the CAA images have been loaded), all the sub-tables which have
-  CAA icons SHOW the CAA toggle button, but the image count is doubled on the button text compared to when I check (by
-  toggling the visibility) the actual renderd images in the stripe (e.g.) "button text count=8", but only 4 images
-  visible which also matches the actual 4 rows
-
-- when I now enter a gobal filter string which should only select in all the sub-tables with images exactly one
-  sub-table with one filtered row, it works and the button text now even displays the rigth count (so "1" corresponding
-  to the one displayed row)
-
-- if I now remove the global filter again, all the rows in all sub-tables show up again (we can check by uncollapsing
-  the hidden h3 table sections), but now the BUG: the CAA toggle buttons DO NOT show up again for the-subtables with CAA
-  images, except when a sub-table was uncollapsed BEFORE entering the filter string. In that case the CAA toggle button
-  stays visible for that specific sub-table (even with the right button row count)
-
-
-* DONE distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a fallback check using the duration property in case the transferSize is restricted)
-** initial
-
-In the uploaded userscript "ShowAllEntityData.user.js"
-
-Implement the following:
-
-- distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API (maybe with a
-fallback check using the duration property in case the transferSize is restricted)
-
-- expose this information visually in the "CAA" column by prepending an icon like "[🟢] artwork icon"
-
-see more below
-
-1. Detecting network fetch vs browser cache hit (Resource Timing API)
-
-Recommended approach
-
-function getResourceTiming(url) {
-  const entries = performance.getEntriesByName(url, 'resource');
-  if (!entries.length) return null;
-
-  const e = entries[entries.length - 1];
-
-  return {
-    transferSize: e.transferSize,
-    encodedBodySize: e.encodedBodySize,
-    duration: e.duration
-  };
-}
-
-Interpretation:
-
-Case	transferSize	encodedBodySize	Meaning
-0	>0	memory cache	
->0	>0	network	
-0	0	opaque/cross-origin restricted	
-
-Typical rule used in practice:
-
-const fromCache =
-    entry.transferSize === 0 &&
-    entry.encodedBodySize > 0;
-
-Fallback heuristic (when timing info restricted):
-
-const fromCache = entry.duration < 5;
-
-Caveats
-
-CAA images redirect to archive.org, which is cross-origin.
-
-That means:
-
-transferSize may be 0 even for network fetch
-
-timing info may be partially blocked
-
-So your fallback heuristic is useful.
-
-Visualizing in the CAA column
-
-Good simple indicators:
-
-Symbol	Meaning
-🟢	memory cache
-🟡	disk cache
-🔵	network
-⚠	timing unavailable
-
-Example:
-
-CAA
-[🟢] 250px
-
-or
-
-[NET 120ms]
-
-** configurable
-
-add the following functionality
-
-- introduce a new "Resource Timing API" section in the config schema "const configSchema"
-- make the whole "Resource Timing API" feature you just introduced configurable (default "true"
-- make all 3 display options for the visual indicators separately configurable with a boolean (default "true")
-- inside the "CAA" column the indicator icon is currently prepended to the artwork icon, please change this in such a
-  way that it is appended to the artwork icon above the artwork count (in the same virtual column) as the artwork count
-  visully already looks like a subscript, so the indicator could act as a supersript above it
-
-** hover
-
-In the uploaded userscript "ShowAllEntityData.user.js",
-
-1.)
-   
-actually the the indicator icon is now rendered after the artwork count instead of above it
-
-#+begin_example
-<td data-erg-injected="1"><a href="/release/3b6b3148-68f4-47be-94b3-18fbbbb27ed7/cover-art" title="6 images found for this release / release-group" data-caa-enriched="1"><span class="artwork-icon caa-icon" title="6 images found for this release / release-group" data-cache-hint="unavailable" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/3b6b3148-68f4-47be-94b3-18fbbbb27ed7/front-250&quot;);"></span></a><span class="mb-caa-count-badge" title="6 images found for this release / release-group">6</span><span class="mb-art-cache-hint-col-wrap"><span class="mb-art-cache-hint-col" title="Timing unavailable">⚠️</span></span><span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes</span></td>
-#+end_example
-
-2.)
-
-check the uploaded file "cache" why "Timing unavailable" is displayed for EVERY artwork, at least if I call the page 2
-times, I would expect the browser reading the icons from its' disk cache eventually. Does the output make sense
-
-3.)
-
-Please implement the additional functionality:
-
-Add hover preview of the full image which is displayed in the big picture stripe when hovering over the artwork in
-BOTH the "CAA" column or the column which has the artwork prepended to the release/release-group title
-
-** why not disk fetch
-
-There is NEVER a disk fetch, even if the page gets reloaded a couple of times
-
-#+begin_example
-12:40:05.002 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=2914ms) — //coverartarchive.org/release/22426cff-05b0-4219-8c50-cb3a3b278d93/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.043 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=2954ms) — //coverartarchive.org/release/baef42e5-76e8-4017-a06f-b39690b4ecfa/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.137 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3048ms) — //coverartarchive.org/release/0fac5146-1101-47cc-84cb-d84b3f23815d/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.163 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3075ms) — //coverartarchive.org/release/cc5c8a11-9970-4cd8-88ee-ae14db4b860e/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.250 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3162ms) — //coverartarchive.org/release/e008bf6f-468f-4535-a237-26e610d9093d/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.271 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3182ms) — //coverartarchive.org/release/b0ab1e0d-9890-47dd-b050-3e22c930e974/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.345 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3256ms) — //coverartarchive.org/release/755eec4f-d7d7-4fec-9b97-3be7a9ad5012/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.432 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3343ms) — //coverartarchive.org/release/bb2890f8-d3cb-425d-be25-bddc403cecf4/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.541 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3452ms) — //coverartarchive.org/release/83d45d1b-5dda-40e9-96b2-93ead5e9b969/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.583 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3495ms) — //coverartarchive.org/release/6d3d93d6-c7aa-4d00-96c9-6a5d06e5ca67/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.634 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3546ms) — //coverartarchive.org/release/809f63c8-4459-4bcc-9a81-a5d4543a7e93/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.825 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3737ms) — //coverartarchive.org/release/6fa88ae2-5f05-4e3d-9372-c47c711dd90a/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:05.829 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3741ms) — //coverartarchive.org/release/01687d8c-c702-4a0f-bef4-a002949ab678/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:06.049 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3960ms) — //coverartarchive.org/release/594db9cf-77e3-4b90-8a75-cd38fc88935c/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:06.052 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=3961ms) — //coverartarchive.org/release/782b2731-af95-4e39-be75-a7889d8d85da/front-250 
-userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=71fb00f8-75c0-4ca4-9051-e04be07b997f:245 12:40:06.110 [VZ-ShowAllEntityData: label-releases] 📝 caaInitBigPics: cache-hint=network (dur=4021ms) — //coverartarchive.org/release/40af322b-b91a-4566-941c-5ec4b7d535cd/front-250
-#+end_example
-
-
 * GOOD versions
 ** /doubleCAAimages
 
 
-* DONE function findH3ForTable(table)
-** init
+* TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 
-In the uploaded userscript "ShowAllEntityData.user.js",
 
-it looks like the introduction of the function "findH3ForTable(table)"
+* TODO add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
 
-#+begin_example
-    /**
-     * Returns the h3.mb-toggle-h3 element that logically owns `table` in
-     * multi-table mode, walking backwards past any injected elements
-     * (e.g. div.mb-caa-bigbox, div.mb-eaa-bigbox) that may sit between the
-     * h3 and the table after `_artInitBigPics` has run.
-     *
-     * IMPORTANT: always use this helper instead of bare `table.previousElementSibling`
-     * whenever an h3 is expected.  After the initial render, `_artInitBigPics` inserts
-     * a div.mb-{caa|eaa}-bigbox directly before the table, so
-     * `table.previousElementSibling` returns the bigbox — not the h3.  Any code that
-     * then treats the bigbox as the h3 will mutate it (inserting subtable-controls
-     * buttons into the bigbox, silently losing row-count updates, etc.).
-     *
-     * Returns null when no qualifying h3 is found within 5 backward steps
-     * (single-table mode, or an unexpected DOM structure).
-     *
-     * @param  {Element|null} table
-     * @returns {Element|null}
-     */
-    function findH3ForTable(table) {
-        if (!table) return null;
-        let prev  = table.previousElementSibling;
-        let steps = 0;
-        while (prev && steps < 5) {
-            if (prev.tagName === 'H3' && prev.classList.contains('mb-toggle-h3')) {
-                return prev;
-            }
-            prev = prev.previousElementSibling;
-            steps++;
-        }
-        return null;
-    }
-#+end_example
+In the uploaded userscript,
 
-introduced two more bugs which manifests on:
+add more guards (notify user with an alert box) before leaving the final rendered page:
 
-1.) "multi"-table mode: (uploaded debug log as "multi-table_Arist-ReleaseGroups-Bug")
+- even the TAB key pressed repeatedly should never leave the page up to native browser controls
 
-- on pageTyp="'artist-releasegroups'" URLSs e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
-there is ONLY one subtable named "Other" in the h3 header which gets rendered with ALL rows instead of splitting them
-under different sub-tables as it used to be.
 
-2.) "single" table mode: (uploaded debug log as "single-table-Bug")
+* TODO implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
 
-- on e.g. https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
 
-NO CAA cover art gets rendered at all
+* TODO add a multi-row cell for the CAA info
 
-** abandoned reply from claude
+one row per coverart - type, comment, dimensions
+
+* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+
+
+
+
+* TODO retry "Failed to fetch" - CAA cover artcode
+
+In the CAA cover art fetching code
+
+implement a queued retry mechanisms to workaround the following "Failed to fetch" errors
 
 #+begin_example
-Please fix
-
-findH3ForTable checks for h3.mb-toggle-h3. But in the fetched pages (parsed via XHR), the h3 elements are raw
-MusicBrainz h3 elements (NOT mb-toggle-h3). So findH3ForTable always returns null and every group is named "Other".
-
-The fix is to replace that function call with a simple backwards walk through sibling elements to find the nearest h3,
-which will correctly identify the category labels for each table group.
-
-Now I can see Bug #1 clearly. The fix is to use a plain h3 walk (no class restriction) for fetched XHR pages. Let me
-also look at the single-table CAA bug.
+23:35:51.910 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichReleaseGroupIcon: fetch error for /release-group/5cbee6ec-2cd2-4cc5-a41e-33d80140fe63: TypeError: Failed to fetch
+    at caaEnrichReleaseGroupIcon (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21214:32)
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21262:25
+    at NodeList.forEach (<anonymous>)
+    at caaInitSmallPics (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21258:15)
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21710:13
+    at NodeList.forEach (<anonymous>)
+    at initCaaPics (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:21705:16)
+    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:15717:13)
 #+end_example
 
-** why additional generated code
+Where the CAA artwork icon would normally be rendered show a replacement icon with a red text which counts from 5 to 0
+backwards for each retry. Replace that icon with the actual download CA artwork image or leave a red questiomnark in
+place for a visual clue that retries have at least been tried
 
-Yes that fixes the bug for Artist-Releasegroup pages
 
-BUT one question, here is the diff between the current code base (with your fix) and the previous
+* TODO is it worth to implement a retry solution (n times) for cases where images coudn't be fetched right away with manual fallback (by clicking a retry icon)
 
 #+begin_example
-modified   claude/caa1rowrenderingbug/1/ShowAllEntityData_user.js
-@@ -13165,8 +13165,19 @@
- 
-                 if (pageType === 'artist-releasegroups') {
-                     doc.querySelectorAll('table.tbl').forEach(table => {
--                        const h3 = findH3ForTable(table);
--                        const category = h3 ? h3.textContent.trim() : 'Other';
-+                        // Fetched XHR pages contain native MusicBrainz <h3> elements
-+                        // (e.g. "Album", "Single", "EP") that do NOT carry the
-+                        // mb-toggle-h3 class injected by renderGroupedTable().
-+                        // findH3ForTable() requires that class and always returns null
-+                        // here, collapsing every group into "Other".  Use a plain
-+                        // backwards walk with no class restriction instead.
-+                        let _prev = table.previousElementSibling, _steps = 0, _h3 = null;
-+                        while (_prev && _steps < 5) {
-+                            if (_prev.tagName === 'H3') { _h3 = _prev; break; }
-+                            _prev = _prev.previousElementSibling;
-+                            _steps++;
-+                        }
-+                        const category = _h3 ? _h3.textContent.trim() : 'Other';
- 
-                         // Logic to handle grouped data and repeating headers over multiple paginated pages (e.g. "Album + Live")
-                         if (category !== lastCategorySeenAcrossPages) {
-@@ -13820,13 +13831,15 @@
-             // Highlight identical barcodes in Barcode columns (post-render)
-             initBarcodeHighlight();
- 
--            // NOTE: initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics are
--            // NOT called here.  renderGroupedTable() calls them at its own tail (just
--            // before "Finished renderGroupedTable"), so calling them again here would
--            // produce doubled badge counts: the first set of <img> elements is detached
--            // by the second _artInitBigPics pass but keeps firing load events via the
--            // still-live btnId closure, so every successfully-loaded image increments the
--            // badge twice.
-+            // Load CAA/EAA art thumbnails and big-pic strip (post-render).
-+            // initCaaPics() MUST run before initEaaPics() and the inline variants —
-+            // it creates _caaQueue used by all three.
-+            initCaaPics();
-+            initEaaPics();
-+            // Inline CAA/EAA thumbnails must run after ERG (▶ button already present)
-+            // and after initCaaPics() (so _caaQueue is initialised).
-+            initCaaInlinePics();
-+            initEaaInlinePics();
- 
-             // Initialise the Unicode character picker (builds menu DOM once, idempotent)
-             initSaUnicodeCharsFeature();
-@@ -20146,12 +20159,9 @@
-                 return;
-             }
-         } else {
--            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics.
--            // Also restore display in case the button was hidden by the stale-bigbox
--            // clear path (count=0 on a previous filter pass) and is now valid again.
-+            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics
-             const badge = btn.querySelector('.' + ctx.countClass);
-             if (badge) badge.textContent = '0';
--            btn.style.display = '';
-         }
- 
-         // Sync button title to current bigbox visibility (box may not exist yet)
+    // ── CAA fetch-retry infrastructure ───────────────────────────────────────
+    //
+    // Root cause of "TypeError: Failed to fetch":
+    //   coverartarchive.org's JSON API does not include an
+    //   Access-Control-Allow-Origin header, so the browser blocks any call
+    //   made with window.fetch() from the musicbrainz.org page context.
+    //   GM_xmlhttpRequest runs in the userscript sandbox and is completely
+    //   exempt from CORS, so all CAA JSON fetches use it exclusively.
+    //
+    // The retry mechanism handles the residual case where GM_xmlhttpRequest
+    // itself encounters a network error (e.g. coverartarchive.org is briefly
+    // unreachable):
+    //
+    //   • Up to CAA_MAX_RETRIES additional attempts per release-group path.
+    //   • Multiple anchors referencing the same path share ONE retry sequence
+    //     (deduplication via _caaRetryState).
+    //   • Each retry is preceded by a visible countdown rendered as an SVG
+    //     data-URI in the caa/eaa/artwork-icon span's background-image — the
+    //     same CSS property that caaLoadIcon() normally uses for the thumbnail.
+    //   • On success: caaLoadIcon() re-fires (re-loads the artwork thumbnail)
+    //     and caaEnrichReleaseGroupIcon() re-runs (serves from cache — no extra
+    //     network round-trip).
+    //   • On final failure: a permanent red "?" SVG replaces the countdown so
+    //     the user can see that retries were at least attempted.
+    //
+    // ─────────────────────────────────────────────────────────────────────────
 #+end_example
 
-what is the diff code block
 
-#+begin_example
-@@ -13820,13 +13831,15 @@
-             // Highlight identical barcodes in Barcode columns (post-render)
-             initBarcodeHighlight();
- 
--            // NOTE: initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics are
--            // NOT called here.  renderGroupedTable() calls them at its own tail (just
--            // before "Finished renderGroupedTable"), so calling them again here would
--            // produce doubled badge counts: the first set of <img> elements is detached
--            // by the second _artInitBigPics pass but keeps firing load events via the
--            // still-live btnId closure, so every successfully-loaded image increments the
--            // badge twice.
-+            // Load CAA/EAA art thumbnails and big-pic strip (post-render).
-+            // initCaaPics() MUST run before initEaaPics() and the inline variants —
-+            // it creates _caaQueue used by all three.
-+            initCaaPics();
-+            initEaaPics();
-+            // Inline CAA/EAA thumbnails must run after ERG (▶ button already present)
-+            // and after initCaaPics() (so _caaQueue is initialised).
-+            initCaaInlinePics();
-+            initEaaInlinePics();
- 
-             // Initialise the Unicode character picker (builds menu DOM once, idempotent)
-             initSaUnicodeCharsFeature();
-@@ -20146,12 +20159,9 @@
-                 return;
-             }
-         } else {
--            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics.
--            // Also restore display in case the button was hidden by the stale-bigbox
--            // clear path (count=0 on a previous filter pass) and is now valid again.
-+            // Re-render: reset badge to 0 — images are re-loading in _artInitBigPics
-             const badge = btn.querySelector('.' + ctx.countClass);
-             if (badge) badge.textContent = '0';
--            btn.style.display = '';
-         }
- 
-         // Sync button title to current bigbox visibility (box may not exist yet)
-#+end_example
+* TODO add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
 
-good for, does it belong to the bug fix too ?
-
-Also you forgot to produce a changelog entry
-
-* DONE CAA loading completely broken
-
-In the uploaded userscript "ShowAllEntityData.user.js",
-
-the CAA loading is completely broken for "single"-table mode pages, also with query parameters https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&link_type_id=278
-
-see the uploaded ..-bug files
-
-Please fix and provide a changelog
-
-* DONE after filtering the first time and then clearing the filter again
-
-One last glitch,
-
-after starting typing in whatever filter field (global, column specific or in the case of sub-tables, the sub-table filter field), the CAA toggle buttons get renderded visually in such
-a way that the number of CAA images is centered below the CAA image icon inside the button
-
-Please fix and add a changelog
-
-* DONE "single"-table mode: when loading from disk when already on the final rendered page, the CAA count inside the button doubles, but asson nas we start filtering, it resets to the actual filtered count
-** initial
-
-Some more glitches
-
-- "single"-table mode: when loading data from disk when already on the final rendered page, the CAA count inside the button
-doubles, but as soon as we start filtering, it resets to the actual filtered count
-
--" multi"-table mode: when loading data from disk when already on the final rendered page, the CAA count inside the button
-triples, but as soon as we start filtering, it resets to the actual filtered count
-
--" multi"-table mode: when loading data from disk when already on the final rendered page, and then toggle the display
-of the CAA images of one ore more sub-tables, the CAA image big boxes are rendered below the table instead of below the
-h3 sub-header (as what happens when loading from the net). They are also visually stacked below each other in the same
-order as the sub-tables appear on the whole page
-
-** still a glitch
-
-In the uploaded userscript "ShowAllEntityData.user.js",
-
-two bugs are present:
-
-1.)
-
-- on "single"-table and "multi"-table mode: when loading data from disk when already on the final rendered page, the CAA count inside the button
-doubles, but as soon as we start filtering, it resets to the actual filtered count
-
-
-2.)
-
-On "multi"-table pages when toggling the filter elements on for a specific sub-table/section and entering a filter string in the sub-table h3 filter
-field, the following is expected:
-
-The following "mb-subtable-controls" container should be rendered with buttons for clearing the filter field and toggle highlighning + filter information
-
- #+begin_example
-<span class="mb-subtable-controls">
-  <button class="mb-subtable-clear-btn" type="button" title="Clear all filters for this sub-table (column filters and sub-table filter)" style="display: none;">
-    <span style="color: red; font-size: 1em; font-weight: bold;">✗
-    </span>
-    <span class="mb-subtable-clear-btn-label">Clear all filters
-    </span>
-  </button>
-  <button id="mb-stf-Bootleag-toggle-filter-highlight-btn" type="button" title="Toggle filter highlighting on/off (sub-table filter and column filters)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting
-  </button>
-  <span class="mb-filter-status" data-table-name="Bootleg" data-table-index="1" style="color: green;">
-  </span>
-  <span class="mb-sort-status" data-table-name="Bootleg" data-table-index="1">
-  </span>
-</span>
-#+end_example
-
-In the example pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-
-- When the sub-table doesn't have any CAA artworks (no release or release-group column present), for example for the sub-table "Vocals", this really happens   
-
-- NOW the bug: When the sub-table DOES have CAA artworks e.g. the "Liner notes for", the "mb-subtable-controls" container IS NOT rendered 
-
-
-please fix and add a changelog entry
-
-* DONE highlighning still on after load from disk
-
-In the uploaded userscript "ShowAllEntityData.user.js",
-
-There is a bug in "multi"-table mode when loading data from disk:
-
-Lets assume we are on the final rendered page by reading all data from the net on pageType https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23
-
-- then save the data with "Save to Disk"-button to the filessystem
-- then filter on one sub-table, e.g. "Promotion" in the table specific filter field with lets say the string "AR" ==> the filter string will be highlighted in the matching rows
-- NOW the bug: when now loading data from disk with "Load from Disk" button, the rows still have the filter string from before the loading higlighted after rendering
-
-please fix  
-   
+* TODO add global show CAA images for multi-table mode
+* TODO fix the collapsing/uncollapsing behaviour with "Ctrl"-click on h2/h3 header rows
 
 * TODO Add a spacer between the artwork icon and the artwork count to make it visually more appealing
 
-- on "multi"-table pageTypes for each sub-table, add a little bit more space between the artwork icon and the artwork count in all their CAA toggle buttons
+In the uploaded userscript "ShowAllEntityData.user.js",
+
+- on "multi"-table pageTypes for each sub-table, add a little bit more space between the artwork icon and the artwork
+  count in all their CAA toggle buttons to make it visually more appealing
 
 #+begin_example
 <button id="mb-caa-toggle-btn-0" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;" data-art-render-gen="1"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">114</span></button>
@@ -51156,19 +51156,6 @@ toggle the display of the sub-table rows to OFF, the CAA images are STILL displa
 hidden when the corresponding sub-table rows are hidden (but not collapsed internally, so when uncollapsing the
 sub-table rows again, they should still be visible)
 
-- Rename the "suffixText" (and all code/documentatin references to it) from
-
-#+begin_example
-let suffixText = ' all Types';
-#+end_example
-
-to
-
-#+begin_example
-let suffixText = ' all Sections';
-#+end_example
-
-* TODO fix the collapsing/uncollapsing behaviour with "Ctrl"-click on h2/h3 header rows
 
 * Reintroduce jesus2099 "Release events"
 
@@ -51222,3 +51209,7 @@ let suffixText = ' all Sections';
 https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relatinships
 #+end_example
+
+
+* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
+
