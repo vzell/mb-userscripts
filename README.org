@@ -51924,80 +51924,7 @@ so the row count "${rowSegment}" should be included in brackets too and the ${ti
 MB-Artist-(Bruce Springsteen)-Relationships-(1329)_2026-03-13T11-54-51.json.gz
 #+end_example
 
-
-* Reintroduce jesus2099 "Release events"
-
-#+begin_example
-        {
-            type: 'place-performances-filtered',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
-            features: {
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-
-        {
-            type: 'artist-relationships-filtered',
-            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-#+end_example
-
-#+begin_example
-https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
-#+end_example
-
-
-* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
-
-* TODO for RGs CAA artwork also display the Release fom where it's sourced
-
-* add menu to hover CAA picture, for different actions
-
-
-
-* todos
-
-In the newly uploaded userscript,
-
-a couple of things are still missing (also add a changelog):
-
-
-* TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-
-* TODO add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
+* DONE add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
 ** DONE initial
 
 In the uploaded userscript,
@@ -52090,36 +52017,13 @@ function initNavigationGuard() {
 
 still allows it
 
-** Some "TAB" (Shift-TAB) reachable container, for example all the action buttons in the h1 header line do not show any visual representation when using TAB or Shift-TAB AND they have the focus 
+** DONE Some "TAB" (Shift-TAB) reachable container, for example all the action buttons in the h1 header line do not show any visual representation when using TAB or Shift-TAB AND they have the focus 
 
 Some "TAB" (Shift-TAB) reachable container, for example all the action buttons in the h1 header line do not show any
 visual representation when using TAB or Shift-TAB AND they have the focus
 
-* TODO reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+** DONE on the final rendered page the TAB (Shift-TAB) key pressed repeatedly should never
 
-
-In the newly uploaded userscript,
-
-a couple of things are still missing (also add a changelog):
-
-* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
-
-In the newly uploaded userscript,
-
-1.)
-
-On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
-
-The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
-th rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
-is completely missing, to give the user the cahne to quickly filter either for rows with OR without images (desn't
-matter what other information is there)
-
-also add a changelog
-
-2.)
-
-on the final rendered page the TAB (Shift-TAB) key pressed repeatedly should never
 leave the page up to native browser controls, but instead it should only select elements INSIDE the page
 
 It looks like the function
@@ -52129,3 +52033,107 @@ function initNavigationGuard() {
 #+end_example
 
 still allows it
+
+
+* Reintroduce jesus2099 "Release events"
+
+#+begin_example
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+#+end_example
+
+#+begin_example
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
+#+end_example
+
+
+* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
+
+* TODO for RGs CAA artwork also display the Release fom where it's sourced
+
+* add menu to hover CAA picture, for different actions
+
+
+* TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+
+* TODO reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
+
+In the newly uploaded userscript,
+
+a couple of things are still missing (also add a changelog):
+
+* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+** DONE initial
+
+In the newly uploaded userscript,
+
+On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
+
+The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
+the rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
+is completely missing, to give the user the chance to quickly filter either for rows with OR without images (doesn't
+matter what other information is there)
+
+also add a changelog
+
+** doesn't work
+
+In the newly uploaded userscript,
+
+On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
+
+The "Cell stucture" submenu list should have, additionally to the entries for multi-re-cells collapse/uncollape states,
+entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
+to give the user the chance to quickly filter either for rows with OR without images
+
+* todos
+
+In the newly uploaded userscript,
+
+a couple of things are still missing (also add a changelog):
+
+
