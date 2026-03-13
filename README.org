@@ -46318,7 +46318,7 @@ into a condensed format as one line "inlcude", something like
 
 
 
-* TODO Event-Alias handling - add the event alias int the next line
+* DONE Event-Alias handling - add the event alias int the next line
 ** extract as synthetic column - add synthetic column for event alias - 2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA (2001-05-27) (Southside Johnny & The Asbury Jukes at The Stone Pony, Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
 
 https://musicbrainz.org/event/26cead1c-a5fa-4677-873a-312412c6dc91
@@ -47002,7 +47002,86 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 
 
-* optionally hide "recording of <work>" in Artist-Recordings" pages
+* TODO reintroduce 'Batch-add "performance of" relationships' userscript functionaliyt on final rendered pages
+
+* TODO hide "recording of <work>" in Artist-Recordings" pages
+
+#+begin_example
+// @name         MusicBrainz: Batch-add "performance of" relationships
+// @description  Batch link recordings to works from artist Recordings page.
+// @version      2023.7.2
+// @author       Michael Wiencek
+#+end_example
+
+#+begin_example
+function applyColumnErasers(row, eraserDescriptors)
+#+end_example
+
+#+begin_example
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] },
+                    { sourceColumn: 'Name', erasers: ['wiencek'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release groups', 'CAA' ],
+                addCAA: 'Release groups',
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+#+begin_example
+<td>
+  <a class="wrap-anywhere" href="/recording/e1801356-9611-4907-b3fd-6c68f43f6906">
+    <bdi>? (unknown Title)
+    </bdi>
+  </a>
+  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em; color: orange;">
+    <span>Looking for matching work…
+    </span>&nbsp;
+    <span>1236/1584
+    </span>
+  </div>
+</td>
+
+<td>
+  <span class="video" title="This recording is a video">
+  </span>
+  <a class="wrap-anywhere" href="/recording/875a6a0d-1fcc-416e-959f-433f96b0da17">
+    <bdi>"Born to Run"
+    </bdi>
+  </a>
+  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">
+    <span style="color: green; font-weight: bold;">Suggested work:
+    </span>&nbsp;
+    <a href="/work/9893a23c-f282-3b07-a2db-b4f2f3b9f4b2">Born to Run
+    </a>
+  </div>
+</td>
+
+<td>
+  <a class="wrap-anywhere" href="/recording/e7592c69-88ae-4038-a834-c6b63bbb5251">
+    <bdi>(4th of July, Asbury Park) Sandy
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>live, 1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa City, IA, USA
+    </bdi>)
+  </span>
+  <div class="work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">live recording of
+    <a href="/work/1f573511-eb4b-3106-8fb2-f15de52e4868">4th of July, Asbury Park (Sandy)
+    </a>
+  </div>
+</td>
+#+end_example
 
 * The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
 
@@ -51217,9 +51296,12 @@ whereas the the column header collapse/uncollpase icon and the cell specific one
 
 ** TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
+
 * TODO reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 
+
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+
 
 * DONE retry "Failed to fetch" - CAA cover artcode
 
@@ -51580,6 +51662,167 @@ with comments, see
      */
 #+end_example
 
+* DONE add background color to the h2/h3 table header header rows
+** initial
+
+Add configurable background colors in the configuration "const configSchema":
+
+- all pageTypes have at least one (typically more) h2 header lines, e.g.
+
+#+begin_example
+<h2 class="relationships mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Relationships</h2>
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Appearances<span class="mb-row-count-stat">(1329)</span><button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/08be60a2-44c9-4639-8678-05d874d8bcc4/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">331</span></button><button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><span class="mb-master-toggle">[ <span title="Show all sub-tables">Show</span> | <span title="Hide all sub-tables">Hide</span> ] all Sections</span><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude matches (Global Filter)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: none;"><span>▶ Expand</span><span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting</button><button id="mb-clear-column-filters-btn" title="Clear all column-specific filter inputs — global action (Shift+Esc)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global/sub-table filters and ALL column filters in all sub-tables — also triggered by Ctrl+Shift+G" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status"></span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
+<h2 class="annotation mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Annotation</h2>
+<h2 class="wikipedia mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Wikipedia</h2>
+#+end_example
+
+where the rendered initial text is colored in orange. Please add a configurable background color (default: "light orange") to the complete h2 lines when the cursor is NOT hovering over it but leave the curretn gey background IF the cursor is over the h2 line
+
+- on "multi"-table pageTypes also add a configurable background color (default: "ligh green") to the h3 headers
+
+#+begin_example
+<h3 class="mb-toggle-h3" title="Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>....
+#+end_example
+  
+add a better background color (even better make them configurable in the configuration section) to the h2/h3
+table/sub-table header header rows (depending on single or multi-table mode))
+
+Use as a default the original rainbow like grey coloring of the table header (foreground/backgound) from the initial
+entry page before acting on the action button and rendering the final page.
+
+** also make the hover state for h2/h3 headers also configurable (default: #f9f9f9)
+
+Two more things
+
+- also make the hover state for h2/h3 headers configurable (default: #f9f9f9)
+
+- A bug: the "sa_enable_h1_comment_span_relocation_on_final_page" should decide if the "H1 comment-span relocation"
+  feature should be enabled on the final rendered page, but the "Primary alias" doesn'get rendred at all on the final
+  renderd page (although it works on the initial page), the text for the "Primary alias" is actually completely removed
+
+** DONE change all color configuration parameters
+
+change all color configuration parameters which currently use
+
+#+begin_example
+type: 'color',
+#+end_example
+
+to
+
+#+begin_example
+type: 'color_picker',
+#+end_example
+
+in the configuration "const configSchema"
+
+** DONE Add configurable background colors for the standard AND synthetic table columns
+
+Add configurable background colors also for the standard AND synthetic table column headers. The default value should be
+the current color for the standard column headers and a darker background than now for the synthetic column headers
+
+** TODO Add configurable background colors for the standard AND synthetic table columns
+
+Split the current configuration parameter which handles both H2 and H3 header background colors
+
+#+begin_example
+        sa_ui_h2_hover_bg: {
+            label: 'H2 / H3 header hover background color',
+            type: 'color',
+            default: '#f9f9f9',
+            description: 'Background color applied to H2 and H3 section headers when the cursor hovers over them (.mb-toggle-h2:hover, .mb-toggle-h3:hover). Default is the original MusicBrainz light grey.'
+        },
+#+end_example
+
+into separate configurations for H2 (sa_ui_h2_hover_bg) and H3 (sa_ui_h3_hover_bg) headers + adjust their descriptions correspondingly
+
+
+* DONE LOAD AND SAVE DATA TO/FROM DISK SECTION
+
+Add more configuration options to the
+
+#+begin_example
+// ============================================================
+// LOAD AND SAVE DATA TO/FROM DISK SECTION
+// ============================================================
+#+end_example
+
+in the configuration "const configSchema":
+
+a.)
+
+- a boolean parameter which specifies if the ${detailSegment} should be included in the final filename
+- a boolean parameter which specifies if the ${rowSegment} (in brackets, see below) should be included in the final filename
+- a boolean parameter which specifies if the ${timestamp} should be included in the final filename
+- a string parameter for the prefix in the complete filename (default: "MB-")
+
+b.)
+
+Change the current filename
+
+#+begin_src bash
+const filename = `MB-${pageTypeSlug}${detailSegment}-${rowSegment}-${timestamp}.json.gz`;
+#+end_src
+
+to a new format, see instructions below:
+
+- First of all additionally extract the current pageType entity name "${entityName}" from the h1 header, e.g. with the following two examples
+
+#+begin_example
+<h1>
+  <a href="/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b">
+    <bdi>Thunder Road
+    </bdi>
+  </a>
+#+end_example
+
+#+begin_example
+<h1>
+  <a href="/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c">
+    <bdi>From the Studio to the Stage: New York
+    </bdi>
+  </a> (2024-10-04)
+#+end_example
+
+the entity names "${entityName}" would be
+
+#+begin_example
+Thunder Road
+From the Studio to the Stage: New York (2024-10-04)
+#+end_example
+
+so effectively extract the text part from the "<bdi>" and the optional text part after the anchor "<a>"
+
+- capitalize the ${pageTypeSlug}, so e.g.
+
+#+begin_example
+artist-relationships
+#+end_example
+
+would change to
+
+#+begin_example
+Artist-Relationships
+#+end_example
+
+- add the "${entityName}" from before, in brackets prepended with another "-" right in front of the "-" in the ${pageTypeSlug}, e.g.
+
+#+begin_example
+Artist-Relationships
+#+end_example
+
+would finally become (on the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships for exampe, where the artist is "Bruce Springsteen")
+
+#+begin_example
+Artist-(Bruce Springsteen)-Relationships
+#+end_example
+
+so the row count "${rowSegment}" should be included in brackets too and the ${timestamp} finally appended (separated with a "_" from the rest)
+
+#+begin_example
+MB-Artist-(Bruce Springsteen)-Relationships-(1329)_2026-03-13T11-54-51.json.gz
+#+end_example
+
 
 * Reintroduce jesus2099 "Release events"
 
@@ -51643,59 +51886,25 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 * add menu to hover CAA picture, for different actions
 
 
-* TODO better background for the h3 sub-table header in multi-table mode and better background for the h2 headers - configurable
-* TODO add background color to the h2/h3 table header header rows
-** initial
-
-Add configurable background colors in the configuration "const configSchema":
-
-- all pageTypes have at least one (typically more) h2 header lines, e.g.
-
-#+begin_example
-<h2 class="relationships mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Relationships</h2>
-<h2 class="mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Appearances<span class="mb-row-count-stat">(1329)</span><button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/08be60a2-44c9-4639-8678-05d874d8bcc4/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">331</span></button><button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><span class="mb-master-toggle">[ <span title="Show all sub-tables">Show</span> | <span title="Hide all sub-tables">Hide</span> ] all Sections</span><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude matches (Global Filter)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: none;"><span>▶ Expand</span><span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting</button><button id="mb-clear-column-filters-btn" title="Clear all column-specific filter inputs — global action (Shift+Esc)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global/sub-table filters and ALL column filters in all sub-tables — also triggered by Ctrl+Shift+G" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status"></span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
-<h2 class="annotation mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Annotation</h2>
-<h2 class="wikipedia mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Wikipedia</h2>
-#+end_example
-
-where the rendered initial text is colored in orange. Please add a configurable background color (default: "light orange") to the complete h2 lines when the cursor is NOT hovering over it but leave the curretn gey background IF the cursor is over the h2 line
-
-- on "multi"-table pageTypes also add a configurable background color (default: "ligh green") to the h3 headers
-
-#+begin_example
-<h3 class="mb-toggle-h3" title="Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>....
-#+end_example
-  
-add a better background color (even better make them configurable in the configuration section) to the h2/h3
-table/sub-table header header rows (depending on single or multi-table mode))
-
-Use as a default the original rainbow like grey coloring of the table header (foreground/backgound) from the initial
-entry page before acting on the action button and rendering the final page.
-
-** also make the hover state for h2/h3 headers also configurable (default: #f9f9f9)
-
-Two more things
-
-- also make the hover state for h2/h3 headers configurable (default: #f9f9f9)
-
-- A bug: the "sa_enable_h1_comment_span_relocation_on_final_page" should decide if the "H1 comment-span relocation"
-  feature should be enabled on the final rendered page, but the "Primary alias" doesn'get rendred at all on the final
-  renderd page (although it works on the initial page), the text for the "Primary alias" is actually completely removed
-
-** Add configurable background colors for the standard AND synthetic table columns
-
 
 * todos
 
-a couple of things are still missing; by the way you missed adding a changelog for the previous edits (please readd and
-also add a new changelog for the upcoming implementations)
+In the uploaded userscript,
+
+a couple of things are still missing (also add a changelog):
 
 1.)
 
-Add configurable background colors for the standard AND synthetic table columns. The default value should be the current
-color for the standard columns and a darker background than now for the synthetic columns
+Split the current configuration parameter which handles both H2 and H3 header background colors
 
-2.)
+#+begin_example
+        sa_ui_h2_hover_bg: {
+            label: 'H2 / H3 header hover background color',
+            type: 'color',
+            default: '#f9f9f9',
+            description: 'Background color applied to H2 and H3 section headers when the cursor hovers over them (.mb-toggle-h2:hover, .mb-toggle-h3:hover). Default is the original MusicBrainz light grey.'
+        },
+#+end_example
 
-Make the 
-saved filename should get the entity name 
+into separate configurations for H2 (sa_ui_h2_hover_bg) and H3 (sa_ui_h3_hover_bg) headers + adjust their descriptions correspondingly
+
