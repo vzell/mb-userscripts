@@ -51293,9 +51293,6 @@ Those changes together would likely cut the runtime of your script by 50–70% o
 * TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 
 
-* TODO implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
-
-
 * DONE add a multi-row cell for the CAA info
 ** DONE initial
 
@@ -52120,7 +52117,7 @@ matter what other information is there)
 
 also add a changelog
 
-** doesn't work
+** DONE doesn't work
 
 In the newly uploaded userscript,
 
@@ -52129,6 +52126,49 @@ On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the
 The "Cell stucture" submenu list should have, additionally to the entries for multi-re-cells collapse/uncollape states,
 entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
 to give the user the chance to quickly filter either for rows with OR without images
+
+
+* TODO implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
+
+
+
+** initial
+
+please implement an indexed-DB persistent storage solution for the fetched artwork images (CAA and EAA). When rendering
+the final page the index DB should always be consulted first for a match before reaching out to the network.
+
+Probably the "Load from Disk" path would benefit the most, as there are probably almost no network rountrips involved.
+
+** *.archive.org
+
+a couple of issues:
+
+1.)
+
+the button "Save to Disk" popsup a browser alert dialog which says "Your are about to leave this page". Please exlude
+this specific button click inside the function
+
+#+begin_example
+function initNavigationGuard() {
+#+end_example
+  
+to NOT produce this alert, as it actually dos NOT leave the page
+
+2.)
+
+the following two @connect headers must also be set, because coverartarchive.org redirects to archive.org which in turn
+redirects to arbitrary cache server which ends in *.archive.org
+
+#+begin_example
+// @connect      archive.org
+// @connect      *.archive.org
+#+end_example
+
+3.)
+
+the hovering over a small artwork image inside the "CAA" column works when the images are loaded the first time over the
+network. But when then saving the table data to disk with "Save to Disk"-button and later on loading the data again with
+the "Load from Disk"-button,
 
 * todos
 
