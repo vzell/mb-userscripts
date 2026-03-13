@@ -50148,7 +50148,9 @@ Verdict: worth implementing as a dedicated feature. Suggested scope: IDB metadat
 * ChatGPT
 ** recommendations
 
-I’ll go through your ideas one by one from a technical feasibility + real benefit perspective for a userscript like ShowAllEntityData.user.js. I’ll also point out a few implementation tricks that work well with the Cover Art Archive (CAA).
+I’ll go through your ideas one by one from a technical feasibility + real benefit perspective for a userscript like
+ShowAllEntityData.user.js. I’ll also point out a few implementation tricks that work well with the Cover Art Archive
+(CAA).
 
 1. Detecting network fetch vs browser cache hit (Resource Timing API)
 Short answer
@@ -50224,6 +50226,7 @@ Verdict
 ✔ Very small code footprint
 
 2. Retry solution for failed image loads
+
 Yes — but with limited retries
 
 CAA sometimes fails because:
@@ -51152,14 +51155,14 @@ toggle the display of the sub-table rows to OFF, the CAA images are STILL displa
 hidden when the corresponding sub-table rows are hidden (but not collapsed internally, so when uncollapsing the
 sub-table rows again, they should still be visible)
 
-
-* fix count on global button
+* DONE fix count on global button
 
 One last bug
 
 The CAA count on the global CAA toggle button is always 0
 
 Please fix
+
 
 * Reintroduce jesus2099 "Release events"
 
@@ -51218,4 +51221,113 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 * TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
 
 * for RGs CAA artwork also display the Release fom where it's sourced
+
+* TODO better background for the h3 sub-table header in multi-table mode and better background for the h2 headers - configurable
+
+A bug is still left:
+
+Let's take for example the follwing multi-table URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
+- there must be a bug when it comes to fetching and/or rendering datacells with an actual CAA artwork image in the CAA
+  column (which can be deduced that it's there, from the equivalent artwork icon in the "Title" columns where it
+  actually got's rendered).
+
+Here is such a rendered row
+
+#+begin_example
+<tr class="odd" data-mb-row-idx="902">
+  <td>
+  </td>
+  <td data-caa-inline-done="1" data-erg-injected="1">
+    <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+    </span>
+    <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+      <img alt="" src="//coverartarchive.org/release/52c6808b-037d-47d5-b0c7-17331c9d36cd/front-250" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;">
+      <span class="mb-art-cache-hint-inline" title="Network fetch (8771 ms)" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🔵
+      </span>
+    </span>
+    <span class="releaselink">
+    </span>
+    <a href="/release/52c6808b-037d-47d5-b0c7-17331c9d36cd">
+      <bdi>Tougher Than the Rest
+      </bdi>
+    </a>
+  </td>
+  <td>
+  </td>
+  <td>
+  </td>
+  <td>
+    <bdi>
+      <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+      </a>
+    </bdi>
+  </td>
+  <td>
+  </td>
+  <td>
+    <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">no
+    </span>
+  </td>
+  <td data-erg-injected="1">
+    <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+    </span>
+    <a href="/release/52c6808b-037d-47d5-b0c7-17331c9d36cd">
+      <bdi>Tougher Than the Rest
+      </bdi>
+    </a>
+  </td>
+  <td>
+  </td>
+</tr>
+#+end_example
+
+The question is WHY is there NO icon at all (pretending there is NO artwork, but there actually IS), not even an icon
+which represents network problems (which we have to tackle later on, see below...)
+
+Please implement a general retry strategy on the table/sub-table level (implementing a "⟳"-icon on BOTH the
+table/sub-table level after the CAA toggle button, or in the case of a row-level network error, replacing the
+
+#+begin_example
+<span class="mb-art-cache-hint-col" title="Timing unavailable">⚠️</span>
+#+end_example
+
+with
+
+#+begin_example
+<span class="mb-art-cache-hint-col" title="Retry...">⚠⟳</span>
+#+end_example
+
+to tackle two issues at once
+
+1.) clicking the '<span class="mb-art-cache-hint-col" title="Retry...">⚠⟳</span>' icon should only try to reload the specific artwork for that row
+
+
+2.) clicking the icon for the whole table, located/rendered AFTER the CAA toggle button, should trigger a REAL reload over the network of all artwork images for each row in that sub-table
+
+*
+
+#+begin_example
+Root cause — empty CAA column on artist-relationships
+
+MusicBrainz does not render caa-icon/artwork-icon spans in the source HTML of the relationships page — only plain <a
+href="/release/..."> links. The caa() column extractor searches specifically for those spans, finds none, and correctly
+writes sort-key="no". The _artInitSmallPics function has no icon spans to queue, so no load is ever attempted and no
+error indicator was ever shown.
+
+The inline thumbnail in the Title column works via the entirely independent addCAA: 'Title' → _artInitInlinePics path,
+which extracts the release GUID directly from the href and queries the CAA API — no source-side artwork marker
+needed. Populating the CAA column for these pages would require injecting artwork-icon spans when inline thumbnails
+load, which is a deeper architectural change tracked as a future enhancement.
+#+end_example
+
+* remove double comment blocks
+
+#+begin_example
+ * Loads an art thumbnail into the background of one artwork-icon span.
+#+end_example
+
+* TODO adjust the height of the "⟳" char to the other buttons, actually make the height of the "⟳" char and "resize" and "visible" columns buttons the same
+
+
 
