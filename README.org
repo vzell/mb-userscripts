@@ -51049,8 +51049,6 @@ add more guards (notify user with an alert box) before leaving the final rendere
 
 - even the TAB key pressed repeatedly should never leave the page up to native browser controls
 
-
-
 * TODO implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
 
 
@@ -51140,7 +51138,7 @@ a couple of glitches:
 - initially when rendering the final page, the column header collapse/uncollapse icon for multi-row cells in the "CAA" column is NOT visible
 - as soon as I sort on ANY column it gets visible and from then on the collapse/uncollapse works either  when clicking the column header icon or the global icon 
 
-** The "mb-col-collapse-all-btn", when clicked does not take into account the "CAA" column
+** DONE The "mb-col-collapse-all-btn", when clicked does not take into account the "CAA" column
 
 The "mb-col-collapse-all-btn", when clicked does not take into account the "CAA" column
 
@@ -51150,7 +51148,7 @@ The "mb-col-collapse-all-btn", when clicked does not take into account the "CAA"
 
 whereas the the column header collapse/uncollpase icon and the cell specific ones work
 
-** investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+** TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
 * TODO reinforce the loading o the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 
@@ -51413,7 +51411,6 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 
 * TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
 
-
 * for RGs CAA artwork also display the Release fom where it's sourced
 
 
@@ -51422,6 +51419,7 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 #+begin_example
  * Loads an art thumbnail into the background of one artwork-icon span.
 #+end_example
+
 
 * TODO adjust the height of the "⟳" char to the other buttons, actually make the height of the "⟳" char and "resize" and "visible" columns buttons the same
 
@@ -51434,12 +51432,6 @@ Use as a default the original rainbow like grey coloring of the table header (fo
 entry page before acting on the action button and rendering the final page.
 
 * add menu to hover CAA picture, for different actions
-
-* unique column values drop down
-
-#+begin_example
-o make them filterable, I need a dedicated text extraction path for CAA art cells that reads from the art-li-image rows, but without letting types and comments pollute the sort keys or global row text used for global filtering.
-#+end_example
 
 * DONE Somehow you messed up when generating the code
 
