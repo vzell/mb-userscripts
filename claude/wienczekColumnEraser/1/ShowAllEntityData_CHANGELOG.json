@@ -1,18 +1,5 @@
 [
     {
-      "version": "9.99.142",
-      "date": "2026-03-13",
-      "sections": [
-        {
-          "label": "✨ Improvements",
-          "items": [
-            "Navigation guard (initNavigationGuard) completely reworked. Three independent guards are now installed under a single idempotent _mbNavGuardInstalled flag: (1) Anchor click guard — page-wide, identical to the expansion introduced in 9.99.141. (2) Tab key focus-trap — a new keydown capture listener intercepts Tab and Shift+Tab: when the focused element is the last (or first for Shift+Tab) visible, enabled focusable element on the page, the default browser behaviour of moving focus into the browser chrome (address bar, toolbar) is suppressed and focus wraps around to the first (or last) page element instead. Focusable elements are collected via a combined selector (a[href], button:not([disabled]), input, select, textarea, [tabindex]) and filtered for visibility; elements with tabIndex > 0 are sorted to the front per the HTML spec. (3) Merge-form submit-button guard — a second click capture listener detects button clicks inside any <form> that contains a div.list-merge-buttons-row-container (the MusicBrainz 'Add all releases for merging' / 'Merge release groups' action forms). Clicking one of these buttons submits the form and navigates away; the guard intercepts the click and shows the standard confirmation dialog. Buttons whose formtarget='_blank' open in a new tab and are not guarded. The human-readable form label is extracted from the embedded <script type='application/json'> for the debug log. JSDoc updated to describe all three guards.",
-            "initNavigationGuard debug log updated: the final installed message now reads 'Navigation guard installed (anchor + Tab-trap + merge-form).' and each guard emits a dedicated debug line on trigger/cancel."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.141",
       "date": "2026-03-13",
       "sections": [

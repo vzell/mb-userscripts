@@ -47002,7 +47002,9 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 
 
-* TODO hide "recording of <work>" in Artist-Recordings" pages
+* The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
+
+* DONE hide "recording of <work>" in Artist-Recordings" pages
 
 In the page definition variable "const pageDefinitions" add the following new "columnEraser"
 
@@ -47092,9 +47094,6 @@ Here is are examples of the cell HTML without the stripping:
   </div>
 </td>
 #+end_example
-
-* The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
-
 
 * DONE add the empty cell stuff to all unique drop down lists, especially for "Barcode" - https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
@@ -51740,7 +51739,7 @@ in the configuration "const configSchema"
 Add configurable background colors also for the standard AND synthetic table column headers. The default value should be
 the current color for the standard column headers and a darker background than now for the synthetic column headers
 
-** TODO Add configurable background colors for the standard AND synthetic table columns
+** DONE Add configurable background colors for the standard AND synthetic table columns
 
 Split the current configuration parameter which handles both H2 and H3 header background colors
 
@@ -51754,7 +51753,6 @@ Split the current configuration parameter which handles both H2 and H3 header ba
 #+end_example
 
 into separate configurations for H2 (sa_ui_h2_hover_bg) and H3 (sa_ui_h3_hover_bg) headers + adjust their descriptions correspondingly
-
 
 * DONE LOAD AND SAVE DATA TO/FROM DISK SECTION
 
@@ -51893,7 +51891,7 @@ MB-Artist-(Bruce Springsteen)-Relationships-(1329)_2026-03-13T11-54-51.json.gz
 
 #+begin_example
 https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relatinships
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
 #+end_example
 
 
@@ -52028,6 +52026,7 @@ Adjust the following function
 
 to guard NOT ONLY anchor clicks inside a table, but EVERYWHERE on the final rendered page
 
+* Adjust the following function even more
 
 Adjust the following function even more
 
@@ -52035,5 +52034,66 @@ Adjust the following function even more
 function initNavigationGuard() {
 #+end_example
 
+1.)
+
+
 to guard NOT ONLY anchor EVERYWHERE on the final rendered page but also the TAB key pressed repeatedly should never
-leave the page up to native browser controls, but instead it should only select elemets INSIDE the page
+leave the page up to native browser controls, but instead it should only select elements INSIDE the page
+
+2.)
+
+and also guard also against button clicks in these kind of "form" containers
+
+#+begin_example
+<form action="/release/merge_queue?returnto=%2Frelease-group%2Fc497fc44-ddaf-3cce-a9b4-bfec958a0f3c%3Ftport%3D8000%26page%3D1" method="post">
+  <nav>
+  </nav>
+  <nav>
+  </nav>
+  <script type="application/json">{"label":"Add selected releases for merging"}
+  </script>
+  <div class="list-merge-buttons-row-container">
+    <div class="row">
+      <span class="buttons">
+	<button type="submit" style="background-color: rgb(255, 238, 255);">Add all releases for merging
+	</button>
+	<button type="submit" style="background-color: rgb(255, 238, 255); cursor: help;" title="Shift+click to merge in new tab
+Ctrl+click to merge in background tab (browser support may vary)
+You don’t need this if you are adding a different type of entities.">Clear queue then add all releases for merging
+	</button>
+	<button aria-label="Add selected releases for merging (in a new tab)" formtarget="_blank" title="Add selected releases for merging (in a new tab)" type="submit">
+	  <img alt="Add selected releases for merging (in a new tab)" src="https://static.metabrainz.org/MB/new_tab-810fcb6.svg">
+	</button>
+      </span>
+    </div>
+  </div>
+  <script src="https://static.metabrainz.org/MB/common/components/ListMergeButtonsRow-76d7c3c.js" async="">
+  </script>
+</form>
+
+<form action="/release_group/merge_queue?returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%3Fpage%3D1" method="post">
+  <nav>
+  </nav>
+  <nav>
+  </nav>
+  <script type="application/json">{"label":"Merge release groups"}
+  </script>
+  <div class="list-merge-buttons-row-container">
+    <div class="row">
+      <span class="buttons">
+	<button type="submit" style="background-color: rgb(255, 238, 255);">Merge release groups
+	</button>
+	<button type="submit" style="background-color: rgb(255, 238, 255); cursor: help;" title="Shift+click to merge in new tab
+Ctrl+click to merge in background tab (browser support may vary)
+You don’t need this if you are adding a different type of entities.">Clear queue then merge release groups
+	</button>
+	<button aria-label="Merge release groups (in a new tab)" formtarget="_blank" title="Merge release groups (in a new tab)" type="submit">
+	  <img alt="Merge release groups (in a new tab)" src="https://static.metabrainz.org/MB/new_tab-810fcb6.svg">
+	</button>
+      </span>
+    </div>
+  </div>
+  <script src="https://static.metabrainz.org/MB/common/components/ListMergeButtonsRow-76d7c3c.js" async="">
+  </script>
+</form>
+#+end_example
