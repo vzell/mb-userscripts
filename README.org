@@ -51502,3 +51502,57 @@ with comments, see
      * @returns {HTMLLIElement}
      */
 #+end_example
+
+* fix changelog
+
+In the uploaded changelog file "ShowAllEntityData_CHANGELOG.json"
+
+Starting from the entry '"version": "9.99.114"' up to '"version": "9.99.135"'
+
+#+begin_example
+    {
+      "version": "9.99.114",
+      "date": "2026-03-11",
+      "changes": {
+        "♻️ Refactor": [
+          "Unified the CAA Illustrated Discography and EAA Illustrated Events features into a single shared generic engine (_art* functions) parameterised by archive context descriptors (CAA_CTX / EAA_CTX).",
+          "Eliminated ~450 lines of structural duplication: caaLoadIcon / eaaLoadIcon → _artLoadIcon(ctx), caaEnrichReleaseGroupIcon / eaaEnrichEventIcon → _artEnrichIcon(ctx), caaInitSmallPics / eaaInitSmallPics → _artInitSmallPics(ctx), caaCountLinks / eaaCountLinks → _artCountLinks(ctx), caaInitBigPics / eaaInitBigPics → _artInitBigPics(ctx), caaUpdateBigBoxForTable / eaaUpdateBigBoxForTable → _artUpdateBigBoxForTable(ctx), caaCreateOrUpdateToggleButton / eaaCreateOrUpdateToggleButton → _artCreateOrUpdateToggleButton(ctx), initCaaPics / initEaaPics → _artInitPics(ctx), initCaaInlinePics / initEaaInlinePics → _artInitInlinePics(ctx).",
+          "Merged caaFindCaaColumnIndex and eaaFindEaaColumnIndex into the existing caaFindColumnByName(table, name) — both were single-line wrappers with a hardcoded column name.",
+          "Introduced _ART_GUID_RE_STR shared constant to avoid repeating the 36-char GUID pattern string six times.",
+          "All public call-site names (initCaaPics, initEaaPics, initCaaInlinePics, initEaaInlinePics, caaUpdateBigBoxForTable, eaaUpdateBigBoxForTable) are unchanged; no call sites required modification.",
+          "Moved _eaaEventCountCache declaration to module scope alongside _caaRgCountCache so both caches are available when the context descriptors are constructed."
+        ]
+      }
+    },
+#+end_example
+
+there are a missing "sections" structures with missing "label" and "items"
+
+see the following exmpaple how it should look like
+
+#+begin_example
+    {
+        "version": "9.99.113",
+        "date": "2026-03-11",
+        "sections": [
+            {
+                "label": "🔧 Code Quality",
+                "items": [
+                    "Removed unused variable guardColFilterPrefixKeydown: a @deprecated alias of guardFilterPrefixKeydown that was never referenced anywhere else in the script. The canonical function guardFilterPrefixKeydown() is used directly at all call sites.",
+                    "Fixed JSDoc for updateH2Count(): the third parameter absoluteTotal (added in an earlier revision to support pre-filter absolute row counts on multi-table pages) was missing its @param declaration. Added @param {number|null} [absoluteTotal=null] with a description of its purpose."
+                ]
+            },
+            {
+                "label": "📖 Documentation",
+                "items": [
+                    "ShowAllEntityData_HELP.txt: corrected prefix-mode shortcut key for 'Show Statistics panel' from 't' to 'i' — the actual ctrlMFunctionMap entry has always used 'i' (matching the Statistics button's underline character); the help file had a stale value.",
+                    "ShowAllEntityData_HELP.txt: added Ctrl+U (Unicode character picker) to the KEYBOARD SHORTCUTS table; the shortcut was already implemented and configurable but was not documented in the help file.",
+                    "ShowAllEntityData_HELP.txt: added a new 'COLUMN FILTER FOCUS SHORTCUTS' section documenting Ctrl+↑ (sort ascending), Ctrl+↓ (sort descending), Ctrl+# (unsort), Ctrl+O (toggle multi-row collapse), Ctrl+Q (unique-values dropdown), Ctrl+A (toggle CAA/EAA cover art), Ctrl+R (sub-table resize), and Ctrl+V (sub-table visible-columns). These shortcuts were fully implemented and configurable but absent from the help text.",
+                    "ShowAllEntityData_HELP.txt: updated stale shortcut count in the SETTINGS section from '12 configurable direct-chord shortcuts' to '20', enumerating both the global-scope shortcuts and the new column-filter-focused shortcuts."
+                ]
+            }
+        ]
+    },
+#+end_example
+
+Please fix

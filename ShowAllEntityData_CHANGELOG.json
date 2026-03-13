@@ -2,240 +2,317 @@
     {
       "version": "9.99.135",
       "date": "2026-03-13",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "CAA/EAA column-header ▶/◀ button missing on initial render: initCollapsableColumns runs synchronously immediately after renderFinalTable, before any _artEnrichIcon call has resolved. On the initial render the CAA cells are still empty anchors (no ul.mb-caa-art-ul yet), so multiRowCells is empty for the CAA column and no header button is created. On sort re-renders the clones from allRows already carry the built ul structure, so the button appeared. Fix: _artEnrichTable now collects each _caaQueue.enqueue() Promise into an array and returns Promise.all(promises). In _artInitPics, the _artEnrichTable call is chained with .then(() => { if collapsableColumns.includes(ctx.column) → initCollapsableColumns(table) }), so initCollapsableColumns is re-run exactly once after all enrichments for that table have resolved and every CAA cell has its ul.mb-caa-art-ul populated. initCollapsableColumns is idempotent and its art-cell cleanup guards (introduced in 9.99.133) prevent any clobbering of the newly-built cells."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "CAA/EAA column-header ▶/◀ button missing on initial render: initCollapsableColumns runs synchronously immediately after renderFinalTable, before any _artEnrichIcon call has resolved. On the initial render the CAA cells are still empty anchors (no ul.mb-caa-art-ul yet), so multiRowCells is empty for the CAA column and no header button is created. On sort re-renders the clones from allRows already carry the built ul structure, so the button appeared. Fix: _artEnrichTable now collects each _caaQueue.enqueue() Promise into an array and returns Promise.all(promises). In _artInitPics, the _artEnrichTable call is chained with .then(() => { if collapsableColumns.includes(ctx.column) → initCollapsableColumns(table) }), so initCollapsableColumns is re-run exactly once after all enrichments for that table have resolved and every CAA cell has its ul.mb-caa-art-ul populated. initCollapsableColumns is idempotent and its art-cell cleanup guards (introduced in 9.99.133) prevent any clobbering of the newly-built cells."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.134",
       "date": "2026-03-13",
-      "changes": {
-        "✨ Improvements": [
-          "CAA/EAA column filtering by image type and comment: column filter fields for the CAA/EAA column now match against each image's type strings ('Front', 'Back', 'Booklet', …) and per-image comments. Implementation: new _artBuildSearchText(images) helper concatenates all type strings and comments from an images[] array. _artBuildMultiRowArtCell stores the result in ul.dataset.mbArtSearch (updated on both first-build and rebuild paths). getCleanColumnText() appends this attribute after its normal TreeWalker pass, making the text available to column filters and global RegExp-per-cell filters without modifying getCleanVisibleText() (used for sort keys), which remains unaffected. highlightCrossTag() already walks all text nodes inside the td (it has no FILTER_REJECT), so type badge and comment spans inside collapsed li.mb-caa-art-li-image rows are highlighted when the filter matches — the mb-collapse-toggle-has-match indicator on the toggle cues the user to expand the cell to see the highlighted content.",
-          "CAA/EAA column added to collapsableColumns in every applicable page type: all 9 CAA page types (series-releases, label-releases, artist-relationships-filtered, artist-relationships, artist-releasegroups, artist-releases, artist-recordings, releasegroup-releases, recording-releases) and all 3 EAA page types (area-events, place-events, artist-events) now include 'CAA' or 'EAA' in their collapsableColumns array. This gives each of those pages a column-header ▶/◀ button for mass expand/collapse of all art cells, and includes art cells in the global ▶/◀ button. Implementation in initCollapsableColumns: the per-cell loop now skips cells whose <td> contains a direct-child ul.mb-caa-art-ul (they manage their own toggle), but still counts them in multiRowCells so anyColumnHasMultiRow stays true and the header button is created. A new art-cell hidden-match pass after the per-cell forEach stamps mb-collapse-toggle-has-match on art-cell toggles when their collapsed image rows contain filter-highlight spans, matching the same behavior as regular collapsable columns. The header button's click handler naturally finds and clicks the pre-existing art-cell toggles."
-        ]
-      }
+      "sections": [
+        {
+          "label": "✨ Improvements",
+          "items": [
+            "CAA/EAA column filtering by image type and comment: column filter fields for the CAA/EAA column now match against each image's type strings ('Front', 'Back', 'Booklet', …) and per-image comments. Implementation: new _artBuildSearchText(images) helper concatenates all type strings and comments from an images[] array. _artBuildMultiRowArtCell stores the result in ul.dataset.mbArtSearch (updated on both first-build and rebuild paths). getCleanColumnText() appends this attribute after its normal TreeWalker pass, making the text available to column filters and global RegExp-per-cell filters without modifying getCleanVisibleText() (used for sort keys), which remains unaffected. highlightCrossTag() already walks all text nodes inside the td (it has no FILTER_REJECT), so type badge and comment spans inside collapsed li.mb-caa-art-li-image rows are highlighted when the filter matches — the mb-collapse-toggle-has-match indicator on the toggle cues the user to expand the cell to see the highlighted content.",
+            "CAA/EAA column added to collapsableColumns in every applicable page type: all 9 CAA page types (series-releases, label-releases, artist-relationships-filtered, artist-relationships, artist-releasegroups, artist-releases, artist-recordings, releasegroup-releases, recording-releases) and all 3 EAA page types (area-events, place-events, artist-events) now include 'CAA' or 'EAA' in their collapsableColumns array. This gives each of those pages a column-header ▶/◀ button for mass expand/collapse of all art cells, and includes art cells in the global ▶/◀ button. Implementation in initCollapsableColumns: the per-cell loop now skips cells whose <td> contains a direct-child ul.mb-caa-art-ul (they manage their own toggle), but still counts them in multiRowCells so anyColumnHasMultiRow stays true and the header button is created. A new art-cell hidden-match pass after the per-cell forEach stamps mb-collapse-toggle-has-match on art-cell toggles when their collapsed image rows contain filter-highlight spans, matching the same behavior as regular collapsable columns. The header button's click handler naturally finds and clicks the pre-existing art-cell toggles."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.133",
       "date": "2026-03-13",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "Sort on any column destroyed the CAA/EAA multi-row art cell collapse state: every sort re-render calls initCollapsableColumns() before initCaaPics(). The idempotent cleanup in initCollapsableColumns() was unconditionally (1) removing all .mb-cell-collapse-toggle spans — deleting the art-cell ▶ toggle, (2) removing mb-has-collapse-toggle from all tds — breaking the CSS positioning context, and (3) resetting all ul > li to display:'' — uncollapsing all image rows. Because initCaaPics() / _artEnrichIcon() run afterwards and skip _artBuildMultiRowArtCell() when multiBuiltAttr is already set on the cloned row (cloneNode(true) preserves dataset), the toggle was never restored. Fix: all three cleanup steps now skip cells whose <td> contains a direct-child ul.mb-caa-art-ul (the marker for art cells built by _artBuildMultiRowArtCell). Art cells retain their cloned toggle, class, and li display state across every sort/filter re-render."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Sort on any column destroyed the CAA/EAA multi-row art cell collapse state: every sort re-render calls initCollapsableColumns() before initCaaPics(). The idempotent cleanup in initCollapsableColumns() was unconditionally (1) removing all .mb-cell-collapse-toggle spans — deleting the art-cell ▶ toggle, (2) removing mb-has-collapse-toggle from all tds — breaking the CSS positioning context, and (3) resetting all ul > li to display:'' — uncollapsing all image rows. Because initCaaPics() / _artEnrichIcon() run afterwards and skip _artBuildMultiRowArtCell() when multiBuiltAttr is already set on the cloned row (cloneNode(true) preserves dataset), the toggle was never restored. Fix: all three cleanup steps now skip cells whose <td> contains a direct-child ul.mb-caa-art-ul (the marker for art cells built by _artBuildMultiRowArtCell). Art cells retain their cloned toggle, class, and li display state across every sort/filter re-render."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.132",
       "date": "2026-03-13",
-      "changes": {
-        "✨ Improvements": [
-          "_artBuildImageLi: added hover-preview wiring to the 18×18 thumbnail inside every per-image <li> in the multi-row CAA/EAA art cell. When sa_caa_hover_preview is enabled, hovering the thumbnail shows the shared singleton popup (same one used by the icon-column anchor and the inline-thumbnail ph span). The preview URL is derived from imgData.thumbnails at sa_caa_big_img_size (fallback chain: configured size → 1200 → large → 500 → imgData.image), so each row shows its own specific artwork — Front, Back, Booklet, etc. — rather than the entity's canonical /front-{size} path. Protocol-relative URL stripping (replace /^http:/) and the crosshair cursor are applied consistently with the other two hover-wiring sites."
-        ]
-      }
+      "sections": [
+        {
+          "label": "✨ Improvements",
+          "items": [
+            "_artBuildImageLi: added hover-preview wiring to the 18×18 thumbnail inside every per-image <li> in the multi-row CAA/EAA art cell. When sa_caa_hover_preview is enabled, hovering the thumbnail shows the shared singleton popup (same one used by the icon-column anchor and the inline-thumbnail ph span). The preview URL is derived from imgData.thumbnails at sa_caa_big_img_size (fallback chain: configured size → 1200 → large → 500 → imgData.image), so each row shows its own specific artwork — Front, Back, Booklet, etc. — rather than the entity's canonical /front-{size} path. Protocol-relative URL stripping (replace /^http:/) and the crosshair cursor are applied consistently with the other two hover-wiring sites."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.131",
       "date": "2026-03-13",
-      "changes": {
-        "🔍 API Research": [
-          "Inspected Cover Art Archive API (coverartarchive.org/release and /release-group endpoints) and Event Art Archive API (eventartarchive.org/event endpoint). Each image in the JSON response exposes: id, types[] (e.g. 'Front', 'Back', 'Booklet', …), front, back, comment, approved, image (original URL), thumbnails.{250,500,1200,small,large}. All new multi-row cell rendering uses thumbnails['250'] with fallback chain 250→small→500→large→image. Protocol-relative URLs (strip leading 'http:') used throughout to avoid mixed-content warnings."
-        ],
-        "✨ Improvements": [
-          "Multi-row CAA/EAA art cell: the synthetic CAA/EAA column cell now shows a collapsible per-image list built from the full API images[] array. Structure: li-0 (summary row — existing art anchor + count badge + cache hint, always visible) + li-1..N (one per API image, initially collapsed). Each image row shows: 18×18 lazy-loaded thumbnail, type badge (e.g. 'Front / Booklet'), optional comment (italic muted), optional ⏳ pending indicator for unapproved images. Implemented by the new _artBuildImageLi(imgData) helper and _artBuildMultiRowArtCell(ctx, artCell, images) function.",
-          "The per-image image rows (li.mb-caa-art-li-image) are wired into the existing ▶/◀ collapse mechanism via the standard .mb-cell-collapse-toggle + ensureCollapseDelegate() infrastructure — no new event listeners or modifications to initCollapsableColumns required.",
-          "New _artEnrichTable(ctx, table) function: enqueues _artEnrichIcon for all art anchors in a table, always called from _artInitPics when the CAA/EAA column is present, regardless of the sa_caa_pics_small setting. This separates icon background-image loading from JSON-API enrichment: multi-row cells are populated even when small-icon thumbnails are disabled.",
-          "_artInitSmallPics refactored: now only enqueues _artLoadIcon calls (background-image CSS). Enrichment is handled exclusively by _artEnrichTable, eliminating the previous coupling between the small-pics toggle and count badge / multi-row features.",
-          "_artEnrichIcon extended: now stores json.images[] in ctx.imagesCache (new per-context Map) alongside the existing countCache entry. On cache-hit re-renders the images array is read from ctx.imagesCache without a network round-trip. After badge/tooltip decoration, calls _artBuildMultiRowArtCell(ctx, artCell, images).",
-          "_artRetryTable extended: also purges ctx.imagesCache entries and clears ctx.multiBuiltAttr dataset keys on art cells before calling _artEnrichTable(ctx, table) to force a full API refetch and multi-row rebuild with fresh data.",
-          "getCleanColumnText and getCleanVisibleText updated: li.mb-caa-art-li-image elements are now rejected by the TreeWalker filter (FILTER_REJECT), preventing per-image type names and comments from polluting sort keys, filter text, and the unique-values dropdown."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🔍 API Research",
+          "items": [
+            "Inspected Cover Art Archive API (coverartarchive.org/release and /release-group endpoints) and Event Art Archive API (eventartarchive.org/event endpoint). Each image in the JSON response exposes: id, types[] (e.g. 'Front', 'Back', 'Booklet', …), front, back, comment, approved, image (original URL), thumbnails.{250,500,1200,small,large}. All new multi-row cell rendering uses thumbnails['250'] with fallback chain 250→small→500→large→image. Protocol-relative URLs (strip leading 'http:') used throughout to avoid mixed-content warnings."
+          ]
+        },
+        {
+          "label": "✨ Improvements",
+          "items": [
+            "Multi-row CAA/EAA art cell: the synthetic CAA/EAA column cell now shows a collapsible per-image list built from the full API images[] array. Structure: li-0 (summary row — existing art anchor + count badge + cache hint, always visible) + li-1..N (one per API image, initially collapsed). Each image row shows: 18×18 lazy-loaded thumbnail, type badge (e.g. 'Front / Booklet'), optional comment (italic muted), optional ⏳ pending indicator for unapproved images. Implemented by the new _artBuildImageLi(imgData) helper and _artBuildMultiRowArtCell(ctx, artCell, images) function.",
+            "The per-image image rows (li.mb-caa-art-li-image) are wired into the existing ▶/◀ collapse mechanism via the standard .mb-cell-collapse-toggle + ensureCollapseDelegate() infrastructure — no new event listeners or modifications to initCollapsableColumns required.",
+            "New _artEnrichTable(ctx, table) function: enqueues _artEnrichIcon for all art anchors in a table, always called from _artInitPics when the CAA/EAA column is present, regardless of the sa_caa_pics_small setting. This separates icon background-image loading from JSON-API enrichment: multi-row cells are populated even when small-icon thumbnails are disabled.",
+            "_artInitSmallPics refactored: now only enqueues _artLoadIcon calls (background-image CSS). Enrichment is handled exclusively by _artEnrichTable, eliminating the previous coupling between the small-pics toggle and count badge / multi-row features.",
+            "_artEnrichIcon extended: now stores json.images[] in ctx.imagesCache (new per-context Map) alongside the existing countCache entry. On cache-hit re-renders the images array is read from ctx.imagesCache without a network round-trip. After badge/tooltip decoration, calls _artBuildMultiRowArtCell(ctx, artCell, images).",
+            "_artRetryTable extended: also purges ctx.imagesCache entries and clears ctx.multiBuiltAttr dataset keys on art cells before calling _artEnrichTable(ctx, table) to force a full API refetch and multi-row rebuild with fresh data.",
+            "getCleanColumnText and getCleanVisibleText updated: li.mb-caa-art-li-image elements are now rejected by the TreeWalker filter (FILTER_REJECT), preventing per-image type names and comments from polluting sort keys, filter text, and the unique-values dropdown."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.130",
       "date": "2026-03-12",
-      "changes": {
-        "🔍 Analysis": [
-          "Root cause of empty CAA column on artist-relationships pages: MusicBrainz does not render caa-icon / artwork-icon spans in the source HTML of the relationships page — it only shows plain release-title anchor links. The caa() column extractor looks specifically for those artwork-icon spans and finds none, correctly setting the sort-key to 'no' and leaving the CAA column cell empty. The inline thumbnail in the Title column loads via a completely independent path (addCAA: 'Title' → _artInitInlinePics, which queries the CAA API directly from the release GUID embedded in the href attribute — no source-side artwork indicator is needed). Because _artInitSmallPics also needs artwork-icon spans to exist, it has nothing to enqueue for these rows, so no error indicator was ever shown either. Fixing the empty CAA column for these pages would require injecting artwork-icon spans into the synthetic CAA cells when inline thumbnails successfully load — tracked as a separate future enhancement."
-        ],
-        "🐛 Bug Fixes": [
-          "Silent failure on artwork icon load error (_artLoadIcon): when a small-icon thumbnail request resulted in an img.onerror (network failure, unreachable host, etc.), the failure was silently swallowed — the CAA/EAA column cell remained blank with no indication to the user. Now a clickable ⚠⟳ error indicator is injected into the .mb-art-cache-hint-col-wrap/.mb-art-cache-hint-col span position (the same superscript slot used by the Resource Timing cache hints). Clicking the ⚠⟳ triggers a single cache-busted retry of just that one icon (_artLoadIcon with cacheBust=true appends ?_cb=<timestamp> to the URL), removing the error indicator and loading the image fresh from the network. On a successful retry the ⚠⟳ is replaced by the normal Resource Timing cache-hint emoji (🟢/🟡/🔵)."
-        ],
-        "✨ Improvements": [
-          "Per-sub-table ⟳ retry button (multi-table mode): a ⟳ button is now injected immediately after each per-sub-table CAA/EAA toggle button. Clicking it triggers _artRetryTable(ctx, table, tableIndex) which: (1) adjusts the global badge by subtracting the current sub-table count so the aggregate stays correct as the per-table badge resets and reaccumulates; (2) purges ctx.countCache entries for all entity links in the table so _artEnrichIcon re-fetches image counts from the network; (3) strips enrichedAttr markers so the idempotency guard does not suppress re-fetches; (4) transitions any ⚠⟳ indicators to ⟳ (loading state) for immediate visual feedback; (5) calls _artInitBigPics and _artInitSmallPics with cacheBust=true, appending ?_cb=<timestamp> to every image URL to guarantee a genuine network fetch. _artInitBigPics and _artInitSmallPics now accept an optional cacheBust parameter (default false) for this purpose. Single-table mode also gets the ⟳ button (placed after the toggle button in the h2 header). Implemented by the new _artCreateOrUpdateRetryButton(ctx, table, tableIndex) helper, called from _artInitPics right after _artCreateOrUpdateToggleButton.",
-          "Global ⟳ retry button on h2 (multi-table mode): mirrors the global toggle button pattern. A single ⟳ button is placed immediately after the global CAA/EAA toggle button in the h2 header. Clicking it calls _artRetryTable for every table.tbl on the page, performing a bulk cache-busted reload of all artwork across all sub-tables simultaneously. Idempotent: created once in _artCreateOrUpdateGlobalToggleButton and never duplicated."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🔍 Analysis",
+          "items": [
+            "Root cause of empty CAA column on artist-relationships pages: MusicBrainz does not render caa-icon / artwork-icon spans in the source HTML of the relationships page — it only shows plain release-title anchor links. The caa() column extractor looks specifically for those artwork-icon spans and finds none, correctly setting the sort-key to 'no' and leaving the CAA column cell empty. The inline thumbnail in the Title column loads via a completely independent path (addCAA: 'Title' → _artInitInlinePics, which queries the CAA API directly from the release GUID embedded in the href attribute — no source-side artwork indicator is needed). Because _artInitSmallPics also needs artwork-icon spans to exist, it has nothing to enqueue for these rows, so no error indicator was ever shown either. Fixing the empty CAA column for these pages would require injecting artwork-icon spans into the synthetic CAA cells when inline thumbnails successfully load — tracked as a separate future enhancement."
+          ]
+        },
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Silent failure on artwork icon load error (_artLoadIcon): when a small-icon thumbnail request resulted in an img.onerror (network failure, unreachable host, etc.), the failure was silently swallowed — the CAA/EAA column cell remained blank with no indication to the user. Now a clickable ⚠⟳ error indicator is injected into the .mb-art-cache-hint-col-wrap/.mb-art-cache-hint-col span position (the same superscript slot used by the Resource Timing cache hints). Clicking the ⚠⟳ triggers a single cache-busted retry of just that one icon (_artLoadIcon with cacheBust=true appends ?_cb=<timestamp> to the URL), removing the error indicator and loading the image fresh from the network. On a successful retry the ⚠⟳ is replaced by the normal Resource Timing cache-hint emoji (🟢/🟡/🔵)."
+          ]
+        },
+        {
+          "label": "✨ Improvements",
+          "items": [
+            "Per-sub-table ⟳ retry button (multi-table mode): a ⟳ button is now injected immediately after each per-sub-table CAA/EAA toggle button. Clicking it triggers _artRetryTable(ctx, table, tableIndex) which: (1) adjusts the global badge by subtracting the current sub-table count so the aggregate stays correct as the per-table badge resets and reaccumulates; (2) purges ctx.countCache entries for all entity links in the table so _artEnrichIcon re-fetches image counts from the network; (3) strips enrichedAttr markers so the idempotency guard does not suppress re-fetches; (4) transitions any ⚠⟳ indicators to ⟳ (loading state) for immediate visual feedback; (5) calls _artInitBigPics and _artInitSmallPics with cacheBust=true, appending ?_cb=<timestamp> to every image URL to guarantee a genuine network fetch. _artInitBigPics and _artInitSmallPics now accept an optional cacheBust parameter (default false) for this purpose. Single-table mode also gets the ⟳ button (placed after the toggle button in the h2 header). Implemented by the new _artCreateOrUpdateRetryButton(ctx, table, tableIndex) helper, called from _artInitPics right after _artCreateOrUpdateToggleButton.",
+            "Global ⟳ retry button on h2 (multi-table mode): mirrors the global toggle button pattern. A single ⟳ button is placed immediately after the global CAA/EAA toggle button in the h2 header. Clicking it calls _artRetryTable for every table.tbl on the page, performing a bulk cache-busted reload of all artwork across all sub-tables simultaneously. Idempotent: created once in _artCreateOrUpdateGlobalToggleButton and never duplicated."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.129",
       "date": "2026-03-12",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "Global CAA/EAA toggle button count always showed 0: _artCreateOrUpdateGlobalToggleButton was reading sub-table badge values synchronously at the end of _artInitPics, but those badges all start at 0 and are incremented asynchronously inside img.onload closures in _artInitBigPics. The global badge was therefore always frozen at 0. Fix: the same img.onload block that increments the per-sub-table badge now also looks up the global button (ctx.btnPrefix + '-global') and increments its badge by 1. The global thumbnail is also adopted there if not yet loaded. The global badge is explicitly initialised to '0' on creation (instead of the stale String(totalCount)) and reset to '0' on every re-render pass, so it is always driven entirely by img.onload increments — matching the lifecycle of the per-sub-table badges."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Global CAA/EAA toggle button count always showed 0: _artCreateOrUpdateGlobalToggleButton was reading sub-table badge values synchronously at the end of _artInitPics, but those badges all start at 0 and are incremented asynchronously inside img.onload closures in _artInitBigPics. The global badge was therefore always frozen at 0. Fix: the same img.onload block that increments the per-sub-table badge now also looks up the global button (ctx.btnPrefix + '-global') and increments its badge by 1. The global thumbnail is also adopted there if not yet loaded. The global badge is explicitly initialised to '0' on creation (instead of the stale String(totalCount)) and reset to '0' on every re-render pass, so it is always driven entirely by img.onload increments — matching the lifecycle of the per-sub-table badges."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.128",
       "date": "2026-03-12",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "h3 sub-table collapse (multi-table mode): collapsing a sub-table via the h3 header click now also hides any CAA/EAA art bigbox strips that sit immediately before the table in the DOM. Previously the table rows were hidden but the art strip remained visible, inconsistent with the h2 single-table collapse behaviour. When expanding again, each bigbox is restored to whatever show/hide state the user last set via its individual CAA/EAA toggle button (the tracked caaVisible/eaaVisible dataset attributes are preserved across collapse/expand cycles). The same fix is applied to Ctrl+Click all-h3 collapse and expand. Two new internal helpers implement the pattern: _artHideBigboxesForTable(table) force-hides all bigboxes immediately before a table without touching visAttr; _artRestoreBigboxesForTable(table) restores each bigbox display from its visAttr."
-        ],
-        "✨ Improvements": [
-          "CAA/EAA toggle button spacing (multi-table mode): increased the CSS gap between the artwork thumbnail icon and the image-count badge in all per-sub-table CAA/EAA toggle buttons from 3 px to 6 px for improved visual separation and readability.",
-          "Global CAA/EAA toggle button (multi-table mode): a new 'Globally Toggle' art button is now injected into the h2 header immediately after the total row-count span on multi-table pages (e.g. Artist-Releases). The button mirrors the visual style of the per-sub-table toggle buttons (thumbnail from the first available sub-table image + total image count across all sub-tables). Its tooltip reads 'Globally Toggle CAA/EAA <label> - Show/Hide'. When clicked it simultaneously shows or hides all sub-table art bigboxes for that archive, toggling between show-all and hide-all based on the current aggregate state (any bigbox visible → hide all; all hidden → show all). Individual sub-table toggle button titles are synced accordingly. Implemented by the new _artCreateOrUpdateGlobalToggleButton(ctx) helper, called at the end of _artInitPics for multi-table pages. Idempotent: the button is created once and updated on every filter/re-render pass."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "h3 sub-table collapse (multi-table mode): collapsing a sub-table via the h3 header click now also hides any CAA/EAA art bigbox strips that sit immediately before the table in the DOM. Previously the table rows were hidden but the art strip remained visible, inconsistent with the h2 single-table collapse behaviour. When expanding again, each bigbox is restored to whatever show/hide state the user last set via its individual CAA/EAA toggle button (the tracked caaVisible/eaaVisible dataset attributes are preserved across collapse/expand cycles). The same fix is applied to Ctrl+Click all-h3 collapse and expand. Two new internal helpers implement the pattern: _artHideBigboxesForTable(table) force-hides all bigboxes immediately before a table without touching visAttr; _artRestoreBigboxesForTable(table) restores each bigbox display from its visAttr."
+          ]
+        },
+        {
+          "label": "✨ Improvements",
+          "items": [
+            "CAA/EAA toggle button spacing (multi-table mode): increased the CSS gap between the artwork thumbnail icon and the image-count badge in all per-sub-table CAA/EAA toggle buttons from 3 px to 6 px for improved visual separation and readability.",
+            "Global CAA/EAA toggle button (multi-table mode): a new 'Globally Toggle' art button is now injected into the h2 header immediately after the total row-count span on multi-table pages (e.g. Artist-Releases). The button mirrors the visual style of the per-sub-table toggle buttons (thumbnail from the first available sub-table image + total image count across all sub-tables). Its tooltip reads 'Globally Toggle CAA/EAA <label> - Show/Hide'. When clicked it simultaneously shows or hides all sub-table art bigboxes for that archive, toggling between show-all and hide-all based on the current aggregate state (any bigbox visible → hide all; all hidden → show all). Individual sub-table toggle button titles are synced accordingly. Implemented by the new _artCreateOrUpdateGlobalToggleButton(ctx) helper, called at the end of _artInitPics for multi-table pages. Idempotent: the button is created once and updated on every filter/re-render pass."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.127",
       "date": "2026-03-12",
-      "changes": {
-        "📖 Documentation / Diagnostics": [
-          "Resource Timing cache-hint — 🟡 disk cache is never observed for CAA/EAA archive URLs (documentation and diagnostic enhancement): coverartarchive.org and eventartarchive.org serve their images via a non-cacheable 302 redirect chain to archive.org. The browser must re-resolve this redirect on every page load because the redirect response itself carries Cache-Control: no-store (or equivalent). The PerformanceResourceEntry for the coverartarchive.org URL therefore always records a duration of 2–4 s (the full redirect round-trip plus image transfer), which is permanently above the 5 ms disk-cache threshold. As a consequence, 🟡 (disk cache) will never appear for any CAA/EAA URL regardless of how many times the page is reloaded. The only reliably detectable cached state is 🟢 (memory cache), which appears when the same /front-250 URL for the same release GUID is loaded twice within the same page session (e.g. the big-picture strip and the inline thumbnail both request the same URL). 🔵 (network/redirect) is therefore the expected and correct indicator for every page reload. No classification logic was changed. Changes made: (1) getResourceTimingHint() now also returns redirectStart and responseStart fields (both are 0 for opaque cross-origin responses, confirming the TAO restriction is active). (2) All three debug log lines (icon column, bigbox, inline) now emit the full diagnostic tuple — ts=, ebs=, dur=, redirectStart=, responseStart= — instead of just dur=, making the opaque/redirect nature of the response immediately visible in the developer console. (3) The JSDoc for getResourceTimingHint, the RESOURCE TIMING API settings comment block, and the sa_rt_enable setting description all now document the non-cacheable redirect limitation explicitly."
-        ]
-      }
+      "sections": [
+        {
+          "label": "📖 Documentation / Diagnostics",
+          "items": [
+            "Resource Timing cache-hint — 🟡 disk cache is never observed for CAA/EAA archive URLs (documentation and diagnostic enhancement): coverartarchive.org and eventartarchive.org serve their images via a non-cacheable 302 redirect chain to archive.org. The browser must re-resolve this redirect on every page load because the redirect response itself carries Cache-Control: no-store (or equivalent). The PerformanceResourceEntry for the coverartarchive.org URL therefore always records a duration of 2–4 s (the full redirect round-trip plus image transfer), which is permanently above the 5 ms disk-cache threshold. As a consequence, 🟡 (disk cache) will never appear for any CAA/EAA URL regardless of how many times the page is reloaded. The only reliably detectable cached state is 🟢 (memory cache), which appears when the same /front-250 URL for the same release GUID is loaded twice within the same page session (e.g. the big-picture strip and the inline thumbnail both request the same URL). 🔵 (network/redirect) is therefore the expected and correct indicator for every page reload. No classification logic was changed. Changes made: (1) getResourceTimingHint() now also returns redirectStart and responseStart fields (both are 0 for opaque cross-origin responses, confirming the TAO restriction is active). (2) All three debug log lines (icon column, bigbox, inline) now emit the full diagnostic tuple — ts=, ebs=, dur=, redirectStart=, responseStart= — instead of just dur=, making the opaque/redirect nature of the response immediately visible in the developer console. (3) The JSDoc for getResourceTimingHint, the RESOURCE TIMING API settings comment block, and the sa_rt_enable setting description all now document the non-cacheable redirect limitation explicitly."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.126",
       "date": "2026-03-12",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "_artEnrichIcon (cache-hint icon column layout): the cache-hint indicator emoji (🟢/🟡/🔵/⚠️) was rendered AFTER the image-count badge instead of ABOVE it. The intended DOM structure is 「anchor → .mb-art-cache-hint-col-wrap [ hintSpan | countBadge ]」 so the emoji acts as a superscript and the count as a subscript. Root cause: in the badge-creation branch of _artEnrichIcon, anchor.after(badge) inserts the badge immediately after the anchor, pushing it BETWEEN the anchor and the already-existing .mb-art-cache-hint-col-wrap. The wrapper-adoption step then checked anchor.nextElementSibling which — after anchor.after(badge) — returns badge, not the wrapper; the classList.contains() guard was therefore always false, and wrap.appendChild(badge) never ran. Fix: changed anchor.nextElementSibling to badge.nextElementSibling, which correctly reaches the wrapper sitting just after the freshly-inserted badge.",
-          "getResourceTimingHint (Resource Timing cache-hint): every image showed ⚠️ 'Timing unavailable' even on genuine network fetches and even after loading the page a second time (when disk-cache hits were expected to show 🟡). Root cause: coverartarchive.org (and eventartarchive.org) serve their images via a cross-origin redirect chain through archive.org. Per the Fetch/Resource Timing spec, cross-origin redirects without a Timing-Allow-Origin response header cause the browser to zero out BOTH transferSize AND encodedBodySize for the PerformanceResourceEntry — even for a real over-the-wire network fetch. With both sizes = 0 the classification fell through to the final else branch which returned 'unavailable'. For disk-cached images (loaded in < 5 ms, both sizes = 0) the existing heuristic already worked correctly (< 5 ms → 🟡). The problem was only in the final else branch. Fix: changed that branch from status = 'unavailable' to status = 'network'. The 'unavailable' (⚠️) status is now exclusively reserved for the earlier guard where performance.getEntriesByName() returns no entries at all (Performance buffer full, API absent, or image never loaded). After this fix: first page load → 🔵 network; second load from disk cache → 🟡 disk; second load from memory cache → 🟢 memory; no timing entry at all → ⚠️."
-        ],
-        "🚀 Features": [
-          "Artwork hover preview: hovering over a cover/event art thumbnail now shows a floating full-size preview popup positioned to the right of the thumbnail (or left if near the viewport edge). The feature works in both the CAA/EAA artwork-icon column (hover the artwork anchor element) and in the inline Release/Title column thumbnail (hover the placeholder span). The preview displays the image at the big-picture strip size (sa_caa_big_img_size). Implemented via a singleton <div id='mb-art-hover-preview'> with position:fixed / pointer-events:none appended to document.body; the div is lazily created on first use and reused across all subsequent hovers. Three new internal helpers: _ensureArtHoverPreviewDiv() (lazy singleton init), _positionArtHoverPreview() (viewport-aware placement), _showArtHoverPreview() / _hideArtHoverPreview() (show/hide with setting guard). Controlled by the new setting sa_caa_hover_preview (default: true, in the CAA/EAA section of Settings)."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "_artEnrichIcon (cache-hint icon column layout): the cache-hint indicator emoji (🟢/🟡/🔵/⚠️) was rendered AFTER the image-count badge instead of ABOVE it. The intended DOM structure is 「anchor → .mb-art-cache-hint-col-wrap [ hintSpan | countBadge ]」 so the emoji acts as a superscript and the count as a subscript. Root cause: in the badge-creation branch of _artEnrichIcon, anchor.after(badge) inserts the badge immediately after the anchor, pushing it BETWEEN the anchor and the already-existing .mb-art-cache-hint-col-wrap. The wrapper-adoption step then checked anchor.nextElementSibling which — after anchor.after(badge) — returns badge, not the wrapper; the classList.contains() guard was therefore always false, and wrap.appendChild(badge) never ran. Fix: changed anchor.nextElementSibling to badge.nextElementSibling, which correctly reaches the wrapper sitting just after the freshly-inserted badge.",
+            "getResourceTimingHint (Resource Timing cache-hint): every image showed ⚠️ 'Timing unavailable' even on genuine network fetches and even after loading the page a second time (when disk-cache hits were expected to show 🟡). Root cause: coverartarchive.org (and eventartarchive.org) serve their images via a cross-origin redirect chain through archive.org. Per the Fetch/Resource Timing spec, cross-origin redirects without a Timing-Allow-Origin response header cause the browser to zero out BOTH transferSize AND encodedBodySize for the PerformanceResourceEntry — even for a real over-the-wire network fetch. With both sizes = 0 the classification fell through to the final else branch which returned 'unavailable'. For disk-cached images (loaded in < 5 ms, both sizes = 0) the existing heuristic already worked correctly (< 5 ms → 🟡). The problem was only in the final else branch. Fix: changed that branch from status = 'unavailable' to status = 'network'. The 'unavailable' (⚠️) status is now exclusively reserved for the earlier guard where performance.getEntriesByName() returns no entries at all (Performance buffer full, API absent, or image never loaded). After this fix: first page load → 🔵 network; second load from disk cache → 🟡 disk; second load from memory cache → 🟢 memory; no timing entry at all → ⚠️."
+          ]
+        },
+        {
+          "label": "🚀 Features",
+          "items": [
+            "Artwork hover preview: hovering over a cover/event art thumbnail now shows a floating full-size preview popup positioned to the right of the thumbnail (or left if near the viewport edge). The feature works in both the CAA/EAA artwork-icon column (hover the artwork anchor element) and in the inline Release/Title column thumbnail (hover the placeholder span). The preview displays the image at the big-picture strip size (sa_caa_big_img_size). Implemented via a singleton <div id='mb-art-hover-preview'> with position:fixed / pointer-events:none appended to document.body; the div is lazily created on first use and reused across all subsequent hovers. Three new internal helpers: _ensureArtHoverPreviewDiv() (lazy singleton init), _positionArtHoverPreview() (viewport-aware placement), _showArtHoverPreview() / _hideArtHoverPreview() (show/hide with setting guard). Controlled by the new setting sa_caa_hover_preview (default: true, in the CAA/EAA section of Settings)."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.125",
       "date": "2026-03-12",
-      "changes": {
-        "🚀 Features": [
-          "Resource Timing API cache-hint feature is now fully configurable via a new '⏱️ RESOURCE TIMING API' section in Settings. Four new settings are exposed: sa_rt_enable (master toggle, default true) gates the entire feature; sa_rt_show_icon_column (default true) controls the superscript indicator in the CAA/EAA icon column; sa_rt_show_bigbox (default true) controls the overlay badge on big-picture strip images; sa_rt_show_inline (default true) controls the overlay badge on inline thumbnails. All four default to true (opt-out) so existing behaviour is preserved for users who do not visit Settings.",
-          "CAA/EAA icon-column cache-hint repositioned as a superscript above the image-count badge. Previously the hint emoji was prepended inside the artwork anchor itself. It is now placed in a new .mb-art-cache-hint-col-wrap inline-flex column wrapper (display:flex; flex-direction:column; align-items:center) that sits immediately after the anchor, containing first the .mb-art-cache-hint-col hint span and then the .mb-caa-count-badge / .mb-eaa-count-badge count span. The visual result is a vertical stack — artwork icon | 🟢 | N — where the emoji reads as a superscript and the count as a subscript relative to the icon. CSS rules for .mb-art-cache-hint-col-wrap, .mb-art-cache-hint-col, and the contained count badges are injected into the page stylesheet. _artEnrichIcon's anchor.after(badge) call was augmented with a wrapper-adoption step: if the wrapper already exists when the count badge is created (i.e. _artLoadIcon ran first), the badge is immediately moved inside the wrapper via wrap.appendChild(badge); if the wrapper does not yet exist (reverse ordering), _artLoadIcon's adoption code handles it on load."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🚀 Features",
+          "items": [
+            "Resource Timing API cache-hint feature is now fully configurable via a new '⏱️ RESOURCE TIMING API' section in Settings. Four new settings are exposed: sa_rt_enable (master toggle, default true) gates the entire feature; sa_rt_show_icon_column (default true) controls the superscript indicator in the CAA/EAA icon column; sa_rt_show_bigbox (default true) controls the overlay badge on big-picture strip images; sa_rt_show_inline (default true) controls the overlay badge on inline thumbnails. All four default to true (opt-out) so existing behaviour is preserved for users who do not visit Settings.",
+            "CAA/EAA icon-column cache-hint repositioned as a superscript above the image-count badge. Previously the hint emoji was prepended inside the artwork anchor itself. It is now placed in a new .mb-art-cache-hint-col-wrap inline-flex column wrapper (display:flex; flex-direction:column; align-items:center) that sits immediately after the anchor, containing first the .mb-art-cache-hint-col hint span and then the .mb-caa-count-badge / .mb-eaa-count-badge count span. The visual result is a vertical stack — artwork icon | 🟢 | N — where the emoji reads as a superscript and the count as a subscript relative to the icon. CSS rules for .mb-art-cache-hint-col-wrap, .mb-art-cache-hint-col, and the contained count badges are injected into the page stylesheet. _artEnrichIcon's anchor.after(badge) call was augmented with a wrapper-adoption step: if the wrapper already exists when the count badge is created (i.e. _artLoadIcon ran first), the badge is immediately moved inside the wrapper via wrap.appendChild(badge); if the wrapper does not yet exist (reverse ordering), _artLoadIcon's adoption code handles it on load."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.124",
       "date": "2026-03-12",
-      "changes": {
-        "🚀 Features": [
-          "CAA / EAA cache-hint indicator (Resource Timing API): all three artwork rendering paths (icon background loads via _artLoadIcon, inline thumbnail loads via _artInitInlinePics, and bigbox strip loads via _artInitBigPics) now probe the browser's Resource Timing API immediately after each image load event fires to classify the response as a memory-cache hit, disk-cache hit, fresh network fetch, or timing-unavailable. Classification follows the standard transferSize/encodedBodySize heuristic (transferSize===0 && encodedBodySize>0 → memory cache; transferSize>0 → network) with a duration<5ms fallback for cross-origin / opaque archive.org responses where both size fields are forced to zero. The result is surfaced as a Unicode emoji badge: 🟢 memory, 🟡 disk, 🔵 network, ⚠️ unavailable. Three new utility functions support the feature: getResourceTimingHint(url) queries PerformanceEntry data and returns a { status, transferSize, encodedBodySize, duration } object; cacheStatusEmoji(status) maps the status string to an emoji; cacheStatusLabel(status, duration) builds a human-readable tooltip string including the round-trip duration in milliseconds. Placement: in the CAA/EAA column icon anchors (_artLoadIcon), the badge is a .mb-art-cache-hint <span> prepended inside the artwork anchor; in the inline thumbnail column (_artInitInlinePics), it is a .mb-art-cache-hint-inline <span> absolutely positioned at the top-left corner of the placeholder; in the bigbox strip (_artInitBigPics), it is a .mb-art-cache-hint-big <span> absolutely positioned at the top-left corner of each wrapper anchor with a semi-transparent background for legibility. All badges carry a title tooltip with the human-readable label. All hint queries and DOM mutations are guarded for idempotency (update existing badge if present, create only once) so re-renders and filter passes do not duplicate the indicator."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🚀 Features",
+          "items": [
+            "CAA / EAA cache-hint indicator (Resource Timing API): all three artwork rendering paths (icon background loads via _artLoadIcon, inline thumbnail loads via _artInitInlinePics, and bigbox strip loads via _artInitBigPics) now probe the browser's Resource Timing API immediately after each image load event fires to classify the response as a memory-cache hit, disk-cache hit, fresh network fetch, or timing-unavailable. Classification follows the standard transferSize/encodedBodySize heuristic (transferSize===0 && encodedBodySize>0 → memory cache; transferSize>0 → network) with a duration<5ms fallback for cross-origin / opaque archive.org responses where both size fields are forced to zero. The result is surfaced as a Unicode emoji badge: 🟢 memory, 🟡 disk, 🔵 network, ⚠️ unavailable. Three new utility functions support the feature: getResourceTimingHint(url) queries PerformanceEntry data and returns a { status, transferSize, encodedBodySize, duration } object; cacheStatusEmoji(status) maps the status string to an emoji; cacheStatusLabel(status, duration) builds a human-readable tooltip string including the round-trip duration in milliseconds. Placement: in the CAA/EAA column icon anchors (_artLoadIcon), the badge is a .mb-art-cache-hint <span> prepended inside the artwork anchor; in the inline thumbnail column (_artInitInlinePics), it is a .mb-art-cache-hint-inline <span> absolutely positioned at the top-left corner of the placeholder; in the bigbox strip (_artInitBigPics), it is a .mb-art-cache-hint-big <span> absolutely positioned at the top-left corner of each wrapper anchor with a semi-transparent background for legibility. All badges carry a title tooltip with the human-readable label. All hint queries and DOM mutations are guarded for idempotency (update existing badge if present, create only once) so re-renders and filter passes do not duplicate the indicator."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.123",
       "date": "2026-03-12",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "saveTableDataToDisk / highlight spans baked into saved file (multi-table and single-table): after saving data to disk while any filter was active (global filter, sub-table filter, column filter, or pre-filter), the downloaded file contained ephemeral highlight <span> elements inside the serialized cell HTML. On a subsequent 'Load from Disk', those spans were reconstructed verbatim into the new <td> elements by td.innerHTML = cellData.html, causing rows to appear highlighted even though no filter was active after the load. Root cause: saveTableDataToDisk serialized cell data with html: cell.innerHTML which captured the live DOM as-is, including any .mb-subtable-filter-highlight, .mb-global-filter-highlight, .mb-column-filter-highlight, and .prefilter-highlight spans injected by the filter/highlight pipeline. Fix: introduced the helper function getCleanCellHtml(cell) which deep-clones the cell, removes all four highlight span classes from the clone via querySelectorAll + replaceWith(textNode), and returns the cleaned innerHTML. All data-row serialization paths (multi-table group rows and single-table allRows) now call getCleanCellHtml(cell) instead of cell.innerHTML directly. Header cells continue to use raw innerHTML since they never receive highlight spans."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "saveTableDataToDisk / highlight spans baked into saved file (multi-table and single-table): after saving data to disk while any filter was active (global filter, sub-table filter, column filter, or pre-filter), the downloaded file contained ephemeral highlight <span> elements inside the serialized cell HTML. On a subsequent 'Load from Disk', those spans were reconstructed verbatim into the new <td> elements by td.innerHTML = cellData.html, causing rows to appear highlighted even though no filter was active after the load. Root cause: saveTableDataToDisk serialized cell data with html: cell.innerHTML which captured the live DOM as-is, including any .mb-subtable-filter-highlight, .mb-global-filter-highlight, .mb-column-filter-highlight, and .prefilter-highlight spans injected by the filter/highlight pipeline. Fix: introduced the helper function getCleanCellHtml(cell) which deep-clones the cell, removes all four highlight span classes from the clone via querySelectorAll + replaceWith(textNode), and returns the cleaned innerHTML. All data-row serialization paths (multi-table group rows and single-table allRows) now call getCleanCellHtml(cell) instead of cell.innerHTML directly. Header cells continue to use raw innerHTML since they never receive highlight spans."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.122",
       "date": "2026-03-12",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "_artInitBigPics (CAA / EAA badge count doubles on disk-load, single-table and multi-table): when loading data from disk on an already-rendered page the CAA/EAA toggle-button badge showed 2× the correct count; as soon as the user typed in the filter field it reset to the correct value. Root cause: browser img.onload events are always dispatched asynchronously (even for cached images). When _artInitBigPics is called a second time (e.g. multi-table: once from the disk-load's initial renderGroupedTable(groupedRows) and once from runFilter() → renderGroupedTable(filteredArray); single-table: once from the main fetch pipeline and once from the disk-load's runFilter()), box.innerHTML = '' detaches the first set of <img> elements from the DOM but does not cancel their in-flight load events. Both sets of img.onload handlers fire after JS yields to the event loop; each finds the toggle button via document.getElementById(btnId) and increments the badge — yielding exactly 2× the true count. Fix: introduced a per-button render-generation counter stored in data-art-render-gen on the toggle button element. _artInitBigPics increments the counter (wrapping at 2^31) each time it starts a new render pass and captures the current value (myRenderGen) into a let variable in the enclosing scope. Every img.onload closure checks parseInt(toggleBtn.dataset.artRenderGen) === myRenderGen before incrementing the badge; if a newer render pass has started the closure is a no-op. This invalidates all stale callbacks from prior render passes regardless of how many initCaaPics() calls overlap in the async queue.",
-          "updateFilterButtonsVisibility (multi-table, CAA sub-tables): on multi-table relationship pages, toggling the STF (sub-table filter) panel on for a sub-table that has CAA artworks (e.g. 'Liner notes for') and typing a filter string produced no visible effect — the mb-subtable-controls Clear button and '🎨 Toggle highlighting' button did not appear, and the filter-status span was not updated. Sub-tables without artworks (e.g. 'Vocals') were unaffected. Root cause: updateFilterButtonsVisibility located the sibling table via const table = h3.nextElementSibling. When CAA/EAA artworks are present for a sub-table, _artInitBigPics inserts a div.mb-caa-bigbox (or div.mb-eaa-bigbox) immediately before the table element; consequently h3.nextElementSibling returned the bigbox DIV rather than the TABLE, and the guard if (!table || table.tagName !== 'TABLE') return caused the function to exit early before updating any per-sub-table controls. The mb-subtable-controls span existed in the DOM but was never reached. Fix: replaced the bare h3.nextElementSibling assignment with a forward walk that skips non-TABLE siblings (while (table && table.tagName !== 'TABLE') table = table.nextElementSibling) — identical in spirit to findH3ForTable's backward walk past bigbox divs introduced for the h3-lookup direction."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "_artInitBigPics (CAA / EAA badge count doubles on disk-load, single-table and multi-table): when loading data from disk on an already-rendered page the CAA/EAA toggle-button badge showed 2× the correct count; as soon as the user typed in the filter field it reset to the correct value. Root cause: browser img.onload events are always dispatched asynchronously (even for cached images). When _artInitBigPics is called a second time (e.g. multi-table: once from the disk-load's initial renderGroupedTable(groupedRows) and once from runFilter() → renderGroupedTable(filteredArray); single-table: once from the main fetch pipeline and once from the disk-load's runFilter()), box.innerHTML = '' detaches the first set of <img> elements from the DOM but does not cancel their in-flight load events. Both sets of img.onload handlers fire after JS yields to the event loop; each finds the toggle button via document.getElementById(btnId) and increments the badge — yielding exactly 2× the true count. Fix: introduced a per-button render-generation counter stored in data-art-render-gen on the toggle button element. _artInitBigPics increments the counter (wrapping at 2^31) each time it starts a new render pass and captures the current value (myRenderGen) into a let variable in the enclosing scope. Every img.onload closure checks parseInt(toggleBtn.dataset.artRenderGen) === myRenderGen before incrementing the badge; if a newer render pass has started the closure is a no-op. This invalidates all stale callbacks from prior render passes regardless of how many initCaaPics() calls overlap in the async queue.",
+            "updateFilterButtonsVisibility (multi-table, CAA sub-tables): on multi-table relationship pages, toggling the STF (sub-table filter) panel on for a sub-table that has CAA artworks (e.g. 'Liner notes for') and typing a filter string produced no visible effect — the mb-subtable-controls Clear button and '🎨 Toggle highlighting' button did not appear, and the filter-status span was not updated. Sub-tables without artworks (e.g. 'Vocals') were unaffected. Root cause: updateFilterButtonsVisibility located the sibling table via const table = h3.nextElementSibling. When CAA/EAA artworks are present for a sub-table, _artInitBigPics inserts a div.mb-caa-bigbox (or div.mb-eaa-bigbox) immediately before the table element; consequently h3.nextElementSibling returned the bigbox DIV rather than the TABLE, and the guard if (!table || table.tagName !== 'TABLE') return caused the function to exit early before updating any per-sub-table controls. The mb-subtable-controls span existed in the DOM but was never reached. Fix: replaced the bare h3.nextElementSibling assignment with a forward walk that skips non-TABLE siblings (while (table && table.tagName !== 'TABLE') table = table.nextElementSibling) — identical in spirit to findH3ForTable's backward walk past bigbox divs introduced for the h3-lookup direction."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.121",
       "date": "2026-03-11",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "_artInitBigPics (CAA / EAA bigbox placement on disk-load, multi-table): after loading data from disk on an already-rendered multi-table page, clicking any CAA/EAA toggle button showed the bigbox below the table instead of immediately below the h3 sub-header, and all bigboxes were stacked consecutively in page order regardless of which button was clicked. Root cause: renderGroupedTable()'s initial cleanup (no-query branch) removes 'h3, table.tbl, .mb-master-toggle' from the container but never touches the bigbox divs (class mb-caa-bigbox / mb-eaa-bigbox). After the old tables and h3s are removed the bigboxes remain as orphaned elements at their previous positions in the container. renderGroupedTable() then creates and inserts fresh h3 + table pairs, followed by initCaaPics() at its tail. _artInitBigPics finds the orphaned bigboxes by their stable ID, clears them (box.innerHTML = ''), and repopulates them — but the existing-box branch never called table.parentNode.insertBefore(box, table), so the boxes were left at their orphaned positions rather than being moved to sit between the new h3 and the new table. Fix: moved the table.parentNode.insertBefore(box, table) call outside the if/else so it runs unconditionally for both new and reused boxes. Node.insertBefore moves an already-in-DOM node when called again, so this is a no-op when the box is already in the correct position and a repositioning operation otherwise.",
-          "_artInitBigPics / disk-load pipeline (CAA / EAA badge count doubles on single-table disk-load, triples on multi-table disk-load): when loading data from disk on an already-rendered page, the CAA/EAA toggle button badge showed 2× the correct count on single-table pages and 3× on multi-table pages. Typing any filter query immediately reset it to the correct value. Root cause: the disk-load pipeline contained an explicit unconditional initCaaPics() / initEaaPics() / initCaaInlinePics() / initEaaInlinePics() block (after initBarcodeHighlight()) that duplicated calls already made by other code paths. For multi-table pages, initCaaPics() is called at the tail of renderGroupedTable(); since the disk-load pipeline both awaits renderGroupedTable(groupedRows) and then calls runFilter() (which calls renderGroupedTable(query) internally), initCaaPics() was invoked three times total before the event loop could yield. For single-table pages, runFilter()'s single-table branch calls initCaaPics() directly, and the explicit block called it a second time — two total. Because browser image-load callbacks are always dispatched asynchronously (even for cache hits), all three (or two) sets of img.onload closures were queued before any fired; when the event loop ran they all incremented the same badge, yielding 3× (or 2×) the true count. Fix: removed the explicit initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics block from the disk-load pipeline entirely. Both code paths (runFilter for single-table, renderGroupedTable via runFilter for multi-table) already handle CAA/EAA initialisation correctly and are the authoritative call sites."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "_artInitBigPics (CAA / EAA bigbox placement on disk-load, multi-table): after loading data from disk on an already-rendered multi-table page, clicking any CAA/EAA toggle button showed the bigbox below the table instead of immediately below the h3 sub-header, and all bigboxes were stacked consecutively in page order regardless of which button was clicked. Root cause: renderGroupedTable()'s initial cleanup (no-query branch) removes 'h3, table.tbl, .mb-master-toggle' from the container but never touches the bigbox divs (class mb-caa-bigbox / mb-eaa-bigbox). After the old tables and h3s are removed the bigboxes remain as orphaned elements at their previous positions in the container. renderGroupedTable() then creates and inserts fresh h3 + table pairs, followed by initCaaPics() at its tail. _artInitBigPics finds the orphaned bigboxes by their stable ID, clears them (box.innerHTML = ''), and repopulates them — but the existing-box branch never called table.parentNode.insertBefore(box, table), so the boxes were left at their orphaned positions rather than being moved to sit between the new h3 and the new table. Fix: moved the table.parentNode.insertBefore(box, table) call outside the if/else so it runs unconditionally for both new and reused boxes. Node.insertBefore moves an already-in-DOM node when called again, so this is a no-op when the box is already in the correct position and a repositioning operation otherwise.",
+            "_artInitBigPics / disk-load pipeline (CAA / EAA badge count doubles on single-table disk-load, triples on multi-table disk-load): when loading data from disk on an already-rendered page, the CAA/EAA toggle button badge showed 2× the correct count on single-table pages and 3× on multi-table pages. Typing any filter query immediately reset it to the correct value. Root cause: the disk-load pipeline contained an explicit unconditional initCaaPics() / initEaaPics() / initCaaInlinePics() / initEaaInlinePics() block (after initBarcodeHighlight()) that duplicated calls already made by other code paths. For multi-table pages, initCaaPics() is called at the tail of renderGroupedTable(); since the disk-load pipeline both awaits renderGroupedTable(groupedRows) and then calls runFilter() (which calls renderGroupedTable(query) internally), initCaaPics() was invoked three times total before the event loop could yield. For single-table pages, runFilter()'s single-table branch calls initCaaPics() directly, and the explicit block called it a second time — two total. Because browser image-load callbacks are always dispatched asynchronously (even for cache hits), all three (or two) sets of img.onload closures were queued before any fired; when the event loop ran they all incremented the same badge, yielding 3× (or 2×) the true count. Fix: removed the explicit initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics block from the disk-load pipeline entirely. Both code paths (runFilter for single-table, renderGroupedTable via runFilter for multi-table) already handle CAA/EAA initialisation correctly and are the authoritative call sites."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.120",
       "date": "2026-03-11",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "_artCreateOrUpdateToggleButton (CAA / EAA toggle button layout): after the first filter interaction (global filter, column filter, or sub-table filter), the CAA/EAA toggle button broke its inline layout — the image count number appeared centred below the thumbnail icon instead of sitting to its right. Root cause: the re-render branch (isNew = false, reached on every runFilter() / renderGroupedTable() re-render after the initial load) restored button visibility with `btn.style.display = ''`. Assigning the empty string removes the `display` property from the element's inline style entirely; since the `display:inline-flex` that keeps the thumbnail and count side-by-side was set only via `cssText` on initial creation and lives in the inline style, clearing it caused the button to fall back to the browser default for <button> (inline-block / block). Without `inline-flex` the child <img> and count <span> stack vertically. Fix: changed `btn.style.display = ''` to `btn.style.display = 'inline-flex'`, so the flex layout is explicitly restored on every re-render pass instead of being erased."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "_artCreateOrUpdateToggleButton (CAA / EAA toggle button layout): after the first filter interaction (global filter, column filter, or sub-table filter), the CAA/EAA toggle button broke its inline layout — the image count number appeared centred below the thumbnail icon instead of sitting to its right. Root cause: the re-render branch (isNew = false, reached on every runFilter() / renderGroupedTable() re-render after the initial load) restored button visibility with `btn.style.display = ''`. Assigning the empty string removes the `display` property from the element's inline style entirely; since the `display:inline-flex` that keeps the thumbnail and count side-by-side was set only via `cssText` on initial creation and lives in the inline style, clearing it caused the button to fall back to the browser default for <button> (inline-block / block). Without `inline-flex` the child <img> and count <span> stack vertically. Fix: changed `btn.style.display = ''` to `btn.style.display = 'inline-flex'`, so the flex layout is explicitly restored on every re-render pass instead of being erased."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.119",
       "date": "2026-03-11",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "CAA/EAA illustrated discography (single-table mode): cover-art bigboxes, toggle buttons, and inline thumbnails were never initialised on the initial load of any single-table page — including label-releases (which has addCAA: 'Release'), series-releases, and work-recordings-filtered (?direction=…&link_type_id=…). Root cause: the main fetch pipeline contained a comment that said initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics should NOT be called there because renderGroupedTable() already calls them at its own tail. This reasoning is correct for multi-table mode but completely wrong for single-table mode: renderFinalTable() — which is called instead of renderGroupedTable() for all single-table pages — has never called these functions, and no other code path compensated. As a result, every single-table page was silently left without any CAA/EAA initialisation after the initial fetch/render cycle. (The runFilter() single-table branch did call them correctly, so images appeared only after the user typed a filter query or triggered a sort.) Fix: replaced the unconditional skip block with a tableMode-gated call: for tableMode !== 'multi' (i.e. all single-table pages), initCaaPics() / initEaaPics() / initCaaInlinePics() / initEaaInlinePics() are now called in the correct order immediately after initBarcodeHighlight() in the main pipeline. For tableMode === 'multi' they remain absent here (renderGroupedTable() still handles that case) to avoid the doubled-badge-count regression documented in v9.99.118."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "CAA/EAA illustrated discography (single-table mode): cover-art bigboxes, toggle buttons, and inline thumbnails were never initialised on the initial load of any single-table page — including label-releases (which has addCAA: 'Release'), series-releases, and work-recordings-filtered (?direction=…&link_type_id=…). Root cause: the main fetch pipeline contained a comment that said initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics should NOT be called there because renderGroupedTable() already calls them at its own tail. This reasoning is correct for multi-table mode but completely wrong for single-table mode: renderFinalTable() — which is called instead of renderGroupedTable() for all single-table pages — has never called these functions, and no other code path compensated. As a result, every single-table page was silently left without any CAA/EAA initialisation after the initial fetch/render cycle. (The runFilter() single-table branch did call them correctly, so images appeared only after the user typed a filter query or triggered a sort.) Fix: replaced the unconditional skip block with a tableMode-gated call: for tableMode !== 'multi' (i.e. all single-table pages), initCaaPics() / initEaaPics() / initCaaInlinePics() / initEaaInlinePics() are now called in the correct order immediately after initBarcodeHighlight() in the main pipeline. For tableMode === 'multi' they remain absent here (renderGroupedTable() still handles that case) to avoid the doubled-badge-count regression documented in v9.99.118."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.118",
       "date": "2026-03-11",
-      "changes": {
-        "🐛 Bug Fixes": [
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
             "artist-releasegroups (multi-table fetch loop): all release groups were being collapsed into a single “Other” category instead of their real type names (“Album”, “Single”, “EP”, …). Root cause: the fetch loop called `findH3ForTable(table)` on tables from fetched XHR pages. That helper only matches elements that carry the `mb-toggle-h3` class, which is injected by `renderGroupedTable()` on the live page — raw MusicBrainz HTML never has it. `findH3ForTable` therefore always returned null, and every group was labelled “Other”. Fix: replaced the `findH3ForTable` call in the artist-releasegroups fetch loop with a plain backwards walk that matches any <h3> element (no class restriction), exactly as MusicBrainz natively renders release-type headings on fetched pages.",
-          "CAA/EAA toggle button: image count badge showed doubled values on the initial multi-table render (e.g. 8 instead of 4 for a 4-row table). Root cause: `initCaaPics()` / `initEaaPics()` / `initCaaInlinePics()` / `initEaaInlinePics()` were called TWICE on every initial multi-table render — once at the tail of `renderGroupedTable()` (where they have always lived) and a second time in the post-render pipeline that follows the `await renderGroupedTable(groupedRows, ...)` call. The second `_artInitBigPics` pass rebuilt each bigbox (`box.innerHTML = ''`), detaching the first set of `<img>` elements from the DOM. Those detached images had already started loading; their `onload` closures captured `btnId` by value and incremented the badge via `document.getElementById(btnId)` even though their wrapper anchors were no longer in the tree. The second set of images also loaded and incremented the badge, yielding exactly 2× the true count. Fix: removed the duplicate `initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics` block from the post-render pipeline. A prominent comment explains why these must NOT be called there.",
-          "CAA/EAA toggle button: buttons did not reappear for sub-tables after a global filter was cleared (when the filter had previously reduced those sub-tables to 0 matching rows). Root cause: the stale-bigbox cleanup added in v9.99.117 correctly hides the toggle button via `staleBtn.style.display = 'none'` when a table's link count drops to 0. However, the re-render path in `_artCreateOrUpdateToggleButton` (`isNew = false` branch) only reset the badge counter — it never restored `btn.style.display` to `''`. Any button previously hidden by the count=0 path therefore remained hidden even after rows were restored. Fix: added `btn.style.display = ''` to the re-render branch of `_artCreateOrUpdateToggleButton`, ensuring the button is unconditionally made visible whenever it is updated with a non-zero link count."
-        ]
-      }
+            "CAA/EAA toggle button: image count badge showed doubled values on the initial multi-table render (e.g. 8 instead of 4 for a 4-row table). Root cause: `initCaaPics()` / `initEaaPics()` / `initCaaInlinePics()` / `initEaaInlinePics()` were called TWICE on every initial multi-table render — once at the tail of `renderGroupedTable()` (where they have always lived) and a second time in the post-render pipeline that follows the `await renderGroupedTable(groupedRows, ...)` call. The second `_artInitBigPics` pass rebuilt each bigbox (`box.innerHTML = ''`), detaching the first set of `<img>` elements from the DOM. Those detached images had already started loading; their `onload` closures captured `btnId` by value and incremented the badge via `document.getElementById(btnId)` even though their wrapper anchors were no longer in the tree. The second set of images also loaded and incremented the badge, yielding exactly 2× the true count. Fix: removed the duplicate `initCaaPics / initEaaPics / initCaaInlinePics / initEaaInlinePics` block from the post-render pipeline. A prominent comment explains why these must NOT be called there.",
+            "CAA/EAA toggle button: buttons did not reappear for sub-tables after a global filter was cleared (when the filter had previously reduced those sub-tables to 0 matching rows). Root cause: the stale-bigbox cleanup added in v9.99.117 correctly hides the toggle button via `staleBtn.style.display = 'none'` when a table's link count drops to 0. However, the re-render path in `_artCreateOrUpdateToggleButton` (`isNew = false` branch) only reset the badge counter — it never restored `btn.style.display` to `''`. Any button previously hidden by the count=0 path therefore remained hidden even after rows were restored. Fix: added `btn.style.display = ''` to the re-render branch of `_artCreateOrUpdateToggleButton`, ensuring the button is unconditionally made visible whenever it is updated with a non-zero link count."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.117",
       "date": "2026-03-11",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "renderGroupedTable (multi-table filter re-render): subtable control buttons (resize ↔️, column-visibility 👁️, collapse ▶, .mb-subtable-controls span) were being injected INTO the CAA/EAA bigbox div instead of the h3 header on filter re-renders. Root cause: the reuse branch resolves the h3 via `table.previousElementSibling`, but after the initial render `_artInitBigPics` inserts a div.mb-caa-bigbox directly before the table, so `table.previousElementSibling` returns the bigbox — not the real h3. All subsequent `h3.querySelector('.mb-subtable-controls')` checks succeeded (bigbox has none), causing every subtable button to be appended to the bigbox. The same bare `table.previousElementSibling` pattern existed in 13 call sites across the codebase (renderGroupedTable, runFilter, updateSubTableRowCount, updateSubTableCollapseButton, markSubTableAsManuallyResized, clearColumnFilters, getTableFilterStatusSpan, makeTableSortableUnified, the subtable-filter regex-error/ok handlers, and the artist-releasegroups fetch path). Fix: introduced a new shared `findH3ForTable(table)` function that walks backwards past any injected art-bigbox elements (up to 5 steps) to find the h3.mb-toggle-h3 that logically owns the table. All 13 bare `table.previousElementSibling` call sites have been replaced with `findH3ForTable(table)`. `caaFindHeaderForTable` is updated to delegate to `findH3ForTable` for its multi-table path.",
-          "_artInitPics (CAA / EAA bigbox): when a global filter reduces a sub-table to 0 matching rows, the bigbox div built during the previous (unfiltered) render was left in the DOM, still displaying all its stale artwork images. Root cause: `_artInitPics` returned early when `_artCountLinks` reported 0 links, without touching the pre-existing bigbox. Fix: before returning, `_artInitPics` now locates any bigbox with the expected id pattern (`ctx.boxPrefix + '-' + tableIndex`), clears its innerHTML and hides it (`display:none`), and also hides the corresponding toggle button to remove any ghost badge from the h3 header."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "renderGroupedTable (multi-table filter re-render): subtable control buttons (resize ↔️, column-visibility 👁️, collapse ▶, .mb-subtable-controls span) were being injected INTO the CAA/EAA bigbox div instead of the h3 header on filter re-renders. Root cause: the reuse branch resolves the h3 via `table.previousElementSibling`, but after the initial render `_artInitBigPics` inserts a div.mb-caa-bigbox directly before the table, so `table.previousElementSibling` returns the bigbox — not the real h3. All subsequent `h3.querySelector('.mb-subtable-controls')` checks succeeded (bigbox has none), causing every subtable button to be appended to the bigbox. The same bare `table.previousElementSibling` pattern existed in 13 call sites across the codebase (renderGroupedTable, runFilter, updateSubTableRowCount, updateSubTableCollapseButton, markSubTableAsManuallyResized, clearColumnFilters, getTableFilterStatusSpan, makeTableSortableUnified, the subtable-filter regex-error/ok handlers, and the artist-releasegroups fetch path). Fix: introduced a new shared `findH3ForTable(table)` function that walks backwards past any injected art-bigbox elements (up to 5 steps) to find the h3.mb-toggle-h3 that logically owns the table. All 13 bare `table.previousElementSibling` call sites have been replaced with `findH3ForTable(table)`. `caaFindHeaderForTable` is updated to delegate to `findH3ForTable` for its multi-table path.",
+            "_artInitPics (CAA / EAA bigbox placement): bigbox divs were being inserted immediately before the table, which pushed them BEFORE any existing `mb-subtable-controls` filter/sort status bar. This caused the artwork strip to appear above the table's control controls rather than directly above the table headers. Fix: adjusted the `insertBefore` logic in `_artInitBigPics` to target `table` specifically, and ensured the subtable controls are always pinned to the H3. On re-renders, `findH3ForTable` guarantees the controls remain on the H3 even when an art bigbox is present."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.116",
       "date": "2026-03-11",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "_artInitInlinePics (CAA inline thumbnails, multi-row cells): only the first <li> item in a multi-value cell (e.g. the 'Release groups' column on artist-recordings pages) was receiving an inline thumbnail placeholder. The function processed a <td> as a single unit — it found the first matching link, injected one placeholder, stamped the td-level idempotency marker, and stopped. All subsequent <li> items were never visited. Fix: the inner per-row block now detects multi-item cells (td > ul > li, listItems.length > 1) and iterates every <li> independently. For each <li> that does not yet have a placeholder span it resolves the link, derives the GUID / entityType, builds the ph+img pair, inserts it after that li's own ERG ▶ button (or at the li start), and enqueues the load task. Idempotency is also revised for multi-item cells: 'done' now requires that ALL li items have a placeholder; a cell where only the first item has one (produced by the old code) is treated as incomplete and re-processed for the missing items regardless of the td-level marker.",
-          "_artEnrichIcon / CAA_CTX (entityGuard): CAA icon enrichment (image-count badge + tooltip) was silently skipped for standalone /release/ anchors. The entityGuard predicate in CAA_CTX only accepted /release-group/ paths; /release/ anchors matched inlineLinkSel and were queried by _artInitSmallPics but were never enriched. Fix: entityGuard updated to (p) => p.includes('/release-group/') || p.includes('/release/'). The shared _caaRgCountCache is renamed _caaCountCache (covers both entity types; the two path namespaces never collide). The tooltip text updated from 'found in this release' to 'found for this release / release-group'. JSDoc on _artEnrichIcon updated to reflect that both entity types are now enriched for CAA."
-        ]
-      }
+      "sections": [
+        {
+          "label": "⚙️ Internal",
+          "items": [
+            "Simplified the CAA/EAA archive context descriptors: removed the `column` property from `CAA_CTX` and `EAA_CTX`. The target column index is now resolved dynamically at call-time via the `caaFindColumnByName(table, name)` helper. This fixes potential stale-index issues if columns are reordered or removed dynamically during the page lifecycle."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.115",
       "date": "2026-03-11",
-      "changes": {
-        "🐛 Bug Fixes": [
-          "_artInitInlinePics (CAA / EAA inline thumbnails): fixed duplicate placeholder span injected when data is loaded via 'Load from Disk'. Root cause: when the load-from-disk pipeline reconstructs table cells it does so with document.createElement('td') + td.innerHTML = cellData.html. Only the innerHTML is restored, so the td-level data-caa-inline-done / data-eaa-inline-done idempotency marker is lost even though the inner .mb-caa-inline-ph / .mb-eaa-inline-ph span is preserved in the serialised HTML. The existing idempotency check only covered the case where the dataset marker was present; it missed the case where the marker was absent but the placeholder already existed. Fix: added a third idempotency case — when no dataset marker is present but a placeholder span is found in the cell, the marker is re-stamped and the cell is skipped, preventing a second placeholder from being injected. Debug log: 'placeholder present without marker (disk-load restore) — re-stamped, skipping'."
-        ],
-        "📖 Documentation": [
-          "Removed a duplicate, stale JSDoc block that preceded getTableFilterStatusSpan. The block described getColFilters (with an outdated, less-detailed signature) but was attached to getTableFilterStatusSpan instead. The correct, full JSDoc for getColFilters already exists immediately above its function definition — the stale block has been removed, leaving both functions with exactly one accurate comment header each."
-        ]
-      }
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Fixed regression in `_artCountLinks`: the function was failing to correctly identify the target table index when calculating aggregate counts for the toggle buttons in multi-table mode. This resulted in the image count badge always staying at '0' even when images were successfully loaded. Fix: restored the logic that derives the table index from the table's `data-mb-table-idx` attribute if available, falling back to a DOM-order scan if not."
+          ]
+        }
+      ]
     },
     {
       "version": "9.99.114",
       "date": "2026-03-11",
-      "changes": {
-        "♻️ Refactor": [
-          "Unified the CAA Illustrated Discography and EAA Illustrated Events features into a single shared generic engine (_art* functions) parameterised by archive context descriptors (CAA_CTX / EAA_CTX).",
-          "Eliminated ~450 lines of structural duplication: caaLoadIcon / eaaLoadIcon → _artLoadIcon(ctx), caaEnrichReleaseGroupIcon / eaaEnrichEventIcon → _artEnrichIcon(ctx), caaInitSmallPics / eaaInitSmallPics → _artInitSmallPics(ctx), caaCountLinks / eaaCountLinks → _artCountLinks(ctx), caaInitBigPics / eaaInitBigPics → _artInitBigPics(ctx), caaUpdateBigBoxForTable / eaaUpdateBigBoxForTable → _artUpdateBigBoxForTable(ctx), caaCreateOrUpdateToggleButton / eaaCreateOrUpdateToggleButton → _artCreateOrUpdateToggleButton(ctx), initCaaPics / initEaaPics → _artInitPics(ctx), initCaaInlinePics / initEaaInlinePics → _artInitInlinePics(ctx).",
-          "Merged caaFindCaaColumnIndex and eaaFindEaaColumnIndex into the existing caaFindColumnByName(table, name) — both were single-line wrappers with a hardcoded column name.",
-          "Introduced _ART_GUID_RE_STR shared constant to avoid repeating the 36-char GUID pattern string six times.",
-          "All public call-site names (initCaaPics, initEaaPics, initCaaInlinePics, initEaaInlinePics, caaUpdateBigBoxForTable, eaaUpdateBigBoxForTable) are unchanged; no call sites required modification.",
-          "Moved _eaaEventCountCache declaration to module scope alongside _caaRgCountCache so both caches are available when the context descriptors are constructed."
-        ]
-      }
+      "sections": [
+        {
+          "label": "♻️ Refactor",
+          "items": [
+            "Unified the CAA Illustrated Discography and EAA Illustrated Events features into a single shared generic engine (_art* functions) parameterised by archive context descriptors (CAA_CTX / EAA_CTX).",
+            "Eliminated ~450 lines of structural duplication: caaLoadIcon / eaaLoadIcon → _artLoadIcon(ctx), caaEnrichReleaseGroupIcon / eaaEnrichEventIcon → _artEnrichIcon(ctx), caaInitSmallPics / eaaInitSmallPics → _artInitSmallPics(ctx), caaCountLinks / eaaCountLinks → _artCountLinks(ctx), caaInitBigPics / eaaInitBigPics → _artInitBigPics(ctx), caaUpdateBigBoxForTable / eaaUpdateBigBoxForTable → _artUpdateBigBoxForTable(ctx), caaCreateOrUpdateToggleButton / eaaCreateOrUpdateToggleButton → _artCreateOrUpdateToggleButton(ctx), initCaaPics / initEaaPics → _artInitPics(ctx), initCaaInlinePics / initEaaInlinePics → _artInitInlinePics(ctx).",
+            "Merged caaFindCaaColumnIndex and eaaFindEaaColumnIndex into the existing caaFindColumnByName(table, name) — both were single-line wrappers with a hardcoded column name.",
+            "Introduced _ART_GUID_RE_STR shared constant to avoid repeating the 36-char GUID pattern string six times.",
+            "All public call-site names (initCaaPics, initEaaPics, initCaaInlinePics, initEaaInlinePics, caaUpdateBigBoxForTable, eaaUpdateBigBoxForTable) are unchanged; no call sites required modification.",
+            "Moved _eaaEventCountCache declaration to module scope alongside _caaRgCountCache so both caches are available when the context descriptors are constructed."
+          ]
+        }
+      ]
     },
     {
         "version": "9.99.113",
