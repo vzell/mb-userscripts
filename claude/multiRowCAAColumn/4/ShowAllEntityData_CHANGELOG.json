@@ -1,5 +1,14 @@
 [
     {
+      "version": "9.99.135",
+      "date": "2026-03-13",
+      "changes": {
+        "🐛 Bug Fixes": [
+          "CAA/EAA column-header ▶/◀ button missing on initial render: initCollapsableColumns runs synchronously immediately after renderFinalTable, before any _artEnrichIcon call has resolved. On the initial render the CAA cells are still empty anchors (no ul.mb-caa-art-ul yet), so multiRowCells is empty for the CAA column and no header button is created. On sort re-renders the clones from allRows already carry the built ul structure, so the button appeared. Fix: _artEnrichTable now collects each _caaQueue.enqueue() Promise into an array and returns Promise.all(promises). In _artInitPics, the _artEnrichTable call is chained with .then(() => { if collapsableColumns.includes(ctx.column) → initCollapsableColumns(table) }), so initCollapsableColumns is re-run exactly once after all enrichments for that table have resolved and every CAA cell has its ul.mb-caa-art-ul populated. initCollapsableColumns is idempotent and its art-cell cleanup guards (introduced in 9.99.133) prevent any clobbering of the newly-built cells."
+        ]
+      }
+    },
+    {
       "version": "9.99.134",
       "date": "2026-03-13",
       "changes": {

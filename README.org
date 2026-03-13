@@ -51104,13 +51104,13 @@ see the code after the comment
 // ── CAA / EAA multi-row art cell builders
 #+end_example
 
-** TODO sorting bug
+** DONE sorting bug
 
 as soon as we sort on ANY column, the collpase state of the CAA multi-row column is lost, and all multi-row columns are
 uncollapsed. Additionally the collapse/uncollapse toggle icon is gone and there is no way to collapse these columns
 again
 
-** add the CAA column to collapsable columns, does it interfer somehow with the current implementation
+** DONE add the CAA column to collapsable columns, will it interfer somehow with the current implementation
 
 1.)
 
@@ -51118,20 +51118,31 @@ please also add the ability to filter on the currently disabled CAA image type (
 
 2.)
 
-if I would use the collapsable feature framework, defined in the variable "const pageDefinitions" for the CAA columns like this
+if I would use the collapsable feature framework, and add the CAA column to the collapsable columns
 
 #+begin_example
 collapsableColumns: [ 'CAA' ],
 #+end_example
 
-does it interfer somehow with the current implementation, or do we gain any benefits
+defined in the variable "const pageDefinitions" for the pageTypes which have CAA columns, will it interfer somehow with
+the current implementation/functionaliyt, or do we gain any benefits
 
-** filter also on the image type and comment
+If all is good, then please add the "CAA" column to every pageType necessary
+
+** DONE filter also on the image type and comment
 
 please also add the ability to filter on the currently disabled CAA image type (like "front", "back", etc) and even more important, the comment on each CAA image
 
+** initially when rendering the final page, the column header collapse icon for multi-row cells in the "CAA" column is NOT visible
+
+a couple of glitches:
+
+- initially when rendering the final page, the column header collapse/uncollapse icon for multi-row cells in the "CAA" column is NOT visible
+- as soon as I sort on ANY column it gets visible and from then on the collapse/uncollapse works either  when clicking the column header icon or the global icon 
+
 ** investigate the collapsing of the RGs in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
+* TODO reinforce the loading o the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 
@@ -51404,6 +51415,88 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 
 * TODO adjust the height of the "⟳" char to the other buttons, actually make the height of the "⟳" char and "resize" and "visible" columns buttons the same
 
-* add background color to h2/h3 header rows
+* add background color to the h2/h3 table header header rows
+
+add a better background color (even better make them configurable in the configuration section) to the h2/h3
+table/sub-table header header rows (depending on single or multi-table mode))
+
+Use as a default the original rainbow like grey coloring of the table header (foreground/backgound) from the initial
+entry page before acting on the action button and rendering the final page.
 
 * add menu to hover CAA picture, for different actions
+
+* unique column values drop down
+
+#+begin_example
+o make them filterable, I need a dedicated text extraction path for CAA art cells that reads from the art-li-image rows, but without letting types and comments pollute the sort keys or global row text used for global filtering.
+#+end_example
+
+* DONE Somehow you messed up when generating the code
+
+you mixed the function
+
+#+begin_example
+    function _artBuildSearchText(images) {
+        return images.map(img => {
+            const parts = [];
+            if (Array.isArray(img.types) && img.types.length)
+                parts.push(img.types.join(' '));
+            if (img.comment && img.comment.trim())
+                parts.push(img.comment.trim());
+            return parts.join(' ');
+        }).join('  '); // double-space separates per-image groups
+    }
+#+end_example
+
+with comments, see
+
+#+begin_example
+    // ── CAA / EAA multi-row art cell builders ─────────────────────────────────
+
+    /**
+     * Builds a single search-index string from an images[] array so that column
+     * filters can match against image types ("Front", "Back", "Booklet", …) and
+     * per-image comments without those strings polluting sort keys.
+     *
+     * The string is stored as `ul.dataset.mbArtSearch` on the `ul.mb-caa-art-ul`
+     * element and is appended to the text extracted by `getCleanColumnText()`.
+     * `getCleanVisibleText()` (used for sort) is NOT affected.
+     *
+     * Format: types and comments are space-joined; one token group per image.
+     *   e.g. "Front  Back Gatefold  Booklet sleeve booklet"
+     *
+     * @param   {Object[]} images  Archive `images[]` array.
+     * @returns {string}
+     */
+    function _artBuildSearchText(images) {
+        return images.map(img => {
+            const parts = [];
+            if (Array.isArray(img.types) && img.types.length)
+                parts.push(img.types.join(' '));
+            if (img.comment && img.comment.trim())
+                parts.push(img.comment.trim());
+            return parts.join(' ');
+        }).join('  '); // double-space separates per-image groups
+    }
+
+     * single image entry from the CAA/EAA JSON API response.
+     *
+     * Layout per row (all optional pieces degrade gracefully if data absent):
+     *   [18×18 thumb]  [type badge]  [ — comment ]  [⏳ if pending]
+     *
+     * When `sa_caa_hover_preview` is enabled, hovering the thumbnail triggers the
+     * shared singleton popup showing a larger version of that specific image
+     * (derived from `imgData.thumbnails` at `sa_caa_big_img_size`).  Unlike the
+     * icon-column hover, which always fetches `/front-{size}`, each li uses its
+     * own archive URL so Back, Booklet, etc. images preview correctly.
+     *
+     * The <li> starts with `style="display:none"` so the parent collapse
+     * toggle controls its visibility.  Protocol-relative URLs (`//`) are used
+     * so the element works on both http and https pages.
+     *
+     * @param   {Object} imgData  One image entry from the archive `images[]` array.
+     *   Expected fields: id, types[], front, back, comment, approved, image,
+     *   thumbnails.{250,500,1200,small,large}
+     * @returns {HTMLLIElement}
+     */
+#+end_example

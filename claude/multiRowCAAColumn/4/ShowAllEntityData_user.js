@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.134+2026-03-13
+// @version      9.99.135+2026-03-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -20815,19 +20815,26 @@
      */
     function _artEnrichTable(ctx, table) {
         const icons = table.querySelectorAll(ctx.iconSel);
+        const promises = [];
 
         icons.forEach(icon => {
             const anchor = icon.closest('a[href]');
             if (!anchor) return;
             if (_caaQueue) {
-                _caaQueue.enqueue(() => _artEnrichIcon(ctx, anchor));
+                promises.push(_caaQueue.enqueue(() => _artEnrichIcon(ctx, anchor)));
             } else {
-                _artEnrichIcon(ctx, anchor);
+                promises.push(_artEnrichIcon(ctx, anchor));
             }
         });
 
         Lib.debug(ctx.key, `${ctx.key}EnrichTable: enqueued ${icons.length} enrichment request(s) ` +
             `(queue: ${_caaQueue ? _caaQueue.runningCount + ' running, ' + _caaQueue.pendingCount + ' pending' : 'unavailable'})`);
+
+        // Return a Promise that resolves once every enqueued enrichment task is done.
+        // _artInitPics chains .then() on this to re-run initCollapsableColumns for
+        // the CAA/EAA column after the multi-row cells have been built — fixing the
+        // missing column-header ▶/◀ button on initial render.
+        return Promise.all(promises);
     }
 
     /**
@@ -21739,7 +21746,33 @@
                 // Enrichment (count badges + multi-row cell build) is always done
                 // regardless of the sa_caa_pics_small setting.  _artEnrichIcon's
                 // own idempotency guard prevents double-work when both paths fire.
-                _artEnrichTable(ctx, table);
+                //
+                // ── Deferred initCollapsableColumns ──────────────────────────────
+                // On the initial render, initCollapsableColumns runs BEFORE any
+                // enrichment has completed (the CAA cells are still empty anchors),
+                // so the CAA/EAA column has no ul>li structure yet and the column-
+                // header ▶/◀ button is not created.  On sort re-renders the problem
+                // doesn't arise because clones already carry the built ul.mb-caa-art-ul.
+                //
+                // Fix: _artEnrichTable now returns Promise.all of all its enqueued
+                // tasks.  When the last enrichment for this table resolves — meaning
+                // every CAA cell has been populated by _artBuildMultiRowArtCell —
+                // we check whether the art column is in collapsableColumns and, if
+                // so, re-run initCollapsableColumns so it finds the populated cells
+                // and creates the header button and global button correctly.
+                // initCollapsableColumns is idempotent and its cleanup guards already
+                // skip art cells (ul.mb-caa-art-ul), so this call is safe to repeat.
+                _artEnrichTable(ctx, table).then(() => {
+                    const collapseCols = activeDefinition &&
+                                        activeDefinition.features &&
+                                        activeDefinition.features.collapsableColumns;
+                    if (Array.isArray(collapseCols) && collapseCols.includes(ctx.column)) {
+                        Lib.debug(ctx.key,
+                            `init${ctx.key.toUpperCase()}Pics: all enrichments done — ` +
+                            `re-running initCollapsableColumns for "${ctx.column}" column`);
+                        initCollapsableColumns(table);
+                    }
+                });
             }
 
             // Single-pass strategy: scan links first (read-only), create the
