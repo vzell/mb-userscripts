@@ -17602,78 +17602,192 @@
     }
 
     /**
-     * Installs a one-time document-level click listener that intercepts ALL anchor clicks
-     * anywhere on the rendered page while data is loaded (`isLoaded === true`).
+     * Installs a one-time set of document-level event listeners that protect the
+     * current page session from accidental navigation while data is loaded
+     * (`isLoaded === true`).
      *
-     * When the user clicks a link that would navigate away from the current page, a
-     * `confirm()` dialog is shown.  If the user cancels, the navigation is suppressed.
-     * This prevents accidental loss of all loaded data, applied filters, active sorts,
-     * column resizing and other per-session customisations — regardless of whether the
-     * clicked link is inside the consolidated table, the MusicBrainz header, the sidebar,
-     * breadcrumbs, or any other element on the page.
+     * THREE guards are installed, all idempotent via `_mbNavGuardInstalled`:
      *
-     * Links that are NOT guarded (navigation stays uninterrupted):
-     *   - Links with `target="_blank"` (open in a new tab — no state is lost)
-     *   - Fragment-only links (`href="#..."` or `href=""`) — same-page scrolling
-     *   - `javascript:` pseudo-links
-     *   - Links whose resolved URL matches the current page URL (e.g. self-referencing links)
+     * ── Guard 1: Anchor click guard (page-wide) ────────────────────────────────
+     * Intercepts ALL anchor clicks anywhere on the rendered page (header, sidebar,
+     * breadcrumbs, consolidated table, etc.).  A `confirm()` dialog is shown when
+     * the clicked link would navigate away from the current page.
      *
-     * The listener is registered only once (guarded by `_mbNavGuardInstalled`).
+     * Links that are NOT guarded:
+     *   - `target="_blank"` / `target="_new"` — opens in new tab, no state lost
+     *   - Fragment-only hrefs (`#…`) — same-page scroll
+     *   - `javascript:` pseudo-hrefs
+     *   - Links whose resolved URL matches the current page (query/hash-only change)
+     *
+     * ── Guard 2: Tab key focus-trap (page-wide) ────────────────────────────────
+     * Captures Tab / Shift+Tab keydown events.  When the focus would leave the
+     * last (or first, for Shift+Tab) focusable element on the page and enter the
+     * browser chrome (address bar, toolbar, etc.), the event is suppressed and
+     * focus is wrapped around to the first (or last) focusable element on the page
+     * instead, keeping keyboard navigation entirely within the document.
+     *
+     * Focusable selector: a[href], button:not([disabled]), input:not([disabled]),
+     *   select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])
+     * Elements that are hidden (offsetParent === null for non-fixed) or have
+     * visibility:hidden / display:none are excluded.
+     *
+     * ── Guard 3: Merge-form submit-button guard ────────────────────────────────
+     * Intercepts clicks on `button[type="submit"]` elements inside a `<form>` that
+     * contains a `div.list-merge-buttons-row-container`.  These are the MusicBrainz
+     * "Add all releases for merging" / "Merge release groups" action forms injected
+     * by MusicBrainz itself (and related userscripts).  Submitting them navigates
+     * to a merge-queue URL and would silently discard all session data.
+     *
+     * Buttons that are NOT guarded (submit proceeds uninterrupted):
+     *   - Buttons with `formtarget="_blank"` — submission opens in a new tab
+     *
+     * The listener set is registered only once (guarded by `_mbNavGuardInstalled`).
      */
     function initNavigationGuard() {
         if (document._mbNavGuardInstalled) return;
         document._mbNavGuardInstalled = true;
 
+        // ── Shared confirmation helper ──────────────────────────────────────────
+        /**
+         * Show the standard "leaving the page" confirm dialog.
+         * @returns {boolean} true if the user confirmed navigation, false to cancel.
+         */
+        const confirmNavigation = (context) => {
+            Lib.debug('navigation', `Guard triggered: ${context}`);
+            return window.confirm(
+                'You are about to leave this page.\n\n' +
+                'All loaded data, filters, sorting, column resizing and other\n' +
+                'customisations will be lost.\n\n' +
+                'Do you want to continue?'
+            );
+        };
+
+        // ── Guard 1: Anchor click guard ─────────────────────────────────────────
         document.addEventListener('click', (e) => {
             if (!isLoaded) return;
 
-            // Walk up the DOM from the click target to find an <a> element
             const anchor = e.target.closest('a[href]');
             if (!anchor) return;
-
-            // Guard ALL anchor clicks on the rendered page — not just links inside
-            // the consolidated table — so that navigating via the MusicBrainz header,
-            // sidebar, breadcrumbs, or any other page element also triggers the
-            // "you are about to leave" confirmation when data is loaded.
 
             const href = anchor.getAttribute('href') || '';
 
             // Skip fragment-only, javascript:, and empty hrefs
             if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
 
-            // Skip links that open in a new tab/window (no session state is lost)
+            // Skip links that open in a new tab / window (no session state is lost)
             if (anchor.target === '_blank' || anchor.target === '_new') return;
 
-            // Resolve the href to an absolute URL and compare to the current page
+            // Resolve to absolute URL
             let targetUrl;
             try {
                 targetUrl = new URL(href, window.location.href);
             } catch (_) {
                 return; // Unparseable href — let the browser handle it
             }
-            const currentBase = window.location.origin + window.location.pathname;
-            const targetBase  = targetUrl.origin + targetUrl.pathname;
 
-            // Same-page links (different query/hash only) do not navigate away
+            // Same-page links (query/hash-only change) do not navigate away
+            const currentBase = window.location.origin + window.location.pathname;
+            const targetBase  = targetUrl.origin  + targetUrl.pathname;
             if (targetBase === currentBase) return;
 
-            Lib.debug('navigation', `Guard triggered for link: ${targetUrl.href}`);
-
-            const confirmed = window.confirm(
-                'You are about to leave this page.\n\n' +
-                'All loaded data, filters, sorting, column resizing and other\n' +
-                'customisations will be lost.\n\n' +
-                'Do you want to continue?'
-            );
-
-            if (!confirmed) {
+            if (!confirmNavigation(`anchor click → ${targetUrl.href}`)) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
-                Lib.debug('navigation', 'Navigation cancelled by user.');
+                Lib.debug('navigation', 'Navigation cancelled by user (anchor).');
             }
         }, /* useCapture */ true);
 
-        Lib.debug('navigation', 'Navigation guard installed.');
+        // ── Guard 2: Tab key focus-trap ─────────────────────────────────────────
+        /**
+         * Returns the ordered list of currently visible, enabled focusable elements
+         * within the document, respecting tabIndex ordering.
+         * Elements with tabIndex > 0 are sorted to the front per the HTML spec;
+         * elements with tabIndex === 0 / -1 (but not [tabindex="-1"]) follow in DOM order.
+         */
+        const getFocusable = () => {
+            const sel = [
+                'a[href]',
+                'button:not([disabled])',
+                'input:not([disabled])',
+                'select:not([disabled])',
+                'textarea:not([disabled])',
+                '[tabindex]:not([tabindex="-1"])'
+            ].join(', ');
+
+            return Array.from(document.querySelectorAll(sel)).filter(el => {
+                // Exclude elements that are not visible / interactable
+                if (el.offsetWidth === 0 && el.offsetHeight === 0) return false;
+                const style = window.getComputedStyle(el);
+                if (style.visibility === 'hidden' || style.display === 'none') return false;
+                return true;
+            }).sort((a, b) => {
+                const ta = a.tabIndex > 0 ? a.tabIndex : Infinity;
+                const tb = b.tabIndex > 0 ? b.tabIndex : Infinity;
+                if (ta !== tb) return ta - tb;
+                // Same tabIndex bucket: maintain DOM order
+                return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+            });
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (!isLoaded) return;
+            if (e.key !== 'Tab') return;
+
+            const focusable = getFocusable();
+            if (focusable.length === 0) return;
+
+            const first = focusable[0];
+            const last  = focusable[focusable.length - 1];
+            const active = document.activeElement;
+
+            if (e.shiftKey) {
+                // Shift+Tab: if focus is on (or before) the first element, wrap to last
+                if (active === first || !focusable.includes(active)) {
+                    e.preventDefault();
+                    last.focus();
+                    Lib.debug('navigation', 'Tab-trap: wrapped focus to last element (Shift+Tab).');
+                }
+            } else {
+                // Tab: if focus is on (or past) the last element, wrap to first
+                if (active === last || !focusable.includes(active)) {
+                    e.preventDefault();
+                    first.focus();
+                    Lib.debug('navigation', 'Tab-trap: wrapped focus to first element (Tab).');
+                }
+            }
+        }, /* useCapture */ true);
+
+        // ── Guard 3: Merge-form submit-button guard ─────────────────────────────
+        document.addEventListener('click', (e) => {
+            if (!isLoaded) return;
+
+            // Only care about button clicks
+            const btn = e.target.closest('button');
+            if (!btn) return;
+
+            // The button must be inside a <form> that contains a merge-buttons container
+            const form = btn.closest('form');
+            if (!form) return;
+            if (!form.querySelector('div.list-merge-buttons-row-container')) return;
+
+            // Buttons with formtarget="_blank" open in a new tab — no state lost
+            if (btn.getAttribute('formtarget') === '_blank') return;
+
+            // Determine a human-readable description from the embedded JSON label if present
+            const labelScript = form.querySelector('script[type="application/json"]');
+            let formLabel = 'merge form';
+            try {
+                if (labelScript) formLabel = JSON.parse(labelScript.textContent).label || formLabel;
+            } catch (_) { /* ignore */ }
+
+            if (!confirmNavigation(`merge-form button "${btn.textContent.trim() || formLabel}"`)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                Lib.debug('navigation', `Navigation cancelled by user (merge-form: "${formLabel}").`);
+            }
+        }, /* useCapture */ true);
+
+        Lib.debug('navigation', 'Navigation guard installed (anchor + Tab-trap + merge-form).');
     }
 
     /**
