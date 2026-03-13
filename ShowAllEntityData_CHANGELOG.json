@@ -1,5 +1,20 @@
 [
     {
+      "version": "9.99.140",
+      "date": "2026-03-13",
+      "sections": [
+        {
+          "label": "✨ Improvements",
+          "items": [
+            "All color configuration parameters in configSchema that used type: 'color' have been changed to type: 'color_picker'. Affected settings: sa_ui_h2_bg, sa_ui_h3_bg, sa_ui_h2_h3_hover_bg, sa_ui_thead_th_bg, sa_ui_thead_th_color, sa_ui_thead_filter_row_bg.",
+            "Configurable synthetic column header background color (sa_ui_thead_th_synthetic_bg, default #b8c8b8): a new color_picker setting in the UI APPEARANCE section controls the background color of all injected synthetic table column headers (Event-Type, Event-Date, Country, Date, MB-Name, Comment, CAA, EAA, etc.). The default is a darker greenish grey, visually distinct from the standard header background (#e8e8e8), making synthetic columns immediately identifiable at a glance. The previously hard-coded '#d3d3d3' value in cleanupHeaders() has been replaced by Lib.settings.sa_ui_thead_th_synthetic_bg.",
+            "Four new filename construction options in the LOAD AND SAVE DATA TO/FROM DISK configSchema section: sa_filename_prefix (string, default 'MB-') sets the prefix of every generated save filename; sa_filename_include_detail (boolean, default true) controls whether the optional detail segment (multi-button label or filtered-relationship slug) is included; sa_filename_include_row_count (boolean, default true) controls whether the row count is included in parentheses; sa_filename_include_timestamp (boolean, default true) controls whether the ISO-8601 timestamp is appended.",
+            "Save filename format redesigned (v9.99.140+). The new format is: <prefix><PageType>-(<EntityName>)-<Section>[-(detailSlug)][(-rowCount)][_timestamp].json.gz. Changes: (1) The entity name is extracted from the h1 <bdi> element (plus any trailing text after the </a>, e.g. an event date), and inserted in parentheses between the entity-type prefix and the page-section suffix. (2) Every dash-separated word in the pageType slug is Title-cased (e.g. 'artist-relationships' → 'Artist-Relationships'). (3) The row count is wrapped in parentheses rather than appearing as a bare number. (4) The timestamp is separated from the rest by an underscore rather than a dash. Example: MB-Artist-(Bruce Springsteen)-Relationships-(1329)_2026-03-13T11-54-51.json.gz. The load-path detailSlugFromFilename() fallback (strategy 2) has been updated to recognise the new format and bail out early (entity-name files start with '(' after the prefix and are handled by strategy 1 via data.buttonLabel), preserving backward compatibility with files saved in the old format."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.139",
       "date": "2026-03-13",
       "sections": [
