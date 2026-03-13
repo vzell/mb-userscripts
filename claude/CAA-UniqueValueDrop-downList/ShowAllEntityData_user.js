@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.144+2026-03-13
+// @version      9.99.143+2026-03-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -10342,82 +10342,6 @@
             line-height: 1;
             color: #555;
             font-weight: bold;
-        }
-
-        /* ============================================================
-           Keyboard focus ring — visible indicator for Tab navigation
-           ============================================================
-           Applied to every interactive element the Tab-trap can land on.
-
-           Two-layer ring:
-             • outline      : high-contrast blue border, respects outline-offset
-             • box-shadow   : soft halo that follows border-radius (outline
-                              corners are square in some browsers even on rounded
-                              buttons)
-
-           :focus-visible is used as the primary selector so mouse clicks do NOT
-           trigger the ring (modern browsers).  The paired :focus rule with
-           :not(:focus-visible) ensures the outline is explicitly cleared on
-           mouse-focus in those same browsers, avoiding a double-ring on elements
-           that already have their own :focus styles (e.g. .mb-col-filter-input).
-
-           !important is required on the outline because MusicBrainz's global
-           stylesheet sets "outline: 0" on <button> elements, and inline cssText
-           properties (uiActionBtnBaseCSS etc.) are applied to the element's
-           style attribute — which has higher specificity than a class rule but
-           NOT higher than !important in a sheet rule.               */
-
-        /* ── Shared focus-ring mixin (applied via the selectors below) ── */
-        #mb-show-all-controls-container button:focus-visible,
-        .mb-subtable-clear-btn:focus-visible,
-        .mb-show-all-subtable-btn:focus-visible,
-        .mb-subtable-resize-btn:focus-visible,
-        .mb-subtable-vis-btn:focus-visible,
-        .mb-caa-art-toggle-btn:focus-visible,
-        .mb-global-art-toggle-btn:focus-visible,
-        [id^="mb-caa-toggle-btn-retry-"]:focus-visible,
-        [id^="mb-eaa-toggle-btn-retry-"]:focus-visible,
-        [id$="-global-retry"]:focus-visible,
-        .sort-icon-btn:focus-visible,
-        .mb-col-uniq-btn:focus-visible,
-        .mb-col-collapse-hdr-btn:focus-visible,
-        .mb-toggle-h2:focus-visible,
-        .mb-toggle-h3:focus-visible,
-        .mb-col-filter-input:focus-visible,
-        #mb-prefilter-input:focus-visible,
-        #mb-filter-input:focus-visible,
-        .mb-uniq-qf-input:focus-visible {
-            outline: 2px solid #1a73e8 !important;
-            outline-offset: 2px !important;
-            box-shadow: 0 0 0 4px rgba(26,115,232,0.28) !important;
-        }
-
-        /* ── Fallback: browsers that don't support :focus-visible still see
-               the ring on keyboard focus; mouse focus is suppressed above. ── */
-        @supports not selector(:focus-visible) {
-            #mb-show-all-controls-container button:focus,
-            .mb-subtable-clear-btn:focus,
-            .mb-show-all-subtable-btn:focus,
-            .mb-subtable-resize-btn:focus,
-            .mb-subtable-vis-btn:focus,
-            .mb-caa-art-toggle-btn:focus,
-            .mb-global-art-toggle-btn:focus,
-            [id^="mb-caa-toggle-btn-retry-"]:focus,
-            [id^="mb-eaa-toggle-btn-retry-"]:focus,
-            [id$="-global-retry"]:focus,
-            .sort-icon-btn:focus,
-            .mb-col-uniq-btn:focus,
-            .mb-col-collapse-hdr-btn:focus,
-            .mb-toggle-h2:focus,
-            .mb-toggle-h3:focus,
-            .mb-col-filter-input:focus,
-            #mb-prefilter-input:focus,
-            #mb-filter-input:focus,
-            .mb-uniq-qf-input:focus {
-                outline: 2px solid #1a73e8 !important;
-                outline-offset: 2px !important;
-                box-shadow: 0 0 0 4px rgba(26,115,232,0.28) !important;
-            }
         }
     `;
     document.head.appendChild(style);

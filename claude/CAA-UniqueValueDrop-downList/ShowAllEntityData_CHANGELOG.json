@@ -1,17 +1,5 @@
 [
     {
-      "version": "9.99.144",
-      "date": "2026-03-13",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "Keyboard focus ring missing on Tab-reachable elements: all interactive elements injected by the script (h1 action-bar buttons, H2 filter-bar utility buttons, H3 sub-table buttons including CAA/EAA toggles, retry buttons, resize and column-visibility buttons, per-column filter inputs, the global and pre-filter inputs, the quickfilter input inside the unique-values dropdown, sort-icon buttons, column-collapse header buttons, and H2/H3 section headers) now display a visible two-layer focus indicator when reached via Tab or Shift+Tab. The ring is rendered as a 2px solid #1a73e8 outline (with 2px offset) plus a matching soft halo (box-shadow: 0 0 0 4px rgba(26,115,232,0.28)) so it follows the element's border-radius. !important is used on both properties to override MusicBrainz's global 'outline: 0' reset for <button> elements and any inline cssText that would otherwise win on specificity. :focus-visible is used as the primary selector so mouse clicks do not produce a ring in modern browsers. A @supports not selector(:focus-visible) block provides the identical rules under plain :focus for older browsers that lack :focus-visible support."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.143",
       "date": "2026-03-13",
       "sections": [

@@ -50104,7 +50104,7 @@ In the example pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-e
 
 please fix and add a changelog entry
 
-* DONE highlighning still on after load from disk
+* DONE highligthning still on after load from disk
 
 In the uploaded userscript "ShowAllEntityData.user.js",
 
@@ -50119,6 +50119,95 @@ Lets assume we are on the final rendered page by reading all data from the net o
 please fix  
    
 
+
+* DONE In the page definition variable "const pageDefinitions" add the following new "columnEraser"
+
+#+begin_example
+{ sourceColumn: 'Name', erasers: ['wiencek'] }
+#+end_example
+
+to the pageType "type: 'artist-recordings'"
+
+#+begin_example
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] },
+                    { sourceColumn: 'Name', erasers: ['wiencek'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release groups', 'CAA' ],
+                addCAA: 'Release groups',
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+and implement it to strip the following containers
+
+#+begin_example
+<div class="suggested-work" ...
+<div class="work" ...
+#+end_example
+
+from the configured "sourceColumn": in the final rendered page via the function
+
+#+begin_example
+function applyColumnErasers(row, eraserDescriptors)
+#+end_example
+
+Here is are examples of the cell HTML without the stripping:
+
+#+begin_example
+<td>
+  <a class="wrap-anywhere" href="/recording/e1801356-9611-4907-b3fd-6c68f43f6906">
+    <bdi>? (unknown Title)
+    </bdi>
+  </a>
+  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em; color: orange;">
+    <span>Looking for matching work…
+    </span>&nbsp;
+    <span>1236/1584
+    </span>
+  </div>
+</td>
+
+<td>
+  <span class="video" title="This recording is a video">
+  </span>
+  <a class="wrap-anywhere" href="/recording/875a6a0d-1fcc-416e-959f-433f96b0da17">
+    <bdi>"Born to Run"
+    </bdi>
+  </a>
+  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">
+    <span style="color: green; font-weight: bold;">Suggested work:
+    </span>&nbsp;
+    <a href="/work/9893a23c-f282-3b07-a2db-b4f2f3b9f4b2">Born to Run
+    </a>
+  </div>
+</td>
+
+<td>
+  <a class="wrap-anywhere" href="/recording/e7592c69-88ae-4038-a834-c6b63bbb5251">
+    <bdi>(4th of July, Asbury Park) Sandy
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>live, 1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa City, IA, USA
+    </bdi>)
+  </span>
+  <div class="work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">live recording of
+    <a href="/work/1f573511-eb4b-3106-8fb2-f15de52e4868">4th of July, Asbury Park (Sandy)
+    </a>
+  </div>
+</td>
+#+end_example
 
 
 * is it better to use fetch or GM_xmlhttpRequest
@@ -51204,19 +51293,10 @@ Those changes together would likely cut the runtime of your script by 50–70% o
 * TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 
 
-* TODO add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
-
-In the uploaded userscript,
-
-add more guards (notify user with an alert box) before leaving the final rendered page:
-
-- even the TAB key pressed repeatedly should never leave the page up to native browser controls
-
-
 * TODO implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
 
 
-* TODO add a multi-row cell for the CAA info
+* DONE add a multi-row cell for the CAA info
 ** DONE initial
 
 one row per coverart - type, comment, etc (whatever the API exposes)
@@ -51311,15 +51391,6 @@ The "mb-col-collapse-all-btn", when clicked does not take into account the "CAA"
 #+end_example
 
 whereas the the column header collapse/uncollpase icon and the cell specific ones work
-
-** TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-
-* TODO reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-
-
-* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
-
 
 * DONE retry "Failed to fetch" - CAA cover artcode
 
@@ -51754,6 +51825,19 @@ Split the current configuration parameter which handles both H2 and H3 header ba
 
 into separate configurations for H2 (sa_ui_h2_hover_bg) and H3 (sa_ui_h3_hover_bg) headers + adjust their descriptions correspondingly
 
+** DONE Split the current configuration parameter which handles both H2 and H3 header background colors
+
+#+begin_example
+        sa_ui_h2_hover_bg: {
+            label: 'H2 / H3 header hover background color',
+            type: 'color',
+            default: '#f9f9f9',
+            description: 'Background color applied to H2 and H3 section headers when the cursor hovers over them (.mb-toggle-h2:hover, .mb-toggle-h3:hover). Default is the original MusicBrainz light grey.'
+        },
+#+end_example
+
+into separate configurations for H2 (sa_ui_h2_hover_bg) and H3 (sa_ui_h3_hover_bg) headers + adjust their descriptions correspondingly
+
 * DONE LOAD AND SAVE DATA TO/FROM DISK SECTION
 
 Add more configuration options to the
@@ -51897,7 +51981,6 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 
 * TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
 
-
 * TODO for RGs CAA artwork also display the Release fom where it's sourced
 
 * add menu to hover CAA picture, for different actions
@@ -51906,127 +51989,24 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 
 * todos
 
-In the uploaded userscript,
+In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
 
-1.)
 
-Split the current configuration parameter which handles both H2 and H3 header background colors
+* TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
-#+begin_example
-        sa_ui_h2_hover_bg: {
-            label: 'H2 / H3 header hover background color',
-            type: 'color',
-            default: '#f9f9f9',
-            description: 'Background color applied to H2 and H3 section headers when the cursor hovers over them (.mb-toggle-h2:hover, .mb-toggle-h3:hover). Default is the original MusicBrainz light grey.'
-        },
-#+end_example
 
-into separate configurations for H2 (sa_ui_h2_hover_bg) and H3 (sa_ui_h3_hover_bg) headers + adjust their descriptions correspondingly
+* TODO add more guards before leaving the final rendered page, even the TAB key pressed repeatedly should never leave the page up to native browser controls
+** DONE initial
 
-2.)
+In the uploaded userscript,
 
-In the page definition variable "const pageDefinitions" add the following new "columnEraser"
+add more guards (notify user with an alert box) before leaving the final rendered page:
 
-#+begin_example
-{ sourceColumn: 'Name', erasers: ['wiencek'] }
-#+end_example
+- even the TAB key pressed repeatedly should never leave the page up to native browser controls
 
-to the pageType "type: 'artist-recordings'"
-
-#+begin_example
-        {
-            type: 'artist-recordings',
-            match: (path) => path.includes('/recordings'),
-            buttons: [ { label: 'Show all Recordings for Artist' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] },
-                    { sourceColumn: 'Name', erasers: ['wiencek'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                collapsableColumns: [ 'Release groups', 'CAA' ],
-                addCAA: 'Release groups',
-                extractMainColumn: 'Name'
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-and implement it to strip the following containers
-
-#+begin_example
-<div class="suggested-work" ...
-<div class="work" ...
-#+end_example
-
-from the configured "sourceColumn": in the final rendered page via the function
-
-#+begin_example
-function applyColumnErasers(row, eraserDescriptors)
-#+end_example
-
-Here is are examples of the cell HTML without the stripping:
-
-#+begin_example
-<td>
-  <a class="wrap-anywhere" href="/recording/e1801356-9611-4907-b3fd-6c68f43f6906">
-    <bdi>? (unknown Title)
-    </bdi>
-  </a>
-  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em; color: orange;">
-    <span>Looking for matching work…
-    </span>&nbsp;
-    <span>1236/1584
-    </span>
-  </div>
-</td>
-
-<td>
-  <span class="video" title="This recording is a video">
-  </span>
-  <a class="wrap-anywhere" href="/recording/875a6a0d-1fcc-416e-959f-433f96b0da17">
-    <bdi>"Born to Run"
-    </bdi>
-  </a>
-  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">
-    <span style="color: green; font-weight: bold;">Suggested work:
-    </span>&nbsp;
-    <a href="/work/9893a23c-f282-3b07-a2db-b4f2f3b9f4b2">Born to Run
-    </a>
-  </div>
-</td>
-
-<td>
-  <a class="wrap-anywhere" href="/recording/e7592c69-88ae-4038-a834-c6b63bbb5251">
-    <bdi>(4th of July, Asbury Park) Sandy
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>live, 1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa City, IA, USA
-    </bdi>)
-  </span>
-  <div class="work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">live recording of
-    <a href="/work/1f573511-eb4b-3106-8fb2-f15de52e4868">4th of July, Asbury Park (Sandy)
-    </a>
-  </div>
-</td>
-#+end_example
-
-3.)
-
-Adjust the following function
-
-#+begin_example
-    function initNavigationGuard() {
-#+end_example
-
-to guard NOT ONLY anchor clicks inside a table, but EVERYWHERE on the final rendered page
-
-* Adjust the following function even more
+** DONE some more guards
 
 Adjust the following function even more
 
@@ -52035,7 +52015,6 @@ function initNavigationGuard() {
 #+end_example
 
 1.)
-
 
 to guard NOT ONLY anchor EVERYWHERE on the final rendered page but also the TAB key pressed repeatedly should never
 leave the page up to native browser controls, but instead it should only select elements INSIDE the page
@@ -52097,3 +52076,56 @@ You don’t need this if you are adding a different type of entities.">Clear que
   </script>
 </form>
 #+end_example
+
+** DONE still allows it
+
+on the final rendered page the TAB (Shift-TAB) key pressed repeatedly should never
+leave the page up to native browser controls, but instead it should only select elements INSIDE the page
+
+It looks like the function
+
+#+begin_example
+function initNavigationGuard() {
+#+end_example
+
+still allows it
+
+** Some "TAB" (Shift-TAB) reachable container, for example all the action buttons in the h1 header line do not show any visual representation when using TAB or Shift-TAB AND they have the focus 
+
+Some "TAB" (Shift-TAB) reachable container, for example all the action buttons in the h1 header line do not show any
+visual representation when using TAB or Shift-TAB AND they have the focus
+
+* TODO reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
+
+In the newly uploaded userscript,
+
+a couple of things are still missing (also add a changelog):
+
+* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+
+In the newly uploaded userscript,
+
+1.)
+
+On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
+
+The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
+th rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
+is completely missing, to give the user the cahne to quickly filter either for rows with OR without images (desn't
+matter what other information is there)
+
+also add a changelog
+
+2.)
+
+on the final rendered page the TAB (Shift-TAB) key pressed repeatedly should never
+leave the page up to native browser controls, but instead it should only select elements INSIDE the page
+
+It looks like the function
+
+#+begin_example
+function initNavigationGuard() {
+#+end_example
+
+still allows it
