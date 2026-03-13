@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.139+2026-03-13
+// @version      9.99.138+2026-03-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -754,13 +754,6 @@
             type: 'color',
             default: '#f0fff4',
             description: 'Background color for collapsible H3 sub-table headers (.mb-toggle-h3) in multi-table mode when the cursor is NOT hovering. The existing grey hover background is preserved. Default is a light green.'
-        },
-
-        sa_ui_h2_h3_hover_bg: {
-            label: 'H2 / H3 header hover background color',
-            type: 'color',
-            default: '#f9f9f9',
-            description: 'Background color applied to H2 and H3 section headers when the cursor hovers over them (.mb-toggle-h2:hover, .mb-toggle-h3:hover). Default is the original MusicBrainz light grey.'
         },
 
         // --- Table column-header (thead) row colors ---
@@ -9951,7 +9944,7 @@
         }
         .mb-toggle-h3:hover, .mb-toggle-h2:hover {
             color: #222;
-            background-color: ${Lib.settings.sa_ui_h2_h3_hover_bg || '#f9f9f9'};
+            background-color: #f9f9f9;
         }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; background-color: ${Lib.settings.sa_ui_h3_bg || '#f0fff4'}; }
         .mb-subtable-controls { display: inline-flex; align-items: baseline; gap: 8px; margin-left: 12px; vertical-align: middle; }
@@ -10352,25 +10345,14 @@
             ? headerContainer
             : (headerContainer.closest('h1') || headerContainer);
 
-        // ── Source-data guards — checked BEFORE touching the existing alias line ──
-        //
-        // The initial-page pass consumes the <span class="comment"> from the h1
-        // (removes or replaces it) and injects #mb-h1-alias-line.  The final-page
-        // pass therefore finds no comment span and must NOT remove the alias line
-        // that the initial pass already created.  The stale removal is therefore
-        // deferred to just before the actual injection so that every early-return
-        // path leaves the existing alias line intact.
+        // Remove any stale injected alias line from a previous run (soft-nav).
+        const stale = document.getElementById('mb-h1-alias-line');
+        if (stale) stale.remove();
 
         // Find the comment span directly inside the h1 (not inside a table cell
         // or other descendant — those are handled by the extractor pipeline).
         const commentSpan = h1El.querySelector(':scope > span.comment');
-        if (!commentSpan) {
-            // Source span absent — the initial pass already consumed it (or this
-            // page type never had one).  Preserve whatever alias line is present.
-            Lib.debug('init',
-                `applyH1CommentSpanRelocation [${callSite}]: no comment span — alias line preserved as-is`);
-            return;
-        }
+        if (!commentSpan) return;
 
         // We only act when the span contains an <i title="…"> alias marker.
         // Plain disambiguation comments like "(live)" have no <i title> and must
@@ -10414,11 +10396,6 @@
         }
 
         // ── Build the alias line ──────────────────────────────────────────────
-        // All source-data guards have passed — safe to remove the stale alias
-        // line (soft-nav re-run) and replace it with a freshly built one.
-        const stale = document.getElementById('mb-h1-alias-line');
-        if (stale) stale.remove();
-
         const aliasLine = document.createElement('p');
         aliasLine.id = 'mb-h1-alias-line';
         // Modest italicised appearance close to the MB subheader style.

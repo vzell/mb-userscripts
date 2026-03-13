@@ -45827,286 +45827,6 @@ In the uploaded script, please handle the "Tagger" and "Rating" columns (see als
 
 
 
-* TODO Checks for unused variables and functions
-** question
-
-In the uploaded userscript and library
-check for all unused variables and function definitions, create a report and fix
- 
-** answer
-*** gemini
-
-#+begin_example
-This is an impressive and highly functional Tampermonkey script! Managing DOM manipulation, chunked rendering, filtering, and cross-tab/file states in vanilla JavaScript is no small feat.
-
-I have reviewed the script based on your guidelines. Here is a breakdown of unused code, extraction candidates, and areas that would significantly benefit from refactoring for clarity.
-
-1. Unused Variables and Functions
-Unused Functions:
-
-triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) (around line 1618): This function is completely orphaned. The file selection and loading logic is actually handled by the <input type="file"> element created around line 1319 and triggered inside showLoadFilterDialog(). You can safely delete the triggerDiskLoad function.
-
-Dead UI Elements (Never appended to the DOM):
-
-Around line 1334, several pre-filter UI elements are created but never appended to the document:
-
-preFilterContainer
-
-preFilterInput
-
-preFilterCaseLabel
-
-preFilterCaseCheckbox
-
-preFilterRxLabel
-
-preFilterRxCheckbox
-
-(Note: preFilterMsg is appended later, so it is used, but the inputs themselves are legacy code likely superseded by your showLoadFilterDialog modal).
-
-Unused (or Dead-End) Variables:
-
-timerDisplay: Created around line 1406 (const timerDisplay = document.createElement('span');) and appended to the controls, but its text content is never updated during the fetching, sorting, or filtering operations (the script uses globalStatusDisplay and statusDisplay instead).
-
-basePath and isFilteredRelationshipPage: These are declared at the top and only ever used in the Lib.debug('init', ...) statements. Because you want to keep debug logging, these shouldn't be removed, but be aware they serve no logical purpose outside of the console.
-
-2. Code Extraction Candidates (DRY Principle)
-There are several highly repetitive blocks of code that can be extracted into shared helper functions without changing any logic.
-
-A. The Fade-Out Notification Popups
-You have an identical ~45-line block of code for a pop-up alert in both exportTableToCSV() and triggerStandardDownload().
-
-Refactor: Extract this into a reusable UI helper.
-
-JavaScript
-/**
- * Shows a temporary fade-out notification popup
- * @param {string} messageText - The message to display
- */
-function showNotificationPopup(messageText) {
-    const infoPopup = document.createElement('div');
-    infoPopup.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        border: 1px solid #888;
-        border-radius: 6px;
-        padding: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 10000;
-        max-width: 400px;
-        text-align: center;
-        font-family: sans-serif;
-        opacity: 1;
-        transition: opacity 0.3s ease;
-    `;
-
-    const msg = document.createElement('div');
-    msg.textContent = messageText;
-    msg.style.marginBottom = '15px';
-
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Close';
-    closeBtn.style.cssText = `
-        padding: 6px 12px;
-        cursor: pointer;
-        border-radius: 4px;
-        border: 1px solid #555;
-        background-color: #f0f0f0;
-    `;
-    closeBtn.type = 'button';
-
-    // Close function with fade out
-    const closePopup = () => {
-        infoPopup.style.opacity = '0';
-        // Remove from DOM after transition
-        setTimeout(() => {
-            if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
-            document.removeEventListener('keydown', onEscape);
-        }, 300); // match the CSS transition duration
-    };
-
-    // Button click closes popup
-    closeBtn.addEventListener('click', closePopup);
-
-    // Escape key closes popup
-    const onEscape = (e) => {
-        if (e.key === 'Escape') closePopup();
-    };
-    document.addEventListener('keydown', onEscape);
-
-    infoPopup.appendChild(msg);
-    infoPopup.appendChild(closeBtn);
-    document.body.appendChild(infoPopup);
-}
-B. Highlight Resetting
-The logic to clear previous .mb-global-filter-highlight and .mb-column-filter-highlight tags is repeated four times (in runFilter single mode, runFilter multi mode, startFetchingProcess cleanup, and the "Unhighlight all" button).
-
-Refactor:
-
-JavaScript
-function clearHighlights(containerElement) {
-    containerElement.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
-        .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
-}
-C. Button Generation Boilerplate
-Creating top-bar buttons (addExportButton, addDensityControl, addStatsButton, addAutoResizeButton) involves 10-12 lines of identical document.createElement and inline CSS boilerplate.
-
-Refactor: Create a createToolbarButton(label, title, onClickHandler) to generate and return these buttons.
-
-3. Refactoring for Clarity
-A. Massive duplication inside runFilter()
-The runFilter() function has two entirely separate blocks for activeDefinition.tableMode === 'multi' and single table mode. Inside both blocks, the 40+ line loop that resets highlights, checks Regex/Case matches against the global filter, checks the column filters, and applies new highlight spans is 100% duplicated.
-
-You can pull the row-evaluation logic out into a single helper function, drastically cleaning up runFilter():
-
-JavaScript
-/**
- * Evaluates if a row matches the given filters and applies highlights if necessary.
- * Returns true if it matches, false otherwise.
- */
-function evaluateAndHighlightRow(row, globalQuery, globalQueryRaw, globalRegex, colFilters, isCaseSensitive, isRegExp) {
-    // Reset previous highlights (critical for correct filtering)
-    clearHighlights(row);
-
-    // Global match
-    let globalHit = !globalQuery;
-    if (!globalHit) {
-        if (isRegExp && globalRegex) {
-            // For regex patterns, test against each cell individually
-            // This allows anchored patterns like ^Thunder Road to work correctly
-            globalHit = Array.from(row.cells).some(cell => {
-                const cellText = getCleanColumnText(cell);
-                return globalRegex.test(cellText);
-            });
-        } else {
-            // For non-regex, test against concatenated row text
-            const text = getCleanVisibleText(row);
-            globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
-        }
-    }
-
-    // Column matches
-    let colHit = true;
-    for (const f of colFilters) {
-        const cellText = getCleanColumnText(row.cells[f.idx]);
-        let match = false;
-        if (isRegExp) {
-            try {
-                match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
-            } catch (e) {
-                match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
-            }
-        } else {
-            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
-        }
-        if (!match) {
-            colHit = false;
-            break;
-        }
-    }
-
-    const finalHit = globalHit && colHit;
-    if (finalHit) {
-        if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
-        colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
-    }
-    
-    return finalHit;
-}
-With this in place, your matches = group.rows.map(r => r.cloneNode(true)).filter(r => { ... }) just becomes a clean, single line call to evaluateAndHighlightRow(...).
-
-B. The startFetchingProcess Function Complexity
-This function is over 600 lines long. The core of its complexity lies around line 2140: tableBody.childNodes.forEach(node => { ... }). Inside this loop, you're parsing DOM elements, splitting specific columns (Country/Date, Location, Area), extracting data, and applying column exclusions.
-
-Refactor Idea: Move the column manipulation blocks out of the loop.
-For example, the 25-line chunk handling Country/Date splitting could become:
-
-JavaScript
-function splitCountryDateCell(newRow, countryDateIdx) {
-    const tdSplitC = document.createElement('td');
-    const tdSplitD = document.createElement('td');
-    
-    const cdCell = newRow.cells[countryDateIdx];
-    if (cdCell) {
-        const events = Array.from(cdCell.querySelectorAll('.release-event'));
-        events.forEach((ev, i) => {
-            // ... (existing logic) ...
-        });
-    }
-    return { tdSplitC, tdSplitD };
-}
-Doing this for Location and Area as well would shave hundreds of lines of visual noise off startFetchingProcess and make the primary data-collection loop much easier to follow.
-#+end_example
-
-* TODO Reorder functions
-** question
-
-- Reorder all functions sorted at the end of the file
-- Leave
-
-#+begin_example
-let changelog = [changelog
-const SCRIPT_ID = "vzell-mb-show-all-entities";
-const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
-// CONFIG SCHEMA
-const configSchema = {
-const pageDefinitions = [
-#+end_example
-
-at the very beginning of the file (in that order if possible, and if it does not break the code)
-and other variable definitions after it.
-
-Is that even possible without breaking the code
-
-** answer
-*** claude
-
-#+begin_example
-Code Reorganization
-New structure (from top to bottom):
-
-Changelog (line 50) - Moved to right after userscript header
-IIFE start (function() { 'use strict'; (line 115)
-SCRIPT_ID (line 119)
-SCRIPT_NAME (line 120)
-configSchema (line 123)
-pageDefinitions (line 411)
-All utility functions (line 902+)
-Lib initialization (line 2625)
-Rest of execution code
-
-Why This Works
-JavaScript function declarations are hoisted, meaning they can be defined anywhere and used before their definition in the source code. The functions reference Lib, configSchema, and other variables, but they're only called after everything is initialized, so there's no dependency issue.
-The constants (SCRIPT_ID, SCRIPT_NAME, configSchema, pageDefinitions) are now at the top because:
-
-They have no dependencies (except SCRIPT_NAME uses GM_info which is globally available)
-Lib initialization needs them, so they must come before it
-They're configuration/metadata, so having them at the top improves code organization
-
-Changes Made
-
-Version: Updated to 9.1.2+2026-02-15
-Changelog: Added entry about code reorganization
-Syntax: Verified with Node.js - all valid JavaScript
-
-The reorganized code is functionally identical to the original but much more readable with all configuration at the top!
-#+end_example
-
-*** gemini
-
-* TODO generic refactoring
-
-In the uploaded script, the code has been grown over time and is now more or less unmaintanble.  What are the best
-options to refactor the code, given it's logic but without breaking stuff, Which approach ist the best regarding best
-practices and best patterns
-
-- Check for obvious code which could make it into a functions without breaking the rest of the big userscript
-- check for code blocks which could easily be refactored to make the code more clear
-
-
 * TODO Could the "Page Reloaded" popup dialog directly emulate the click on the corresponding "Show all..." button from which it was triggerd
 
 Question:
@@ -46787,6 +46507,38 @@ and only the "Primary alias:" stuff should be relocated as before
 
 ** From the Studio to the Stage: New York (2024-10-04) (2024-10-04: Madison Square Garden, New York City, NY, USA, Bleachers) - https://musicbrainz.org/event/52b702c1-eb57-4e8e-a4a8-d9ace716099c/aliases
 
+* DONE Make the "H1 comment-span relocation" feature configurable by introducing a new boolean parameter (default value "true") in the configuration section "const configSchema"
+** DONE initial
+
+Make the "H1 comment-span relocation" feature
+
+#+begin_example
+(function relocateH1CommentSpan() {
+#+end_example
+
+configurable by introducing a new boolean parameter (default value "true") in the configuration section "const configSchema"
+
+** create two separate boolean parameters (default value "true") in the configuration section "const configSchema"
+** DONE rename the following boolean "sa_enable_h1_comment_span_relocation" 
+
+#+begin_example
+        sa_enable_h1_comment_span_relocation: {
+            label: "Relocate H1 comment-span alias block",
+            type: "checkbox",
+            default: true,
+            description: "Move the alias <i title='...'> block from the h1's <span class='comment'> into a dedicated italic line injected below the page title. Only affects release-group and event pages where MusicBrainz injects an alias marker directly inside the h1 element. Standard disambiguation comments (e.g. '(live)') that contain no <i title> are never touched."
+        },
+#+end_example
+
+to "sa_enable_h1_comment_span_relocation_on_initial_page" and change it's description accordingly
+
+- add a second boolean parameter "sa_enable_h1_comment_span_relocation_on_final_page" (default value "true") in the
+  configuration section "const configSchema" and a corresponding description
+
+The two booleans should implement the following two functionilities:  
+
+- "sa_enable_h1_comment_span_relocation_on_initial_page" should to decide if the "H1 comment-span relocation" feature should be enabled on the initial page
+- "sa_enable_h1_comment_span_relocation_on_final_page" should to decide if the "H1 comment-span relocation" feature should be enabled on the final rendered page
 
 
 * TODO posting to MusicBrainz forum
@@ -48334,7 +48086,7 @@ and this is the code
             }
 #+end_example
 
-** Do NOT render the CAA toggle button if none of the rows in a table/sub-table have actually CAA images
+** TODO Do NOT render the CAA toggle button if none of the rows in a table/sub-table have actually CAA images (count 0)
 
 Do NOT render the CAA toggle button if none of the rows in a table/sub-table have actually CAA images, see the following HTML code when rendered
 
@@ -48348,7 +48100,7 @@ Do NOT render the CAA toggle button if none of the rows in a table/sub-table hav
 
 So when there is a '<span class="mb-caa-toggle-count">0' present
 
-** incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in front of the release or release group title
+** TODO incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in front of the release or release group title
 
 some more things to implement:
 
@@ -48361,8 +48113,6 @@ some more things to implement:
                 addCAA: '<column name>'
             },
 #+end_example
-  
-- leave for now the double implementation inside the "CAA column", we will get of rid of the whole "CAA" column approch later
   
 * DONE rename "type: 'events'," to "type: 'artist-events',
 
@@ -49011,26 +48761,16 @@ For CAA, enrichment is only performed for release-group anchors - please also ad
 
 * DONE number of images per release is NEVER shown (check the CAA API how to get it)
 
+* DONE create the effect that the button is actually pressed
+** DONE initial
 
-* please check function documentations against it's implementation again and fix if necessary + rebuild HELP + CHANGLOG
+Please for all
 
-In the uploaded userscript "ShowAllEntityData.user.js" and library "ShowAllEntityData_CHANGELOG.json"
-
-- check for all unused variables and function definitions, create a report and fix
-- check the current function documentations against their implementation, where the doc is differing, please fix
-- resync the uploaded HELP file "ShowAllEntityData_HELP.txt" against the current code base and keyboard shortcuts
-- add a changelog entry
-
-
-* TODO render coverart archive - https://dn710909.ca.archive.org/0/items/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json
-
-curl -v -L "https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" | jq
-curl -v -L https://archive.org/download/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json | jq
-
-
-* TODO all buttons need the pressing effect
-
-What needs to be done to the following code to create the effect that the button is actually pressed (it should kinda move down a little bit)
+- action buttons like all the "Show all...", "Save to Disk" etc (so basically all the buttons in the h1 header line)
+- action buttons in the h2 header lines like "Toggle highlightning", "Clear all COLUMN filters", etc
+- action buttons in the h3 header lines like the sub-table "Resize", "Visible", '<button class="mb-show-all-subtable-btn"' buttons, etc
+  
+create the effect that the button is actually pressed (it should kinda move down a little bit)
 
 #+begin_example
     function makeButtonHTML(text, underlineChar, icon) {
@@ -49062,6 +48802,324 @@ What needs to be done to the following code to create the effect that the button
         toggleBtn.style.cssText = uiActionBtnBaseCSS();
         toggleBtn.type = 'button';
 #+end_example
+
+** DONE "📂 Load Table Data" dialog
+
+create the effect that the button is actually pressed (it should kinda move down a little bit) also for ALL buttons in
+the following dialogs
+
+- In the "📂 Load Table Data" dialog 
+ 
+#+begin_example
+async function showLoadFilterDialog(triggerButton = null) {
+#+end_example
+
+- in the function
+
+#+begin_example
+function showDownloadNotification(message, statusText = null) {
+#+end_example
+
+
+* TODO Checks for unused variables and functions
+** question
+
+In the uploaded userscript and library
+check for all unused variables and function definitions, create a report and fix
+ 
+** answer
+*** gemini
+
+#+begin_example
+This is an impressive and highly functional Tampermonkey script! Managing DOM manipulation, chunked rendering, filtering, and cross-tab/file states in vanilla JavaScript is no small feat.
+
+I have reviewed the script based on your guidelines. Here is a breakdown of unused code, extraction candidates, and areas that would significantly benefit from refactoring for clarity.
+
+1. Unused Variables and Functions
+Unused Functions:
+
+triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) (around line 1618): This function is completely orphaned. The file selection and loading logic is actually handled by the <input type="file"> element created around line 1319 and triggered inside showLoadFilterDialog(). You can safely delete the triggerDiskLoad function.
+
+Dead UI Elements (Never appended to the DOM):
+
+Around line 1334, several pre-filter UI elements are created but never appended to the document:
+
+preFilterContainer
+
+preFilterInput
+
+preFilterCaseLabel
+
+preFilterCaseCheckbox
+
+preFilterRxLabel
+
+preFilterRxCheckbox
+
+(Note: preFilterMsg is appended later, so it is used, but the inputs themselves are legacy code likely superseded by your showLoadFilterDialog modal).
+
+Unused (or Dead-End) Variables:
+
+timerDisplay: Created around line 1406 (const timerDisplay = document.createElement('span');) and appended to the controls, but its text content is never updated during the fetching, sorting, or filtering operations (the script uses globalStatusDisplay and statusDisplay instead).
+
+basePath and isFilteredRelationshipPage: These are declared at the top and only ever used in the Lib.debug('init', ...) statements. Because you want to keep debug logging, these shouldn't be removed, but be aware they serve no logical purpose outside of the console.
+
+2. Code Extraction Candidates (DRY Principle)
+There are several highly repetitive blocks of code that can be extracted into shared helper functions without changing any logic.
+
+A. The Fade-Out Notification Popups
+You have an identical ~45-line block of code for a pop-up alert in both exportTableToCSV() and triggerStandardDownload().
+
+Refactor: Extract this into a reusable UI helper.
+
+JavaScript
+/**
+ * Shows a temporary fade-out notification popup
+ * @param {string} messageText - The message to display
+ */
+function showNotificationPopup(messageText) {
+    const infoPopup = document.createElement('div');
+    infoPopup.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border: 1px solid #888;
+        border-radius: 6px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 400px;
+        text-align: center;
+        font-family: sans-serif;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    `;
+
+    const msg = document.createElement('div');
+    msg.textContent = messageText;
+    msg.style.marginBottom = '15px';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = `
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        border: 1px solid #555;
+        background-color: #f0f0f0;
+    `;
+    closeBtn.type = 'button';
+
+    // Close function with fade out
+    const closePopup = () => {
+        infoPopup.style.opacity = '0';
+        // Remove from DOM after transition
+        setTimeout(() => {
+            if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
+            document.removeEventListener('keydown', onEscape);
+        }, 300); // match the CSS transition duration
+    };
+
+    // Button click closes popup
+    closeBtn.addEventListener('click', closePopup);
+
+    // Escape key closes popup
+    const onEscape = (e) => {
+        if (e.key === 'Escape') closePopup();
+    };
+    document.addEventListener('keydown', onEscape);
+
+    infoPopup.appendChild(msg);
+    infoPopup.appendChild(closeBtn);
+    document.body.appendChild(infoPopup);
+}
+B. Highlight Resetting
+The logic to clear previous .mb-global-filter-highlight and .mb-column-filter-highlight tags is repeated four times (in runFilter single mode, runFilter multi mode, startFetchingProcess cleanup, and the "Unhighlight all" button).
+
+Refactor:
+
+JavaScript
+function clearHighlights(containerElement) {
+    containerElement.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
+        .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+}
+C. Button Generation Boilerplate
+Creating top-bar buttons (addExportButton, addDensityControl, addStatsButton, addAutoResizeButton) involves 10-12 lines of identical document.createElement and inline CSS boilerplate.
+
+Refactor: Create a createToolbarButton(label, title, onClickHandler) to generate and return these buttons.
+
+3. Refactoring for Clarity
+A. Massive duplication inside runFilter()
+The runFilter() function has two entirely separate blocks for activeDefinition.tableMode === 'multi' and single table mode. Inside both blocks, the 40+ line loop that resets highlights, checks Regex/Case matches against the global filter, checks the column filters, and applies new highlight spans is 100% duplicated.
+
+You can pull the row-evaluation logic out into a single helper function, drastically cleaning up runFilter():
+
+JavaScript
+/**
+ * Evaluates if a row matches the given filters and applies highlights if necessary.
+ * Returns true if it matches, false otherwise.
+ */
+function evaluateAndHighlightRow(row, globalQuery, globalQueryRaw, globalRegex, colFilters, isCaseSensitive, isRegExp) {
+    // Reset previous highlights (critical for correct filtering)
+    clearHighlights(row);
+
+    // Global match
+    let globalHit = !globalQuery;
+    if (!globalHit) {
+        if (isRegExp && globalRegex) {
+            // For regex patterns, test against each cell individually
+            // This allows anchored patterns like ^Thunder Road to work correctly
+            globalHit = Array.from(row.cells).some(cell => {
+                const cellText = getCleanColumnText(cell);
+                return globalRegex.test(cellText);
+            });
+        } else {
+            // For non-regex, test against concatenated row text
+            const text = getCleanVisibleText(row);
+            globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
+        }
+    }
+
+    // Column matches
+    let colHit = true;
+    for (const f of colFilters) {
+        const cellText = getCleanColumnText(row.cells[f.idx]);
+        let match = false;
+        if (isRegExp) {
+            try {
+                match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
+            } catch (e) {
+                match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+            }
+        } else {
+            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+        }
+        if (!match) {
+            colHit = false;
+            break;
+        }
+    }
+
+    const finalHit = globalHit && colHit;
+    if (finalHit) {
+        if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+        colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
+    }
+    
+    return finalHit;
+}
+With this in place, your matches = group.rows.map(r => r.cloneNode(true)).filter(r => { ... }) just becomes a clean, single line call to evaluateAndHighlightRow(...).
+
+B. The startFetchingProcess Function Complexity
+This function is over 600 lines long. The core of its complexity lies around line 2140: tableBody.childNodes.forEach(node => { ... }). Inside this loop, you're parsing DOM elements, splitting specific columns (Country/Date, Location, Area), extracting data, and applying column exclusions.
+
+Refactor Idea: Move the column manipulation blocks out of the loop.
+For example, the 25-line chunk handling Country/Date splitting could become:
+
+JavaScript
+function splitCountryDateCell(newRow, countryDateIdx) {
+    const tdSplitC = document.createElement('td');
+    const tdSplitD = document.createElement('td');
+    
+    const cdCell = newRow.cells[countryDateIdx];
+    if (cdCell) {
+        const events = Array.from(cdCell.querySelectorAll('.release-event'));
+        events.forEach((ev, i) => {
+            // ... (existing logic) ...
+        });
+    }
+    return { tdSplitC, tdSplitD };
+}
+Doing this for Location and Area as well would shave hundreds of lines of visual noise off startFetchingProcess and make the primary data-collection loop much easier to follow.
+#+end_example
+
+* TODO Reorder functions
+** question
+
+- Reorder all functions sorted at the end of the file
+- Leave
+
+#+begin_example
+let changelog = [changelog
+const SCRIPT_ID = "vzell-mb-show-all-entities";
+const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
+// CONFIG SCHEMA
+const configSchema = {
+const pageDefinitions = [
+#+end_example
+
+at the very beginning of the file (in that order if possible, and if it does not break the code)
+and other variable definitions after it.
+
+Is that even possible without breaking the code
+
+** answer
+*** claude
+
+#+begin_example
+Code Reorganization
+New structure (from top to bottom):
+
+Changelog (line 50) - Moved to right after userscript header
+IIFE start (function() { 'use strict'; (line 115)
+SCRIPT_ID (line 119)
+SCRIPT_NAME (line 120)
+configSchema (line 123)
+pageDefinitions (line 411)
+All utility functions (line 902+)
+Lib initialization (line 2625)
+Rest of execution code
+
+Why This Works
+JavaScript function declarations are hoisted, meaning they can be defined anywhere and used before their definition in the source code. The functions reference Lib, configSchema, and other variables, but they're only called after everything is initialized, so there's no dependency issue.
+The constants (SCRIPT_ID, SCRIPT_NAME, configSchema, pageDefinitions) are now at the top because:
+
+They have no dependencies (except SCRIPT_NAME uses GM_info which is globally available)
+Lib initialization needs them, so they must come before it
+They're configuration/metadata, so having them at the top improves code organization
+
+Changes Made
+
+Version: Updated to 9.1.2+2026-02-15
+Changelog: Added entry about code reorganization
+Syntax: Verified with Node.js - all valid JavaScript
+
+The reorganized code is functionally identical to the original but much more readable with all configuration at the top!
+#+end_example
+
+*** gemini
+
+* TODO generic refactoring
+
+In the uploaded script, the code has been grown over time and is now more or less unmaintanble.  What are the best
+options to refactor the code, given it's logic but without breaking stuff, Which approach ist the best regarding best
+practices and best patterns
+
+- Check for obvious code which could make it into a functions without breaking the rest of the big userscript
+- check for code blocks which could easily be refactored to make the code more clear
+
+* TODO please check function documentations against it's implementation again and fix if necessary + rebuild HELP + CHANGLOG
+
+In the uploaded userscript "ShowAllEntityData.user.js" and library "ShowAllEntityData_CHANGELOG.json"
+
+- check for all unused variables and function definitions, create a report and fix
+- check the current function documentations against their implementation, where the doc is differing, please fix
+- resync the uploaded HELP file "ShowAllEntityData_HELP.txt" against the current code base and keyboard shortcuts
+- add a changelog entry
+
+* TODO remove double comment blocks
+
+#+begin_example
+ * Loads an art thumbnail into the background of one artwork-icon span.
+#+end_example
+
+
+* TODO render coverart archive - https://dn710909.ca.archive.org/0/items/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json
+
+curl -v -L "https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" | jq
+curl -v -L https://archive.org/download/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json | jq
 
 
 * add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
@@ -49364,7 +49422,7 @@ live, 2002‐10‐20: Velodrom, Berlin, Germany
 
 Please show the full code of the newly generated implementation and also make a changelog entry in the uploaded "ShowAllEntityData_CHANGELOG.json" 
 
-** fix for USA and Canada
+** DONE fix for USA and Canada
 
 Please fix for "UK", "USA" and "Canada"
 
@@ -49406,9 +49464,18 @@ should split into (first part after the colon is the 'Event-Venue', second part 
 'Event-Country' - Canada
 #+end_example
 
-** TODO make it configurable
+** DONE make it configurable
 
-In the uploaded userscript,
+Make the 'eventParts' feature, introduced with the following "syntheticColumnExtractors" parameter
+
+#+begin_example
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+#+end_example
+
+configurable by the end-user by introducing a new boolean parameter (default value "true") in the configuration section
+"const configSchema". Only if "true" really create the new syntheticColumns: "['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country']"
 
 ** TODO add MB lookup from https://musicbrainz.org/recording/f3f63c9e-c954-49a0-86f3-bd8ce0f32a31 - Thunder Road (live, 1995‐02‐21: Tramps, New York City, NY, USA)
 
@@ -49445,7 +49512,6 @@ present (e.g. in the follwing two examples the "3" and "1") when uncollapsing th
   </span>
 </button>
 #+end_example
-
 
 * DONE bug with filtering und strange button rendering - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 ** initial
@@ -51049,6 +51115,7 @@ add more guards (notify user with an alert box) before leaving the final rendere
 
 - even the TAB key pressed repeatedly should never leave the page up to native browser controls
 
+
 * TODO implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
 
 
@@ -51150,7 +51217,7 @@ whereas the the column header collapse/uncollpase icon and the cell specific one
 
 ** TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
-* TODO reinforce the loading o the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+* TODO reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 
@@ -51252,9 +51319,6 @@ The CAA count on the global CAA toggle button is always 0
 
 Please fix
 
-
-* TODO better background for the h3 sub-table header in multi-table mode and better background for the h2 headers - configurable
-
 * DONE bug when it comes to fetching and/or rendering datacells with an actual CAA artwork image
 
 A bug is still left:
@@ -51338,7 +51402,7 @@ to tackle two issues at once
 
 2.) clicking the icon for the whole table, located/rendered AFTER the CAA toggle button, should trigger a REAL reload over the network of all artwork images for each row in that sub-table
 
-* DONE desciption fomr claude
+* DONE desciption from claude
 
 #+begin_example
 Root cause — empty CAA column on artist-relationships
@@ -51354,84 +51418,97 @@ needed. Populating the CAA column for these pages would require injecting artwor
 load, which is a deeper architectural change tracked as a future enhancement.
 #+end_example
 
+* DONE fix changelog
 
-* Reintroduce jesus2099 "Release events"
+In the uploaded changelog file "ShowAllEntityData_CHANGELOG.json"
 
-#+begin_example
-        {
-            type: 'place-performances-filtered',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
-            features: {
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-
-        {
-            type: 'artist-relationships-filtered',
-            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-#+end_example
+Starting from the entry '"version": "9.99.114"' up to '"version": "9.99.135"'
 
 #+begin_example
-https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relatinships
+    {
+      "version": "9.99.114",
+      "date": "2026-03-11",
+      "changes": {
+        "♻️ Refactor": [
+          "Unified the CAA Illustrated Discography and EAA Illustrated Events features into a single shared generic engine (_art* functions) parameterised by archive context descriptors (CAA_CTX / EAA_CTX).",
+          "Eliminated ~450 lines of structural duplication: caaLoadIcon / eaaLoadIcon → _artLoadIcon(ctx), caaEnrichReleaseGroupIcon / eaaEnrichEventIcon → _artEnrichIcon(ctx), caaInitSmallPics / eaaInitSmallPics → _artInitSmallPics(ctx), caaCountLinks / eaaCountLinks → _artCountLinks(ctx), caaInitBigPics / eaaInitBigPics → _artInitBigPics(ctx), caaUpdateBigBoxForTable / eaaUpdateBigBoxForTable → _artUpdateBigBoxForTable(ctx), caaCreateOrUpdateToggleButton / eaaCreateOrUpdateToggleButton → _artCreateOrUpdateToggleButton(ctx), initCaaPics / initEaaPics → _artInitPics(ctx), initCaaInlinePics / initEaaInlinePics → _artInitInlinePics(ctx).",
+          "Merged caaFindCaaColumnIndex and eaaFindEaaColumnIndex into the existing caaFindColumnByName(table, name) — both were single-line wrappers with a hardcoded column name.",
+          "Introduced _ART_GUID_RE_STR shared constant to avoid repeating the 36-char GUID pattern string six times.",
+          "All public call-site names (initCaaPics, initEaaPics, initCaaInlinePics, initEaaInlinePics, caaUpdateBigBoxForTable, eaaUpdateBigBoxForTable) are unchanged; no call sites required modification.",
+          "Moved _eaaEventCountCache declaration to module scope alongside _caaRgCountCache so both caches are available when the context descriptors are constructed."
+        ]
+      }
+    },
 #+end_example
 
+there are a missing "sections" structures with missing "label" and "items"
 
-* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
-
-* for RGs CAA artwork also display the Release fom where it's sourced
-
-
-* remove double comment blocks
+see the following exmpaple how it should look like
 
 #+begin_example
- * Loads an art thumbnail into the background of one artwork-icon span.
+    {
+        "version": "9.99.113",
+        "date": "2026-03-11",
+        "sections": [
+            {
+                "label": "🔧 Code Quality",
+                "items": [
+                    "Removed unused variable guardColFilterPrefixKeydown: a @deprecated alias of guardFilterPrefixKeydown that was never referenced anywhere else in the script. The canonical function guardFilterPrefixKeydown() is used directly at all call sites.",
+                    "Fixed JSDoc for updateH2Count(): the third parameter absoluteTotal (added in an earlier revision to support pre-filter absolute row counts on multi-table pages) was missing its @param declaration. Added @param {number|null} [absoluteTotal=null] with a description of its purpose."
+                ]
+            },
+            {
+                "label": "📖 Documentation",
+                "items": [
+                    "ShowAllEntityData_HELP.txt: corrected prefix-mode shortcut key for 'Show Statistics panel' from 't' to 'i' — the actual ctrlMFunctionMap entry has always used 'i' (matching the Statistics button's underline character); the help file had a stale value.",
+                    "ShowAllEntityData_HELP.txt: added Ctrl+U (Unicode character picker) to the KEYBOARD SHORTCUTS table; the shortcut was already implemented and configurable but was not documented in the help file.",
+                    "ShowAllEntityData_HELP.txt: added a new 'COLUMN FILTER FOCUS SHORTCUTS' section documenting Ctrl+↑ (sort ascending), Ctrl+↓ (sort descending), Ctrl+# (unsort), Ctrl+O (toggle multi-row collapse), Ctrl+Q (unique-values dropdown), Ctrl+A (toggle CAA/EAA cover art), Ctrl+R (sub-table resize), and Ctrl+V (sub-table visible-columns). These shortcuts were fully implemented and configurable but absent from the help text.",
+                    "ShowAllEntityData_HELP.txt: updated stale shortcut count in the SETTINGS section from '12 configurable direct-chord shortcuts' to '20', enumerating both the global-scope shortcuts and the new column-filter-focused shortcuts."
+                ]
+            }
+        ]
+    },
 #+end_example
 
+Please fix
 
-* TODO adjust the height of the "⟳" char to the other buttons, actually make the height of the "⟳" char and "resize" and "visible" columns buttons the same
+* DONE adjust the height of the "⟳" char to the other buttons, actually make the height of the "⟳" char and "resize" and "visible" columns buttons the same
+** DONE initial
 
-* add background color to the h2/h3 table header header rows
+Adjust the height of the following buttons
 
-add a better background color (even better make them configurable in the configuration section) to the h2/h3
-table/sub-table header header rows (depending on single or multi-table mode))
+#+begin_example
+<button id="mb-caa-toggle-btn-retry-<n>" type="button" title="Retry loading all CAA cover art images for this sub-table (forces network reload)"
+<button id="mb-stf-composed-resize-btn" type="button" class="mb-subtable-resize-btn"
+<button id="mb-stf-composed-resize-btn" type="button" class="mb-subtable-resize-btn"
+<button id="mb-stf-composed-vis-btn" type="button" class="mb-subtable-vis-btn"
+#+end_example
 
-Use as a default the original rainbow like grey coloring of the table header (foreground/backgound) from the initial
-entry page before acting on the action button and rendering the final page.
+in the h3 header line
+ 
+#+begin_example
+<h3 class="mb-toggle-h3" title="Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)"
+#+end_example
 
-* add menu to hover CAA picture, for different actions
+to be the same height as the toggle CAA button in the same h3 header line
+
+#+begin_example
+<button id="mb-caa-toggle-btn-<n>" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show"
+#+end_example
+
+** DONE Adjust the height of the following button
+
+Adjust the height of the following button (it was missing from the previous list)
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)"
+#+end_example
+
+to be the same height as the toggle CAA button in the same h2 header line
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" 
+#+end_example
 
 * DONE Somehow you messed up when generating the code
 
@@ -51503,56 +51580,122 @@ with comments, see
      */
 #+end_example
 
-* fix changelog
 
-In the uploaded changelog file "ShowAllEntityData_CHANGELOG.json"
-
-Starting from the entry '"version": "9.99.114"' up to '"version": "9.99.135"'
+* Reintroduce jesus2099 "Release events"
 
 #+begin_example
-    {
-      "version": "9.99.114",
-      "date": "2026-03-11",
-      "changes": {
-        "♻️ Refactor": [
-          "Unified the CAA Illustrated Discography and EAA Illustrated Events features into a single shared generic engine (_art* functions) parameterised by archive context descriptors (CAA_CTX / EAA_CTX).",
-          "Eliminated ~450 lines of structural duplication: caaLoadIcon / eaaLoadIcon → _artLoadIcon(ctx), caaEnrichReleaseGroupIcon / eaaEnrichEventIcon → _artEnrichIcon(ctx), caaInitSmallPics / eaaInitSmallPics → _artInitSmallPics(ctx), caaCountLinks / eaaCountLinks → _artCountLinks(ctx), caaInitBigPics / eaaInitBigPics → _artInitBigPics(ctx), caaUpdateBigBoxForTable / eaaUpdateBigBoxForTable → _artUpdateBigBoxForTable(ctx), caaCreateOrUpdateToggleButton / eaaCreateOrUpdateToggleButton → _artCreateOrUpdateToggleButton(ctx), initCaaPics / initEaaPics → _artInitPics(ctx), initCaaInlinePics / initEaaInlinePics → _artInitInlinePics(ctx).",
-          "Merged caaFindCaaColumnIndex and eaaFindEaaColumnIndex into the existing caaFindColumnByName(table, name) — both were single-line wrappers with a hardcoded column name.",
-          "Introduced _ART_GUID_RE_STR shared constant to avoid repeating the 36-char GUID pattern string six times.",
-          "All public call-site names (initCaaPics, initEaaPics, initCaaInlinePics, initEaaInlinePics, caaUpdateBigBoxForTable, eaaUpdateBigBoxForTable) are unchanged; no call sites required modification.",
-          "Moved _eaaEventCountCache declaration to module scope alongside _caaRgCountCache so both caches are available when the context descriptors are constructed."
-        ]
-      }
-    },
-#+end_example
-
-there are a missing "sections" structures with missing "label" and "items"
-
-see the following exmpaple how it should look like
-
-#+begin_example
-    {
-        "version": "9.99.113",
-        "date": "2026-03-11",
-        "sections": [
-            {
-                "label": "🔧 Code Quality",
-                "items": [
-                    "Removed unused variable guardColFilterPrefixKeydown: a @deprecated alias of guardFilterPrefixKeydown that was never referenced anywhere else in the script. The canonical function guardFilterPrefixKeydown() is used directly at all call sites.",
-                    "Fixed JSDoc for updateH2Count(): the third parameter absoluteTotal (added in an earlier revision to support pre-filter absolute row counts on multi-table pages) was missing its @param declaration. Added @param {number|null} [absoluteTotal=null] with a description of its purpose."
-                ]
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
             },
-            {
-                "label": "📖 Documentation",
-                "items": [
-                    "ShowAllEntityData_HELP.txt: corrected prefix-mode shortcut key for 'Show Statistics panel' from 't' to 'i' — the actual ctrlMFunctionMap entry has always used 'i' (matching the Statistics button's underline character); the help file had a stale value.",
-                    "ShowAllEntityData_HELP.txt: added Ctrl+U (Unicode character picker) to the KEYBOARD SHORTCUTS table; the shortcut was already implemented and configurable but was not documented in the help file.",
-                    "ShowAllEntityData_HELP.txt: added a new 'COLUMN FILTER FOCUS SHORTCUTS' section documenting Ctrl+↑ (sort ascending), Ctrl+↓ (sort descending), Ctrl+# (unsort), Ctrl+O (toggle multi-row collapse), Ctrl+Q (unique-values dropdown), Ctrl+A (toggle CAA/EAA cover art), Ctrl+R (sub-table resize), and Ctrl+V (sub-table visible-columns). These shortcuts were fully implemented and configurable but absent from the help text.",
-                    "ShowAllEntityData_HELP.txt: updated stale shortcut count in the SETTINGS section from '12 configurable direct-chord shortcuts' to '20', enumerating both the global-scope shortcuts and the new column-filter-focused shortcuts."
-                ]
-            }
-        ]
-    },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
 #+end_example
 
-Please fix
+#+begin_example
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relatinships
+#+end_example
+
+
+* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
+
+
+* TODO for RGs CAA artwork also display the Release fom where it's sourced
+
+* add menu to hover CAA picture, for different actions
+
+
+* TODO better background for the h3 sub-table header in multi-table mode and better background for the h2 headers - configurable
+* TODO add background color to the h2/h3 table header header rows
+** initial
+
+Add configurable background colors in the configuration "const configSchema":
+
+- all pageTypes have at least one (typically more) h2 header lines, e.g.
+
+#+begin_example
+<h2 class="relationships mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Relationships</h2>
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Appearances<span class="mb-row-count-stat">(1329)</span><button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/08be60a2-44c9-4639-8678-05d874d8bcc4/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">331</span></button><button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><span class="mb-master-toggle">[ <span title="Show all sub-tables">Show</span> | <span title="Hide all sub-tables">Hide</span> ] all Sections</span><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude matches (Global Filter)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: none;"><span>▶ Expand</span><span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting</button><button id="mb-clear-column-filters-btn" title="Clear all column-specific filter inputs — global action (Shift+Esc)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global/sub-table filters and ALL column filters in all sub-tables — also triggered by Ctrl+Shift+G" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status"></span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
+<h2 class="annotation mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Annotation</h2>
+<h2 class="wikipedia mb-h2-processed mb-toggle-h2" title="Click to Collapse/Uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Wikipedia</h2>
+#+end_example
+
+where the rendered initial text is colored in orange. Please add a configurable background color (default: "light orange") to the complete h2 lines when the cursor is NOT hovering over it but leave the curretn gey background IF the cursor is over the h2 line
+
+- on "multi"-table pageTypes also add a configurable background color (default: "ligh green") to the h3 headers
+
+#+begin_example
+<h3 class="mb-toggle-h3" title="Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>....
+#+end_example
+  
+add a better background color (even better make them configurable in the configuration section) to the h2/h3
+table/sub-table header header rows (depending on single or multi-table mode))
+
+Use as a default the original rainbow like grey coloring of the table header (foreground/backgound) from the initial
+entry page before acting on the action button and rendering the final page.
+
+** also make the hover state for h2/h3 headers also configurable (default: #f9f9f9)
+
+Two more things
+
+- also make the hover state for h2/h3 headers configurable (default: #f9f9f9)
+
+- A bug: the "sa_enable_h1_comment_span_relocation_on_final_page" should decide if the "H1 comment-span relocation"
+  feature should be enabled on the final rendered page, but the "Primary alias" doesn'get rendred at all on the final
+  renderd page (although it works on the initial page), the text for the "Primary alias" is actually completely removed
+
+** Add configurable background colors for the standard AND synthetic table columns
+
+
+* todos
+
+a couple of things are still missing; by the way you missed adding a changelog for the previous edits (please readd and
+also add a new changelog for the upcoming implementations)
+
+1.)
+
+Add configurable background colors for the standard AND synthetic table columns. The default value should be the current
+color for the standard columns and a darker background than now for the synthetic columns
+
+2.)
+
+Make the 
+saved filename should get the entity name 

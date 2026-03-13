@@ -1,57 +1,5 @@
 [
     {
-      "version": "9.99.139",
-      "date": "2026-03-13",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "applyH1CommentSpanRelocation: the final-page pass was silently deleting the alias line injected by the initial-page pass. Root cause: the stale #mb-h1-alias-line removal was executed unconditionally at the top of the function, before the source-data guards; when the final pass ran it removed the existing alias line, then found no <span class='comment'> in the h1 (consumed by the initial pass) and returned early, leaving nothing behind. Fix: the stale removal is now deferred to just before the actual DOM injection, after all early-return guards have passed. Every early-return path (no comment span, no i[title], empty alias text) now leaves the existing #mb-h1-alias-line untouched. An explicit debug log message is emitted when the function returns early due to the comment span being absent."
-          ]
-        },
-        {
-          "label": "✨ Improvements",
-          "items": [
-            "H2/H3 header hover background color is now configurable via sa_ui_h2_h3_hover_bg (default #f9f9f9, matching the original MusicBrainz grey). The value is injected into the .mb-toggle-h2:hover, .mb-toggle-h3:hover CSS rule in the main style block, replacing the previous hard-coded #f9f9f9."
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.138",
-      "date": "2026-03-13",
-      "sections": [
-        {
-          "label": "✨ Improvements",
-          "items": [
-            "H1 comment-span relocation split into two independent feature flags: sa_enable_h1_comment_span_relocation_on_initial_page (default true) controls the run on the original MusicBrainz entity page before any 'Show all' action; sa_enable_h1_comment_span_relocation_on_final_page (default true) controls a second run after the consolidated table has been rendered. The one-shot IIFE was converted to a named reusable function applyH1CommentSpanRelocation(callSite) so both call sites share identical logic. The final-page call is placed at the end of finalCleanup(), ensuring it fires after every render pipeline (main fetch, Load from Disk, filter re-render). Both settings live in the EXPERIMENTAL FEATURES section of configSchema. The old single setting sa_enable_h1_comment_span_relocation has been removed.",
-            "Configurable H2 section-header background color (sa_ui_h2_bg, default #fff3e0 light orange): background-color is now injected into the .mb-toggle-h2 CSS rule via the settings value. The existing grey hover background (#f9f9f9 on .mb-toggle-h2:hover) is preserved and takes precedence.",
-            "Configurable H3 sub-table-header background color (sa_ui_h3_bg, default #f0fff4 light green): background-color injected into .mb-toggle-h3 the same way. Hover background preserved.",
-            "Configurable table column-header row colors: three new settings added to the UI APPEARANCE section — sa_ui_thead_th_bg (default #e8e8e8, header row background), sa_ui_thead_th_color (default #333333, header row text color), sa_ui_thead_filter_row_bg (default #f4f4f4, per-column filter row background). The defaults match the original MusicBrainz grey palette visible on the initial entity pages. All three are wired into the applyStickyHeaders() injected style block, replacing the previous hard-coded #f2f2f2 / #f9f9f9 values."
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.137",
-      "date": "2026-03-13",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "Accidentally dropped click event listener on the sub-table resize button (mb-subtable-resize-btn): during the Change 8 cssText update in 9.99.136 the btn.addEventListener('click', …toggleSubTableAutoResize…) block was omitted from the new_str of the str_replace, causing the resize button to render correctly but silently ignore all clicks. The listener has been restored."
-          ]
-        },
-        {
-          "label": "✨ Improvements",
-          "items": [
-            "Global retry button (mb-caa-toggle-btn-global-retry / mb-eaa-toggle-btn-global-retry) height and press effect: the global retry button created inside _artCreateOrUpdateGlobalToggleButton now receives the same inline style additions as the per-table retry button — display:inline-flex, align-items:center, box-sizing:border-box, transition:transform 0.1s,box-shadow 0.1s. The CSS height-unification selector group was extended with [id$='-global-retry'] (covers both CAA and EAA global retry buttons) and a matching :active press rule was added.",
-            "Button press-down effect extended to dialogs: showDownloadNotification Close button receives transition + mousedown/mouseup/mouseleave handlers for the press animation (CSS :active cannot be used reliably on a transient popup). showLoadFilterDialog buttons (Load Data, Cancel, Filter Data, Render Data, history-toggle ▾) receive transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s in their inline style attributes; :active rules for all five were added to the lazily-injected sa-load-popup-styles block."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.136",
       "date": "2026-03-13",
       "sections": [

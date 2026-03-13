@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.139+2026-03-13
+// @version      9.99.136+2026-03-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -105,18 +105,11 @@
             description: "Automatically collapse the sidebar when the consolidated view is first rendered, freeing up horizontal space immediately. Only takes effect when 'Collabsable sidebar' is also enabled."
         },
 
-        sa_enable_h1_comment_span_relocation_on_initial_page: {
-            label: "Relocate H1 comment-span alias block (initial page)",
+        sa_enable_h1_comment_span_relocation: {
+            label: "Relocate H1 comment-span alias block",
             type: "checkbox",
             default: true,
-            description: "On the original MusicBrainz entity page (before any 'Show all' button is pressed), move the alias <i title='...'> block from the h1's <span class='comment'> into a dedicated italic line injected below the page title. Only affects release-group and event pages where MusicBrainz injects an alias marker directly inside the h1 element. Standard disambiguation comments (e.g. '(live)') that contain no <i title> are never touched."
-        },
-
-        sa_enable_h1_comment_span_relocation_on_final_page: {
-            label: "Relocate H1 comment-span alias block (final rendered page)",
-            type: "checkbox",
-            default: true,
-            description: "After the consolidated table has been rendered (i.e. after a 'Show all' button completes), re-apply the H1 comment-span relocation so the alias line remains visible below the page title on the final page view. Same structural rules as the initial-page variant: only acts when an <i title='...'> alias marker is present inside the h1's <span class='comment'>."
+            description: "Move the alias <i title='...'> block from the h1's <span class='comment'> into a dedicated italic line injected below the page title. Only affects release-group and event pages where MusicBrainz injects an alias marker directly inside the h1 element. Standard disambiguation comments (e.g. '(live)') that contain no <i title> are never touched."
         },
 
         sa_enable_event_parts_extractor: {
@@ -739,50 +732,6 @@
             fields: ['fontSize', 'marginRight'],
             default: '0.8em|2px',
             description: 'Checkboxes (Cc / Rx / Ex) in filter bars: fontSize|marginRight'
-        },
-
-        // --- H2 / H3 section header colors ---
-        sa_ui_h2_bg: {
-            label: 'H2 section-header background color',
-            type: 'color',
-            default: '#fff3e0',
-            description: 'Background color for collapsible H2 section headers (.mb-toggle-h2) when the cursor is NOT hovering. The existing grey hover background is preserved. Default is a light orange.'
-        },
-
-        sa_ui_h3_bg: {
-            label: 'H3 sub-table-header background color',
-            type: 'color',
-            default: '#f0fff4',
-            description: 'Background color for collapsible H3 sub-table headers (.mb-toggle-h3) in multi-table mode when the cursor is NOT hovering. The existing grey hover background is preserved. Default is a light green.'
-        },
-
-        sa_ui_h2_h3_hover_bg: {
-            label: 'H2 / H3 header hover background color',
-            type: 'color',
-            default: '#f9f9f9',
-            description: 'Background color applied to H2 and H3 section headers when the cursor hovers over them (.mb-toggle-h2:hover, .mb-toggle-h3:hover). Default is the original MusicBrainz light grey.'
-        },
-
-        // --- Table column-header (thead) row colors ---
-        sa_ui_thead_th_bg: {
-            label: 'Table header-row background color',
-            type: 'color',
-            default: '#e8e8e8',
-            description: 'Background color for all table column-header cells (table.tbl thead th). The default matches the original MusicBrainz grey used before the consolidated view is rendered.'
-        },
-
-        sa_ui_thead_th_color: {
-            label: 'Table header-row text color',
-            type: 'color',
-            default: '#333333',
-            description: 'Foreground (text) color for all table column-header cells (table.tbl thead th). The default matches the dark grey text used on the original MusicBrainz entity pages.'
-        },
-
-        sa_ui_thead_filter_row_bg: {
-            label: 'Table column-filter row background color',
-            type: 'color',
-            default: '#f4f4f4',
-            description: 'Background color for the per-column filter input row (table.tbl thead tr.mb-col-filter-row th). Slightly lighter than the main header row.'
         },
 
         // ============================================================
@@ -3503,8 +3452,7 @@
 
             /* Ensure headers have a solid background so scrolling content doesn't bleed through */
             table.tbl thead th {
-                background-color: ${Lib.settings.sa_ui_thead_th_bg || '#e8e8e8'};
-                color: ${Lib.settings.sa_ui_thead_th_color || '#333333'};
+                background-color: #f2f2f2; /* Default MusicBrainz header color */
                 border-bottom: 1px solid #ddd;
                 border-top: 1px solid #ddd;
                 background-clip: padding-box;
@@ -3513,7 +3461,7 @@
 
             /* Filter row specific styling */
             table.tbl thead tr.mb-col-filter-row th {
-                background-color: ${Lib.settings.sa_ui_thead_filter_row_bg || '#f4f4f4'};
+                background-color: #f9f9f9;
                 border-bottom: 2px solid #ccc;
                 border-top: none;
             }
@@ -9951,9 +9899,9 @@
         }
         .mb-toggle-h3:hover, .mb-toggle-h2:hover {
             color: #222;
-            background-color: ${Lib.settings.sa_ui_h2_h3_hover_bg || '#f9f9f9'};
+            background-color: #f9f9f9;
         }
-        .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; background-color: ${Lib.settings.sa_ui_h3_bg || '#f0fff4'}; }
+        .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; }
         .mb-subtable-controls { display: inline-flex; align-items: baseline; gap: 8px; margin-left: 12px; vertical-align: middle; }
         .mb-subtable-clear-btn { font-size: ${uiSubtableBtnVals().fontSize}; padding: ${uiSubtableBtnVals().padding}; cursor: pointer; vertical-align: middle; border-radius: ${uiSubtableBtnVals().borderRadius}; background: ${uiSubtableBtnVals().bg}; border: ${uiSubtableBtnVals().border}; }
         .mb-subtable-clear-btn:hover { background: ${uiSubtableBtnVals().bgHover}; }
@@ -9962,7 +9910,7 @@
         .mb-subtable-status-display { font-size: 0.85em; color: #333; font-weight: bold; vertical-align: middle; }
         .mb-filter-status { font-family: 'Courier New', monospace; font-size: 1.0em; vertical-align: middle; margin-right: 4px; }
         .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 1.0em; font-style: italic; vertical-align: middle; }
-        .mb-toggle-h2 { cursor: pointer; user-select: none; background-color: ${Lib.settings.sa_ui_h2_bg || '#fff3e0'}; }
+        .mb-toggle-h2 { cursor: pointer; user-select: none; }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; cursor: pointer; }
         .mb-master-toggle { color: #0066cc; font-weight: bold; margin-left: 15px; font-size: 0.8em; vertical-align: middle; display: inline-block; cursor: default; }
         .mb-master-toggle span { cursor: pointer; }
@@ -10293,10 +10241,8 @@
     }
 
     // ── H1 comment-span relocation ────────────────────────────────────────────
-    // Two independent feature guards:
-    //   sa_enable_h1_comment_span_relocation_on_initial_page  — runs immediately below
-    //   sa_enable_h1_comment_span_relocation_on_final_page    — called from finalCleanup()
-    //
+    // Feature guard: sa_enable_h1_comment_span_relocation (default true).
+    // When disabled the span is left completely untouched.
     // MusicBrainz sometimes injects a <span class="comment"> directly inside the
     // h1 on release-group and event pages.  The structure can take two forms:
     //
@@ -10324,10 +10270,6 @@
     /**
      * Relocates the `<span class="comment">` alias block from the h1.
      *
-     * Callable on both the initial page load and after the final render
-     * completes.  The function is idempotent: stale `#mb-h1-alias-line`
-     * elements are removed before a new one is injected.
-     *
      * Handles two structural variants found on MusicBrainz release-group and
      * event pages:
      *
@@ -10342,35 +10284,23 @@
      *             in the h1, so EXTRA stays visible on the title line.
      *             If EXTRA is blank after trimming the span is simply removed.
      *
-     * @param {string} callSite - 'initial' or 'final' — used only for debug logging.
      * @returns {void}
      */
-    function applyH1CommentSpanRelocation(callSite) {
+    if (Lib.settings.sa_enable_h1_comment_span_relocation) (function relocateH1CommentSpan() {
         // Resolve the actual <h1> regardless of whether headerContainer is the h1
         // itself or a descendant (e.g. an <a> element inside it).
         const h1El = headerContainer.tagName === 'H1'
             ? headerContainer
             : (headerContainer.closest('h1') || headerContainer);
 
-        // ── Source-data guards — checked BEFORE touching the existing alias line ──
-        //
-        // The initial-page pass consumes the <span class="comment"> from the h1
-        // (removes or replaces it) and injects #mb-h1-alias-line.  The final-page
-        // pass therefore finds no comment span and must NOT remove the alias line
-        // that the initial pass already created.  The stale removal is therefore
-        // deferred to just before the actual injection so that every early-return
-        // path leaves the existing alias line intact.
+        // Remove any stale injected alias line from a previous run (soft-nav).
+        const stale = document.getElementById('mb-h1-alias-line');
+        if (stale) stale.remove();
 
         // Find the comment span directly inside the h1 (not inside a table cell
         // or other descendant — those are handled by the extractor pipeline).
         const commentSpan = h1El.querySelector(':scope > span.comment');
-        if (!commentSpan) {
-            // Source span absent — the initial pass already consumed it (or this
-            // page type never had one).  Preserve whatever alias line is present.
-            Lib.debug('init',
-                `applyH1CommentSpanRelocation [${callSite}]: no comment span — alias line preserved as-is`);
-            return;
-        }
+        if (!commentSpan) return;
 
         // We only act when the span contains an <i title="…"> alias marker.
         // Plain disambiguation comments like "(live)" have no <i title> and must
@@ -10414,11 +10344,6 @@
         }
 
         // ── Build the alias line ──────────────────────────────────────────────
-        // All source-data guards have passed — safe to remove the stale alias
-        // line (soft-nav re-run) and replace it with a freshly built one.
-        const stale = document.getElementById('mb-h1-alias-line');
-        if (stale) stale.remove();
-
         const aliasLine = document.createElement('p');
         aliasLine.id = 'mb-h1-alias-line';
         // Modest italicised appearance close to the MB subheader style.
@@ -10442,14 +10367,9 @@
             h1El.parentNode.appendChild(aliasLine);
         }
 
-        Lib.debug('init', `applyH1CommentSpanRelocation [${callSite}]: relocated → #mb-h1-alias-line`,
+        Lib.debug('init', 'Relocated h1 comment span → #mb-h1-alias-line',
             { aliasTitle, aliasText, extraText });
-    }
-
-    // ── Initial-page call ────────────────────────────────────────────────────
-    if (Lib.settings.sa_enable_h1_comment_span_relocation_on_initial_page) {
-        applyH1CommentSpanRelocation('initial');
-    }
+    })();
     // ── end H1 comment-span relocation ───────────────────────────────────────
 
     // Blur the native MusicBrainz search / header query input so that keyboard
@@ -17655,13 +17575,6 @@
             Lib.debug('cleanup', `Final cleanup complete: Removed a total of ${totalRemoved} consecutive <br> tags across ${instancesFound} locations.`);
         } else {
             Lib.debug('cleanup', 'Final cleanup complete: No consecutive <br> tags found.');
-        }
-
-        // ── H1 comment-span relocation (final-page pass) ─────────────────────
-        // Re-apply after every render so the alias line survives "Load from Disk"
-        // re-renders and any other path that calls finalCleanup().
-        if (Lib.settings.sa_enable_h1_comment_span_relocation_on_final_page) {
-            applyH1CommentSpanRelocation('final');
         }
     }
 

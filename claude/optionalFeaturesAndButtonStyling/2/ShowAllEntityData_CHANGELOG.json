@@ -1,23 +1,5 @@
 [
     {
-      "version": "9.99.139",
-      "date": "2026-03-13",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "applyH1CommentSpanRelocation: the final-page pass was silently deleting the alias line injected by the initial-page pass. Root cause: the stale #mb-h1-alias-line removal was executed unconditionally at the top of the function, before the source-data guards; when the final pass ran it removed the existing alias line, then found no <span class='comment'> in the h1 (consumed by the initial pass) and returned early, leaving nothing behind. Fix: the stale removal is now deferred to just before the actual DOM injection, after all early-return guards have passed. Every early-return path (no comment span, no i[title], empty alias text) now leaves the existing #mb-h1-alias-line untouched. An explicit debug log message is emitted when the function returns early due to the comment span being absent."
-          ]
-        },
-        {
-          "label": "✨ Improvements",
-          "items": [
-            "H2/H3 header hover background color is now configurable via sa_ui_h2_h3_hover_bg (default #f9f9f9, matching the original MusicBrainz grey). The value is injected into the .mb-toggle-h2:hover, .mb-toggle-h3:hover CSS rule in the main style block, replacing the previous hard-coded #f9f9f9."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.138",
       "date": "2026-03-13",
       "sections": [
