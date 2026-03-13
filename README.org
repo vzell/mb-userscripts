@@ -48608,7 +48608,6 @@ refactor the whole "// ── CAA Illustrated Discography feature" functionality
 Right now only the "CAA" functionality is implemented (also some comments also talk about EAA)
 
 The CAA API is documented at https://musicbrainz.org/doc/Cover_Art_Archive/API and uses URLs of type /coverartarchive.org/release or /coverartarchive.org/release-group
-
 The EAA API is documented at https://musicbrainz.org/doc/Event_Art_Archive/API and uses URLS of type /eventartarchive.org/event/
 
 The "function initCaaInlinePics" ONLY works right now for CAA
@@ -51056,15 +51055,54 @@ add more guards (notify user with an alert box) before leaving the final rendere
 
 
 * TODO add a multi-row cell for the CAA info
+** initial
 
-one row per coverart - type, comment, dimensions
+one row per coverart - type, comment, etc (whatever the API exposes)
+
+Add the following functionality:
+
+1.)
+
+First inspect the CAA/EAA API definitions at
+
+#+begin_example
+The CAA API is documented at https://musicbrainz.org/doc/Cover_Art_Archive/API and uses URLs of type /coverartarchive.org/release or /coverartarchive.org/release-group
+The EAA API is documented at https://musicbrainz.org/doc/Event_Art_Archive/API and uses URLS of type /eventartarchive.org/event/
+#+end_example
+
+2.)
+
+The CAA column should in general be a multi-row column with all the images (the API exposes them) per
+release/release-group in their own <li> container, so a general rendered multi-row column should look like: (the first
+row should always be specialy rendered one, because it's visually rendered even in the collapsed state of the column (so
+it should act of kind a summary row about the CAA image information: for now just leave it as is, so what's currently shown when a row has an image))
+
+For the following, dont' really render the "row-<n>", it just acts as a description for YOU, what really should be
+renderded (everything which follows the "row-<n>")
+
+# exmaple mult-row cell with CAA/EAA image information/images artwork thumbnails
+
+#+begin_example
+row-0: <global information about the artwork> <== please decide yourself whats visualy most appealing (and whats actually available via the API)
+row-1: <1st rendered image artwork thumbnail> - <image type like: "front", "back or even a list of types">[- <disambiguation comment for 1st rendered image artwork thumbnail, if available
+row-2: <2nd rendered image artwork thumbnail> - <image type like: "front", "back or even a list of types">[- <disambiguation comment for 2nd rendered image artwork thumbnail, if available>
+row-3: <3rd rendered image artwork thumbnail> - <image type like: "front", "back or even a list of types">[- <disambiguation comment for 3rd rendered image artwork thumbnail, if available>
+...
+#+end_example
+
+** TODO implement the same "hover over" functionality, to show a big picture of the cover art, like in the case for the first row (probably need to be fetched from the net)
+
+
+** TODO sorting bug
+
+as soon as we sort on a column, the collpase state of the CAA multi-row column is lost, and all multi-row columns are
+uncollapsed. Additionally the collapse/uncollapse toggle icon is gone and there is no way to collapse these columns
+again
+
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 
-
-
-
-* TODO retry "Failed to fetch" - CAA cover artcode
+* DONE retry "Failed to fetch" - CAA cover artcode
 
 In the CAA cover art fetching code
 
@@ -51086,7 +51124,7 @@ Where the CAA artwork icon would normally be rendered show a replacement icon wi
 backwards for each retry. Replace that icon with the actual download CA artwork image or leave a red questiomnark in
 place for a visual clue that retries have at least been tried
 
-* TODO is it worth to implement a retry solution (n times) for cases where images coudn't be fetched right away with manual fallback (by clicking a retry icon)
+* DONE is it worth to implement a retry solution (n times) for cases where images coudn't be fetched right away with manual fallback (by clicking a retry icon)
 
 #+begin_example
     // ── CAA fetch-retry infrastructure ───────────────────────────────────────
@@ -51116,7 +51154,6 @@ place for a visual clue that retries have at least been tried
     //
     // ─────────────────────────────────────────────────────────────────────────
 #+end_example
-
 
 * DONE add a little more spacing in the h3 header row between the "(number of rows)" and the "CAA"-toggle button
 
@@ -51164,65 +51201,9 @@ The CAA count on the global CAA toggle button is always 0
 Please fix
 
 
-* Reintroduce jesus2099 "Release events"
-
-#+begin_example
-        {
-            type: 'place-performances-filtered',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
-            features: {
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-
-        {
-            type: 'artist-relationships-filtered',
-            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-#+end_example
-
-#+begin_example
-https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relatinships
-#+end_example
-
-
-* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
-
-* for RGs CAA artwork also display the Release fom where it's sourced
-
 * TODO better background for the h3 sub-table header in multi-table mode and better background for the h2 headers - configurable
+
+* DONE bug when it comes to fetching and/or rendering datacells with an actual CAA artwork image
 
 A bug is still left:
 
@@ -51305,7 +51286,7 @@ to tackle two issues at once
 
 2.) clicking the icon for the whole table, located/rendered AFTER the CAA toggle button, should trigger a REAL reload over the network of all artwork images for each row in that sub-table
 
-*
+* DONE desciption fomr claude
 
 #+begin_example
 Root cause — empty CAA column on artist-relationships
@@ -51321,6 +51302,67 @@ needed. Populating the CAA column for these pages would require injecting artwor
 load, which is a deeper architectural change tracked as a future enhancement.
 #+end_example
 
+
+* Reintroduce jesus2099 "Release events"
+
+#+begin_example
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+#+end_example
+
+#+begin_example
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relatinships
+#+end_example
+
+
+* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
+
+
+* for RGs CAA artwork also display the Release fom where it's sourced
+
+
 * remove double comment blocks
 
 #+begin_example
@@ -51329,5 +51371,4 @@ load, which is a deeper architectural change tracked as a future enhancement.
 
 * TODO adjust the height of the "⟳" char to the other buttons, actually make the height of the "⟳" char and "resize" and "visible" columns buttons the same
 
-
-
+* add background color to h2/h3 header rows
