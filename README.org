@@ -47002,20 +47002,15 @@ Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
 
 
 
-* TODO reintroduce 'Batch-add "performance of" relationships' userscript functionaliyt on final rendered pages
-
 * TODO hide "recording of <work>" in Artist-Recordings" pages
 
-#+begin_example
-// @name         MusicBrainz: Batch-add "performance of" relationships
-// @description  Batch link recordings to works from artist Recordings page.
-// @version      2023.7.2
-// @author       Michael Wiencek
-#+end_example
+In the page definition variable "const pageDefinitions" add the following new "columnEraser"
 
 #+begin_example
-function applyColumnErasers(row, eraserDescriptors)
+{ sourceColumn: 'Name', erasers: ['wiencek'] }
 #+end_example
+
+to the pageType "type: 'artist-recordings'"
 
 #+begin_example
         {
@@ -47037,6 +47032,21 @@ function applyColumnErasers(row, eraserDescriptors)
             tableMode: 'single'
         },
 #+end_example
+
+and implement it to strip the following containers
+
+#+begin_example
+<div class="suggested-work" ...
+<div class="work" ...
+#+end_example
+
+from the configured "sourceColumn": in the final rendered page via the function
+
+#+begin_example
+function applyColumnErasers(row, eraserDescriptors)
+#+end_example
+
+Here is are examples of the cell HTML without the stripping:
 
 #+begin_example
 <td>
@@ -49212,6 +49222,15 @@ Inspect the uploaded userscript "addRGsFromAbove.js" and extract the contents to
 the final rendered pages which have columns with name "CAA"
 
 * TODO add "Relationships" column support again, but configurable 
+
+* TODO add 'Batch-add "performance of" relationships' userscript functionality on final rendered pages
+
+#+begin_example
+// @name         MusicBrainz: Batch-add "performance of" relationships
+// @description  Batch link recordings to works from artist Recordings page.
+// @version      2023.7.2
+// @author       Michael Wiencek
+#+end_example
 
 
 * TODO extract the VZ event disambiguation configurable in its constituents
@@ -51908,3 +51927,113 @@ Split the current configuration parameter which handles both H2 and H3 header ba
 
 into separate configurations for H2 (sa_ui_h2_hover_bg) and H3 (sa_ui_h3_hover_bg) headers + adjust their descriptions correspondingly
 
+2.)
+
+In the page definition variable "const pageDefinitions" add the following new "columnEraser"
+
+#+begin_example
+{ sourceColumn: 'Name', erasers: ['wiencek'] }
+#+end_example
+
+to the pageType "type: 'artist-recordings'"
+
+#+begin_example
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] },
+                    { sourceColumn: 'Name', erasers: ['wiencek'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release groups', 'CAA' ],
+                addCAA: 'Release groups',
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+and implement it to strip the following containers
+
+#+begin_example
+<div class="suggested-work" ...
+<div class="work" ...
+#+end_example
+
+from the configured "sourceColumn": in the final rendered page via the function
+
+#+begin_example
+function applyColumnErasers(row, eraserDescriptors)
+#+end_example
+
+Here is are examples of the cell HTML without the stripping:
+
+#+begin_example
+<td>
+  <a class="wrap-anywhere" href="/recording/e1801356-9611-4907-b3fd-6c68f43f6906">
+    <bdi>? (unknown Title)
+    </bdi>
+  </a>
+  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em; color: orange;">
+    <span>Looking for matching work…
+    </span>&nbsp;
+    <span>1236/1584
+    </span>
+  </div>
+</td>
+
+<td>
+  <span class="video" title="This recording is a video">
+  </span>
+  <a class="wrap-anywhere" href="/recording/875a6a0d-1fcc-416e-959f-433f96b0da17">
+    <bdi>"Born to Run"
+    </bdi>
+  </a>
+  <div class="suggested-work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">
+    <span style="color: green; font-weight: bold;">Suggested work:
+    </span>&nbsp;
+    <a href="/work/9893a23c-f282-3b07-a2db-b4f2f3b9f4b2">Born to Run
+    </a>
+  </div>
+</td>
+
+<td>
+  <a class="wrap-anywhere" href="/recording/e7592c69-88ae-4038-a834-c6b63bbb5251">
+    <bdi>(4th of July, Asbury Park) Sandy
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>live, 1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa City, IA, USA
+    </bdi>)
+  </span>
+  <div class="work" style="font-size: 0.9em; padding: 0.3em 0.3em 0.3em 1em;">live recording of
+    <a href="/work/1f573511-eb4b-3106-8fb2-f15de52e4868">4th of July, Asbury Park (Sandy)
+    </a>
+  </div>
+</td>
+#+end_example
+
+3.)
+
+Adjust the following function
+
+#+begin_example
+    function initNavigationGuard() {
+#+end_example
+
+to guard NOT ONLY anchor clicks inside a table, but EVERYWHERE on the final rendered page
+
+
+Adjust the following function even more
+
+#+begin_example
+function initNavigationGuard() {
+#+end_example
+
+to guard NOT ONLY anchor EVERYWHERE on the final rendered page but also the TAB key pressed repeatedly should never
+leave the page up to native browser controls, but instead it should only select elemets INSIDE the page

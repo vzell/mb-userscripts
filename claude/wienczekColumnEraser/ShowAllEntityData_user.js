@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.140+2026-03-13
+// @version      9.99.141+2026-03-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -744,53 +744,52 @@
         // --- H2 / H3 section header colors ---
         sa_ui_h2_bg: {
             label: 'H2 section-header background color',
-            type: 'color_picker',
+            type: 'color',
             default: '#fff3e0',
             description: 'Background color for collapsible H2 section headers (.mb-toggle-h2) when the cursor is NOT hovering. The existing grey hover background is preserved. Default is a light orange.'
         },
 
         sa_ui_h3_bg: {
             label: 'H3 sub-table-header background color',
-            type: 'color_picker',
+            type: 'color',
             default: '#f0fff4',
             description: 'Background color for collapsible H3 sub-table headers (.mb-toggle-h3) in multi-table mode when the cursor is NOT hovering. The existing grey hover background is preserved. Default is a light green.'
         },
 
-        sa_ui_h2_h3_hover_bg: {
-            label: 'H2 / H3 header hover background color',
+        sa_ui_h2_hover_bg: {
+            label: 'H2 section-header hover background color',
             type: 'color_picker',
             default: '#f9f9f9',
-            description: 'Background color applied to H2 and H3 section headers when the cursor hovers over them (.mb-toggle-h2:hover, .mb-toggle-h3:hover). Default is the original MusicBrainz light grey.'
+            description: 'Background color applied to H2 section headers when the cursor hovers over them (.mb-toggle-h2:hover). Default is the original MusicBrainz light grey (#f9f9f9). Takes precedence over the non-hover H2 background (sa_ui_h2_bg).'
+        },
+
+        sa_ui_h3_hover_bg: {
+            label: 'H3 sub-table-header hover background color',
+            type: 'color_picker',
+            default: '#f9f9f9',
+            description: 'Background color applied to H3 sub-table headers when the cursor hovers over them (.mb-toggle-h3:hover). Default is the original MusicBrainz light grey (#f9f9f9). Takes precedence over the non-hover H3 background (sa_ui_h3_bg).'
         },
 
         // --- Table column-header (thead) row colors ---
         sa_ui_thead_th_bg: {
             label: 'Table header-row background color',
-            type: 'color_picker',
+            type: 'color',
             default: '#e8e8e8',
             description: 'Background color for all table column-header cells (table.tbl thead th). The default matches the original MusicBrainz grey used before the consolidated view is rendered.'
         },
 
         sa_ui_thead_th_color: {
             label: 'Table header-row text color',
-            type: 'color_picker',
+            type: 'color',
             default: '#333333',
             description: 'Foreground (text) color for all table column-header cells (table.tbl thead th). The default matches the dark grey text used on the original MusicBrainz entity pages.'
         },
 
         sa_ui_thead_filter_row_bg: {
             label: 'Table column-filter row background color',
-            type: 'color_picker',
+            type: 'color',
             default: '#f4f4f4',
             description: 'Background color for the per-column filter input row (table.tbl thead tr.mb-col-filter-row th). Slightly lighter than the main header row.'
-        },
-
-        sa_ui_thead_th_synthetic_bg: {
-            label: 'Synthetic column header background color',
-            type: 'color_picker',
-            default: '#b8c8b8',
-            description: 'Background color for synthetic table column-header cells (injected columns such as Event-Type, Event-Date, Country, Date, MB-Name, Comment, CAA, EAA, etc.). ' +
-                         'The default (#b8c8b8) is a darker, greenish grey — visually distinct from the standard header background — to make synthetic columns immediately recognisable.'
         },
 
         // ============================================================
@@ -799,39 +798,6 @@
         divider_save_load: {
             type: 'divider',
             label: '💾 LOAD AND SAVE DATA TO/FROM DISK'
-        },
-
-        // --- Filename construction options ---
-        sa_filename_prefix: {
-            label: 'Save filename prefix',
-            type: 'text',
-            default: 'MB-',
-            description: 'Prefix prepended to every generated save filename (e.g. "MB-"). ' +
-                         'The full filename format is: <prefix><PageType>-(<EntityName>)-<PageSection>-(<rowCount>)_<timestamp>.json.gz'
-        },
-
-        sa_filename_include_detail: {
-            label: 'Include detail segment in filename',
-            type: 'checkbox',
-            default: true,
-            description: 'When enabled, the detail segment (e.g. a multi-button label slug or filtered-relationship label) ' +
-                         'is included inside the page-section portion of the filename. When disabled the detail segment is omitted.'
-        },
-
-        sa_filename_include_row_count: {
-            label: 'Include row count in filename',
-            type: 'checkbox',
-            default: true,
-            description: 'When enabled, the row count is appended in parentheses after the page-section portion ' +
-                         'of the filename, e.g. "-(1329)". When disabled the row-count segment is omitted entirely.'
-        },
-
-        sa_filename_include_timestamp: {
-            label: 'Include timestamp in filename',
-            type: 'checkbox',
-            default: true,
-            description: 'When enabled, an ISO-8601 timestamp (e.g. "_2026-03-13T11-54-51") is appended at the end of the ' +
-                         'filename, separated from the rest by an underscore. When disabled the timestamp is omitted.'
         },
 
         sa_load_history_limit: {
@@ -2167,9 +2133,10 @@
                 continue;
             }
 
-            // Partition erasers into glyph-symbol erasers and the jesus2099 sentinel
-            const textErasers   = entry.erasers.filter(e => e !== 'jesus2099');
+            // Partition erasers into glyph-symbol erasers and the named sentinels
+            const textErasers    = entry.erasers.filter(e => e !== 'jesus2099' && e !== 'wiencek');
             const eraseJesus2099 = entry.erasers.includes('jesus2099');
+            const eraseWiencek   = entry.erasers.includes('wiencek');
 
             let removedCount = 0;
 
@@ -2196,6 +2163,24 @@
                         removedCount++;
                         Lib.debug('extract', `columnEraser: removed jesus2099 caa-icon anchor from column "${entry.sourceColumn}" (colIdx=${entry.colIdx})`);
                     }
+                });
+            }
+
+            // Strategy 3: wiencek suggested-work / work div erasure
+            // Removes injected <div class="suggested-work"> and <div class="work"> containers
+            // added by Michael Wiencek's "MusicBrainz: Expand/collapse release groups"
+            // userscript on Artist-Recordings pages.  These divs carry inline style attributes
+            // and hold "Suggested work:" hints or "live recording of" relationship text that
+            // clutters the Name cell in the consolidated table.
+            //
+            // Matched containers:
+            //   <div class="suggested-work" …>…</div>   — orange "Looking for matching work…" / green "Suggested work: …" hint
+            //   <div class="work"           …>…</div>   — "live recording of <a>…</a>" relationship line
+            if (eraseWiencek) {
+                cell.querySelectorAll('div.suggested-work, div.work').forEach(div => {
+                    div.remove();
+                    removedCount++;
+                    Lib.debug('extract', `columnEraser: removed wiencek div.${div.className.trim().split(/\s+/)[0]} from column "${entry.sourceColumn}" (colIdx=${entry.colIdx})`);
                 });
             }
 
@@ -2814,7 +2799,8 @@
             buttons: [ { label: 'Show all Recordings for Artist' } ],
             features: {
                 columnErasers: [
-                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] }
+                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] },
+                    { sourceColumn: 'Name', erasers: ['wiencek'] }
                 ],
                 columnExtractors: [
                     { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
@@ -9990,9 +9976,13 @@
             font-size: 0.75em;
             white-space: nowrap;
         }
-        .mb-toggle-h3:hover, .mb-toggle-h2:hover {
+        .mb-toggle-h2:hover {
             color: #222;
-            background-color: ${Lib.settings.sa_ui_h2_h3_hover_bg || '#f9f9f9'};
+            background-color: ${Lib.settings.sa_ui_h2_hover_bg || '#f9f9f9'};
+        }
+        .mb-toggle-h3:hover {
+            color: #222;
+            background-color: ${Lib.settings.sa_ui_h3_hover_bg || '#f9f9f9'};
         }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; background-color: ${Lib.settings.sa_ui_h3_bg || '#f0fff4'}; }
         .mb-subtable-controls { display: inline-flex; align-items: baseline; gap: 8px; margin-left: 12px; vertical-align: middle; }
@@ -12987,7 +12977,7 @@
             Lib.debug('cleanup', 'No columns were matched for removal based on current settings.');
         }
 
-        const headerBgColor = Lib.settings.sa_ui_thead_th_synthetic_bg || '#b8c8b8';
+        const headerBgColor = '#d3d3d3';
 
         // Inject synthetic column headers for every active column extractor.
         // Each extractor may declare one or more synthetic columns; we only add a
@@ -17571,20 +17561,21 @@
     }
 
     /**
-     * Installs a one-time document-level click listener that intercepts anchor clicks
-     * originating inside a rendered `table.tbl` while data is loaded (`isLoaded === true`).
+     * Installs a one-time document-level click listener that intercepts ALL anchor clicks
+     * anywhere on the rendered page while data is loaded (`isLoaded === true`).
      *
      * When the user clicks a link that would navigate away from the current page, a
      * `confirm()` dialog is shown.  If the user cancels, the navigation is suppressed.
      * This prevents accidental loss of all loaded data, applied filters, active sorts,
-     * column resizing and other per-session customisations.
+     * column resizing and other per-session customisations — regardless of whether the
+     * clicked link is inside the consolidated table, the MusicBrainz header, the sidebar,
+     * breadcrumbs, or any other element on the page.
      *
      * Links that are NOT guarded (navigation stays uninterrupted):
      *   - Links with `target="_blank"` (open in a new tab — no state is lost)
      *   - Fragment-only links (`href="#..."` or `href=""`) — same-page scrolling
      *   - `javascript:` pseudo-links
      *   - Links whose resolved URL matches the current page URL (e.g. self-referencing links)
-     *   - Any click that originates outside a `table.tbl` element
      *
      * The listener is registered only once (guarded by `_mbNavGuardInstalled`).
      */
@@ -17599,8 +17590,10 @@
             const anchor = e.target.closest('a[href]');
             if (!anchor) return;
 
-            // Only guard links that are inside a rendered table
-            if (!anchor.closest('table.tbl')) return;
+            // Guard ALL anchor clicks on the rendered page — not just links inside
+            // the consolidated table — so that navigating via the MusicBrainz header,
+            // sidebar, breadcrumbs, or any other page element also triggers the
+            // "you are about to leave" confirmation when data is loaded.
 
             const href = anchor.getAttribute('href') || '';
 
@@ -18236,26 +18229,18 @@
 
             // --- Filename generation ---
             //
-            // Format: <prefix><PageType>-(<EntityName>)-<PageSection>[(-<rowCount>)][_<timestamp>].json.gz
+            // Format: MB-<pageType>[-<detail>-]<rowCount>-<timestamp>.json.gz
             //
-            // Components:
-            //   <prefix>       — configurable via sa_filename_prefix (default "MB-")
-            //   <PageType>     — pageTypeSlug with each dash-delimited word Title-Cased
-            //                    e.g. "artist-relationships" → "Artist-Relationships"
-            //   <EntityName>   — text extracted from the h1 <bdi> element plus any
-            //                    trailing text after the closing </a> (e.g. "(2024-10-04)")
-            //                    wrapped in parentheses: "(Bruce Springsteen)"
-            //   <PageSection>  — the Title-Cased last word(s) of the pageTypeSlug,
-            //                    i.e. everything after the first dash segment
-            //                    (same as the full capitalised slug minus the entity-type prefix)
-            //   <detailSegment>— OPTIONAL slug derived from the page context (same logic as before),
-            //                    included only when sa_filename_include_detail is true
-            //   <rowCount>     — included in parentheses when sa_filename_include_row_count is true
-            //   <timestamp>    — ISO-8601, appended with "_" separator when sa_filename_include_timestamp is true
+            // <detail> is an OPTIONAL slug derived from the page context:
+            //   (a) Multi-button pages (e.g. artist-releases with "Official RGs" / "Non-official RGs"):
+            //       Use the label of the last clicked button, slugified.
+            //   (b) Filtered-relationship pages (URL contains "?…&link_type_id=…"):
+            //       Extract the quoted text from the first h2 in #content, slugified.
+            //       Example: <h2>"holds phonographic copyright (℗) for" relationships</h2>
+            //                → holds_phonographic_copyright_for
+            //   (c) All other pages: no detail segment.
             //
-            // Examples:
-            //   MB-Artist-(Bruce Springsteen)-Relationships-(1329)_2026-03-13T11-54-51.json.gz
-            //   MB-Work-(Thunder Road)-Recordings-(428)_2026-03-13T12-00-00.json.gz
+            // Slugify helper: lowercase → spaces to underscores → strip non-alphanumeric (keep _).
 
             /**
              * Convert an arbitrary label string into a safe filename slug.
@@ -18274,64 +18259,6 @@
                     .replace(/[^a-z0-9_]/g, '')
                     .replace(/_+/g, '_')       // collapse runs of underscores (e.g. from stripped special chars like ℗)
                     .replace(/^_+|_+$/g, '');  // strip leading/trailing underscores (e.g. emoji prefix like 🧮)
-            };
-
-            /**
-             * Title-case a pageType slug: capitalise the first letter of every
-             * dash-separated word.  e.g. "artist-relationships" → "Artist-Relationships".
-             *
-             * @param {string} slug - e.g. "artist-relationships"
-             * @returns {string}    - e.g. "Artist-Relationships"
-             */
-            const toTitleSlug = (slug) =>
-                slug.replace(/(^|-)([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
-
-            /**
-             * Extract the entity name from the h1 heading of the current MusicBrainz page.
-             *
-             * MusicBrainz h1 headings follow two patterns:
-             *   1. Plain entity:
-             *        <h1><a href="…"><bdi>Thunder Road</bdi></a></h1>
-             *   2. Entity with extra text after the anchor (e.g. event date):
-             *        <h1><a href="…"><bdi>From the Studio to the Stage: New York</bdi></a> (2024-10-04)</h1>
-             *
-             * The returned name combines the <bdi> text with any trailing text that follows
-             * the closing </a> inside the h1 (trimmed), producing e.g.:
-             *   "Thunder Road"
-             *   "From the Studio to the Stage: New York (2024-10-04)"
-             *
-             * @returns {string} Entity name, or empty string when the h1 / bdi cannot be found.
-             */
-            const extractEntityName = () => {
-                const h1 = document.querySelector('h1');
-                if (!h1) return '';
-                const bdi = h1.querySelector('bdi');
-                if (!bdi) return '';
-                const bdiText = bdi.textContent.trim();
-                // Collect any text nodes that follow the closing </a> inside the h1.
-                // Walk h1 child nodes from the end; gather text nodes that appear after
-                // all anchor elements.
-                let afterAnchorText = '';
-                let pastLastAnchor = false;
-                // We scan in reverse to find text nodes that come after the last <a>.
-                const h1Nodes = Array.from(h1.childNodes);
-                for (let i = h1Nodes.length - 1; i >= 0; i--) {
-                    const node = h1Nodes[i];
-                    if (!pastLastAnchor) {
-                        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') {
-                            pastLastAnchor = true;
-                        }
-                        // continue scanning backwards
-                    } else {
-                        // We are past (i.e. to the left of) the last anchor.
-                        // Any further anchors mean we overshot — stop.
-                        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') break;
-                        if (node.nodeType === Node.TEXT_NODE) {
-                            afterAnchorText = node.textContent.trim() + (afterAnchorText ? ' ' + afterAnchorText : '');
-                        }
-                    }
-                }
-                return afterAnchorText ? `${bdiText} ${afterAnchorText}` : bdiText;
             };
 
             const isMultiBtn = activeDefinition &&
@@ -18358,59 +18285,14 @@
                 }
             }
 
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const rowSegment = dataToSave.rowCount.toString();
+            const detailSegment = detailSlug ? `-${detailSlug}` : '';
             // Strip the '-filtered' suffix that is part of the internal pageType identifier
             // for link_type_id pages — it is redundant in the filename since the detail slug
             // already captures the relationship label.
-            const rawPageTypeSlug = pageType.replace(/-filtered$/, '');
-
-            // Title-case the full pageType slug: "artist-relationships" → "Artist-Relationships"
-            const pageTypeSlug = toTitleSlug(rawPageTypeSlug);
-
-            // Extract the entity name from the page h1 and wrap it in parentheses.
-            const entityName = extractEntityName();
-            Lib.debug('cache', `Filename entity name extracted: "${entityName}"`);
-
-            // Determine the detail segment (only included when setting is enabled).
-            const includeDetail = Lib.settings.sa_filename_include_detail !== false;
-            const detailSegment = (includeDetail && detailSlug) ? `-${detailSlug}` : '';
-
-            // Split the Title-cased slug at the first dash to get entity-type prefix and
-            // page-section suffix, then re-assemble with the entity name inserted.
-            // e.g. "Artist-Relationships" → prefix="Artist", section="Relationships"
-            //      result: "Artist-(Bruce Springsteen)-Relationships"
-            // For slugs without a dash (e.g. a bare "Artist") the entity name is still
-            // inserted but there is no section suffix:
-            //      result: "Artist-(Bruce Springsteen)"
-            const firstDash = pageTypeSlug.indexOf('-');
-            let assembledSlug;
-            if (firstDash !== -1) {
-                const entityTypePrefix = pageTypeSlug.slice(0, firstDash);
-                const sectionSuffix    = pageTypeSlug.slice(firstDash + 1);
-                assembledSlug = entityName
-                    ? `${entityTypePrefix}-(${entityName})-${sectionSuffix}${detailSegment}`
-                    : `${entityTypePrefix}-${sectionSuffix}${detailSegment}`;
-            } else {
-                assembledSlug = entityName
-                    ? `${pageTypeSlug}-(${entityName})${detailSegment}`
-                    : `${pageTypeSlug}${detailSegment}`;
-            }
-
-            // Configurable prefix (default "MB-").
-            const filenamePrefix = Lib.settings.sa_filename_prefix != null
-                ? Lib.settings.sa_filename_prefix
-                : 'MB-';
-
-            // Optional row-count segment in parentheses.
-            const includeRowCount = Lib.settings.sa_filename_include_row_count !== false;
-            const rowPart = includeRowCount ? `-(${dataToSave.rowCount})` : '';
-
-            // Optional timestamp segment, separated by "_".
-            const includeTimestamp = Lib.settings.sa_filename_include_timestamp !== false;
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-            const timestampPart = includeTimestamp ? `_${timestamp}` : '';
-
-            const filename = `${filenamePrefix}${assembledSlug}${rowPart}${timestampPart}.json.gz`;
-            Lib.debug('cache', `Filename assembled: "${filename}"`);
+            const pageTypeSlug = pageType.replace(/-filtered$/, '');
+            const filename = `MB-${pageTypeSlug}${detailSegment}-${rowSegment}-${timestamp}.json.gz`;
 
             triggerStandardDownload(url, filename, dataToSave.rowCount);
             infoDisplay.textContent = `✓ Serialized ${dataToSave.rowCount.toLocaleString()} rows to ${filename}`;
@@ -18652,9 +18534,8 @@
                 //      Using slugs makes the comparison immune to emoji, superscript digits,
                 //      case differences, and any other textContent decoration.
                 //   2. Filename-slug fallback (for older files without buttonLabel):
-                //      Extract the detail segment from the old-format filename
-                //      (old format: MB-<pageType>-<detailSlug>-<rows>-<timestamp>.json[.gz];
-                //       new v9.99.140+ format with entity name is handled by strategy 1)
+                //      Extract the detail segment from the filename
+                //      (format: MB-<pageType>-<detailSlug>-<rows>-<timestamp>.json[.gz])
                 //      and compare toSlug(btn.dataset.label) against it.
                 //   3. If neither strategy finds a match, colour all action buttons green.
                 {
@@ -18681,32 +18562,24 @@
                      * Return the detail-slug segment embedded in a MB save filename, or '' when
                      * the filename does not match the expected pattern.
                      *
-                     * Supported filename formats:
-                     *   Old: MB-<pageTypeSlug>[-<detailSlug>]-<rowCount>-<ISOTimestamp>.json[.gz]
-                     *   New: MB-<PageType>-(<EntityName>)-<Section>[-<detailSlug>]-(<rowCount>)[_<ISOTimestamp>].json[.gz]
+                     * Filename format:
+                     *   MB-<pageTypeSlug>[-<detailSlug>]-<rowCount>-<ISOTimestamp>.json[.gz]
                      *
-                     * For the old format the detail slug is everything between the pageType slug
-                     * and the numeric row-count segment.
-                     * For the new format (parenthesised entity name) strategy 1 (buttonLabel) will
-                     * have already matched; this function only needs to handle the old format as
-                     * a graceful fallback for files saved before v9.99.140.
+                     * The detail slug is everything between the pageType slug and the numeric
+                     * row-count segment.  We identify the row-count segment as the first purely
+                     * numeric token after the pageType prefix.
                      *
                      * @param {string} filename - e.g. "MB-artist-releasegroups-official_rgs-579-2026-03-06T16-28-02.json.gz"
-                     * @param {string} ptSlug   - page-type slug e.g. "artist-releasegroups" (lowercase, no -filtered suffix)
+                     * @param {string} ptSlug   - page-type slug e.g. "artist-releasegroups"
                      * @returns {string}
                      */
                     const detailSlugFromFilename = (filename, ptSlug) => {
                         // Strip directory path and extension(s) (.json.gz or .json)
                         const base = filename.replace(/^.*[\\/]/, '').replace(/\.json(\.gz)?$/, '');
-                        // Try old-format prefix first: "MB-<ptSlug>-"
-                        const oldPrefix = `MB-${ptSlug}-`;
-                        // Also try Title-cased prefix for new format (but that is handled by strategy 1)
-                        if (!base.toLowerCase().startsWith(oldPrefix.toLowerCase())) return '';
-                        const rest = base.slice(oldPrefix.length); // e.g. "official_rgs-579-2026-03-06T16-28-02"
-                        // New-format files have an entity-name in parens right after the prefix,
-                        // e.g. "(Bruce Springsteen)-Relationships-(1329)_...". We can detect this
-                        // and bail out early — strategy 1 should have already matched these.
-                        if (rest.startsWith('(')) return '';
+                        // Expected prefix: "MB-<ptSlug>-"
+                        const prefix = `MB-${ptSlug}-`;
+                        if (!base.startsWith(prefix)) return '';
+                        const rest = base.slice(prefix.length); // e.g. "official_rgs-579-2026-03-06T16-28-02"
                         // Collect tokens until we hit the first all-digit token (row count)
                         const tokens = rest.split('-');
                         const detailTokens = [];
