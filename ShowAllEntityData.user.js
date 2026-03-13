@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.140+2026-03-13
+// @version      9.99.141+2026-03-13
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -756,11 +756,18 @@
             description: 'Background color for collapsible H3 sub-table headers (.mb-toggle-h3) in multi-table mode when the cursor is NOT hovering. The existing grey hover background is preserved. Default is a light green.'
         },
 
-        sa_ui_h2_h3_hover_bg: {
-            label: 'H2 / H3 header hover background color',
+        sa_ui_h2_hover_bg: {
+            label: 'H2 section-header hover background color',
             type: 'color_picker',
             default: '#f9f9f9',
-            description: 'Background color applied to H2 and H3 section headers when the cursor hovers over them (.mb-toggle-h2:hover, .mb-toggle-h3:hover). Default is the original MusicBrainz light grey.'
+            description: 'Background color applied to H2 section headers when the cursor hovers over them (.mb-toggle-h2:hover). Default is the original MusicBrainz light grey (#f9f9f9). Takes precedence over the non-hover H2 background (sa_ui_h2_bg).'
+        },
+
+        sa_ui_h3_hover_bg: {
+            label: 'H3 sub-table-header hover background color',
+            type: 'color_picker',
+            default: '#f9f9f9',
+            description: 'Background color applied to H3 sub-table headers when the cursor hovers over them (.mb-toggle-h3:hover). Default is the original MusicBrainz light grey (#f9f9f9). Takes precedence over the non-hover H3 background (sa_ui_h3_bg).'
         },
 
         // --- Table column-header (thead) row colors ---
@@ -2167,9 +2174,10 @@
                 continue;
             }
 
-            // Partition erasers into glyph-symbol erasers and the jesus2099 sentinel
-            const textErasers   = entry.erasers.filter(e => e !== 'jesus2099');
+            // Partition erasers into glyph-symbol erasers and the named sentinels
+            const textErasers    = entry.erasers.filter(e => e !== 'jesus2099' && e !== 'wiencek');
             const eraseJesus2099 = entry.erasers.includes('jesus2099');
+            const eraseWiencek   = entry.erasers.includes('wiencek');
 
             let removedCount = 0;
 
@@ -2196,6 +2204,24 @@
                         removedCount++;
                         Lib.debug('extract', `columnEraser: removed jesus2099 caa-icon anchor from column "${entry.sourceColumn}" (colIdx=${entry.colIdx})`);
                     }
+                });
+            }
+
+            // Strategy 3: wiencek suggested-work / work div erasure
+            // Removes injected <div class="suggested-work"> and <div class="work"> containers
+            // added by Michael Wiencek's "MusicBrainz: Expand/collapse release groups"
+            // userscript on Artist-Recordings pages.  These divs carry inline style attributes
+            // and hold "Suggested work:" hints or "live recording of" relationship text that
+            // clutters the Name cell in the consolidated table.
+            //
+            // Matched containers:
+            //   <div class="suggested-work" …>…</div>   — orange "Looking for matching work…" / green "Suggested work: …" hint
+            //   <div class="work"           …>…</div>   — "live recording of <a>…</a>" relationship line
+            if (eraseWiencek) {
+                cell.querySelectorAll('div.suggested-work, div.work').forEach(div => {
+                    div.remove();
+                    removedCount++;
+                    Lib.debug('extract', `columnEraser: removed wiencek div.${div.className.trim().split(/\s+/)[0]} from column "${entry.sourceColumn}" (colIdx=${entry.colIdx})`);
                 });
             }
 
@@ -2814,7 +2840,8 @@
             buttons: [ { label: 'Show all Recordings for Artist' } ],
             features: {
                 columnErasers: [
-                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] }
+                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] },
+                    { sourceColumn: 'Name', erasers: ['wiencek'] }
                 ],
                 columnExtractors: [
                     { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
@@ -9990,9 +10017,13 @@
             font-size: 0.75em;
             white-space: nowrap;
         }
-        .mb-toggle-h3:hover, .mb-toggle-h2:hover {
+        .mb-toggle-h2:hover {
             color: #222;
-            background-color: ${Lib.settings.sa_ui_h2_h3_hover_bg || '#f9f9f9'};
+            background-color: ${Lib.settings.sa_ui_h2_hover_bg || '#f9f9f9'};
+        }
+        .mb-toggle-h3:hover {
+            color: #222;
+            background-color: ${Lib.settings.sa_ui_h3_hover_bg || '#f9f9f9'};
         }
         .mb-toggle-h3 { cursor: pointer; user-select: none; border-bottom: 1px solid #eee; padding: 4px 0; margin-left: 1.5em; background-color: ${Lib.settings.sa_ui_h3_bg || '#f0fff4'}; }
         .mb-subtable-controls { display: inline-flex; align-items: baseline; gap: 8px; margin-left: 12px; vertical-align: middle; }
@@ -17571,20 +17602,21 @@
     }
 
     /**
-     * Installs a one-time document-level click listener that intercepts anchor clicks
-     * originating inside a rendered `table.tbl` while data is loaded (`isLoaded === true`).
+     * Installs a one-time document-level click listener that intercepts ALL anchor clicks
+     * anywhere on the rendered page while data is loaded (`isLoaded === true`).
      *
      * When the user clicks a link that would navigate away from the current page, a
      * `confirm()` dialog is shown.  If the user cancels, the navigation is suppressed.
      * This prevents accidental loss of all loaded data, applied filters, active sorts,
-     * column resizing and other per-session customisations.
+     * column resizing and other per-session customisations — regardless of whether the
+     * clicked link is inside the consolidated table, the MusicBrainz header, the sidebar,
+     * breadcrumbs, or any other element on the page.
      *
      * Links that are NOT guarded (navigation stays uninterrupted):
      *   - Links with `target="_blank"` (open in a new tab — no state is lost)
      *   - Fragment-only links (`href="#..."` or `href=""`) — same-page scrolling
      *   - `javascript:` pseudo-links
      *   - Links whose resolved URL matches the current page URL (e.g. self-referencing links)
-     *   - Any click that originates outside a `table.tbl` element
      *
      * The listener is registered only once (guarded by `_mbNavGuardInstalled`).
      */
@@ -17599,8 +17631,10 @@
             const anchor = e.target.closest('a[href]');
             if (!anchor) return;
 
-            // Only guard links that are inside a rendered table
-            if (!anchor.closest('table.tbl')) return;
+            // Guard ALL anchor clicks on the rendered page — not just links inside
+            // the consolidated table — so that navigating via the MusicBrainz header,
+            // sidebar, breadcrumbs, or any other page element also triggers the
+            // "you are about to leave" confirmation when data is loaded.
 
             const href = anchor.getAttribute('href') || '';
 
@@ -18236,7 +18270,7 @@
 
             // --- Filename generation ---
             //
-            // Format: <prefix><PageType>-(<EntityName>)-<PageSection>[(-<rowCount>)][_<timestamp>].json.gz
+            // Format: <prefix><PageType>-(<EntityName>)-<PageSection>[-(detailSlug)][(-rowCount)][_timestamp].json.gz
             //
             // Components:
             //   <prefix>       — configurable via sa_filename_prefix (default "MB-")
@@ -18309,11 +18343,10 @@
                 if (!bdi) return '';
                 const bdiText = bdi.textContent.trim();
                 // Collect any text nodes that follow the closing </a> inside the h1.
-                // Walk h1 child nodes from the end; gather text nodes that appear after
+                // Walk h1 child nodes in reverse; gather text nodes that appear after
                 // all anchor elements.
                 let afterAnchorText = '';
                 let pastLastAnchor = false;
-                // We scan in reverse to find text nodes that come after the last <a>.
                 const h1Nodes = Array.from(h1.childNodes);
                 for (let i = h1Nodes.length - 1; i >= 0; i--) {
                     const node = h1Nodes[i];
@@ -18698,14 +18731,13 @@
                     const detailSlugFromFilename = (filename, ptSlug) => {
                         // Strip directory path and extension(s) (.json.gz or .json)
                         const base = filename.replace(/^.*[\\/]/, '').replace(/\.json(\.gz)?$/, '');
-                        // Try old-format prefix first: "MB-<ptSlug>-"
+                        // Try old-format prefix: "MB-<ptSlug>-" (case-insensitive for robustness)
                         const oldPrefix = `MB-${ptSlug}-`;
-                        // Also try Title-cased prefix for new format (but that is handled by strategy 1)
                         if (!base.toLowerCase().startsWith(oldPrefix.toLowerCase())) return '';
                         const rest = base.slice(oldPrefix.length); // e.g. "official_rgs-579-2026-03-06T16-28-02"
                         // New-format files have an entity-name in parens right after the prefix,
-                        // e.g. "(Bruce Springsteen)-Relationships-(1329)_...". We can detect this
-                        // and bail out early — strategy 1 should have already matched these.
+                        // e.g. "(Bruce Springsteen)-Relationships-(1329)_...". Bail out early —
+                        // strategy 1 should have already matched these.
                         if (rest.startsWith('(')) return '';
                         // Collect tokens until we hit the first all-digit token (row count)
                         const tokens = rest.split('-');
