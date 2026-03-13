@@ -1,5 +1,14 @@
 [
     {
+      "version": "9.99.136",
+      "date": "2026-03-13",
+      "changes": {
+        "🐛 Bug Fixes": [
+          "Global ▶/◀ button (mb-col-collapse-all-btn) ignored the CAA column: both the single-table onclick (inside initCollapsableColumns) and the multi-table onclick (inside rewireGlobalCollapseButtonMulti) closed over a static snapshot of the column header button list captured at wiring time. Because CAA header buttons are created asynchronously — in the deferred .then() that fires after all enrichments complete — they were never in the captured array, so clicking the global button had no effect on CAA cells. Fix: both onclick handlers now perform a live DOM query (table.querySelectorAll('.mb-col-collapse-hdr-btn') for single-table mode; document.querySelectorAll('table.tbl .mb-col-collapse-hdr-btn') for multi-table mode) at click time rather than closing over an array. rewireGlobalCollapseButtonMulti likewise replaces the allHdrBtns closure variable with a live hdrBtnCount for the show/hide guard and debug log."
+        ]
+      }
+    },
+    {
       "version": "9.99.135",
       "date": "2026-03-13",
       "changes": {

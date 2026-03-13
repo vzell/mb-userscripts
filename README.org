@@ -51133,14 +51133,24 @@ If all is good, then please add the "CAA" column to every pageType necessary
 
 please also add the ability to filter on the currently disabled CAA image type (like "front", "back", etc) and even more important, the comment on each CAA image
 
-** initially when rendering the final page, the column header collapse icon for multi-row cells in the "CAA" column is NOT visible
+** DONE initially when rendering the final page, the column header collapse icon for multi-row cells in the "CAA" column is NOT visible
 
 a couple of glitches:
 
 - initially when rendering the final page, the column header collapse/uncollapse icon for multi-row cells in the "CAA" column is NOT visible
 - as soon as I sort on ANY column it gets visible and from then on the collapse/uncollapse works either  when clicking the column header icon or the global icon 
 
-** investigate the collapsing of the RGs in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+** The "mb-col-collapse-all-btn", when clicked does not take into account the "CAA" column
+
+The "mb-col-collapse-all-btn", when clicked does not take into account the "CAA" column
+
+#+begin_example
+<button id="mb-col-collapse-all-btn" title="Collapse all expanded multi-row cells in every collapsable column" 
+#+end_example
+
+whereas the the column header collapse/uncollpase icon and the cell specific ones work
+
+** investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
 * TODO reinforce the loading o the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 
