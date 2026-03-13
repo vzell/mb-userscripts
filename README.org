@@ -51055,7 +51055,7 @@ add more guards (notify user with an alert box) before leaving the final rendere
 
 
 * TODO add a multi-row cell for the CAA info
-** initial
+** DONE initial
 
 one row per coverart - type, comment, etc (whatever the API exposes)
 
@@ -51092,12 +51092,26 @@ row-3: <3rd rendered image artwork thumbnail> - <image type like: "front", "back
 
 ** TODO implement the same "hover over" functionality, to show a big picture of the cover art, like in the case for the first row (probably need to be fetched from the net)
 
+In the uploaded userscript,
+
+implement the same "hover over" CAA functionality (to show a big picture of the cover art, like in the case for the
+first row, probably the artwork needs to be fetched from the net, instead of grabbing it from the front image artwork
+stribe), for every cover art image in the multi-row "CAA" cells
+
+see the code after the comment
+
+#+begin_example
+// ── CAA / EAA multi-row art cell builders
+#+end_example
+
 
 ** TODO sorting bug
 
 as soon as we sort on a column, the collpase state of the CAA multi-row column is lost, and all multi-row columns are
 uncollapsed. Additionally the collapse/uncollapse toggle icon is gone and there is no way to collapse these columns
 again
+
+** filer also on the image type and comment
 
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
@@ -51372,3 +51386,5 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 * TODO adjust the height of the "⟳" char to the other buttons, actually make the height of the "⟳" char and "resize" and "visible" columns buttons the same
 
 * add background color to h2/h3 header rows
+
+* add menu to hover CAA picture, for different actions
