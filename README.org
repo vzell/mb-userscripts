@@ -51090,7 +51090,7 @@ row-3: <3rd rendered image artwork thumbnail> - <image type like: "front", "back
 ...
 #+end_example
 
-** TODO implement the same "hover over" functionality, to show a big picture of the cover art, like in the case for the first row (probably need to be fetched from the net)
+** DONE implement the same "hover over" functionality, to show a big picture of the cover art, like in the case for the first row (probably need to be fetched from the net)
 
 In the uploaded userscript,
 
@@ -51104,14 +51104,33 @@ see the code after the comment
 // ── CAA / EAA multi-row art cell builders
 #+end_example
 
-
 ** TODO sorting bug
 
-as soon as we sort on a column, the collpase state of the CAA multi-row column is lost, and all multi-row columns are
+as soon as we sort on ANY column, the collpase state of the CAA multi-row column is lost, and all multi-row columns are
 uncollapsed. Additionally the collapse/uncollapse toggle icon is gone and there is no way to collapse these columns
 again
 
-** filer also on the image type and comment
+** add the CAA column to collapsable columns, does it interfer somehow with the current implementation
+
+1.)
+
+please also add the ability to filter on the currently disabled CAA image type (like "front", "back", etc) and even more important, the comment on each CAA image
+
+2.)
+
+if I would use the collapsable feature framework, defined in the variable "const pageDefinitions" for the CAA columns like this
+
+#+begin_example
+collapsableColumns: [ 'CAA' ],
+#+end_example
+
+does it interfer somehow with the current implementation, or do we gain any benefits
+
+** filter also on the image type and comment
+
+please also add the ability to filter on the currently disabled CAA image type (like "front", "back", etc) and even more important, the comment on each CAA image
+
+** investigate the collapsing of the RGs in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
