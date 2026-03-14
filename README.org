@@ -52177,3 +52177,238 @@ In the newly uploaded userscript,
 a couple of things are still missing (also add a changelog):
 
 
+* why
+
+
+* Reintroduce jesus2099 "Release events"
+
+#+begin_example
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+#+end_example
+
+#+begin_example
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
+#+end_example
+
+
+* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
+
+* TODO for RGs CAA artwork also display the Release fom where it's sourced
+
+* add menu to hover CAA picture, for different actions
+
+
+* TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+
+* TODO reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
+
+In the newly uploaded userscript,
+
+a couple of things are still missing (also add a changelog):
+
+* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+** DONE initial
+
+In the newly uploaded userscript,
+
+On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
+
+The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
+the rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
+is completely missing, to give the user the chance to quickly filter either for rows with OR without images (doesn't
+matter what other information is there)
+
+also add a changelog
+
+** DONE doesn't work
+
+In the newly uploaded userscript,
+
+On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
+
+The "Cell stucture" submenu list should have, additionally to the entries for multi-re-cells collapse/uncollape states,
+entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
+to give the user the chance to quickly filter either for rows with OR without images
+
+
+* TODO implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
+
+
+
+** initial
+
+please implement an indexed-DB persistent storage solution for the fetched artwork images (CAA and EAA). When rendering
+the final page the index DB should always be consulted first for a match before reaching out to the network.
+
+Probably the "Load from Disk" path would benefit the most, as there are probably almost no network rountrips involved.
+
+** *.archive.org
+
+a couple of issues:
+
+1.)
+
+the button "Save to Disk" popsup a browser alert dialog which says "Your are about to leave this page". Please exlude
+this specific button click inside the function
+
+#+begin_example
+function initNavigationGuard() {
+#+end_example
+  
+to NOT produce this alert, as it actually dos NOT leave the page
+
+2.)
+
+the following two @connect headers must also be set, because coverartarchive.org redirects to archive.org which in turn
+redirects to arbitrary cache server which ends in *.archive.org
+
+#+begin_example
+// @connect      archive.org
+// @connect      *.archive.org
+#+end_example
+
+3.)
+
+the hovering over a small artwork image inside the "CAA" column works when the images are loaded the first time over the
+network. But when then saving the table data to disk with "Save to Disk"-button and later on loading the data again with
+the "Load from Disk"-button,
+
+* todos
+
+When the uploaded userscript executes with
+
+#+begin_example
+sa_art_idb_enable: false
+#+end_example
+
+for the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+lots of sub-tables at the end of the rendered page do NOT show an CAA artwork icon (but the broken browser image) inside the CAA toggle button (count
+0), although when uncollapsing the table itself most of them have at least one row. Here the HTML of such a sub-table artwork button with "Other (1)" in the h3 row above the sub-table:
+ 
+#+begin_example
+<button id="mb-caa-toggle-btn-13" type="button" claless="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;" data-art-render-gen="1">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/963303c0-96a6-4879-b126-eeda4d71d39f/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">0
+  </span>
+</button>
+#+end_example
+
+Actually after a long time (I accidentally pressed F11 in the browser which toogled the browser window in full screen),
+the big CAA icon when the CAA button was pressed to show the images, appeared but the broken browser image inside the
+CAA toggle button is still is there.
+
+Even after pressing the "Reload all CAA images" button for this table, the result was the same: ==> still the broken browser image inside the
+CAA toggle button.
+
+Please explain ... I also uploaded the debug log in the file "withoutDB-Artist-RGs"
+
+
+
+Another strange effect:
+
+There is one sub-table also at the end of the rendered page "Single + Kuve (14)"
+
+** empty "CAA" column
+
+How can this be ? At the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships in the
+last sub-table named "Tribute albums (17)" CAA Toggle button [artwork icon 15] the "CAA" column is completely empty,
+although there 15 rows out of 17 which have CAA artwork release-group thumbnails in the "Title" column. Even a click on the table level "Retry loading all CAA images for this table"-button
+
+see also the corresponding debug log for this action
+
+#+begin_example
+[VZ-ShowAllEntityData: artist-relationships] 🎨 Toggling table for "tribute albums". New state: visible 
+[VZ-ShowAllEntityData: artist-relationships] 🎨 Toggling table for "arranged (2)". New state: visible 
+[VZ-ShowAllEntityData: artist-relationships] 🎨 Toggling table for "arranged (2)". New state: hidden 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaRetryTable: starting forced reload for table 18 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaCreateOrUpdateToggleButton: updated btn mb-caa-toggle-btn-18 (17 link(s)) 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: built bigbox for table 18 with 17 image(s), initially hidden 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitSmallPics: enqueued 0 load request(s) (queue: 0 running, 0 pending) 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaEnrichTable: enqueued 0 enrichment request(s) (queue: 0 running, 0 pending) 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaRetryTable: reload enqueued for table 18 (17 link(s)) 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/15cde239-ea18-36aa-905e-c7cab9f7a99f/front-250?_cb=1773446620396 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/7baa19d0-58e1-3d01-821b-51bda3d81feb/front-250?_cb=1773446620397 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/aa665060-ff0d-4a4d-9b8c-7e4d03d82949/front-250?_cb=1773446620397 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/ee3a7819-a640-41be-8c75-1c9d861b02a1/front-250?_cb=1773446620397 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/1256c401-47e3-3101-9d4d-3d5e9e77b1c6/front-250?_cb=1773446620397 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/e27ab02b-160c-4659-9a83-a414663d0ffe/front-250?_cb=1773446620398 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/41a750f9-b0b7-41cf-86be-92c76f2ee3f3/front-250?_cb=1773446620399 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/2f0954df-ef05-39bf-8c83-d3510f588bf8/front-250?_cb=1773446620399 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/7b138396-67d0-43b0-ac83-9efea7394a36/front-250?_cb=1773446620399 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/cbd98e80-fe84-4b2d-80d6-bd28c1d7480d/front-250?_cb=1773446620399 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/24067a74-9326-4e82-9fee-94411fee350b/front-250?_cb=1773446620400 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/d17ac54a-6812-42dd-8274-a65b9a13a119/front-250?_cb=1773446620400 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/6af8a15b-fe7e-457b-8f5f-e58cfb1c4c56/front-250?_cb=1773446620398 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/74afee03-7c56-3f87-9324-2ec86e737cd3/front-250?_cb=1773446620400 
+[VZ-ShowAllEntityData: artist-relationships] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/34ec27df-4183-4494-9e36-97b582be1f71/front-250?_cb=1773446620400 
+#+end_example
+
+
+The same happens sometimes also for other rows in other sub-tables on that page athough the sub-table "Tribute albums" is the onyl one with a complete empty CAA column
+
+** forget
+
+you did not base your new fixes on the last session where you already did some fixes: see the following changelog
+
+#+begin_example
+    {
+      "version": "9.99.148",
+      "date": "2026-03-14",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "CAA/EAA toggle button thumbnail permanently stuck as browser broken-image when sa_art_idb_enable=false: the HTML spec sets HTMLImageElement.complete=true as soon as the browser finishes a fetch attempt — regardless of success or failure (404, network error). The toggle button thumb is created with thumb.src=firstImgUrl (the first entity link found in the table). If that URL returns 404 (release-group has no CAA artwork), complete becomes true and naturalWidth stays 0 (broken-image state). When a bigbox image for a different entity in the same table later fires its img.onload, the handler's guard '!thumb.complete' evaluates to false (complete=true for the broken thumb), so thumb.src is never replaced and the broken image persists even after the badge correctly increments. Fixed by replacing !thumb.complete with (!thumb.complete || thumb.naturalWidth===0) at all three guard sites: (1) per-table toggle button img.onload in _artInitBigPics, (2) global toggle button img.onload in the same callback, (3) _artCreateOrUpdateToggleButton re-render branch (covers the 'Reload all CAA images' retry path, where the existing broken thumb was never reset before _artInitBigPics ran again)."
+          ]
+        }
+      ]
+    },
+#+end_example
+
+please reaply the current fixes on top of the last session and also fix the changelog accordingly

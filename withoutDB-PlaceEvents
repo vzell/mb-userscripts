@@ -1,0 +1,485 @@
+﻿[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.121+2026-03-11) loaded with external library (3.14.3+2026-03-04) active on MusicBrainz page: https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events 
+[VZ-ShowAllEntityData: place-events] 📝 Changelog source: remote — replaced 0 local entries with 297 remote entries (fromCache=true) 
+[VZ-ShowAllEntityData: place-events] 🚀 Settings saved. Reloading... 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.147+2026-03-13) loaded with external library (3.14.3+2026-03-04) active on MusicBrainz page: https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: place-events 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: single 
+[VZ-ShowAllEntityData: place-events] 🚀 Initializing script for path: /place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+[VZ-ShowAllEntityData: place-events] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+[VZ-ShowAllEntityData: place-events] 🚀 Blurred #headerid-query input on page entry 
+[VZ-ShowAllEntityData: place-events] 📝 Fetched and cached fresh content for showallentitydata-remote-changelog (364797 bytes) 
+[VZ-ShowAllEntityData: place-events] 📝 Changelog source: remote — replaced 0 local entries with 321 remote entries (fromCache=false) 
+[VZ-ShowAllEntityData: place-events] 🚀 Settings saved. Reloading... 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.147+2026-03-13) loaded with external library (3.14.3+2026-03-04) active on MusicBrainz page: https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: place-events 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: single 
+[VZ-ShowAllEntityData: place-events] 🚀 Initializing script for path: /place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+[VZ-ShowAllEntityData: place-events] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+[VZ-ShowAllEntityData: place-events] 🚀 Blurred #headerid-query input on page entry 
+[VZ-ShowAllEntityData: place-events] 📝 Changelog source: remote — replaced 0 local entries with 321 remote entries (fromCache=true) 
+[VZ-ShowAllEntityData: place-events] 🧹 Signalling other scripts to stop... 
+[VZ-ShowAllEntityData: place-events] 📥 Starting fetch process... null
+[VZ-ShowAllEntityData: place-events] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+[VZ-ShowAllEntityData: place-events] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+[VZ-ShowAllEntityData: place-events] 📥 determineMaxPageFromDOM: Found "Next" link. Extracted page: 2 
+[VZ-ShowAllEntityData: place-events] 📥 Total pages to fetch: 2 
+[VZ-ShowAllEntityData: place-events] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntityData: place-events] 📥 Page 1 is current page. Using existing document. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: Found 13 li.show-all element(s). Expanding from inline <script type="application/json"> data. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 17 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0] Li split: before=4, after=0, JSON total=17, missing=13. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [4]: "Sara Devine (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [5]: "Jack Daley (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [6]: "Steven Van Zandt (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [7]: "Ravi Best (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [8]: "Ron Tooley (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [9]: "Ed Manion (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [10]: "Marc Ribler (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [11]: "Rich Mercurio (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [12]: "Andy Burton (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [13]: "Jessie Wagner (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [14]: "Mike Mancini (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [15]: "Anthony Almonte (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0]   Inserted [16]: "John Martin (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [0] Expansion complete at col-index=3, header="Artists" — inserted 13, before=4, after=0, total=17. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [1] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 6 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [1] Li split: before=4, after=0, JSON total=6, missing=2. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [1]   Inserted [4]: "Jeremy Allen White (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [1]   Inserted [5]: "George Stephanopoulos (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [1] Expansion complete at col-index=3, header="Artists" — inserted 2, before=4, after=0, total=6. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [2] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 6 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [2] Li split: before=4, after=0, JSON total=6, missing=2. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [2]   Inserted [4]: "Rachel Ana Dobken (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [2]   Inserted [5]: "The Tangiers Blues Band (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [2] Expansion complete at col-index=3, header="Artists" — inserted 2, before=4, after=0, total=6. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [3] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 6 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [3] Li split: before=4, after=0, JSON total=6, missing=2. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [3]   Inserted [4]: "J.T. Bowen (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [3]   Inserted [5]: "Steve Barlotta (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [3] Expansion complete at col-index=3, header="Artists" — inserted 2, before=4, after=0, total=6. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [4] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 6 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [4] Li split: before=4, after=0, JSON total=6, missing=2. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [4]   Inserted [4]: "The Bobby Bandiera Band (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [4]   Inserted [5]: "Jane Gillan Williams (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [4] Expansion complete at col-index=3, header="Artists" — inserted 2, before=4, after=0, total=6. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [5] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 11 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [5] Li split: before=4, after=0, JSON total=11, missing=7. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [5]   Inserted [4]: "Ed Manion (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [5]   Inserted [5]: "Joey Stann (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [5]   Inserted [6]: "Bobby Bandiera (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [5]   Inserted [7]: "Kevin Kavanaugh (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [5]   Inserted [8]: "Joe Bellia (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [5]   Inserted [9]: "Steve “Muddy” Shews (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [5]   Inserted [10]: "The Bobby Bandiera Band (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [5] Expansion complete at col-index=3, header="Artists" — inserted 7, before=4, after=0, total=11. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [6] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 7 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [6] Li split: before=4, after=0, JSON total=7, missing=3. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [6]   Inserted [4]: "Boccigalupe & The Badboys (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [6]   Inserted [5]: "JoBonanno & The Godsons of Soul (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [6]   Inserted [6]: "The Danny White Band (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [6] Expansion complete at col-index=3, header="Artists" — inserted 3, before=4, after=0, total=7. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [7] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 7 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [7] Li split: before=4, after=0, JSON total=7, missing=3. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [7]   Inserted [4]: "Ed Manion (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [7]   Inserted [5]: "Joey Stann (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [7]   Inserted [6]: "Bobby Bandiera (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [7] Expansion complete at col-index=3, header="Artists" — inserted 3, before=4, after=0, total=7. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [8] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 10 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [8] Li split: before=4, after=0, JSON total=10, missing=6. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [8]   Inserted [4]: "Joe Grushecky & the Houserockers (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [8]   Inserted [5]: "Michael J. Fox (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [8]   Inserted [6]: "Soozie Tyrell (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [8]   Inserted [7]: "Johnny Grushecky (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [8]   Inserted [8]: "Boccigalupe & The Badboys (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [8]   Inserted [9]: "JoBonanno & The Godsons of Soul (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [8] Expansion complete at col-index=3, header="Artists" — inserted 6, before=4, after=0, total=10. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 13 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9] Li split: before=4, after=0, JSON total=13, missing=9. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9]   Inserted [4]: "Southside Johnny (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9]   Inserted [5]: "Lisa Lowell (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9]   Inserted [6]: "Joey Stann (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9]   Inserted [7]: "Bobby Bandiera (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9]   Inserted [8]: "Joe Bellia (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9]   Inserted [9]: "Steve Shews (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9]   Inserted [10]: "Mike Mancini (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9]   Inserted [11]: "Bob Berger (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9]   Inserted [12]: "The Bobby Bandiera Band (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [9] Expansion complete at col-index=3, header="Artists" — inserted 9, before=4, after=0, total=13. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [10] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 12 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [10] Li split: before=4, after=0, JSON total=12, missing=8. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [10]   Inserted [4]: "Lisa Lowell (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [10]   Inserted [5]: "Joey Stann (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [10]   Inserted [6]: "Bobby Bandiera (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [10]   Inserted [7]: "Joe Bellia (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [10]   Inserted [8]: "Steve Shews (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [10]   Inserted [9]: "Mike Mancini (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [10]   Inserted [10]: "Bob Berger (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [10]   Inserted [11]: "The Bobby Bandiera Band (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [10] Expansion complete at col-index=3, header="Artists" — inserted 8, before=4, after=0, total=12. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [11] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 12 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [11] Li split: before=4, after=0, JSON total=12, missing=8. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [11]   Inserted [4]: "Mark Pender (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [11]   Inserted [5]: "Chris Anderson (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [11]   Inserted [6]: "Southside Johnny (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [11]   Inserted [7]: "Ed Manion (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [11]   Inserted [8]: "Joey Stann (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [11]   Inserted [9]: "Jeff Kazee (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [11]   Inserted [10]: "Steve “Muddy” Shews (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [11]   Inserted [11]: "Louie Appel (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [11] Expansion complete at col-index=3, header="Artists" — inserted 8, before=4, after=0, total=12. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [12] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 10 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [12] Li split: before=4, after=0, JSON total=10, missing=6. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [12]   Inserted [4]: "Willie Nile (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [12]   Inserted [5]: "Joe Grushecky & the Houserockers (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [12]   Inserted [6]: "Mr. Reality (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [12]   Inserted [7]: "Lee Ann Grushecky (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [12]   Inserted [8]: "Bob Benjamin (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [12]   Inserted [9]: "Boccigalupe & The Badboys (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: [12] Expansion complete at col-index=3, header="Artists" — inserted 6, before=4, after=0, total=10. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 1: expandShowAllCells complete — expanded: 13, skipped: 0. 
+[VZ-ShowAllEntityData: place-events] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntityData: place-events] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntityData: place-events] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+[VZ-ShowAllEntityData: place-events] 📝 Detected indices → mainColIdx=1 (Event), extractors=[caa("Event"@1)], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], excluded=[] for pageType: place-events 
+[VZ-ShowAllEntityData: place-events] 📝 Table body found. Processing child nodes. Total nodes: 100 
+[VZ-ShowAllEntityData: place-events] 📥 Page 1/2 processed in 0.08s. Rows on page: 100. Total: 100 
+[VZ-ShowAllEntityData: place-events] 📥 Fetching URL for page 2: https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events?page=2 
+[VZ-ShowAllEntityData: place-events] 📥 Initiating fetch for URL: https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events?page=2 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: Found 3 li.show-all element(s). Expanding from inline <script type="application/json"> data. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 16 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0] Li split: before=4, after=0, JSON total=16, missing=12. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [4]: "Ronnie Spector (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [5]: "Max Weinberg (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [6]: "Miami Steve Van Zandt (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [7]: "Billy Rush (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [8]: "Southside Johnny (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [9]: "Ed Manion (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [10]: "Kevin Kavanaugh (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [11]: "Rick Gazda (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [12]: "Kenny Pentifallo (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [13]: "Carlo Novi (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [14]: "Tony Pallagrosi (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0]   Inserted [15]: "Al Berger (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [0] Expansion complete at col-index=3, header="Artists" — inserted 12, before=4, after=0, total=16. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [1] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 11 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [1] Li split: before=4, after=0, JSON total=11, missing=7. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [1]   Inserted [4]: "David Sancious (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [1]   Inserted [5]: "Billy Rush (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [1]   Inserted [6]: "Southside Johnny (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [1]   Inserted [7]: "Kevin Kavanaugh (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [1]   Inserted [8]: "Kenny Pentifallo (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [1]   Inserted [9]: "Carlo Novi (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [1]   Inserted [10]: "Al Berger (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [1] Expansion complete at col-index=3, header="Artists" — inserted 7, before=4, after=0, total=11. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [2] JSON shape: "relations" (Artist roles (e.g. Place-Events "Artists" column)), 6 total entries at col-index=3, header="Artists". 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [2] Li split: before=4, after=0, JSON total=6, missing=2. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [2]   Inserted [4]: "Vini Lopez (guest performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [2]   Inserted [5]: "The Blackberry Booze Band (main performer)" 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: [2] Expansion complete at col-index=3, header="Artists" — inserted 2, before=4, after=0, total=6. 
+[VZ-ShowAllEntityData: place-events] 📝 Page 2: expandShowAllCells complete — expanded: 3, skipped: 0. 
+[VZ-ShowAllEntityData: place-events] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntityData: place-events] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+[VZ-ShowAllEntityData: place-events] 📥 Found matching table "[object HTMLTableElement]" on page 2 to process. 
+[VZ-ShowAllEntityData: place-events] 📝 Detected indices → mainColIdx=1 (Event), extractors=[caa("Event"@1)], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], excluded=[] for pageType: place-events 
+[VZ-ShowAllEntityData: place-events] 📝 Table body found. Processing child nodes. Total nodes: 9 
+[VZ-ShowAllEntityData: place-events] 📥 Page 2/2 processed in 0.86s. Rows on page: 9. Total: 109 
+[VZ-ShowAllEntityData: place-events] 🎨 DOM rendering starting... 
+[VZ-ShowAllEntityData: place-events] 🎨 Starting updateH2Count: filtered=109, total=109, absoluteTotal=null 
+[VZ-ShowAllEntityData: place-events] 🎨 Searching for target H2. Current pageType: place-events 
+[VZ-ShowAllEntityData: place-events] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntityData: place-events] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+[VZ-ShowAllEntityData: place-events] 🎨 Target element identified: "Events..." 
+[VZ-ShowAllEntityData: place-events] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ-ShowAllEntityData: place-events] 🎨 Appending filterContainer to targetH2. 
+[VZ-ShowAllEntityData: place-events] 🎨 Updated header/target Events count: (109) 
+[VZ-ShowAllEntityData: place-events] 🎨 Starting renderFinalTable with 109 rows. 
+[VZ-ShowAllEntityData: place-events] 🎨 Final table structure → headers=7, rowCells=10 
+[VZ-ShowAllEntityData: place-events] 🎨 Fast render: Injected 109 rows into DOM. 
+[VZ-ShowAllEntityData: place-events] 🧹 cleanupHeaders() called → existing headers=[ | Event | Type | Artists | Date | Time | Rating] 
+[VZ-ShowAllEntityData: place-events] 🧹 Skipping removal of column 6 ("Rating"). Setting "sa_remove_rating" is disabled. 
+[VZ-ShowAllEntityData: place-events] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntityData: place-events] 🧹 Injecting synthetic header: EAA (via extractor: caa) 
+[VZ-ShowAllEntityData: place-events] 🧹 Injecting synthetic header: MB-Name 
+[VZ-ShowAllEntityData: place-events] 🧹 Injecting synthetic header: Comment 
+[VZ-ShowAllEntityData: place-events] 📝 initCollapsableColumns: columns=[Artists, EAA] 
+[VZ-ShowAllEntityData: place-events] 📝 ensureCollapseDelegate: delegation listener installed on tbody. 
+[VZ-ShowAllEntityData: place-events] 📝 initCollapsableColumns: "Artists" (col 3) — 105 multi-row cell(s). 
+[VZ-ShowAllEntityData: place-events] 📝 initCollapsableColumns: "EAA" (col 7) — no multi-row cells found, skipping. 
+[VZ-ShowAllEntityData: place-events] 📝 initCollapsableColumns: done — 2 declared, 1 with multi-row cells. 
+[VZ-ShowAllEntityData: place-events] 🧹 Running final cleanup... 
+[VZ-ShowAllEntityData: place-events] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ-ShowAllEntityData: place-events] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntityData: place-events] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+[VZ-ShowAllEntityData: place-events] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+[VZ-ShowAllEntityData: place-events] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntityData: place-events] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+[VZ-ShowAllEntityData: place-events] 🖥️ Auto-resize button added to controls 
+[VZ-ShowAllEntityData: place-events] 📝 Made 10 columns resizable 
+[VZ-ShowAllEntityData: place-events] 🖥️ Column visibility toggle added to controls 
+[VZ-ShowAllEntityData: place-events] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+[VZ-ShowAllEntityData: place-events] 🖥️ Density control button added to controls 
+[VZ-ShowAllEntityData: place-events] 🖥️ Statistics button added to controls 
+[VZ-ShowAllEntityData: place-events] 📝 Keyboard shortcuts initialized 
+[VZ-ShowAllEntityData: place-events] 🖥️ Shortcuts help button already exists, skipping 
+[VZ-ShowAllEntityData: place-events] 🖥️ Export button with dropdown menu added to controls 
+[VZ-ShowAllEntityData: place-events] 🚀 Initializing aggressive full-width sidebar toggle. 
+[VZ-ShowAllEntityData: place-events] 📝 initBarcodeHighlight: processed table 0 
+[VZ-ShowAllEntityData: place-events] 📝 initCaaPics: request queue created (concurrency=4) 
+[VZ-ShowAllEntityData: place-events] 📝 initCAAPics: table 0 has no CAA column and no addCAA feature — skipping 
+[VZ-ShowAllEntityData: place-events] 📝 initCAAPics: processed 0 table(s) with CAA column 
+[VZ-ShowAllEntityData: place-events] 📝 eaaLoadIcon: loading //eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 eaaLoadIcon: loading //eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 eaaInitSmallPics: enqueued 2 load request(s) (queue: 2 running, 0 pending) 
+[VZ-ShowAllEntityData: place-events] 📝 eaaEnrichTable: enqueued 2 enrichment request(s) (queue: 4 running, 0 pending) 
+[VZ-ShowAllEntityData: place-events] 📝 eaaCreateOrUpdateToggleButton: created btn mb-eaa-toggle-btn-0 (109 link(s)) 
+[VZ-ShowAllEntityData: place-events] 📝 _artCreateOrUpdateRetryButton: created retry btn mb-eaa-toggle-btn-retry-0 
+[VZ-ShowAllEntityData: place-events] 📝 eaaInitBigPics: built bigbox for table 0 with 109 image(s), initially hidden 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAPics: processed 1 table(s) with EAA column 
+[VZ-ShowAllEntityData: place-events] 📝 initCAAInlinePics: no addCAA column configured for this page type — skipping 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: addEAA column = "Event" 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: processing table 0, column "Event" at index 1 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/97fe7c03-e647-4827-b29f-1987b0800f84/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/fd5487d3-3b7c-490d-81a2-96be344da3b9/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/61ad6394-5295-4d37-9c8f-9e28cdbc332d/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/0b7ddd68-826d-4d64-8659-0215cb63c4e4/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/a8bb2a77-4174-460b-bbd9-dbc4a9217568/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/f7483ae8-3660-4ce5-b06b-d13cc9ec176b/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/6c4fcb51-054c-4ec4-a916-6af655696138/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/7b3fb025-13ef-48fa-97d1-adaaf0aa8ec0/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/185bf839-d300-4dde-9cfa-8f3730a03d1b/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/cec60893-a8c3-41de-8889-42f45048907a/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/80d1be40-eff6-4836-b4a7-959abf6d783e/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/04bf0b2c-b36f-4350-abdc-17539e0793d7/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/9922574e-ffba-449a-a091-225e18b544ab/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/1d9b4f50-68ed-4327-9eb2-cdc3e2856a27/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/f1f2c5c6-f051-4f43-b7c5-c733ef199859/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/a41a51cb-d158-427e-aba3-60801103cd31/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/31ae96aa-f00d-4624-8f06-ff6f44fe6d21/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/63632ed8-5ba5-4a36-9224-ddf713bdf1b6/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/3843b85d-4d9f-445b-8d36-5234c39bb9db/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/3abbfbc7-7ac8-4ae7-897a-4e57087b8c78/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/37d303d5-3921-45f1-a723-20f478d26b58/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/fb9f2740-23d1-43c0-affe-58b9d01a136d/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/c97d0a31-d01e-414f-83b6-49389dd8f06c/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/6905631f-e396-467d-8c44-87c8f191b502/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/a7f59980-73bf-4517-a483-67447a1d1d44/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/768e8345-88b2-4a73-b191-0137c4ff7855/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/510cce24-bb0d-42b6-a9f7-ebf890d03dff/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/26cead1c-a5fa-4677-873a-312412c6dc91/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/ac6db257-1e3a-40df-b675-13f1bb92fcd2/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/26b22d86-4ff2-497f-9294-8c550bfd671e/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/ec0ec8f9-3578-417d-b00a-339b578a2c7d/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/921aad18-3f49-4582-aaa6-4871dafe3336/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/db0df581-05d4-41fb-8127-3232ee942596/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/9ae1059f-6545-4b8f-9d35-adb4a18d83a5/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/a0dc2482-bdc3-44bc-abc0-e1934c9a5f9c/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/95d7bee4-1baf-482a-b0d5-100318b1e4f2/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/f3381b69-6648-47b6-b00e-5be0183cac20/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/991870a3-73d8-4a28-b8a7-8f22f6a3c106/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/90513310-c4a6-4add-bf9f-c7b38a5961f0/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/9723480f-8521-4e17-b8e2-628f12f4cd51/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/83575194-d273-4069-acc8-f7b7e77dc885/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/bc4304a6-0d2a-4761-8f8e-a58352a674a4/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/59a00aab-691b-4889-9646-d083b99e336b/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/43f7bd2c-61cf-48c1-bc94-b9bc9ff3ec07/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/96695197-fd4c-4ef0-a074-ed87cbb60c6e/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/5843d832-a117-4b64-8405-a92a84d5736f/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/4b5df864-4941-4338-8f30-c06cf461f3b1/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/db777a0c-191c-4057-8572-5f481ccba023/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/b92f710a-eaa3-4821-8077-d716fb367dcc/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/6544199e-b817-4e7b-b986-e580ef9ab218/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/029d809f-4c06-493e-9ea6-604d80945f50/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/e62feb7c-9a9a-4141-9bb3-1a72053cb8b3/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/ea099c33-84a7-4741-ae82-640bc29a6585/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/51b0fca6-8b74-48f6-88bd-b788b894dbf8/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/7acc74ce-0375-4a0f-92d7-fa5d04c35b86/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/2e915804-f50c-4fc4-9f55-1f3437b265da/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/49e5d1e6-0f27-46b7-a838-c0b7622a7520/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/3df42b5d-52d9-4e30-9598-46a9b5a1e1c7/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/163a8444-2cbb-404d-b7a6-1d5e8eebb0a1/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/b9025139-6ed4-4f7d-9db1-3108743b8851/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/de99c407-ec30-494d-9c08-b49c149cd029/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/d637ded3-2366-4f13-97d0-9ce791d6ce29/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/e5caeaac-c339-4f0a-b321-41d93df9e5fe/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/0f94658c-ef4b-4bde-8851-38347534c742/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/6acdcdd7-b3ee-4d9a-8c8a-c5793d497224/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/39827e0a-3dbc-4afc-bf27-356490ba96f7/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/b3803225-b0fb-40d9-9403-437134045464/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/31650a29-b8d2-4cde-a5b4-a7a3f61ad408/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/b70b436c-9e58-4d3a-88e7-7f10faca5d97/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/c0636be3-6ac8-4498-aac6-71af212f4478/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/a196efe7-d119-4784-ae7a-948c4488aa4f/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/440996d1-6a9d-4228-adc3-06c8143ad057/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/c6db85c2-28fd-4633-895c-eacf5fd7b2f0/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/817a843d-2e41-454b-9230-b4c4fc782412/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/c10ba4c1-4f78-48d9-b4f5-e5eb282432b9/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/50f66e9c-01e6-46d3-b12e-68ce6c5e49f1/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/52ba979c-6243-422d-8108-6016901675b1/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/afca36c7-b12d-4b2d-b8c5-bc764796e3f4/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/97a15a0e-1674-4629-a178-62718bd98fbd/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/0a999506-5c00-45b9-bea1-f3a16ed33d62/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/313dc5fc-18a5-4e2b-8fb4-df574ed616bd/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/2d4d9007-9146-43a0-b98c-75153215e85b/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/3faed6ce-5e63-4109-8d28-d5d1dec11939/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/2c0d6fd6-fd47-4bf0-b5c2-88592da1e05e/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/8c0b533c-ce16-47bf-bd9d-95085ed2b2c3/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/026c7f3b-9dd2-4803-8443-8b39f95f8f53/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/fdf0c10a-6354-41e5-a796-a20e9deb5d34/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/fdd857c6-cf3b-4b75-b659-75946c258410/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/ea80152e-23da-4774-bb55-91545acbe0d7/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/265094f1-4599-4c4a-9e74-f50dd0ff4087/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/65c0e850-fe5d-4afb-9173-a77afe89fde4/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/be295446-c730-49d2-b130-8cb1f5ca84a2/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/fca0ed5a-e49c-44da-a0e6-e3d2b8dd56e3/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/5af06f98-8335-458d-b4e6-a971da757537/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/b2be92f9-73db-4d25-a032-a48f08771dd4/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/739e9bb8-b2e9-4deb-9420-4c25da54342b/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/87459b48-70c6-40ea-9722-31ec2139ade3/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/b8c8d447-12f7-422b-aa79-6fffca5e7a10/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/9b1001bc-f870-43b5-a861-06d218ff8b76/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/fb7c10e3-8a08-46cf-ae33-78d0a1bd993b/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/6f33ac2e-ceba-455c-aec8-e3d602848fff/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/0ed8e193-3daa-4c23-a252-2c7e52e2c48c/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/ed06c82a-45de-4efd-b224-88694b21f6dd/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/b3d18108-8bf9-4fba-b445-169c2d60f743/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/40e1293b-e1b3-4cda-a4e6-5f7c679021a1/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/4e7063ec-2b63-4777-88c7-f31e74044df0/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: will fetch inline thumbnail: //eventartarchive.org/event/4ab0e432-18e5-4ed8-9865-1b5ed10dabb9/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: done — injected=109 enqueued=109 skipped(done=0 noLink=0 noGuid=0) column="Event" (queue: 4 running, 109 pending) 
+[VZ-ShowAllEntityData: place-events] 📝 Unicode character picker initialised 
+[VZ-ShowAllEntityData: place-events] 🎨 DOM rendering finished in 725.60ms 
+[VZ-ShowAllEntityData: place-events] ✅ Process complete. Final Row Count: 109. Total Time: 1.67s 
+[VZ-ShowAllEntityData: place-events] 🖥️ Auto-focused global filter input after final render 
+[VZ-ShowAllEntityData: place-events] 📝 eaaInitBigPics: cache-hint=network (ts=0 ebs=0 dur=1573ms redirectStart=0ms responseStart=0ms) — //eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 eaaLoadIcon: cache-hint=network (ts=0 ebs=0 dur=1573ms redirectStart=0ms responseStart=0ms) — //eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 eaaLoadIcon: loaded OK (idb=false) — //eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: cache-hint=network (ts=0 ebs=0 dur=1573ms redirectStart=0ms responseStart=0ms) — //eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: loaded OK — //eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 eaaEnrichIcon: 4 image(s) for /event/47b84024-bd3b-4e36-80e1-b051e12ede2f 
+[VZ-ShowAllEntityData: place-events] 📝 _artBuildMultiRowArtCell: built 4 image row(s) in EAA cell 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/97fe7c03-e647-4827-b29f-1987b0800f84/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/fd5487d3-3b7c-490d-81a2-96be344da3b9/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/61ad6394-5295-4d37-9c8f-9e28cdbc332d/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/0b7ddd68-826d-4d64-8659-0215cb63c4e4/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/a8bb2a77-4174-460b-bbd9-dbc4a9217568/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/f7483ae8-3660-4ce5-b06b-d13cc9ec176b/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/6c4fcb51-054c-4ec4-a916-6af655696138/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/7b3fb025-13ef-48fa-97d1-adaaf0aa8ec0/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/185bf839-d300-4dde-9cfa-8f3730a03d1b/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/cec60893-a8c3-41de-8889-42f45048907a/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/80d1be40-eff6-4836-b4a7-959abf6d783e/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 eaaEnrichIcon: 1 image(s) for /event/b0466931-607d-4033-aff3-022c3122ea2d 
+[VZ-ShowAllEntityData: place-events] 📝 _artBuildMultiRowArtCell: built 1 image row(s) in EAA cell 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/04bf0b2c-b36f-4350-abdc-17539e0793d7/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/9922574e-ffba-449a-a091-225e18b544ab/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/f1f2c5c6-f051-4f43-b7c5-c733ef199859/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/1d9b4f50-68ed-4327-9eb2-cdc3e2856a27/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/a41a51cb-d158-427e-aba3-60801103cd31/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/31ae96aa-f00d-4624-8f06-ff6f44fe6d21/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/63632ed8-5ba5-4a36-9224-ddf713bdf1b6/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/3843b85d-4d9f-445b-8d36-5234c39bb9db/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/3abbfbc7-7ac8-4ae7-897a-4e57087b8c78/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/37d303d5-3921-45f1-a723-20f478d26b58/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/fb9f2740-23d1-43c0-affe-58b9d01a136d/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/6905631f-e396-467d-8c44-87c8f191b502/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/c97d0a31-d01e-414f-83b6-49389dd8f06c/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/a7f59980-73bf-4517-a483-67447a1d1d44/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/510cce24-bb0d-42b6-a9f7-ebf890d03dff/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/768e8345-88b2-4a73-b191-0137c4ff7855/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/ac6db257-1e3a-40df-b675-13f1bb92fcd2/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/26cead1c-a5fa-4677-873a-312412c6dc91/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/26b22d86-4ff2-497f-9294-8c550bfd671e/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/ec0ec8f9-3578-417d-b00a-339b578a2c7d/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/921aad18-3f49-4582-aaa6-4871dafe3336/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/db0df581-05d4-41fb-8127-3232ee942596/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 eaaInitBigPics: cache-hint=network (ts=0 ebs=0 dur=2610ms redirectStart=0ms responseStart=0ms) — //eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 eaaLoadIcon: cache-hint=network (ts=0 ebs=0 dur=2610ms redirectStart=0ms responseStart=0ms) — //eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 eaaLoadIcon: loaded OK (idb=false) — //eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: cache-hint=network (ts=0 ebs=0 dur=2610ms redirectStart=0ms responseStart=0ms) — //eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: loaded OK — //eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/front-250 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/a0dc2482-bdc3-44bc-abc0-e1934c9a5f9c/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/9ae1059f-6545-4b8f-9d35-adb4a18d83a5/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/f3381b69-6648-47b6-b00e-5be0183cac20/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/95d7bee4-1baf-482a-b0d5-100318b1e4f2/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/991870a3-73d8-4a28-b8a7-8f22f6a3c106/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/9723480f-8521-4e17-b8e2-628f12f4cd51/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/83575194-d273-4069-acc8-f7b7e77dc885/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/bc4304a6-0d2a-4761-8f8e-a58352a674a4/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/90513310-c4a6-4add-bf9f-c7b38a5961f0/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/5843d832-a117-4b64-8405-a92a84d5736f/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/59a00aab-691b-4889-9646-d083b99e336b/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/43f7bd2c-61cf-48c1-bc94-b9bc9ff3ec07/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/96695197-fd4c-4ef0-a074-ed87cbb60c6e/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/4b5df864-4941-4338-8f30-c06cf461f3b1/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/6544199e-b817-4e7b-b986-e580ef9ab218/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/b92f710a-eaa3-4821-8077-d716fb367dcc/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/db777a0c-191c-4057-8572-5f481ccba023/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/ea099c33-84a7-4741-ae82-640bc29a6585/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/e62feb7c-9a9a-4141-9bb3-1a72053cb8b3/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/51b0fca6-8b74-48f6-88bd-b788b894dbf8/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/029d809f-4c06-493e-9ea6-604d80945f50/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/7acc74ce-0375-4a0f-92d7-fa5d04c35b86/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/3df42b5d-52d9-4e30-9598-46a9b5a1e1c7/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/2e915804-f50c-4fc4-9f55-1f3437b265da/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/49e5d1e6-0f27-46b7-a838-c0b7622a7520/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/de99c407-ec30-494d-9c08-b49c149cd029/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/b9025139-6ed4-4f7d-9db1-3108743b8851/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/163a8444-2cbb-404d-b7a6-1d5e8eebb0a1/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/d637ded3-2366-4f13-97d0-9ce791d6ce29/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/e5caeaac-c339-4f0a-b321-41d93df9e5fe/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/0f94658c-ef4b-4bde-8851-38347534c742/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/39827e0a-3dbc-4afc-bf27-356490ba96f7/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/6acdcdd7-b3ee-4d9a-8c8a-c5793d497224/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/b3803225-b0fb-40d9-9403-437134045464/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/b70b436c-9e58-4d3a-88e7-7f10faca5d97/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/a196efe7-d119-4784-ae7a-948c4488aa4f/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/31650a29-b8d2-4cde-a5b4-a7a3f61ad408/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/c0636be3-6ac8-4498-aac6-71af212f4478/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/c6db85c2-28fd-4633-895c-eacf5fd7b2f0/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/c10ba4c1-4f78-48d9-b4f5-e5eb282432b9/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/440996d1-6a9d-4228-adc3-06c8143ad057/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/817a843d-2e41-454b-9230-b4c4fc782412/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/afca36c7-b12d-4b2d-b8c5-bc764796e3f4/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/97a15a0e-1674-4629-a178-62718bd98fbd/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/50f66e9c-01e6-46d3-b12e-68ce6c5e49f1/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/52ba979c-6243-422d-8108-6016901675b1/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/313dc5fc-18a5-4e2b-8fb4-df574ed616bd/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/2d4d9007-9146-43a0-b98c-75153215e85b/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/3faed6ce-5e63-4109-8d28-d5d1dec11939/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/0a999506-5c00-45b9-bea1-f3a16ed33d62/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/fdf0c10a-6354-41e5-a796-a20e9deb5d34/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/2c0d6fd6-fd47-4bf0-b5c2-88592da1e05e/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/8c0b533c-ce16-47bf-bd9d-95085ed2b2c3/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/026c7f3b-9dd2-4803-8443-8b39f95f8f53/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/265094f1-4599-4c4a-9e74-f50dd0ff4087/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/fdd857c6-cf3b-4b75-b659-75946c258410/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/65c0e850-fe5d-4afb-9173-a77afe89fde4/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/ea80152e-23da-4774-bb55-91545acbe0d7/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/be295446-c730-49d2-b130-8cb1f5ca84a2/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/5af06f98-8335-458d-b4e6-a971da757537/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/fca0ed5a-e49c-44da-a0e6-e3d2b8dd56e3/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/b2be92f9-73db-4d25-a032-a48f08771dd4/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/739e9bb8-b2e9-4deb-9420-4c25da54342b/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/87459b48-70c6-40ea-9722-31ec2139ade3/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/fb7c10e3-8a08-46cf-ae33-78d0a1bd993b/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/9b1001bc-f870-43b5-a861-06d218ff8b76/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/b8c8d447-12f7-422b-aa79-6fffca5e7a10/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/0ed8e193-3daa-4c23-a252-2c7e52e2c48c/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/ed06c82a-45de-4efd-b224-88694b21f6dd/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/b3d18108-8bf9-4fba-b445-169c2d60f743/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/6f33ac2e-ceba-455c-aec8-e3d602848fff/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/4e7063ec-2b63-4777-88c7-f31e74044df0/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/4ab0e432-18e5-4ed8-9865-1b5ed10dabb9/front-250 — placeholder stays as spacer 
+[VZ-ShowAllEntityData: place-events] 📝 initEAAInlinePics: failed to load //eventartarchive.org/event/40e1293b-e1b3-4cda-a4e6-5f7c679021a1/front-250 — placeholder stays as spacer 
