@@ -1,41 +1,5 @@
 [
     {
-      "version": "9.99.154",
-      "date": "2026-03-14",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "CAA big-picture strip (bigbox) on artist-releasegroups pages showed only a small fraction of the available cover art images when sa_art_idb_enable=false, and the toggle button badge reflected the same wrong count (e.g. 12 instead of 39 for a 45-row 'Album + Compilation' sub-table). Root cause: _artInitBigPics fired img.src (non-IDB path) or _artFetchCachedImage (IDB path) for every bigbox image across all sub-tables in a single synchronous forEach pass. On a large artist page with 31 sub-tables this produced a burst of hundreds of simultaneous HTTP requests to coverartarchive.org; the browser silently dropped or rate-limited the excess. Because the img.onerror handler removes the wrapper from the bigbox without emitting any log message, the missing images were invisible and the badge counted only the successfully-loaded subset. The small-pic icon column and the inline Title-column thumbnails were unaffected because both already route their img.src assignments through _caaQueue (concurrency=4). Fixed by wrapping both the non-IDB (native img.onload) and the IDB (_artFetchCachedImage) bigbox fetch paths in the same _caaQueue throttle, exactly mirroring the pattern used by _artInitSmallPics and _artInitInlinePics. The retry button (⟳) already rebuilt the bigbox from scratch with cache-busted URLs which happen to fire after the initial burst subsides, explaining why it appeared to 'fix' the strip. After this fix the strip populates correctly on the first render without needing a retry."
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.153",
-      "date": "2026-03-14",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "Inline Title-column thumbnail hover preview non-functional after new-session disk-load restore: the hover-wiring block in Case C of _artInitInlinePics set existingPh.dataset[hoverWiredAttr]='1' on the first render's ph span before enqueueing the C2 refetch. cloneNode(true) — used by the second renderGroupedTable pass inside runFilter() to rebuild tds from groupedRows — copied all dataset attributes including hoverWiredAttr to the cloned ph spans. The second render's Case C then evaluated !existingPh.dataset[hoverWiredAttr] as false and skipped the addEventListener calls entirely, leaving the live second-render ph element with no mouseenter/mouseleave listeners. Fixed by replacing the guarded if block with an unconditional delete existingPh.dataset[hoverWiredAttr] followed by the listener attachment, so any cloneNode-inherited value is always cleared before re-wiring. The hoverWiredAttr idempotency guard is unnecessary inside Case C in any case: Case C only fires when td.dataset[ctx.inlineDoneAttr] is absent, and every exit path of Case C stamps that marker (C1 immediately, C2 after successful refetch), making it impossible for Case C to re-enter on the same physical DOM node — and therefore impossible for duplicate listeners to accumulate."
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.152",
-      "date": "2026-03-14",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "Inline Title-column thumbnails invisible after new-session disk-load restore — cache-hint emoji rendered but <img> remained display:none: the C2 path introduced in 9.99.151 set td.dataset[ctx.inlineDoneAttr]='1' eagerly at the top of Case C before enqueueing the refetch. The disk-load pipeline calls renderGroupedTable twice in immediate succession — first to build the initial DOM, then again synchronously via runFilter() which clones every td with cloneNode(true). cloneNode copies all dataset attributes, so every cloned td in the second render already carried the 'done' marker. The second render's initCaaInlinePics() found marker present + ph span present → Case A → skip, while initCaaPics() simultaneously replaced _caaQueue with a fresh instance, abandoning all first-render refetch tasks still pending in the old queue. Net result: queue tasks from the first render ran on detached nodes with no visible effect; queue tasks for the second render were never enqueued; all images remained display:none and only the serialised cache-hint emoji from the saved HTML was visible. Fixed by removing the eager marker assignment from C2: td.dataset[ctx.inlineDoneAttr]='1' is now set inside the _artFetchCachedImage .then() callback, after existingImg.src and existingImg.style.display='inline' are written, and only when existingImg.isConnected is true (guarding against tasks that complete after a subsequent tbody.innerHTML='' detaches the node). The second render's cloned tds therefore carry no marker, fall into Case C again, and trigger their own refetch on the live DOM nodes that are actually rendered. C1 (same-session restore, blobIsAlive=true) still stamps the marker immediately because the image is already visible and no async path is involved. The native img.onload fallback path (IDB disabled) received the same deferred-marker and isConnected treatment, and its event listeners were converted to { once: true } to prevent accumulation."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.151",
       "date": "2026-03-14",
       "sections": [

@@ -52407,8 +52407,7 @@ you did not base your new fixes on the last session where you already did some f
 please reaply the current fixes on top of the last session and also fix the changelog accordingly
 
 
-* why is the loading of images with GM_xmlhttpRequest so much slower that using fetch
-
+* TODO why is the loading of images with GM_xmlhttpRequest so much slower that using fetch
 
 why is the loading of CAA artwork images/thumbnails with GM_xmlhttpRequest using an indexedDB (sa_art_idb_enable: true)
 so much slower that using native fetch (sa_art_idb_enable: false)
@@ -52508,3 +52507,321 @@ please also provide a changelog entry
   ]
 }
 #+end_example
+
+
+* in multi-table pageTypes rename
+
+#+begin_example
+Holds phonographic copyright (p) for recordings
+Instruments (1) ==> Instruments on recordings
+Instruments (2) ==> Instruments on releases
+#+end_example
+
+* in debug log emit also the entity title
+
+* change "[Show | Hide ] all sections" to Toggle button [Show all sections"/"Hide all sections"
+
+* debug log when images per release are loadeded
+
+
+* image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknow
+
+* bug for pageType "type: 'artist-releasegroups'" when NOT using indexedDB (sa_art_idb_enable: false)
+
+In the uploaded userscript,
+
+there is bug for pageType "type: 'artist-releasegroups'" https://musicbrainz.org/artist/678d88b2-87b0-403b-b63d-5da7465aecc3?all=1&va=0
+when NOT using indexedDB (sa_art_idb_enable: false):
+
+Here is as an example of one of the h3 headers after the whole page has finally rendered (including downloading all the CAA images)
+
+#+begin_example
+<h3 class="mb-toggle-h3" title="Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)" style="cursor: pointer; user-select: none;">
+  <span class="mb-toggle-icon">▼
+  </span>Album + Compilation
+  <span class="mb-row-count-stat">(45)
+  </span>
+  <button id="mb-caa-toggle-btn-1" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Hide" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;" data-art-render-gen="1">
+    <img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release-group/92d5e425-6dff-34d7-8edf-0c82156b46b0/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+    <span class="mb-caa-toggle-count">12
+    </span>
+  </button>
+  <button id="mb-caa-toggle-btn-retry-1" type="button" title="Retry loading all CAA cover art images for this sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳
+  </button>
+  <button id="mb-stf-Album___Compilation-resize-btn" type="button" class="mb-subtable-resize-btn" title="Auto-resize columns for &quot;Album + Compilation&quot;" aria-label="Auto-resize columns for: Album + Compilation" style="font-size: 0.8em; padding: 1px 5px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; display: inline-flex; align-items: center; box-sizing: border-box; transition: background-color 0.2s, border-color 0.2s, transform 0.1s, box-shadow 0.1s;">↔️
+  </button>
+  <button id="mb-stf-Album___Compilation-vis-btn" type="button" class="mb-subtable-vis-btn" title="Show/hide columns for &quot;Album + Compilation&quot;" aria-label="Column visibility for: Album + Compilation" style="font-size: 0.85em; padding: 1px 5px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; display: inline-flex; align-items: center; box-sizing: border-box; transition: background-color 0.2s, border-color 0.2s, transform 0.1s, box-shadow 0.1s;">👁️
+  </button>
+  <span class="mb-subtable-filter-toggle-icon" title="Toggle filter elements on/off for this section" role="button" aria-label="Toggle sub-table filter for &quot;Album + Compilation&quot;">🔍
+  </span>
+  <span class="mb-subtable-filter-container" data-category-name="Album + Compilation">
+    <span class="mb-subtable-filter-wrapper">
+      <input id="mb-stf-Album___Compilation-input" type="text" placeholder="Filter &quot;Album + Compilation&quot;… just in this sub-table" title="Filter rows in the &quot;Album + Compilation&quot; sub-table" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(204, 204, 204); border-radius: 3px 0px 0px 3px; width: 320px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;">
+      <span id="mb-stf-Album___Compilation-clear" title="Clear filter for &quot;Album + Compilation&quot;" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(204, 204, 204); border-bottom: 2px solid rgb(204, 204, 204); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕
+      </span>
+      <span title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(204, 204, 204); border-right: 2px solid rgb(204, 204, 204); border-bottom: 2px solid rgb(204, 204, 204); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮
+      </span>
+    </span>
+    <label id="mb-stf-Album___Compilation-case-label" for="mb-stf-Album___Compilation-case-checkbox" title="Case Sensitive Filtering" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+      <input id="mb-stf-Album___Compilation-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc
+    </label>
+    <label id="mb-stf-Album___Compilation-rx-label" for="mb-stf-Album___Compilation-rx-checkbox" title="RegExp Filtering" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+      <input id="mb-stf-Album___Compilation-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx
+    </label>
+    <label id="mb-stf-Album___Compilation-ex-label" for="mb-stf-Album___Compilation-ex-checkbox" title="Exclude matches (Filter for &quot;Album + Compilation&quot;)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+      <input id="mb-stf-Album___Compilation-ex-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex
+    </label>
+    <button id="mb-stf-Album___Compilation-clear-all-btn" class="mb-stf-clear-col-btn" type="button" title="Clear all COLUMN filters for this sub-table (sub-table filter is kept)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;">
+      <span style="color: red; font-size: 1em; font-weight: bold;">✗
+      </span>Clear all COLUMN filters
+    </button>
+  </span>
+  <button id="mb-stf-Album___Compilation-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand all collapsed multi-row cells in &quot;Album + Compilation&quot;" aria-label="Expand all collapsed multi-row cells in: Album + Compilation" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: none;">
+    <span>▶ Expand
+    </span>
+    <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;">
+      <span>multi-row
+      </span>
+      <span>cells
+      </span>
+    </span>
+  </button>
+  <span class="mb-subtable-controls">
+    <button class="mb-subtable-clear-btn" type="button" title="Clear all filters for this sub-table (column filters and sub-table filter)" style="display: none;">
+      <span style="color: red; font-size: 1em; font-weight: bold;">✗
+      </span>
+      <span class="mb-subtable-clear-btn-label">Clear all filters
+      </span>
+    </button>
+    <button id="mb-stf-Album___Compilation-toggle-filter-highlight-btn" type="button" title="Toggle filter highlighting on/off (sub-table filter and column filters)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting
+    </button>
+    <span class="mb-filter-status" data-table-name="Album + Compilation" data-table-index="1">
+    </span>
+    <span class="mb-sort-status" data-table-name="Album + Compilation" data-table-index="1">
+    </span>
+  </span>
+</h3>
+#+end_example
+
+The actual number of rows in that sub-table ("Album + Compilation) is 45, out of which 39 HAVE CAA images as can be seen
+when uncollapsing the whole sub-table to display all rows. Nevertheless the CAA toggle button ONLY shows 12 and when
+toggle the display of the CAA images it also just show 12 images.
+
+Why doesn't it show all off the 39 CAA images in the big picture stripe, because BOTH the "CAA" and "Title" column for
+this sub-table actually shows/renders them (also hovering functions on both columns)
+
+The debug log is attached in the uploaded file "debug-Artist-RGs"
+
+When cklicking the button
+
+#+begin_example
+<button id="mb-caa-toggle-btn-retry-1" type="button" title="Retry loading all CAA cover art images for this sub-table (forces network reload)"
+#+end_example
+
+the missing ĆAA artwork images in the big picture ARE finally downloaded (as can also be seen in the debug log)
+
+But why doesn't it load them right away.... please fix and also provide a changelog entry
+
+SO in essence, the bug is: there 45 rows in total in the sub-table out of which 39 have CAA images but the CAA togle button ONLY show 12
+
+#+begin_example
+Now I have a complete understanding of the bug. Let me confirm the exact code section to fix:Architected concurrency fix
+for image loading bottleneckArchitected concurrency fix for image loading bottleneckView the exact non-IDB bigbox load
+block to fixNow I fully understand the bug and have the fix. Let me also look at the _artRetryTable to see if it
+properly handles things after the fix.
+
+The fix: in the non-IDB path of _artInitBigPics, instead of immediately setting img.src = imgurl, we need to enqueue the
+load through _caaQueue. This prevents the browser from being overwhelmed with hundreds of simultaneous image requests.
+
+The _caaQueue concurrency is sa_caa_fetch_concurrency (default 4), which handles small pics and enrichment. By sharing
+this budget, bigbox images compete fairly with small pics.
+
+I'm considering whether to use the same queue or create a separate higher-concurrency queue for bigbox images, but since
+bigbox is typically just one per row like the small pics, sharing the same queue should work fine. Now I'm implementing
+the fix by wrapping the image load in the queue instead of s
+#+end_example
+
+#+begin_example
+Now I see the full picture. _artFetchCachedImage does NOT go through _caaQueue - it does its own network fetching via _artGmFetchBlob (GM_xmlhttpRequest). So the IDB path for bigbox also bypasses the queue.
+But in the IDB case, the network fetch uses _artGmFetchBlob which might have different characteristics than img.src. And for IDB mode, the user would typically have images cached in memory (session Map), so it would be instant. For the non-IDB path, we're using raw img.src.
+The real issue is that when IDB is disabled, _artInitBigPics synchronously sets img.src for every bigbox image in a tight loop, triggering hundreds of concurrent requests to coverartarchive.org. On pages with many sub-tables, this can easily exceed 500 simultaneous requests, overwhelming the browser and causing many to fail silently without firing load or error events.
+The solution is to queue these image loads through _caaQueue instead, the same throttling mechanism already used for small icons, so requests are processed concurrently but within reasonable limits. I need to modify the non-IDB fallback path to push each image load onto the queue rather than setting img.src directly.
+Wrapping the load/error handlers... I'm seeing the error handling for the IDB fetch path and considering whether the same queue-throttling issue affects it too. The IDB path has three tiers of performance—memory cache, IndexedDB lookup, and network fallback via GM_xhr—but since the reported bug is specifically about the non-IDB path and uses a different network mechanism, I'll focus on fixing just the immediate issue for now.Show less
+#+end_example
+
+Root Cause Summary:
+In _artInitBigPics, the non-IDB path (lines 22510-22518) fires img.src = imgurl immediately in a synchronous forEach loop for every image across ALL sub-tables. With an artist page having 31 sub-tables and hundreds of images, this creates a burst of 500+ simultaneous HTTP requests to coverartarchive.org. The browser cannot handle all of these, and many fire img.onerror silently (the error handler removes the wrapper without logging), resulting in only a fraction of images being shown.
+The IDB path also bypasses the queue, but since that's not the reported issue and uses GM_xmlhttpRequest which might behave differently, I should focus on fixing the non-IDB path first. Though I should double-check whether the IDB bigbox path needs the same fix.
+Looking at the IDB code, _artFetchCachedImage uses GM_xmlhttpRequest for network requests, which is throttled differently than regular img.src assignments, and images from IDB are usually served from the session memory Map anyway so the burst loading doesn't matter there.
+The real problem is in the non-IDB case where I need to wrap the img.src assignment in a queue task, similar to how inline-pics handles it. So I'll modify _artInitBigPics to queue the image loading...
+
+Now I understand the issue clearly and have all the context I need for the fix. Let me also check the IDB path for bigbox - should we also route it through _caaQueue?
+For the IDB path:
+
+_artFetchCachedImage is called directly (not through _caaQueue)
+Tier 1 (memory) is instant - no issue
+Tier 2 (IDB) is fast local DB lookup - no issue
+Tier 3 (GM_xhr network) - this COULD also be a burst, but:
+
+GM_xmlhttpRequest has different characteristics from img.src
+It uses the Tampermonkey/Greasemonkey background request mechanism
+The user hasn't reported an issue with IDB mode
+Adding queue routing to the IDB path is a separate concern
+
+
+
+I should focus on fixing the non-IDB path first, but I'll also add queue routing to the IDB bigbox path since it has the same potential burst issue. Looking at the IDB path implementation, I can see where the cached image fetch is triggered and how it chains through the promise handlers.
+The IDB path bypasses the queue entirely when enabled, calling the fetch directly for each image. Since the user only reported the bug with IDB disabled and GM_xmlhttpRequest has its own built-in queuing at the browser level, the concurrent burst problem is less severe there, but I should still apply the same queue routing for consistency. let me also wrap the IDB bigbox path in _caaQueue.
+Actually, let me be careful here. The IDB path for bigbox fires _artFetchCachedImage for EVERY image in ALL sub-tables in one pass. That's hundreds of GM_xhr requests fired simultaneously. This could be the same issue for IDB mode.
+But the user said "non-IDB mode" is where the bug is. Let me focus on that for now and not change the IDB path, to minimize the diff.
+The Fix:
+I need to route the fallback image loading through _caaQueue so bigbox requests share the same concurrency throttle as small-pic icon loads. Without queuing, _artInitBigPics fires img.src for every image in every sub-table in a single synchronous pass, creating a burst of hundreds of
+
+
+Now I understand the issue clearly and have all the context I need for the fix. Let me also check the IDB path for bigbox - should we also route it through _caaQueue?
+For the IDB path:
+
+_artFetchCachedImage is called directly (not through _caaQueue)
+Tier 1 (memory) is instant - no issue
+Tier 2 (IDB) is fast local DB lookup - no issue
+Tier 3 (GM_xhr network) - this COULD also be a burst, but:
+
+GM_xmlhttpRequest has different characteristics from img.src
+It uses the Tampermonkey/Greasemonkey background request mechanism
+The user hasn't reported an issue with IDB mode
+Adding queue routing to the IDB path is a separate concern
+
+
+
+I should focus on fixing the non-IDB path first, but I'll also add queue routing to the IDB bigbox path since it has the same potential burst issue. Looking at the IDB path implementation, I can see where the cached image fetch is triggered and how it chains through the promise handlers.
+The IDB path bypasses the queue entirely when enabled, calling the fetch directly for each image. Since the user only reported the bug with IDB disabled and GM_xmlhttpRequest has its own built-in queuing at the browser level, the concurrent burst problem is less severe there, but I should still apply the same queue routing for consistency. let me also wrap the IDB bigbox path in _caaQueue.
+Actually, let me be careful here. The IDB path for bigbox fires _artFetchCachedImage for EVERY image in ALL sub-tables in one pass. That's hundreds of GM_xhr requests fired simultaneously. This could be the same issue for IDB mode.
+But the user said "non-IDB mode" is where the bug is. Let me focus on that for now and not change the IDB path, to minimize the diff.
+The Fix:
+I need to route the fallback image loading through _caaQueue so bigbox requests share the same concurrency throttle as small-pic icon loads. Without queuing, _artInitBigPics fires img.src for every image in every sub-table in a single synchronous pass, creating a burst of hundreds of simultaneous requests to coverartarchive.org. The browser silently drops or rate-limits the excess, which is why img.onerror fires with no log.
+Continuing with the fix... Finishing the queue logic...
+I'm realizing the IDB path has different timing characteristics — memory and IDB hits are instant, but network requests all fire at once. Since the user only reported issues with sa_art_idb_enable: false, and GM_xhr might handle queuing differently than img.src, I'll leave that path alone to keep the fix focused.
+But looking at how _artInitSmallPics wraps both IDB and non-IDB paths through _caaQueue, I should probably apply the same consistency here and route the IDB big pics through the queue as well to prevent the same simultaneous request problem.
+Writing the IDB fix...
+Now I'm documenting the bug for the changelog: the artist-releasegroups page was making unthrottled requests for all bigbox images simultaneously when IDB was disabled, causing the browser to drop excess requests and only load a subset of images per sub-table, which is why the CAA toggle showed the wrong count.Show less
+
+
+Root cause: In _artInitBigPics, the non-IDB path fires img.src = imgurl for every single bigbox image across all
+sub-tables in one synchronous loop. With 31 sub-tables on this artist page, that's a burst of 500+ simultaneous HTTP
+requests to coverartarchive.org. The browser silently drops or fails the excess (the img.onerror handler removes
+wrappers without logging), so only the first ~12 images from table 1 loaded before the burst saturated the browser. The
+small-pic path works correctly because it uses _caaQueue (concurrency=4), exactly as the inline-pics path does. The
+bigbox path needs the same treatment.
+
+
+
+#+begin_example
+Root cause
+_artInitBigPics fires all bigbox image requests simultaneously in a single synchronous forEach loop. On an artist page with 31 sub-tables this produces a burst of 500+ concurrent HTTP requests to coverartarchive.org. The browser silently drops or rate-limits the excess. Because the img.onerror handler removes the wrapper from the bigbox without any log message, those images vanish silently — leaving only the ~12 that survived the initial burst visible in the strip and counted in the badge.
+The small-pic icon column and inline Title-column thumbnails are unaffected because both already route img.src through _caaQueue (concurrency=4). The bigbox path was the only one that didn't. The retry button "worked" because it rebuilt the bigbox from scratch after the burst had subsided.
+What was confirmed from the debug log
+ObservableMeaningcaaInitBigPics: built bigbox for table 1 with 45 image(s)45 img.src fired simultaneously (along with hundreds more from other tables)Only 12 of those 45 fire caaInitBigPics: loaded OK in the initial windowBrowser dropped the restAll 45 corresponding caaLoadIcon: loaded OK fire at 10:48:16–20Same images succeed fine through the throttled queuecaaRetryTable: starting forced reload for table 1 → all 45 load at 11:55:17Rebuild with fresh DOM + smaller in-flight count = success
+The fix (v9.99.154)
+Both the non-IDB (img.src) and the IDB (_artFetchCachedImage) bigbox fetch paths are now wrapped in a _loadBigImg / _loadBigImgIdb task function and routed through _caaQueue.enqueue(...), exactly mirroring the pattern already used by _artInitSmallPics and _artInitInlinePics. The resolve() call on both load and error lets the queue correctly proceed to the next item.Showallentitydata user  1
+#+end_example
+
+* TODO add information that ALL CAA images have been loaded
+
+* TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-offiucail h3 headers somehow from the offial ones - e.g. "EP - official" and "EP - unofficial"
+
+* TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
+
+When loading saving from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" -
+https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but
+only inside the "CAA" column ALOS the hovering over the "empty" space works and shows the big picture artwork ==> Reload icon FIXES actually
+
+#+begin_example
+<td>
+  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back  Front Spine">
+    <li class="mb-caa-art-li mb-caa-art-li-summary" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <a href="/release-group/025f5d35-e806-4932-80c0-df1b383fb363/cover-art" title="3 images found for this release / release-group" data-caa-enriched="1">
+	<span class="artwork-icon caa-icon" title="3 images found for this release / release-group" data-cache-hint="unavailable" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363/front-250&quot;);">
+	</span>
+      </a>
+      <span class="mb-art-cache-hint-col-wrap">
+	<span class="mb-art-cache-hint-col" title="Timing unavailable">⚠️
+	</span>
+	<span class="mb-caa-count-badge" title="3 images found for this release / release-group">3
+	</span>
+      </span>
+      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088662167-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088664101-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Back
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088665260-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front / Spine
+      </span>
+    </li>
+  </ul>
+  <span class="mb-cell-collapse-toggle" title="Show all 3 image(s) — click to expand" role="button" aria-expanded="false" aria-label="Expand: 3 image(s) collapsed">▶
+  </span>
+</td>
+#+end_example
+
+
+* https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 - Artist-RGs
+
+There are a couple of bugs when NOT using indexedDB (sa_art_idb_enable: false) e.g. on the page "multi"-table pageType
+https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 and reloading daat from the serialized state from
+disk
+
+In the following list are the steps to reproduce
+
+1.)
+
+after the final page is rendered and all CAA images have been loaded from the network (so this path works OK), when I
+first uncollapse the big-picture stripe, and on some rows toggle the display of all CAA art images in the multi-cell
+"CAA" data column, and now use the "Save to Disk" button, the whole display state seems to be serialzed to disk in it's current form
+
+2.)
+
+when loading in the same session from disk, the multi-row toggle icon
+
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Show all 6 image(s) — click to expand" 
+#+end_example
+
+is gone, and also does NOT rerender even when cklicking the button
+
+#+begin_example
+<button id="mb-caa-toggle-btn-retry-1" type="button" title="Retry loading all CAA cover art images for this sub-table (forces network reload)"
+#+end_example
+
+3.)
+
+when loading in the same session from disk the previously uncollapsed artwork icons in multi-row cells show up (they are
+rendered after the disk load) but are NOT hoverable
+
+
+4.)
+
+when loading in a NEW session from disk, when clicking the reload icon, the original multi-row uncollapse state is
+actually being restored, but the collpase/uncollapse icon is gone to show ALL the artworks per release; pressing reload
+again both the uncollapsed state and the coll/uncooll icon is gone
+
+
+* fix: when the
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
+#+end_example
+
+had been toggled before saving, it shows up again as a ghost entry, because you can't uncollapse it again
+

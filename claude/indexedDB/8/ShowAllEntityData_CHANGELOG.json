@@ -1,17 +1,5 @@
 [
     {
-      "version": "9.99.154",
-      "date": "2026-03-14",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "CAA big-picture strip (bigbox) on artist-releasegroups pages showed only a small fraction of the available cover art images when sa_art_idb_enable=false, and the toggle button badge reflected the same wrong count (e.g. 12 instead of 39 for a 45-row 'Album + Compilation' sub-table). Root cause: _artInitBigPics fired img.src (non-IDB path) or _artFetchCachedImage (IDB path) for every bigbox image across all sub-tables in a single synchronous forEach pass. On a large artist page with 31 sub-tables this produced a burst of hundreds of simultaneous HTTP requests to coverartarchive.org; the browser silently dropped or rate-limited the excess. Because the img.onerror handler removes the wrapper from the bigbox without emitting any log message, the missing images were invisible and the badge counted only the successfully-loaded subset. The small-pic icon column and the inline Title-column thumbnails were unaffected because both already route their img.src assignments through _caaQueue (concurrency=4). Fixed by wrapping both the non-IDB (native img.onload) and the IDB (_artFetchCachedImage) bigbox fetch paths in the same _caaQueue throttle, exactly mirroring the pattern used by _artInitSmallPics and _artInitInlinePics. The retry button (⟳) already rebuilt the bigbox from scratch with cache-busted URLs which happen to fire after the initial burst subsides, explaining why it appeared to 'fix' the strip. After this fix the strip populates correctly on the first render without needing a retry."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.153",
       "date": "2026-03-14",
       "sections": [
