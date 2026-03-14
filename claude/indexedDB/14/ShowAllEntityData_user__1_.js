@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.160+2026-03-14
+// @version      9.99.159+2026-03-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -21833,19 +21833,6 @@
 
         if (existingUl) {
             // ── Rebuild: replace image lis, update toggle title ────────────────
-            //
-            // Capture whether the user had already expanded this cell BEFORE we
-            // touch anything.  The new lis created by _artBuildImageLi default to
-            // display:none, so rebuilding while the cell is expanded causes the
-            // images to silently disappear — the user must click ▶ again just to
-            // re-expand, and they may never realise the hover listeners are now live.
-            // By restoring the expansion state after the rebuild we avoid that UX
-            // regression: if the user had expanded the cell, the fresh lis are made
-            // visible immediately and their mouseenter listeners work from the start.
-            const wasExpanded = Array.from(
-                existingUl.querySelectorAll(':scope > li.mb-caa-art-li-image')
-            ).some(li => li.style.display !== 'none');
-
             const lis = Array.from(existingUl.querySelectorAll(':scope > li'));
             lis.slice(1).forEach(li => li.remove());
             images.forEach(img => existingUl.appendChild(_artBuildImageLi(img)));
@@ -21864,24 +21851,16 @@
                 artCell.appendChild(toggle);
             }
 
-            if (wasExpanded) {
-                // Restore the expanded state: make the new li items visible and
-                // update the toggle glyph to match.
-                existingUl.querySelectorAll(':scope > li.mb-caa-art-li-image').forEach(li => {
-                    li.style.display = '';
-                });
-                toggle.textContent = '\u25C0'; // ◀
-                toggle.setAttribute('aria-expanded', 'true');
-                toggle.title = `Collapse back to first item (${n + 1} total)`;
-                toggle.setAttribute('aria-label', `Collapse: showing all ${n + 1} items`);
-            } else {
-                // Cell was collapsed — keep it collapsed (▶) to match the new li
-                // default display:none set by _artBuildImageLi.
-                toggle.textContent = '\u25B6'; // ▶
-                toggle.setAttribute('aria-expanded', 'false');
-                toggle.title = `Show all ${n} image(s) \u2014 click to expand`;
-                toggle.setAttribute('aria-label', `Expand: ${n} image(s) collapsed`);
-            }
+            // Always reset to collapsed state (▶) on a rebuild so the toggle
+            // glyph matches the freshly-reset li display states (all hidden by
+            // _artBuildImageLi's default display:none).  Without this reset a
+            // toggle that was saved as ◀ (expanded) in a disk file would remain
+            // ◀ after restore — clicking it would try to COLLAPSE an already-
+            // collapsed list and appear to have no effect.
+            toggle.textContent = '\u25B6'; // ▶
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.title = `Show all ${n} image(s) \u2014 click to expand`;
+            toggle.setAttribute('aria-label', `Expand: ${n} image(s) collapsed`);
 
             // Re-add mb-has-collapse-toggle to the artCell and call
             // ensureCollapseDelegate, for the same reasons the first-build path

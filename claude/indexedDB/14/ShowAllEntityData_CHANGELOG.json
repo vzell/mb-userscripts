@@ -1,17 +1,5 @@
 [
     {
-      "version": "9.99.160",
-      "date": "2026-03-14",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "Hover popup non-functional for expanded per-image thumbnails in multi-row CAA art cells after disk-load restore — root cause: _artBuildMultiRowArtCell's rebuild path (taken when the deserialized cell HTML already contains a ul.mb-caa-art-ul) unconditionally reset all new li items to display:none (the default set by _artBuildImageLi). If the user had already expanded the cell (clicked ▶) before the async enrichment/rebuild completed, the rebuild silently collapsed it again — the old li elements that the user had made visible were removed and replaced with new ones at display:none. The user then sees the images disappear without warning. To get the hover-wired items they would have to click ▶ a second time, but most users don't realise this is necessary and conclude the hover is permanently broken. Fixed by capturing the pre-rebuild expansion state (wasExpanded = any li.mb-caa-art-li-image with display!='none') before removing the old lis, then restoring it after: if wasExpanded is true the new li items are set to display:'' and the toggle is updated to ◀ with the correct aria-expanded='true', title, and aria-label; if wasExpanded is false the new li items remain display:none and the toggle stays ▶. This ensures that users who expanded the cell before enrichment completed immediately see the fresh, hover-wired replacement images without any additional interaction."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.159",
       "date": "2026-03-14",
       "sections": [
