@@ -1,12 +1,49 @@
 [
     {
-      "version": "9.99.146",
+      "version": "9.99.149",
+      "date": "2026-03-14",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "CAA column permanently empty on artist-relationships and similar pages where MusicBrainz does not embed span.caa-icon in table rows: the script has two independent artwork-detection pipelines — the bigbox/inline pipeline scans plain entity links (a[href*='/release-group/']) and works correctly, but the CAA-column/small-icon/count-badge pipeline is driven by iconSel which requires 'td a[href$=\"/cover-art\"] > span.caa-icon'. On artist-relationships rows the source Title cell contains only a bare <a href=\"/release-group/GUID\"> with no span.caa-icon child, so iconSel matches nothing, _artInitSmallPics and _artEnrichTable both enqueue 0 items, and the entire CAA column stays blank. Fixed by adding Path C to the caa ColumnDataExtractor: when neither Path A (artwork anchor) nor Path B (bare icon span) finds anything, but a release-group or release link exists in the source cell, a synthetic <a href=\"ENTITY_PATH/cover-art\" data-caa-synthetic=\"1\"><span class=\"caa-icon\"></span></a> is created in the CAA cell — the same DOM structure Path A produces — enabling both pipelines to work identically. The sort key is conservatively written as 'no' at extraction time (artwork unknown); _artEnrichIcon flips it to 'yes' after the CAA JSON API confirms count > 0, covering both the network-fetch path and the IDB early-return path. sortKeyClass property added to CAA_CTX and EAA_CTX to allow _artEnrichIcon to locate the hidden sort-key span without a hardcoded class name."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.148",
+      "date": "2026-03-14",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "CAA/EAA toggle button thumbnail permanently stuck as browser broken-image when sa_art_idb_enable=false: the HTML spec sets HTMLImageElement.complete=true as soon as the browser finishes a fetch attempt — regardless of success or failure (404, network error). The toggle button thumb is created with thumb.src=firstImgUrl (the first entity link found in the table). If that URL returns 404 (release-group has no CAA artwork), complete becomes true and naturalWidth stays 0 (broken-image state). When a bigbox image for a different entity in the same table later fires its img.onload, the handler's guard '!thumb.complete' evaluates to false (complete=true for the broken thumb), so thumb.src is never replaced and the broken image persists even after the badge correctly increments. Fixed by replacing !thumb.complete with (!thumb.complete || thumb.naturalWidth===0) at all three guard sites: (1) per-table toggle button img.onload in _artInitBigPics, (2) global toggle button img.onload in the same callback, (3) _artCreateOrUpdateToggleButton re-render branch (covers the 'Reload all CAA images' retry path, where the existing broken thumb was never reset before _artInitBigPics ran again)."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.147",
       "date": "2026-03-13",
       "sections": [
         {
           "label": "🐛 Bug Fixes",
           "items": [
-            "Navigation guard (initNavigationGuard Guard 1) erroneously showed 'You are about to leave this page' alert when clicking the 'Save to Disk' button: triggerStandardDownload() creates a temporary <a href='blob:…' download='…'> element and calls .click() on it programmatically to trigger the browser file-save dialog. Guard 1's capture-phase click listener intercepted that synthetic click, found an anchor with a non-same-page href, resolved the blob: URL as an apparent cross-origin navigation, and called confirmNavigation() — showing the alert even though no page navigation occurs. Fixed by adding an early-return guard in Guard 1 immediately after the javascript:/fragment/empty-href checks: if anchor.hasAttribute('download') OR href.startsWith('blob:') the listener returns without calling confirmNavigation(). Both conditions are true for every download anchor created by triggerStandardDownload() and the three export helpers; checking either is sufficient, but both are checked as a belt-and-braces guard so the save/export flow is never interrupted if one condition changes in the future."
+            "Navigation guard (initNavigationGuard Guard 1) erroneously showed 'You are about to leave this page' alert when clicking the 'Save to Disk' button: triggerStandardDownload() creates a temporary <a href='blob:…' download='…'> element and calls .click() on it programmatically to trigger the browser file-save dialog. Guard 1's capture-phase click listener intercepted that synthetic click, found an anchor with a non-same-page href, resolved the blob: URL as an apparent cross-origin navigation, and called confirmNavigation() — showing the alert even though no page navigation occurs. Fixed by adding an early-return guard in Guard 1 immediately after the javascript:/fragment/empty-href checks: if anchor.hasAttribute('download') OR href.startsWith('blob:') the listener returns without calling confirmNavigation(). Both conditions are true for every download anchor created by triggerStandardDownload() and the three export helpers; checking either is sufficient, but both are checked as a belt-and-braces guard so the save/export flow is never interrupted if one condition changes in the future.",
+            "Added @connect archive.org and @connect *.archive.org to the userscript header: coverartarchive.org and eventartarchive.org redirect image requests via HTTP 302 to archive.org, which in turn redirects to an arbitrary *.archive.org CDN cache server (e.g. ia803408.us.archive.org). GM_xmlhttpRequest follows these redirects automatically, but Tampermonkey blocks any redirect whose target host is not listed in @connect. Without these two entries every IDB-cache-miss image fetch would fail at the archive.org redirect step, making the IDB cache effectively non-functional for cold (first-time) fetches."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.146",
+      "date": "2026-03-13",
+      "sections": [
+        {
+          "label": "✨ New Features",
+          "items": [
+            "IndexedDB persistent artwork cache (CAA / EAA): all three artwork image-loading pipelines (_artLoadIcon for icon-column thumbnails, _artInitBigPics for the big-picture strip, _artInitInlinePics for inline Release/Title column thumbnails) and the JSON-metadata enrichment pipeline (_artEnrichIcon for image-count badges and multi-row art cells) now consult a three-tier cache before touching the network. Tier 1 is the existing per-session in-memory Map (_artIdbMemCache) that covers sort/filter re-renders within the same page load at zero cost. Tier 2 is a new IndexedDB database ('vz-mb-saed-art-cache', two object stores: 'images' for raw Blobs keyed by normalised https:// URL, 'metadata' for archive JSON keyed by entity path) that survives page reloads and Load-from-Disk restores — the path that benefits most since almost no network round-trips are needed. Tier 3 is the network: images are fetched via GM_xmlhttpRequest (CORS-bypass, two new @connect directives added: coverartarchive.org and eventartarchive.org) and stored as Blobs in IDB; metadata is fetched via the existing fetch() call and also stored in IDB, including the 404/zero-count sentinel so even absent-artwork entities skip the network on subsequent loads. Blob: object URLs are tracked in _artIdbBlobUrls and revoked en-masse on the pagehide event to release Blob memory. All IDB operations (open, get, put, delete, cursor sweep) are wrapped in standard IDB request/transaction helpers (_artOpenIdb, _artIdbGet, _artIdbPut, _artIdbDelete) with full error handling; failures fall through silently to the next tier. Expired records are evicted lazily on read (TTL check in _artFetchCachedImage and _artIdbGetMetadata) and proactively via a background cursor sweep (_artIdbSweepExpired) scheduled with requestIdleCallback (5-second setTimeout fallback) after each initCaaPics() call so stale data is never visible but the sweep never competes with the image load queue. IDB hits are reported to the Resource Timing cache-hint indicator system as a new 'idb' status (emoji 🗄️, label 'IndexedDB cache hit') in all three display locations (icon column, bigbox strip, inline thumbnail); since blob: URLs produce no PerformanceResourceEntry the RT API is intentionally skipped for IDB hits and the status is synthesised directly. Three new settings control the feature: sa_art_idb_enable (master toggle, default true), sa_art_idb_image_ttl_days (Blob TTL in days, default 30, range 1–365), sa_art_idb_metadata_ttl_days (JSON TTL in days, default 7, range 1–90), placed in a new '🗄️ ART ARCHIVE INDEXEDDB CACHE' settings section between the existing CAA/EAA and Resource Timing sections. When sa_art_idb_enable is false or cacheBust=true (force-retry path) all three load sites fall back to their original native img.src / fetch() paths with no behaviour change. The IDB database can be inspected and cleared via browser DevTools → Application → Storage → IndexedDB → 'vz-mb-saed-art-cache'."
           ]
         }
       ]

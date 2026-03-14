@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.146+2026-03-13
+// @version      9.99.149+2026-03-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -17,6 +17,10 @@
 // @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels)(?:\?.*)?$/
 // @match        *://*.musicbrainz.org/search?query=*
 // @connect      raw.githubusercontent.com
+// @connect      coverartarchive.org
+// @connect      eventartarchive.org
+// @connect      archive.org
+// @connect      *.archive.org
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_setValue
@@ -1088,6 +1092,56 @@
         },
 
         // ============================================================
+        // ART ARCHIVE INDEXEDDB CACHE SECTION
+        // ============================================================
+        divider_art_idb: {
+            type: 'divider',
+            label: '🗄️ ART ARCHIVE INDEXEDDB CACHE'
+        },
+
+        sa_art_idb_enable: {
+            label: 'Enable IndexedDB art image/metadata cache',
+            type: 'checkbox',
+            default: true,
+            description: 'Cache CAA/EAA artwork image blobs and archive JSON metadata in IndexedDB so ' +
+                         'they survive page reloads without repeat network requests.  On the first ' +
+                         'access each image is fetched via GM_xmlhttpRequest (CORS-bypass) and stored ' +
+                         'as a raw Blob; subsequent loads — including the "Load from Disk" path — are ' +
+                         'served instantly from IDB with no network round-trip.  Archive JSON metadata ' +
+                         '(image counts + thumbnail lists from coverartarchive.org / eventartarchive.org) ' +
+                         'is cached separately with its own TTL.  A per-session in-memory Map provides ' +
+                         'an additional zero-cost shortcut for URLs seen multiple times within the same ' +
+                         'page load (e.g. sort/filter re-renders).  The browser\'s IndexedDB can be ' +
+                         'inspected or cleared via DevTools → Application → Storage → IndexedDB → ' +
+                         '"vz-mb-saed-art-cache".'
+        },
+
+        sa_art_idb_image_ttl_days: {
+            label: 'Image blob cache TTL (days)',
+            type: 'number',
+            default: 30,
+            min: 1,
+            max: 365,
+            description: 'Maximum age in days for a cached artwork image blob before it is considered ' +
+                         'expired and re-fetched from the network.  Expired entries are transparently ' +
+                         'overwritten on next access; a background sweep (requestIdleCallback) removes ' +
+                         'remaining stale records after the initial render completes.'
+        },
+
+        sa_art_idb_metadata_ttl_days: {
+            label: 'Metadata (JSON) cache TTL (days)',
+            type: 'number',
+            default: 7,
+            min: 1,
+            max: 90,
+            description: 'Maximum age in days for a cached archive JSON metadata record (image count + ' +
+                         'thumbnails list from coverartarchive.org / eventartarchive.org) before it is ' +
+                         're-fetched from the network.  Shorter TTL means count badges and multi-row ' +
+                         'art cells reflect recent archive changes sooner; longer TTL reduces API call ' +
+                         'volume on pages with many entities.'
+        },
+
+        // ============================================================
         // RESOURCE TIMING API SECTION
         //
         // Controls the cache-hint indicator feature that probes the
@@ -1673,7 +1727,52 @@
                         }
                         appendSortKey('yes');
                     } else {
-                        appendSortKey('no');
+                        // --- Path C: no artwork span at all, but a bare entity link exists ---
+                        //
+                        // On pages like artist-relationships, MusicBrainz never emits
+                        // span.caa-icon in relationship rows — the Title cell only contains
+                        // a plain <a href="/release-group/GUID">Title</a>.  Without this path:
+                        //   • iconSel (`td a[href$="/cover-art"] > span.caa-icon`) matches
+                        //     nothing  →  _artInitSmallPics enqueues 0 items
+                        //   • _artEnrichTable also enqueues 0 items
+                        //   →  the synthetic CAA column is permanently empty even when many
+                        //      rows actually have CAA artwork (bigbox strip works fine because
+                        //      it scans plain entity links directly).
+                        //
+                        // By synthesising <a href="ENTITY_PATH/cover-art" data-caa-synthetic="1">
+                        // <span class="caa-icon"></span></a> we produce the same DOM structure
+                        // as Path A, making iconSel match and both pipelines work identically.
+                        //
+                        // Sort key: written as "no" now (artwork unknown at extraction time);
+                        // _artEnrichIcon flips it to "yes" once the CAA JSON API confirms
+                        // count > 0 (guarded by anchor.dataset.caaSynthetic === '1').
+                        //
+                        // IMPORTANT: use setAttribute (not .href) so the browser does NOT
+                        // normalise the path to an absolute URL — assigning .href would
+                        // produce "https://musicbrainz.org/…" which breaks _artLoadIcon's
+                        // URL construction: //coverartarchive.orghttps://…
+                        const entityAnchorC = sourceCell.querySelector(
+                            'a[href*="/release-group/"],' +
+                            'a[href*="/release/"]:not([href$="/cover-art"])'
+                        );
+                        if (entityAnchorC) {
+                            const entityPathC     = entityAnchorC.getAttribute('href').split('?')[0];
+                            const syntheticAnchor = document.createElement('a');
+                            syntheticAnchor.setAttribute('href', entityPathC + '/cover-art');
+                            // Mark as Path-C synthetic so _artEnrichIcon can flip the
+                            // sort key after confirming artwork exists via the JSON API.
+                            syntheticAnchor.dataset.caaSynthetic = '1';
+                            const iconSpanC       = document.createElement('span');
+                            iconSpanC.className   = 'caa-icon';
+                            syntheticAnchor.appendChild(iconSpanC);
+                            tdCaa.appendChild(syntheticAnchor);
+                            // Conservative placeholder; flipped to "yes" by _artEnrichIcon.
+                            appendSortKey('no');
+                            Lib.debug('extract',
+                                `caa extractor: Path C — synthesised cover-art anchor for ${entityPathC}`);
+                        } else {
+                            appendSortKey('no');
+                        }
                     }
                 }
             } else {
@@ -17968,7 +18067,7 @@
             }
         }, /* useCapture */ true);
 
-        Lib.debug('navigation', 'Navigation guard installed (anchor + Tab-trap + merge-form).');
+        Lib.debug('navigation', 'Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt).');
     }
 
     /**
@@ -20550,6 +20649,7 @@
             case 'memory':      return '🟢';
             case 'disk':        return '🟡';
             case 'network':     return '🔵';
+            case 'idb':         return '🗄️';
             default:            return '⚠️';
         }
     }
@@ -20569,11 +20669,410 @@
             case 'memory':  return 'Memory cache hit' + ms;
             case 'disk':    return 'Disk cache hit' + ms;
             case 'network': return 'Network fetch' + ms;
+            case 'idb':     return 'IndexedDB cache hit' + ms;
             default:        return 'Timing unavailable';
         }
     }
 
     // ── end Resource Timing cache-hint utility ────────────────────────────────
+
+    // ── Art Archive IndexedDB cache ───────────────────────────────────────────
+    //
+    // Persistent cross-session image blob + JSON metadata cache for all CAA/EAA
+    // art fetches.  The store hierarchy is:
+    //
+    //   DB name  : 'vz-mb-saed-art-cache'
+    //   version  : 1
+    //   Stores
+    //     'images'   — keyed by canonical image URL string (protocol-relative URLs
+    //                  are normalised to https:// before storage).
+    //                  Value: { url, blob, storedAt }
+    //                  storedAt: Date.now() timestamp (ms).
+    //
+    //     'metadata' — keyed by entity path string (e.g. '/release/GUID').
+    //                  Value: { entityPath, count, images, storedAt }
+    //                  'images' is the raw Array from the archive JSON API.
+    //
+    // Three-tier lookup for image blobs (_artFetchCachedImage):
+    //   Tier 1 — per-session in-memory Map (_artIdbMemCache): zero overhead,
+    //            covers sort/filter re-renders within the same page load.
+    //   Tier 2 — IndexedDB: covers page reloads and Load-from-Disk restores.
+    //   Tier 3 — network via GM_xmlhttpRequest: CORS-bypass fetch; result stored
+    //            in both IDB and the session Map.
+    //
+    // Metadata path (_artIdbGetMetadata / _artIdbPutMetadata) uses the same DB
+    // but the 'metadata' store only — no in-memory tier (ctx.countCache / imagesCache
+    // already serve that role for within-session deduplication).
+    //
+    // Expired records are evicted lazily (on next read) and also via a background
+    // sweep (_artIdbSweepExpired) scheduled with requestIdleCallback after the
+    // initial render completes.
+    //
+    // All public functions in this section are safe to call even when IDB is
+    // disabled (sa_art_idb_enable=false) or unavailable (private browsing on
+    // some browsers) — they fall through to the network path silently.
+
+    /** DB name and current schema version. */
+    const _ART_IDB_NAME    = 'vz-mb-saed-art-cache';
+    const _ART_IDB_VERSION = 1;
+
+    /**
+     * Cached IDB database connection promise.
+     * Resolved once on first call to _artOpenIdb(); reused thereafter.
+     * Set to null by _artIdbClose() to allow reconnection after an abort.
+     *
+     * @type {Promise<IDBDatabase>|null}
+     */
+    let _artIdbPromise = null;
+
+    /**
+     * Per-session in-memory image cache (Tier 1).
+     * Maps canonical URL string → object URL string (blob:…).
+     * Object URLs are revoked when the page unloads via a 'pagehide' listener.
+     *
+     * @type {Map<string, string>}
+     */
+    const _artIdbMemCache = new Map();
+
+    /**
+     * Set of blob: object URLs created this session; unregistered on pagehide.
+     * @type {Set<string>}
+     */
+    const _artIdbBlobUrls = new Set();
+
+    // Revoke all object URLs on page unload to release Blob memory.
+    window.addEventListener('pagehide', () => {
+        _artIdbBlobUrls.forEach(u => {
+            try { URL.revokeObjectURL(u); } catch (_) { /* ignore */ }
+        });
+        _artIdbBlobUrls.clear();
+        _artIdbMemCache.clear();
+    });
+
+    /**
+     * Opens (or reuses) the IndexedDB connection for the art cache.
+     *
+     * Creates the 'images' and 'metadata' object stores on first open.
+     * Resolves with the IDBDatabase instance; rejects if IDB is unavailable
+     * (e.g. private-browsing mode on certain browsers) or if `onblocked` fires.
+     *
+     * The resolved DB reference is cached in `_artIdbPromise` so the open
+     * handshake happens only once per page load.
+     *
+     * @returns {Promise<IDBDatabase>}
+     */
+    function _artOpenIdb() {
+        if (_artIdbPromise) return _artIdbPromise;
+        _artIdbPromise = new Promise((resolve, reject) => {
+            if (typeof indexedDB === 'undefined') {
+                reject(new Error('IndexedDB not available'));
+                return;
+            }
+            const req = indexedDB.open(_ART_IDB_NAME, _ART_IDB_VERSION);
+            req.onupgradeneeded = (ev) => {
+                const db = ev.target.result;
+                if (!db.objectStoreNames.contains('images')) {
+                    db.createObjectStore('images', { keyPath: 'url' });
+                }
+                if (!db.objectStoreNames.contains('metadata')) {
+                    db.createObjectStore('metadata', { keyPath: 'entityPath' });
+                }
+            };
+            req.onsuccess  = (ev) => {
+                const db = ev.target.result;
+                // If the connection is force-closed by the browser (e.g. during
+                // a version upgrade from another tab), null the cached promise so
+                // the next call re-opens.
+                db.onversionchange = () => {
+                    db.close();
+                    _artIdbPromise = null;
+                };
+                db.onclose = () => { _artIdbPromise = null; };
+                resolve(db);
+                Lib.debug('idb', '_artOpenIdb: database opened successfully');
+            };
+            req.onerror    = (ev) => {
+                _artIdbPromise = null;
+                reject(ev.target.error);
+            };
+            req.onblocked  = () => {
+                _artIdbPromise = null;
+                reject(new Error('IndexedDB open blocked by another tab'));
+            };
+        });
+        return _artIdbPromise;
+    }
+
+    /**
+     * Reads a single record from an IDB object store.
+     *
+     * @param   {string} storeName  'images' | 'metadata'
+     * @param   {string} key        Record key to look up.
+     * @returns {Promise<any|null>} Resolves with the record or null if not found.
+     */
+    function _artIdbGet(storeName, key) {
+        return _artOpenIdb().then(db => new Promise((resolve, reject) => {
+            try {
+                const tx  = db.transaction(storeName, 'readonly');
+                const req = tx.objectStore(storeName).get(key);
+                req.onsuccess = () => resolve(req.result || null);
+                req.onerror   = (ev) => reject(ev.target.error);
+            } catch (e) {
+                reject(e);
+            }
+        }));
+    }
+
+    /**
+     * Writes (creates or replaces) a single record in an IDB object store.
+     *
+     * @param   {string} storeName  'images' | 'metadata'
+     * @param   {object} record     Record to store; must include the store's keyPath.
+     * @returns {Promise<void>}
+     */
+    function _artIdbPut(storeName, record) {
+        return _artOpenIdb().then(db => new Promise((resolve, reject) => {
+            try {
+                const tx    = db.transaction(storeName, 'readwrite');
+                const req   = tx.objectStore(storeName).put(record);
+                req.onsuccess = () => resolve();
+                req.onerror   = (ev) => reject(ev.target.error);
+            } catch (e) {
+                reject(e);
+            }
+        }));
+    }
+
+    /**
+     * Deletes a single record from an IDB object store.
+     *
+     * @param   {string} storeName  'images' | 'metadata'
+     * @param   {string} key        Record key to delete.
+     * @returns {Promise<void>}
+     */
+    function _artIdbDelete(storeName, key) {
+        return _artOpenIdb().then(db => new Promise((resolve, reject) => {
+            try {
+                const tx  = db.transaction(storeName, 'readwrite');
+                const req = tx.objectStore(storeName).delete(key);
+                req.onsuccess = () => resolve();
+                req.onerror   = (ev) => reject(ev.target.error);
+            } catch (e) {
+                reject(e);
+            }
+        }));
+    }
+
+    /**
+     * Normalises a protocol-relative CAA/EAA URL to an https:// absolute URL
+     * suitable for use as a stable IDB key.
+     *
+     * @param   {string} url  e.g. '//coverartarchive.org/release/GUID/front-250'
+     * @returns {string}      e.g. 'https://coverartarchive.org/release/GUID/front-250'
+     */
+    function _artNormaliseUrl(url) {
+        return url.startsWith('//') ? 'https:' + url : url;
+    }
+
+    /**
+     * Fetches one artwork image blob using GM_xmlhttpRequest (bypasses CORS) and
+     * resolves with the raw Blob.
+     *
+     * Only called when the image is absent or expired in IDB; the result is
+     * handed back to `_artFetchCachedImage` which stores it in IDB + the
+     * session Map before resolving to the caller.
+     *
+     * @param   {string} url  Absolute https:// URL.
+     * @returns {Promise<Blob>}
+     */
+    function _artGmFetchBlob(url) {
+        return new Promise((resolve, reject) => {
+            GM_xmlhttpRequest({
+                method:       'GET',
+                url:          url,
+                responseType: 'blob',
+                onload:       (resp) => {
+                    if (resp.status >= 200 && resp.status < 300) {
+                        resolve(resp.response);
+                    } else {
+                        reject(new Error(`HTTP ${resp.status} for ${url}`));
+                    }
+                },
+                onerror:  (err) => reject(new Error('GM_xhr network error: ' + url)),
+                ontimeout: ()  => reject(new Error('GM_xhr timeout: ' + url)),
+            });
+        });
+    }
+
+    /**
+     * Three-tier image fetch with IDB persistence.
+     *
+     * Returns a { objectUrl, fromIdb } object:
+     *   objectUrl — a blob: URL suitable for assignment to `img.src` or
+     *               `background-image` CSS.  Callers must NOT revoke this URL;
+     *               it is tracked in `_artIdbBlobUrls` and revoked on pagehide.
+     *   fromIdb   — true when the blob was served from IDB (Tier 2 hit), used
+     *               by callers to classify the Resource Timing hint as 'idb'.
+     *
+     * Lookup order:
+     *   1. _artIdbMemCache (per-session Map keyed by canonical URL)
+     *   2. IndexedDB 'images' store — respects sa_art_idb_image_ttl_days
+     *   3. Network via _artGmFetchBlob — result stored in IDB + session Map
+     *
+     * A 404 from the network is surfaced as a rejected Promise so the caller
+     * can handle it the same way as a native img.onerror event.
+     *
+     * @param   {string}  url   Protocol-relative or absolute image URL.
+     * @returns {Promise<{objectUrl: string, fromIdb: boolean, fromMemory: boolean}>}
+     */
+    async function _artFetchCachedImage(url) {
+        const normUrl  = _artNormaliseUrl(url);
+        const ttlMs    = ((Lib.settings.sa_art_idb_image_ttl_days || 30) * 86400 * 1000);
+
+        // ── Tier 1: per-session in-memory Map ──────────────────────────────────
+        if (_artIdbMemCache.has(normUrl)) {
+            Lib.debug('idb', `_artFetchCachedImage: memory hit — ${normUrl}`);
+            return { objectUrl: _artIdbMemCache.get(normUrl), fromIdb: false, fromMemory: true };
+        }
+
+        // ── Tier 2: IndexedDB ──────────────────────────────────────────────────
+        try {
+            const rec = await _artIdbGet('images', normUrl);
+            if (rec && rec.blob && (Date.now() - rec.storedAt) < ttlMs) {
+                const objUrl = URL.createObjectURL(rec.blob);
+                _artIdbBlobUrls.add(objUrl);
+                _artIdbMemCache.set(normUrl, objUrl);
+                Lib.debug('idb', `_artFetchCachedImage: IDB hit — ${normUrl}`);
+                return { objectUrl: objUrl, fromIdb: true, fromMemory: false };
+            }
+            // Record absent or expired — fall through to network.
+        } catch (idbErr) {
+            Lib.warn('idb', `_artFetchCachedImage: IDB read error for ${normUrl}:`, idbErr);
+        }
+
+        // ── Tier 3: network (GM_xmlhttpRequest, CORS-bypass) ───────────────────
+        Lib.debug('idb', `_artFetchCachedImage: network fetch — ${normUrl}`);
+        const blob   = await _artGmFetchBlob(normUrl);
+        const objUrl = URL.createObjectURL(blob);
+        _artIdbBlobUrls.add(objUrl);
+        _artIdbMemCache.set(normUrl, objUrl);
+
+        // Fire-and-forget IDB write — a write failure must not block the caller.
+        _artIdbPut('images', { url: normUrl, blob, storedAt: Date.now() })
+            .then(() => Lib.debug('idb', `_artFetchCachedImage: IDB stored — ${normUrl}`))
+            .catch(e  => Lib.warn('idb',  `_artFetchCachedImage: IDB write failed for ${normUrl}:`, e));
+
+        return { objectUrl: objUrl, fromIdb: false, fromMemory: false };
+    }
+
+    /**
+     * Reads cached archive JSON metadata for one entity path.
+     *
+     * Returns a { count, images } object when a non-expired record exists in
+     * IDB, or null when the record is absent, expired, or IDB is unavailable.
+     * A null result tells the caller to fall through to a network fetch.
+     *
+     * @param   {string} entityPath  e.g. '/release/GUID'
+     * @returns {Promise<{count: number, images: Array}|null>}
+     */
+    async function _artIdbGetMetadata(entityPath) {
+        const ttlMs = ((Lib.settings.sa_art_idb_metadata_ttl_days || 7) * 86400 * 1000);
+        try {
+            const rec = await _artIdbGet('metadata', entityPath);
+            if (rec && (Date.now() - rec.storedAt) < ttlMs) {
+                Lib.debug('idb', `_artIdbGetMetadata: IDB hit — ${entityPath} (${rec.count} images)`);
+                return { count: rec.count, images: rec.images || [] };
+            }
+        } catch (e) {
+            Lib.warn('idb', `_artIdbGetMetadata: IDB read error for ${entityPath}:`, e);
+        }
+        return null;
+    }
+
+    /**
+     * Persists archive JSON metadata for one entity path into the IDB
+     * 'metadata' store.  Fire-and-forget: a write failure is logged but does
+     * not propagate to the caller.
+     *
+     * @param   {string} entityPath  e.g. '/release/GUID'
+     * @param   {number} count       Number of images found.
+     * @param   {Array}  images      Raw images array from the archive JSON API.
+     * @returns {void}
+     */
+    function _artIdbPutMetadata(entityPath, count, images) {
+        _artIdbPut('metadata', { entityPath, count, images, storedAt: Date.now() })
+            .then(() => Lib.debug('idb', `_artIdbPutMetadata: stored — ${entityPath} (${count} images)`))
+            .catch(e  => Lib.warn('idb',  `_artIdbPutMetadata: IDB write failed for ${entityPath}:`, e));
+    }
+
+    /**
+     * Background sweep: opens a read cursor on each store and deletes every
+     * record whose `storedAt` timestamp is older than its respective TTL.
+     *
+     * Scheduled via requestIdleCallback (with a 5-second deadline fallback
+     * to setTimeout) so it runs only during browser idle time and never
+     * competes with the initial render or image load queue.
+     *
+     * Guards:
+     *   - `sa_art_idb_enable` must be true.
+     *   - IDB must be openable.
+     *
+     * @returns {void}
+     */
+    function _artIdbSweepExpired() {
+        if (!Lib.settings.sa_art_idb_enable) return;
+        const run = () => {
+            _artOpenIdb().then(db => {
+                const imgTtlMs  = ((Lib.settings.sa_art_idb_image_ttl_days    || 30) * 86400 * 1000);
+                const metaTtlMs = ((Lib.settings.sa_art_idb_metadata_ttl_days || 7)  * 86400 * 1000);
+                let   deleted   = 0;
+
+                /**
+                 * Cursors through `storeName` deleting records older than `ttlMs`.
+                 * @param   {string} storeName
+                 * @param   {number} ttlMs
+                 * @returns {Promise<void>}
+                 */
+                const sweepStore = (storeName, ttlMs) => new Promise((resolve, reject) => {
+                    try {
+                        const tx  = db.transaction(storeName, 'readwrite');
+                        const req = tx.objectStore(storeName).openCursor();
+                        req.onsuccess = (ev) => {
+                            const cursor = ev.target.result;
+                            if (!cursor) { resolve(); return; }
+                            if ((Date.now() - (cursor.value.storedAt || 0)) > ttlMs) {
+                                cursor.delete();
+                                deleted++;
+                            }
+                            cursor.continue();
+                        };
+                        req.onerror = (ev) => reject(ev.target.error);
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+
+                Promise.all([
+                    sweepStore('images',   imgTtlMs),
+                    sweepStore('metadata', metaTtlMs),
+                ]).then(() => {
+                    Lib.debug('idb', `_artIdbSweepExpired: sweep complete — deleted ${deleted} expired record(s)`);
+                }).catch(e => {
+                    Lib.warn('idb', '_artIdbSweepExpired: sweep error:', e);
+                });
+            }).catch(e => {
+                Lib.warn('idb', '_artIdbSweepExpired: could not open IDB for sweep:', e);
+            });
+        };
+
+        if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(run, { timeout: 5000 });
+        } else {
+            setTimeout(run, 5000);
+        }
+    }
+
+    // ── end Art Archive IndexedDB cache ───────────────────────────────────────
 
     /**
      * Shared GUID pattern string reused in all RegExp constructors throughout
@@ -20678,6 +21177,10 @@
         tbodyOut:      '_caaMouseout',
         rowLinkSel:    'td a[href^="/release"]:not([href$="/cover-art"])',
         toggleLabel:   'CAA cover art images',
+        // Class name of the hidden sort/filter key span appended by the caa extractor.
+        // Used by _artEnrichIcon to flip "no" → "yes" for Path-C synthetic anchors
+        // once the JSON API confirms the entity has artwork.
+        sortKeyClass:  'mb-caa-sort-key',
     };
 
     /**
@@ -20716,6 +21219,9 @@
         tbodyOut:      '_eaaMouseout',
         rowLinkSel:    'td a[href^="/event"]:not([href$="/event-art"])',
         toggleLabel:   'EAA event art images',
+        // The caa extractor always uses 'mb-caa-sort-key' regardless of CAA vs EAA;
+        // keep the same value here so _artEnrichIcon can locate the span uniformly.
+        sortKeyClass:  'mb-caa-sort-key',
     };
 
     // ── Generic shared utilities ──────────────────────────────────────────────
@@ -21175,86 +21681,46 @@
         const imgurl = ctx.archiveHost + entityPath + '/front-' + size +
                        (cacheBust ? '?_cb=' + Date.now() : '');
 
-        Lib.debug(ctx.key, `${ctx.key}LoadIcon: fetching ${imgurl}`);
+        Lib.debug(ctx.key, `${ctx.key}LoadIcon: loading ${imgurl}`);
 
-        return new Promise(resolve => {
-            const img = document.createElement('img');
-            img.addEventListener('load', function() {
-                artIcon.style.setProperty('background-size',  'contain');
-                artIcon.style.setProperty('background-image', 'url(' + this.src + ')');
+        /**
+         * Common success handler shared by both the IDB and the native img load
+         * paths.  Applies background-image, hover preview, and RT/IDB cache-hint.
+         *
+         * @param {string}  src       The resolved src string (object URL or network URL).
+         * @param {boolean} wasIdbHit Whether the blob was served from IDB (Tier 2 hit).
+         */
+        const _onIconLoaded = (src, wasIdbHit) => {
+            artIcon.style.setProperty('background-size',  'contain');
+            artIcon.style.setProperty('background-image', 'url(' + src + ')');
 
-                // ── Hover preview wiring (CAA/EAA icon column) ────────────────
-                // Attach mouseenter/mouseleave to the anchor so hovering over the
-                // artwork icon cell thumbnail triggers a floating full-size preview
-                // using the big-picture strip image URL.  Uses addEventListener
-                // rather than direct property assignment to survive multiple render
-                // passes (old anchor elements are discarded on re-render, so there
-                // is no risk of accumulating duplicate listeners on the same node).
-                if (Lib.settings.sa_caa_hover_preview) {
-                    const bigSize = Lib.settings.sa_caa_big_img_size || 250;
-                    const bigUrl  = imgurl.replace('/front-' + size, '/front-' + bigSize);
-                    anchor.addEventListener('mouseenter', () => _showArtHoverPreview(bigUrl, anchor));
-                    anchor.addEventListener('mouseleave', _hideArtHoverPreview);
-                }
-                // Probe the browser's PerformanceResourceEntry for the image URL
-                // that was just resolved.  Because archive.org responses are
-                // cross-origin, transferSize / encodedBodySize may both be 0
-                // even for a genuine network fetch; the duration-based fallback
-                // handles that case.
-                //
-                // Guard: both the master toggle (sa_rt_enable) and the per-location
-                // toggle (sa_rt_show_icon_column) must be true.
-                //
-                // Layout: we wrap the artwork anchor + the existing count badge
-                // (inserted later by _artEnrichIcon via anchor.after()) in an
-                // .mb-art-cache-hint-col-wrap inline-flex column so the hint
-                // emoji sits above the count badge like a superscript:
-                //
-                //     [ ⚪ artwork icon ]   ← anchor (background-image set above)
-                //         🟢              ← hint (superscript)
-                //          2              ← count badge (subscript, added later)
-                if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_icon_column) {
-                    const hint  = getResourceTimingHint(this.src);
-                    const emoji = cacheStatusEmoji(hint.status);
-                    const label = cacheStatusLabel(hint.status, hint.duration);
+            // ── Hover preview wiring (CAA/EAA icon column) ────────────────
+            // Attach mouseenter/mouseleave to the anchor so hovering over the
+            // artwork icon cell thumbnail triggers a floating full-size preview
+            // using the big-picture strip image URL.  Uses addEventListener
+            // rather than direct property assignment to survive multiple render
+            // passes (old anchor elements are discarded on re-render, so there
+            // is no risk of accumulating duplicate listeners on the same node).
+            if (Lib.settings.sa_caa_hover_preview) {
+                const bigSize = Lib.settings.sa_caa_big_img_size || 250;
+                const bigUrl  = imgurl.replace('/front-' + size, '/front-' + bigSize);
+                anchor.addEventListener('mouseenter', () => _showArtHoverPreview(bigUrl, anchor));
+                anchor.addEventListener('mouseleave', _hideArtHoverPreview);
+            }
 
-                    // Stamp the classification on the icon span for CSS targeting.
-                    artIcon.dataset.cacheHint = hint.status;
-
-                    // Find or create the flex-column wrapper that sits after the anchor.
-                    let wrap = anchor.nextElementSibling;
-                    if (!wrap || !wrap.classList.contains('mb-art-cache-hint-col-wrap')) {
-                        wrap = document.createElement('span');
-                        wrap.className = 'mb-art-cache-hint-col-wrap';
-                        // Insert the wrapper immediately after the anchor.
-                        // Any count badge that _artEnrichIcon places with anchor.after()
-                        // will land after the wrapper; _artEnrichIcon runs after us, so
-                        // we re-parent the count badge into the wrapper in the block below.
-                        anchor.after(wrap);
-                    }
-
-                    // Hint span (top / superscript position in the wrapper).
-                    const existingHint = wrap.querySelector('.mb-art-cache-hint-col');
-                    if (existingHint) {
-                        existingHint.textContent = emoji;
-                        existingHint.title        = label;
-                    } else {
-                        const hintSpan         = document.createElement('span');
-                        hintSpan.className     = 'mb-art-cache-hint-col';
-                        hintSpan.textContent   = emoji;
-                        hintSpan.title         = label;
-                        wrap.appendChild(hintSpan);
-                    }
-
-                    // If the count badge was already placed by _artEnrichIcon (re-render
-                    // path), pull it into the wrapper so the flex column is complete.
-                    const countBadge = anchor.nextElementSibling;
-                    if (countBadge &&
-                        (countBadge.classList.contains('mb-caa-count-badge') ||
-                         countBadge.classList.contains('mb-eaa-count-badge'))) {
-                        wrap.appendChild(countBadge);
-                    }
-
+            if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_icon_column) {
+                // ── Cache-hint indicator (icon column) ────────────────────────
+                // For IDB/memory hits there is no PerformanceResourceEntry for the
+                // blob: URL so we synthesise the hint status directly.  For network
+                // fetches (cacheBust=true retry path) we query the RT API as before.
+                let hintStatus, hintLabel;
+                if (wasIdbHit) {
+                    hintStatus = 'idb';
+                    hintLabel  = cacheStatusLabel('idb', null);
+                } else {
+                    const hint = getResourceTimingHint(src);
+                    hintStatus = hint.status;
+                    hintLabel  = cacheStatusLabel(hint.status, hint.duration);
                     Lib.debug(ctx.key,
                         `${ctx.key}LoadIcon: cache-hint=${hint.status} ` +
                         `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
@@ -21263,57 +21729,135 @@
                         `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
                         ` — ${imgurl}`);
                 }
-                Lib.debug(ctx.key, `${ctx.key}LoadIcon: loaded OK — ${imgurl}`);
-                resolve();
-            });
-            img.addEventListener('error', function() {
-                // A 404 is the normal outcome for entities with no "Front" image.
-                // Failures from genuine network errors are surfaced via a ⚠⟳ indicator
-                // that the user can click to retry just this one icon.
-                Lib.debug(ctx.key, `${ctx.key}LoadIcon: failed to load ${imgurl} — injecting ⚠⟳ retry indicator`);
+
+                const emoji = cacheStatusEmoji(hintStatus);
+                artIcon.dataset.cacheHint = hintStatus;
 
                 // Find or create the flex-column wrapper that sits after the anchor.
-                // This mirrors the structure used by the Resource Timing cache-hint
-                // feature (img.onload path), so the ⚠⟳ sits in the superscript
-                // position above the count badge.  The CSS for the wrap is injected
-                // unconditionally, so creating it here is always safe.
                 let wrap = anchor.nextElementSibling;
                 if (!wrap || !wrap.classList.contains('mb-art-cache-hint-col-wrap')) {
                     wrap = document.createElement('span');
                     wrap.className = 'mb-art-cache-hint-col-wrap';
+                    // Insert the wrapper immediately after the anchor.
+                    // Any count badge that _artEnrichIcon places with anchor.after()
+                    // will land after the wrapper; _artEnrichIcon runs after us, so
+                    // we re-parent the count badge into the wrapper in the block below.
                     anchor.after(wrap);
                 }
 
-                // Create or update the hint span with the ⚠⟳ error-retry symbol.
-                let hintSpan = wrap.querySelector('.mb-art-cache-hint-col');
-                if (!hintSpan) {
-                    hintSpan = document.createElement('span');
-                    hintSpan.className = 'mb-art-cache-hint-col';
-                    wrap.insertBefore(hintSpan, wrap.firstChild);
+                // Hint span (top / superscript position in the wrapper).
+                const existingHint = wrap.querySelector('.mb-art-cache-hint-col');
+                if (existingHint) {
+                    existingHint.textContent = emoji;
+                    existingHint.title        = hintLabel;
+                } else {
+                    const hintSpan         = document.createElement('span');
+                    hintSpan.className     = 'mb-art-cache-hint-col';
+                    hintSpan.textContent   = emoji;
+                    hintSpan.title         = hintLabel;
+                    wrap.appendChild(hintSpan);
                 }
-                hintSpan.textContent = '⚠⟳';
-                hintSpan.title       = 'Load failed – click to retry this icon';
-                hintSpan.style.cursor = 'pointer';
-                artIcon.dataset.cacheHint = 'error';
 
-                // Single-use retry: clicking re-triggers _artLoadIcon with cache
-                // busting so the browser fetches a fresh copy rather than replaying
-                // the cached failure response.
-                function _retryIconHandler(e) {
-                    e.stopPropagation();
-                    hintSpan.removeEventListener('click', _retryIconHandler);
-                    hintSpan.textContent  = '⟳';
-                    hintSpan.title        = 'Retrying…';
-                    hintSpan.style.cursor = 'default';
-                    delete artIcon.dataset.cacheHint;
-                    if (_caaQueue) {
-                        _caaQueue.enqueue(() => _artLoadIcon(ctx, artIcon, true));
-                    } else {
-                        _artLoadIcon(ctx, artIcon, true);
-                    }
+                // If the count badge was already placed by _artEnrichIcon (re-render
+                // path), pull it into the wrapper so the flex column is complete.
+                const countBadge = anchor.nextElementSibling;
+                if (countBadge &&
+                    (countBadge.classList.contains('mb-caa-count-badge') ||
+                     countBadge.classList.contains('mb-eaa-count-badge'))) {
+                    wrap.appendChild(countBadge);
                 }
-                hintSpan.addEventListener('click', _retryIconHandler);
+            }
+            Lib.debug(ctx.key, `${ctx.key}LoadIcon: loaded OK (idb=${wasIdbHit}) — ${imgurl}`);
+        };
 
+        /**
+         * Injects the ⚠⟳ retry indicator into the icon cell and wires up the
+         * single-use retry click handler.  Called by both the IDB-error path and
+         * the native img.onerror path.
+         */
+        const _onIconError = () => {
+            Lib.debug(ctx.key, `${ctx.key}LoadIcon: failed to load ${imgurl} — injecting ⚠⟳ retry indicator`);
+
+            // Find or create the flex-column wrapper that sits after the anchor.
+            // This mirrors the structure used by the Resource Timing cache-hint
+            // feature (img.onload path), so the ⚠⟳ sits in the superscript
+            // position above the count badge.  The CSS for the wrap is injected
+            // unconditionally, so creating it here is always safe.
+            let wrap = anchor.nextElementSibling;
+            if (!wrap || !wrap.classList.contains('mb-art-cache-hint-col-wrap')) {
+                wrap = document.createElement('span');
+                wrap.className = 'mb-art-cache-hint-col-wrap';
+                anchor.after(wrap);
+            }
+
+            // Create or update the hint span with the ⚠⟳ error-retry symbol.
+            let hintSpan = wrap.querySelector('.mb-art-cache-hint-col');
+            if (!hintSpan) {
+                hintSpan = document.createElement('span');
+                hintSpan.className = 'mb-art-cache-hint-col';
+                wrap.insertBefore(hintSpan, wrap.firstChild);
+            }
+            hintSpan.textContent  = '⚠⟳';
+            hintSpan.title        = 'Load failed – click to retry this icon';
+            hintSpan.style.cursor = 'pointer';
+            artIcon.dataset.cacheHint = 'error';
+
+            // Single-use retry: clicking re-triggers _artLoadIcon with cache
+            // busting so the browser fetches a fresh copy rather than replaying
+            // the cached failure response.
+            function _retryIconHandler(e) {
+                e.stopPropagation();
+                hintSpan.removeEventListener('click', _retryIconHandler);
+                hintSpan.textContent  = '⟳';
+                hintSpan.title        = 'Retrying…';
+                hintSpan.style.cursor = 'default';
+                delete artIcon.dataset.cacheHint;
+                if (_caaQueue) {
+                    _caaQueue.enqueue(() => _artLoadIcon(ctx, artIcon, true));
+                } else {
+                    _artLoadIcon(ctx, artIcon, true);
+                }
+            }
+            hintSpan.addEventListener('click', _retryIconHandler);
+        };
+
+        // ── IDB-aware load path ───────────────────────────────────────────────
+        // When the IDB cache is enabled and this is not a force-refresh retry
+        // (cacheBust=true), try to serve the blob from IDB / session memory
+        // before falling back to a network fetch.
+        //
+        // On an IDB hit the resolved blob: URL is set directly on a detached
+        // <img> so the load event fires synchronously from memory — no network
+        // round-trip occurs.
+        //
+        // On any IDB/network failure the ⚠⟳ retry indicator is shown via
+        // _onIconError() so the user can force a fresh fetch.
+        if (Lib.settings.sa_art_idb_enable && !cacheBust) {
+            return new Promise(resolve => {
+                _artFetchCachedImage(imgurl)
+                    .then(({ objectUrl, fromIdb }) => {
+                        // Apply background-image + hint directly; no DOM img needed.
+                        _onIconLoaded(objectUrl, fromIdb);
+                        resolve();
+                    })
+                    .catch(err => {
+                        // Network fetch failed (e.g. 404 = no front image, or CDN error).
+                        Lib.debug(ctx.key, `${ctx.key}LoadIcon: IDB/network fetch failed — ${err.message}`);
+                        _onIconError();
+                        resolve();
+                    });
+            });
+        }
+
+        // ── Fallback: native img element path (IDB disabled or cacheBust=true) ─
+        return new Promise(resolve => {
+            const img = document.createElement('img');
+            img.addEventListener('load', function() {
+                _onIconLoaded(this.src, false);
+                resolve();
+            });
+            img.addEventListener('error', function() {
+                _onIconError();
                 resolve();
             });
             img.src = imgurl; // triggers the browser request
@@ -21348,14 +21892,74 @@
 
         if (!ctx.entityGuard(entityPath)) return;
 
-        // ── Resolve count + images — from cache or network ───────────────────
+        // ── Resolve count + images — from session cache, IDB, or network ────────
         let count;
         let images = [];
         if (ctx.countCache.has(entityPath)) {
+            // Tier 1: in-session Map — no network round-trip.
             count  = ctx.countCache.get(entityPath);
             images = ctx.imagesCache.get(entityPath) || [];
-            Lib.debug(ctx.key, `${ctx.key}EnrichIcon: ${count} image(s) for ${entityPath} (cached)`);
+            Lib.debug(ctx.key, `${ctx.key}EnrichIcon: ${count} image(s) for ${entityPath} (session cache)`);
         } else {
+            // Tier 2: IndexedDB metadata — survives page reloads and Load-from-Disk.
+            if (Lib.settings.sa_art_idb_enable) {
+                try {
+                    const idbMeta = await _artIdbGetMetadata(entityPath);
+                    if (idbMeta !== null) {
+                        count  = idbMeta.count;
+                        images = idbMeta.images;
+                        ctx.countCache.set(entityPath, count);
+                        ctx.imagesCache.set(entityPath, images);
+                        Lib.debug(ctx.key, `${ctx.key}EnrichIcon: ${count} image(s) for ${entityPath} (IDB metadata)`);
+                        // Skip to the decoration block — no network call needed.
+                        if (count <= 0) { anchor.dataset[ctx.enrichedAttr] = '1'; return; }
+                        // fall through to decoration
+                        const tooltipI = ctx.tooltip(count);
+                        anchor.title = tooltipI;
+                        const iconSpanI = anchor.querySelector('span.caa-icon, span.eaa-icon, span.artwork-icon');
+                        if (iconSpanI) iconSpanI.title = tooltipI;
+                        const artCellI = anchor.closest('td');
+                        if (artCellI && !artCellI.querySelector('.' + ctx.badgeClass)) {
+                            const badge = document.createElement('span');
+                            badge.className   = ctx.badgeClass;
+                            badge.textContent = count;
+                            badge.title       = tooltipI;
+                            anchor.after(badge);
+                            const wrap = badge.nextElementSibling;
+                            if (wrap && wrap.classList.contains('mb-art-cache-hint-col-wrap')) {
+                                wrap.appendChild(badge);
+                            }
+                        }
+                        const addColNameI = activeDefinition && activeDefinition.features && activeDefinition.features[ctx.addFeature];
+                        if (addColNameI) {
+                            const tr = anchor.closest('tr'); const table = anchor.closest('table');
+                            if (tr && table) {
+                                const colIdx = caaFindColumnByName(table, addColNameI);
+                                const titleCell = colIdx !== -1 ? tr.cells[colIdx] : null;
+                                if (titleCell) { const inlinePh = titleCell.querySelector('.' + ctx.inlinePh); if (inlinePh) inlinePh.title = tooltipI; }
+                            }
+                        }
+                        if (artCellI) _artBuildMultiRowArtCell(ctx, artCellI, images);
+                        // Flip sort key for Path-C synthetic anchors (same logic as the
+                        // network-fetch path below; IDB hits return early so they need
+                        // their own copy of this guard).
+                        if (anchor.dataset.caaSynthetic === '1' && ctx.sortKeyClass) {
+                            const sortKeySpanI = artCellI && artCellI.querySelector('.' + ctx.sortKeyClass);
+                            if (sortKeySpanI && sortKeySpanI.textContent === 'no') {
+                                sortKeySpanI.textContent = 'yes';
+                                Lib.debug(ctx.key,
+                                    `${ctx.key}EnrichIcon: flipped sort key "no"→"yes" for Path-C anchor ${entityPath} (IDB)`);
+                            }
+                        }
+                        anchor.dataset[ctx.enrichedAttr] = '1';
+                        return;
+                    }
+                } catch (idbErr) {
+                    Lib.warn(ctx.key, `${ctx.key}EnrichIcon: IDB metadata read error for ${entityPath}:`, idbErr);
+                }
+            }
+
+            // Tier 3: network fetch (original path).
             const apiUrl = ctx.apiHost + entityPath;
             try {
                 const resp = await fetch(apiUrl);
@@ -21371,6 +21975,10 @@
                     // across sort/filter re-renders for the same entity.
                     ctx.countCache.set(entityPath, 0);
                     ctx.imagesCache.set(entityPath, []);
+                    // Persist negative result in IDB so Load-from-Disk skips the network too.
+                    if (Lib.settings.sa_art_idb_enable) {
+                        _artIdbPutMetadata(entityPath, 0, []);
+                    }
                     anchor.dataset[ctx.enrichedAttr] = '1';
                     return;
                 }
@@ -21379,6 +21987,10 @@
                 count  = images.length;
                 ctx.countCache.set(entityPath, count);
                 ctx.imagesCache.set(entityPath, images);
+                // Persist to IDB so subsequent page loads skip this network call.
+                if (Lib.settings.sa_art_idb_enable) {
+                    _artIdbPutMetadata(entityPath, count, images);
+                }
                 Lib.debug(ctx.key, `${ctx.key}EnrichIcon: ${count} image(s) for ${entityPath}`);
             } catch (err) {
                 // Network-level failure — do NOT cache so connectivity-restored
@@ -21459,6 +22071,23 @@
         // Build (or rebuild after _artRetryTable) the per-image list inside
         // the CAA/EAA column cell.  Only fires when the cell is present, i.e.
         // the page definition includes the synthetic CAA/EAA column.
+        //
+        // ── 3b. Flip sort key for Path-C synthetic anchors ───────────────────
+        // The caa extractor's Path C (bare entity link, no artwork span) cannot
+        // know whether artwork exists at extraction time, so it writes "no" as a
+        // conservative placeholder in the hidden .mb-caa-sort-key span.
+        // Now that the JSON API has confirmed count > 0, update the span text to
+        // "yes" so sorting (ascending/descending) and the unique-values dropdown
+        // filter correctly reflect the presence of artwork.
+        if (anchor.dataset.caaSynthetic === '1' && ctx.sortKeyClass) {
+            const sortKeySpan = artCell && artCell.querySelector('.' + ctx.sortKeyClass);
+            if (sortKeySpan && sortKeySpan.textContent === 'no') {
+                sortKeySpan.textContent = 'yes';
+                Lib.debug(ctx.key,
+                    `${ctx.key}EnrichIcon: flipped sort key "no"→"yes" for Path-C anchor ${entityPath}`);
+            }
+        }
+
         if (artCell) {
             _artBuildMultiRowArtCell(ctx, artCell, images);
         }
@@ -21701,20 +22330,30 @@
 
                     wrapper.appendChild(document.createTextNode('⌛'));
 
-                    const img         = document.createElement('img');
-                    img.src           = imgurl; // always set → background download even when box hidden
+                    const img     = document.createElement('img');
                     img.alt           = a.textContent.trim();
                     img.style.cssText = 'vertical-align:middle; display:none;' +
                                         ' max-height:' + maxH + ';' +
                                         ' box-shadow:1px 1px 4px black;';
 
-                    img.addEventListener('load', function() {
+                    /**
+                     * Shared bigbox image success handler.
+                     * Called by both the IDB and native img.onload paths with the
+                     * resolved src string and an IDB-hit flag.
+                     *
+                     * @param {string}  src       Resolved src (object URL or network URL).
+                     * @param {boolean} bigIdbHit Whether the blob was served from IDB.
+                     */
+                    const _onBigLoaded = (src, bigIdbHit) => {
+                        // Update img element so mouseover highlight uses the right URL.
+                        if (img.src !== src) img.src = src;
+
                         // Remove the ⌛ text node once the image arrives
-                        const first = this.parentNode.firstChild;
+                        const first = wrapper.firstChild;
                         if (first && first.nodeType === Node.TEXT_NODE) {
-                            this.parentNode.removeChild(first);
+                            wrapper.removeChild(first);
                         }
-                        this.style.display = 'inline';
+                        img.style.display = 'inline';
 
                         // Live-update the toggle button badge.
                         // Guard: skip if a newer render pass has already started.
@@ -21731,8 +22370,15 @@
                                     badge.textContent = (parseInt(badge.textContent, 10) || 0) + 1;
                                 }
                                 const thumb = toggleBtn.querySelector('.' + ctx.thumbClass);
-                                if (thumb && !thumb.complete) {
-                                    thumb.src = imgurl;
+                                // Replace the thumb when it is still loading (!complete) OR when it
+                                // finished loading but failed (complete=true yet naturalWidth=0, i.e.
+                                // the browser broken-image state caused by a 404 / network error on
+                                // the firstImgUrl that was set during toggle-button creation).
+                                // Using only !complete misses the broken-image case because the HTML
+                                // spec sets complete=true as soon as the fetch attempt finishes —
+                                // regardless of success or failure.
+                                if (thumb && (!thumb.complete || thumb.naturalWidth === 0)) {
+                                    thumb.src = src;
                                 }
                                 // Also increment the global toggle button badge (multi-table mode).
                                 // The global button is created synchronously before any images load,
@@ -21746,33 +22392,43 @@
                                     }
                                     // Adopt the first loaded thumbnail into the global button too.
                                     const globalThumb = globalBtn.querySelector('.' + ctx.thumbClass);
-                                    if (globalThumb && (!globalThumb.src || !globalThumb.complete)) {
-                                        globalThumb.src = imgurl;
+                                    // Same broken-image guard as the per-table thumb above:
+                                    // complete=true on a failed fetch, so also check naturalWidth===0.
+                                    if (globalThumb && (!globalThumb.src || !globalThumb.complete || globalThumb.naturalWidth === 0)) {
+                                        globalThumb.src = src;
                                     }
                                 }
                             }
                         }
 
                         // ── Cache-hint overlay on the bigbox wrapper ──────────
-                        // After the image load event fires the browser has already
-                        // committed a PerformanceResourceEntry for `imgurl`.  We
-                        // probe it here so the timing data is as fresh as possible.
-                        // The emoji is rendered as a small absolutely-positioned
-                        // overlay in the top-left corner of the wrapper anchor so it
-                        // is visible at a glance without covering meaningful content.
-                        // `wrapper` is the <a> element captured in the outer loop.
-                        //
                         // Guards: sa_rt_enable (master) and sa_rt_show_bigbox must
                         // both be true for the indicator to be rendered.
+                        // For IDB hits there is no PerformanceResourceEntry for the
+                        // blob: URL so we synthesise the hint status directly.
                         if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_bigbox) {
-                            const hint  = getResourceTimingHint(this.src);
-                            const emoji = cacheStatusEmoji(hint.status);
-                            const label = cacheStatusLabel(hint.status, hint.duration);
+                            let hintStatus, hintLabel;
+                            if (bigIdbHit) {
+                                hintStatus = 'idb';
+                                hintLabel  = cacheStatusLabel('idb', null);
+                            } else {
+                                const hint = getResourceTimingHint(src);
+                                hintStatus = hint.status;
+                                hintLabel  = cacheStatusLabel(hint.status, hint.duration);
+                                Lib.debug(ctx.key,
+                                    `${ctx.key}InitBigPics: cache-hint=${hint.status} ` +
+                                    `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
+                                    `dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'} ` +
+                                    `redirectStart=${hint.redirectStart !== null ? Math.round(hint.redirectStart) + 'ms' : 'n/a'} ` +
+                                    `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
+                                    ` — ${imgurl}`);
+                            }
+                            const emoji = cacheStatusEmoji(hintStatus);
 
                             const existingHint = wrapper.querySelector('.mb-art-cache-hint-big');
                             if (existingHint) {
                                 existingHint.textContent = emoji;
-                                existingHint.title        = label;
+                                existingHint.title        = hintLabel;
                             } else {
                                 // Make the wrapper a positioning context for the badge.
                                 // Its existing cssText uses display:inline-block which
@@ -21782,7 +22438,7 @@
                                 const hintBadge           = document.createElement('span');
                                 hintBadge.className       = 'mb-art-cache-hint-big';
                                 hintBadge.textContent     = emoji;
-                                hintBadge.title           = label;
+                                hintBadge.title           = hintLabel;
                                 hintBadge.style.cssText   =
                                     'position:absolute; top:2px; left:2px;' +
                                     ' font-size:0.8em; line-height:1;' +
@@ -21791,19 +22447,8 @@
                                     ' pointer-events:none; z-index:1;';
                                 wrapper.appendChild(hintBadge);
                             }
-                            Lib.debug(ctx.key,
-                                `${ctx.key}InitBigPics: cache-hint=${hint.status} ` +
-                                `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
-                                `dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'} ` +
-                                `redirectStart=${hint.redirectStart !== null ? Math.round(hint.redirectStart) + 'ms' : 'n/a'} ` +
-                                `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
-                                ` — ${imgurl}`);
                         }
-                    });
-                    img.addEventListener('error', function() {
-                        const w = this.parentNode;
-                        if (w && w.parentNode) w.parentNode.removeChild(w);
-                    });
+                    };
 
                     // ── 3. img:mouseover / mouseout — highlight row links ─────
                     img.addEventListener('mouseover', function() {
@@ -21821,6 +22466,31 @@
 
                     wrapper.appendChild(img);
                     box.appendChild(wrapper);
+
+                    // ── IDB-aware image fetch for bigbox ──────────────────────
+                    // When IDB is enabled and this is not a force-refresh pass, try
+                    // to serve the blob from cache.  On success _onBigLoaded() is
+                    // called directly without going through a DOM img.onload event.
+                    // On failure (404 / network error) remove the wrapper silently.
+                    if (Lib.settings.sa_art_idb_enable && !cacheBust) {
+                        _artFetchCachedImage(imgurl)
+                            .then(({ objectUrl, fromIdb }) => {
+                                _onBigLoaded(objectUrl, fromIdb);
+                            })
+                            .catch(() => {
+                                // 404 or network failure — remove placeholder wrapper.
+                                if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+                            });
+                    } else {
+                        // Fallback: native img.onload / onerror path.
+                        img.addEventListener('load',  function() { _onBigLoaded(this.src, false); });
+                        img.addEventListener('error', function() {
+                            const w = this.parentNode;
+                            if (w && w.parentNode) w.parentNode.removeChild(w);
+                        });
+                        img.src = imgurl; // triggers the browser request
+                    }
+
                     break; // matched one type for this href — move on
                 }
             }
@@ -22398,6 +23068,17 @@
             const badge = btn.querySelector('.' + ctx.countClass);
             if (badge) badge.textContent = '0';
             btn.style.display = 'inline-flex';
+
+            // If the existing thumbnail is in a broken state (complete=true but
+            // naturalWidth=0, i.e. its original firstImgUrl returned 404) and a new
+            // firstImgUrl is available, reset the src so the browser retries — most
+            // useful when the caller is _artRetryTable (cache-busted URLs may now succeed).
+            if (firstImgUrl) {
+                const thumb = btn.querySelector('.' + ctx.thumbClass);
+                if (thumb && (!thumb.complete || thumb.naturalWidth === 0)) {
+                    thumb.src = firstImgUrl;
+                }
+            }
         }
 
         // Sync button title to current bigbox visibility (box may not exist yet)
@@ -22672,78 +23353,138 @@
                     injected++;
                     anyInjected = true;
 
-                    // ── Defer img.src assignment through _caaQueue ────────────
-                    const loadTask = () => new Promise(resolve => {
-                        img.addEventListener('load', function() {
-                            this.style.display = 'inline';
+                    // ── Defer fetch through _caaQueue (concurrency-throttled) ───
+                    // When IDB is enabled the loadTask calls _artFetchCachedImage
+                    // (three-tier: session Map → IDB → GM_xhr network).
+                    // When IDB is disabled, the original native img.src path is used.
+                    const loadTask = () => {
+                        if (Lib.settings.sa_art_idb_enable) {
+                            return _artFetchCachedImage(imgurl)
+                                .then(({ objectUrl, fromIdb }) => {
+                                    img.src = objectUrl;
+                                    img.style.display = 'inline';
 
-                            // ── Hover preview wiring (inline thumbnail column) ─────
-                            // Attach mouseenter/mouseleave to `ph` (the placeholder span
-                            // wrapping this <img>), reusing the same singleton popup as
-                            // the CAA icon column hover.  The preview shows the big-
-                            // picture-strip image (sa_caa_big_img_size) derived from the
-                            // same entity URL.  Uses addEventListener; ph is a fresh DOM
-                            // node per render pass so accumulation is not a concern.
-                            if (Lib.settings.sa_caa_hover_preview) {
-                                const bigSize = Lib.settings.sa_caa_big_img_size || 250;
-                                const bigUrl  = imgurl.replace('/front-' + size, '/front-' + bigSize);
-                                ph.style.cursor = 'crosshair';
-                                ph.addEventListener('mouseenter', () => _showArtHoverPreview(bigUrl, ph));
-                                ph.addEventListener('mouseleave', _hideArtHoverPreview);
-                            }
-                            // After the image has loaded (and the browser has therefore
-                            // committed a PerformanceResourceEntry for the URL), query
-                            // the Resource Timing API to determine whether the image was
-                            // served from memory cache, disk cache, or the network.
-                            // The result is rendered as a small emoji icon prepended
-                            // to the ph <span> that wraps this <img>.
-                            // The span itself is `ph` (closed over from the outer scope).
-                            //
-                            // Guards: sa_rt_enable (master) and sa_rt_show_inline must
-                            // both be true for the indicator to be rendered.
-                            if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_inline) {
-                                const hint  = getResourceTimingHint(this.src);
-                                const emoji = cacheStatusEmoji(hint.status);
-                                const label = cacheStatusLabel(hint.status, hint.duration);
+                                    // ── Hover preview wiring (inline thumbnail column) ─
+                                    if (Lib.settings.sa_caa_hover_preview) {
+                                        const bigSize = Lib.settings.sa_caa_big_img_size || 250;
+                                        const bigUrl  = imgurl.replace('/front-' + size, '/front-' + bigSize);
+                                        ph.style.cursor = 'crosshair';
+                                        ph.addEventListener('mouseenter', () => _showArtHoverPreview(bigUrl, ph));
+                                        ph.addEventListener('mouseleave', _hideArtHoverPreview);
+                                    }
 
-                                const existingHint = ph.querySelector('.mb-art-cache-hint-inline');
-                                if (existingHint) {
-                                    existingHint.textContent = emoji;
-                                    existingHint.title        = label;
-                                } else {
-                                    const hintSpan           = document.createElement('span');
-                                    hintSpan.className       = 'mb-art-cache-hint-inline';
-                                    hintSpan.textContent     = emoji;
-                                    hintSpan.title           = label;
-                                    hintSpan.style.cssText   =
-                                        'font-size:0.65em; line-height:1; position:absolute;' +
-                                        ' top:0; left:0; user-select:none; cursor:default;' +
-                                        ' pointer-events:none;';
-                                    // ph already has overflow:hidden + relative sizing; make
-                                    // it a positioning context for the absolute badge.
-                                    ph.style.position = 'relative';
-                                    ph.appendChild(hintSpan);
+                                    // ── Cache-hint indicator (inline) ──────────────────
+                                    if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_inline) {
+                                        let hintStatus, hintLabel;
+                                        if (fromIdb) {
+                                            hintStatus = 'idb';
+                                            hintLabel  = cacheStatusLabel('idb', null);
+                                        } else {
+                                            const hint = getResourceTimingHint(objectUrl);
+                                            hintStatus = hint.status;
+                                            hintLabel  = cacheStatusLabel(hint.status, hint.duration);
+                                        }
+                                        const emoji = cacheStatusEmoji(hintStatus);
+                                        const existingHint = ph.querySelector('.mb-art-cache-hint-inline');
+                                        if (existingHint) {
+                                            existingHint.textContent = emoji;
+                                            existingHint.title        = hintLabel;
+                                        } else {
+                                            const hintSpan           = document.createElement('span');
+                                            hintSpan.className       = 'mb-art-cache-hint-inline';
+                                            hintSpan.textContent     = emoji;
+                                            hintSpan.title           = hintLabel;
+                                            hintSpan.style.cssText   =
+                                                'font-size:0.65em; line-height:1; position:absolute;' +
+                                                ' top:0; left:0; user-select:none; cursor:default;' +
+                                                ' pointer-events:none;';
+                                            ph.style.position = 'relative';
+                                            ph.appendChild(hintSpan);
+                                        }
+                                    }
+                                    Lib.debug(ctx.key,
+                                        `init${ctx.key.toUpperCase()}InlinePics: loaded OK (idb=${fromIdb}) — ${imgurl}`);
+                                })
+                                .catch(() => {
+                                    Lib.debug(ctx.key,
+                                        `init${ctx.key.toUpperCase()}InlinePics: failed to load ${imgurl}` +
+                                        ` — placeholder stays as spacer`);
+                                });
+                        }
+
+                        // ── Fallback: native img.onload path (IDB disabled) ───────
+                        return new Promise(resolve => {
+                            img.addEventListener('load', function() {
+                                this.style.display = 'inline';
+
+                                // ── Hover preview wiring (inline thumbnail column) ─────
+                                // Attach mouseenter/mouseleave to `ph` (the placeholder span
+                                // wrapping this <img>), reusing the same singleton popup as
+                                // the CAA icon column hover.  The preview shows the big-
+                                // picture-strip image (sa_caa_big_img_size) derived from the
+                                // same entity URL.  Uses addEventListener; ph is a fresh DOM
+                                // node per render pass so accumulation is not a concern.
+                                if (Lib.settings.sa_caa_hover_preview) {
+                                    const bigSize = Lib.settings.sa_caa_big_img_size || 250;
+                                    const bigUrl  = imgurl.replace('/front-' + size, '/front-' + bigSize);
+                                    ph.style.cursor = 'crosshair';
+                                    ph.addEventListener('mouseenter', () => _showArtHoverPreview(bigUrl, ph));
+                                    ph.addEventListener('mouseleave', _hideArtHoverPreview);
+                                }
+                                // After the image has loaded (and the browser has therefore
+                                // committed a PerformanceResourceEntry for the URL), query
+                                // the Resource Timing API to determine whether the image was
+                                // served from memory cache, disk cache, or the network.
+                                // The result is rendered as a small emoji icon prepended
+                                // to the ph <span> that wraps this <img>.
+                                // The span itself is `ph` (closed over from the outer scope).
+                                //
+                                // Guards: sa_rt_enable (master) and sa_rt_show_inline must
+                                // both be true for the indicator to be rendered.
+                                if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_inline) {
+                                    const hint  = getResourceTimingHint(this.src);
+                                    const emoji = cacheStatusEmoji(hint.status);
+                                    const label = cacheStatusLabel(hint.status, hint.duration);
+
+                                    const existingHint = ph.querySelector('.mb-art-cache-hint-inline');
+                                    if (existingHint) {
+                                        existingHint.textContent = emoji;
+                                        existingHint.title        = label;
+                                    } else {
+                                        const hintSpan           = document.createElement('span');
+                                        hintSpan.className       = 'mb-art-cache-hint-inline';
+                                        hintSpan.textContent     = emoji;
+                                        hintSpan.title           = label;
+                                        hintSpan.style.cssText   =
+                                            'font-size:0.65em; line-height:1; position:absolute;' +
+                                            ' top:0; left:0; user-select:none; cursor:default;' +
+                                            ' pointer-events:none;';
+                                        // ph already has overflow:hidden + relative sizing; make
+                                        // it a positioning context for the absolute badge.
+                                        ph.style.position = 'relative';
+                                        ph.appendChild(hintSpan);
+                                    }
+                                    Lib.debug(ctx.key,
+                                        `init${ctx.key.toUpperCase()}InlinePics: cache-hint=${hint.status} ` +
+                                        `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
+                                        `dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'} ` +
+                                        `redirectStart=${hint.redirectStart !== null ? Math.round(hint.redirectStart) + 'ms' : 'n/a'} ` +
+                                        `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
+                                        ` — ${imgurl}`);
                                 }
                                 Lib.debug(ctx.key,
-                                    `init${ctx.key.toUpperCase()}InlinePics: cache-hint=${hint.status} ` +
-                                    `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
-                                    `dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'} ` +
-                                    `redirectStart=${hint.redirectStart !== null ? Math.round(hint.redirectStart) + 'ms' : 'n/a'} ` +
-                                    `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
-                                    ` — ${imgurl}`);
-                            }
-                            Lib.debug(ctx.key,
-                                `init${ctx.key.toUpperCase()}InlinePics: loaded OK — ${imgurl}`);
-                            resolve();
+                                    `init${ctx.key.toUpperCase()}InlinePics: loaded OK — ${imgurl}`);
+                                resolve();
+                            });
+                            img.addEventListener('error', function() {
+                                Lib.debug(ctx.key,
+                                    `init${ctx.key.toUpperCase()}InlinePics: failed to load ${imgurl}` +
+                                    ` — placeholder stays as spacer`);
+                                resolve();
+                            });
+                            img.src = imgurl;
                         });
-                        img.addEventListener('error', function() {
-                            Lib.debug(ctx.key,
-                                `init${ctx.key.toUpperCase()}InlinePics: failed to load ${imgurl}` +
-                                ` — placeholder stays as spacer`);
-                            resolve();
-                        });
-                        img.src = imgurl;
-                    });
+                    };
 
                     if (_caaQueue) {
                         _caaQueue.enqueue(loadTask);
@@ -22798,6 +23539,11 @@
         Lib.debug('caa', `initCaaPics: request queue created (concurrency=${concurrency})`);
 
         _artInitPics(CAA_CTX);
+
+        // Schedule a background IDB sweep to evict expired image blobs and metadata
+        // records after the render completes.  Runs in browser idle time so it never
+        // competes with the image load queue.
+        _artIdbSweepExpired();
     }
 
     /**
