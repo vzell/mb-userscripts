@@ -1,29 +1,5 @@
 [
     {
-      "version": "9.99.158",
-      "date": "2026-03-14",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "mb-cell-collapse-toggle visually missing and non-functional after disk-load restore on multi-table pages — two compounding bugs in the rebuild path of _artBuildMultiRowArtCell (taken when a ul.mb-caa-art-ul already exists in the deserialized cell HTML): (a) Invisible toggle: saveTableDataToDisk serializes only cell innerHTML and colSpan/rowSpan, NOT the <td> className attribute. The mb-has-collapse-toggle class that gives the <td> position:relative (required as a CSS positioning context for the toggle's position:absolute) is therefore never present on deserialized cells. Without it the toggle is absolutely positioned relative to the nearest positioned ancestor (the table or body) rather than its own cell, so it floats outside the visible cell area and is effectively invisible. The first-build path always calls artCell.classList.add('mb-has-collapse-toggle') but the rebuild path did not — fixed by adding the same call to the rebuild path. (b) Non-functional toggle: ensureCollapseDelegate(table) was only called in the first-build path. For pages without explicit collapsableColumns configured (such as artist-releasegroups), initCollapsableColumns returns before calling ensureCollapseDelegate, so the tbody click-delegation listener is never installed and clicking the toggle has no effect. Fixed by adding ensureCollapseDelegate(artCell.closest('table')) to the rebuild path as well. Additionally: if the toggle span was absent from the serialized HTML entirely (disk files from before the multi-row feature, or stripped by an older pipeline), the rebuild path previously did nothing when toggle was null; it now creates the span fresh with the correct className and role attributes before setting the glyph and aria state."
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.157",
-      "date": "2026-03-14",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "Two bugs remaining after 9.99.156 on disk-load restore: (1) mb-cell-collapse-toggle still not rendered inside multi-row CAA/EAA art cells after loading from disk (new or same session) — root cause: getCleanCellHtml only strips transient markers at save time, so disk files saved before 9.99.155 still carry data-caa-enriched='1' on art anchors; at load time _artEnrichIcon sees the marker and returns immediately, _artBuildMultiRowArtCell is never called, and the toggle serialized in the old HTML (in whatever glyph state it was saved) is never re-wired with a live ensureCollapseDelegate. (2) CAA/EAA global toggle button still missing from the h2 header in new-session disk-load — root cause: _artCreateOrUpdateGlobalToggleButton anchors the button with countStat.after(btn) where countStat is h2 .mb-row-count-stat; during loadTableDataFromDisk this element does not exist when initCaaPics runs inside the first await renderGroupedTable(groupedRows) call (the count stat is only created later by updateH2Count), and it still does not exist when initCaaPics runs inside the runFilter() call that immediately follows (updateH2Count in runFilter creates the stat after renderGroupedTable returns, but the re-anchor loop added in 9.99.156 finds no buttons to re-anchor because the button was never created); the subsequent updateH2Count(loadedRowCount) call at the bottom of loadTableDataFromDisk recreates the stat once more, still with no button. Fixed both bugs by: (a) extracting all cleanup logic from getCleanCellHtml into a new private helper _stripTransientCellState(el) that operates in-place; getCleanCellHtml continues to use it on a cloneNode(true) copy; (b) calling _stripTransientCellState(td) on every freshly-deserialized <td> in both the multi-table and single-table branches of loadTableDataFromDisk, so old disk files are cleaned at load time regardless of when they were saved; (c) adding an explicit _artCreateOrUpdateGlobalToggleButton(CAA_CTX) and _artCreateOrUpdateGlobalToggleButton(EAA_CTX) call immediately after the final updateH2Count(loadedRowCount) in loadTableDataFromDisk, at which point the h2 .mb-row-count-stat is guaranteed to exist and will not be recreated again; in a same-session load the buttons already exist so this is a cheap idempotent update call."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.156",
       "date": "2026-03-14",
       "sections": [

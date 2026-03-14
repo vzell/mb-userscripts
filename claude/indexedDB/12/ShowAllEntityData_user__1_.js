@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.158+2026-03-14
+// @version      9.99.157+2026-03-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -21829,49 +21829,20 @@
             // Refresh the search-index attribute with the new image set.
             existingUl.dataset.mbArtSearch = _artBuildSearchText(images);
 
-            const n = images.length;
-            let toggle = artCell.querySelector(':scope > .mb-cell-collapse-toggle');
-            if (!toggle) {
-                // Toggle absent from serialized HTML (saved before multi-row feature
-                // or stripped by an older disk-load pass) — create it fresh.
-                toggle = document.createElement('span');
-                toggle.className = 'mb-cell-collapse-toggle';
-                toggle.setAttribute('role', 'button');
-                artCell.appendChild(toggle);
+            const toggle = artCell.querySelector(':scope > .mb-cell-collapse-toggle');
+            if (toggle) {
+                const n    = images.length;
+                // Always reset to collapsed state (▶) on a rebuild so the toggle
+                // glyph matches the freshly-reset li display states (all hidden by
+                // _artBuildImageLi's default display:none).  Without this reset a
+                // toggle that was saved as ◀ (expanded) in a disk file would remain
+                // ◀ after restore — clicking it would try to COLLAPSE an already-
+                // collapsed list and appear to have no effect.
+                toggle.textContent = '\u25B6'; // ▶
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.title = `Show all ${n} image(s) \u2014 click to expand`;
+                toggle.setAttribute('aria-label', `Expand: ${n} image(s) collapsed`);
             }
-
-            // Always reset to collapsed state (▶) on a rebuild so the toggle
-            // glyph matches the freshly-reset li display states (all hidden by
-            // _artBuildImageLi's default display:none).  Without this reset a
-            // toggle that was saved as ◀ (expanded) in a disk file would remain
-            // ◀ after restore — clicking it would try to COLLAPSE an already-
-            // collapsed list and appear to have no effect.
-            toggle.textContent = '\u25B6'; // ▶
-            toggle.setAttribute('aria-expanded', 'false');
-            toggle.title = `Show all ${n} image(s) \u2014 click to expand`;
-            toggle.setAttribute('aria-label', `Expand: ${n} image(s) collapsed`);
-
-            // Re-add mb-has-collapse-toggle to the artCell and call
-            // ensureCollapseDelegate, for the same reasons the first-build path
-            // does it.  These two steps are omitted from the rebuild path
-            // (designed for live retry), causing two bugs on disk-load restore:
-            //
-            // (a) mb-has-collapse-toggle is NOT serialized (saveTableDataToDisk
-            //     stores only cell innerHTML, not the <td> className).  After
-            //     disk-load the deserialized <td> never has the class, so the
-            //     toggle's `position:absolute` is resolved against the nearest
-            //     positioned ancestor (the table or body) instead of the <td>
-            //     — the toggle floats outside its cell and is visually invisible.
-            //
-            // (b) ensureCollapseDelegate is only called in the first-build path.
-            //     When no explicit collapsableColumns are configured for the page
-            //     (e.g. artist-releasegroups), initCollapsableColumns returns
-            //     early before calling ensureCollapseDelegate, so the tbody
-            //     delegation listener is never installed and clicking the toggle
-            //     does nothing.
-            artCell.classList.add('mb-has-collapse-toggle');
-            const table = artCell.closest('table');
-            if (table) ensureCollapseDelegate(table);
         } else {
             // ── First build: wrap existing content in li-0, add image lis ─────
             const ul = document.createElement('ul');

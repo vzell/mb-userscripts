@@ -52407,12 +52407,12 @@ you did not base your new fixes on the last session where you already did some f
 please reaply the current fixes on top of the last session and also fix the changelog accordingly
 
 
-* TODO why is the loading of images with GM_xmlhttpRequest so much slower that using fetch
+* DONE why is the loading of images with GM_xmlhttpRequest so much slower that using fetch
 
 why is the loading of CAA artwork images/thumbnails with GM_xmlhttpRequest using an indexedDB (sa_art_idb_enable: true)
 so much slower that using native fetch (sa_art_idb_enable: false)
 
-* when using the indexedDB path in the code, after loading data from disk, the thumbail are all populated, but the hovering over on and display a lager image does not work, not in the CAA column aand alo not 
+* DONE when using the indexedDB path in the code, after loading data from disk, the thumbail are all populated, but the hovering over on and display a lager image does not work, not in the CAA column and also not 
 ** same session
 
 In the uploaded userscript,
@@ -52523,8 +52523,7 @@ Instruments (2) ==> Instruments on releases
 
 * debug log when images per release are loadeded
 
-
-* image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknow
+* image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happesn why ?
 
 * bug for pageType "type: 'artist-releasegroups'" when NOT using indexedDB (sa_art_idb_enable: false)
 
@@ -52727,7 +52726,7 @@ Both the non-IDB (img.src) and the IDB (_artFetchCachedImage) bigbox fetch paths
 
 * TODO add information that ALL CAA images have been loaded
 
-* TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-offiucail h3 headers somehow from the offial ones - e.g. "EP - official" and "EP - unofficial"
+* TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
 
 * TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
 
@@ -52776,7 +52775,8 @@ only inside the "CAA" column ALOS the hovering over the "empty" space works and 
 #+end_example
 
 
-* https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 - Artist-RGs
+* TODO https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 - Artist-RGs
+** initial
 
 There are a couple of bugs when NOT using indexedDB (sa_art_idb_enable: false) e.g. on the page "multi"-table pageType
 https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 and reloading daat from the serialized state from
@@ -52809,19 +52809,233 @@ is gone, and also does NOT rerender even when cklicking the button
 when loading in the same session from disk the previously uncollapsed artwork icons in multi-row cells show up (they are
 rendered after the disk load) but are NOT hoverable
 
-
 4.)
 
-when loading in a NEW session from disk, when clicking the reload icon, the original multi-row uncollapse state is
-actually being restored, but the collpase/uncollapse icon is gone to show ALL the artworks per release; pressing reload
-again both the uncollapsed state and the coll/uncooll icon is gone
-
-
-* fix: when the
+when loading in the same session from disk and previously before saving, if I also had uncollapsed with the following button
 
 #+begin_example
 <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
 #+end_example
 
-had been toggled before saving, it shows up again as a ghost entry, because you can't uncollapse it again
+the display of the underlying entity page, it will be RERENDERED again as a ghost entry (after loadinf from disk again),
+BUT because you can't uncollapse it again for example. Additionally a new indpendant '<span data-erg-btn="1" title="Toggle display of underlying entity page"' icon
+is rendered anyway in the data cells
+
+5.)
+
+even when loading in a NEW session from disk, the same happens
+
+** thinking
+
+#+begin_example
+Let me now implement all the fixes. I need to:
+
+Fix getCleanCellHtml to strip transient DOM state before serialization:
+
+Strip data-caa-enriched, data-caa-multi-built, data-eaa-enriched, data-eaa-multi-built from anchors/cells
+Remove expanded ERG tables (appended dynamically) and reset ERG button state
+Strip background-image from icon spans (they'll be re-fetched)
+Strip inline-pic placeholders with blob: URLs (they'll be re-fetched)
+
+
+Fix the inline-pic hover bug for expanded li items (though this may already be handled by the IDB/non-IDB inline pics path)
+Fix the artwork icon selector - the current selector only targets icons inside cover-art links within table cells, but I need to also capture the icons nested inside the expanded li items that get dynamically added. I see the issue now - bug 3 is about the image rows that get rendered after loading, but they're not hoverable because _artLoadIcon only sets up hover previews for the span.caa-icon elements in the summary row, not the actual <img> elements inside the multi-row cells that _artBuildImageLi creates. If enrichedAttr is blocking re-enrichment, then those image rows never get their hover listeners attached in the first place.
+#+end_example
+
+#+begin_example
+All five bugs share a single root cause: getCleanCellHtml() only stripped filter-highlight spans; it left all transient JS-only state in the serialized HTML. On disk-load this dead state blocked every feature from re-initialising.
+Precise cause of each bug
+#BugCause in serialized HTML1mb-cell-collapse-toggle gone, retry does nothingdata-caa-enriched on art anchors → _artEnrichIcon returns immediately → _artBuildMultiRowArtCell never called → no toggle built, no delegation wired2Expanded artwork icons not hoverableSame blockage — _artBuildImageLi never called → no mouseenter/mouseleave on per-image <img> elements3Multi-row cells still expanded after restoreli.mb-caa-art-li-image items saved with display:"" (expanded state) instead of display:none; mb-cell-collapse-toggle saved as ◀4&5ERG ghost sub-table + dead new button (same/new session)The ERG inline <table> (no class/id, just style="marginTop:1em…") was serialized as cell content; on reload initExpandRGsFeature injected a fresh button with its own fresh empty table in its closure, but couldn't remove the ghost
+The fix (v9.99.155)
+getCleanCellHtml() now performs 11 cleanup steps on the cloned cell before returning innerHTML: strips enrichment/built/done dataset markers; resets expanded art li items to display:none; resets ◀ toggles to ▶; removes background-image from icon spans; removes inline-ph placeholder spans; unwraps cache-hint overlays; resets ERG button glyph ▼→▶; removes direct-child <table> elements (ERG ghost tables); and strips data-erg-injected.
+#+end_example
+
+** final fix + explanations
+
+#+begin_example
+Both files delivered — v9.99.155 with all five disk-load restore bugs fixed. Here's a summary of the complete change:
+Single fix location: getCleanCellHtml() — the one function called for every cell during saveTableDataToDisk(). It now performs these 11 cleanup steps on the cloned <td> before serializing its innerHTML:
+
+Strip filter-highlight spans (pre-existing)
+Delete data-caa-enriched / data-eaa-enriched from art anchors — unblocks _artEnrichIcon on restore
+Delete data-caa-multi-built / data-eaa-multi-built from <td> — unblocks _artBuildMultiRowArtCell
+Delete data-caa-inline-done / data-eaa-inline-done — unblocks _artInitInlinePics
+Reset li.mb-caa-art-li-image to display:none — collapse expanded multi-row art rows
+Reset ◀ toggle → ▶ with matching title/aria — match the collapsed li state
+Strip background-image from caa-icon/eaa-icon/artwork-icon spans — dead on reload, re-fetched anyway
+Remove .mb-caa-inline-ph / .mb-eaa-inline-ph spans — contain session-scoped blob: URLs
+Unwrap .mb-art-cache-hint-col-wrap and remove .mb-art-cache-hint-big / .mb-art-cache-hint-inline — rebuilt on each render
+Reset [data-erg-btn] glyph ▼→▶ — matches the stripped sub-table state
+Remove direct-child <table> elements and strip data-erg-injected — eliminates the ERG ghost sub-table that could never be removed by the newly injected fresh button
+#+end_example
+
+** still some bugs left
+
+In the uploaded userscript "",
+
+there are still some bugs left, e.g. on the multi-table pageType URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+1.)
+
+when loading in a NEW session from disk, the CAA toggle button does not get restored in the h2 header line AFTER the 
+
+#+begin_example
+<span class="mb-row-count-stat">(<number if rows>)</span>
+#+end_example
+
+2.)
+
+when loading in the SAME session from disk, the CAA toggle button is there but gets rendered in the h2 header line BEFORE the 
+
+#+begin_example
+<span class="mb-row-count-stat">(<number if rows>)</span>
+#+end_example
+
+3.)
+
+when loading in a NEW or in the SAME session from disk, the cache icon
+
+#+begin_example
+<span class="mb-art-cache-hint-col-wrap"><span class="mb-art-cache-hint-col" title="Timing unavailable">⚠️</span></span>
+#+end_example
+
+is doubly rendered, see the following example HTML for a mult-row cell
+
+#+begin_example
+<td data-caa-multi-built="1">
+  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back  Medium  Booklet  Booklet  Booklet">
+    <li class="mb-caa-art-li mb-caa-art-li-summary" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <a href="/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/cover-art" title="6 images found for this release / release-group" data-caa-enriched="1">
+	<span class="artwork-icon caa-icon" title="6 images found for this release / release-group" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250?_cb=1773522207697&quot;);">
+	</span>
+      </a>
+      <span class="mb-art-cache-hint-col-wrap">
+	<span class="mb-art-cache-hint-col" title="Network fetch (225 ms)">🔵
+	</span>
+      </span>
+      <span class="mb-art-cache-hint-col" title="Network fetch (640 ms)">🔵
+      </span>
+      <span class="mb-caa-count-badge" title="6 images found for this release / release-group">6
+      </span>
+      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019000164-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019005311-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Back
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019008538-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Medium
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019013436-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Booklet
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019017117-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Booklet
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019023836-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Booklet
+      </span>
+    </li>
+  </ul>
+  <span class="mb-cell-collapse-toggle" title="Show all 6 image(s) — click to expand" role="button" aria-expanded="true" aria-label="Expand: 6 image(s) collapsed">◀
+  </span>
+</td>
+#+end_example
+
+additionally the "mb-cell-collapse-toggle"
+
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Show all 6 image(s) — click to expand" role="button" aria-expanded="false" aria-label="Expand: 6 image(s) collapsed">▶</span>
+#+end_example
+
+is NOT rendered to uncollapse the additional artwork images although the list of images belonging to release are present in the HTML code
+
+** still bugs
+
+1.)
+
+the '<span class="mb-cell-collapse-toggle"' is still NOT rendered inside the multi-row cell after loading from disk in either NEW or SAME session
+
+2.)
+
+when loading in a NEW session from disk, the CAA toggle button does not get restored in the h2 header line
+
+** still bugs
+
+OK, when loading in a NEW session from disk, the CAA toggle button NOW IS rendered, thx.
+
+There is still the problem with the "mb-cell-collapse-toggle" NOT being rendered. Here is a new HTML cell how it looks like:
+
+#+begin_example
+<td data-caa-multi-built="1">
+  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back  Medium  Booklet  Booklet  Booklet">
+    <li class="mb-caa-art-li mb-caa-art-li-summary" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <a href="/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/cover-art" title="6 images found for this release / release-group" data-caa-enriched="1">
+	<span class="artwork-icon caa-icon" title="6 images found for this release / release-group" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250&quot;);">
+	</span>
+      </a>
+      <span class="mb-art-cache-hint-col-wrap">
+	<span class="mb-art-cache-hint-col" title="Network fetch (266 ms)">🔵
+	</span>
+	<span class="mb-caa-count-badge" title="6 images found for this release / release-group">6
+	</span>
+      </span>
+      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+    <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019000164-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019005311-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Back
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019008538-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Medium
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019013436-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Booklet
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019017117-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Booklet
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019023836-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Booklet
+      </span>
+    </li>
+  </ul>
+  <span class="mb-cell-collapse-toggle" title="Show all 6 image(s) — click to expand" role="button" aria-expanded="false" aria-label="Expand: 6 image(s) collapsed">▶
+  </span>
+</td>
+#+end_example
+
+** still bugs
 

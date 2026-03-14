@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.158+2026-03-14
+// @version      9.99.155+2026-03-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -11721,30 +11721,6 @@
                 targetH2.appendChild(span);
             }
 
-            // Re-anchor global art toggle/retry buttons so they always sit
-            // immediately after the (newly created/replaced) count stat span.
-            //
-            // _artCreateOrUpdateGlobalToggleButton places these buttons with
-            // countStat.after(btn), but updateH2Count removes and recreates
-            // the count stat span on every call — leaving any previously placed
-            // buttons floating at their old position (before the new span).
-            // This causes the CAA/EAA global buttons to appear in the wrong
-            // order (before the count stat) on same-session disk-loads, and to
-            // be invisible (deferred "not found" early-exit) on new-session
-            // disk-loads where the very first renderGroupedTable call ran before
-            // the count stat was created.
-            //
-            // Fix: collect all direct-child global art buttons in their current
-            // DOM order, then re-insert them in REVERSE order immediately after
-            // the new span (reversing ensures the first-collected element ends
-            // up first in the DOM after all insertions complete).
-            const globalArtBtns = Array.from(targetH2.querySelectorAll(
-                ':scope > .mb-global-art-toggle-btn, :scope > [id$="-global-retry"]'
-            ));
-            for (let i = globalArtBtns.length - 1; i >= 0; i--) {
-                span.after(globalArtBtns[i]);
-            }
-
             if (activeDefinition.tableMode !== 'multi') {
 
                 if (filterContainer.parentNode !== targetH2) {
@@ -18643,87 +18619,78 @@
             span.replaceWith(document.createTextNode(span.textContent));
         });
 
-        // ── 2–8. Strip all JS-only transient state ────────────────────────────
-        // Shared helper — also called by loadTableDataFromDisk on deserialized
-        // cells so that disk files saved before 9.99.157 (which still carry
-        // these markers verbatim) are cleaned up at load time as well.
-        _stripTransientCellState(clone);
-
-        return clone.innerHTML;
-    }
-
-    /**
-     * Strips all transient JS-only state from a `<td>` (or a clone of one)
-     * so that it is safe to use as a source row after a disk-load restore.
-     *
-     * This function operates **in-place** on the supplied element.
-     * Callers that need to preserve the live DOM node should pass a
-     * `cloneNode(true)` copy instead (as `getCleanCellHtml` does).
-     *
-     * Cleaned state (matches the full list documented on `getCleanCellHtml`):
-     *   - CAA/EAA enrichment dataset markers (caaEnriched, eaaEnriched,
-     *     caaMultiBuilt, eaaMultiBuilt, caaInlineDone, eaaInlineDone)
-     *   - Expanded art-li items reset to display:none
-     *   - Expanded .mb-cell-collapse-toggle (◀ U+25C0) reset to ▶
-     *   - background-image / background-size removed from artwork-icon spans
-     *   - .mb-caa-inline-ph / .mb-eaa-inline-ph placeholder spans removed
-     *   - .mb-art-cache-hint-col-wrap, .mb-art-cache-hint-col,
-     *     .mb-art-cache-hint-big, .mb-art-cache-hint-inline removed
-     *   - [data-erg-btn] glyph reset from ▼ to ▶
-     *   - Direct-child <table> elements (ERG ghost tables) removed
-     *   - data-erg-injected dataset marker removed
-     *
-     * @param {HTMLElement} el - The <td> element to clean in-place.
-     */
-    function _stripTransientCellState(el) {
-        // CAA/EAA enrichment markers
-        el.querySelectorAll('a[data-caa-enriched], a[data-eaa-enriched]').forEach(a => {
+        // ── 2. Strip CAA/EAA enrichment markers so features re-init on load ──
+        // data-caa-enriched / data-eaa-enriched
+        clone.querySelectorAll('a[data-caa-enriched], a[data-eaa-enriched]').forEach(a => {
             delete a.dataset.caaEnriched;
             delete a.dataset.eaaEnriched;
         });
-        delete el.dataset.caaMultiBuilt;
-        delete el.dataset.eaaMultiBuilt;
-        delete el.dataset.caaInlineDone;
-        delete el.dataset.eaaInlineDone;
+        // data-caa-multi-built / data-eaa-multi-built
+        delete clone.dataset.caaMultiBuilt;
+        delete clone.dataset.eaaMultiBuilt;
+        // data-caa-inline-done / data-eaa-inline-done
+        delete clone.dataset.caaInlineDone;
+        delete clone.dataset.eaaInlineDone;
 
-        // Art li items → collapsed
-        el.querySelectorAll('li.mb-caa-art-li-image, li.mb-eaa-art-li-image').forEach(li => {
+        // ── 3. Reset expanded art li items to collapsed (display:none) ────────
+        clone.querySelectorAll('li.mb-caa-art-li-image, li.mb-eaa-art-li-image').forEach(li => {
             li.style.display = 'none';
         });
 
-        // Collapse toggle → ▶ (◀ U+25C0 is the expanded glyph)
-        el.querySelectorAll('.mb-cell-collapse-toggle').forEach(toggle => {
-            if (toggle.textContent.trim() === '\u25C0') { // ◀
+        // ── 4. Reset any expanded collapse toggle (◀) back to collapsed (▶) ──
+        clone.querySelectorAll('.mb-cell-collapse-toggle').forEach(toggle => {
+            if (toggle.textContent.trim() === '\u25C4') { // ◀
                 toggle.textContent = '\u25B6'; // ▶
                 toggle.setAttribute('aria-expanded', 'false');
                 const ul = toggle.closest('td')?.querySelector(':scope > ul');
                 if (ul) {
-                    const n = ul.querySelectorAll(':scope > li').length - 1;
+                    const n = ul.querySelectorAll(':scope > li').length - 1; // image lis
                     toggle.title = `Show all ${n} image(s) \u2014 click to expand`;
                     toggle.setAttribute('aria-label', `Expand: ${n} image(s) collapsed`);
                 }
             }
         });
 
-        // Artwork-icon background-image (session-scoped or will be re-fetched)
-        el.querySelectorAll('span.caa-icon, span.eaa-icon, span.artwork-icon').forEach(span => {
+        // ── 5. Strip background-image from artwork-icon spans ─────────────────
+        // These are session-scoped blob: URLs (IDB path) or will be re-fetched
+        // anyway.  Leaving them causes stale/broken images on reload.
+        clone.querySelectorAll(
+            'span.caa-icon, span.eaa-icon, span.artwork-icon'
+        ).forEach(span => {
             span.style.removeProperty('background-image');
             span.style.removeProperty('background-size');
         });
 
-        // Inline-thumbnail placeholder spans (_artInitInlinePics re-injects them)
-        el.querySelectorAll('.mb-caa-inline-ph, .mb-eaa-inline-ph').forEach(ph => ph.remove());
+        // ── 6. Remove inline-thumbnail placeholder spans ──────────────────────
+        // .mb-caa-inline-ph / .mb-eaa-inline-ph: _artInitInlinePics re-injects them.
+        // Their src may be a dead blob: URL after a session boundary.
+        clone.querySelectorAll('.mb-caa-inline-ph, .mb-eaa-inline-ph').forEach(ph => ph.remove());
 
-        // Cache-hint overlays (cosmetic, rebuilt on render)
-        el.querySelectorAll('.mb-art-cache-hint-col-wrap').forEach(wrap => wrap.remove());
-        el.querySelectorAll('.mb-art-cache-hint-col').forEach(hint => hint.remove());
-        el.querySelectorAll('.mb-art-cache-hint-big, .mb-art-cache-hint-inline').forEach(e => e.remove());
+        // ── 7. Remove cache-hint overlay spans (cosmetic, rebuilt on render) ──
+        clone.querySelectorAll('.mb-art-cache-hint-col-wrap').forEach(wrap => {
+            // Unwrap: move children back to parent before removing the wrapper span.
+            while (wrap.firstChild) wrap.parentNode.insertBefore(wrap.firstChild, wrap);
+            wrap.remove();
+        });
+        clone.querySelectorAll('.mb-art-cache-hint-big, .mb-art-cache-hint-inline').forEach(el => el.remove());
 
-        // ERG: reset expanded button glyph and remove ghost sub-tables
-        el.querySelectorAll('[data-erg-btn]').forEach(btn => { btn.innerHTML = '&#9654;'; });
-        Array.from(el.children).forEach(child => { if (child.tagName === 'TABLE') child.remove(); });
-        delete el.dataset.ergInjected;
-        el.querySelectorAll('[data-erg-injected]').forEach(child => delete child.dataset.ergInjected);
+        // ── 8. ERG: reset expanded buttons and remove ghost sub-tables ────────
+        // Reset any expanded ERG button glyph (▼ → ▶) before the sub-table is
+        // removed, so the button appearance matches the stripped-content state.
+        clone.querySelectorAll('[data-erg-btn]').forEach(btn => {
+            btn.innerHTML = '&#9654;'; // ▶
+        });
+        // Remove any direct-child <table> elements — these are ERG-fetched inline
+        // release/release-group tables that have no persistent class or id.
+        // A <table> as a direct child of a <td> clone is always an ERG artifact.
+        Array.from(clone.children).forEach(child => {
+            if (child.tagName === 'TABLE') child.remove();
+        });
+        // Strip data-erg-injected so initExpandRGsFeature re-injects a live button.
+        delete clone.dataset.ergInjected;
+        clone.querySelectorAll('[data-erg-injected]').forEach(el => delete el.dataset.ergInjected);
+
+        return clone.innerHTML;
     }
 
     /**
@@ -19181,12 +19148,6 @@
                                 td.innerHTML = cellData.html;
                                 if (cellData.colSpan > 1) td.colSpan = cellData.colSpan;
                                 if (cellData.rowSpan > 1) td.rowSpan = cellData.rowSpan;
-                                // Strip transient JS-only state from cells that were
-                                // saved before 9.99.157 (before getCleanCellHtml began
-                                // stripping these markers at save time).  Files saved
-                                // with 9.99.157+ have already been cleaned, so this is
-                                // a cheap no-op for them.
-                                _stripTransientCellState(td);
                                 tr.appendChild(td);
                             });
 
@@ -19217,7 +19178,6 @@
                             td.innerHTML = cellData.html;
                             if (cellData.colSpan > 1) td.colSpan = cellData.colSpan;
                             if (cellData.rowSpan > 1) td.rowSpan = cellData.rowSpan;
-                            _stripTransientCellState(td);
                             tr.appendChild(td);
                         });
 
@@ -19519,33 +19479,6 @@
                 // is the authoritative and sufficient call site.
 
                 updateH2Count(loadedRowCount, loadedRowCount);
-
-                // Explicitly place the CAA/EAA global toggle buttons in the h2
-                // after the count stat has been created.
-                //
-                // _artCreateOrUpdateGlobalToggleButton uses `countStat.after(btn)`
-                // to position the button immediately after `h2 .mb-row-count-stat`.
-                // During a disk-load the call sequence is:
-                //   1. await renderGroupedTable(groupedRows)  → initCaaPics
-                //      → _artCreateOrUpdateGlobalToggleButton → defers
-                //        (h2 .mb-row-count-stat does not exist yet)
-                //   2. runFilter() → renderGroupedTable(filteredArray) → initCaaPics
-                //      → _artCreateOrUpdateGlobalToggleButton → still defers
-                //      → then runFilter calls updateH2Count: count stat created
-                //        but updateH2Count's re-anchor loop finds no buttons yet
-                //   3. updateH2Count(loadedRowCount) [this call] recreates the stat
-                //        re-anchor loop still finds no buttons
-                //
-                // Net result in a new session: the button is never created.
-                // Fix: call _artCreateOrUpdateGlobalToggleButton here, after the
-                // count stat definitely exists.  In a same-session load the button
-                // already exists and this is a cheap idempotent update.
-                if (activeDefinition.tableMode === 'multi') {
-                    if (Lib.settings.sa_enable_caa_pics) {
-                        _artCreateOrUpdateGlobalToggleButton(CAA_CTX);
-                        _artCreateOrUpdateGlobalToggleButton(EAA_CTX);
-                    }
-                }
 
                 // Show main filter container (if hidden)
                 if (!filterContainer.parentNode) filterContainer.style.display = 'inline-flex';
@@ -21829,49 +21762,12 @@
             // Refresh the search-index attribute with the new image set.
             existingUl.dataset.mbArtSearch = _artBuildSearchText(images);
 
-            const n = images.length;
-            let toggle = artCell.querySelector(':scope > .mb-cell-collapse-toggle');
-            if (!toggle) {
-                // Toggle absent from serialized HTML (saved before multi-row feature
-                // or stripped by an older disk-load pass) — create it fresh.
-                toggle = document.createElement('span');
-                toggle.className = 'mb-cell-collapse-toggle';
-                toggle.setAttribute('role', 'button');
-                artCell.appendChild(toggle);
+            const toggle = artCell.querySelector(':scope > .mb-cell-collapse-toggle');
+            if (toggle) {
+                const n    = images.length;
+                toggle.title = `Show all ${n} image(s) \u2014 click to expand`;
+                toggle.setAttribute('aria-label', `Expand: ${n} image(s) collapsed`);
             }
-
-            // Always reset to collapsed state (▶) on a rebuild so the toggle
-            // glyph matches the freshly-reset li display states (all hidden by
-            // _artBuildImageLi's default display:none).  Without this reset a
-            // toggle that was saved as ◀ (expanded) in a disk file would remain
-            // ◀ after restore — clicking it would try to COLLAPSE an already-
-            // collapsed list and appear to have no effect.
-            toggle.textContent = '\u25B6'; // ▶
-            toggle.setAttribute('aria-expanded', 'false');
-            toggle.title = `Show all ${n} image(s) \u2014 click to expand`;
-            toggle.setAttribute('aria-label', `Expand: ${n} image(s) collapsed`);
-
-            // Re-add mb-has-collapse-toggle to the artCell and call
-            // ensureCollapseDelegate, for the same reasons the first-build path
-            // does it.  These two steps are omitted from the rebuild path
-            // (designed for live retry), causing two bugs on disk-load restore:
-            //
-            // (a) mb-has-collapse-toggle is NOT serialized (saveTableDataToDisk
-            //     stores only cell innerHTML, not the <td> className).  After
-            //     disk-load the deserialized <td> never has the class, so the
-            //     toggle's `position:absolute` is resolved against the nearest
-            //     positioned ancestor (the table or body) instead of the <td>
-            //     — the toggle floats outside its cell and is visually invisible.
-            //
-            // (b) ensureCollapseDelegate is only called in the first-build path.
-            //     When no explicit collapsableColumns are configured for the page
-            //     (e.g. artist-releasegroups), initCollapsableColumns returns
-            //     early before calling ensureCollapseDelegate, so the tbody
-            //     delegation listener is never installed and clicking the toggle
-            //     does nothing.
-            artCell.classList.add('mb-has-collapse-toggle');
-            const table = artCell.closest('table');
-            if (table) ensureCollapseDelegate(table);
         } else {
             // ── First build: wrap existing content in li-0, add image lis ─────
             const ul = document.createElement('ul');
