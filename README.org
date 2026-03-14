@@ -52244,12 +52244,12 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 * TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
 
-* TODO reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-
+* DONE reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 
 In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
+
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
@@ -52277,9 +52277,6 @@ to give the user the chance to quickly filter either for rows with OR without im
 
 
 * TODO implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
-
-
-
 ** initial
 
 please implement an indexed-DB persistent storage solution for the fetched artwork images (CAA and EAA). When rendering
@@ -52318,7 +52315,9 @@ the hovering over a small artwork image inside the "CAA" column works when the i
 network. But when then saving the table data to disk with "Save to Disk"-button and later on loading the data again with
 the "Load from Disk"-button,
 
-* todos
+
+* DONE bugs with indexedDB - but disabled
+** initial
 
 When the uploaded userscript executes with
 
@@ -52347,12 +52346,6 @@ Even after pressing the "Reload all CAA images" button for this table, the resul
 CAA toggle button.
 
 Please explain ... I also uploaded the debug log in the file "withoutDB-Artist-RGs"
-
-
-
-Another strange effect:
-
-There is one sub-table also at the end of the rendered page "Single + Kuve (14)"
 
 ** empty "CAA" column
 
@@ -52412,3 +52405,106 @@ you did not base your new fixes on the last session where you already did some f
 #+end_example
 
 please reaply the current fixes on top of the last session and also fix the changelog accordingly
+
+
+* why is the loading of images with GM_xmlhttpRequest so much slower that using fetch
+
+
+why is the loading of CAA artwork images/thumbnails with GM_xmlhttpRequest using an indexedDB (sa_art_idb_enable: true)
+so much slower that using native fetch (sa_art_idb_enable: false)
+
+* when using the indexedDB path in the code, after loading data from disk, the thumbail are all populated, but the hovering over on and display a lager image does not work, not in the CAA column aand alo not 
+** same session
+
+In the uploaded userscript,
+
+for the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+when using the indexedDB path in the code, after loading data from disk, the thumbnaila are all populated, but the
+hovering over a thumbnail and display a lager image does not work, not in the CAA column aand also not in the "Titel" column
+
+** new session
+
+when creating a new session, and then on the initial page, load the data from disk, then all the images in the "Title"
+column are rendered as the browser broken image, but the CAA images display + the hover over bigger pictures
+
+see also the uploaded debug log in the file "debug"
+
+** changelog
+
+#+begin_example
+{
+  "version": "9.99.151",
+  "date": "2026-03-14",
+  "sections": [
+    {
+      "label": "🐛 Bug Fixes",
+      "items": [
+        "Inline Title-column thumbnails rendered as browser broken-image icons on the first load in a new browser session after loading data from disk: the disk-save pipeline serialises cell HTML verbatim, including the <span class=\"mb-caa-inline-ph\"><img src=\"blob:chrome-extension://…\"> elements written by _artInitInlinePics. blob: URLs are session-scoped — they are revoked on pagehide and unknown to the new session's _artIdbBlobUrls Set. Case C of the _artInitInlinePics idempotency logic detects 'marker absent, placeholder present' and, before this fix, simply re-stamped the td-level marker and returned immediately, leaving the broken blob: URL in img.src untouched. Fixed by splitting Case C into two sub-cases keyed on a single _artIdbBlobUrls.has(img.src) check: C1 (same-session restore, blob: URL still live) preserves the previous behaviour — image is already rendering, hover listeners are re-wired, function returns; C2 (new-session restore, blob: URL absent from _artIdbBlobUrls) immediately clears img.src to '' and hides the <img> to remove the broken-image icon, then enqueues a refetchTask through _caaQueue (respecting the shared concurrency budget) which calls _artFetchCachedImage(imgurl) and writes the resulting objectUrl back into the existing <img> element inside the existing ph span. Reusing the existing DOM nodes is essential: falling through to the fresh-injection code path below Case C would append a second <span class=\"mb-caa-inline-ph\"> alongside the first one, producing duplicate thumbnails per cell. Both C1 and C2 attach hover listeners unconditionally (guarded by the per-placeholder ctx.key+'HoverWired' idempotency attribute) so the hover-preview fix from 9.99.150 is preserved for both sub-cases. A native img.onload/onerror fallback path inside refetchTask handles the IDB-disabled case identically to the original fresh-injection loadTask."
+      ]
+    }
+  ]
+},
+{
+  "version": "9.99.150",
+  "date": "2026-03-14",
+  "sections": [
+    {
+      "label": "🐛 Bug Fixes",
+      "items": [
+        "Hover preview popup blank / never populated when sa_art_idb_enable=true (affects both CAA icon column and inline Title-column thumbnails): _showArtHoverPreview assigned the plain coverartarchive.org / eventartarchive.org network URL directly to previewImg.src. With IDB enabled, thumbnails are fetched via GM_xmlhttpRequest in Tampermonkey's extension background context; the browser's page-level HTTP cache is never populated for those URLs. When hover fired, previewImg.src triggered a fresh page-context request that had to follow the non-cacheable 302 redirect to archive.org — a 2–4 s round-trip — so the popup rendered as an empty white box and the image arrived only after the user had already moved away. Fixed by routing through _artFetchCachedImage(imgUrl) when sa_art_idb_enable is true: the big-picture strip has already loaded the same bigSize URL into the session Map (_artIdbMemCache) via the _artInitBigPics IDB path, so _artFetchCachedImage resolves synchronously in the same microtask and previewImg.src receives a live blob: URL with no network round-trip. The div.style.display !== 'none' guard inside the .then() ensures a late-resolving fetch (cold IDB miss) does not update a popup the user has already left. The original img.src assignment path is retained for the IDB-disabled case. Simultaneously fixed: inline Title-column thumbnails on same-session disk-load restore had no hover listeners attached — the mouseenter/mouseleave wiring lives inside the loadTask() closure, which Case C of the _artInitInlinePics idempotency logic never called (it returned immediately after re-stamping the marker). Fixed by iterating all existing ph spans in Case C, re-deriving bigUrl from the entity link href, and attaching listeners on each ph element, guarded by a per-placeholder ctx.key+'HoverWired' dataset attribute to prevent accumulation on repeated _artInitInlinePics calls."
+      ]
+    }
+  ]
+},
+#+end_example
+
+#+begin_example
+9.99.150 covers both changes made in that session: the _showArtHoverPreview IDB routing fix (which affects all hover preview regardless of how the page was loaded) and the original Case C hover-listener fix (which only addressed same-session restores). They're combined into one entry because they were a single atomic code session and are causally related — the hover routing fix is only observable once the listeners are actually attached.
+9.99.151 covers only the C1/C2 split, which is a follow-on fix that the debug log from the new session exposed: the broken-image problem was a distinct root cause (dead blob: URL in a new session) that the 9.99.150 Case C change didn't reach.
+Both entries follow the established style of single dense paragraphs: cause first, precise technical mechanism second, fix last, with the key guard/idempotency details called out explicitly.
+#+end_example
+
+** broken icon removed
+
+the latest change removed the broken browser icon, but now ONLY the cache identifier gets rendered but NO thumbnail
+
+** changelog
+
+#+begin_example
+{
+  "version": "9.99.152",
+  "date": "2026-03-14",
+  "sections": [
+    {
+      "label": "🐛 Bug Fixes",
+      "items": [
+        "Inline Title-column thumbnails invisible after new-session disk-load restore — cache-hint emoji rendered but <img> remained display:none: the C2 path introduced in 9.99.151 set td.dataset[ctx.inlineDoneAttr]='1' eagerly at the top of Case C before enqueueing the refetch. The disk-load pipeline calls renderGroupedTable twice in immediate succession — first to build the initial DOM, then again synchronously via runFilter() which clones every td with cloneNode(true). cloneNode copies all dataset attributes, so every cloned td in the second render already carried the 'done' marker. The second render's initCaaInlinePics() found marker present + ph span present → Case A → skip, while initCaaPics() simultaneously replaced _caaQueue with a fresh instance, abandoning all first-render refetch tasks still pending in the old queue. Net result: queue tasks from the first render ran on detached nodes with no visible effect; queue tasks for the second render were never enqueued; all images remained display:none and only the serialised cache-hint emoji from the saved HTML was visible. Fixed by removing the eager marker assignment from C2: td.dataset[ctx.inlineDoneAttr]='1' is now set inside the _artFetchCachedImage .then() callback, after existingImg.src and existingImg.style.display='inline' are written, and only when existingImg.isConnected is true (guarding against tasks that complete after a subsequent tbody.innerHTML='' detaches the node). The second render's cloned tds therefore carry no marker, fall into Case C again, and trigger their own refetch on the live DOM nodes that are actually rendered. C1 (same-session restore, blobIsAlive=true) still stamps the marker immediately because the image is already visible and no async path is involved. The native img.onload fallback path (IDB disabled) received the same deferred-marker and isConnected treatment, and its event listeners were converted to { once: true } to prevent accumulation."
+      ]
+    }
+  ]
+},
+#+end_example
+
+** ok, now at least the thumbnail gets renderd after diskload in the title column, BUT the hovering functionality is NOT working ONLY in the CAA column
+
+ok, now at least the thumbnail gets rendered after disk load in the title column, BUT the hovering functionality is NOT working ONLY in the CAA column
+
+please also provide a changelog entry
+
+** changelog
+
+#+begin_example
+{
+  "version": "9.99.153",
+  "date": "2026-03-14",
+  "sections": [
+    {
+      "label": "🐛 Bug Fixes",
+      "items": [
+        "Inline Title-column thumbnail hover preview non-functional after new-session disk-load restore: the hover-wiring block in Case C of _artInitInlinePics set existingPh.dataset[hoverWiredAttr]='1' on the first render's ph span before enqueueing the C2 refetch. cloneNode(true) — used by the second renderGroupedTable pass inside runFilter() to rebuild tds from groupedRows — copied all dataset attributes including hoverWiredAttr to the cloned ph spans. The second render's Case C then evaluated !existingPh.dataset[hoverWiredAttr] as false and skipped the addEventListener calls entirely, leaving the live second-render ph element with no mouseenter/mouseleave listeners. Fixed by replacing the guarded if block with an unconditional delete existingPh.dataset[hoverWiredAttr] followed by the listener attachment, so any cloneNode-inherited value is always cleared before re-wiring. The hoverWiredAttr idempotency guard is unnecessary inside Case C in any case: Case C only fires when td.dataset[ctx.inlineDoneAttr] is absent, and every exit path of Case C stamps that marker (C1 immediately, C2 after successful refetch), making it impossible for Case C to re-enter on the same physical DOM node — and therefore impossible for duplicate listeners to accumulate."
+      ]
+    }
+  ]
+}
+#+end_example
