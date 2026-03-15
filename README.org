@@ -53412,8 +53412,9 @@ rename in the following lines (linenumbers provided) the "title" from
   22217:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
   22221:                    expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
   22270:            expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
-#+end_example
 
+                    showAllBtn.title = `Click to show all${countSuffix} rows in a new browser tab (currently only showing 100 entries per MusicBrainz limitation)`;
+#+end_example
 
 to
 
@@ -53461,6 +53462,7 @@ to
   17183:                ? `Collapse back to just show the first item in the list (total shown ${lis.length})`
   17479:                    ? `Collapse back to just show the first item in the list (total shown ${lis.length})`
 
+                    showAllBtn.title = `Click to show all${countSuffix} rows in a new browser tab (MusicBrainz Artist-Relationships pages have currently a limit of 100 rows rendered at most per relationship type)`;
 #+end_example
 
 * rename "Save current table data to disk in a serialized format
@@ -53636,7 +53638,7 @@ only inside the "CAA" column ALSO the hovering over the "empty" space works and 
 
 
 
-* TODO reorder the symbols in column headers
+* DONE reorder the symbols in column headers
 ** DONE initial
 
 reorder the information in all the table column headers (the "CAA/EAA" columns are special as they have additional icon/tumbnails for the artwork display)
@@ -53742,7 +53744,7 @@ There should also be just ONE tooltip with the text
 Show the <number of different unique values per column> different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing "Enter" on an entry
 #+end_example
 
-** TODO add a toggle button inside the "CAA" column header info with text "▶ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased
+** DONE add a toggle button inside the "CAA" column header info with text "▶ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased
 
 add a toggle button inside the "CAA" column header for each table/sub-table which actually has a "CAA" column with text "▶ [front CAA thumbnail from first row which has artwork]"
 when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased. The placement should be after the
