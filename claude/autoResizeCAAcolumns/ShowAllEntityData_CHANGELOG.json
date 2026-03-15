@@ -1,17 +1,5 @@
 [
     {
-      "version": "9.99.166",
-      "date": "2026-03-14",
-      "sections": [
-        {
-          "label": "✨ New Features / Changes",
-          "items": [
-            "CAA/EAA column-header expand/collapse toggle button — for every table/sub-table that has a synthetic CAA or EAA column, a new .mb-caa-col-hdr-btn span is injected into the mb-col-hdr-flex row of the column header, positioned immediately before the existing mb-col-collapse-hdr-btn (or the 📊 unique-values button if that is absent). The button shows the front thumbnail of the first row that has artwork (16×16 px, sourced from ctx.archiveHost + entityPath + '/front-' + size) alongside a glyph: ▶ when all [data-caa-expand-btn] cells in that table are collapsed, ▼ when at least one is expanded. Clicking ▶ iterates all [data-caa-expand-btn] spans in the table body and fires a synthetic .click() on each one that is not already in the expanded state (mirroring the exact action of clicking the per-cell button), then updates the header button to ▼; clicking ▼ collapses all and restores ▶. The button is created by the new _artInitCaaColHeaderToggle(ctx) function which is called from _artInitPics (after _artCreateOrUpdateGlobalToggleButton) and is therefore refreshed on every render pass. A companion _updateCaaColHdrBtn(btn, expanded, thumbSrc) helper manages the glyph, title, aria-expanded, and img.src updates. The initCollapsableColumns cleanup pass now also removes stale .mb-caa-col-hdr-btn elements so they are correctly rebuilt on re-renders. CSS class .mb-caa-col-hdr-btn uses inline-flex with a 3px gap between the glyph and thumbnail, border-radius:3px, and a hover tint matching the existing sort/collapse header button style."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.165",
       "date": "2026-03-14",
       "sections": [

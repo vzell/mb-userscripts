@@ -49588,8 +49588,7 @@ to the event parts extracted
 * "video" icon - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings - "shooting location for"
 
 
-* remove the toggle icon from the "CAA" column 
-
+* DONE remove the toggle icon from the "CAA" column 
 * DONE Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a miniature picture the standard browser "broken image" placeholder is rendered instead
 
 Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a
@@ -50119,7 +50118,6 @@ Lets assume we are on the final rendered page by reading all data from the net o
 please fix  
    
 
-
 * DONE In the page definition variable "const pageDefinitions" add the following new "columnEraser"
 
 #+begin_example
@@ -50209,8 +50207,7 @@ Here is are examples of the cell HTML without the stripping:
 </td>
 #+end_example
 
-
-* is it better to use fetch or GM_xmlhttpRequest
+* DONE is it better to use fetch or GM_xmlhttpRequest
 ** question
 
 In the uploaded userscript,
@@ -50279,15 +50276,14 @@ Both caaLoadIcon and initCaaInlinePics would call caaLoadImageCached(imgurl) and
 This is a separate, non-urgent improvement — the browser cache already prevents the actual network double-hit. Worth doing as a dedicated commit when convenient.
 #+end_example
 
-* do we actually have enough information available for each pageType to completely switch to the GM_xmlhttpRequest, as it looks somehow we double the downloading of images from CAA for the synthetic "CAA" columns (right now only needed to display th number of e) and the 
+* DONE do we actually have enough information available for each pageType to completely switch to the GM_xmlhttpRequest, as it looks somehow we double the downloading of images from CAA for the synthetic "CAA" columns (right now only needed to display th number of e) and the 
 
 do we actually have enough information available for each pageType to completely switch to the GM_xmlhttpRequest, as it
 looks somehow we double the downloading of images from CAA for the synthetic "CAA" columns (right now only needed to
 display the number of images in the release group) and the column where the actual title for the release or release group
 is located and where the CAA artwork gets prepended.
 
-
-* questions
+* DONE questions
 
 In the uploaded userscript,
 
@@ -50304,7 +50300,7 @@ In the uploaded userscript,
 - is it worth implementing an indexed-DB persistent storage solution for the fetched images altogether. Probably the
   "Load from Disk" path would benefit the most, as there are probably almost no network rountrips involved
   
-* questions + answers
+* DONE questions + answers
 
 - Is it possible to distinguish between a fresh network fetch and a browser cache hit by using the Resource Timing API
   (maybe with a fallback check using the duration property in case the transferSize is restricted) and expose this information somehow visually (maybe in the "CAA" column)
@@ -50396,7 +50392,7 @@ Verdict: worth implementing as a dedicated feature. Suggested scope: IDB metadat
 - is it worth implementing an indexed-DB persistent storage solution for the fetched images altogether. Probably the
   "Load from Disk" path would benefit the most, as there are probably almost no network rountrips involved
   
-* ChatGPT
+* DONE ChatGPT
 ** recommendations
 
 I’ll go through your ideas one by one from a technical feasibility + real benefit perspective for a userscript like
@@ -51285,14 +51281,6 @@ DOM rendering batching
 
 Those changes together would likely cut the runtime of your script by 50–70% on big pages.
 
-
-* GOOD versions
-** /doubleCAAimages
-
-
-* TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
-
-
 * DONE add a multi-row cell for the CAA info
 ** DONE initial
 
@@ -52031,103 +52019,6 @@ function initNavigationGuard() {
 
 still allows it
 
-
-* Reintroduce jesus2099 "Release events"
-
-#+begin_example
-        {
-            type: 'place-performances-filtered',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
-            features: {
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-
-        {
-            type: 'artist-relationships-filtered',
-            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-#+end_example
-
-#+begin_example
-https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
-#+end_example
-
-
-* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
-
-* TODO for RGs CAA artwork also display the Release from where it's sourced
-
-* add menu to hover CAA picture, for different actions
-
-
-* TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-
-* DONE reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-
-In the newly uploaded userscript,
-
-a couple of things are still missing (also add a changelog):
-
-
-* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
-** DONE initial
-
-In the newly uploaded userscript,
-
-On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
-
-The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
-the rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
-is completely missing, to give the user the chance to quickly filter either for rows with OR without images (doesn't
-matter what other information is there)
-
-also add a changelog
-
-** DONE doesn't work
-
-In the newly uploaded userscript,
-
-On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
-
-The "Cell stucture" submenu list should have, additionally to the entries for multi-re-cells collapse/uncollape states,
-entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
-to give the user the chance to quickly filter either for rows with OR without images
-
-
 * DONE implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
 ** initial
 
@@ -52166,143 +52057,6 @@ redirects to arbitrary cache server which ends in *.archive.org
 the hovering over a small artwork image inside the "CAA" column works when the images are loaded the first time over the
 network. But when then saving the table data to disk with "Save to Disk"-button and later on loading the data again with
 the "Load from Disk"-button,
-
-
-* todos
-
-In the newly uploaded userscript,
-
-a couple of things are still missing (also add a changelog):
-
-
-* Reintroduce jesus2099 "Release events"
-
-#+begin_example
-        {
-            type: 'place-performances-filtered',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
-            features: {
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-
-        {
-            type: 'artist-relationships-filtered',
-            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-#+end_example
-
-#+begin_example
-https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
-#+end_example
-
-
-* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
-
-* TODO for RGs CAA artwork also display the Release fom where it's sourced
-
-* add menu to hover CAA picture, for different actions
-
-
-* TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-
-* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
-** DONE initial
-
-In the newly uploaded userscript,
-
-On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
-
-The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
-the rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
-is completely missing, to give the user the chance to quickly filter either for rows with OR without images (doesn't
-matter what other information is there)
-
-also add a changelog
-
-** DONE doesn't work
-
-In the newly uploaded userscript,
-
-On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
-
-The "Cell stucture" submenu list should have, additionally to the entries for multi-re-cells collapse/uncollape states,
-entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
-to give the user the chance to quickly filter either for rows with OR without images
-
-
-* TODO implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
-** initial
-
-please implement an indexed-DB persistent storage solution for the fetched artwork images (CAA and EAA). When rendering
-the final page the index DB should always be consulted first for a match before reaching out to the network.
-
-Probably the "Load from Disk" path would benefit the most, as there are probably almost no network rountrips involved.
-
-** *.archive.org
-
-a couple of issues:
-
-1.)
-
-the button "Save to Disk" popsup a browser alert dialog which says "Your are about to leave this page". Please exlude
-this specific button click inside the function
-
-#+begin_example
-function initNavigationGuard() {
-#+end_example
-  
-to NOT produce this alert, as it actually dos NOT leave the page
-
-2.)
-
-the following two @connect headers must also be set, because coverartarchive.org redirects to archive.org which in turn
-redirects to arbitrary cache server which ends in *.archive.org
-
-#+begin_example
-// @connect      archive.org
-// @connect      *.archive.org
-#+end_example
-
-3.)
-
-the hovering over a small artwork image inside the "CAA" column works when the images are loaded the first time over the
-network. But when then saving the table data to disk with "Save to Disk"-button and later on loading the data again with
-the "Load from Disk"-button,
-
 
 * DONE reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 
@@ -52589,7 +52343,6 @@ Composed release
             tableMode: 'single' // Paginated single list
         },
 #+end_example
-
 
 * DONE bug for pageType "type: 'artist-releasegroups'" when NOT using indexedDB (sa_art_idb_enable: false)
 
@@ -53302,13 +53055,7 @@ has it
 
 
 
-
-
-* TODO in debug log emit also the entity title
-
-* TODO show log info on page or in alert box when images per release are completely loadeded
-
-* change "[Show | Hide ] all sections" to Toggle button "Show all sections"/"Hide all sections"
+* DONE change "[Show | Hide ] all sections" to Toggle button "Show all sections"/"Hide all sections"
 
 for "multi"-table pageTypes, change the text based "[Show | Hide ] all sections" click functionality
 
@@ -53320,10 +53067,234 @@ in the h2 header row to a toggle button which either shows "Show all sections" o
 functionality. Place the new button at the same location as the curretn text approach
 
 
+* DONE reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
+In the newly uploaded userscript,
+
+a couple of things are still missing (also add a changelog):
+
+* DONE implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
+** initial
+
+please implement an indexed-DB persistent storage solution for the fetched artwork images (CAA and EAA). When rendering
+the final page the index DB should always be consulted first for a match before reaching out to the network.
+
+Probably the "Load from Disk" path would benefit the most, as there are probably almost no network rountrips involved.
+
+** *.archive.org
+
+a couple of issues:
+
+1.)
+
+the button "Save to Disk" popsup a browser alert dialog which says "Your are about to leave this page". Please exlude
+this specific button click inside the function
+
+#+begin_example
+function initNavigationGuard() {
+#+end_example
+  
+to NOT produce this alert, as it actually dos NOT leave the page
+
+2.)
+
+the following two @connect headers must also be set, because coverartarchive.org redirects to archive.org which in turn
+redirects to arbitrary cache server which ends in *.archive.org
+
+#+begin_example
+// @connect      archive.org
+// @connect      *.archive.org
+#+end_example
+
+3.)
+
+the hovering over a small artwork image inside the "CAA" column works when the images are loaded the first time over the
+network. But when then saving the table data to disk with "Save to Disk"-button and later on loading the data again with
+the "Load from Disk"-button,
+
+
+* GOOD versions
+** /doubleCAAimages
+
+
+* Reintroduce jesus2099 "Release events"
+
+#+begin_example
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+#+end_example
+
+#+begin_example
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
+#+end_example
+
+
+* TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
+
+
+* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
+
+* TODO for RGs CAA artwork also display the Release from where it's sourced
+
+* add menu to hover CAA picture, for different actions
+
+
+* TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+
+* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+** DONE initial
+
+In the newly uploaded userscript,
+
+On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
+
+The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
+the rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
+is completely missing, to give the user the chance to quickly filter either for rows with OR without images (doesn't
+matter what other information is there)
+
+also add a changelog
+
+** DONE doesn't work
+
+In the newly uploaded userscript,
+
+On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
+
+The "Cell stucture" submenu list should have, additionally to the entries for multi-re-cells collapse/uncollape states,
+entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
+to give the user the chance to quickly filter either for rows with OR without images
+
+
+
+* todos
+
+In the newly uploaded userscript,
+
+a couple of things are still missing (also add a changelog):
+
+* Reintroduce jesus2099 "Release events"
+
+#+begin_example
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+#+end_example
+
+#+begin_example
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
+#+end_example
+
+
+* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
+
+* TODO for RGs CAA artwork also display the Release fom where it's sourced
+
+* add menu to hover CAA picture, for different actions
+
+
+* TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+
+* TODO in debug log emit also the entity title
+
+* TODO show log info on page or in alert box when images per release are completely loadeded
+
 * image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
 
 
 * TODO add information that ALL CAA images have been loaded
+** DONE initial
+
+add a non intrusive popup window which tells the end-user that ALL CAA image loading has happened, "CAA" column, "Title"
+or equivalent columns (depending on pageType) and the big-image stripe above a table. this window could be clicked on to
+get rid off, or it should auto-vanish after 10 seconds (configurable in the "const configSchema" variable)
+
+** TODO count the total time for CAA rendering/fetching and show that also in the popup and the global info area when finished
 
 
 * TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
@@ -53375,7 +53346,10 @@ only inside the "CAA" column ALOS the hovering over the "empty" space works and 
 #+end_example
 
 
-* TODO auto-resizing a table should take the artwork comments into account in the "CAA" column when the
+* DONE auto-resizing a table should take the artwork comments into account in the "CAA" column when the
+
+When auto-resizing a table which has "CAA" columns the aut-resize algorithm which calcualtes the maximum column-width
+per column should take the artwork comments into account in the "CAA" columns when their
 
 #+begin_example
 <span data-caa-expand-btn="collapsed" title="Show all 1 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
@@ -53412,4 +53386,29 @@ to
 * TODO add shortcut "Render" when no filtering in the "Load from Disk" path
 
 * TODO deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog
+
+* TODO add a toggle button inside the "CAA" column header info with text "▶ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased
+
+add a toggle button inside the "CAA" column header for each table/sub-table which actually has a "CAA" column with text "▶ [front CAA thumbnail from first row which has artwork]"
+when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased. The placement should be after the
+
+#+begin_example
+<span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅</span>
+#+end_example
+
+and the actual "CAA" column name. When successively clicked, it should emulate pressing the
+
+#+begin_example
+<span data-caa-expand-btn="collapsed" title="Show all 8 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
+#+end_example
+
+or
+
+#+begin_example
+ <span data-caa-expand-btn="expanded" title="Collapse — click to hide CAA images" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
+#+end_example
+
+depending on state
+
+* TODO reorder the symbols in column headers
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.166+2026-03-14
+// @version      9.99.165+2026-03-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -10394,31 +10394,6 @@
             background: rgba(0, 0, 0, 0.09);
         }
 
-        /* Per-column CAA/EAA expand/collapse button in the CAA/EAA column header.
-           Shows the first-row thumbnail + ▶ (all collapsed) / ▼ (all expanded).
-           Placed in the mb-col-hdr-flex row immediately before the 📊 button. */
-        .mb-caa-col-hdr-btn {
-            cursor: pointer;
-            font-size: 0.80em;
-            line-height: 1;
-            opacity: 0.60;
-            user-select: none;
-            padding: 1px 3px;
-            border-radius: 3px;
-            border: 1px solid transparent;
-            transition: opacity 0.15s, background 0.15s, border-color 0.15s;
-            vertical-align: middle;
-            flex-shrink: 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-        }
-        .mb-caa-col-hdr-btn:hover {
-            opacity: 1;
-            background: rgba(0, 0, 0, 0.07);
-            border-color: #bbb;
-        }
-
         #mb-col-uniq-dropdown {
             position: fixed;
             z-index: 999999;
@@ -17347,10 +17322,6 @@
             }
             btn.remove();
         });
-        // Also remove CAA/EAA column-header expand buttons — they are re-injected
-        // by _artInitCaaColHeaderToggle which runs after makeTableSortableUnified
-        // has rebuilt the mb-col-hdr-flex rows.
-        table.querySelectorAll('.mb-caa-col-hdr-btn').forEach(btn => btn.remove());
         table.querySelectorAll('.mb-cell-collapse-toggle').forEach(el => {
             // Skip toggles that belong to CAA/EAA art cells — art cells now use
             // [data-caa-expand-btn] inside li-0; any leftover mb-cell-collapse-toggle
@@ -23753,132 +23724,6 @@
         // For multi-table pages, create/refresh the global art toggle button that
         // sits in the h2 header and controls all sub-table bigboxes at once.
         _artCreateOrUpdateGlobalToggleButton(ctx);
-
-        // Inject or update the per-table CAA/EAA column-header expand/collapse button.
-        _artInitCaaColHeaderToggle(ctx);
-    }
-
-    /**
-     * Injects (or refreshes) a small ▶/▼ + thumbnail toggle button inside the
-     * mb-col-hdr-flex of each table that has a `ctx.column` (CAA or EAA) column.
-     *
-     * Button anatomy:   [glyph ▶/▼]  [thumbnail img, 16×16]
-     *
-     * - ▶ when ALL [data-caa-expand-btn] cells in that table are collapsed.
-     * - ▼ when at least one is expanded (or after clicking to expand all).
-     *
-     * On click: iterates every `[data-caa-expand-btn]` in the table and fires a
-     * synthetic click on each one that is not already in the target state — exactly
-     * mirroring what the user would do manually.
-     *
-     * Idempotent: the button is keyed by `data-caa-col-hdr-btn` on the th element;
-     * a second call updates the thumbnail src and state rather than adding a duplicate.
-     *
-     * @param {ArtCtx} ctx  Archive context descriptor.
-     */
-    function _artInitCaaColHeaderToggle(ctx) {
-        if (!Lib.settings.sa_enable_caa_pics) return;
-        const tables = document.querySelectorAll('table.tbl');
-        tables.forEach(table => {
-            const colIdx = caaFindColumnByName(table, ctx.column);
-            if (colIdx === -1) return;
-
-            // Find the <th> for this column in the first header row.
-            const headerRow = table.querySelector('thead tr');
-            if (!headerRow) return;
-            const th = headerRow.cells[colIdx];
-            if (!th) return;
-            const hdrFlex = th.querySelector('.mb-col-hdr-flex');
-            if (!hdrFlex) return;
-
-            // Derive the thumbnail URL from the first row that has a data-caa-expand-btn.
-            let thumbSrc = '';
-            const firstExpandBtn = table.querySelector('tbody [data-caa-expand-btn]');
-            if (firstExpandBtn) {
-                // Try to find the art anchor in the same li-0 cell.
-                const artAnchor = firstExpandBtn.closest('td')?.querySelector(
-                    'a[href$="' + ctx.artSuffix + '"]'
-                );
-                if (artAnchor) {
-                    const entityPath = artAnchor.getAttribute('href')
-                        .replace(new RegExp(ctx.artSuffix + '$'), '');
-                    const size = Lib.settings.sa_caa_big_img_size || 250;
-                    thumbSrc = ctx.archiveHost + entityPath + '/front-' + size;
-                }
-            }
-
-            // Determine current aggregate state.
-            const allExpandBtns = Array.from(table.querySelectorAll('tbody [data-caa-expand-btn]'));
-            const anyExpanded = allExpandBtns.some(b => b.dataset.caaExpandBtn === 'expanded');
-
-            // Idempotency: reuse existing button if present.
-            let btn = th.querySelector('.mb-caa-col-hdr-btn');
-            if (!btn) {
-                btn = document.createElement('span');
-                btn.className = 'mb-caa-col-hdr-btn';
-                btn.setAttribute('role', 'button');
-
-                // Thumbnail image.
-                const thumbImg = document.createElement('img');
-                thumbImg.style.cssText =
-                    'width:16px; height:16px; object-fit:cover; border-radius:2px;' +
-                    ' vertical-align:middle; display:inline-block;';
-                thumbImg.alt = '';
-                btn.appendChild(thumbImg);
-
-                // Glyph span.
-                const glyph = document.createElement('span');
-                btn.appendChild(glyph);
-
-                btn.addEventListener('click', (ev) => {
-                    ev.stopPropagation();
-                    const nowExpanding = btn.dataset.caaColHdrState !== 'expanded';
-                    const expandBtns = Array.from(table.querySelectorAll('tbody [data-caa-expand-btn]'));
-                    expandBtns.forEach(b => {
-                        const cellExpanded = b.dataset.caaExpandBtn === 'expanded';
-                        if (cellExpanded !== nowExpanding) {
-                            b.click(); // fires the ensureCollapseDelegate handler
-                        }
-                    });
-                    _updateCaaColHdrBtn(btn, nowExpanding, thumbSrc);
-                });
-
-                // Place before the 📊 unique-values button.
-                const uniqBtn = hdrFlex.querySelector('.mb-col-uniq-btn');
-                const collapseHdrBtn = hdrFlex.querySelector('.mb-col-collapse-hdr-btn');
-                // Insert just before the collapse-hdr-btn (if present) or uniqBtn,
-                // so order is: ⇅ CAA ▲▼ [mb-caa-col-hdr-btn] [mb-col-collapse-hdr-btn] 📊
-                const insertBefore = collapseHdrBtn || uniqBtn;
-                if (insertBefore) {
-                    hdrFlex.insertBefore(btn, insertBefore);
-                } else {
-                    hdrFlex.appendChild(btn);
-                }
-            }
-
-            _updateCaaColHdrBtn(btn, anyExpanded, thumbSrc);
-        });
-    }
-
-    /**
-     * Updates the glyph, title, aria attributes and thumbnail of a
-     * `.mb-caa-col-hdr-btn` to reflect the given expansion state.
-     *
-     * @param {HTMLElement} btn        The button element.
-     * @param {boolean}     expanded   True → ▼ (hide), False → ▶ (show).
-     * @param {string}      thumbSrc   URL for the thumbnail; '' = hide the img.
-     */
-    function _updateCaaColHdrBtn(btn, expanded, thumbSrc) {
-        btn.dataset.caaColHdrState = expanded ? 'expanded' : 'collapsed';
-        const glyph = btn.querySelector('span');
-        if (glyph) glyph.textContent = expanded ? '▼' : '▶';
-        btn.title = expanded ? 'Collapse all CAA images' : 'Show all CAA images';
-        btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        const img = btn.querySelector('img');
-        if (img) {
-            img.src = thumbSrc || '';
-            img.style.display = thumbSrc ? 'inline-block' : 'none';
-        }
     }
 
     /**
