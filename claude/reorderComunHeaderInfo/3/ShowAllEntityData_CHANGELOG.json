@@ -1,17 +1,5 @@
 [
     {
-      "version": "9.99.174",
-      "date": "2026-03-15",
-      "sections": [
-        {
-          "label": "✨ New Features / Improvements",
-          "items": [
-            "Unique-value count and 📊 glyph now act as one unified clickable button. Previously only the 📊 span had tabindex/role/click handlers while the count span was inert. The interactivity is now entirely on the .mb-col-uniq-wrap wrapper: it carries tabindex='0', role='button', the click handler, the keydown handler, and the aria-label — all delegating to openUniqDrop(uniqWrap, ...) so _uniqDropOwner correctly tracks the wrapper. The .mb-col-uniq-btn (📊) is demoted to a purely visual glyph with pointer-events:none so clicks pass through to the wrapper. A single tooltip is set on the wrapper (not separately on the count span) by _updateAllColHeaderCounts() each time the count is refreshed: 'Show the N different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing \"Enter\" on an entry' (falls back to 'Show unique values for this column' when the count is zero). CSS: cursor, hover highlight (background + opacity propagated to both child spans via descendant rules), and active state moved from .mb-col-uniq-btn to .mb-col-uniq-wrap; .mb-col-uniq-btn gains pointer-events:none; stale .mb-col-uniq-btn:hover and .mb-col-uniq-btn.mb-col-uniq-active rules removed; :focus-visible / :focus ring selectors updated from .mb-col-uniq-btn to .mb-col-uniq-wrap. The Ctrl+Q keyboard shortcut handler updated to querySelector('.mb-col-uniq-wrap') and call .click() on the wrapper."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.173",
       "date": "2026-03-15",
       "sections": [

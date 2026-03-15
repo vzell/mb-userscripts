@@ -1,5 +1,17 @@
 [
     {
+      "version": "9.99.175",
+      "date": "2026-03-15",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Fixed missing thumbnail in the CAA/EAA column header button (▶🖼/▼🖼) on pages where every release has exactly one image (artist-releases, artist-recordings, label-releases, series, etc.). Root cause: _artInitCaaColHeaderToggle derived thumbSrc exclusively from the first [data-caa-expand-btn] in the tbody, but that button is only injected by _artBuildMultiRowArtCell when an art cell has ≥2 images — so on single-image pages firstExpandBtn was always null and thumbSrc stayed '', leaving the header img hidden. Fix is a three-strategy fallback chain: Strategy 1 (unchanged) uses [data-caa-expand-btn] when present; Strategy 2 scans all visible tbody rows in the CAA/EAA column for the first a[href$=artSuffix] anchor and constructs the small-size URL from the entity path (this is the primary fix — it works as soon as the DOM is rendered, before any network fetch); Strategy 3 scans for any art-icon span in the column that already has a background-image style set and reuses that URL directly. Additionally a backfill path was added to _onIconLoaded (the shared success handler in _artLoadIcon): after each successful icon load, if the column header button's img is still hidden (display:none) it is immediately updated with the just-loaded imgurl — this covers the race where all three strategies returned '' at _artInitCaaColHeaderToggle call time but images subsequently load. Also fixed the sa_caa_big_img_size reference in Strategy 1 to use sa_caa_small_img_size (matching the icon column size, consistent with Strategies 2 and 3)."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.174",
       "date": "2026-03-15",
       "sections": [

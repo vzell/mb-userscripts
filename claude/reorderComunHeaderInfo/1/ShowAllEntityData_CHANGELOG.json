@@ -1,41 +1,5 @@
 [
     {
-      "version": "9.99.174",
-      "date": "2026-03-15",
-      "sections": [
-        {
-          "label": "✨ New Features / Improvements",
-          "items": [
-            "Unique-value count and 📊 glyph now act as one unified clickable button. Previously only the 📊 span had tabindex/role/click handlers while the count span was inert. The interactivity is now entirely on the .mb-col-uniq-wrap wrapper: it carries tabindex='0', role='button', the click handler, the keydown handler, and the aria-label — all delegating to openUniqDrop(uniqWrap, ...) so _uniqDropOwner correctly tracks the wrapper. The .mb-col-uniq-btn (📊) is demoted to a purely visual glyph with pointer-events:none so clicks pass through to the wrapper. A single tooltip is set on the wrapper (not separately on the count span) by _updateAllColHeaderCounts() each time the count is refreshed: 'Show the N different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing \"Enter\" on an entry' (falls back to 'Show unique values for this column' when the count is zero). CSS: cursor, hover highlight (background + opacity propagated to both child spans via descendant rules), and active state moved from .mb-col-uniq-btn to .mb-col-uniq-wrap; .mb-col-uniq-btn gains pointer-events:none; stale .mb-col-uniq-btn:hover and .mb-col-uniq-btn.mb-col-uniq-active rules removed; :focus-visible / :focus ring selectors updated from .mb-col-uniq-btn to .mb-col-uniq-wrap. The Ctrl+Q keyboard shortcut handler updated to querySelector('.mb-col-uniq-wrap') and call .click() on the wrapper."
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.173",
-      "date": "2026-03-15",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes / Improvements",
-          "items": [
-            "Three fixes/additions: (1) Removed excess space between unique-value count and 📊 in column headers (gap:2px on .mb-col-uniq-wrap → gap:0). (2) Fixed unique-value count tooltip not appearing on hover — pointer-events:none on .mb-col-uniq-count was blocking mouse events so the browser never fired the title attribute; replaced with cursor:default. (3) Per-cell multi-row collapse toggles (.mb-cell-collapse-toggle) now use the same structured three-child-span layout as the column header collapse buttons: .mb-cell-collapse-glyph (▶ collapsed / ▼ expanded), .mb-cell-collapse-count (number of list items in this cell), .mb-cell-collapse-rack (▤, static). Creation in initCollapsableColumns builds the three spans with the cell's lis.length count. State detection throughout switched from textContent comparisons (toggle.textContent === '▶', '◀') to aria-expanded, covering: the ensureCollapseDelegate delegation handler (glyph flip via querySelector('.mb-cell-collapse-glyph') with textContent fallback for legacy nodes), the hidden-match scan guard, the column header button click handler (driving cells to target state), and the disk-save cleanup path (resets expanded toggles back to collapsed). New CSS block .mb-cell-collapse-glyph, .mb-cell-collapse-count, .mb-cell-collapse-rack { pointer-events:none; user-select:none } plus .mb-cell-collapse-count { font-weight:bold; margin:0 1px }. Cell toggle titles updated throughout from 'Collapse back to first item (N total)' / 'Show all items (N) — click to expand' to 'Collapse multi-row cell back to display just the first item (N total)' / 'Show all multi-row cell items (N)'."
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.172",
-      "date": "2026-03-15",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes / Improvements",
-          "items": [
-            "Fixed unique-value count drifting away from 📊 in column headers (introduced in 9.99.171). The count span and 📊 button are now wrapped together in a '.mb-col-uniq-wrap' inline-flex container (gap:2px) so they always move as one unit and can never be separated by flex layout. The wrapper carries margin-left:auto by default (pushing the pair to the right edge); when a '.mb-col-collapse-hdr-btn' is present, initCollapsableColumns gives margin-left:auto to the collapse button instead and clears the wrapper's inline margin, preserving the correct order [▶N▤ auto] [N 📊]. The cleanup pass in initCollapsableColumns now resets marginLeft on the wrapper (not the bare uniqBtn). CSS: margin-left:auto removed from .mb-col-uniq-btn (now carried by .mb-col-uniq-wrap); margin-right removed from .mb-col-uniq-count (spacing handled by wrapper gap). Added tooltip to the unique-value count span: 'There are N different unique values in this column, click the 📊 symbol to display them', set by _updateAllColHeaderCounts() each time the count is refreshed (empty string when count is 0)."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.171",
       "date": "2026-03-15",
       "sections": [

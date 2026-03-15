@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.174+2026-03-15
+// @version      9.99.175+2026-03-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -22585,6 +22585,29 @@
             else if (wasIdbHit)          _caaFetchStats.icon.idb++;
             else if (src.startsWith('blob:')) _caaFetchStats.icon.network++;
             else                         _caaFetchStats.icon.browser++;
+
+            // ── Backfill column-header thumbnail if still missing ─────────────
+            // _artInitCaaColHeaderToggle runs before images load; if no multi-row
+            // expand button was present at that point (e.g. every release has
+            // exactly one image) thumbSrc was '' and the header img was hidden.
+            // The first successfully loaded icon in this column backfills it.
+            const td = artIcon.closest('td');
+            if (td) {
+                const table = td.closest('table');
+                if (table) {
+                    const hdrBtn = table.querySelector('thead .mb-caa-col-hdr-btn');
+                    if (hdrBtn) {
+                        const hdrImg = hdrBtn.querySelector('img');
+                        if (hdrImg && hdrImg.style.display === 'none') {
+                            hdrImg.src = imgurl;
+                            hdrImg.style.display = 'inline-block';
+                            Lib.debug(ctx.key,
+                                `${ctx.key}LoadIcon: backfilled column-header thumbnail — ${imgurl}`);
+                        }
+                    }
+                }
+            }
+
             Lib.debug(ctx.key, `${ctx.key}LoadIcon: loaded OK (idb=${wasIdbHit} memory=${wasMemoryHit}) — ${imgurl}`);
         };
 
@@ -24049,19 +24072,78 @@
             const hdrFlex = th.querySelector('.mb-col-hdr-flex');
             if (!hdrFlex) return;
 
-            // Derive the thumbnail URL from the first row that has a data-caa-expand-btn.
+            // Derive the thumbnail URL for the header button.
+            //
+            // Strategy 1 (multi-image cells): find the first [data-caa-expand-btn]
+            //   in the tbody — these exist only when a cell has ≥2 images.  The art
+            //   anchor inside the same <td> gives us the entity path.
+            //
+            // Strategy 2 (single-image cells / art not yet enriched): scan every
+            //   visible tbody row in the column for the first art anchor whose href
+            //   ends with ctx.artSuffix and use that entity path directly.  This
+            //   covers pages where every release has exactly one image (no expand
+            //   button is ever injected) or where _artEnrichIcon has not yet run.
+            //
+            // Strategy 3 (loaded icon background-image): if we still have nothing,
+            //   look for any art-icon span in the column that already has a
+            //   background-image loaded from a previous _artLoadIcon call and reuse
+            //   that URL directly (it is already the right size).
             let thumbSrc = '';
+
+            // Strategy 1 — multi-image expand button present
             const firstExpandBtn = table.querySelector('tbody [data-caa-expand-btn]');
             if (firstExpandBtn) {
-                // Try to find the art anchor in the same li-0 cell.
                 const artAnchor = firstExpandBtn.closest('td')?.querySelector(
                     'a[href$="' + ctx.artSuffix + '"]'
                 );
                 if (artAnchor) {
                     const entityPath = artAnchor.getAttribute('href')
                         .replace(new RegExp(ctx.artSuffix + '$'), '');
-                    const size = Lib.settings.sa_caa_big_img_size || 250;
+                    const size = Lib.settings.sa_caa_small_img_size || 250;
                     thumbSrc = ctx.archiveHost + entityPath + '/front-' + size;
+                }
+            }
+
+            // Strategy 2 — scan all visible rows for the first art anchor
+            if (!thumbSrc) {
+                const tbody = table.tBodies[0];
+                if (tbody) {
+                    for (const row of tbody.rows) {
+                        if (row.style.display === 'none') continue;
+                        const cell = row.cells[colIdx];
+                        if (!cell) continue;
+                        const artAnchor = cell.querySelector('a[href$="' + ctx.artSuffix + '"]');
+                        if (artAnchor) {
+                            const entityPath = artAnchor.getAttribute('href')
+                                .replace(new RegExp(ctx.artSuffix + '$'), '');
+                            const size = Lib.settings.sa_caa_small_img_size || 250;
+                            thumbSrc = ctx.archiveHost + entityPath + '/front-' + size;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Strategy 3 — reuse an already-loaded background-image from an icon span
+            if (!thumbSrc) {
+                const tbody = table.tBodies[0];
+                if (tbody) {
+                    for (const row of tbody.rows) {
+                        if (row.style.display === 'none') continue;
+                        const cell = row.cells[colIdx];
+                        if (!cell) continue;
+                        const iconSpan = cell.querySelector(
+                            'span.caa-icon, span.eaa-icon, span.artwork-icon'
+                        );
+                        if (iconSpan) {
+                            const bg = iconSpan.style.backgroundImage;
+                            if (bg && bg !== 'none' && bg !== '') {
+                                // bg is e.g. 'url("blob:...")' or 'url("https://...")'
+                                const m = bg.match(/url\(["']?([^"')]+)["']?\)/);
+                                if (m) { thumbSrc = m[1]; break; }
+                            }
+                        }
+                    }
                 }
             }
 

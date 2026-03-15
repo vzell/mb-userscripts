@@ -53052,7 +53052,6 @@ but the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
 has it
 
-
 * DONE change "[Show | Hide ] all sections" to Toggle button "Show all sections"/"Hide all sections"
 
 for "multi"-table pageTypes, change the text based "[Show | Hide ] all sections" click functionality
@@ -53181,31 +53180,6 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 * TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
 * TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
-
-
-* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
-** DONE initial
-
-In the newly uploaded userscript,
-
-On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
-
-The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
-the rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
-is completely missing, to give the user the chance to quickly filter either for rows with OR without images (doesn't
-matter what other information is there)
-
-also add a changelog
-
-** DONE doesn't work
-
-In the newly uploaded userscript,
-
-On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
-
-The "Cell stucture" submenu list should have, additionally to the entries for multi-re-cells collapse/uncollape states,
-entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
-to give the user the chance to quickly filter either for rows with OR without images
 
 
 
@@ -53402,7 +53376,13 @@ rename in the following lines (linenumbers provided) the "title" from
    9755:    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs — global action (Shift+Esc)';
    9785:    clearAllFiltersBtn.title = `Clear global/sub-table filters and ALL column filters in all sub-tables — also triggered by ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}`;
   15020:        highlightBtn.title = 'Toggle filter highlighting on/off (sub-table filter and column filters)';
-  22155:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+
+  22217:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+  22221:                    expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
+  22270:            expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
+  17172:                    ? `Collapse \u2014 click to hide CAA images`
+  22179:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+  
   23628:                    ? 'Toggle ' + ctx.toggleLabel + ' - Hide'
   23629:                    : 'Toggle ' + ctx.toggleLabel + ' - Show';
   23676:            ? 'Toggle ' + ctx.toggleLabel + ' - Hide'
@@ -53415,8 +53395,6 @@ rename in the following lines (linenumbers provided) the "title" from
   22159:                    expandBtn.title = `Show all ${n} image(s) \u2014 click to expand`;
   22208:            expandBtn.title = `Show all ${n} image(s) \u2014 click to expand`;
 
-  17172:                    ? `Collapse \u2014 click to hide CAA images`
-  22179:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
 
   23385:                btn.title = 'Globally Toggle ' + ctx.toggleLabel +
   23413:        btn.title = 'Globally Toggle ' + ctx.toggleLabel +
@@ -53430,7 +53408,12 @@ rename in the following lines (linenumbers provided) the "title" from
   17254:                    : `Show all ${lis.length} items (click to expand)`;
   17183:                ? `Collapse back to first item (${lis.length} total)`
   17479:                    ? `Collapse back to first item (${lis.length} total)`
+
+  22217:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+  22221:                    expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
+  22270:            expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
 #+end_example
+
 
 to
 
@@ -53443,7 +53426,13 @@ to
    9755:    clearColumnFiltersBtn.title = 'Clear ALL column filter inputs — (global action Shift+Esc)';
    9785:    clearAllFiltersBtn.title = `Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (except the filter when 'Loading from Disk' was used — also triggered by ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}`;
   15020:        highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table)';
-  22155:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+
+  22217:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+  22221:                    expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
+  22270:            expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
+  17172:                    ? `Collapse \u2014 click to hide CAA images`
+  22179:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+  
   23628:                    ? 'Hide big artwork ' + ctx.toggleLabel + ' stripe'
   23629:                    : 'Show big artwork ' + ctx.toggleLabel + ' stripe';
   23676:            ? 'Hide big artwork ' + ctx.toggleLabel + ' stripe'
@@ -53471,6 +53460,7 @@ to
   17254:                    : `Show all multi-row ${lis.length} items  in this cell (click to expand)`;
   17183:                ? `Collapse back to just show the first item in the list (total shown ${lis.length})`
   17479:                    ? `Collapse back to just show the first item in the list (total shown ${lis.length})`
+
 #+end_example
 
 * rename "Save current table data to disk in a serialized format
@@ -53485,37 +53475,10 @@ to
 
 * TODO deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog
 
-* TODO add a toggle button inside the "CAA" column header info with text "▶ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased
-
-add a toggle button inside the "CAA" column header for each table/sub-table which actually has a "CAA" column with text "▶ [front CAA thumbnail from first row which has artwork]"
-when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased. The placement should be after the
-
-#+begin_example
-<span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅</span>
-#+end_example
-
-and the actual "CAA" column name. When successively clicked, it should emulate pressing the
-
-#+begin_example
-<span data-caa-expand-btn="collapsed" title="Show all 8 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
-#+end_example
-
-or
-
-#+begin_example
- <span data-caa-expand-btn="expanded" title="Collapse — click to hide CAA images" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
-#+end_example
-
-depending on state
-
 * TODO Change all the entity links to open in a new tab
 
 * TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
 
-
-* TODO in the unique column drop down menu add a static sub-section which tells us the number of different unique values
-
-in the unique column drop down menu add a static sub-section which tells us the number of different unique values
 
 * TODO add collpase icon to "Area" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events or even better in all "Location" split types
 
@@ -53560,6 +53523,7 @@ collapsableColumns: [ 'Location', '', ... ],
             tableMode: 'single'
         }
 #+end_example
+
 
 * TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just dispay ONE
 
@@ -53623,6 +53587,7 @@ Actually display ALL the different timeing information (for the different image 
 
 ** TODO make the info box a little bit wider
 
+
 * TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
 
 When loading saving from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" -
@@ -53672,7 +53637,7 @@ only inside the "CAA" column ALSO the hovering over the "empty" space works and 
 
 
 * TODO reorder the symbols in column headers
-** initial
+** DONE initial
 
 reorder the information in all the table column headers (the "CAA/EAA" columns are special as they have additional icon/tumbnails for the artwork display)
 
@@ -53699,15 +53664,232 @@ to
 (this is again for a "CAA" column, the '▶ [artwork thumbnail]' and '▼ [artwork thumbnail]' parts are missing on non-CAA columns)
 
 #+begin_example
-Collapased STATE (visual representation): '▶ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▶ ▤''<horizontal-flex-space>' '📊'
+Collapased STATE (visual representation): '▶ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▶ ▤' '<horizontal-flex-space>' '📊'
 #+end_example
 
 #+begin_example
-Uncollapased STATE (visual representation): '▼ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▼ ▤''<horizontal-flex-space>' '📊'
+Uncollapased STATE (visual representation): '▼ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▼ ▤' '<horizontal-flex-space>' '📊'
 #+end_example
 
-** also take the glyphs into account for the auto-resize functionality and calculating the minimum column lenght
+** DONE change the symbols one more time and add one more
 
+- Count how many different unique values exist per column in the column specific drop down-menu under the '📊' glyph and render the number (in smaller font) right in front of the currently rendered '📊' glyph in the column header
+- Count how many collapsable multi-row cells exists in columns which in theory can have multi-row cells and render the value (in smaller font) in between the '▶'/'▼' and '▤' glyphs of the currently rendered '▶ ▤'/'▼ ▤' glyphs in the column header
+
+
+So the current column header structure 
+
+(this is again for a "CAA" column, the '▶ [artwork thumbnail]' and '▼ [artwork thumbnail]' parts are missing on non-CAA columns)
+
+#+begin_example
+Collapased STATE (visual representation): '▶ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▶ ▤' '<horizontal-flex-space>' '📊'
+#+end_example
+
+#+begin_example
+Uncollapased STATE (visual representation): '▼ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▼ ▤' '<horizontal-flex-space>' '📊'
+#+end_example
+
+should now be
+
+#+begin_example
+Collapased STATE (visual representation): '▶ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▶ <number of collapsable multi-row cells in a column> ▤' '<horizontal-flex-space>' '<number of different unique values per column>' '📊'
+#+end_example
+
+#+begin_example
+Uncollapased STATE (visual representation): '▼ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▼ <number of collapsable multi-row cells in a column> ▤' '<horizontal-flex-space>' '<number of different unique values per column>' '📊'
+#+end_example
+
+also take all the new and count integers into account for the auto-resize functionality and calculating the minimum column length
+
+** DONE final fix
+
+Two small glitches:
+
+- there is a rendering bug: the '<number of different unique values per column>' is rendered right after the sort
+  descending symbol '▼' OR the '▤' glyph, if present (if a column can have multi-row cells), BUT it should be rendered
+  together with the '📊' glyph (left from it). Maybe put them in together in a specific container so they don't loose
+  their association
+  
+- please add a tooltip to the rendered '<number of different unique values per column>' which says "There are <number of different unique values per column> different unique values in this column, click the 📊 symbol to display them"
+
+** DONE one more
+
+two bugs still left
+
+1.)
+
+There is still too much space between the unique value count and the 📊 glyph
+
+#+begin_example
+<span class="mb-col-uniq-wrap"><span class="mb-col-uniq-count" title="There are 2 different unique values in this column, click the 📊 symbol to display them">2</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊</span></span>
+#+end_example
+
+2.)
+
+the tooltip on the rendered '<number of different unique values per column>' DOESN't show up when hovering over with the mouse
+
+** DONE unify the two spans
+
+The two spans '<span class="mb-col-uniq-count"' and '<span class="mb-col-uniq-btn"' should act as one clickable container, when clicked showing the pull-down list with the column unique values
+
+#+begin_example
+<span class="mb-col-uniq-wrap"><span class="mb-col-uniq-count" title="There are 72 different unique values in this column, click the 📊 symbol to display them">72</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for Country/Date">📊</span></span>
+#+end_example
+
+There should also be just ONE tooltip with the text
+
+#+begin_example
+Show the <number of different unique values per column> different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing "Enter" on an entry
+#+end_example
+
+** TODO add a toggle button inside the "CAA" column header info with text "▶ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased
+
+add a toggle button inside the "CAA" column header for each table/sub-table which actually has a "CAA" column with text "▶ [front CAA thumbnail from first row which has artwork]"
+when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased. The placement should be after the
+
+#+begin_example
+<span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅</span>
+#+end_example
+
+and the actual "CAA" column name. When successively clicked, it should emulate pressing the
+
+#+begin_example
+<span data-caa-expand-btn="collapsed" title="Show all 8 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
+#+end_example
+
+or
+
+#+begin_example
+ <span data-caa-expand-btn="expanded" title="Collapse — click to hide CAA images" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
+#+end_example
+
+depending on state
+
+
+
+the CAA toggle button has the artwork symbol in the "CAA" column header on the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+#+begin_example
+<th data-col-name="CAA" style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 28px;">
+  <div class="mb-col-hdr-flex">
+    <span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images" aria-expanded="false">
+      <span>▶
+      </span>
+      <img alt="" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;">
+    </span>CAA
+    <span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+    </span>
+    <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+    </span>
+    <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+    </span>
+    <span class="mb-col-collapse-hdr-btn" data-col-index="10" title="Expand all multi-row CAA image cells in this table column" role="button" aria-expanded="false" aria-label="Expand all collapsed cells in: CAA" style="margin-left: auto;">
+      <span class="mb-col-collapse-glyph">▶
+      </span>
+      <span class="mb-col-collapse-count">116
+      </span>
+      <span class="mb-col-collapse-rack">▤
+      </span>
+    </span>
+    <span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 99 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 99 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+      <span class="mb-col-uniq-count">99
+      </span>
+      <span class="mb-col-uniq-btn">📊
+      </span>
+    </span>
+  </div>
+  <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+  </div>
+</th>
+#+end_example
+
+but it's somehow NOT rendered on the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+#+begin_example
+<th data-col-name="CAA" style="background-color: rgb(184, 200, 184); cursor: default; position: relative;">
+  <div class="mb-col-hdr-flex">
+    <span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images" aria-expanded="false">
+      <span>▶
+      </span>
+      <img alt="" src="" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: none;">
+    </span>CAA
+    <span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+    </span>
+    <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+    </span>
+    <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+    </span>
+    <span class="mb-col-uniq-wrap">
+      <span class="mb-col-uniq-count" title="There are 2 different unique values in this column, click the 📊 symbol to display them">2
+      </span>
+      <span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊
+      </span>
+    </span>
+  </div>
+  <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+  </div>
+</th>
+#+end_example
+
+also other URLs exhibit the same problem (missing the artwork thumbnail)
+
+#+begin_example
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
+https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+etc.
+#+end_example
+
+The column header thumbnail should be taken as the thumbnail from the first row in the table which has a thumbnail in the "CAA" column
+
+* DONE replace the current column cell symbols '▶'/'◀'
+
+replace in tables which have columns which could have multi-row values, the current column cell specific symbols '▶'/'◀'
+which represent a column cell which has multi-row values (either 'collapsed - ▶' or 'uncollapsed - ◀')
+
+COLLAPSED state e.g.:
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Collapse back to first item (2 total)" role="button" aria-expanded="true" aria-label="Collapse: showing all 2 items">◀</span>
+#+end_example
+
+UNCOLLAPSED state e.g.:
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Show all items (2) — click to expand" role="button" aria-expanded="false" aria-label="Expand: 2 items are collapsed">▶</span>
+#+end_example
+
+with the ones which are used already in the corresponding column headers (but the numeric count has a different meaning per cell, it represents the number of list items per multi-row data cell:
+
+COLLAPSED state: '▶ <number of list items per multi-row data cell> ▤'
+
+UNCOLLAPSED state: '▼ <number of list items per multi-row data cell> ▤'
+
+Also change the cell specific tool tips for the new symbols from
+
+#+begin_example
+            toggle.title = nowExpanding
+                ? `Collapse back to first item (${lis.length} total)`
+                : `Show all items (${lis.length}) \u2014 click to expand`;
+#+end_example
+
+#+begin_example
+                cellToggle.title = startExpanded
+                    ? `Collapse back to first item (${lis.length} total)`
+                    : `Show all items (${lis.length}) \u2014 click to expand`;
+#+end_example
+
+to
+
+#+begin_example
+            toggle.title = nowExpanding
+                ? `Collapse multi-row cell back to display just the first item (${lis.length} total)`
+                : `Show all multi-row cell items (${lis.length})`;
+#+end_example
+
+#+begin_example
+                cellToggle.title = startExpanded
+                    ? `Collapse multi-row cell back to display just the first item (${lis.length} total)`
+                    : `Show all multi-row cell items (${lis.length})`;
+#+end_example
 
 
 * TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
@@ -53756,4 +53938,48 @@ fetching of all paginated pages begins after pressing the "Show all.." action bu
 
 
 * TODO Rename "Official releases" on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases to "Artist Releases"
+
+
+* TODO ALL columns: in the unique column drop down menu add a static sub-section which tells us the number of different unique values
+
+in the unique column drop down menu add a static sub-section which tells us the number of different unique values
+
+* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+** DONE initial
+
+In the newly uploaded userscript,
+
+On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
+
+The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
+the rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
+is completely missing, to give the user the chance to quickly filter either for rows with OR without images (doesn't
+matter what other information is there)
+
+also add a changelog
+
+** DONE doesn't work
+
+In the newly uploaded userscript,
+
+On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
+
+The "Cell stucture" submenu list should have, additionally to the entries for multi-re-cells collapse/uncollape states,
+entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
+to give the user the chance to quickly filter either for rows with OR without images
+
+
+* TODO numeric columns "DD","MM", "YYY" ... should be centered aligned in the data cells like currently the "Releases" column
+
+Is this function also used for alignment inside the columns cells
+
+#+begin_example
+        // --- Helper: is a column name numeric? ---------------------------------
+        const isNumericCol = (name) =>
+            name.includes('Year') || name.includes('Releases') || name.includes('Track') ||
+            name.includes('Length') || name.includes('#');
+#+end_example
+
+
+* add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.174+2026-03-15
+// @version      9.99.171+2026-03-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -6793,9 +6793,9 @@
                 if (isShortcutEvent(e, 'sa_shortcut_col_unique_dropdown', 'Ctrl+Q')) {
                     e.preventDefault();
                     e.stopPropagation();
-                    const _uniqWrap = _cfTh ? _cfTh.querySelector('.mb-col-uniq-wrap') : null;
-                    if (_uniqWrap) {
-                        _uniqWrap.click();
+                    const _uniqBtn = _cfTh ? _cfTh.querySelector('.mb-col-uniq-btn') : null;
+                    if (_uniqBtn) {
+                        _uniqBtn.click();
                         Lib.debug('shortcuts', 'Unique-values dropdown opened via ' +
                             getShortcutDisplay('sa_shortcut_col_unique_dropdown', 'Ctrl+Q'));
                     } else {
@@ -10311,58 +10311,39 @@
         /* ============================================================
            Unique-values dropdown  (📊 button in column header cells)
            ============================================================ */
-        /* .mb-col-uniq-btn is now a purely visual glyph (📊) inside the wrapper.
-           All cursor / hover / active / focus behaviour lives on the wrapper. */
         .mb-col-uniq-btn {
+            cursor: pointer;
             font-size: 0.80em;
             line-height: 1;
             opacity: 0.45;
             user-select: none;
-            pointer-events: none;   /* clicks pass through to the wrapper */
             padding: 0 2px;
-            flex-shrink: 0;
-            transition: opacity 0.15s;
-            vertical-align: middle;
-        }
-        /* Wrapper that keeps the unique-value count and 📊 glued together as one
-           interactive flex unit.  margin-left:auto (when no collapse button is
-           present) or 0 (when the collapse button carries the auto margin) is set
-           inline by initCollapsableColumns. */
-        .mb-col-uniq-wrap {
-            display: inline-flex;
-            align-items: center;
-            gap: 0;
-            flex-shrink: 0;
-            margin-left: auto;   /* default: push the pair to the right edge */
-            cursor: pointer;
             border-radius: 3px;
             transition: opacity 0.15s, background 0.15s;
-        }
-        .mb-col-uniq-wrap:hover .mb-col-uniq-btn,
-        .mb-col-uniq-wrap:hover .mb-col-uniq-count {
-            opacity: 1;
-        }
-        .mb-col-uniq-wrap:hover {
-            background: rgba(0,0,0,0.09);
-        }
-        .mb-col-uniq-wrap.mb-col-uniq-active,
-        .mb-col-uniq-wrap.mb-col-uniq-active .mb-col-uniq-btn,
-        .mb-col-uniq-wrap.mb-col-uniq-active .mb-col-uniq-count {
-            opacity: 1;
-            background: rgba(0,100,255,0.13);
+            vertical-align: middle;
+            flex-shrink: 0;
+            margin-left: auto;
         }
         /* Flex row wrapper for every sortable column header.
            Element order (left → right):
              [.mb-caa-col-hdr-btn ▶🖼/▼🖼 — CAA/EAA columns only, prepended]
              colName  ⇅  ▲  ▼
-             [.mb-col-collapse-hdr-btn ▶N▤/▼N▤ — collapsable columns, margin-left:auto]
-             [.mb-col-uniq-wrap [ N 📊 ]]  */
+             [.mb-col-collapse-hdr-btn ▶▤/▼▤ — collapsable columns, margin-left:auto]
+             📊 */
         .mb-col-hdr-flex {
             display: flex;
             align-items: center;
             white-space: nowrap;
             gap: 0;
             width: 100%;
+        }
+        .mb-col-uniq-btn:hover {
+            opacity: 1;
+            background: rgba(0,0,0,0.09);
+        }
+        .mb-col-uniq-btn.mb-col-uniq-active {
+            opacity: 1;
+            background: rgba(0,100,255,0.13);
         }
 
         /* ============================================================
@@ -10386,18 +10367,6 @@
             position: absolute;
             right: 4px;
             top: 4px;
-        }
-        /* Child spans inside .mb-cell-collapse-toggle: inherit cursor/user-select
-           from the parent so clicking anywhere on the toggle works uniformly. */
-        .mb-cell-collapse-glyph,
-        .mb-cell-collapse-count,
-        .mb-cell-collapse-rack {
-            pointer-events: none;
-            user-select: none;
-        }
-        .mb-cell-collapse-count {
-            font-weight: bold;
-            margin: 0 1px;
         }
         .mb-cell-collapse-toggle:hover {
             opacity: 1;
@@ -10456,16 +10425,15 @@
             user-select: none;
         }
 
-        /* Unique-value count badge rendered immediately before the 📊 button,
-           inside .mb-col-uniq-wrap so the two never separate.
-           pointer-events must NOT be none here — the browser suppresses title
-           tooltips on pointer-events:none elements. */
+        /* Unique-value count badge rendered immediately before the 📊 button.
+           Displayed in a subdued small font; not clickable itself. */
         .mb-col-uniq-count {
             font-size: 0.72em;
             font-weight: bold;
             opacity: 0.60;
             user-select: none;
-            cursor: default;
+            pointer-events: none;
+            margin-right: 1px;
             flex-shrink: 0;
             vertical-align: middle;
         }
@@ -10656,7 +10624,7 @@
         [id^="mb-eaa-toggle-btn-retry-"]:focus-visible,
         [id$="-global-retry"]:focus-visible,
         .sort-icon-btn:focus-visible,
-        .mb-col-uniq-wrap:focus-visible,
+        .mb-col-uniq-btn:focus-visible,
         .mb-col-collapse-hdr-btn:focus-visible,
         .mb-toggle-h2:focus-visible,
         .mb-toggle-h3:focus-visible,
@@ -10683,7 +10651,7 @@
             [id^="mb-eaa-toggle-btn-retry-"]:focus,
             [id$="-global-retry"]:focus,
             .sort-icon-btn:focus,
-            .mb-col-uniq-wrap:focus,
+            .mb-col-uniq-btn:focus,
             .mb-col-collapse-hdr-btn:focus,
             .mb-toggle-h2:focus,
             .mb-toggle-h3:focus,
@@ -17258,16 +17226,14 @@
             const lis = Array.from(ul.querySelectorAll(':scope > li'));
             if (lis.length < 2) return;
 
-            const nowExpanding = toggle.getAttribute('aria-expanded') !== 'true';
+            const nowExpanding = toggle.textContent === '▶';
             lis.slice(1).forEach(li => {
                 li.style.display = nowExpanding ? '' : 'none';
             });
-            const _glyphEl = toggle.querySelector('.mb-cell-collapse-glyph');
-            if (_glyphEl) _glyphEl.textContent = nowExpanding ? '▼' : '▶';
-            else toggle.textContent = nowExpanding ? '▼' : '▶'; // fallback for legacy toggles
+            toggle.textContent = nowExpanding ? '◀' : '▶';
             toggle.title = nowExpanding
-                ? `Collapse multi-row cell back to display just the first item (${lis.length} total)`
-                : `Show all multi-row cell items (${lis.length})`;
+                ? `Collapse back to first item (${lis.length} total)`
+                : `Show all items (${lis.length}) \u2014 click to expand`;
             toggle.setAttribute('aria-expanded', nowExpanding ? 'true' : 'false');
             toggle.setAttribute(
                 'aria-label',
@@ -17365,18 +17331,7 @@
                     const v = getCleanColumnText(cell);
                     if (v) seen.add(v);
                 });
-                const n = seen.size;
-                uniqCountSpan.textContent = n > 0 ? String(n) : '';
-                // Single tooltip on the wrapper (not the count span) so it shows
-                // wherever the user hovers within the clickable unit.
-                const uniqWrap = uniqCountSpan.closest('.mb-col-uniq-wrap');
-                if (uniqWrap) {
-                    const tip = n > 0
-                        ? `Show the ${n} different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing "Enter" on an entry`
-                        : 'Show unique values for this column';
-                    uniqWrap.title      = tip;
-                    uniqWrap.setAttribute('aria-label', tip);
-                }
+                uniqCountSpan.textContent = seen.size > 0 ? String(seen.size) : '';
             }
 
             // ── 2. Multi-row (collapsable) cell count ─────────────────────────
@@ -17498,8 +17453,8 @@
         table.querySelectorAll('.mb-col-collapse-hdr-btn').forEach(btn => {
             const hdrFlex = btn.closest('.mb-col-hdr-flex');
             if (hdrFlex) {
-                const uniqWrap = hdrFlex.querySelector('.mb-col-uniq-wrap');
-                if (uniqWrap) uniqWrap.style.marginLeft = '';
+                const uniqBtn = hdrFlex.querySelector('.mb-col-uniq-btn');
+                if (uniqBtn) uniqBtn.style.marginLeft = '';
             }
             btn.remove();
         });
@@ -17628,27 +17583,12 @@
                 td.classList.add('mb-has-collapse-toggle');
 
                 // Create the toggle icon span — click handling via delegation.
-                // Built from three child spans mirroring the column header button:
-                //   .mb-cell-collapse-glyph  — ▶ (collapsed) / ▼ (expanded)
-                //   .mb-cell-collapse-count  — number of list items in this cell
-                //   .mb-cell-collapse-rack   — ▤ (static rows icon)
                 const cellToggle = document.createElement('span');
                 cellToggle.className = 'mb-cell-collapse-toggle';
-                const _cg = document.createElement('span');
-                _cg.className   = 'mb-cell-collapse-glyph';
-                _cg.textContent = startExpanded ? '▼' : '▶';
-                const _cc = document.createElement('span');
-                _cc.className   = 'mb-cell-collapse-count';
-                _cc.textContent = String(lis.length);
-                const _cr = document.createElement('span');
-                _cr.className   = 'mb-cell-collapse-rack';
-                _cr.textContent = '▤';
-                cellToggle.appendChild(_cg);
-                cellToggle.appendChild(_cc);
-                cellToggle.appendChild(_cr);
+                cellToggle.textContent = startExpanded ? '◀' : '▶';
                 cellToggle.title = startExpanded
-                    ? `Collapse multi-row cell back to display just the first item (${lis.length} total)`
-                    : `Show all multi-row cell items (${lis.length})`;
+                    ? `Collapse back to first item (${lis.length} total)`
+                    : `Show all items (${lis.length}) \u2014 click to expand`;
                 cellToggle.setAttribute('role', 'button');
                 cellToggle.setAttribute('aria-expanded', startExpanded ? 'true' : 'false');
                 cellToggle.setAttribute('aria-label',
@@ -17700,7 +17640,7 @@
                 const artUl = td.querySelector(':scope > ul.mb-caa-art-ul');
                 if (!artUl) return;
                 const toggle = td.querySelector(':scope > .mb-cell-collapse-toggle');
-                if (!toggle || toggle.getAttribute('aria-expanded') === 'true') return; // expanded — no hidden content
+                if (!toggle || toggle.textContent !== '▶') return; // expanded — no hidden content
                 const artLis = Array.from(artUl.querySelectorAll(':scope > li'));
                 const hasHiddenMatch = artLis.slice(1).some(li => li.querySelector(
                     '.mb-global-filter-highlight, ' +
@@ -17766,7 +17706,7 @@
                     if (!td) return;
                     const toggle = td.querySelector('.mb-cell-collapse-toggle');
                     if (!toggle) return;
-                    const cellExpanded = toggle.getAttribute('aria-expanded') === 'true';
+                    const cellExpanded = toggle.textContent === '◀';
                     if (cellExpanded !== targetExpand) {
                         toggle.click(); // caught by ensureCollapseDelegate()
                     }
@@ -17787,14 +17727,18 @@
             });
 
             if (hdrFlex) {
-                const uniqWrap = hdrFlex.querySelector('.mb-col-uniq-wrap');
-                if (uniqWrap) {
-                    // The collapse button takes over the right-push role:
-                    // give it margin-left:auto and clear it from the wrapper
-                    // so the order is: [▶N▤ margin-auto] [N 📊].
-                    uniqWrap.style.marginLeft = '';
+                const uniqBtn = hdrFlex.querySelector('.mb-col-uniq-btn');
+                const uniqCountSpan = hdrFlex.querySelector('.mb-col-uniq-count');
+                if (uniqBtn) {
+                    // Transfer margin-left:auto from 📊 to the collapse button
+                    // so the right-hand group (▶N▤  N📊) is pushed to the right
+                    // edge of the flex row.
+                    uniqBtn.style.marginLeft = '';
                     collapseHdrBtn.style.marginLeft = 'auto';
-                    hdrFlex.insertBefore(collapseHdrBtn, uniqWrap);
+                    // Insert before uniqCountSpan when present (so the order is
+                    // [collapseHdrBtn] [uniqCountSpan] [📊]), otherwise before 📊.
+                    const insertRef = uniqCountSpan || uniqBtn;
+                    hdrFlex.insertBefore(collapseHdrBtn, insertRef);
                 } else {
                     hdrFlex.appendChild(collapseHdrBtn);
                 }
@@ -18250,51 +18194,37 @@
             };
 
             // ── 📊 unique-values button ────────────────────────────────────
-            // The visual 📊 glyph is a plain non-interactive span; all click /
-            // keyboard / ARIA responsibilities live on the .mb-col-uniq-wrap
-            // wrapper so that clicking the count number OR the 📊 glyph both
-            // open the dropdown — they act as one clickable unit.
+            // Must be appended BEFORE the inline text so CSS float:right places
+            // it at the trailing edge of the cell without breaking text flow.
             const uniqBtn = document.createElement('span');
-            uniqBtn.className   = 'mb-col-uniq-btn';
+            uniqBtn.className  = 'mb-col-uniq-btn';
             uniqBtn.textContent = '📊';
-            // No title, tabindex, role, or listeners — the wrapper owns those.
-
-            // Unique-value wrapper: count span + 📊 glyph as one clickable unit.
-            // Tooltip and aria-label are set/updated by _updateAllColHeaderCounts()
-            // once the count is known after the first render.
-            const uniqWrap = document.createElement('span');
-            uniqWrap.className = 'mb-col-uniq-wrap';
-            uniqWrap.setAttribute('tabindex', '0');
-            uniqWrap.setAttribute('role',     'button');
-            uniqWrap.setAttribute('aria-label', `Unique values for ${colName}`);
-
-            const uniqCountSpan = document.createElement('span');
-            uniqCountSpan.className   = 'mb-col-uniq-count';
-            uniqCountSpan.textContent = '';   // populated by _updateAllColHeaderCounts()
-
-            uniqWrap.appendChild(uniqCountSpan);
-            uniqWrap.appendChild(uniqBtn);
-
-            uniqWrap.addEventListener('click', (ev) => {
+            uniqBtn.title       = 'Show unique values for this column — Click or press Enter on an entry to apply as filter for this column';
+            uniqBtn.setAttribute('tabindex', '0');
+            uniqBtn.setAttribute('role',     'button');
+            uniqBtn.setAttribute('aria-label', `Unique values for ${colName}`);
+            uniqBtn.addEventListener('click', (ev) => {
                 ev.preventDefault();
                 ev.stopPropagation();
-                openUniqDrop(uniqWrap, table, index);
+                openUniqDrop(uniqBtn, table, index);
             });
             // Space / Enter open the panel; arrow-key navigation is wired
-            // inside openUniqDrop and attached directly to the wrapper there.
+            // inside openUniqDrop and attached directly to the button there.
             //
-            // NOTE: when the panel is already open for this wrapper, Enter must
+            // NOTE: when the panel is already open for this button, Enter must
             // NOT be handled here — the per-invocation `kh` handler (registered
             // inside openUniqDrop) will select the focused item.  Without this
             // guard the original listener (attached first) would call
             // openUniqDrop() → toggle-close before kh ever runs, making Enter
             // appear to do nothing while navigating the list with arrow-keys.
-            uniqWrap.addEventListener('keydown', (ev) => {
+            uniqBtn.addEventListener('keydown', (ev) => {
                 if (ev.key === 'Enter' || ev.key === ' ') {
-                    if (ev.key === 'Enter' && _uniqDropOwner === uniqWrap) return;
+                    // If the panel is already open for this button, let the kh
+                    // handler (registered inside openUniqDrop) deal with Enter.
+                    if (ev.key === 'Enter' && _uniqDropOwner === uniqBtn) return;
                     ev.preventDefault();
                     ev.stopPropagation();
-                    openUniqDrop(uniqWrap, table, index);
+                    openUniqDrop(uniqBtn, table, index);
                 }
             });
 
@@ -18306,17 +18236,22 @@
             //   [.mb-caa-col-hdr-btn — prepended here by _artInitCaaColHeaderToggle]
             //   colName  ⇅  ▲  ▼
             //   [.mb-col-collapse-hdr-btn — inserted by initCollapsableColumns, margin-left:auto]
-            //   [.mb-col-uniq-wrap [ .mb-col-uniq-count  📊 ]]
-            //
-            // .mb-col-uniq-wrap is the single interactive element: clicking the
-            // count number OR the 📊 glyph both open the dropdown.
+            //   .mb-col-uniq-count  📊
             const hdrFlex = document.createElement('div');
             hdrFlex.className = 'mb-col-hdr-flex';
             hdrFlex.appendChild(document.createTextNode(`${colName} `));
             hdrFlex.appendChild(createIcon('⇅', 0));
             hdrFlex.appendChild(createIcon('▲', 1));
             hdrFlex.appendChild(createIcon('▼', 2));
-            hdrFlex.appendChild(uniqWrap);
+            // Unique-value count badge — sits immediately before 📊, updated by
+            // _updateAllColHeaderCounts() after every render/filter pass.
+            const uniqCountSpan = document.createElement('span');
+            uniqCountSpan.className   = 'mb-col-uniq-count';
+            uniqCountSpan.textContent = '';   // populated after first render
+            hdrFlex.appendChild(uniqCountSpan);
+            // 📊 goes last; .mb-col-collapse-hdr-btn (inserted later by
+            // initCollapsableColumns) gets margin-left:auto and sits just before it.
+            hdrFlex.appendChild(uniqBtn);
             th.dataset.colName = colName;
             th.appendChild(hdrFlex);
         });
@@ -19145,19 +19080,17 @@
             }
         });
 
-        // Collapse toggle → collapsed state (◀/▼N▤ expanded → ▶N▤ collapsed) — non-art cells only
+        // Collapse toggle → ▶ (◀ U+25C0 is the expanded glyph) — non-art cells only
         // (art cells now use [data-caa-expand-btn], handled above)
         el.querySelectorAll('.mb-cell-collapse-toggle').forEach(toggle => {
-            if (toggle.getAttribute('aria-expanded') === 'true') {
-                const glyphEl = toggle.querySelector('.mb-cell-collapse-glyph');
-                if (glyphEl) glyphEl.textContent = '▶';
-                else toggle.textContent = '▶'; // fallback for legacy toggles
+            if (toggle.textContent.trim() === '\u25C0') { // ◀
+                toggle.textContent = '\u25B6'; // ▶
                 toggle.setAttribute('aria-expanded', 'false');
                 const ul = toggle.closest('td')?.querySelector(':scope > ul');
                 if (ul) {
-                    const n = ul.querySelectorAll(':scope > li').length;
-                    toggle.title = `Show all multi-row cell items (${n})`;
-                    toggle.setAttribute('aria-label', `Expand: ${n} items are collapsed`);
+                    const n = ul.querySelectorAll(':scope > li').length - 1;
+                    toggle.title = `Show all image(s) (${n}) \u2014 click to expand`;
+                    toggle.setAttribute('aria-label', `Expand: ${n} image(s) collapsed`);
                 }
             }
         });
