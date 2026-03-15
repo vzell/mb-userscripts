@@ -1,17 +1,5 @@
 [
     {
-      "version": "9.99.169",
-      "date": "2026-03-15",
-      "sections": [
-        {
-          "label": "✨ New Features / Changes",
-          "items": [
-            "CAA/EAA fetch telemetry extended with full per-path breakdown in the completion toast. The toast (introduced in 9.99.165, summary line added in 9.99.168) now renders a multiline message with white-space:pre and line-height:1.55 comprising: (1) header line '🎨 All CAA/EAA artwork loaded'; (2) summary line '   N images in T'; (3) one breakdown row per active cache tier (rows with zero counts are suppressed): '  🟢 Memory cache: N icon + N inline = N', '  🗄️ IndexedDB cache: …', '  🔵 Network fetch: …', '  🌐 Browser cache: …'; (4) footer '   (click to dismiss)'. The four tiers correspond exactly to the existing per-icon RT badge system: Memory (Tier 1, _artIdbMemCache session Map), IDB (Tier 2, IndexedDB blob cache), Network (Tier 3, GM_xmlhttpRequest CORS-bypass fetch producing a blob: URL), and Browser (native img.src path used when IDB is disabled or on cacheBust retry, where the browser manages caching internally). The infoDisplay (#mb-info-display) global info area retains the compact single-line form '🎨 CAA/EAA: N images in T'. Implementation: the former flat _caaFetchStartTime + _caaFetchedCount pair is replaced by a single _caaFetchStats object { startTime, icon: { memory, idb, network, browser }, inline: { memory, idb, network, browser } } reset in initCaaPics(). _onIconLoaded gains a wasMemoryHit parameter (default false) threaded from _artFetchCachedImage's fromMemory return value, enabling exact tier classification for icon-column images: memory/idb from the flags, network from src.startsWith('blob:') with both flags false, browser otherwise. _artInitInlinePics IDB path now destructures fromMemory alongside fromIdb for the same three-tier classification; the native img.onload path increments inline.browser. The unused _caaTotalLoaded() helper (defined but never called) was removed."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.168",
       "date": "2026-03-15",
       "sections": [

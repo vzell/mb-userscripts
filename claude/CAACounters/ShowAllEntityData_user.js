@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.169+2026-03-15
+// @version      9.99.168+2026-03-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -20974,36 +20974,15 @@
     // Null before the first render; never accessed outside the CAA feature block.
     let _caaQueue = null;
 
-    /**
-     * Per-session CAA/EAA fetch telemetry.  Reset by initCaaPics() on every
-     * render pass so re-renders get a fresh measurement.
-     *
-     * startTime  — performance.now() snapshot taken when initCaaPics() creates
-     *              the new _caaQueue; used to compute total elapsed time.
-     *
-     * Counts are split by image type (icon column vs inline thumbnail) and by
-     * the cache tier / source that served the image:
-     *
-     *   memory  — Tier 1: per-session in-memory Map (_artIdbMemCache).
-     *             Zero network overhead; served synchronously from RAM.
-     *   idb     — Tier 2: IndexedDB blob cache (sa_art_idb_enable=true).
-     *             No network round-trip; blob read from the browser DB.
-     *   network — Tier 3: GM_xmlhttpRequest CORS-bypass fetch.
-     *             Image was not cached; fetched fresh from the archive host.
-     *   browser — Native img.src path (IDB disabled or cacheBust retry).
-     *             The browser itself handles caching; the exact tier
-     *             (browser-memory / disk / network) is visible in the per-icon
-     *             Resource Timing badge but is not broken out here because
-     *             blob: URLs returned by _artFetchCachedImage have no RT entry.
-     *
-     * Only successful displays are counted; 404s and other errors are not.
-     */
-    let _caaFetchStats = {
-        startTime: null,
-        icon:   { memory: 0, idb: 0, network: 0, browser: 0 },
-        inline: { memory: 0, idb: 0, network: 0, browser: 0 },
-    };
+    // Tracks the wall-clock start time (performance.now()) of the current CAA/EAA
+    // fetch session.  Reset by initCaaPics() each render pass so re-renders get a
+    // fresh measurement.  Read by _showCaaCompletionToast() when the queue drains.
+    let _caaFetchStartTime = null;
 
+    // Running count of artwork images that were successfully displayed in the
+    // current session (icon column + inline thumbnails, CAA + EAA combined).
+    // Incremented by every successful load path; reset by initCaaPics().
+    let _caaFetchedCount = 0;
 
     // ── Art Archive (CAA / EAA) shared feature engine ─────────────────────────
     //
@@ -22302,12 +22281,10 @@
          * Common success handler shared by both the IDB and the native img load
          * paths.  Applies background-image, hover preview, and RT/IDB cache-hint.
          *
-         * @param {string}  src           The resolved src string (object URL or network URL).
-         * @param {boolean} wasIdbHit     Whether the blob was served from IDB (Tier 2 hit).
-         * @param {boolean} wasMemoryHit  Whether the blob was served from the session
-         *                               in-memory Map (Tier 1 hit).
+         * @param {string}  src       The resolved src string (object URL or network URL).
+         * @param {boolean} wasIdbHit Whether the blob was served from IDB (Tier 2 hit).
          */
-        const _onIconLoaded = (src, wasIdbHit, wasMemoryHit = false) => {
+        const _onIconLoaded = (src, wasIdbHit) => {
             artIcon.style.setProperty('background-size',  'contain');
             artIcon.style.setProperty('background-image', 'url(' + src + ')');
 
@@ -22384,19 +22361,8 @@
                     wrap.appendChild(countBadge);
                 }
             }
-            // ── Telemetry: count this successful icon-column image by cache tier ─
-            // wasMemoryHit=true  → Tier 1 session Map
-            // wasIdbHit=true     → Tier 2 IndexedDB
-            // src is blob: URL but both flags false → Tier 3 GM_xhr network fetch
-            //   (_artFetchCachedImage always returns a blob: URL, so blob: + both
-            //   false means the blob was freshly fetched from the network)
-            // otherwise          → native img.src path (IDB disabled / cacheBust);
-            //   browser handles caching internally; src is a plain https:// URL
-            if (wasMemoryHit)            _caaFetchStats.icon.memory++;
-            else if (wasIdbHit)          _caaFetchStats.icon.idb++;
-            else if (src.startsWith('blob:')) _caaFetchStats.icon.network++;
-            else                         _caaFetchStats.icon.browser++;
-            Lib.debug(ctx.key, `${ctx.key}LoadIcon: loaded OK (idb=${wasIdbHit} memory=${wasMemoryHit}) — ${imgurl}`);
+            _caaFetchedCount++;
+            Lib.debug(ctx.key, `${ctx.key}LoadIcon: loaded OK (idb=${wasIdbHit}) — ${imgurl}`);
         };
 
         /**
@@ -22464,9 +22430,9 @@
         if (Lib.settings.sa_art_idb_enable && !cacheBust) {
             return new Promise(resolve => {
                 _artFetchCachedImage(imgurl)
-                    .then(({ objectUrl, fromIdb, fromMemory }) => {
+                    .then(({ objectUrl, fromIdb }) => {
                         // Apply background-image + hint directly; no DOM img needed.
-                        _onIconLoaded(objectUrl, fromIdb, fromMemory);
+                        _onIconLoaded(objectUrl, fromIdb);
                         resolve();
                     })
                     .catch(err => {
@@ -24276,7 +24242,7 @@
                     const loadTask = () => {
                         if (Lib.settings.sa_art_idb_enable) {
                             return _artFetchCachedImage(imgurl)
-                                .then(({ objectUrl, fromIdb, fromMemory }) => {
+                                .then(({ objectUrl, fromIdb }) => {
                                     if (!ph.isConnected) return; // node detached by a later render pass
                                     img.src = objectUrl;
                                     img.style.display = 'inline';
@@ -24322,12 +24288,9 @@
                                             ph.appendChild(hintSpan);
                                         }
                                     }
-                                    // ── Telemetry ──────────────────────────────────────
-                                    if (fromMemory)    _caaFetchStats.inline.memory++;
-                                    else if (fromIdb)  _caaFetchStats.inline.idb++;
-                                    else               _caaFetchStats.inline.network++;
+                                    _caaFetchedCount++;
                                     Lib.debug(ctx.key,
-                                        `init${ctx.key.toUpperCase()}InlinePics: loaded OK (idb=${fromIdb} memory=${fromMemory}) — ${imgurl}`);
+                                        `init${ctx.key.toUpperCase()}InlinePics: loaded OK (idb=${fromIdb}) — ${imgurl}`);
                                 })
                                 .catch(() => {
                                     Lib.debug(ctx.key,
@@ -24405,8 +24368,7 @@
                                             `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
                                             ` — ${imgurl}`);
                                     }
-                                    // ── Telemetry (browser-native img path) ────────────
-                                    _caaFetchStats.inline.browser++;
+                                    _caaFetchedCount++;
                                     Lib.debug(ctx.key,
                                         `init${ctx.key.toUpperCase()}InlinePics: loaded OK — ${imgurl}`);
                                 }
@@ -24483,9 +24445,9 @@
         if (typeof secs === 'number' && secs <= 0) return;
         const duration = (typeof secs === 'number' ? secs : 10) * 1000;
 
-        // ── Snapshot telemetry ────────────────────────────────────────────────
-        const s         = _caaFetchStats;
-        const elapsedMs = (s.startTime !== null) ? (performance.now() - s.startTime) : null;
+        // ── Compute elapsed time ──────────────────────────────────────────────
+        const elapsedMs  = (_caaFetchStartTime !== null) ? (performance.now() - _caaFetchStartTime) : null;
+        const imageCount = _caaFetchedCount;
 
         /**
          * Format elapsed milliseconds as a human-readable string.
@@ -24496,81 +24458,35 @@
         function _fmtMs(ms) {
             if (ms === null) return '?';
             if (ms < 1000)   return `${Math.round(ms)}ms`;
-            const totalSecs = ms / 1000;
+            const totalSecs  = ms / 1000;
             if (totalSecs < 60) return `${totalSecs.toFixed(1)}s`;
             const m = Math.floor(totalSecs / 60);
-            const ss = Math.round(totalSecs % 60);
-            return `${m}m ${ss}s`;
+            const s = Math.round(totalSecs % 60);
+            return `${m}m ${s}s`;
         }
 
-        // ── Totals per image type ─────────────────────────────────────────────
-        const iconTotal   = s.icon.memory   + s.icon.idb   + s.icon.network   + s.icon.browser;
-        const inlineTotal = s.inline.memory + s.inline.idb + s.inline.network + s.inline.browser;
-        const grandTotal  = iconTotal + inlineTotal;
+        const timeStr  = _fmtMs(elapsedMs);
+        const imgLabel = imageCount === 1 ? '1 image' : `${imageCount} images`;
+        const summary  = `${imgLabel} loaded in ${timeStr}`;
 
-        // ── Build per-tier breakdown rows (skip zero counts) ──────────────────
-        //
-        // Source labels with emoji matching the existing per-icon RT badges:
-        //   🟢 memory  — session in-memory Map (Tier 1, fastest)
-        //   🗄️ idb     — IndexedDB blob cache  (Tier 2, fast)
-        //   🔵 network — GM_xmlhttpRequest CORS-bypass fetch (Tier 3, slow)
-        //   🌐 browser — native img.src path (IDB disabled; browser cache)
-        //
-        // Each row: "  <emoji> <label>: <icon> icon + <inline> inline = <total>"
-        // Rows with a zero grand-total for that tier are suppressed entirely.
-        const tiers = [
-            { key: 'memory',  emoji: '🟢', label: 'Memory cache' },
-            { key: 'idb',     emoji: '🗄️', label: 'IndexedDB cache' },
-            { key: 'network', emoji: '🔵', label: 'Network fetch' },
-            { key: 'browser', emoji: '🌐', label: 'Browser cache' },
-        ];
-
-        const tierLines = tiers
-            .map(({ key, emoji, label }) => {
-                const ic = s.icon[key];
-                const il = s.inline[key];
-                if (ic === 0 && il === 0) return null;
-                const parts = [];
-                if (ic > 0) parts.push(`${ic} icon`);
-                if (il > 0) parts.push(`${il} inline`);
-                const tot = ic + il;
-                const breakdown = parts.length === 2
-                    ? `${parts[0]} + ${parts[1]} = ${tot}`
-                    : `${tot}`;
-                return `  ${emoji} ${label}: ${breakdown}`;
-            })
-            .filter(Boolean);
-
-        // ── Assemble the full multiline message ───────────────────────────────
-        const timeStr    = _fmtMs(elapsedMs);
-        const totalLabel = grandTotal === 1 ? '1 image' : `${grandTotal} images`;
-        const lines = [
-            `🎨 All CAA/EAA artwork loaded`,
-            `   ${totalLabel} in ${timeStr}`,
-            ...tierLines,
-            `   (click to dismiss)`,
-        ];
-        const toastText = lines.join('\n');
-
-        // ── Update the global info area (compact single-line summary) ─────────
+        // ── Update the global info area ───────────────────────────────────────
         const infoDisplay = document.getElementById('mb-info-display');
         if (infoDisplay) {
-            infoDisplay.textContent = `🎨 CAA/EAA: ${totalLabel} in ${timeStr}`;
+            infoDisplay.textContent = `🎨 CAA/EAA: ${summary}`;
             infoDisplay.style.color = 'green';
         }
 
-        // ── Show toast ────────────────────────────────────────────────────────
+        // ── Show toast ───────────────────────────────────────────────────────
         const toast = document.createElement('div');
         toast.id = 'mb-caa-completion-toast';
-        toast.textContent = toastText;
+        toast.textContent = `🎨 All CAA/EAA artwork (${summary})`;
         toast.style.cssText =
             'position:fixed; bottom:20px; right:20px; z-index:99999;' +
             ' background:rgba(30,30,30,0.88); color:#fff;' +
             ' padding:8px 14px; border-radius:6px; font-size:0.85em;' +
             ' font-family:sans-serif; cursor:pointer; user-select:none;' +
             ' box-shadow:0 2px 8px rgba(0,0,0,0.35);' +
-            ' opacity:1; transition:opacity 0.35s ease;' +
-            ' white-space:pre; line-height:1.55;';
+            ' opacity:1; transition:opacity 0.35s ease;';
 
         const dismiss = () => {
             toast.style.opacity = '0';
@@ -24594,14 +24510,11 @@
         Lib.debug('caa', `initCaaPics: request queue created (concurrency=${concurrency})`);
 
         // Reset per-session fetch telemetry so every render pass gets a fresh
-        // count and elapsed-time measurement.  _caaFetchStats counters are
-        // incremented by every successful image-load path (icon column + inline
-        // thumbnails, CAA + EAA combined, split by cache tier).
-        _caaFetchStats = {
-            startTime: performance.now(),
-            icon:   { memory: 0, idb: 0, network: 0, browser: 0 },
-            inline: { memory: 0, idb: 0, network: 0, browser: 0 },
-        };
+        // count and elapsed-time measurement.  _caaFetchedCount is incremented
+        // by every successful image-load path (icon column + inline thumbnails,
+        // CAA + EAA combined); _caaFetchStartTime is read by _showCaaCompletionToast.
+        _caaFetchStartTime = performance.now();
+        _caaFetchedCount   = 0;
 
         _artInitPics(CAA_CTX);
 

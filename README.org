@@ -53594,6 +53594,9 @@ or equivalent columns (depending on pageType) and the big-image stripe above a t
 get rid off, or it should auto-vanish after 10 seconds (configurable in the "const configSchema" variable)
 
 ** TODO count the total time for CAA rendering/fetching and show that also in the popup and the global info area when finished
+*** initial
+
+In the uploaded userscript,
 
 Implement measuring the total time it takes for CAA/EAA fetching from the network/indexedDB and the total number of
 images fetched and show that also in the popup and the global info area when finished
@@ -53613,6 +53616,11 @@ in the function
 #+begin_example
     function _showCaaCompletionToast() {
 #+end_example
+
+*** all info
+
+Actually display ALL the different timeing information (for the different image load paths) in the "toast.textContent" ... make it multiline
+
 
 * TODO reorder the symbols in column headers
 
@@ -53699,7 +53707,6 @@ after running the current algorithm of "removing (delete from DOM) the first occ
 
 in the last step also remove all sub-tables from the DOM which are rendered BEFORE the "Album" sub-table
 
-
 ** remove the sub-tables from the DOM before starting to fetch any CAA images
 
 
@@ -53708,5 +53715,6 @@ in the last step also remove all sub-tables from the DOM which are rendered BEFO
 
 on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the
 fetching of all paginated pages begins after pressing the "Show all.." action button
+
 
 * TODO Rename "Official releases" on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases to "Artist Releases"
