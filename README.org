@@ -53167,15 +53167,7 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 #+end_example
 
 
-* TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
-
-
 * TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
-
-* TODO for RGs CAA artwork also display the Release from where it's sourced
-
-* add menu to hover CAA picture, for different actions
-
 
 * TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
@@ -53247,7 +53239,6 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 * TODO for RGs CAA artwork also display the Release fom where it's sourced
 
 * add menu to hover CAA picture, for different actions
-
 
 * TODO in debug log emit also the entity title
 
@@ -53465,23 +53456,26 @@ to
                     showAllBtn.title = `Click to show all${countSuffix} rows in a new browser tab (MusicBrainz Artist-Relationships pages have currently a limit of 100 rows rendered at most per relationship type)`;
 #+end_example
 
+* TODO Rename "Official releases" on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases to "Artist Releases"
+
 * rename "Save current table data to disk in a serialized format
 
 * rename "Enter global filter string" to "Enter global filter string (focus filter field with ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')})"
 * Change expand multi-row cells to "Expand|all" | "multi-row|cells" - elements under each other aligned in the middle
 
+* TODO add "syntheticColumns: ['Total Tracks']" to the pageType 
 
-* TODO in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
-
-* TODO add shortcut "Render" when no filtering in the "Load from Disk" path
-
-* TODO deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog
-
-* TODO Change all the entity links to open in a new tab
-
-* TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
-
-
+#+begin_example
+            type: 'artist-releases',
+	    ...
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+#+end_example
 * TODO add collpase icon to "Area" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events or even better in all "Location" split types
 
 #+begin_example
@@ -53526,9 +53520,6 @@ collapsableColumns: [ 'Location', '', ... ],
         }
 #+end_example
 
-
-* TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just dispay ONE
-
 * TODO reposition the comment
 
 #+begin_example
@@ -53551,6 +53542,17 @@ before
 #+begin_example
     function initCaaPics() {
 #+end_example
+
+
+
+* TODO in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
+
+* TODO Change all the entity links to open in a new tab
+
+* TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
+
+
+* TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just dispay ONE
 
 * TODO add information that ALL CAA images have been loaded
 ** DONE initial
@@ -53939,8 +53941,6 @@ on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336
 fetching of all paginated pages begins after pressing the "Show all.." action button
 
 
-* TODO Rename "Official releases" on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases to "Artist Releases"
-
 
 * TODO ALL columns: in the unique column drop down menu add a static sub-section which tells us the number of different unique values
 
@@ -53971,7 +53971,7 @@ entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no
 to give the user the chance to quickly filter either for rows with OR without images
 
 
-* TODO numeric columns "DD","MM", "YYY" ... should be centered aligned in the data cells like currently the "Releases" column
+* TODO numeric columns "DD","MM", "YYY",  ... should be centered aligned in the data cells like currently the "Releases" column (actually "Releases" gets render by the MB stylesheet, it seems, it's already centered on the initial page)
 
 Is this function also used for alignment inside the columns cells
 
@@ -53984,4 +53984,276 @@ Is this function also used for alignment inside the columns cells
 
 
 * add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
+
+* TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
+
+* TODO add shortcut "Render" when no filtering in the "Load from Disk" path
+
+* TODO deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog
+
+* split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
+** initial
+
+given the fact that the following action button (also it's labeled '🧮 Non-official RGs')
+
+#+begin_example
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+            ],
+#+end_example
+
+produces on the final rendered page, both the "official" and "non-offical" sub-tables with the different types of releases (like "Album", "Album + Live", etc)
+
+and the following action button 
+
+#+begin_example
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+            ],
+#+end_example
+
+actually produces ONLY the "official" sub-tables.
+
+Create a definition for a new action button with label '🧮 Artist RGs',
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Artist RGs', params: { all: ['1', '0'], va: '0' } },
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+#+end_example
+
+that when clicked iterates over the "all: ['1', '0']" array, so in effect downloads first both the "official" and
+"non-offical" sub-tables (the are also rendered in the order) and thern 'subtracts' the sub-tables for the "official" releases.
+
+Now 'subtracts' in this context means, we need to now where in the list of "all" sub-tables, the "non-official" ones
+start. We can deduce this from the names of the sub-tables in the "official" releases download path, by comparing these names with the names from the "all" path (which fetches "official" and
+"non-offical" sub-tables). As soon as we can't match the h3 header namees from these pathes, we know that the official sub-tables start.
+
+When this happens a new h2 header with name "Non-Official Artist Discography" should be rendered before the sub-tables for the non-official case.
+The original h2 header which preceeds the "official" sub-tables, should then be renamed from "Discography" to "Official Artist Discography"
+
+** why is the h2 header "Wikipedia" missing
+
+A couple of observations:
+
+1.)
+
+First of all one question, and maybe you can fix it:
+
+why is the h2 header "Wikipedia" missing
+
+#+begin_example
+<div class="wikipedia-extract"><h2 class="wikipedia">Wikipedia</h2><div class="wikipedia-extract-body wikipedia-extract-collapsed"><p class="mw-empty-elt">
+#+end_example
+
+on the following pageType with the following labels:
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+#+end_example
+
+but it's there on the new label '🧮 Official RGs'
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+            ],
+#+end_example
+
+which you just added support for
+
+** A couple of observations regarding the new label implmentation
+
+2.)
+
+In the implementation for the new label '🧮 Official RGs' the 2 phase fetching and diffing works, but there are a couple of bugs:
+
+a.)
+
+the collapsable sidebar feature is not honoured
+
+b.)
+
+The original table columns do not honour the configured background color, e.g we get 
+
+c.)
+
+NONE of the h2 header lines in the final rendered is clickable to support the collapse/uncollapase feature. Please fix
+
+d.)
+
+The newly inserted h2 header line "Non-Official Artist Discography" is missing all the buttons and filter field
+
+#+begin_example
+<h2 class="mb-toggle-h2" title="Click to collapse/uncollapse section" style="cursor: pointer; user-select: none; margin-top: 1.4em;">Non-Official Artist Discography</h2>
+#+end_example
+
+Compare it to the h2 header line for the "Official Artist Discography"
+
+#+begin_example
+<h2 class="discography">Official Artist Discography<span class="mb-row-count-stat">(2123)</span><button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">560</span></button><button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><button class="mb-master-toggle" type="button" data-state="collapsed" title="Click to uncollapse all sub-sections (Ctrl+Click to uncollapse ALL sub-sections)">Show all sub-sections</button><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude matches (Global Filter)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: none;"><span>▶ Expand</span><span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting</button><button id="mb-clear-column-filters-btn" title="Clear all column-specific filter inputs — global action (Shift+Esc)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global, ALL sub-table and ALL column filters in all sub-tables (except filter from 'Loading from Disk') — also triggered by Ctrl+Shift+G" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status"></span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
+#+end_example
+
+please fix
+
+e.)
+
+the row count 2123 in the h2 header line for the "Official Artist Discography"
+
+#+begin_example
+<span class="mb-row-count-stat">(2123)</span>
+#+end_example
+
+represents the total rowcount in both, the "Official Artist Discography" and "Non-Official Artist Discography"
+
+Please fix
+
+f.)
+
+The following navigation container exists 2 times below the final rendered sub-table
+
+#+begin_example
+<nav><ul class="pagination"><li><span>Previous</span></li><li class="separator"></li><li><a class="sel" href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1"><strong>1</strong></a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=2">2</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=3">3</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=4">4</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=5">5</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=6">6</a></li><li class="separator"></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=2">Next</a></li></ul></nav>
+#+end_example
+
+It shouldn't be there. I think normally the cleanup routines remove it. Please fix
+
+** small fixes
+
+a couple of fixes:
+
+1.)
+
+rename the labels in the following block from
+
+#+begin_example
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Artist RGs', params: { all: ['1', '0'], va: '0' } },
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+#+end_example
+
+to
+
+#+begin_example
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Artist RGs', params: { all: ['1', '0'], va: '0' } },
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 All official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 All official VA RGs', params: { all: '1', va: '1' } }
+            ],
+#+end_example
+
+and add before the line
+
+#+begin_example
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+#+end_example
+
+the new label '🧮 VA RGs'
+
+#+begin_example
+                { label: '🧮 VA RGs', params: { all: all: ['1', '0'],, va: '1' } }
+#+end_example
+
+also adjust the naming in the the following section
+
+#+begin_example
+        // Add tooltip based on button label
+#+end_example
+
+2.)
+
+the h2 header line
+
+has the following controls
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">746</span></button>
+<button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
+<span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude matches (Global Filter)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span>▶ Expand</span><span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting</button><button id="mb-clear-column-filters-btn" title="Clear all column-specific filter inputs — global action (Shift+Esc)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global, ALL sub-table and ALL column filters in all sub-tables (except filter from 'Loading from Disk') — also triggered by Ctrl+Shift+G" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span><span id="mb-sort-status-display" class="mb-sort-status" style="color: orange;"></span></span></span>
+#+end_example
+
+which seems to work globally over both sub-table areas, the sub-tables below the h2 header line "Official Artist Discography" and "Non-Official Artist Discography"
+
+I want to have the same controls also for the h2 header line "Non-Official Artist Discography".
+
+Both controls should only work on their h2 header line respectively (so locally over it's h2 area)
+
+There should be a synthetic h2 header line right above the h2 header line for "Official Artist Discography" with the
+same controls, which should work on the real global level (like what the current h2 header line for ""Official Artist Discography"" is doing right now)
+
+It should get a new configurable background color (default dark green) in the the configuration section in the variable "const configSchema" 
+
+** last fix
+
+a couple of more bugs
+
+1.)
+
+The new action buttons 1 and 3 should get the green background color when succesfully loading all the pages
+
+2.)
+
+The Global super-header h2 line doesn't react on click events.It should collapse/uncollapse the "Official Artist Discography" and "Non-Official Artist Discography" h2 header areas
+
+3.)
+
+both the "Official Artist Discography" and "Non-Official Artist Discography" h2 header filter fields work fine, but the filter string in the resulting filtered rows should also be highlighted 
+
+4.)
+
+also the following controls are still missing on both the "Official Artist Discography" and "Non-Official Artist Discography" h2 header lines
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">746</span></button>
+<button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
+#+end_example
+
+and from the filter container the additional checkboxes for "Case sensitive", "regexp" and "exclude" filtering functionality
+
+** the page guards are also missing
+
+** rename "All official" to just "All" , same for VA
+
+** count in the "Official Artist Discography" is the same as the global count (im not sure when it happens, probably during filtering)
+
+* TODO Implement fixing a configurable colum to not scroll when using the horizontal scrollbar
 
