@@ -1,5 +1,17 @@
 [
     {
+      "version": "9.99.168",
+      "date": "2026-03-14",
+      "sections": [
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "artist-releasegroups page: when clicking 'Non-official RGs' ({all:'1',va:'0'}) or 'Non-official VA RGs' ({all:'1',va:'1'}), after renderGroupedTable completes a deduplication pass runs to remove the first occurrence of each sub-table name that appears more than once in the DOM. MusicBrainz can return the same release-group type+subtype combination (e.g. 'Album + Compilation') under both the artist's own non-official releases and their various-artists entries, producing two identically-named sub-tables. The dedup algorithm: (1) collects all .mb-toggle-h3 elements and extracts their clean category name (stripping toggle icon, mb-row-count-stat span, buttons); (2) groups them by name; (3) for any name with 2+ occurrences, removes every occurrence except the last — each removal deletes the h3, any immediately following mb-caa-bigbox/mb-eaa-bigbox siblings, and the subsequent table.tbl from the DOM; (4) prunes the corresponding groupedRows entries (all but the last); (5) calls updateH2Count(newTotal, newTotal) to refresh the h2 row-count span. Trigger condition: pageType === 'artist-releasegroups' AND overrideParams.all === '1'. Full debug logging to the console at each step: scan start, per-duplicate-name removal details (occurrence index, bigbox count, row count), groupedRows pruning, and final summary (sub-tables removed, rows removed, new total)."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.167",
       "date": "2026-03-14",
       "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.167+2026-03-14
+// @version      9.99.168+2026-03-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -14596,6 +14596,132 @@
             if (activeDefinition.tableMode === 'multi') {
                 groupedRows.forEach(g => { g.originalRows = [...g.rows]; });
                 await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
+
+                // ── Deduplicate sub-tables for Non-official RGs / Non-official VA RGs ──
+                //
+                // MusicBrainz categorises release groups by type+subtype combinations.
+                // When a user fetches "Non-official RGs" or "Non-official VA RGs" the
+                // API can return the same combined category (e.g. "Album + Compilation")
+                // under BOTH the artist's own non-official releases AND their VA entries,
+                // producing two identically-named sub-tables on the same page.
+                //
+                // Trigger condition:
+                //   • pageType === 'artist-releasegroups'
+                //   • clicked button has params.all === '1'
+                //     (matches both Non-official RGs {all:'1',va:'0'}
+                //      and Non-official VA RGs {all:'1',va:'1'})
+                //
+                // Algorithm: collect every .mb-toggle-h3 element, extract its clean
+                // category name, then for each name that appears more than once remove
+                // every occurrence EXCEPT the LAST one (last = the richer / merged group
+                // that MusicBrainz returns latest in pagination).  Also prune groupedRows
+                // and recalculate the h2 row-count.
+                if (pageType === 'artist-releasegroups' && overrideParams && overrideParams.all === '1') {
+                    Lib.debug('dedup', 'Non-official RGs dedup: starting sub-table deduplication pass.');
+
+                    // Helper: extract the plain category name from an h3, stripping
+                    // the toggle icon, row-count stat, and any injected buttons/spans.
+                    const _extractH3CategoryName = (h3) => {
+                        const clone = h3.cloneNode(true);
+                        clone.querySelectorAll(
+                            '.mb-toggle-icon, .mb-row-count-stat, button, .mb-subtable-controls, ' +
+                            '.mb-col-collapse-all-btn, .mb-toggle-icon-btn'
+                        ).forEach(el => el.remove());
+                        return clone.textContent.replace(/[▼▲▶◀]/g, '').trim();
+                    };
+
+                    // Collect all h3s with their category names.
+                    const allH3s = Array.from(document.querySelectorAll('.mb-toggle-h3'));
+                    Lib.debug('dedup', `Non-official RGs dedup: found ${allH3s.length} sub-table h3(s).`);
+
+                    // Build map: categoryName → [h3, h3, …] (in DOM order)
+                    const nameToH3s = new Map();
+                    allH3s.forEach(h3 => {
+                        const name = _extractH3CategoryName(h3);
+                        if (!nameToH3s.has(name)) nameToH3s.set(name, []);
+                        nameToH3s.get(name).push(h3);
+                    });
+
+                    let removedSubTables = 0;
+                    let removedRows      = 0;
+
+                    nameToH3s.forEach((h3List, name) => {
+                        if (h3List.length < 2) return; // no duplicate — nothing to do
+
+                        Lib.debug('dedup',
+                            `Non-official RGs dedup: duplicate sub-table "${name}" ` +
+                            `appears ${h3List.length} time(s) — removing first ${h3List.length - 1} occurrence(s).`);
+
+                        // Remove every occurrence except the last.
+                        for (let i = 0; i < h3List.length - 1; i++) {
+                            const h3ToDrop = h3List[i];
+
+                            // Find the table immediately following the h3 (may be separated
+                            // by div.mb-caa-bigbox / div.mb-eaa-bigbox elements).
+                            let sibling = h3ToDrop.nextElementSibling;
+                            let tableToDrop = null;
+                            const bigboxesToDrop = [];
+                            while (sibling) {
+                                if (sibling.tagName === 'TABLE' && sibling.classList.contains('tbl')) {
+                                    tableToDrop = sibling;
+                                    break;
+                                }
+                                if (sibling.classList.contains('mb-caa-bigbox') ||
+                                    sibling.classList.contains('mb-eaa-bigbox')) {
+                                    bigboxesToDrop.push(sibling);
+                                    sibling = sibling.nextElementSibling;
+                                } else {
+                                    break; // unexpected element — stop walking
+                                }
+                            }
+
+                            // Count the rows being removed for the h2 stat update.
+                            const droppedRowCount = tableToDrop
+                                ? tableToDrop.querySelectorAll('tbody tr').length
+                                : 0;
+                            removedRows += droppedRowCount;
+
+                            Lib.debug('dedup',
+                                `Non-official RGs dedup: removing h3 "${name}" (occurrence ${i + 1}) ` +
+                                `+ ${bigboxesToDrop.length} bigbox(es) ` +
+                                `+ table with ${droppedRowCount} row(s) from DOM.`);
+
+                            // Remove bigboxes, table, and h3 from the DOM.
+                            bigboxesToDrop.forEach(bb => bb.remove());
+                            if (tableToDrop) tableToDrop.remove();
+                            h3ToDrop.remove();
+                            removedSubTables++;
+                        }
+
+                        // Also prune groupedRows — remove all but the last entry for this name.
+                        const matchingGroups = groupedRows.filter(g => {
+                            const gName = (g.category || g.key || '').replace(/[▼▲▶◀]/g, '').trim();
+                            return gName === name;
+                        });
+                        if (matchingGroups.length > 1) {
+                            for (let j = 0; j < matchingGroups.length - 1; j++) {
+                                const idx = groupedRows.indexOf(matchingGroups[j]);
+                                if (idx !== -1) {
+                                    Lib.debug('dedup',
+                                        `Non-official RGs dedup: pruning groupedRows[${idx}] ` +
+                                        `"${name}" (${matchingGroups[j].rows.length} rows).`);
+                                    groupedRows.splice(idx, 1);
+                                }
+                            }
+                        }
+                    });
+
+                    if (removedSubTables > 0) {
+                        const newTotal = groupedRows.reduce((acc, g) => acc + g.rows.length, 0);
+                        Lib.debug('dedup',
+                            `Non-official RGs dedup: removed ${removedSubTables} duplicate sub-table(s) ` +
+                            `(${removedRows} rows). New total: ${newTotal}.`);
+                        // Refresh the h2 row-count stat to reflect the pruned totals.
+                        updateH2Count(newTotal, newTotal);
+                    } else {
+                        Lib.debug('dedup', 'Non-official RGs dedup: no duplicate sub-tables found.');
+                    }
+                }
             } else {
                 originalAllRows = [...allRows];
                 await renderFinalTable(allRows);

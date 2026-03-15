@@ -50117,7 +50117,6 @@ Lets assume we are on the final rendered page by reading all data from the net o
 
 please fix  
    
-
 * DONE In the page definition variable "const pageDefinitions" add the following new "columnEraser"
 
 #+begin_example
@@ -53054,7 +53053,6 @@ but the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 has it
 
 
-
 * DONE change "[Show | Hide ] all sections" to Toggle button "Show all sections"/"Hide all sections"
 
 for "multi"-table pageTypes, change the text based "[Show | Hide ] all sections" click functionality
@@ -53065,7 +53063,6 @@ for "multi"-table pageTypes, change the text based "[Show | Hide ] all sections"
 
 in the h2 header row to a toggle button which either shows "Show all sections" or hide "Hide all sections" with the same
 functionality. Place the new button at the same location as the curretn text approach
-
 
 * DONE reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 
@@ -53183,6 +53180,8 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 
 * TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
+* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
+
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
@@ -53215,6 +53214,7 @@ to give the user the chance to quickly filter either for rows with OR without im
 In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
+
 
 * Reintroduce jesus2099 "Release events"
 
@@ -53270,22 +53270,321 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 #+end_example
 
 
-* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
-
 * TODO for RGs CAA artwork also display the Release fom where it's sourced
 
 * add menu to hover CAA picture, for different actions
 
 
-* TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-
 * TODO in debug log emit also the entity title
-
-* TODO show log info on page or in alert box when images per release are completely loadeded
 
 * image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
 
+
+* DONE auto-resizing a table should take the artwork comments into account in the "CAA" column when the
+
+When auto-resizing a table which has "CAA" columns the aut-resize algorithm which calcualtes the maximum column-width
+per column should take the artwork comments into account in the "CAA" columns when their
+
+#+begin_example
+<span data-caa-expand-btn="collapsed" title="Show all 1 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
+#+end_example
+
+is in the collapsed state. So when the table is auto-resized and a user clicks the "data-caa-expand-btn" on a data cell
+to show all the images with their optional comments, there is already enough space in the colum to show the largest
+artwork comment
+
+* DONE rename "Hide all sections" ==> "Collapse all sections" - maybe add a tooltip wich mentions also "Ctrl-Click" on whatever h3 sub-table header row
+
+2.)
+
+rename "textContent" and "title" values + documentation strings in the following code block from
+
+#+begin_example
+                // Single toggle button that alternates between "Show all sections"
+                // and "Hide all sections".  Starts in "Show all" state (all sub-tables
+                // are initially collapsed so "Show" is the natural first action).
+                const masterToggle = document.createElement('button');
+                masterToggle.className  = 'mb-master-toggle';
+                masterToggle.type       = 'button';
+                masterToggle.dataset.state = 'collapsed'; // 'collapsed' → click shows; 'expanded' → click hides
+                masterToggle.textContent = 'Show all sections';
+                masterToggle.title       = 'Show all sub-tables';
+
+                const _updateMasterToggleState = (expanded) => {
+                    masterToggle.dataset.state = expanded ? 'expanded' : 'collapsed';
+                    masterToggle.textContent   = expanded ? 'Hide all sections' : 'Show all sections';
+                    masterToggle.title         = expanded ? 'Hide all sub-tables' : 'Show all sub-tables';
+#+end_example
+
+to
+
+#+begin_example
+                // Single toggle button that alternates between "Show all sub-sections"
+                // and "Hide all sub-sections".  Starts in "Show all" state (all sub-tables
+                // are initially collapsed so "Show" is the natural first action).
+                const masterToggle = document.createElement('button');
+                masterToggle.className  = 'mb-master-toggle';
+                masterToggle.type       = 'button';
+                masterToggle.dataset.state = 'collapsed'; // 'collapsed' → click shows; 'expanded' → click hides
+                masterToggle.textContent = 'Show all sub-sections';
+                masterToggle.title       = 'Click to uncollapse all sub-sections (Ctrl+Click to uncollapse ALL sub-sections)';
+
+                const _updateMasterToggleState = (expanded) => {
+                    masterToggle.dataset.state = expanded ? 'expanded' : 'collapsed';
+                    masterToggle.textContent   = expanded ? 'Hide all sub-sections' : 'Show all sub-sections';
+                    masterToggle.title         = expanded ? 'Click to collapse all sub-sections (Ctrl+Click to collapse ALL sub-sections)' : 'Show all sub-sections';
+#+end_example
+
+* DONE change button text and color for "mb-show-all-subtable-btn"
+
+in "multi"-table pageTypes if the following button is present in the h3 header row for a sub-table
+
+#+begin_example
+<button class="mb-show-all-subtable-btn" type="button">Show all <total number of rows></button>
+#+end_example
+
+- change the button text from
+
+#+begin_example
+Show all <total number of rows>
+#+end_example
+
+to
+
+#+begin_example
+Show all <total number of rows> rows
+#+end_example
+
+and add the following tooltip text
+
+#+begin_example
+Click to show all <total number of rows> rows in a new browser tab (currently only showing 100 entries per MusicBrainz limitation)
+#+end_example
+
+- also change the button background color (configurable in the userscript configuration section "const configSchema") to "#FFE0B2" by default and after the end-user has clicked the button to "#CCFFCC"
+
+* DONE rename "collapsable column" to "collapsable table column"
+
+rename the string "collapsable column" to "collapsable table column" in the following code block from
+
+#+begin_example
+   9741:        'Expand all collapsed multi-row cells in every collapsable column';
+  17092:        globalBtn.title         = 'Expand all collapsed multi-row cells in every collapsable column';
+  17111:                ? 'Collapse all expanded multi-row cells in every collapsable column'
+  17112:                : 'Expand all collapsed multi-row cells in every collapsable column';
+  17635:                    globalBtn.title = 'Expand all collapsed multi-row cells in every collapsable column';
+  17659:                            ? 'Collapse all expanded multi-row cells in every collapsable column'
+  17660:                            : 'Expand all collapsed multi-row cells in every collapsable column';
+#+end_example
+
+to
+
+#+begin_example
+   9741:        'Expand all collapsed multi-row cells in every collapsable table column';
+  17092:        globalBtn.title         = 'Expand all collapsed multi-row cells in every collapsable table column';
+  17111:                ? 'Collapse all expanded multi-row cells in every collapsable table column'
+  17112:                : 'Expand all collapsed multi-row cells in every collapsable table column';
+  17635:                    globalBtn.title = 'Expand all collapsed multi-row cells in every collapsable table column';
+  17659:                            ? 'Collapse all expanded multi-row cells in every collapsable table column'
+  17660:                            : 'Expand all collapsed multi-row cells in every collapsable table column';
+#+end_example
+
+* TODO rename tooltip text
+
+rename in the following lines (linenumbers provided) the "title" from
+
+#+begin_example
+   4094:        btn.title = 'Toggle filter highlighting on/off (sub-table filter and column filters)';
+   5024:        btn.title     = `Show/hide columns for "${categoryName}"`;
+   7912:        btn.title = `Auto-resize columns for "${categoryName}"`;
+   8134:        btn.title     = `Auto-resize columns for "${categoryName}"`;
+   9688:    unhighlightAllBtn.title = 'Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)';
+   9755:    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs — global action (Shift+Esc)';
+   9785:    clearAllFiltersBtn.title = `Clear global/sub-table filters and ALL column filters in all sub-tables — also triggered by ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}`;
+  15020:        highlightBtn.title = 'Toggle filter highlighting on/off (sub-table filter and column filters)';
+  22155:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+  23628:                    ? 'Toggle ' + ctx.toggleLabel + ' - Hide'
+  23629:                    : 'Toggle ' + ctx.toggleLabel + ' - Show';
+  23676:            ? 'Toggle ' + ctx.toggleLabel + ' - Hide'
+  23677:            : 'Toggle ' + ctx.toggleLabel + ' - Show';
+  
+  17149:                    : `Show all ${imageLis.length} image(s) \u2014 click to expand`;
+  17184:                : `Show all ${lis.length} items (click to expand)`;
+  17480:                    : `Show all ${lis.length} items (click to expand)`;
+  18946:                    toggle.title = `Show all ${n} image(s) \u2014 click to expand`;
+  22159:                    expandBtn.title = `Show all ${n} image(s) \u2014 click to expand`;
+  22208:            expandBtn.title = `Show all ${n} image(s) \u2014 click to expand`;
+
+  17172:                    ? `Collapse \u2014 click to hide CAA images`
+  22179:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+
+  23385:                btn.title = 'Globally Toggle ' + ctx.toggleLabel +
+  23413:        btn.title = 'Globally Toggle ' + ctx.toggleLabel +
+
+  17587:            collapseHdrBtn.title = `Expand all multi-row ${colName} image cells in this table column`;
+  17617:                    : `Expand all multi-row ${colName} image cells in this table column`;
+  17616:                    ? `Collapse all multi-row ${colName} image cells in this table column`
+  17622:                        ? `Collapse all multi-row ${colName} image cells in: ${colName}`
+
+  16969:                : `Show all ${lis.length} items (click to expand)`;
+  17254:                    : `Show all ${lis.length} items (click to expand)`;
+  17183:                ? `Collapse back to first item (${lis.length} total)`
+  17479:                    ? `Collapse back to first item (${lis.length} total)`
+#+end_example
+
+to
+
+#+begin_example
+   4094:        btn.title = 'Toggle filter string highlighting for this sub-table filter and ALL sub-table column filters)';
+   5024:        btn.title     = `Show/hide columns in sub-section "${categoryName}"`;
+   7912:        btn.title = `Auto-resize columns in sub-section "${categoryName}"`;
+   8134:        btn.title     = `Auto-resize columns in sub-section "${categoryName}"`;
+   9688:    unhighlightAllBtn.title = 'Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables)';
+   9755:    clearColumnFiltersBtn.title = 'Clear ALL column filter inputs — (global action Shift+Esc)';
+   9785:    clearAllFiltersBtn.title = `Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (except the filter when 'Loading from Disk' was used — also triggered by ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}`;
+  15020:        highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table)';
+  22155:                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+  23628:                    ? 'Hide big artwork ' + ctx.toggleLabel + ' stripe'
+  23629:                    : 'Show big artwork ' + ctx.toggleLabel + ' stripe';
+  23676:            ? 'Hide big artwork ' + ctx.toggleLabel + ' stripe'
+  23677:            : 'Show big artwork ' + ctx.toggleLabel + ' stripe';
+
+  17149:                    : `Show all ${ctx.toggleLabel} ${imageLis.length} image(s)`;
+  17184:                : `Show all ${ctx.toggleLabel} ${lis.length} items (click to expand)`;
+  17480:                    : `Show all ${ctx.toggleLabel} ${lis.length} items (click to expand)`;
+  18946:                    toggle.title = `Show all ${ctx.toggleLabel} ${n} image(s)`;
+  22159:                    expandBtn.title = `Show all ${n} ${ctx.toggleLabel} image(s)`;
+  22208:            expandBtn.title = `Show all ${n} ${ctx.toggleLabel} image(s)`;
+
+  17172:                    ? `Collapse all ${ctx.toggleLabel} images`
+  22179:                    expandBtn.title = `Collapse all ${ctx.toggleLabel} images`;
+  
+  23385:                btn.title = 'Globally toggle ' + ctx.toggleLabel +
+  23413:        btn.title = 'Globally toggle ' + ctx.toggleLabel +
+  
+  17587:            collapseHdrBtn.title = `Expand all multi-row ${colName} cells in this table column`;
+  17617:                    : `Expand all multi-row ${colName} cells in this table column`;
+  17616:                    ? `Collapse all multi-row ${colName} cells in this table column`
+  17622:                        ? `Collapse all multi-row ${colName} cells in: ${colName}`
+  
+  16969:                : `Show all multi-row ${lis.length} items in this cell (click to expand)`;
+  17254:                    : `Show all multi-row ${lis.length} items  in this cell (click to expand)`;
+  17183:                ? `Collapse back to just show the first item in the list (total shown ${lis.length})`
+  17479:                    ? `Collapse back to just show the first item in the list (total shown ${lis.length})`
+#+end_example
+
+* rename "Save current table data to disk in a serialized format
+
+* rename "Enter global filter string" to "Enter global filter string (focus filter field with ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')})"
+* Change expand multi-row cells to "Expand|all" | "multi-row|cells" - elements under each other aligned in the middle
+
+
+* TODO in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
+
+* TODO add shortcut "Render" when no filtering in the "Load from Disk" path
+
+* TODO deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog
+
+* TODO add a toggle button inside the "CAA" column header info with text "▶ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased
+
+add a toggle button inside the "CAA" column header for each table/sub-table which actually has a "CAA" column with text "▶ [front CAA thumbnail from first row which has artwork]"
+when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased. The placement should be after the
+
+#+begin_example
+<span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅</span>
+#+end_example
+
+and the actual "CAA" column name. When successively clicked, it should emulate pressing the
+
+#+begin_example
+<span data-caa-expand-btn="collapsed" title="Show all 8 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
+#+end_example
+
+or
+
+#+begin_example
+ <span data-caa-expand-btn="expanded" title="Collapse — click to hide CAA images" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
+#+end_example
+
+depending on state
+
+* TODO Change all the entity links to open in a new tab
+
+* TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
+
+
+* TODO in the unique column drop down menu add a static sub-section which tells us the number of different unique values
+
+in the unique column drop down menu add a static sub-section which tells us the number of different unique values
+
+* TODO add collpase icon to "Area" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events or even better in all "Location" split types
+
+#+begin_example
+collapsableColumns: [ 'Location', '', ... ],
+#+end_example
+
+#+begin_example
+        {
+            type: 'area-events',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Area' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
+                ],
+                collapsableColumns: [ 'Artists', 'Location', 'EAA' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'artist-events',
+            match: (path) => path.includes('/events'),
+            buttons: [ { label: 'Show all Events for Artist' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                    { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                collapsableColumns: [ 'Location', 'EAA' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        }
+#+end_example
+
+* TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just dispay ONE
+
+* TODO reposition the comment
+
+#+begin_example
+    /**
+     * Entry point for the CAA Illustrated Discography feature.
+     *
+     * (Re-)creates the shared `_caaQueue` — which is also consumed by
+     * initEaaPics / initCaaInlinePics / initEaaInlinePics — so this MUST be called
+     * before any of those functions at every render-completion site.
+     *
+     * Guards: `Lib.settings.sa_enable_caa_pics` must be true.
+     *
+     * Called from: main fetch pipeline, runFilter() single-table branch,
+     *              renderGroupedTable() multi-table re-renders, load-from-disk pipeline.
+     */
+#+end_example
+
+before
+
+#+begin_example
+    function initCaaPics() {
+#+end_example
 
 * TODO add information that ALL CAA images have been loaded
 ** DONE initial
@@ -53296,14 +53595,32 @@ get rid off, or it should auto-vanish after 10 seconds (configurable in the "con
 
 ** TODO count the total time for CAA rendering/fetching and show that also in the popup and the global info area when finished
 
+Implement measuring the total time it takes for CAA/EAA fetching from the network/indexedDB and the total number of
+images fetched and show that also in the popup and the global info area when finished
 
-* TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
+Change the
+
+#+begin_example
+        toast.textContent = '🎨 All CAA/EAA artwork loaded';
+#+end_example
+
+#+begin_example
+        toast.textContent = '🎨 All CAA/EAA artwork (<number of artwork images> images) loaded in <time it took>';
+#+end_example
+
+in the function
+
+#+begin_example
+    function _showCaaCompletionToast() {
+#+end_example
+
+* TODO reorder the symbols in column headers
 
 * TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
 
 When loading saving from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" -
 https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but
-only inside the "CAA" column ALOS the hovering over the "empty" space works and shows the big picture artwork ==> Reload icon FIXES actually
+only inside the "CAA" column ALSO the hovering over the "empty" space works and shows the big picture artwork ==> Reload icon FIXES actually
 
 #+begin_example
 <td>
@@ -53346,69 +53663,50 @@ only inside the "CAA" column ALOS the hovering over the "empty" space works and 
 #+end_example
 
 
-* DONE auto-resizing a table should take the artwork comments into account in the "CAA" column when the
 
-When auto-resizing a table which has "CAA" columns the aut-resize algorithm which calcualtes the maximum column-width
-per column should take the artwork comments into account in the "CAA" columns when their
+* TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
+** initial
 
-#+begin_example
-<span data-caa-expand-btn="collapsed" title="Show all 1 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
-#+end_example
+on the pageType of URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
-is in the collapsed state. So when the table is auto-resized and a user clicks the "data-caa-expand-btn" on a data cell
-to show all the images with their optional comments, there is already enough space in the colum to show the largest
-artwork comment
-
-
-* TODO change text on expand and collapse back
+implement specifically when clicking either the button
 
 #+begin_example
-  16969:                : `Show all ${lis.length} items (click to expand)`;
-  17254:                    : `Show all ${lis.length} items (click to expand)`;
-#+end_example
-
-* TODO rename: Ctrl+Click to toggle ALL types
-
-#+begin_example
-                h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)';
-#+end_example
-
-to
-
-#+begin_example
-                h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL table sections)';
-#+end_example
-
-* TODO rename "Hide all sections" ==> "Collapse all sections" - maby add a tooltip wich mentions also "Ctrl-Click" on whatever h3 sub-table header row
-
-* TODO in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
-
-* TODO add shortcut "Render" when no filtering in the "Load from Disk" path
-
-* TODO deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog
-
-* TODO add a toggle button inside the "CAA" column header info with text "▶ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased
-
-add a toggle button inside the "CAA" column header for each table/sub-table which actually has a "CAA" column with text "▶ [front CAA thumbnail from first row which has artwork]"
-when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased. The placement should be after the
-
-#+begin_example
-<span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅</span>
-#+end_example
-
-and the actual "CAA" column name. When successively clicked, it should emulate pressing the
-
-#+begin_example
-<span data-caa-expand-btn="collapsed" title="Show all 8 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
+<button type="button" title="Fetch all non-official artist release groups from the MusicBrainz backend database (Ctrl+M, then 2)" data-label="🧮 Non-official RGs" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;">🧮² Non-official RGs</button>
 #+end_example
 
 or
 
 #+begin_example
- <span data-caa-expand-btn="expanded" title="Collapse — click to hide CAA images" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
+<button type="button" title="Fetch all non-official various artists release groups from the MusicBrainz backend database (Ctrl+M, then 4)" data-label="🧮 Non-official VA RGs" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;">🧮⁴ Non-official VA RGs</button>
 #+end_example
 
-depending on state
+the following:
 
-* TODO reorder the symbols in column headers
+- remove (delete from DOM) the first occurence for each same named subtable (same h2 header text) from the final rendered page, e.g.
 
+Let's say there is a sub-table named "Album + Compilation" at the beginning of the final rendered page and later on, on
+the same page another sub-table named "Album + Compilation" occurs in the DOM, completely remove the FIRST from the
+DOM. Make sure to update the total row count in the h2 header <span class="mb-row-count-stat">
+
+Also write debug statements to the console log
+
+** after running the current algorithm
+
+on the pageType of URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+after running the current algorithm of "removing (delete from DOM) the first occurence for each same named subtable (same h2 header text) from the final rendered page"
+
+in the last step also remove all sub-tables from the DOM which are rendered BEFORE the "Album" sub-table
+
+
+** remove the sub-tables from the DOM before starting to fetch any CAA images
+
+
+
+* on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
+
+on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the
+fetching of all paginated pages begins after pressing the "Show all.." action button
+
+* TODO Rename "Official releases" on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases to "Artist Releases"
