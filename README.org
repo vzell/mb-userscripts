@@ -52239,13 +52239,6 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 * TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
 
-* DONE reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-
-In the newly uploaded userscript,
-
-a couple of things are still missing (also add a changelog):
-
-
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
 
@@ -52310,6 +52303,12 @@ the hovering over a small artwork image inside the "CAA" column works when the i
 network. But when then saving the table data to disk with "Save to Disk"-button and later on loading the data again with
 the "Load from Disk"-button,
 
+
+* DONE reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
+In the newly uploaded userscript,
+
+a couple of things are still missing (also add a changelog):
 
 * DONE bugs with indexedDB - but disabled
 ** initial
@@ -52400,7 +52399,6 @@ you did not base your new fixes on the last session where you already did some f
 #+end_example
 
 please reaply the current fixes on top of the last session and also fix the changelog accordingly
-
 
 * DONE why is the loading of images with GM_xmlhttpRequest so much slower that using fetch
 
@@ -52503,8 +52501,7 @@ please also provide a changelog entry
 }
 #+end_example
 
-
-* in multi-table pageTypes rename "Composed (2)" columns
+* DONE in multi-table pageTypes rename "Composed (2)" columns
 
 In the pageType "type: 'artist-relationships'" (URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships)
 
@@ -52592,19 +52589,6 @@ Composed release
             tableMode: 'single' // Paginated single list
         },
 #+end_example
-
-
-
-* in debug log emit also the entity title
-
-* change "[Show | Hide ] all sections" to Toggle button [Show all sections"/"Hide all sections"
-
-* debug log when images per release are loadeded
-
-* image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
-
-
-* TODO add information that ALL CAA images have been loaded
 
 
 * DONE bug for pageType "type: 'artist-releasegroups'" when NOT using indexedDB (sa_art_idb_enable: false)
@@ -52804,87 +52788,6 @@ What was confirmed from the debug log
 ObservableMeaningcaaInitBigPics: built bigbox for table 1 with 45 image(s)45 img.src fired simultaneously (along with hundreds more from other tables)Only 12 of those 45 fire caaInitBigPics: loaded OK in the initial windowBrowser dropped the restAll 45 corresponding caaLoadIcon: loaded OK fire at 10:48:16–20Same images succeed fine through the throttled queuecaaRetryTable: starting forced reload for table 1 → all 45 load at 11:55:17Rebuild with fresh DOM + smaller in-flight count = success
 The fix (v9.99.154)
 Both the non-IDB (img.src) and the IDB (_artFetchCachedImage) bigbox fetch paths are now wrapped in a _loadBigImg / _loadBigImgIdb task function and routed through _caaQueue.enqueue(...), exactly mirroring the pattern already used by _artInitSmallPics and _artInitInlinePics. The resolve() call on both load and error lets the queue correctly proceed to the next item.Showallentitydata user  1
-#+end_example
-
-
-* TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
-
-
-* TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
-
-When loading saving from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" -
-https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but
-only inside the "CAA" column ALOS the hovering over the "empty" space works and shows the big picture artwork ==> Reload icon FIXES actually
-
-#+begin_example
-<td>
-  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back  Front Spine">
-    <li class="mb-caa-art-li mb-caa-art-li-summary" data-erg-injected="1">
-      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
-      </span>
-      <a href="/release-group/025f5d35-e806-4932-80c0-df1b383fb363/cover-art" title="3 images found for this release / release-group" data-caa-enriched="1">
-	<span class="artwork-icon caa-icon" title="3 images found for this release / release-group" data-cache-hint="unavailable" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363/front-250&quot;);">
-	</span>
-      </a>
-      <span class="mb-art-cache-hint-col-wrap">
-	<span class="mb-art-cache-hint-col" title="Timing unavailable">⚠️
-	</span>
-	<span class="mb-caa-count-badge" title="3 images found for this release / release-group">3
-	</span>
-      </span>
-      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
-      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088662167-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Front
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
-      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088664101-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Back
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
-      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088665260-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Front / Spine
-      </span>
-    </li>
-  </ul>
-  <span class="mb-cell-collapse-toggle" title="Show all 3 image(s) — click to expand" role="button" aria-expanded="false" aria-label="Expand: 3 image(s) collapsed">▶
-  </span>
-</td>
-#+end_example
-
-
-* TODO auto-resizing a table should take the artwork comments into account in the "CAA" column when the
-
-#+begin_example
-<span data-caa-expand-btn="collapsed" title="Show all 1 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
-#+end_example
-
-is in the collapsed state. So when the table is auto-resized and a user clicks the "data-caa-expand-btn" on a data cell
-to show all the images with their optional comments, there is already enough space in the colum to show the largest
-artwork comment
-
-
-* TODO change text on expand and collapse back
-
-#+begin_example
-  16969:                : `Show all ${lis.length} items (click to expand)`;
-  17254:                    : `Show all ${lis.length} items (click to expand)`;
-#+end_example
-
-* TODO rename: Ctrl+Click to toggle ALL types
-
-#+begin_example
-                h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)';
-#+end_example
-
-to
-
-#+begin_example
-                h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL table sections)';
 #+end_example
 
 * DONE NOT using indexedDB - fixes for CAA/Title columns when loading from disk - https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 - Artist-RGs
@@ -53332,13 +53235,6 @@ Still a small bug left:
 The hover-wired thumbnails now appear in the case of loading data in a NEW session from disk. but it does NOT work in
 the case of loading data in the SAME session from disk
 
-
-* TODO in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
-
-* TODO add shortcut "Render" when no filtering in the "Load from Disk" path
-
-* TODO deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog
-
 * DONE remove the "Toggle entity page" functionality from the CAA column (if present) and instead use the same icons (▶, ▼)  for toggling the display of all the CAA images belonging to a release
 
 Please add the two features:
@@ -53406,4 +53302,114 @@ has it
 
 
 
+
+
+* TODO in debug log emit also the entity title
+
+* TODO show log info on page or in alert box when images per release are completely loadeded
+
+* change "[Show | Hide ] all sections" to Toggle button "Show all sections"/"Hide all sections"
+
+for "multi"-table pageTypes, change the text based "[Show | Hide ] all sections" click functionality
+
+#+begin_example
+<span class="mb-master-toggle">[ <span title="Show all sub-tables">Show</span> | <span title="Hide all sub-tables">Hide</span> ] all Sections</span>
+#+end_example
+
+in the h2 header row to a toggle button which either shows "Show all sections" or hide "Hide all sections" with the same
+functionality. Place the new button at the same location as the curretn text approach
+
+
+* image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
+
+
+* TODO add information that ALL CAA images have been loaded
+
+
+* TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
+
+* TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
+
+When loading saving from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" -
+https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but
+only inside the "CAA" column ALOS the hovering over the "empty" space works and shows the big picture artwork ==> Reload icon FIXES actually
+
+#+begin_example
+<td>
+  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back  Front Spine">
+    <li class="mb-caa-art-li mb-caa-art-li-summary" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <a href="/release-group/025f5d35-e806-4932-80c0-df1b383fb363/cover-art" title="3 images found for this release / release-group" data-caa-enriched="1">
+	<span class="artwork-icon caa-icon" title="3 images found for this release / release-group" data-cache-hint="unavailable" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363/front-250&quot;);">
+	</span>
+      </a>
+      <span class="mb-art-cache-hint-col-wrap">
+	<span class="mb-art-cache-hint-col" title="Timing unavailable">⚠️
+	</span>
+	<span class="mb-caa-count-badge" title="3 images found for this release / release-group">3
+	</span>
+      </span>
+      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088662167-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088664101-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Back
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088665260-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front / Spine
+      </span>
+    </li>
+  </ul>
+  <span class="mb-cell-collapse-toggle" title="Show all 3 image(s) — click to expand" role="button" aria-expanded="false" aria-label="Expand: 3 image(s) collapsed">▶
+  </span>
+</td>
+#+end_example
+
+
+* TODO auto-resizing a table should take the artwork comments into account in the "CAA" column when the
+
+#+begin_example
+<span data-caa-expand-btn="collapsed" title="Show all 1 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
+#+end_example
+
+is in the collapsed state. So when the table is auto-resized and a user clicks the "data-caa-expand-btn" on a data cell
+to show all the images with their optional comments, there is already enough space in the colum to show the largest
+artwork comment
+
+
+* TODO change text on expand and collapse back
+
+#+begin_example
+  16969:                : `Show all ${lis.length} items (click to expand)`;
+  17254:                    : `Show all ${lis.length} items (click to expand)`;
+#+end_example
+
+* TODO rename: Ctrl+Click to toggle ALL types
+
+#+begin_example
+                h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)';
+#+end_example
+
+to
+
+#+begin_example
+                h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL table sections)';
+#+end_example
+
+* TODO rename "Hide all sections" ==> "Collapse all sections" - maby add a tooltip wich mentions also "Ctrl-Click" on whatever h3 sub-table header row
+
+* TODO in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
+
+* TODO add shortcut "Render" when no filtering in the "Load from Disk" path
+
+* TODO deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog
 
