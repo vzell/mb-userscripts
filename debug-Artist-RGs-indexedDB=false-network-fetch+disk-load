@@ -1,0 +1,388 @@
+﻿========================== network
+
+             [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.161+2026-03-14) loaded with external library (3.14.3+2026-03-04) active on MusicBrainz page: https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 
+00:04:16.808 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 
+00:04:16.809 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 
+00:04:16.809 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 
+00:04:16.809 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+00:04:16.809 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+00:04:16.809 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: artist-releasegroups 
+00:04:16.809 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+00:04:16.809 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 Initializing script for path: /artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4
+00:04:16.810 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+00:04:16.811 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 Blurred #headerid-query input on page entry 
+00:04:16.811 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Changelog source: remote — replaced 0 local entries with 336 remote entries (fromCache=true) 
+00:04:21.358 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 columnErasers configured: "Title" → [▶, jesus2099] 
+00:04:21.358 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Signalling other scripts to stop... 
+00:04:21.358 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Starting fetch process... Object
+00:04:21.358 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Context: overrideParams detected. Fetching maxPage with overrides. Object
+00:04:21.358 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Fetching maxPage from: https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4?all=0&va=0&page=1 
+00:04:21.358 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4?all=0&va=0&page=1 
+00:04:25.187 [VZ-ShowAllEntityData: artist-releasegroups] ✅ Determined maxPage: 1 
+00:04:25.187 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Total pages to fetch: 1 
+00:04:25.187 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Starting clutter element removal. 
+00:04:25.188 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Removed artist release group filter description paragraph. 
+00:04:25.188 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Removing Sanojjonas containers... 
+00:04:25.188 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Removing Sanojjonas containers... 
+00:04:25.189 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Fetching URL for page 1: https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4?page=1&all=0&va=0 
+00:04:25.189 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4?page=1&all=0&va=0 
+00:04:29.493 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+00:04:29.493 [VZ-ShowAllEntityData: artist-releasegroups] 📝 No targetHeader provided; returning all tables found in container. 
+00:04:29.493 [VZ-ShowAllEntityData: artist-releasegroups] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+00:04:29.493 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+00:04:29.493 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Detected indices → mainColIdx=2 (Title), extractors=[caa("Title"@2), primaryAlias("Title"@2)], syntheticExtractors=[none], erasers=[[▶,jesus2099]@"Title"(colIdx=2)], renderMultiRow=[none], excluded=[] for pageType: artist-releasegroups 
+00:04:29.493 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Type Change: "Album". Rows so far: 0 
+00:04:29.494 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+00:04:29.494 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+00:04:29.494 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/cover-art) 
+00:04:29.494 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+00:04:29.494 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+00:04:29.494 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/cover-art) 
+00:04:29.494 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Page 1/1 processed in 4.31s. Rows on page: 2. Total: 2 
+00:04:29.494 [VZ-ShowAllEntityData: artist-releasegroups] 📥   Summary: Album: +2 (Total: 2) 
+00:04:29.494 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 DOM rendering starting... 
+00:04:29.495 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Starting updateH2Count: filtered=2, total=2, absoluteTotal=null 
+00:04:29.495 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Searching for target H2. Current pageType: artist-releasegroups 
+00:04:29.495 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+00:04:29.495 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+00:04:29.495 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Target element identified: "Discography..." 
+00:04:29.495 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+00:04:29.495 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Updated header/target Discography count: (2) 
+00:04:29.495 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Starting renderGroupedTable with 1 categories. Query: "" 
+00:04:29.495 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Cloning table head for template. 
+00:04:29.495 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 cleanupHeaders() called → existing headers=[ | Year | Title | Artist | Rating | Releases] 
+00:04:29.496 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Skipping removal of column 4 ("Rating"). Setting "sa_remove_rating" is disabled. 
+00:04:29.496 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 No columns were matched for removal based on current settings. 
+00:04:29.496 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Injecting synthetic header: CAA (via extractor: caa) 
+00:04:29.496 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Injecting synthetic header: Primary Alias (via extractor: primaryAlias) 
+00:04:29.496 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Injecting synthetic header: MB-Name 
+00:04:29.496 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Injecting synthetic header: Comment 
+00:04:29.496 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Searching for target H2. Current pageType: artist-releasegroups 
+00:04:29.496 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+00:04:29.496 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+00:04:29.496 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 No query provided; performing initial cleanup of existing elements. 
+00:04:29.496 [VZ-ShowAllEntityData: artist-releasegroups] 🎨  Injecting master toggle and filter container after target header Discography(2). 
+00:04:29.497 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Processing group: "Album" with 2 rows. 
+00:04:29.497 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Creating new table and H3 for group "Album". 
+00:04:29.497 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Group "Album" auto-expand status: true (singleSubTable=true) 
+00:04:29.499 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCollapsableColumns: columns=[CAA] 
+00:04:29.499 [VZ-ShowAllEntityData: artist-releasegroups] 📝 ensureCollapseDelegate: delegation listener installed on tbody. 
+00:04:29.500 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCollapsableColumns: "CAA" (col 6) — no multi-row cells found, skipping. 
+00:04:29.500 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCollapsableColumns: done — 1 declared, 0 with multi-row cells. 
+00:04:29.500 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initExpandRGsFeature: injected 6 expand button(s) 
+00:04:29.500 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 0 
+00:04:29.500 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCaaPics: request queue created (concurrency=4) 
+00:04:29.501 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loading //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:29.501 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loading //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:29.501 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: enqueued 2 load request(s) (queue: 2 running, 0 pending) 
+00:04:29.502 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichTable: enqueued 2 enrichment request(s) (queue: 4 running, 0 pending) 
+00:04:29.502 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-0 (2 link(s)) 
+00:04:29.502 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateRetryButton: created retry btn mb-caa-toggle-btn-retry-0 
+00:04:29.503 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 0 with 2 image(s), initially hidden 
+00:04:29.503 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAPics: processed 1 table(s) with CAA column 
+00:04:29.503 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateGlobalToggleButton: created global btn mb-caa-toggle-btn-global 
+00:04:29.503 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateGlobalToggleButton: created global retry btn mb-caa-toggle-btn-global-retry 
+00:04:29.503 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initEAAPics: table 0 has no EAA column and no addEAA feature — skipping 
+00:04:29.503 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initEAAPics: processed 0 table(s) with EAA column 
+00:04:29.504 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
+00:04:29.504 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: addCAA column = "Title" 
+00:04:29.504 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: processing table 0, column "Title" at index 2 
+00:04:29.504 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:29.504 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:29.504 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: done — injected=2 enqueued=2 skipped(done=0 noLink=0 noGuid=0) column="Title" (queue: 4 running, 4 pending) 
+00:04:29.504 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
+00:04:29.505 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Finished renderGroupedTable. 
+00:04:29.505 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Running final cleanup... 
+00:04:29.505 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 No Sanojjonas elements found during final cleanup. 
+00:04:29.505 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+00:04:29.505 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+00:04:29.506 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+00:04:29.506 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Initializing collapsible H2 headers... 
+00:04:29.506 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+00:04:29.506 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Auto-resize button added to controls 
+00:04:29.507 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Made 10 columns resizable 
+00:04:29.507 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Column visibility toggle added to controls 
+00:04:29.508 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+00:04:29.508 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Density control button added to controls 
+00:04:29.508 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Statistics button added to controls 
+00:04:29.508 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Keyboard shortcuts initialized 
+00:04:29.508 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Shortcuts help button already exists, skipping 
+00:04:29.509 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Export button with dropdown menu added to controls 
+00:04:29.509 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 Initializing aggressive full-width sidebar toggle. 
+00:04:29.509 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initExpandRGsFeature: injected 6 expand button(s) 
+00:04:29.510 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 0 
+00:04:29.510 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Unicode character picker initialised 
+00:04:29.510 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 DOM rendering finished in 15.40ms 
+00:04:29.510 [VZ-ShowAllEntityData: artist-releasegroups] ✅ Process complete. Final Row Count: 2. Total Time: 4.32s 
+00:04:29.542 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artOpenIdb: database opened successfully 
+00:04:29.542 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:29.542 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:29.565 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
+00:04:29.663 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Auto-focused global filter input after final render 
+00:04:31.112 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichIcon: 6 image(s) for /release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9 
+00:04:31.113 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artBuildMultiRowArtCell: built 6 image row(s) in CAA cell 
+00:04:31.115 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artIdbPutMetadata: stored — /release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9 (6 images) 
+00:04:31.115 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:31.642 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichIcon: 4 image(s) for /release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f 
+00:04:31.642 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artBuildMultiRowArtCell: built 4 image row(s) in CAA cell 
+00:04:31.642 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artIdbPutMetadata: stored — /release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f (4 images) 
+00:04:31.643 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:36.697 [VZ-ShowAllEntityData: artist-releasegroups] 🎵 Sidebar collapsed. Full width applied. 
+00:04:37.685 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:37.685 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loaded OK (idb=false) — //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:37.685 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:37.686 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: loaded OK (idb=false) — //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:37.690 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:37.694 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:38.761 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:38.761 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loaded OK (idb=false) — //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:38.763 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:39.027 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:39.029 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:40.330 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:40.332 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:48.033 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: loaded OK (idb=false) — //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:48.035 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:50.917 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:04:51.037 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:04:52.886 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa toggle btn mb-caa-toggle-btn-0: strip shown 
+00:05:34.663 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019005311-250.jpg 
+00:05:34.790 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019000164-250.jpg 
+00:05:35.422 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019000164-250.jpg 
+00:05:35.438 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019005311-250.jpg 
+00:05:35.454 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019008538-250.jpg 
+00:05:35.510 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:05:35.734 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:05:36.062 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019023836-250.jpg 
+00:05:36.078 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019017117-250.jpg 
+00:05:36.102 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019013436-250.jpg 
+00:05:36.126 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019008538-250.jpg 
+00:05:36.151 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019005311-250.jpg 
+00:05:36.215 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019000164-250.jpg 
+00:05:38.814 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:05:40.293 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019005311-250.jpg 
+00:05:40.900 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019000164-250.jpg 
+00:05:40.990 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019000164-250.jpg 
+00:05:41.246 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019005311-250.jpg 
+00:05:41.696 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019008538-250.jpg 
+00:05:43.878 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:05:44.087 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019023836-250.jpg 
+00:05:44.342 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019017117-250.jpg 
+00:05:44.757 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019013436-250.jpg 
+00:05:45.002 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019008538-250.jpg 
+00:05:45.006 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019000164-250.jpg 
+00:05:45.240 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019005311-250.jpg 
+00:05:45.495 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019000164-250.jpg 
+00:05:51.710 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:05:53.870 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:06:01.478 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:06:01.846 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:06:05.886 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:06:11.022 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019023836-250.jpg 
+00:06:11.694 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019017117-250.jpg 
+00:06:12.174 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019013436-250.jpg 
+00:06:12.622 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019008538-250.jpg 
+00:06:12.942 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019005311-250.jpg 
+00:06:13.262 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019000164-250.jpg 
+00:06:13.630 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019005311-250.jpg 
+00:06:13.734 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019008538-250.jpg 
+00:06:13.886 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019013436-250.jpg 
+00:06:14.022 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019017117-250.jpg 
+00:06:14.094 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019023836-250.jpg 
+
+=============================================================== load from disk - new session
+
+00:11:20.772 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.161+2026-03-14) loaded with external library (3.14.3+2026-03-04) active on MusicBrainz page: https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 
+00:11:20.772 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 
+00:11:20.772 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 
+00:11:20.772 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 
+00:11:20.772 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+00:11:20.772 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+00:11:20.773 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: artist-releasegroups 
+00:11:20.773 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+00:11:20.773 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 Initializing script for path: /artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4
+00:11:20.774 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+00:11:20.774 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 Blurred #headerid-query input on page entry 
+00:11:20.775 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Changelog source: remote — replaced 0 local entries with 336 remote entries (fromCache=true) 
+00:12:32.495 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Render Data clicked. filter="", case=false, regex=false, exclude=false 
+00:12:32.495 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Loading data from file: MB-Artist-(MGV Drabenderhöhe)-Releasegroups-official_rgs-(2)_2026-03-14T22-17-45.json.gz. Prefilter active: false 
+00:12:32.499 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Decompressed 2,040 bytes → 19,616 bytes in 0.50ms 
+00:12:32.499 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Loaded data version 1.0 from 2026-03-14T22:17:45.886Z (File total: 2 rows) 
+00:12:32.499 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Starting clutter element removal. 
+00:12:32.499 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Removed artist release group filter description paragraph. 
+00:12:32.499 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Removing Sanojjonas containers... 
+00:12:32.499 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Running cleanup after initial data load from disk... 
+00:12:32.500 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Disk-load [strategy 1]: coloured button green via buttonLabel slug "official_rgs" → "🧮 Official RGs" 
+00:12:32.501 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Starting renderGroupedTable with 1 categories. Query: "" 
+00:12:32.501 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Cloning table head for template. 
+00:12:32.501 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 cleanupHeaders() called → existing headers=[ | ⇅ Year ▲▼📊 | ⇅ Title ▲▼📊 | ⇅ Artist ▲▼📊 | ⇅ Rating ▲▼📊 | ⇅ Releases ▲▼📊 | ⇅ CAA ▲▼📊 | ⇅ Primary Alias ▲▼📊 | ⇅ MB-Name ▲▼📊 | ⇅ Comment ▲▼📊] 
+00:12:32.501 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 No columns were matched for removal based on current settings. 
+00:12:32.501 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Searching for target H2. Current pageType: artist-releasegroups 
+00:12:32.501 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+00:12:32.501 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+00:12:32.501 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 No query provided; performing initial cleanup of existing elements. 
+00:12:32.501 [VZ-ShowAllEntityData: artist-releasegroups] 🎨  Injecting master toggle and filter container after target header Discography. 
+00:12:32.502 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Processing group: "Album" with 2 rows. 
+00:12:32.502 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Creating new table and H3 for group "Album". 
+00:12:32.502 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Group "Album" auto-expand status: true (singleSubTable=true) 
+00:12:32.505 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCollapsableColumns: columns=[CAA] 
+00:12:32.505 [VZ-ShowAllEntityData: artist-releasegroups] 📝 ensureCollapseDelegate: delegation listener installed on tbody. 
+00:12:32.505 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCollapsableColumns: "CAA" (col 6) — 2 multi-row cell(s). 
+00:12:32.505 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCollapsableColumns: done — 1 declared, 1 with multi-row cells. 
+00:12:32.506 [VZ-ShowAllEntityData: artist-releasegroups] 📝 rewireGlobalCollapseButtonMulti: wired 1 column-header button(s). 
+00:12:32.506 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initExpandRGsFeature: injected 6 expand button(s) 
+00:12:32.506 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 0 
+00:12:32.506 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCaaPics: request queue created (concurrency=4) 
+00:12:32.506 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loading //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.507 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loading //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.507 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: enqueued 2 load request(s) (queue: 2 running, 0 pending) 
+00:12:32.507 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichTable: enqueued 2 enrichment request(s) (queue: 4 running, 0 pending) 
+00:12:32.508 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-0 (2 link(s)) 
+00:12:32.508 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateRetryButton: created retry btn mb-caa-toggle-btn-retry-0 
+00:12:32.508 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 0 with 2 image(s), initially hidden 
+00:12:32.508 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAPics: processed 1 table(s) with CAA column 
+00:12:32.509 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateGlobalToggleButton: h2 .mb-row-count-stat not found — deferring 
+00:12:32.509 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initEAAPics: table 0 has no EAA column and no addEAA feature — skipping 
+00:12:32.509 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initEAAPics: processed 0 table(s) with EAA column 
+00:12:32.509 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
+00:12:32.509 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: addCAA column = "Title" 
+00:12:32.509 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: processing table 0, column "Title" at index 2 
+00:12:32.509 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.509 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.510 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: done — injected=2 enqueued=2 skipped(done=0 noLink=0 noGuid=0) column="Title" (queue: 4 running, 4 pending) 
+00:12:32.510 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
+00:12:32.510 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Finished renderGroupedTable. 
+00:12:32.510 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Running final cleanup... 
+00:12:32.510 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 No Sanojjonas elements found during final cleanup. 
+00:12:32.510 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+00:12:32.510 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+00:12:32.511 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+00:12:32.511 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Initializing collapsible H2 headers... 
+00:12:32.519 [VZ-ShowAllEntityData: artist-releasegroups] 🔍 runFilter(): active element = (none)
+00:12:32.521 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Starting renderGroupedTable with 1 categories. Query: "re-run" 
+00:12:32.521 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Cloning table head for template. 
+00:12:32.521 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 cleanupHeaders() called → existing headers=[ | ⇅ Year ▲▼📊 | ⇅ Title ▲▼📊 | ⇅ Artist ▲▼📊 | ⇅ Rating ▲▼📊 | ⇅ Releases ▲▼📊 | ⇅ CAA ▲▼▶📊 | ⇅ Primary Alias ▲▼📊 | ⇅ MB-Name ▲▼📊 | ⇅ Comment ▲▼📊] 
+00:12:32.521 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 No columns were matched for removal based on current settings. 
+00:12:32.522 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Searching for target H2. Current pageType: artist-releasegroups 
+00:12:32.522 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+00:12:32.522 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+00:12:32.522 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Filtering: Cleaning up overflow tables beyond data length (1). 
+00:12:32.522 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Processing group: "Album" with 2 rows. 
+00:12:32.522 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Reusing existing table at index 0 for group "Album". 
+00:12:32.522 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCollapsableColumns: columns=[CAA] 
+00:12:32.522 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCollapsableColumns: "CAA" (col 6) — 2 multi-row cell(s). 
+00:12:32.522 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCollapsableColumns: done — 1 declared, 1 with multi-row cells. 
+00:12:32.522 [VZ-ShowAllEntityData: artist-releasegroups] 📝 rewireGlobalCollapseButtonMulti: wired 1 column-header button(s). 
+00:12:32.523 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initExpandRGsFeature: injected 6 expand button(s) 
+00:12:32.523 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 0 
+00:12:32.523 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCaaPics: request queue created (concurrency=4) 
+00:12:32.523 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loading //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.523 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loading //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.523 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitSmallPics: enqueued 2 load request(s) (queue: 2 running, 0 pending) 
+00:12:32.523 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichTable: enqueued 2 enrichment request(s) (queue: 4 running, 0 pending) 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaCreateOrUpdateToggleButton: updated btn mb-caa-toggle-btn-0 (2 link(s)) 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: built bigbox for table 0 with 2 image(s), initially hidden 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAPics: processed 1 table(s) with CAA column 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateGlobalToggleButton: h2 .mb-row-count-stat not found — deferring 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initEAAPics: table 0 has no EAA column and no addEAA feature — skipping 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initEAAPics: processed 0 table(s) with EAA column 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: addCAA column = "Title" 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: processing table 0, column "Title" at index 2 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.524 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: done — injected=2 enqueued=2 skipped(done=0 noLink=0 noGuid=0) column="Title" (queue: 4 running, 4 pending) 
+00:12:32.525 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
+00:12:32.525 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Finished renderGroupedTable. 
+00:12:32.525 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Starting updateH2Count: filtered=2, total=2, absoluteTotal=null 
+00:12:32.525 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Searching for target H2. Current pageType: artist-releasegroups 
+00:12:32.525 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+00:12:32.525 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+00:12:32.525 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Target element identified: "▲Discography[ Show | Hide ] al..." 
+00:12:32.525 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Inserting count span before referenceNode: mb-master-toggle 
+00:12:32.525 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Updated header/target ▲Discography[ Show | Hide ] al count: (2) 
+00:12:32.525 [VZ-ShowAllEntityData: artist-releasegroups] 🔍 Filter completed in 14ms 
+00:12:32.526 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+00:12:32.526 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Auto-resize button added to controls 
+00:12:32.526 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Column visibility toggle added to controls 
+00:12:32.527 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+00:12:32.527 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Density control button added to controls 
+00:12:32.527 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Statistics button added to controls 
+00:12:32.527 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Keyboard shortcuts initialized 
+00:12:32.527 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Shortcuts help button already exists, skipping 
+00:12:32.528 [VZ-ShowAllEntityData: artist-releasegroups] 🖥️ Export button with dropdown menu added to controls 
+00:12:32.528 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 Initializing aggressive full-width sidebar toggle. 
+00:12:32.528 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initExpandRGsFeature: injected 6 expand button(s) 
+00:12:32.528 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initBarcodeHighlight: processed table 0 
+00:12:32.528 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Starting updateH2Count: filtered=2, total=2, absoluteTotal=null 
+00:12:32.528 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Searching for target H2. Current pageType: artist-releasegroups 
+00:12:32.529 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+00:12:32.529 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+00:12:32.529 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Target element identified: "▲Discography(2)[ Show | Hide ]..." 
+00:12:32.529 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Removing existing row count stat span. 
+00:12:32.529 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Inserting count span before referenceNode: mb-master-toggle 
+00:12:32.529 [VZ-ShowAllEntityData: artist-releasegroups] 🎨 Updated header/target ▲Discography(2)[ Show | Hide ] count: (2) 
+00:12:32.529 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateGlobalToggleButton: created global btn mb-caa-toggle-btn-global 
+00:12:32.529 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateGlobalToggleButton: created global retry btn mb-caa-toggle-btn-global-retry 
+00:12:32.529 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
+00:12:32.529 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Successfully loaded 2 rows from disk! 
+00:12:32.535 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artOpenIdb: database opened successfully 
+00:12:32.536 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.536 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loaded OK (idb=true) — //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.536 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.536 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.537 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loaded OK (idb=true) — //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.537 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.537 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.537 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artIdbGetMetadata: IDB hit — /release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9 (6 images) 
+00:12:32.537 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichIcon: 6 image(s) for /release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9 (IDB metadata) 
+00:12:32.538 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artBuildMultiRowArtCell: rebuilt 6 image row(s) in CAA cell 
+00:12:32.538 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artIdbGetMetadata: IDB hit — /release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f (4 images) 
+00:12:32.538 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichIcon: 4 image(s) for /release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f (IDB metadata) 
+00:12:32.538 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artBuildMultiRowArtCell: rebuilt 4 image row(s) in CAA cell 
+00:12:32.538 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.538 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loaded OK (idb=true) — //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.539 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.539 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.539 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.539 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.539 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.540 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: loaded OK (idb=false) — //coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:32.540 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.540 [VZ-ShowAllEntityData: artist-releasegroups] 📝 initCAAInlinePics: loaded OK (idb=false) — //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.540 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.540 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaLoadIcon: loaded OK (idb=true) — //coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.540 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artIdbGetMetadata: IDB hit — /release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9 (6 images) 
+00:12:32.540 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichIcon: 6 image(s) for /release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9 (IDB metadata) 
+00:12:32.540 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artBuildMultiRowArtCell: rebuilt 6 image row(s) in CAA cell 
+00:12:32.541 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artIdbGetMetadata: IDB hit — /release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f (4 images) 
+00:12:32.541 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caaEnrichIcon: 4 image(s) for /release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f (IDB metadata) 
+00:12:32.541 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artBuildMultiRowArtCell: rebuilt 4 image row(s) in CAA cell 
+00:12:32.541 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:32.559 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
+00:12:32.568 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
+00:12:38.431 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:38.662 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:38.931 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:12:49.391 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:12:52.455 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:13:01.615 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:13:02.375 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:13:04.623 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:13:04.839 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019000164-250.jpg 
+00:13:05.592 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019005311-250.jpg 
+00:13:05.751 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019008538-250.jpg 
+00:13:06.015 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019013436-250.jpg 
+00:13:06.111 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019017117-250.jpg 
+00:13:06.232 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/97711505-ad48-4787-a70c-b19b7d9f09f7/7019023836-250.jpg 
+00:13:06.487 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/3e6a166b-6f82-4529-9b7c-63da6dd83ca7/6587410740-500.jpg 
+00:13:06.639 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/3e6a166b-6f82-4529-9b7c-63da6dd83ca7/6587414821-500.jpg 
+00:13:06.776 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/3e6a166b-6f82-4529-9b7c-63da6dd83ca7/6587416626-500.jpg 
+00:13:06.896 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/3e6a166b-6f82-4529-9b7c-63da6dd83ca7/6587420835-500.jpg 
+00:13:08.319 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/d7610581-79a0-4e4c-82fa-1a381c8edfc9/front-250 
+00:13:08.703 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:13:10.906 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/3e6a166b-6f82-4529-9b7c-63da6dd83ca7/6587410740-500.jpg 
+00:13:11.463 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release-group/2d9277d7-baff-4405-9a6b-6e83be9e1c1f/front-250 
+00:13:13.595 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/3e6a166b-6f82-4529-9b7c-63da6dd83ca7/6587414821-500.jpg 
+00:13:14.142 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/3e6a166b-6f82-4529-9b7c-63da6dd83ca7/6587416626-500.jpg 
+00:13:15.081 [VZ-ShowAllEntityData: artist-releasegroups] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/3e6a166b-6f82-4529-9b7c-63da6dd83ca7/6587420835-500.jpg 

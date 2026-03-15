@@ -52088,7 +52088,7 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 
 * TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
 
-* TODO for RGs CAA artwork also display the Release fom where it's sourced
+* TODO for RGs CAA artwork also display the Release from where it's sourced
 
 * add menu to hover CAA picture, for different actions
 
@@ -52096,12 +52096,12 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 * TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
 
-* TODO reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-
+* DONE reinforce the loading of the CAA column even if it's NOT displayed at ALL, but the title column HAS CAA image - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
 
 In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
+
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
@@ -52128,10 +52128,7 @@ entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no
 to give the user the chance to quickly filter either for rows with OR without images
 
 
-* TODO implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
-
-
-
+* DONE implement an indexed-DB persistent storage solution (with metadata about the images: type, size, number, comment etc) with a new button to refetch newly added/changed images (if available from the CAA)
 ** initial
 
 please implement an indexed-DB persistent storage solution for the fetched artwork images (CAA and EAA). When rendering
@@ -52170,14 +52167,12 @@ the hovering over a small artwork image inside the "CAA" column works when the i
 network. But when then saving the table data to disk with "Save to Disk"-button and later on loading the data again with
 the "Load from Disk"-button,
 
+
 * todos
 
 In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
-
-
-* why
 
 
 * Reintroduce jesus2099 "Release events"
@@ -52509,13 +52504,96 @@ please also provide a changelog entry
 #+end_example
 
 
-* in multi-table pageTypes rename
+* in multi-table pageTypes rename "Composed (2)" columns
+
+In the pageType "type: 'artist-relationships'" (URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships)
+
+the h3 header text for "relationships" currently follows the following naming schema when rows belonging to a different
+entity type are sorted in their own sub-table AND the h3 header has already been used on the same final rendered page
+
+So, e.g. take the "Composed" relationship. In theory different entity types could use the same sub-table name for rows
+with different relatinships depending on the entity type.
+
+In order to distinguish the sub-tables currently the code appends a unique number starting with (2) to the original relationship name, e.g.
 
 #+begin_example
-Holds phonographic copyright (p) for recordings
-Instruments (1) ==> Instruments on recordings
-Instruments (2) ==> Instruments on releases
+Composed - table-type => release
+Composed (2) - table-type => work
 #+end_example
+
+please implent code so that the h3 header text actually get the following naming schema
+
+#+begin_example
+Composed release
+Composed work
+#+end_example
+
+In order for this to work we need to extract the entity type from the virtual path (without the surrounding "/"s) in the anchor of the "Title" column
+in the first row in the sub-table, eg
+
+#+begin_example
+  <a href="/release/73118778-3815-432b-b3bc-823fbf06d467" style="">
+    <bdi>Streets of Philadelphia
+    </bdi>
+  </a>
+#+end_example
+
+would give us "release"
+
+Here a full example data cell from where we should extract
+
+#+begin_example
+<td data-erg-injected="1" data-caa-inline-done="1">
+  <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <span class="mb-caa-inline-ph" title="19 images found for this release / release-group" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+    <img alt="" src="//coverartarchive.org/release/73118778-3815-432b-b3bc-823fbf06d467/front-250" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;">
+    <span class="mb-art-cache-hint-inline" title="Network fetch (177 ms)" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🔵
+    </span>
+  </span>
+  <span class="releaselink">
+  </span>
+  <a href="/release/73118778-3815-432b-b3bc-823fbf06d467" style="">
+    <bdi>Streets of Philadelphia
+    </bdi>
+  </a>
+</td>
+#+end_example
+
+When we have the entity-type we can construct the actual h3 header text which should finally be renderd before each
+sub-table as the original header text (let's assume as an example "Composed) appended with the entity-type
+
+So we would finally get
+
+#+begin_example
+Composed release
+#+end_example
+
+
+
+
+#+begin_example
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                collapsableColumns: [ 'CAA' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+#+end_example
+
+
 
 * in debug log emit also the entity title
 
@@ -52523,9 +52601,13 @@ Instruments (2) ==> Instruments on releases
 
 * debug log when images per release are loadeded
 
-* image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happesn why ?
+* image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
 
-* bug for pageType "type: 'artist-releasegroups'" when NOT using indexedDB (sa_art_idb_enable: false)
+
+* TODO add information that ALL CAA images have been loaded
+
+
+* DONE bug for pageType "type: 'artist-releasegroups'" when NOT using indexedDB (sa_art_idb_enable: false)
 
 In the uploaded userscript,
 
@@ -52724,9 +52806,9 @@ The fix (v9.99.154)
 Both the non-IDB (img.src) and the IDB (_artFetchCachedImage) bigbox fetch paths are now wrapped in a _loadBigImg / _loadBigImgIdb task function and routed through _caaQueue.enqueue(...), exactly mirroring the pattern already used by _artInitSmallPics and _artInitInlinePics. The resolve() call on both load and error lets the queue correctly proceed to the next item.Showallentitydata user  1
 #+end_example
 
-* TODO add information that ALL CAA images have been loaded
 
 * TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
+
 
 * TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
 
@@ -52775,7 +52857,15 @@ only inside the "CAA" column ALOS the hovering over the "empty" space works and 
 #+end_example
 
 
-* TODO resizing the CAA column should take the artwork comments into account
+* TODO auto-resizing a table should take the artwork comments into account in the "CAA" column when the
+
+#+begin_example
+<span data-caa-expand-btn="collapsed" title="Show all 1 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
+#+end_example
+
+is in the collapsed state. So when the table is auto-resized and a user clicks the "data-caa-expand-btn" on a data cell
+to show all the images with their optional comments, there is already enough space in the colum to show the largest
+artwork comment
 
 
 * TODO change text on expand and collapse back
@@ -52785,7 +52875,19 @@ only inside the "CAA" column ALOS the hovering over the "empty" space works and 
   17254:                    : `Show all ${lis.length} items (click to expand)`;
 #+end_example
 
-* TODO https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 - Artist-RGs
+* TODO rename: Ctrl+Click to toggle ALL types
+
+#+begin_example
+                h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL types)';
+#+end_example
+
+to
+
+#+begin_example
+                h3.title = 'Click to Collapse/Uncollapse table section (Ctrl+Click to toggle ALL table sections)';
+#+end_example
+
+* DONE NOT using indexedDB - fixes for CAA/Title columns when loading from disk - https://musicbrainz.org/artist/b3c01c39-429c-4b1e-8ad4-c7b04b601ca4 - Artist-RGs
 ** initial
 
 There are a couple of bugs when NOT using indexedDB (sa_art_idb_enable: false) e.g. on the page "multi"-table pageType
@@ -53229,5 +53331,79 @@ Still a small bug left:
 
 The hover-wired thumbnails now appear in the case of loading data in a NEW session from disk. but it does NOT work in
 the case of loading data in the SAME session from disk
+
+
+* TODO in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
+
+* TODO add shortcut "Render" when no filtering in the "Load from Disk" path
+
+* TODO deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog
+
+* DONE remove the "Toggle entity page" functionality from the CAA column (if present) and instead use the same icons (▶, ▼)  for toggling the display of all the CAA images belonging to a release
+
+Please add the two features:
+
+1.)
+
+remove the "Toggle display of underlying entity page" functionality clickable on the following icon
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
+#+end_example
+
+from the "CAA" column in the case of pageType type: "'artist-releasegroups'" (https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases)
+It's functionality is doubled because it already exists in the "Title" column where it belongs. Please also check and remove any stale references/function documentation still pointing to it after removal.
+
+2.)
+
+instead in ALL pageTypes which have a synthetic "CAA" column render in the same place as the old "Toggle display of
+underlying entity page"-icon the same toggle icons (▶,▼) but now replaced with the new functionality of toggling the
+display of all the CAA images belonging to a release, so basically what the current "mb-cell-collapse-toggle" icons 
+
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Show all 7 items (click to expand)" role="button" aria-expanded="false" aria-label="Expand: 7 items are collapsed">▶</span>
+<span class="mb-cell-collapse-toggle" title="Collapse back to first item (7 total)" role="button" aria-expanded="true" aria-label="Collapse: showing all 7 items">◀</span>
+#+end_example
+
+do.
+
+So
+
+- "▶" should do the same as the current click on "▶" in "mb-cell-collapse-toggle"
+- "▼" should do the same as the current click on "◀" in "mb-cell-collapse-toggle"
+
+3.)
+
+afterwards remove the spans
+
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Show all 7 items (click to expand)" role="button" aria-expanded="false" aria-label="Expand: 7 items are collapsed">▶</span>
+<span class="mb-cell-collapse-toggle" title="Collapse back to first item (7 total)" role="button" aria-expanded="true" aria-label="Collapse: showing all 7 items">◀</span>
+#+end_example
+
+from the "CAA" cells, as their functionaliyt is now taken over by the icons (▶,▼) right in front of the CAA image in the "CAA" column
+
+* DONE Why have NO toggle-"Toggle display of underlying entity page"-icon (▶, ▼)
+
+In the uploaded userscript,
+
+why do the following pageTypes
+
+https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
+
+have NO toggle-"Toggle display of underlying entity page"-icon (▶, ▼)
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
+#+end_example
+
+in their "CAA" column of the final rendered page
+
+but the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+has it
+
+
 
 
