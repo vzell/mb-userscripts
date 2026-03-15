@@ -53593,7 +53593,7 @@ add a non intrusive popup window which tells the end-user that ALL CAA image loa
 or equivalent columns (depending on pageType) and the big-image stripe above a table. this window could be clicked on to
 get rid off, or it should auto-vanish after 10 seconds (configurable in the "const configSchema" variable)
 
-** TODO count the total time for CAA rendering/fetching and show that also in the popup and the global info area when finished
+** DONE count the total time for CAA rendering/fetching and show that also in the popup and the global info area when finished
 *** initial
 
 In the uploaded userscript,
@@ -53621,8 +53621,7 @@ in the function
 
 Actually display ALL the different timeing information (for the different image load paths) in the "toast.textContent" ... make it multiline
 
-
-* TODO reorder the symbols in column headers
+** TODO make the info box a little bit wider
 
 * TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
 
@@ -53672,6 +53671,45 @@ only inside the "CAA" column ALSO the hovering over the "empty" space works and 
 
 
 
+* TODO reorder the symbols in column headers
+** initial
+
+reorder the information in all the table column headers (the "CAA/EAA" columns are special as they have additional icon/tumbnails for the artwork display)
+
+instead of the following (these are the current HTML fragments for a "CAA" column, the '[artwork thumbnail] ▶' and '[artwork thumbnail] ▼' parts are missing on non-CAA columns)
+
+#+begin_example
+<th data-col-name="CAA" style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 28px;"><div class="mb-col-hdr-flex"><span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅</span> CAA <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲</span><span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼</span><span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images" aria-expanded="false"><img alt="" src="//coverartarchive.orghttps://musicbrainz.org/release/d1f6e86d-66d4-4760-9e59-8a9676ee3a06/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;"><span>▶</span></span><span class="mb-col-collapse-hdr-btn" data-col-index="5" title="Expand all multi-row CAA image cells in this table column" role="button" aria-expanded="false" aria-label="Expand all collapsed cells in: CAA" style="margin-left: auto;">▶</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊</span></div><div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;"></div></th>
+#+end_example
+
+#+begin_example
+Collapased STATE (visual representation): '⇅' '<column name>' '▲' '▼' '[artwork thumbnail] ▶' '<horizontal-flex-space>' '▶' '<horizontal-flex-space>' '📊'
+#+end_example
+
+#+begin_example
+<div class="mb-col-hdr-flex"><span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅</span> CAA <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲</span><span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼</span><span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="expanded" title="Collapse all CAA images" aria-expanded="true"><img alt="" src="//coverartarchive.orghttps://musicbrainz.org/release/d1f6e86d-66d4-4760-9e59-8a9676ee3a06/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;"><span>▼</span></span><span class="mb-col-collapse-hdr-btn" data-col-index="5" title="Collapse all multi-row CAA image cells in this table column" role="button" aria-expanded="true" aria-label="Collapse all multi-row CAA image cells in: CAA" style="margin-left: auto;">◀</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊</span></div>
+#+end_example
+
+#+begin_example
+Uncollapased STATE (visual representation): '⇅' '<column name>' '▲' '▼' '[artwork thumbnail] ▼' '<horizontal-flex-space>' '◀''<horizontal-flex-space>' '📊'
+#+end_example
+
+to
+
+(this is again for a "CAA" column, the '▶ [artwork thumbnail]' and '▼ [artwork thumbnail]' parts are missing on non-CAA columns)
+
+#+begin_example
+Collapased STATE (visual representation): '▶ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▶ ▤''<horizontal-flex-space>' '📊'
+#+end_example
+
+#+begin_example
+Uncollapased STATE (visual representation): '▼ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▼ ▤''<horizontal-flex-space>' '📊'
+#+end_example
+
+** also take the glyphs into account for the auto-resize functionality and calculating the minimum column lenght
+
+
+
 * TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
 ** initial
 
@@ -53718,3 +53756,4 @@ fetching of all paginated pages begins after pressing the "Show all.." action bu
 
 
 * TODO Rename "Official releases" on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases to "Artist Releases"
+
