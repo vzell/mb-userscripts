@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.162+2026-03-14
+// @version      9.99.163+2026-03-14
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -14056,7 +14056,13 @@
                     if (tableBody) {
                         Lib.debug('parse', `Table body found. Processing child nodes. Total nodes: ${tableBody.childNodes.length}`);
                         let currentStatus = 'Unknown';
-                        let seenFetchSubgroups = new Map();  // needed for unique subgroup header names
+                        let seenFetchSubgroups = new Map();  // rawName → Set of entity types already used
+                        // When a subh row is encountered the first data row has not yet
+                        // been processed, so we cannot read the entity type yet.
+                        // Store the raw relationship name and resolve the final group
+                        // name (rawName + " " + entityType) when the first data row arrives.
+                        let pendingGroupRawName = null; // rawName of the most-recent subh row
+                        let pendingGroupResolved = false; // true once the first row has renamed it
 
                         tableBody.childNodes.forEach(node => {
                             if (node.nodeName === 'TR') {
@@ -14074,14 +14080,16 @@
                                     // Normalize whitespace
                                     rawName = rawName.replace(/\s+/g, ' ');
 
-                                    if (seenFetchSubgroups.has(rawName)) {
-                                        let count = seenFetchSubgroups.get(rawName) + 1;
-                                        seenFetchSubgroups.set(rawName, count);
-                                        currentStatus = `${rawName} (${count})`;
-                                    } else {
-                                        seenFetchSubgroups.set(rawName, 1);
-                                        currentStatus = rawName;
-                                    }
+                                    // Tentatively set currentStatus to rawName; it will be
+                                    // renamed once the entity type is known from the first
+                                    // data row.  The seenFetchSubgroups map tracks which
+                                    // (rawName, entityType) pairs have been used so that
+                                    // duplicate raw names with DIFFERENT entity types each
+                                    // get their own sub-table (e.g. "Composed release" and
+                                    // "Composed work") instead of "Composed (2)".
+                                    currentStatus = rawName;
+                                    pendingGroupRawName  = rawName;
+                                    pendingGroupResolved = false;
 
                                     if ((activeDefinition.tableMode === 'multi') && currentStatus !== lastCategorySeenAcrossPages) {
                                         Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
@@ -14266,6 +14274,46 @@
                                     if (mainColIdx !== -1) {
                                         newRow.appendChild(tdName);
                                         newRow.appendChild(tdComment);
+                                    }
+
+                                    // ── Resolve entity-type suffix on first data row ──────────────
+                                    // On the first data row for a pending subh group, read the
+                                    // entity type from the Title column link (mainColIdx) and
+                                    // rename the group from the bare rawName to
+                                    // "rawName entityType" (e.g. "Composed release").
+                                    // This replaces the old "(2)"/"(3)" counter suffix that was
+                                    // used when the same relationship name appeared for different
+                                    // entity types.
+                                    if (pendingGroupRawName !== null && !pendingGroupResolved) {
+                                        pendingGroupResolved = true;
+                                        let entityType = '';
+                                        if (mainColIdx !== -1 && node.cells[mainColIdx]) {
+                                            const titleCell = node.cells[mainColIdx];
+                                            // Find the entity link — skip cover-art links and
+                                            // prefer release-group / release / work / label /
+                                            // area / recording etc. (any /type/UUID pattern).
+                                            const entityLink = titleCell.querySelector(
+                                                'a[href]:not([href$="/cover-art"]):not([href^="http"])'
+                                            ) || titleCell.querySelector('a[href]');
+                                            if (entityLink) {
+                                                const href = entityLink.getAttribute('href');
+                                                // href is like /release-group/UUID or /work/UUID
+                                                const m = href && href.match(/^\/([a-z][a-z0-9-]+)\/[a-f0-9-]{36}/);
+                                                if (m) entityType = m[1];
+                                            }
+                                        }
+                                        if (entityType) {
+                                            const seenSet = seenFetchSubgroups.get(pendingGroupRawName) || new Set();
+                                            seenSet.add(entityType);
+                                            seenFetchSubgroups.set(pendingGroupRawName, seenSet);
+                                            const resolved = `${pendingGroupRawName} ${entityType}`;
+                                            // Rename any group that was already pushed with the bare rawName.
+                                            const stale = groupedRows.find(g => g.category === pendingGroupRawName);
+                                            if (stale) stale.category = resolved;
+                                            currentStatus = resolved;
+                                            Lib.debug('fetch', `Subgroup resolved: "${pendingGroupRawName}" → "${resolved}"`);
+                                        }
+                                        pendingGroupRawName = null;
                                     }
 
                                     if (activeDefinition.tableMode === 'multi') {

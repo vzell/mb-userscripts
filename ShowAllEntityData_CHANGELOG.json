@@ -1,5 +1,17 @@
 [
     {
+      "version": "9.99.163",
+      "date": "2026-03-14",
+      "sections": [
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "Sub-table h3 header naming for multi-table relationship pages (e.g. artist-relationships): duplicate relationship names that arise because the same relationship type applies to multiple entity types (e.g. 'Composed' for both releases and works) are now disambiguated by appending the entity type extracted from the first data row's Title column link rather than a numeric counter suffix. Previously the first occurrence kept the bare name ('Composed') and subsequent occurrences received '(2)', '(3)' etc. — now every occurrence is suffixed with its entity type ('Composed release', 'Composed work') by reading the href of the first link in the Title column cell (any a[href] that is not a cover-art link and matches the /type/UUID pattern) and extracting the path segment before the GUID. The seenFetchSubgroups Map is changed from rawName→count to rawName→Set<entityType>. A new pendingGroupRawName / pendingGroupResolved pair defers the final group name until the first data row for each subh section arrives: on that first row the entity type is extracted, the resolved name is formed, and any group that was already pushed to groupedRows under the bare rawName is renamed in-place before the row is added to it."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.162",
       "date": "2026-03-14",
       "sections": [
