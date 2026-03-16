@@ -54077,6 +54077,8 @@ before
     function initCaaPics() {
 #+end_example
 
+* DONE in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
+
 
 * TODO Change expand multi-row cells to "Expand|all" | "multi-row|cells" - elements under each other aligned in the middle
 
@@ -54171,7 +54173,6 @@ only inside the "CAA" column ALSO the hovering over the "empty" space works and 
   </span>
 </td>
 #+end_example
-
 
 
 
@@ -54561,7 +54562,6 @@ and from the filter container the additional checkboxes for "Case sensitive", "r
 #+end_example
 
 
-* TODO in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
 
 * TODO Change all the entity links to open in a new tab
 
