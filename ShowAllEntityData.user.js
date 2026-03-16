@@ -2927,10 +2927,10 @@
             // Root artist page (Official/Non-Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
-                { label: '🧮 Artist RGs',      params: { all: ['1', '0'], va: '0' } },
+                // { label: '🧮 Artist RGs',      params: { all: ['1', '0'], va: '0' } },
                 { label: '🧮 Official RGs',    params: { all: '0', va: '0' } },
                 { label: '🧮 All RGs',         params: { all: '1', va: '0' } },
-                { label: '🧮 VA RGs',          params: { all: ['1', '0'], va: '1' } },
+                // { label: '🧮 VA RGs',          params: { all: ['1', '0'], va: '1' } },
                 { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
                 { label: '🧮 All VA RGs',      params: { all: '1', va: '1' } }
             ],
