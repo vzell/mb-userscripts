@@ -1,5 +1,17 @@
 [
     {
+      "version": "9.99.182",
+      "date": "2026-03-16",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Harmonize tooltips"
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.181",
       "date": "2026-03-16",
       "sections": [
