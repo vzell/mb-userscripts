@@ -25554,18 +25554,6 @@
     // ── Public entry points ───────────────────────────────────────────────────
 
     /**
-     * Entry point for the CAA Illustrated Discography feature.
-     *
-     * (Re-)creates the shared `_caaQueue` — which is also consumed by
-     * initEaaPics / initCaaInlinePics / initEaaInlinePics — so this MUST be called
-     * before any of those functions at every render-completion site.
-     *
-     * Guards: `Lib.settings.sa_enable_caa_pics` must be true.
-     *
-     * Called from: main fetch pipeline, runFilter() single-table branch,
-     *              renderGroupedTable() multi-table re-renders, load-from-disk pipeline.
-     */
-    /**
      * Shows a small non-intrusive toast in the bottom-right corner of the
      * viewport confirming that all CAA/EAA artwork has finished loading.
      * Auto-dismisses after `sa_caa_completion_toast_duration` seconds (0 = disabled).
@@ -25675,6 +25663,18 @@
         const timer = setTimeout(dismiss, duration);
     }
 
+    /**
+     * Entry point for the CAA Illustrated Discography feature.
+     *
+     * (Re-)creates the shared `_caaQueue` — which is also consumed by
+     * initEaaPics / initCaaInlinePics / initEaaInlinePics — so this MUST be called
+     * before any of those functions at every render-completion site.
+     *
+     * Guards: `Lib.settings.sa_enable_caa_pics` must be true.
+     *
+     * Called from: main fetch pipeline, runFilter() single-table branch,
+     *              renderGroupedTable() multi-table re-renders, load-from-disk pipeline.
+     */
     function initCaaPics() {
         if (!Lib.settings.sa_enable_caa_pics) return;
 
