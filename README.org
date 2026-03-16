@@ -53369,6 +53369,9 @@ to
 * DONE Rename "Official releases" on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases to "Artist Releases"
 * DONE rename "Save current table data to disk in a serialized format
 * TODO rename "Enter global filter string" to "Enter global filter string (focus filter field with ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')})"
+
+rename "Enter global filter string" to something like, "Enter global filter string (focus filter field with ${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+Shift+G')})"
+
 * TODO Change expand multi-row cells to "Expand|all" | "multi-row|cells" - elements under each other aligned in the middle
 * DONE add "syntheticColumns: ['Total Tracks']" to the pageType 
 
@@ -53407,8 +53410,7 @@ before
 #+end_example
 
 
-
-* TODO in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
+* DONE in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
 
 In the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
@@ -53534,100 +53536,6 @@ There is typical a list of release links below the release-group. Could the code
 images for these releases and render them in front od the title as usual
 
 please fix
-
-
-* TODO Change all the entity links to open in a new tab
-
-* TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
-
-
-* TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just dispay ONE
-
-* TODO add information that ALL CAA images have been loaded
-** DONE initial
-
-add a non intrusive popup window which tells the end-user that ALL CAA image loading has happened, "CAA" column, "Title"
-or equivalent columns (depending on pageType) and the big-image stripe above a table. this window could be clicked on to
-get rid off, or it should auto-vanish after 10 seconds (configurable in the "const configSchema" variable)
-
-** DONE count the total time for CAA rendering/fetching and show that also in the popup and the global info area when finished
-*** initial
-
-In the uploaded userscript,
-
-Implement measuring the total time it takes for CAA/EAA fetching from the network/indexedDB and the total number of
-images fetched and show that also in the popup and the global info area when finished
-
-Change the
-
-#+begin_example
-        toast.textContent = '🎨 All CAA/EAA artwork loaded';
-#+end_example
-
-#+begin_example
-        toast.textContent = '🎨 All CAA/EAA artwork (<number of artwork images> images) loaded in <time it took>';
-#+end_example
-
-in the function
-
-#+begin_example
-    function _showCaaCompletionToast() {
-#+end_example
-
-*** all info
-
-Actually display ALL the different timeing information (for the different image load paths) in the "toast.textContent" ... make it multiline
-
-** TODO make the info box a little bit wider
-
-
-* TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
-
-When loading saving from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" -
-https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but
-only inside the "CAA" column ALSO the hovering over the "empty" space works and shows the big picture artwork ==> Reload icon FIXES actually
-
-#+begin_example
-<td>
-  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back  Front Spine">
-    <li class="mb-caa-art-li mb-caa-art-li-summary" data-erg-injected="1">
-      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
-      </span>
-      <a href="/release-group/025f5d35-e806-4932-80c0-df1b383fb363/cover-art" title="3 images found for this release / release-group" data-caa-enriched="1">
-	<span class="artwork-icon caa-icon" title="3 images found for this release / release-group" data-cache-hint="unavailable" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363/front-250&quot;);">
-	</span>
-      </a>
-      <span class="mb-art-cache-hint-col-wrap">
-	<span class="mb-art-cache-hint-col" title="Timing unavailable">⚠️
-	</span>
-	<span class="mb-caa-count-badge" title="3 images found for this release / release-group">3
-	</span>
-      </span>
-      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
-      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088662167-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Front
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
-      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088664101-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Back
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
-      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088665260-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Front / Spine
-      </span>
-    </li>
-  </ul>
-  <span class="mb-cell-collapse-toggle" title="Show all 3 image(s) — click to expand" role="button" aria-expanded="false" aria-label="Expand: 3 image(s) collapsed">▶
-  </span>
-</td>
-#+end_example
-
-
 
 * DONE reorder the symbols in column headers
 ** DONE initial
@@ -53884,6 +53792,386 @@ to
                     : `Show all multi-row cell items (${lis.length})`;
 #+end_example
 
+* DONE OBSOLETE: ALL columns: in the unique column drop down menu add a static sub-section which tells us the number of different unique values
+
+in the unique column drop down menu add a static sub-section which tells us the number of different unique values
+
+* DONE reorder the symbols in column headers
+** DONE initial
+
+reorder the information in all the table column headers (the "CAA/EAA" columns are special as they have additional icon/tumbnails for the artwork display)
+
+instead of the following (these are the current HTML fragments for a "CAA" column, the '[artwork thumbnail] ▶' and '[artwork thumbnail] ▼' parts are missing on non-CAA columns)
+
+#+begin_example
+<th data-col-name="CAA" style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 28px;"><div class="mb-col-hdr-flex"><span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅</span> CAA <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲</span><span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼</span><span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images" aria-expanded="false"><img alt="" src="//coverartarchive.orghttps://musicbrainz.org/release/d1f6e86d-66d4-4760-9e59-8a9676ee3a06/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;"><span>▶</span></span><span class="mb-col-collapse-hdr-btn" data-col-index="5" title="Expand all multi-row CAA image cells in this table column" role="button" aria-expanded="false" aria-label="Expand all collapsed cells in: CAA" style="margin-left: auto;">▶</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊</span></div><div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;"></div></th>
+#+end_example
+
+#+begin_example
+Collapased STATE (visual representation): '⇅' '<column name>' '▲' '▼' '[artwork thumbnail] ▶' '<horizontal-flex-space>' '▶' '<horizontal-flex-space>' '📊'
+#+end_example
+
+#+begin_example
+<div class="mb-col-hdr-flex"><span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅</span> CAA <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲</span><span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼</span><span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="expanded" title="Collapse all CAA images" aria-expanded="true"><img alt="" src="//coverartarchive.orghttps://musicbrainz.org/release/d1f6e86d-66d4-4760-9e59-8a9676ee3a06/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;"><span>▼</span></span><span class="mb-col-collapse-hdr-btn" data-col-index="5" title="Collapse all multi-row CAA image cells in this table column" role="button" aria-expanded="true" aria-label="Collapse all multi-row CAA image cells in: CAA" style="margin-left: auto;">◀</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊</span></div>
+#+end_example
+
+#+begin_example
+Uncollapased STATE (visual representation): '⇅' '<column name>' '▲' '▼' '[artwork thumbnail] ▼' '<horizontal-flex-space>' '◀''<horizontal-flex-space>' '📊'
+#+end_example
+
+to
+
+(this is again for a "CAA" column, the '▶ [artwork thumbnail]' and '▼ [artwork thumbnail]' parts are missing on non-CAA columns)
+
+#+begin_example
+Collapased STATE (visual representation): '▶ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▶ ▤' '<horizontal-flex-space>' '📊'
+#+end_example
+
+#+begin_example
+Uncollapased STATE (visual representation): '▼ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▼ ▤' '<horizontal-flex-space>' '📊'
+#+end_example
+
+** DONE change the symbols one more time and add one more
+
+- Count how many different unique values exist per column in the column specific drop down-menu under the '📊' glyph and render the number (in smaller font) right in front of the currently rendered '📊' glyph in the column header
+- Count how many collapsable multi-row cells exists in columns which in theory can have multi-row cells and render the value (in smaller font) in between the '▶'/'▼' and '▤' glyphs of the currently rendered '▶ ▤'/'▼ ▤' glyphs in the column header
+
+
+So the current column header structure 
+
+(this is again for a "CAA" column, the '▶ [artwork thumbnail]' and '▼ [artwork thumbnail]' parts are missing on non-CAA columns)
+
+#+begin_example
+Collapased STATE (visual representation): '▶ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▶ ▤' '<horizontal-flex-space>' '📊'
+#+end_example
+
+#+begin_example
+Uncollapased STATE (visual representation): '▼ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▼ ▤' '<horizontal-flex-space>' '📊'
+#+end_example
+
+should now be
+
+#+begin_example
+Collapased STATE (visual representation): '▶ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▶ <number of collapsable multi-row cells in a column> ▤' '<horizontal-flex-space>' '<number of different unique values per column>' '📊'
+#+end_example
+
+#+begin_example
+Uncollapased STATE (visual representation): '▼ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▼ <number of collapsable multi-row cells in a column> ▤' '<horizontal-flex-space>' '<number of different unique values per column>' '📊'
+#+end_example
+
+also take all the new and count integers into account for the auto-resize functionality and calculating the minimum column length
+
+** DONE final fix
+
+Two small glitches:
+
+- there is a rendering bug: the '<number of different unique values per column>' is rendered right after the sort
+  descending symbol '▼' OR the '▤' glyph, if present (if a column can have multi-row cells), BUT it should be rendered
+  together with the '📊' glyph (left from it). Maybe put them in together in a specific container so they don't loose
+  their association
+  
+- please add a tooltip to the rendered '<number of different unique values per column>' which says "There are <number of different unique values per column> different unique values in this column, click the 📊 symbol to display them"
+
+** DONE one more
+
+two bugs still left
+
+1.)
+
+There is still too much space between the unique value count and the 📊 glyph
+
+#+begin_example
+<span class="mb-col-uniq-wrap"><span class="mb-col-uniq-count" title="There are 2 different unique values in this column, click the 📊 symbol to display them">2</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊</span></span>
+#+end_example
+
+2.)
+
+the tooltip on the rendered '<number of different unique values per column>' DOESN't show up when hovering over with the mouse
+
+** DONE unify the two spans
+
+The two spans '<span class="mb-col-uniq-count"' and '<span class="mb-col-uniq-btn"' should act as one clickable container, when clicked showing the pull-down list with the column unique values
+
+#+begin_example
+<span class="mb-col-uniq-wrap"><span class="mb-col-uniq-count" title="There are 72 different unique values in this column, click the 📊 symbol to display them">72</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for Country/Date">📊</span></span>
+#+end_example
+
+There should also be just ONE tooltip with the text
+
+#+begin_example
+Show the <number of different unique values per column> different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing "Enter" on an entry
+#+end_example
+
+** DONE add a toggle button inside the "CAA" column header info with text "▶ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased
+
+add a toggle button inside the "CAA" column header for each table/sub-table which actually has a "CAA" column with text "▶ [front CAA thumbnail from first row which has artwork]"
+when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased. The placement should be after the
+
+#+begin_example
+<span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅</span>
+#+end_example
+
+and the actual "CAA" column name. When successively clicked, it should emulate pressing the
+
+#+begin_example
+<span data-caa-expand-btn="collapsed" title="Show all 8 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
+#+end_example
+
+or
+
+#+begin_example
+ <span data-caa-expand-btn="expanded" title="Collapse — click to hide CAA images" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
+#+end_example
+
+depending on state
+
+
+
+the CAA toggle button has the artwork symbol in the "CAA" column header on the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+#+begin_example
+<th data-col-name="CAA" style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 28px;">
+  <div class="mb-col-hdr-flex">
+    <span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images" aria-expanded="false">
+      <span>▶
+      </span>
+      <img alt="" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;">
+    </span>CAA
+    <span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+    </span>
+    <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+    </span>
+    <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+    </span>
+    <span class="mb-col-collapse-hdr-btn" data-col-index="10" title="Expand all multi-row CAA image cells in this table column" role="button" aria-expanded="false" aria-label="Expand all collapsed cells in: CAA" style="margin-left: auto;">
+      <span class="mb-col-collapse-glyph">▶
+      </span>
+      <span class="mb-col-collapse-count">116
+      </span>
+      <span class="mb-col-collapse-rack">▤
+      </span>
+    </span>
+    <span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 99 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 99 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+      <span class="mb-col-uniq-count">99
+      </span>
+      <span class="mb-col-uniq-btn">📊
+      </span>
+    </span>
+  </div>
+  <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+  </div>
+</th>
+#+end_example
+
+but it's somehow NOT rendered on the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+#+begin_example
+<th data-col-name="CAA" style="background-color: rgb(184, 200, 184); cursor: default; position: relative;">
+  <div class="mb-col-hdr-flex">
+    <span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images" aria-expanded="false">
+      <span>▶
+      </span>
+      <img alt="" src="" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: none;">
+    </span>CAA
+    <span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+    </span>
+    <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+    </span>
+    <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+    </span>
+    <span class="mb-col-uniq-wrap">
+      <span class="mb-col-uniq-count" title="There are 2 different unique values in this column, click the 📊 symbol to display them">2
+      </span>
+      <span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊
+      </span>
+    </span>
+  </div>
+  <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+  </div>
+</th>
+#+end_example
+
+also other URLs exhibit the same problem (missing the artwork thumbnail)
+
+#+begin_example
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
+https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+etc.
+#+end_example
+
+The column header thumbnail should be taken as the thumbnail from the first row in the table which has a thumbnail in the "CAA" column
+
+* DONE replace the current column cell symbols '▶'/'◀'
+
+replace in tables which have columns which could have multi-row values, the current column cell specific symbols '▶'/'◀'
+which represent a column cell which has multi-row values (either 'collapsed - ▶' or 'uncollapsed - ◀')
+
+COLLAPSED state e.g.:
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Collapse back to first item (2 total)" role="button" aria-expanded="true" aria-label="Collapse: showing all 2 items">◀</span>
+#+end_example
+
+UNCOLLAPSED state e.g.:
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Show all items (2) — click to expand" role="button" aria-expanded="false" aria-label="Expand: 2 items are collapsed">▶</span>
+#+end_example
+
+with the ones which are used already in the corresponding column headers (but the numeric count has a different meaning per cell, it represents the number of list items per multi-row data cell:
+
+COLLAPSED state: '▶ <number of list items per multi-row data cell> ▤'
+
+UNCOLLAPSED state: '▼ <number of list items per multi-row data cell> ▤'
+
+Also change the cell specific tool tips for the new symbols from
+
+#+begin_example
+            toggle.title = nowExpanding
+                ? `Collapse back to first item (${lis.length} total)`
+                : `Show all items (${lis.length}) \u2014 click to expand`;
+#+end_example
+
+#+begin_example
+                cellToggle.title = startExpanded
+                    ? `Collapse back to first item (${lis.length} total)`
+                    : `Show all items (${lis.length}) \u2014 click to expand`;
+#+end_example
+
+to
+
+#+begin_example
+            toggle.title = nowExpanding
+                ? `Collapse multi-row cell back to display just the first item (${lis.length} total)`
+                : `Show all multi-row cell items (${lis.length})`;
+#+end_example
+
+#+begin_example
+                cellToggle.title = startExpanded
+                    ? `Collapse multi-row cell back to display just the first item (${lis.length} total)`
+                    : `Show all multi-row cell items (${lis.length})`;
+#+end_example
+
+* DONE OBSOLETE: ALL columns: in the unique column drop down menu add a static sub-section which tells us the number of different unique values
+
+in the unique column drop down menu add a static sub-section which tells us the number of different unique values
+
+* DONE reposition the comment
+
+#+begin_example
+    /**
+     * Entry point for the CAA Illustrated Discography feature.
+     *
+     * (Re-)creates the shared `_caaQueue` — which is also consumed by
+     * initEaaPics / initCaaInlinePics / initEaaInlinePics — so this MUST be called
+     * before any of those functions at every render-completion site.
+     *
+     * Guards: `Lib.settings.sa_enable_caa_pics` must be true.
+     *
+     * Called from: main fetch pipeline, runFilter() single-table branch,
+     *              renderGroupedTable() multi-table re-renders, load-from-disk pipeline.
+     */
+#+end_example
+
+before
+
+#+begin_example
+    function initCaaPics() {
+#+end_example
+
+
+* TODO Change all the entity links to open in a new tab
+
+* TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
+
+
+* TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just dispay ONE
+
+* TODO add information that ALL CAA images have been loaded
+** DONE initial
+
+add a non intrusive popup window which tells the end-user that ALL CAA image loading has happened, "CAA" column, "Title"
+or equivalent columns (depending on pageType) and the big-image stripe above a table. this window could be clicked on to
+get rid off, or it should auto-vanish after 10 seconds (configurable in the "const configSchema" variable)
+
+** DONE count the total time for CAA rendering/fetching and show that also in the popup and the global info area when finished
+*** initial
+
+In the uploaded userscript,
+
+Implement measuring the total time it takes for CAA/EAA fetching from the network/indexedDB and the total number of
+images fetched and show that also in the popup and the global info area when finished
+
+Change the
+
+#+begin_example
+        toast.textContent = '🎨 All CAA/EAA artwork loaded';
+#+end_example
+
+#+begin_example
+        toast.textContent = '🎨 All CAA/EAA artwork (<number of artwork images> images) loaded in <time it took>';
+#+end_example
+
+in the function
+
+#+begin_example
+    function _showCaaCompletionToast() {
+#+end_example
+
+*** all info
+
+Actually display ALL the different timeing information (for the different image load paths) in the "toast.textContent" ... make it multiline
+
+** TODO make the info box a little bit wider
+
+
+* TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
+
+When loading saving from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" -
+https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but
+only inside the "CAA" column ALSO the hovering over the "empty" space works and shows the big picture artwork ==> Reload icon FIXES actually
+
+#+begin_example
+<td>
+  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back  Front Spine">
+    <li class="mb-caa-art-li mb-caa-art-li-summary" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <a href="/release-group/025f5d35-e806-4932-80c0-df1b383fb363/cover-art" title="3 images found for this release / release-group" data-caa-enriched="1">
+	<span class="artwork-icon caa-icon" title="3 images found for this release / release-group" data-cache-hint="unavailable" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363/front-250&quot;);">
+	</span>
+      </a>
+      <span class="mb-art-cache-hint-col-wrap">
+	<span class="mb-art-cache-hint-col" title="Timing unavailable">⚠️
+	</span>
+	<span class="mb-caa-count-badge" title="3 images found for this release / release-group">3
+	</span>
+      </span>
+      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088662167-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088664101-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Back
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="display: none;">
+      <img src="https://coverartarchive.org/release/3d2922c1-d8bd-4e8d-a3e7-0e984f5cad79/14088665260-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front / Spine
+      </span>
+    </li>
+  </ul>
+  <span class="mb-cell-collapse-toggle" title="Show all 3 image(s) — click to expand" role="button" aria-expanded="false" aria-label="Expand: 3 image(s) collapsed">▶
+  </span>
+</td>
+#+end_example
+
+
+
 
 * on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
 
@@ -53891,10 +54179,6 @@ on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336
 fetching of all paginated pages begins after pressing the "Show all.." action button
 
 
-
-* DONE OBSOLETE: ALL columns: in the unique column drop down menu add a static sub-section which tells us the number of different unique values
-
-in the unique column drop down menu add a static sub-section which tells us the number of different unique values
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
@@ -54274,30 +54558,6 @@ and from the filter container the additional checkboxes for "Case sensitive", "r
         }
 #+end_example
 
-* DONE reposition the comment
-
-#+begin_example
-    /**
-     * Entry point for the CAA Illustrated Discography feature.
-     *
-     * (Re-)creates the shared `_caaQueue` — which is also consumed by
-     * initEaaPics / initCaaInlinePics / initEaaInlinePics — so this MUST be called
-     * before any of those functions at every render-completion site.
-     *
-     * Guards: `Lib.settings.sa_enable_caa_pics` must be true.
-     *
-     * Called from: main fetch pipeline, runFilter() single-table branch,
-     *              renderGroupedTable() multi-table re-renders, load-from-disk pipeline.
-     */
-#+end_example
-
-before
-
-#+begin_example
-    function initCaaPics() {
-#+end_example
-
-
 
 * TODO in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
 
@@ -54394,261 +54654,6 @@ only inside the "CAA" column ALSO the hovering over the "empty" space works and 
 
 
 
-* DONE reorder the symbols in column headers
-** DONE initial
-
-reorder the information in all the table column headers (the "CAA/EAA" columns are special as they have additional icon/tumbnails for the artwork display)
-
-instead of the following (these are the current HTML fragments for a "CAA" column, the '[artwork thumbnail] ▶' and '[artwork thumbnail] ▼' parts are missing on non-CAA columns)
-
-#+begin_example
-<th data-col-name="CAA" style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 28px;"><div class="mb-col-hdr-flex"><span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅</span> CAA <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲</span><span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼</span><span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images" aria-expanded="false"><img alt="" src="//coverartarchive.orghttps://musicbrainz.org/release/d1f6e86d-66d4-4760-9e59-8a9676ee3a06/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;"><span>▶</span></span><span class="mb-col-collapse-hdr-btn" data-col-index="5" title="Expand all multi-row CAA image cells in this table column" role="button" aria-expanded="false" aria-label="Expand all collapsed cells in: CAA" style="margin-left: auto;">▶</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊</span></div><div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;"></div></th>
-#+end_example
-
-#+begin_example
-Collapased STATE (visual representation): '⇅' '<column name>' '▲' '▼' '[artwork thumbnail] ▶' '<horizontal-flex-space>' '▶' '<horizontal-flex-space>' '📊'
-#+end_example
-
-#+begin_example
-<div class="mb-col-hdr-flex"><span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅</span> CAA <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲</span><span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼</span><span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="expanded" title="Collapse all CAA images" aria-expanded="true"><img alt="" src="//coverartarchive.orghttps://musicbrainz.org/release/d1f6e86d-66d4-4760-9e59-8a9676ee3a06/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;"><span>▼</span></span><span class="mb-col-collapse-hdr-btn" data-col-index="5" title="Collapse all multi-row CAA image cells in this table column" role="button" aria-expanded="true" aria-label="Collapse all multi-row CAA image cells in: CAA" style="margin-left: auto;">◀</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊</span></div>
-#+end_example
-
-#+begin_example
-Uncollapased STATE (visual representation): '⇅' '<column name>' '▲' '▼' '[artwork thumbnail] ▼' '<horizontal-flex-space>' '◀''<horizontal-flex-space>' '📊'
-#+end_example
-
-to
-
-(this is again for a "CAA" column, the '▶ [artwork thumbnail]' and '▼ [artwork thumbnail]' parts are missing on non-CAA columns)
-
-#+begin_example
-Collapased STATE (visual representation): '▶ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▶ ▤' '<horizontal-flex-space>' '📊'
-#+end_example
-
-#+begin_example
-Uncollapased STATE (visual representation): '▼ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▼ ▤' '<horizontal-flex-space>' '📊'
-#+end_example
-
-** DONE change the symbols one more time and add one more
-
-- Count how many different unique values exist per column in the column specific drop down-menu under the '📊' glyph and render the number (in smaller font) right in front of the currently rendered '📊' glyph in the column header
-- Count how many collapsable multi-row cells exists in columns which in theory can have multi-row cells and render the value (in smaller font) in between the '▶'/'▼' and '▤' glyphs of the currently rendered '▶ ▤'/'▼ ▤' glyphs in the column header
-
-
-So the current column header structure 
-
-(this is again for a "CAA" column, the '▶ [artwork thumbnail]' and '▼ [artwork thumbnail]' parts are missing on non-CAA columns)
-
-#+begin_example
-Collapased STATE (visual representation): '▶ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▶ ▤' '<horizontal-flex-space>' '📊'
-#+end_example
-
-#+begin_example
-Uncollapased STATE (visual representation): '▼ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▼ ▤' '<horizontal-flex-space>' '📊'
-#+end_example
-
-should now be
-
-#+begin_example
-Collapased STATE (visual representation): '▶ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▶ <number of collapsable multi-row cells in a column> ▤' '<horizontal-flex-space>' '<number of different unique values per column>' '📊'
-#+end_example
-
-#+begin_example
-Uncollapased STATE (visual representation): '▼ [artwork thumbnail]' '<column name>' '⇅' '▲' '▼'  '<horizontal-flex-space>' '▼ <number of collapsable multi-row cells in a column> ▤' '<horizontal-flex-space>' '<number of different unique values per column>' '📊'
-#+end_example
-
-also take all the new and count integers into account for the auto-resize functionality and calculating the minimum column length
-
-** DONE final fix
-
-Two small glitches:
-
-- there is a rendering bug: the '<number of different unique values per column>' is rendered right after the sort
-  descending symbol '▼' OR the '▤' glyph, if present (if a column can have multi-row cells), BUT it should be rendered
-  together with the '📊' glyph (left from it). Maybe put them in together in a specific container so they don't loose
-  their association
-  
-- please add a tooltip to the rendered '<number of different unique values per column>' which says "There are <number of different unique values per column> different unique values in this column, click the 📊 symbol to display them"
-
-** DONE one more
-
-two bugs still left
-
-1.)
-
-There is still too much space between the unique value count and the 📊 glyph
-
-#+begin_example
-<span class="mb-col-uniq-wrap"><span class="mb-col-uniq-count" title="There are 2 different unique values in this column, click the 📊 symbol to display them">2</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊</span></span>
-#+end_example
-
-2.)
-
-the tooltip on the rendered '<number of different unique values per column>' DOESN't show up when hovering over with the mouse
-
-** DONE unify the two spans
-
-The two spans '<span class="mb-col-uniq-count"' and '<span class="mb-col-uniq-btn"' should act as one clickable container, when clicked showing the pull-down list with the column unique values
-
-#+begin_example
-<span class="mb-col-uniq-wrap"><span class="mb-col-uniq-count" title="There are 72 different unique values in this column, click the 📊 symbol to display them">72</span><span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for Country/Date">📊</span></span>
-#+end_example
-
-There should also be just ONE tooltip with the text
-
-#+begin_example
-Show the <number of different unique values per column> different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing "Enter" on an entry
-#+end_example
-
-** DONE add a toggle button inside the "CAA" column header info with text "▶ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased
-
-add a toggle button inside the "CAA" column header for each table/sub-table which actually has a "CAA" column with text "▶ [front CAA thumbnail from first row which has artwork]"
-when all multi-row cells are collpased, or "▼ [front CAA thumbnail from first row which has artwork]" when all multi-row cells are uncollpased. The placement should be after the
-
-#+begin_example
-<span class="sort-icon-btn" title="Restore original order (clears multi-sort)">⇅</span>
-#+end_example
-
-and the actual "CAA" column name. When successively clicked, it should emulate pressing the
-
-#+begin_example
-<span data-caa-expand-btn="collapsed" title="Show all 8 image(s) — click to expand" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
-#+end_example
-
-or
-
-#+begin_example
- <span data-caa-expand-btn="expanded" title="Collapse — click to hide CAA images" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
-#+end_example
-
-depending on state
-
-
-
-the CAA toggle button has the artwork symbol in the "CAA" column header on the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-#+begin_example
-<th data-col-name="CAA" style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 28px;">
-  <div class="mb-col-hdr-flex">
-    <span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images" aria-expanded="false">
-      <span>▶
-      </span>
-      <img alt="" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;">
-    </span>CAA
-    <span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
-    </span>
-    <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
-    </span>
-    <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
-    </span>
-    <span class="mb-col-collapse-hdr-btn" data-col-index="10" title="Expand all multi-row CAA image cells in this table column" role="button" aria-expanded="false" aria-label="Expand all collapsed cells in: CAA" style="margin-left: auto;">
-      <span class="mb-col-collapse-glyph">▶
-      </span>
-      <span class="mb-col-collapse-count">116
-      </span>
-      <span class="mb-col-collapse-rack">▤
-      </span>
-    </span>
-    <span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 99 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 99 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
-      <span class="mb-col-uniq-count">99
-      </span>
-      <span class="mb-col-uniq-btn">📊
-      </span>
-    </span>
-  </div>
-  <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
-  </div>
-</th>
-#+end_example
-
-but it's somehow NOT rendered on the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-#+begin_example
-<th data-col-name="CAA" style="background-color: rgb(184, 200, 184); cursor: default; position: relative;">
-  <div class="mb-col-hdr-flex">
-    <span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images" aria-expanded="false">
-      <span>▶
-      </span>
-      <img alt="" src="" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: none;">
-    </span>CAA
-    <span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
-    </span>
-    <span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
-    </span>
-    <span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
-    </span>
-    <span class="mb-col-uniq-wrap">
-      <span class="mb-col-uniq-count" title="There are 2 different unique values in this column, click the 📊 symbol to display them">2
-      </span>
-      <span class="mb-col-uniq-btn" title="Show unique values for this column — Click or press Enter on an entry to apply as filter for this column" tabindex="0" role="button" aria-label="Unique values for CAA">📊
-      </span>
-    </span>
-  </div>
-  <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
-  </div>
-</th>
-#+end_example
-
-also other URLs exhibit the same problem (missing the artwork thumbnail)
-
-#+begin_example
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
-https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
-https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
-etc.
-#+end_example
-
-The column header thumbnail should be taken as the thumbnail from the first row in the table which has a thumbnail in the "CAA" column
-
-* DONE replace the current column cell symbols '▶'/'◀'
-
-replace in tables which have columns which could have multi-row values, the current column cell specific symbols '▶'/'◀'
-which represent a column cell which has multi-row values (either 'collapsed - ▶' or 'uncollapsed - ◀')
-
-COLLAPSED state e.g.:
-#+begin_example
-<span class="mb-cell-collapse-toggle" title="Collapse back to first item (2 total)" role="button" aria-expanded="true" aria-label="Collapse: showing all 2 items">◀</span>
-#+end_example
-
-UNCOLLAPSED state e.g.:
-#+begin_example
-<span class="mb-cell-collapse-toggle" title="Show all items (2) — click to expand" role="button" aria-expanded="false" aria-label="Expand: 2 items are collapsed">▶</span>
-#+end_example
-
-with the ones which are used already in the corresponding column headers (but the numeric count has a different meaning per cell, it represents the number of list items per multi-row data cell:
-
-COLLAPSED state: '▶ <number of list items per multi-row data cell> ▤'
-
-UNCOLLAPSED state: '▼ <number of list items per multi-row data cell> ▤'
-
-Also change the cell specific tool tips for the new symbols from
-
-#+begin_example
-            toggle.title = nowExpanding
-                ? `Collapse back to first item (${lis.length} total)`
-                : `Show all items (${lis.length}) \u2014 click to expand`;
-#+end_example
-
-#+begin_example
-                cellToggle.title = startExpanded
-                    ? `Collapse back to first item (${lis.length} total)`
-                    : `Show all items (${lis.length}) \u2014 click to expand`;
-#+end_example
-
-to
-
-#+begin_example
-            toggle.title = nowExpanding
-                ? `Collapse multi-row cell back to display just the first item (${lis.length} total)`
-                : `Show all multi-row cell items (${lis.length})`;
-#+end_example
-
-#+begin_example
-                cellToggle.title = startExpanded
-                    ? `Collapse multi-row cell back to display just the first item (${lis.length} total)`
-                    : `Show all multi-row cell items (${lis.length})`;
-#+end_example
-
 
 * on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
 
@@ -54656,10 +54661,6 @@ on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336
 fetching of all paginated pages begins after pressing the "Show all.." action button
 
 
-
-* DONE OBSOLETE: ALL columns: in the unique column drop down menu add a static sub-section which tells us the number of different unique values
-
-in the unique column drop down menu add a static sub-section which tells us the number of different unique values
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial

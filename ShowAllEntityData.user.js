@@ -5051,7 +5051,7 @@
         btn.type      = 'button';
         btn.className = 'mb-subtable-vis-btn';
         btn.innerHTML = '👁️';
-	btn.title     = `Show/hide columns in sub-section "${categoryName}"`;
+        btn.title     = `Show/hide columns in sub-section "${categoryName}"`;
         btn.setAttribute('aria-label', `Column visibility for: ${categoryName}`);
         btn.style.cssText = [
             'font-size:0.85em; padding:1px 5px; border-radius:4px;',
@@ -7939,7 +7939,7 @@
         btn.style.background  = 'rgb(240,240,240)';
         btn.style.borderColor = 'rgb(204,204,204)';
         btn.style.color       = '';
-	btn.title = `Auto-resize columns in sub-section "${categoryName}"`;
+        btn.title = `Auto-resize columns in sub-section "${categoryName}"`;
     }
 
     /**
@@ -8161,7 +8161,7 @@
         btn.type      = 'button';
         btn.className = 'mb-subtable-resize-btn';
         btn.innerHTML = '↔️';
-	btn.title     = `Auto-resize columns in sub-section "${categoryName}"`;
+        btn.title     = `Auto-resize columns in sub-section "${categoryName}"`;
         btn.setAttribute('aria-label', `Auto-resize columns for: ${categoryName}`);
         btn.style.cssText = [
             'font-size:0.8em; padding:1px 5px; border-radius:4px;',
@@ -9545,7 +9545,7 @@
     filterInput.placeholder = activeDefinition && activeDefinition.tableMode === 'multi'
         ? `Global Filter… works across all sub-tables`
         : `Global Filter…`;
-    filterInput.title = 'Enter global filter string';
+    filterInput.title = `Enter global filter string (focus this field with ${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')})`;
     filterInput.style.cssText = uiGlobalFilterInputCSS();
     // Remove default border-radius on the right so the x/handle attach flush
     filterInput.style.borderRadius = '3px 0 0 3px';
@@ -15893,7 +15893,7 @@
         const highlightBtn = document.createElement('button');
         highlightBtn.id = `${pfx}-toggle-filter-highlight-btn`;
         highlightBtn.type = 'button';
-	highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table)';
+        highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table)';
         highlightBtn.textContent = '🎨 Toggle highlighting';
         // Initially hidden — shown by updateFilterButtonsVisibility() as soon as any
         // filter (subtable input or column filter) is active for this subtable.
@@ -16694,7 +16694,7 @@
                     // Use the stored seeAllCount to update button text
                     const countSuffix = group.seeAllCount ? ` ${group.seeAllCount}` : '';
                     showAllBtn.textContent = `Show all${countSuffix} rows`;
-		    showAllBtn.title = `Click to show all${countSuffix} rows in a new browser tab (MusicBrainz Artist-Relationships pages have currently a limit of 100 rows rendered at most per relationship type)`;
+                    showAllBtn.title = `Click to show all${countSuffix} rows in a new browser tab (MusicBrainz Artist-Relationships pages have currently a limit of 100 rows rendered at most per relationship type)`;
                     showAllBtn.className = 'mb-show-all-subtable-btn';
                     showAllBtn.type = 'button';
                     // Apply configurable initial background color (overrides the CSS class default).
