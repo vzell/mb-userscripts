@@ -45838,8 +45838,8 @@ text) ? If yes, please implement
 * TODO Export
 ** remove "▶" and others before exporting
 ** add more formats, JSON, ORG
-*** JSON
-*** ORG-Mode
+*** DONE JSON
+*** DONE ORG-Mode
 *** XML
 *** Excel
 
@@ -46025,7 +46025,6 @@ Please fix
 
 
 * align button texts and make everything configurable (size, font, height, character to underline)
-
 * add version to app help, configuration and keybord shortcuts dialogs
 
 * Make all popup dialogs use the format of
@@ -46033,11 +46032,6 @@ Please fix
 #+begin_example
 <warning icon> "Page Reloaded"
 #+end_example
-
-
-* document test suite after userscript and library changes
-** library
-** userscript
 
 
 * Why is this - global filter INFO output
@@ -46054,23 +46048,6 @@ Please fix
 
 
 * TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter as long as the hold the mouse 1 during click on that toggle
-
-
-* TODO tooltip for global "Clear all COLUMN filters" from
-
-#+begin_example
-    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
-#+end_example
-
-to
-
-#+begin_example
-    clearColumnFiltersBtn.title = 'Globally clear all column-specific filter inputs';
-#+end_example
-
-* change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
-
-
 
 * changelog popup should get focus when popupped
 
@@ -46540,469 +46517,17 @@ The two booleans should implement the following two functionilities:
 - "sa_enable_h1_comment_span_relocation_on_initial_page" should to decide if the "H1 comment-span relocation" feature should be enabled on the initial page
 - "sa_enable_h1_comment_span_relocation_on_final_page" should to decide if the "H1 comment-span relocation" feature should be enabled on the final rendered page
 
-
-* TODO posting to MusicBrainz forum
-** <2026-01-28 Wed 09:05>
+* DONE tooltip for global "Clear all COLUMN filters" from
 
 #+begin_example
-# [MusicBrainz: Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
-
-I talked to Misses/Mr. Gemini and out came a new Userscript which accumulates all the paginated MB pages of different entities, renders them depending on the entity type either in a flat or in a grouped table structure with real-time filtering and sorting support.
-
-The currently supported entity types are
-
- * Artist-ReleaseGroups
- * ReleaseGroup-Releases
- * Artist-Releases
- * Artist-Works
- * Artist-Recordings
- * Works
- * Recordings
- * Artist-Events
- * Series
- * Labels
- * Place-Events
- * Place-Performances (buggy, I’m working on that later)
-
-![image|690x343](upload://7UxNLpR1vOIs0xP0wqFnDILhRYm.png)
-
-![image|690x173](upload://bbmH3R7j0EuzA3LGmyxh7OLUaLu.png)
-
-![image|690x276](upload://wLemH2Q4wCerLDPTRSTiRBB2rKd.jpeg)
-
-Almost everything is collapsable/un-collapsable (see the tooltip support).
-
-The final rendrered tables also include new extracted columns for easy sorting, like for example the "Country/Date" column in the Series view is split in its different parts "Country" and "Date"
-
-![image|690x136](upload://aQKg02za09Ktbm8UwTT0Afi4rBG.png)
-
-Also I will make more variables configurable via the TamperMonkey menue in the future
-
-![image|393x499](upload://nnvvX9Cow2FOM9k9NIm5GPnlbtb.png)
-
-You can get the script at https://github.com/vzell/mb-userscripts under [Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
+    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs';
 #+end_example
 
-* Forum
-** ChatGPT
+to
 
 #+begin_example
-Here’s a forum-ready description you can post in the MusicBrainz community, followed by concrete screenshot suggestions to showcase the script effectively.
-
-🎛️ VZ: Show All Entity Data In A Consolidated View
-
-A power-user userscript for MusicBrainz that consolidates paginated and multi-table entity pages into a single, filterable, sortable, exportable data view.
-
-Works on:
-
-Artist pages (recordings, releases, works, relationships, etc.)
-
-Release groups
-
-Releases
-
-Recordings
-
-Works
-
-Labels
-
-Areas
-
-Events
-
-Series
-
-Places
-
-Instruments
-
-Search results
-
-🚀 What It Does
-1️⃣ Consolidates All Pages Into One View
-
-No more clicking through 40+ pages.
-
-The script:
-
-Fetches all paginated results
-
-Merges them into one single table
-
-Keeps everything sortable and filterable
-
-Handles multi-table pages (like subheadings or relationship sections)
-
-Perfect for large artists, labels, or search result sets.
-
-2️⃣ Real-Time Filtering (Global + Per Column)
-
-Global filter across all visible columns
-
-Individual column filters
-
-RegExp support (with Rx toggle)
-
-Debounced filtering for performance
-
-ESC clears the focused filter
-
-“Clear All Filters” button
-
-Filtering performance timing is shown in the status bar.
-
-3️⃣ High-Performance Sorting for Large Datasets
-
-Stable sorting
-
-Async chunked sorting for >5000 rows
-
-Progress indicator for very large datasets
-
-Numeric auto-detection
-
-Visual sort indicators
-
-Even 10k+ rows remain responsive.
-
-4️⃣ Column Management
-
-👁️ Show/Hide columns
-
-Select All / Deselect All
-
-Sticky headers (headers and filter row remain visible)
-
-Ctrl+Click header to toggle all headers within the same container
-
-Manual column resizing (drag like Excel)
-
-Auto-resize columns (fit to content)
-
-Restore original widths
-
-5️⃣ Table Density Control
-
-Choose between:
-
-Compact
-
-Normal
-
-Comfortable
-
-Great when working with massive datasets.
-
-6️⃣ CSV Export
-
-Export:
-
-Only visible rows
-
-Only visible columns
-
-Filtered results
-
-Filename automatically includes:
-
-Page type
-
-Timestamp
-
-Perfect for analysis in Excel / LibreOffice / Sheets.
-
-7️⃣ Offline Storage / Caching
-
-Save full dataset to disk (JSON)
-
-Load from disk later
-
-Avoid re-fetching large datasets
-
-Very useful for artists with 8000+ recordings.
-
-8️⃣ Quick Stats Panel
-
-Displays:
-
-Total rows
-
-Visible rows
-
-Column counts
-
-Filter status
-
-Estimated memory usage
-
-Hidden row/column counts
-
-Great for understanding what you’re actually looking at.
-
-9️⃣ Keyboard Shortcuts (Power-User Mode)
-
-Ctrl+F → Focus filter
-
-Ctrl+Shift+F → Clear filters
-
-Ctrl+E → Export CSV
-
-Ctrl+S → Save
-
-Ctrl+L → Load
-
-Ctrl+, → Settings
-
-? → Show shortcuts help
-
-ESC → Clear focused filter
-
-🔧 Additional Highlights
-
-Sidebar collapsing for more horizontal space
-
-Alternating row striping
-
-Chunked rendering for very large tables
-
-Pre-filter on load
-
-Visual progress indicators
-
-Schema-driven settings dialog
-
-Configurable performance thresholds
-
-Status display with timing feedback
-
-Works with other userscripts (e.g., additional columns)
-
-📸 Best Screenshot Suggestions
-
-If you want to show the full power of the script, use 6–8 carefully chosen screenshots:
-
-1️⃣ Before vs After (Most Important)
-
-Use a large artist like:
-
-Bruce Springsteen
-
-Show:
-
-Default multi-page recordings view
-
-Then the single consolidated view with thousands of rows
-
-This immediately demonstrates the core value.
-
-2️⃣ Filtering + Column Filters + RegExp
-
-Show:
-
-Global filter active
-
-At least one column filter active
-
-“Rx” enabled
-
-Status line showing filtering results + timing
-
-This shows depth, not just “a big table”.
-
-3️⃣ Column Visibility Menu Open
-
-Capture:
-
-👁️ Visible Columns dropdown open
-
-Some columns hidden
-
-Table visibly adapted
-
-This shows customization power.
-
-4️⃣ Manual Column Resize + Auto-Resize Toggle
-
-Show:
-
-A very wide table
-
-Auto-resize enabled
-
-Horizontal scroll active
-
-Manual drag handle visible
-
-This makes it look “professional” and Excel-like.
-
-5️⃣ Stats Panel Open
-
-Have:
-
-Stats panel visible
-
-Filters applied
-
-Hidden rows count visible
-
-This visually communicates performance awareness.
-
-6️⃣ CSV Export Feedback Popup
-
-After exporting:
-
-Show status bar update
-
-Export completion popup
-
-Demonstrates practical usefulness.
-
-7️⃣ Density Comparison (Optional but Nice)
-
-Two screenshots:
-
-Compact mode
-
-Comfortable mode
-
-Shows polish and user preference control.
-
-8️⃣ Keyboard Shortcut Overlay
-
-Press ? and capture the shortcuts help overlay.
-
-This reinforces “power tool” positioning.
-
-💡 How To Present It On The Forum
-
-Structure your post like:
-
-Short 3-line summary (what + why)
-
-4–6 screenshots
-
-Bullet list of features
-
-GitHub link
-
-Installation note (tested with Tampermonkey 5.4.1+)
-
-Suggested Short Intro Paragraph
-
-This userscript turns paginated MusicBrainz entity pages into a single consolidated, sortable, filterable data table — optimized for large datasets (thousands of rows), with column management, CSV export, offline caching, keyboard shortcuts, and performance-aware rendering.
-
-If you'd like, I can also generate:
-
-A shorter “teaser-style” forum post
-
-A technical deep-dive version
-
-Or a polished README.md version for GitHub
+    clearColumnFiltersBtn.title = 'Globally clear all column-specific filter inputs';
 #+end_example
-
-** Gemini
-
-#+begin_example
-This userscript is designed to significantly improve the browsing and data-management experience on MusicBrainz by consolidating fragmented, paginated tables into a single, powerful, and highly interactive view.
-
-Below is a highlight-oriented description suitable for the MusicBrainz forum, followed by suggestions for effective screenshots.
-
-Forum Post Draft: [UNOFFICIAL] VZ: MusicBrainz - Show All Entity Data In A Consolidated View
-Tired of clicking through pages of recordings, releases, or events?
-
-The Show All Entity Data userscript transforms the way you interact with MusicBrainz tables. It accumulates paginated and sub-headed lists (Events, Recordings, Releases, Works, Labels, etc.) into one consolidated view, giving you a powerful, spreadsheet-like interface directly in your browser.
-
-Key Highlights:
-🚀 One-Click Consolidation: Instantly fetch all pages of a list (e.g., an artist's 5,000+ recordings) into a single, seamless table.
-
-🔍 Advanced Real-time Filtering:
-
-Global Search: Filter the entire dataset instantly as you type.
-
-Per-Column Filtering: Narrow down results by specific columns (e.g., only show "Live" recordings or specific "Dates").
-
-Regex Support: Power users can use Regular Expressions for complex filtering.
-
-📊 Spreadsheet-style Interaction:
-
-Fast Sorting: High-performance sorting (even for datasets over 10,000 rows) with numeric and date awareness.
-
-Resizable Columns: Drag column edges to adjust widths, just like Excel.
-
-Sticky Headers: Keep your orientation with table headers that stay at the top while you scroll.
-
-Column Visibility: Toggle specific columns on or off to focus on the data that matters.
-
-💾 Data Portability & Persistence:
-
-Export to CSV: Save your filtered view directly to a CSV file for use in Excel or Google Sheets.
-
-Save/Load to Disk: Save the entire fetched dataset to a JSON file and reload it later—perfect for avoiding re-fetching large artist discographies.
-
-📏 Customization & UI:
-
-Table Density: Choose between Compact, Normal, or Comfortable views.
-
-Collapsible Sidebar: Reclaim screen real estate by collapsing the MusicBrainz sidebar into a thin handle.
-
-Quick Stats: View a live summary of row counts, hidden items, and filter status.
-
-🎹 Power User Shortcuts: Use Ctrl+F to search, Ctrl+E to export, and ? to view the full shortcut menu.
-
-Screenshot Recommendations
-To showcase the script effectively, I recommend the following four screenshots:
-
-The "Consolidated Table" View:
-
-Subject: An Artist's Recordings page (with thousands of rows).
-
-What to show: The active "Global Filter" bar at the top, the "Sticky Header" visible while scrolled down, and the consolidated H3/H2 headers showing total counts.
-
-Column Filtering & Highlighting:
-
-Subject: Any entity table with active filters.
-
-What to show: Demonstrate a specific column filter (e.g., filtering the "Format" column for "CD") and show the real-time text highlighting in the result rows.
-
-UI Controls & Density:
-
-Subject: The top control bar.
-
-What to show: The "Visible Columns" dropdown menu, the "Density" toggle, and the "Stats" panel visible on the side.
-
-The Sidebar & Layout:
-
-Subject: Full-page view.
-
-What to show: Show the sidebar in its "Collapsed" state to demonstrate how the table stretches to fill the full screen width, providing a much clearer view for wide tables.
-#+end_example
-
-* TODO forum demo screen shot - RG-R sort format/lable/catalog/country
-
-Text: ever wanted to see ....
-
-now lets concentrate on just Canada --> filter "Country"="can"  ->>status line tells you excaltly that
-
-now filter globally "with just version"
-
-now toggle highlightning on/off
-
-DO the same with loading from the filesystem ---- demo of higjlightning filter column there .. just "Greetings from asbury park, n.j." --- toggle highligh of loading filter
-
-clear all filters
-
-press anywhere on original sort
-
-* TODO screenshot
-
-Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
-
-* write special about it in the forum because of the 2 Action buttons
-
-
-
-* The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
 
 * DONE hide "recording of <work>" in Artist-Recordings" pages
 
@@ -48879,686 +48404,6 @@ async function showLoadFilterDialog(triggerButton = null) {
 #+begin_example
 function showDownloadNotification(message, statusText = null) {
 #+end_example
-
-
-* TODO Checks for unused variables and functions
-** question
-
-In the uploaded userscript and library
-check for all unused variables and function definitions, create a report and fix
- 
-** answer
-*** gemini
-
-#+begin_example
-This is an impressive and highly functional Tampermonkey script! Managing DOM manipulation, chunked rendering, filtering, and cross-tab/file states in vanilla JavaScript is no small feat.
-
-I have reviewed the script based on your guidelines. Here is a breakdown of unused code, extraction candidates, and areas that would significantly benefit from refactoring for clarity.
-
-1. Unused Variables and Functions
-Unused Functions:
-
-triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) (around line 1618): This function is completely orphaned. The file selection and loading logic is actually handled by the <input type="file"> element created around line 1319 and triggered inside showLoadFilterDialog(). You can safely delete the triggerDiskLoad function.
-
-Dead UI Elements (Never appended to the DOM):
-
-Around line 1334, several pre-filter UI elements are created but never appended to the document:
-
-preFilterContainer
-
-preFilterInput
-
-preFilterCaseLabel
-
-preFilterCaseCheckbox
-
-preFilterRxLabel
-
-preFilterRxCheckbox
-
-(Note: preFilterMsg is appended later, so it is used, but the inputs themselves are legacy code likely superseded by your showLoadFilterDialog modal).
-
-Unused (or Dead-End) Variables:
-
-timerDisplay: Created around line 1406 (const timerDisplay = document.createElement('span');) and appended to the controls, but its text content is never updated during the fetching, sorting, or filtering operations (the script uses globalStatusDisplay and statusDisplay instead).
-
-basePath and isFilteredRelationshipPage: These are declared at the top and only ever used in the Lib.debug('init', ...) statements. Because you want to keep debug logging, these shouldn't be removed, but be aware they serve no logical purpose outside of the console.
-
-2. Code Extraction Candidates (DRY Principle)
-There are several highly repetitive blocks of code that can be extracted into shared helper functions without changing any logic.
-
-A. The Fade-Out Notification Popups
-You have an identical ~45-line block of code for a pop-up alert in both exportTableToCSV() and triggerStandardDownload().
-
-Refactor: Extract this into a reusable UI helper.
-
-JavaScript
-/**
- * Shows a temporary fade-out notification popup
- * @param {string} messageText - The message to display
- */
-function showNotificationPopup(messageText) {
-    const infoPopup = document.createElement('div');
-    infoPopup.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        border: 1px solid #888;
-        border-radius: 6px;
-        padding: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 10000;
-        max-width: 400px;
-        text-align: center;
-        font-family: sans-serif;
-        opacity: 1;
-        transition: opacity 0.3s ease;
-    `;
-
-    const msg = document.createElement('div');
-    msg.textContent = messageText;
-    msg.style.marginBottom = '15px';
-
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Close';
-    closeBtn.style.cssText = `
-        padding: 6px 12px;
-        cursor: pointer;
-        border-radius: 4px;
-        border: 1px solid #555;
-        background-color: #f0f0f0;
-    `;
-    closeBtn.type = 'button';
-
-    // Close function with fade out
-    const closePopup = () => {
-        infoPopup.style.opacity = '0';
-        // Remove from DOM after transition
-        setTimeout(() => {
-            if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
-            document.removeEventListener('keydown', onEscape);
-        }, 300); // match the CSS transition duration
-    };
-
-    // Button click closes popup
-    closeBtn.addEventListener('click', closePopup);
-
-    // Escape key closes popup
-    const onEscape = (e) => {
-        if (e.key === 'Escape') closePopup();
-    };
-    document.addEventListener('keydown', onEscape);
-
-    infoPopup.appendChild(msg);
-    infoPopup.appendChild(closeBtn);
-    document.body.appendChild(infoPopup);
-}
-B. Highlight Resetting
-The logic to clear previous .mb-global-filter-highlight and .mb-column-filter-highlight tags is repeated four times (in runFilter single mode, runFilter multi mode, startFetchingProcess cleanup, and the "Unhighlight all" button).
-
-Refactor:
-
-JavaScript
-function clearHighlights(containerElement) {
-    containerElement.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
-        .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
-}
-C. Button Generation Boilerplate
-Creating top-bar buttons (addExportButton, addDensityControl, addStatsButton, addAutoResizeButton) involves 10-12 lines of identical document.createElement and inline CSS boilerplate.
-
-Refactor: Create a createToolbarButton(label, title, onClickHandler) to generate and return these buttons.
-
-3. Refactoring for Clarity
-A. Massive duplication inside runFilter()
-The runFilter() function has two entirely separate blocks for activeDefinition.tableMode === 'multi' and single table mode. Inside both blocks, the 40+ line loop that resets highlights, checks Regex/Case matches against the global filter, checks the column filters, and applies new highlight spans is 100% duplicated.
-
-You can pull the row-evaluation logic out into a single helper function, drastically cleaning up runFilter():
-
-JavaScript
-/**
- * Evaluates if a row matches the given filters and applies highlights if necessary.
- * Returns true if it matches, false otherwise.
- */
-function evaluateAndHighlightRow(row, globalQuery, globalQueryRaw, globalRegex, colFilters, isCaseSensitive, isRegExp) {
-    // Reset previous highlights (critical for correct filtering)
-    clearHighlights(row);
-
-    // Global match
-    let globalHit = !globalQuery;
-    if (!globalHit) {
-        if (isRegExp && globalRegex) {
-            // For regex patterns, test against each cell individually
-            // This allows anchored patterns like ^Thunder Road to work correctly
-            globalHit = Array.from(row.cells).some(cell => {
-                const cellText = getCleanColumnText(cell);
-                return globalRegex.test(cellText);
-            });
-        } else {
-            // For non-regex, test against concatenated row text
-            const text = getCleanVisibleText(row);
-            globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
-        }
-    }
-
-    // Column matches
-    let colHit = true;
-    for (const f of colFilters) {
-        const cellText = getCleanColumnText(row.cells[f.idx]);
-        let match = false;
-        if (isRegExp) {
-            try {
-                match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
-            } catch (e) {
-                match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
-            }
-        } else {
-            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
-        }
-        if (!match) {
-            colHit = false;
-            break;
-        }
-    }
-
-    const finalHit = globalHit && colHit;
-    if (finalHit) {
-        if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
-        colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
-    }
-    
-    return finalHit;
-}
-With this in place, your matches = group.rows.map(r => r.cloneNode(true)).filter(r => { ... }) just becomes a clean, single line call to evaluateAndHighlightRow(...).
-
-B. The startFetchingProcess Function Complexity
-This function is over 600 lines long. The core of its complexity lies around line 2140: tableBody.childNodes.forEach(node => { ... }). Inside this loop, you're parsing DOM elements, splitting specific columns (Country/Date, Location, Area), extracting data, and applying column exclusions.
-
-Refactor Idea: Move the column manipulation blocks out of the loop.
-For example, the 25-line chunk handling Country/Date splitting could become:
-
-JavaScript
-function splitCountryDateCell(newRow, countryDateIdx) {
-    const tdSplitC = document.createElement('td');
-    const tdSplitD = document.createElement('td');
-    
-    const cdCell = newRow.cells[countryDateIdx];
-    if (cdCell) {
-        const events = Array.from(cdCell.querySelectorAll('.release-event'));
-        events.forEach((ev, i) => {
-            // ... (existing logic) ...
-        });
-    }
-    return { tdSplitC, tdSplitD };
-}
-Doing this for Location and Area as well would shave hundreds of lines of visual noise off startFetchingProcess and make the primary data-collection loop much easier to follow.
-#+end_example
-
-* TODO Reorder functions
-** question
-
-- Reorder all functions sorted at the end of the file
-- Leave
-
-#+begin_example
-let changelog = [changelog
-const SCRIPT_ID = "vzell-mb-show-all-entities";
-const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
-// CONFIG SCHEMA
-const configSchema = {
-const pageDefinitions = [
-#+end_example
-
-at the very beginning of the file (in that order if possible, and if it does not break the code)
-and other variable definitions after it.
-
-Is that even possible without breaking the code
-
-** answer
-*** claude
-
-#+begin_example
-Code Reorganization
-New structure (from top to bottom):
-
-Changelog (line 50) - Moved to right after userscript header
-IIFE start (function() { 'use strict'; (line 115)
-SCRIPT_ID (line 119)
-SCRIPT_NAME (line 120)
-configSchema (line 123)
-pageDefinitions (line 411)
-All utility functions (line 902+)
-Lib initialization (line 2625)
-Rest of execution code
-
-Why This Works
-JavaScript function declarations are hoisted, meaning they can be defined anywhere and used before their definition in the source code. The functions reference Lib, configSchema, and other variables, but they're only called after everything is initialized, so there's no dependency issue.
-The constants (SCRIPT_ID, SCRIPT_NAME, configSchema, pageDefinitions) are now at the top because:
-
-They have no dependencies (except SCRIPT_NAME uses GM_info which is globally available)
-Lib initialization needs them, so they must come before it
-They're configuration/metadata, so having them at the top improves code organization
-
-Changes Made
-
-Version: Updated to 9.1.2+2026-02-15
-Changelog: Added entry about code reorganization
-Syntax: Verified with Node.js - all valid JavaScript
-
-The reorganized code is functionally identical to the original but much more readable with all configuration at the top!
-#+end_example
-
-*** gemini
-
-* TODO generic refactoring
-
-In the uploaded script, the code has been grown over time and is now more or less unmaintanble.  What are the best
-options to refactor the code, given it's logic but without breaking stuff, Which approach ist the best regarding best
-practices and best patterns
-
-- Check for obvious code which could make it into a functions without breaking the rest of the big userscript
-- check for code blocks which could easily be refactored to make the code more clear
-
-* TODO please check function documentations against it's implementation again and fix if necessary + rebuild HELP + CHANGLOG
-
-In the uploaded userscript "ShowAllEntityData.user.js" and library "ShowAllEntityData_CHANGELOG.json"
-
-- check for all unused variables and function definitions, create a report and fix
-- check the current function documentations against their implementation, where the doc is differing, please fix
-- resync the uploaded HELP file "ShowAllEntityData_HELP.txt" against the current code base and keyboard shortcuts
-- add a changelog entry
-
-* TODO remove double comment blocks
-
-#+begin_example
- * Loads an art thumbnail into the background of one artwork-icon span.
-#+end_example
-
-
-* TODO render coverart archive - https://dn710909.ca.archive.org/0/items/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json
-
-curl -v -L "https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" | jq
-curl -v -L https://archive.org/download/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json | jq
-
-
-* add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
-
-
-* TODO add addRGsFromAbove.js configurable
-
-In the uploaded userscript,
-
-Inspect the uploaded userscript "addRGsFromAbove.js" and extract the contents to include in our userscript as functions to run on
-the final rendered pages which have columns with name "CAA"
-
-* TODO add "Relationships" column support again, but configurable 
-
-* TODO add 'Batch-add "performance of" relationships' userscript functionality on final rendered pages
-
-#+begin_example
-// @name         MusicBrainz: Batch-add "performance of" relationships
-// @description  Batch link recordings to works from artist Recordings page.
-// @version      2023.7.2
-// @author       Michael Wiencek
-#+end_example
-
-
-* TODO extract the VZ event disambiguation configurable in its constituents
-** DONE initial
-
-Add the following new "syntheticColumnExtractors" parameter
-
-#+begin_example
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
-                ],
-#+end_example
-
-to the 'work-recordings-filtered' pageType
-
-#+begin_example
-        {
-            type: 'work-recordings-filtered',
-            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Work (specialised)' } ],
-            features: {
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
-                ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-#+end_example
-
-and implement the "eventParts" extractor the following way:
-
-A full example "Comment" value
-
-#+begin_example
-live, 1975‐11‐01, early show: Robertson Gymnasium, University of California, Santa Barbara, CA, USA
-#+end_example
-
-should be split into
-
-#+begin_example
-'Event-Type' - live
-'Event-Date' - 1975‐11‐01
-'Event-Detail' - early show
-'Event-Venue' - Robertson Gymnasium
-'Event-Venue2' - University of California
-'Event-City' - Santa Barbara
-'Event-State' - CA
-'Event-Country' - USA
-#+end_example
-
-All parts could actually be optional
-
-#+begin_example
-live, 1995‐11‐26: Wiltern Theatre, Los Angeles, CA, USA
-#+end_example
-
-#+begin_example
-live, 1995‐12‐08: Tower Theater, Upper Darby, Philadelphia, PA, USA
-#+end_example:
-
-#+begin_example
-live, 1975‐10‐18, early show: The Roxy Theatre, West Hollywood, CA, USA
-#+end_example
-
-#+begin_example
-live, 1975: New Jersey, NJ, USA
-#+end_example
-
-#+bein_example
-soundcheck
-#+end_example
-
-#+bein_example
-live: JP
-#+end_example
-
-** DONE refine extraction
-
-In the uploaded userscript "ShowAllEntityData.user.js",
-
-Please further refine the implementation for the "eventParts" extractor
-
-#+begin_example
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
-                ],
-#+end_example
-
-defined in the variable "const pageDefinitions"
-
-#+begin_example
-        /**
-         * eventParts — parses a MusicBrainz recording "Comment" field that encodes
-         * live-performance metadata as a free-form comma/colon-delimited string and
-         * splits it into eight dedicated synthetic columns.
-         *
-         * Expected source format (all segments are optional):
-         *
-         *   [Event-Type][, Event-Date][, Event-Detail][: Venue[, Venue2][, City][, State][, Country]]
-         *
-         * Representative examples and their parsed output:
-         *
-         *   "live, 1975‑11‑01, early show: Robertson Gymnasium, University of California, Santa Barbara, CA, USA"
-         *     → Type=live  Date=1975-11-01  Detail=early show
-         *       Venue=Robertson Gymnasium  Venue2=University of California
-         *       City=Santa Barbara  State=CA  Country=USA
-         *
-         *   "live, 1995‑11‑26: Wiltern Theatre, Los Angeles, CA, USA"
-         *     → Type=live  Date=1995-11-26  (no Detail)
-         *       Venue=Wiltern Theatre  (no Venue2)  City=Los Angeles  State=CA  Country=USA
-         *
-         *   "live, 1995‑12‑08: Tower Theater, Upper Darby, Philadelphia, PA, USA"
-         *     → Type=live  Date=1995-12-08  (no Detail)
-         *       Venue=Tower Theater  Venue2=Upper Darby  City=Philadelphia  State=PA  Country=USA
-         *
-         *   "live, 1975: New Jersey, NJ, USA"
-         *     → Type=live  Date=1975  (no Detail, no Venue, no Venue2)
-         *       City=New Jersey  State=NJ  Country=USA
-         *
-         *   "soundcheck"
-         *     → Type=soundcheck  (all other columns empty)
-         *
-         *   "live: JP"
-         *     → Type=live  Country=JP  (all other columns empty)
-         *
-         * Parsing rules:
-         *   Pre-colon segment (Event-Type / Event-Date / Event-Detail):
-         *     - Split on ", ".  Part 0 is always Event-Type.
-         *     - Part 1, if it matches the date pattern (YYYY | YYYY-MM | YYYY-MM-DD,
-         *       accepting the Unicode non-breaking hyphen U+2010 as well as ASCII '-'),
-         *       becomes Event-Date and Part 2 (if present) becomes Event-Detail.
-         *     - If Part 1 does NOT match the date pattern it is treated as Event-Detail.
-         *   Post-colon location segment:
-         *     - Split on ", ".  Parts are mapped RIGHT-TO-LEFT so that the trailing
-         *       Country / State / City are always filled first; leading Venue2 / Venue
-         *       receive any remaining parts.
-         *     - 1 part  → Country only
-         *     - 2 parts → State, Country
-         *     - 3 parts → City, State, Country
-         *     - 4 parts → Venue, City, State, Country
-         *     - 5 parts → Venue, Venue2, City, State, Country
-         *
-         * Unicode note: The U+2010 NON-BREAKING HYPHEN used by MusicBrainz in date
-         * strings is normalised to ASCII '-' before date-pattern matching and before
-         * writing the Event-Date cell, so downstream sorting and filtering always sees
-         * a consistent '-' separator regardless of source encoding.
-         *
-         * Synthetic columns: ['Event-Type', 'Event-Date', 'Event-Detail',
-         *                      'Event-Venue', 'Event-Venue-Detail',
-         *                      'Event-City', 'Event-State', 'Event-Country']
-         *
-         * @param   {HTMLTableCellElement} sourceCell  Comment <td> (MB-Comment synthetic column).
-         * @returns {HTMLTableCellElement[]}            Eight synthetic <td> elements in declaration order.
-         */
-        eventParts(sourceCell) {
-            // Eight output cells in declaration order:
-            // [0] Event-Type  [1] Event-Date  [2] Event-Detail
-            // [3] Event-Venue [4] Event-Venue-Detail
-            // [5] Event-City  [6] Event-State  [7] Event-Country
-            const tds = Array.from({ length: 8 }, () => document.createElement('td'));
-
-            if (!sourceCell) return tds;
-
-            // Normalise Unicode NON-BREAKING HYPHEN (U+2010) → ASCII '-' throughout.
-            // MusicBrainz encodes dates with U+2010; normalising ensures the date regex
-            // and downstream sort / filter comparisons all see a consistent separator.
-            const raw = sourceCell.textContent.trim().replace(/\u2010/g, '-');
-            if (!raw) return tds;
-
-            // ── Split pre-colon (type / date / detail) from post-colon (location) ──
-            // indexOf(': ') — colon followed by a space — avoids false splits on
-            // time-like tokens or abbreviations that may contain a bare colon.
-            const colonIdx = raw.indexOf(': ');
-            const prePart  = colonIdx !== -1 ? raw.slice(0, colonIdx).trim() : raw;
-            const postPart = colonIdx !== -1 ? raw.slice(colonIdx + 2).trim() : '';
-
-            // ── Pre-colon: Event-Type, Event-Date, Event-Detail ──────────────────
-            // Split on ', ' (comma + space) to keep multi-word tokens intact.
-            const preParts = prePart.split(', ').map(s => s.trim()).filter(s => s.length > 0);
-
-            // Part 0 — always Event-Type (e.g. "live", "soundcheck")
-            if (preParts.length > 0) {
-                tds[0].textContent = preParts[0];
-            }
-
-            // Date pattern: YYYY  |  YYYY-MM  |  YYYY-MM-DD  (ASCII '-' after normalisation)
-            const DATE_RE = /^\d{4}(?:-\d{2}(?:-\d{2})?)?$/;
-
-            if (preParts.length > 1) {
-                if (DATE_RE.test(preParts[1])) {
-                    // Part 1 is a date → Event-Date; Part 2 (optional) → Event-Detail
-                    tds[1].textContent = preParts[1];
-                    if (preParts.length > 2) {
-                        tds[2].textContent = preParts[2];
-                    }
-                } else {
-                    // Part 1 is not a date → treat as Event-Detail (no date present)
-                    tds[2].textContent = preParts[1];
-                }
-            }
-
-            // ── Post-colon: location parts mapped right-to-left ──────────────────
-            // Right-to-left mapping ensures trailing Country / State / City are
-            // always populated first; leading Venue2 / Venue receive surplus parts.
-            // Index mapping  (tds index → semantic column):
-            //   tds[7] Country  tds[6] State  tds[5] City  tds[4] Venue2  tds[3] Venue
-            if (postPart) {
-                const locParts = postPart.split(', ').map(s => s.trim()).filter(s => s.length > 0);
-                const n = locParts.length;
-                if (n >= 1) tds[7].textContent = locParts[n - 1]; // Country
-                if (n >= 2) tds[6].textContent = locParts[n - 2]; // State
-                if (n >= 3) tds[5].textContent = locParts[n - 3]; // City
-                if (n >= 4) tds[4].textContent = locParts[n - 4]; // Venue2
-                if (n >= 5) tds[3].textContent = locParts[n - 5]; // Venue
-            }
-
-            return tds;
-        }
-
-    };
-#+end_example
-
-by taking the country specifically into account
-
-- A full example "Comment" value for country either "USA" or "Canada"
-
-#+begin_example
-live, 1975‐11‐01, early show: Robertson Gymnasium, University of California, Santa Barbara, CA, USA
-#+end_example
-
-should be split into
-
-#+begin_example
-'Event-Type' - live
-'Event-Date' - 1975‐11‐01
-'Event-Detail' - early show
-'Event-Venue' - Robertson Gymnasium
-'Event-Venue2' - University of California
-'Event-City' - Santa Barbara
-'Event-State' - CA
-'Event-Country' - USA
-#+end_example
-
-#+begin_example
-live, 1975‐12‐21: Seneca Field House, Seneca College, Toronto, ON, Canada
-#+end_example
-
-#+begin_example
-live, 1984‐07‐21: Montreal Forum, Montreal, QC, Canada
-#+end_example
-
-All parts could actually be optional.
-
-- A full example "Comment" for country "UK" 
-
-#+begin_example
-live, 2003‐05‐27: National Sports Stadium, Crystal Palace, London, England, UK
-#+end_example
-
-should be split into
-
-#+begin_example
-'Event-Type' - live
-'Event-Date' - 2003‐05‐27
-'Event-Detail' - 
-'Event-Venue' - National Sports Stadium
-'Event-Venue-Detail' - Crystal Palace
-'Event-City' - London
-'Event-State' - England
-'Event-Country' - UK
-#+end_example
-
-#+begin_example
-live, 2003‐05‐27: National Sports Stadium, Crystal Palace, London, England, UK
-#+end_example
-
-#+begin_example
-live, 1985‐07‐04: Wembley Stadium, London, England, UK
-#+end_example
-
-- A full example "Comment" for other countries like "Germany" 
-
-#+begin_example
-live, 2002‐10‐20: Velodrom, Berlin, Germany
-#+end_example
-
-Please show the full code of the newly generated implementation and also make a changelog entry in the uploaded "ShowAllEntityData_CHANGELOG.json" 
-
-** DONE fix for USA and Canada
-
-Please fix for "UK", "USA" and "Canada"
-
-if there are 5 parts after the colon ":"
-
-#+begin_example
-live, 1975‐12‐21: Seneca Field House, Seneca College, Toronto, ON, Canada
-#+end_example
-
-should split into (first part after the colon is the 'Event-Venue', second part the 'Event-Venue-Detail')
-
-#+begin_example
-'Event-Type' - live
-'Event-Date' - 
-'Event-Detail' - 
-'Event-Venue' - Seneca Field House
-'Event-Venue-Detail' - Seneca College
-'Event-City' - Toronto
-'Event-State' - ON
-'Event-Country' - Canada
-#+end_example
-
-and where there are only 4
-
-#+begin_example
-live, 1977‐02‐13: Maple Leaf Gardens, Toronto, ON, Canada
-#+end_example
-
-should split into (first part after the colon is the 'Event-Venue', second part the 'Event-Venue-Detail' should be empty)
-
-#+begin_example
-'Event-Type' - live
-'Event-Date' - 
-'Event-Detail' - 
-'Event-Venue' - Maple Leaf Gardens
-'Event-Venue-Detail' - 
-'Event-City' - Toronto
-'Event-State' - ON
-'Event-Country' - Canada
-#+end_example
-
-** DONE make it configurable
-
-Make the 'eventParts' feature, introduced with the following "syntheticColumnExtractors" parameter
-
-#+begin_example
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
-                ],
-#+end_example
-
-configurable by the end-user by introducing a new boolean parameter (default value "true") in the configuration section
-"const configSchema". Only if "true" really create the new syntheticColumns: "['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country']"
-
-** TODO add MB lookup from https://musicbrainz.org/recording/f3f63c9e-c954-49a0-86f3-bd8ce0f32a31 - Thunder Road (live, 1995‐02‐21: Tramps, New York City, NY, USA)
-
-https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278 - Thunder Road (B. Springsteen 1974–1975)
-
-add MB lookup from https://musicbrainz.org/recording/f3f63c9e-c954-49a0-86f3-bd8ce0f32a31 - Thunder Road (live, 1995‐02‐21: Tramps, New York City, NY, USA)
-
-from "recorded at:	Tramps in Flatiron District, New York, New York, United States (on 1995-02-21)"
-
-to the event parts extracted
-
-
-* "video" icon - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings - "shooting location for"
-
 
 * DONE remove the toggle icon from the "CAA" column 
 * DONE Sometimes instead of rendering on the CAA toggle button the first CAA image icon from the big-picture hover strip as a miniature picture the standard browser "broken image" placeholder is rendered instead
@@ -53080,143 +51925,6 @@ the hovering over a small artwork image inside the "CAA" column works when the i
 network. But when then saving the table data to disk with "Save to Disk"-button and later on loading the data again with
 the "Load from Disk"-button,
 
-
-* GOOD versions
-** /doubleCAAimages
-
-
-* Reintroduce jesus2099 "Release events"
-
-#+begin_example
-        {
-            type: 'place-performances-filtered',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
-            features: {
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-
-        {
-            type: 'artist-relationships-filtered',
-            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-#+end_example
-
-#+begin_example
-https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
-#+end_example
-
-
-* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
-
-* TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
-
-
-
-* todos
-
-In the newly uploaded userscript,
-
-a couple of things are still missing (also add a changelog):
-
-
-* Reintroduce jesus2099 "Release events"
-
-#+begin_example
-        {
-            type: 'place-performances-filtered',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
-            features: {
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-
-        {
-            type: 'artist-relationships-filtered',
-            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
-                ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-#+end_example
-
-#+begin_example
-https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
-#+end_example
-
-
-* TODO for RGs CAA artwork also display the Release from where it's sourced
-
-* add menu to hover CAA picture, for different actions
-
-* TODO in debug log emit also the entity title
-
-* image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
-
-
 * DONE auto-resizing a table should take the artwork comments into account in the "CAA" column when the
 
 When auto-resizing a table which has "CAA" columns the aut-resize algorithm which calcualtes the maximum column-width
@@ -54203,13 +52911,7 @@ Rename
 Do the same for the "Collapse" case
 
 
-* TODO Change all the entity links to open in a new tab
-
-
-* TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
-
-
-* TODO add information that ALL CAA images have been loaded
+* DONE add information that ALL CAA images have been loaded
 ** DONE initial
 
 add a non intrusive popup window which tells the end-user that ALL CAA image loading has happened, "CAA" column, "Title"
@@ -54244,10 +52946,9 @@ in the function
 
 Actually display ALL the different timeing information (for the different image load paths) in the "toast.textContent" ... make it multiline
 
-** TODO make the info box a little bit wider
+** DONE make the info box a little bit wider
 
-
-* TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
+* DONE When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
 
 When loading saving from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" -
 https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but
@@ -54295,12 +52996,1229 @@ only inside the "CAA" column ALSO the hovering over the "empty" space works and 
 
 
 
+* TODO posting to MusicBrainz forum
+** <2026-01-28 Wed 09:05>
+
+#+begin_example
+# [MusicBrainz: Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
+
+I talked to Misses/Mr. Gemini and out came a new Userscript which accumulates all the paginated MB pages of different entities, renders them depending on the entity type either in a flat or in a grouped table structure with real-time filtering and sorting support.
+
+The currently supported entity types are
+
+ * Artist-ReleaseGroups
+ * ReleaseGroup-Releases
+ * Artist-Releases
+ * Artist-Works
+ * Artist-Recordings
+ * Works
+ * Recordings
+ * Artist-Events
+ * Series
+ * Labels
+ * Place-Events
+ * Place-Performances (buggy, I’m working on that later)
+
+![image|690x343](upload://7UxNLpR1vOIs0xP0wqFnDILhRYm.png)
+
+![image|690x173](upload://bbmH3R7j0EuzA3LGmyxh7OLUaLu.png)
+
+![image|690x276](upload://wLemH2Q4wCerLDPTRSTiRBB2rKd.jpeg)
+
+Almost everything is collapsable/un-collapsable (see the tooltip support).
+
+The final rendrered tables also include new extracted columns for easy sorting, like for example the "Country/Date" column in the Series view is split in its different parts "Country" and "Date"
+
+![image|690x136](upload://aQKg02za09Ktbm8UwTT0Afi4rBG.png)
+
+Also I will make more variables configurable via the TamperMonkey menue in the future
+
+![image|393x499](upload://nnvvX9Cow2FOM9k9NIm5GPnlbtb.png)
+
+You can get the script at https://github.com/vzell/mb-userscripts under [Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_consolidated)
+#+end_example
+
+* Forum
+** ChatGPT
+
+#+begin_example
+Here’s a forum-ready description you can post in the MusicBrainz community, followed by concrete screenshot suggestions to showcase the script effectively.
+
+🎛️ VZ: Show All Entity Data In A Consolidated View
+
+A power-user userscript for MusicBrainz that consolidates paginated and multi-table entity pages into a single, filterable, sortable, exportable data view.
+
+Works on:
+
+Artist pages (recordings, releases, works, relationships, etc.)
+
+Release groups
+
+Releases
+
+Recordings
+
+Works
+
+Labels
+
+Areas
+
+Events
+
+Series
+
+Places
+
+Instruments
+
+Search results
+
+🚀 What It Does
+1️⃣ Consolidates All Pages Into One View
+
+No more clicking through 40+ pages.
+
+The script:
+
+Fetches all paginated results
+
+Merges them into one single table
+
+Keeps everything sortable and filterable
+
+Handles multi-table pages (like subheadings or relationship sections)
+
+Perfect for large artists, labels, or search result sets.
+
+2️⃣ Real-Time Filtering (Global + Per Column)
+
+Global filter across all visible columns
+
+Individual column filters
+
+RegExp support (with Rx toggle)
+
+Debounced filtering for performance
+
+ESC clears the focused filter
+
+“Clear All Filters” button
+
+Filtering performance timing is shown in the status bar.
+
+3️⃣ High-Performance Sorting for Large Datasets
+
+Stable sorting
+
+Async chunked sorting for >5000 rows
+
+Progress indicator for very large datasets
+
+Numeric auto-detection
+
+Visual sort indicators
+
+Even 10k+ rows remain responsive.
+
+4️⃣ Column Management
+
+👁️ Show/Hide columns
+
+Select All / Deselect All
+
+Sticky headers (headers and filter row remain visible)
+
+Ctrl+Click header to toggle all headers within the same container
+
+Manual column resizing (drag like Excel)
+
+Auto-resize columns (fit to content)
+
+Restore original widths
+
+5️⃣ Table Density Control
+
+Choose between:
+
+Compact
+
+Normal
+
+Comfortable
+
+Great when working with massive datasets.
+
+6️⃣ CSV Export
+
+Export:
+
+Only visible rows
+
+Only visible columns
+
+Filtered results
+
+Filename automatically includes:
+
+Page type
+
+Timestamp
+
+Perfect for analysis in Excel / LibreOffice / Sheets.
+
+7️⃣ Offline Storage / Caching
+
+Save full dataset to disk (JSON)
+
+Load from disk later
+
+Avoid re-fetching large datasets
+
+Very useful for artists with 8000+ recordings.
+
+8️⃣ Quick Stats Panel
+
+Displays:
+
+Total rows
+
+Visible rows
+
+Column counts
+
+Filter status
+
+Estimated memory usage
+
+Hidden row/column counts
+
+Great for understanding what you’re actually looking at.
+
+9️⃣ Keyboard Shortcuts (Power-User Mode)
+
+Ctrl+F → Focus filter
+
+Ctrl+Shift+F → Clear filters
+
+Ctrl+E → Export CSV
+
+Ctrl+S → Save
+
+Ctrl+L → Load
+
+Ctrl+, → Settings
+
+? → Show shortcuts help
+
+ESC → Clear focused filter
+
+🔧 Additional Highlights
+
+Sidebar collapsing for more horizontal space
+
+Alternating row striping
+
+Chunked rendering for very large tables
+
+Pre-filter on load
+
+Visual progress indicators
+
+Schema-driven settings dialog
+
+Configurable performance thresholds
+
+Status display with timing feedback
+
+Works with other userscripts (e.g., additional columns)
+
+📸 Best Screenshot Suggestions
+
+If you want to show the full power of the script, use 6–8 carefully chosen screenshots:
+
+1️⃣ Before vs After (Most Important)
+
+Use a large artist like:
+
+Bruce Springsteen
+
+Show:
+
+Default multi-page recordings view
+
+Then the single consolidated view with thousands of rows
+
+This immediately demonstrates the core value.
+
+2️⃣ Filtering + Column Filters + RegExp
+
+Show:
+
+Global filter active
+
+At least one column filter active
+
+“Rx” enabled
+
+Status line showing filtering results + timing
+
+This shows depth, not just “a big table”.
+
+3️⃣ Column Visibility Menu Open
+
+Capture:
+
+👁️ Visible Columns dropdown open
+
+Some columns hidden
+
+Table visibly adapted
+
+This shows customization power.
+
+4️⃣ Manual Column Resize + Auto-Resize Toggle
+
+Show:
+
+A very wide table
+
+Auto-resize enabled
+
+Horizontal scroll active
+
+Manual drag handle visible
+
+This makes it look “professional” and Excel-like.
+
+5️⃣ Stats Panel Open
+
+Have:
+
+Stats panel visible
+
+Filters applied
+
+Hidden rows count visible
+
+This visually communicates performance awareness.
+
+6️⃣ CSV Export Feedback Popup
+
+After exporting:
+
+Show status bar update
+
+Export completion popup
+
+Demonstrates practical usefulness.
+
+7️⃣ Density Comparison (Optional but Nice)
+
+Two screenshots:
+
+Compact mode
+
+Comfortable mode
+
+Shows polish and user preference control.
+
+8️⃣ Keyboard Shortcut Overlay
+
+Press ? and capture the shortcuts help overlay.
+
+This reinforces “power tool” positioning.
+
+💡 How To Present It On The Forum
+
+Structure your post like:
+
+Short 3-line summary (what + why)
+
+4–6 screenshots
+
+Bullet list of features
+
+GitHub link
+
+Installation note (tested with Tampermonkey 5.4.1+)
+
+Suggested Short Intro Paragraph
+
+This userscript turns paginated MusicBrainz entity pages into a single consolidated, sortable, filterable data table — optimized for large datasets (thousands of rows), with column management, CSV export, offline caching, keyboard shortcuts, and performance-aware rendering.
+
+If you'd like, I can also generate:
+
+A shorter “teaser-style” forum post
+
+A technical deep-dive version
+
+Or a polished README.md version for GitHub
+#+end_example
+
+** Gemini
+
+#+begin_example
+This userscript is designed to significantly improve the browsing and data-management experience on MusicBrainz by consolidating fragmented, paginated tables into a single, powerful, and highly interactive view.
+
+Below is a highlight-oriented description suitable for the MusicBrainz forum, followed by suggestions for effective screenshots.
+
+Forum Post Draft: [UNOFFICIAL] VZ: MusicBrainz - Show All Entity Data In A Consolidated View
+Tired of clicking through pages of recordings, releases, or events?
+
+The Show All Entity Data userscript transforms the way you interact with MusicBrainz tables. It accumulates paginated and sub-headed lists (Events, Recordings, Releases, Works, Labels, etc.) into one consolidated view, giving you a powerful, spreadsheet-like interface directly in your browser.
+
+Key Highlights:
+🚀 One-Click Consolidation: Instantly fetch all pages of a list (e.g., an artist's 5,000+ recordings) into a single, seamless table.
+
+🔍 Advanced Real-time Filtering:
+
+Global Search: Filter the entire dataset instantly as you type.
+
+Per-Column Filtering: Narrow down results by specific columns (e.g., only show "Live" recordings or specific "Dates").
+
+Regex Support: Power users can use Regular Expressions for complex filtering.
+
+📊 Spreadsheet-style Interaction:
+
+Fast Sorting: High-performance sorting (even for datasets over 10,000 rows) with numeric and date awareness.
+
+Resizable Columns: Drag column edges to adjust widths, just like Excel.
+
+Sticky Headers: Keep your orientation with table headers that stay at the top while you scroll.
+
+Column Visibility: Toggle specific columns on or off to focus on the data that matters.
+
+💾 Data Portability & Persistence:
+
+Export to CSV: Save your filtered view directly to a CSV file for use in Excel or Google Sheets.
+
+Save/Load to Disk: Save the entire fetched dataset to a JSON file and reload it later—perfect for avoiding re-fetching large artist discographies.
+
+📏 Customization & UI:
+
+Table Density: Choose between Compact, Normal, or Comfortable views.
+
+Collapsible Sidebar: Reclaim screen real estate by collapsing the MusicBrainz sidebar into a thin handle.
+
+Quick Stats: View a live summary of row counts, hidden items, and filter status.
+
+🎹 Power User Shortcuts: Use Ctrl+F to search, Ctrl+E to export, and ? to view the full shortcut menu.
+
+Screenshot Recommendations
+To showcase the script effectively, I recommend the following four screenshots:
+
+The "Consolidated Table" View:
+
+Subject: An Artist's Recordings page (with thousands of rows).
+
+What to show: The active "Global Filter" bar at the top, the "Sticky Header" visible while scrolled down, and the consolidated H3/H2 headers showing total counts.
+
+Column Filtering & Highlighting:
+
+Subject: Any entity table with active filters.
+
+What to show: Demonstrate a specific column filter (e.g., filtering the "Format" column for "CD") and show the real-time text highlighting in the result rows.
+
+UI Controls & Density:
+
+Subject: The top control bar.
+
+What to show: The "Visible Columns" dropdown menu, the "Density" toggle, and the "Stats" panel visible on the side.
+
+The Sidebar & Layout:
+
+Subject: Full-page view.
+
+What to show: Show the sidebar in its "Collapsed" state to demonstrate how the table stretches to fill the full screen width, providing a much clearer view for wide tables.
+#+end_example
+
+* TODO forum demo screen shot - RG-R sort format/lable/catalog/country
+
+Text: ever wanted to see ....
+
+now lets concentrate on just Canada --> filter "Country"="can"  ->>status line tells you excaltly that
+
+now filter globally "with just version"
+
+now toggle highlightning on/off
+
+DO the same with loading from the filesystem ---- demo of higjlightning filter column there .. just "Greetings from asbury park, n.j." --- toggle highligh of loading filter
+
+clear all filters
+
+press anywhere on original sort
+
+* TODO screenshot
+
+Artist-Release: sort Date-UP, MB-Name-DOWN, Comment-UP
+
+* write special about it in the forum because of the 2 Action buttons
+
+
+
+
+* TODO generic refactoring
+
+In the uploaded script, the code has been grown over time and is now more or less unmaintanble.  What are the best
+options to refactor the code, given it's logic but without breaking stuff, Which approach ist the best regarding best
+practices and best patterns
+
+- Check for obvious code which could make it into a functions without breaking the rest of the big userscript
+- check for code blocks which could easily be refactored to make the code more clear
+
+* TODO Reorder functions
+** question
+
+- Reorder all functions sorted at the end of the file
+- Leave
+
+#+begin_example
+let changelog = [changelog
+const SCRIPT_ID = "vzell-mb-show-all-entities";
+const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Show All Entities";
+// CONFIG SCHEMA
+const configSchema = {
+const pageDefinitions = [
+#+end_example
+
+at the very beginning of the file (in that order if possible, and if it does not break the code)
+and other variable definitions after it.
+
+Is that even possible without breaking the code
+
+** answer
+*** claude
+
+#+begin_example
+Code Reorganization
+New structure (from top to bottom):
+
+Changelog (line 50) - Moved to right after userscript header
+IIFE start (function() { 'use strict'; (line 115)
+SCRIPT_ID (line 119)
+SCRIPT_NAME (line 120)
+configSchema (line 123)
+pageDefinitions (line 411)
+All utility functions (line 902+)
+Lib initialization (line 2625)
+Rest of execution code
+
+Why This Works
+JavaScript function declarations are hoisted, meaning they can be defined anywhere and used before their definition in the source code. The functions reference Lib, configSchema, and other variables, but they're only called after everything is initialized, so there's no dependency issue.
+The constants (SCRIPT_ID, SCRIPT_NAME, configSchema, pageDefinitions) are now at the top because:
+
+They have no dependencies (except SCRIPT_NAME uses GM_info which is globally available)
+Lib initialization needs them, so they must come before it
+They're configuration/metadata, so having them at the top improves code organization
+
+Changes Made
+
+Version: Updated to 9.1.2+2026-02-15
+Changelog: Added entry about code reorganization
+Syntax: Verified with Node.js - all valid JavaScript
+
+The reorganized code is functionally identical to the original but much more readable with all configuration at the top!
+#+end_example
+
+*** gemini
+
+* TODO Checks for unused variables and functions
+** question
+
+In the uploaded userscript and library
+check for all unused variables and function definitions, create a report and fix
+ 
+** answer
+*** gemini
+
+#+begin_example
+This is an impressive and highly functional Tampermonkey script! Managing DOM manipulation, chunked rendering, filtering, and cross-tab/file states in vanilla JavaScript is no small feat.
+
+I have reviewed the script based on your guidelines. Here is a breakdown of unused code, extraction candidates, and areas that would significantly benefit from refactoring for clarity.
+
+1. Unused Variables and Functions
+Unused Functions:
+
+triggerDiskLoad(filterQueryRaw, isCaseSensitive, isRegExp) (around line 1618): This function is completely orphaned. The file selection and loading logic is actually handled by the <input type="file"> element created around line 1319 and triggered inside showLoadFilterDialog(). You can safely delete the triggerDiskLoad function.
+
+Dead UI Elements (Never appended to the DOM):
+
+Around line 1334, several pre-filter UI elements are created but never appended to the document:
+
+preFilterContainer
+
+preFilterInput
+
+preFilterCaseLabel
+
+preFilterCaseCheckbox
+
+preFilterRxLabel
+
+preFilterRxCheckbox
+
+(Note: preFilterMsg is appended later, so it is used, but the inputs themselves are legacy code likely superseded by your showLoadFilterDialog modal).
+
+Unused (or Dead-End) Variables:
+
+timerDisplay: Created around line 1406 (const timerDisplay = document.createElement('span');) and appended to the controls, but its text content is never updated during the fetching, sorting, or filtering operations (the script uses globalStatusDisplay and statusDisplay instead).
+
+basePath and isFilteredRelationshipPage: These are declared at the top and only ever used in the Lib.debug('init', ...) statements. Because you want to keep debug logging, these shouldn't be removed, but be aware they serve no logical purpose outside of the console.
+
+2. Code Extraction Candidates (DRY Principle)
+There are several highly repetitive blocks of code that can be extracted into shared helper functions without changing any logic.
+
+A. The Fade-Out Notification Popups
+You have an identical ~45-line block of code for a pop-up alert in both exportTableToCSV() and triggerStandardDownload().
+
+Refactor: Extract this into a reusable UI helper.
+
+JavaScript
+/**
+ * Shows a temporary fade-out notification popup
+ * @param {string} messageText - The message to display
+ */
+function showNotificationPopup(messageText) {
+    const infoPopup = document.createElement('div');
+    infoPopup.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border: 1px solid #888;
+        border-radius: 6px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 400px;
+        text-align: center;
+        font-family: sans-serif;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    `;
+
+    const msg = document.createElement('div');
+    msg.textContent = messageText;
+    msg.style.marginBottom = '15px';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = `
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        border: 1px solid #555;
+        background-color: #f0f0f0;
+    `;
+    closeBtn.type = 'button';
+
+    // Close function with fade out
+    const closePopup = () => {
+        infoPopup.style.opacity = '0';
+        // Remove from DOM after transition
+        setTimeout(() => {
+            if (infoPopup.parentNode) infoPopup.parentNode.removeChild(infoPopup);
+            document.removeEventListener('keydown', onEscape);
+        }, 300); // match the CSS transition duration
+    };
+
+    // Button click closes popup
+    closeBtn.addEventListener('click', closePopup);
+
+    // Escape key closes popup
+    const onEscape = (e) => {
+        if (e.key === 'Escape') closePopup();
+    };
+    document.addEventListener('keydown', onEscape);
+
+    infoPopup.appendChild(msg);
+    infoPopup.appendChild(closeBtn);
+    document.body.appendChild(infoPopup);
+}
+B. Highlight Resetting
+The logic to clear previous .mb-global-filter-highlight and .mb-column-filter-highlight tags is repeated four times (in runFilter single mode, runFilter multi mode, startFetchingProcess cleanup, and the "Unhighlight all" button).
+
+Refactor:
+
+JavaScript
+function clearHighlights(containerElement) {
+    containerElement.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
+        .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+}
+C. Button Generation Boilerplate
+Creating top-bar buttons (addExportButton, addDensityControl, addStatsButton, addAutoResizeButton) involves 10-12 lines of identical document.createElement and inline CSS boilerplate.
+
+Refactor: Create a createToolbarButton(label, title, onClickHandler) to generate and return these buttons.
+
+3. Refactoring for Clarity
+A. Massive duplication inside runFilter()
+The runFilter() function has two entirely separate blocks for activeDefinition.tableMode === 'multi' and single table mode. Inside both blocks, the 40+ line loop that resets highlights, checks Regex/Case matches against the global filter, checks the column filters, and applies new highlight spans is 100% duplicated.
+
+You can pull the row-evaluation logic out into a single helper function, drastically cleaning up runFilter():
+
+JavaScript
+/**
+ * Evaluates if a row matches the given filters and applies highlights if necessary.
+ * Returns true if it matches, false otherwise.
+ */
+function evaluateAndHighlightRow(row, globalQuery, globalQueryRaw, globalRegex, colFilters, isCaseSensitive, isRegExp) {
+    // Reset previous highlights (critical for correct filtering)
+    clearHighlights(row);
+
+    // Global match
+    let globalHit = !globalQuery;
+    if (!globalHit) {
+        if (isRegExp && globalRegex) {
+            // For regex patterns, test against each cell individually
+            // This allows anchored patterns like ^Thunder Road to work correctly
+            globalHit = Array.from(row.cells).some(cell => {
+                const cellText = getCleanColumnText(cell);
+                return globalRegex.test(cellText);
+            });
+        } else {
+            // For non-regex, test against concatenated row text
+            const text = getCleanVisibleText(row);
+            globalHit = isCaseSensitive ? text.includes(globalQuery) : text.toLowerCase().includes(globalQuery);
+        }
+    }
+
+    // Column matches
+    let colHit = true;
+    for (const f of colFilters) {
+        const cellText = getCleanColumnText(row.cells[f.idx]);
+        let match = false;
+        if (isRegExp) {
+            try {
+                match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
+            } catch (e) {
+                match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+            }
+        } else {
+            match = isCaseSensitive ? cellText.includes(f.val) : cellText.toLowerCase().includes(f.val);
+        }
+        if (!match) {
+            colHit = false;
+            break;
+        }
+    }
+
+    const finalHit = globalHit && colHit;
+    if (finalHit) {
+        if (globalQuery) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
+        colFilters.forEach(f => highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp));
+    }
+    
+    return finalHit;
+}
+With this in place, your matches = group.rows.map(r => r.cloneNode(true)).filter(r => { ... }) just becomes a clean, single line call to evaluateAndHighlightRow(...).
+
+B. The startFetchingProcess Function Complexity
+This function is over 600 lines long. The core of its complexity lies around line 2140: tableBody.childNodes.forEach(node => { ... }). Inside this loop, you're parsing DOM elements, splitting specific columns (Country/Date, Location, Area), extracting data, and applying column exclusions.
+
+Refactor Idea: Move the column manipulation blocks out of the loop.
+For example, the 25-line chunk handling Country/Date splitting could become:
+
+JavaScript
+function splitCountryDateCell(newRow, countryDateIdx) {
+    const tdSplitC = document.createElement('td');
+    const tdSplitD = document.createElement('td');
+    
+    const cdCell = newRow.cells[countryDateIdx];
+    if (cdCell) {
+        const events = Array.from(cdCell.querySelectorAll('.release-event'));
+        events.forEach((ev, i) => {
+            // ... (existing logic) ...
+        });
+    }
+    return { tdSplitC, tdSplitD };
+}
+Doing this for Location and Area as well would shave hundreds of lines of visual noise off startFetchingProcess and make the primary data-collection loop much easier to follow.
+#+end_example
+
+* TODO please check function documentations against it's implementation again and fix if necessary + rebuild HELP + CHANGLOG
+
+In the uploaded userscript "ShowAllEntityData.user.js" and library "ShowAllEntityData_CHANGELOG.json"
+
+- check for all unused variables and function definitions, create a report and fix
+- check the current function documentations against their implementation, where the doc is differing, please fix
+- resync the uploaded HELP file "ShowAllEntityData_HELP.txt" against the current code base and keyboard shortcuts
+- add a changelog entry
+
+* document test suite after userscript and library changes
+** library
+** userscript
+
+
+* TODO render coverart archive - https://dn710909.ca.archive.org/0/items/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json
+
+curl -v -L "https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" | jq
+curl -v -L https://archive.org/download/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json | jq
+
+
+* The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
+
+
+* add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
+
+
+* TODO add addRGsFromAbove.js configurable
+
+In the uploaded userscript,
+
+Inspect the uploaded userscript "addRGsFromAbove.js" and extract the contents to include in our userscript as functions to run on
+the final rendered pages which have columns with name "CAA"
+
+* TODO add "Relationships" column support again, but configurable 
+
+* TODO add 'Batch-add "performance of" relationships' userscript functionality on final rendered pages
+
+#+begin_example
+// @name         MusicBrainz: Batch-add "performance of" relationships
+// @description  Batch link recordings to works from artist Recordings page.
+// @version      2023.7.2
+// @author       Michael Wiencek
+#+end_example
+
+* Reintroduce jesus2099 "Release events"
+
+#+begin_example
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+#+end_example
+
+#+begin_example
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
+#+end_example
+
+
+* TODO extract the VZ event disambiguation configurable in its constituents
+** DONE initial
+
+Add the following new "syntheticColumnExtractors" parameter
+
+#+begin_example
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+#+end_example
+
+to the 'work-recordings-filtered' pageType
+
+#+begin_example
+        {
+            type: 'work-recordings-filtered',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work (specialised)' } ],
+            features: {
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+#+end_example
+
+and implement the "eventParts" extractor the following way:
+
+A full example "Comment" value
+
+#+begin_example
+live, 1975‐11‐01, early show: Robertson Gymnasium, University of California, Santa Barbara, CA, USA
+#+end_example
+
+should be split into
+
+#+begin_example
+'Event-Type' - live
+'Event-Date' - 1975‐11‐01
+'Event-Detail' - early show
+'Event-Venue' - Robertson Gymnasium
+'Event-Venue2' - University of California
+'Event-City' - Santa Barbara
+'Event-State' - CA
+'Event-Country' - USA
+#+end_example
+
+All parts could actually be optional
+
+#+begin_example
+live, 1995‐11‐26: Wiltern Theatre, Los Angeles, CA, USA
+#+end_example
+
+#+begin_example
+live, 1995‐12‐08: Tower Theater, Upper Darby, Philadelphia, PA, USA
+#+end_example:
+
+#+begin_example
+live, 1975‐10‐18, early show: The Roxy Theatre, West Hollywood, CA, USA
+#+end_example
+
+#+begin_example
+live, 1975: New Jersey, NJ, USA
+#+end_example
+
+#+bein_example
+soundcheck
+#+end_example
+
+#+bein_example
+live: JP
+#+end_example
+
+** DONE refine extraction
+
+In the uploaded userscript "ShowAllEntityData.user.js",
+
+Please further refine the implementation for the "eventParts" extractor
+
+#+begin_example
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+#+end_example
+
+defined in the variable "const pageDefinitions"
+
+#+begin_example
+        /**
+         * eventParts — parses a MusicBrainz recording "Comment" field that encodes
+         * live-performance metadata as a free-form comma/colon-delimited string and
+         * splits it into eight dedicated synthetic columns.
+         *
+         * Expected source format (all segments are optional):
+         *
+         *   [Event-Type][, Event-Date][, Event-Detail][: Venue[, Venue2][, City][, State][, Country]]
+         *
+         * Representative examples and their parsed output:
+         *
+         *   "live, 1975‑11‑01, early show: Robertson Gymnasium, University of California, Santa Barbara, CA, USA"
+         *     → Type=live  Date=1975-11-01  Detail=early show
+         *       Venue=Robertson Gymnasium  Venue2=University of California
+         *       City=Santa Barbara  State=CA  Country=USA
+         *
+         *   "live, 1995‑11‑26: Wiltern Theatre, Los Angeles, CA, USA"
+         *     → Type=live  Date=1995-11-26  (no Detail)
+         *       Venue=Wiltern Theatre  (no Venue2)  City=Los Angeles  State=CA  Country=USA
+         *
+         *   "live, 1995‑12‑08: Tower Theater, Upper Darby, Philadelphia, PA, USA"
+         *     → Type=live  Date=1995-12-08  (no Detail)
+         *       Venue=Tower Theater  Venue2=Upper Darby  City=Philadelphia  State=PA  Country=USA
+         *
+         *   "live, 1975: New Jersey, NJ, USA"
+         *     → Type=live  Date=1975  (no Detail, no Venue, no Venue2)
+         *       City=New Jersey  State=NJ  Country=USA
+         *
+         *   "soundcheck"
+         *     → Type=soundcheck  (all other columns empty)
+         *
+         *   "live: JP"
+         *     → Type=live  Country=JP  (all other columns empty)
+         *
+         * Parsing rules:
+         *   Pre-colon segment (Event-Type / Event-Date / Event-Detail):
+         *     - Split on ", ".  Part 0 is always Event-Type.
+         *     - Part 1, if it matches the date pattern (YYYY | YYYY-MM | YYYY-MM-DD,
+         *       accepting the Unicode non-breaking hyphen U+2010 as well as ASCII '-'),
+         *       becomes Event-Date and Part 2 (if present) becomes Event-Detail.
+         *     - If Part 1 does NOT match the date pattern it is treated as Event-Detail.
+         *   Post-colon location segment:
+         *     - Split on ", ".  Parts are mapped RIGHT-TO-LEFT so that the trailing
+         *       Country / State / City are always filled first; leading Venue2 / Venue
+         *       receive any remaining parts.
+         *     - 1 part  → Country only
+         *     - 2 parts → State, Country
+         *     - 3 parts → City, State, Country
+         *     - 4 parts → Venue, City, State, Country
+         *     - 5 parts → Venue, Venue2, City, State, Country
+         *
+         * Unicode note: The U+2010 NON-BREAKING HYPHEN used by MusicBrainz in date
+         * strings is normalised to ASCII '-' before date-pattern matching and before
+         * writing the Event-Date cell, so downstream sorting and filtering always sees
+         * a consistent '-' separator regardless of source encoding.
+         *
+         * Synthetic columns: ['Event-Type', 'Event-Date', 'Event-Detail',
+         *                      'Event-Venue', 'Event-Venue-Detail',
+         *                      'Event-City', 'Event-State', 'Event-Country']
+         *
+         * @param   {HTMLTableCellElement} sourceCell  Comment <td> (MB-Comment synthetic column).
+         * @returns {HTMLTableCellElement[]}            Eight synthetic <td> elements in declaration order.
+         */
+        eventParts(sourceCell) {
+            // Eight output cells in declaration order:
+            // [0] Event-Type  [1] Event-Date  [2] Event-Detail
+            // [3] Event-Venue [4] Event-Venue-Detail
+            // [5] Event-City  [6] Event-State  [7] Event-Country
+            const tds = Array.from({ length: 8 }, () => document.createElement('td'));
+
+            if (!sourceCell) return tds;
+
+            // Normalise Unicode NON-BREAKING HYPHEN (U+2010) → ASCII '-' throughout.
+            // MusicBrainz encodes dates with U+2010; normalising ensures the date regex
+            // and downstream sort / filter comparisons all see a consistent separator.
+            const raw = sourceCell.textContent.trim().replace(/\u2010/g, '-');
+            if (!raw) return tds;
+
+            // ── Split pre-colon (type / date / detail) from post-colon (location) ──
+            // indexOf(': ') — colon followed by a space — avoids false splits on
+            // time-like tokens or abbreviations that may contain a bare colon.
+            const colonIdx = raw.indexOf(': ');
+            const prePart  = colonIdx !== -1 ? raw.slice(0, colonIdx).trim() : raw;
+            const postPart = colonIdx !== -1 ? raw.slice(colonIdx + 2).trim() : '';
+
+            // ── Pre-colon: Event-Type, Event-Date, Event-Detail ──────────────────
+            // Split on ', ' (comma + space) to keep multi-word tokens intact.
+            const preParts = prePart.split(', ').map(s => s.trim()).filter(s => s.length > 0);
+
+            // Part 0 — always Event-Type (e.g. "live", "soundcheck")
+            if (preParts.length > 0) {
+                tds[0].textContent = preParts[0];
+            }
+
+            // Date pattern: YYYY  |  YYYY-MM  |  YYYY-MM-DD  (ASCII '-' after normalisation)
+            const DATE_RE = /^\d{4}(?:-\d{2}(?:-\d{2})?)?$/;
+
+            if (preParts.length > 1) {
+                if (DATE_RE.test(preParts[1])) {
+                    // Part 1 is a date → Event-Date; Part 2 (optional) → Event-Detail
+                    tds[1].textContent = preParts[1];
+                    if (preParts.length > 2) {
+                        tds[2].textContent = preParts[2];
+                    }
+                } else {
+                    // Part 1 is not a date → treat as Event-Detail (no date present)
+                    tds[2].textContent = preParts[1];
+                }
+            }
+
+            // ── Post-colon: location parts mapped right-to-left ──────────────────
+            // Right-to-left mapping ensures trailing Country / State / City are
+            // always populated first; leading Venue2 / Venue receive surplus parts.
+            // Index mapping  (tds index → semantic column):
+            //   tds[7] Country  tds[6] State  tds[5] City  tds[4] Venue2  tds[3] Venue
+            if (postPart) {
+                const locParts = postPart.split(', ').map(s => s.trim()).filter(s => s.length > 0);
+                const n = locParts.length;
+                if (n >= 1) tds[7].textContent = locParts[n - 1]; // Country
+                if (n >= 2) tds[6].textContent = locParts[n - 2]; // State
+                if (n >= 3) tds[5].textContent = locParts[n - 3]; // City
+                if (n >= 4) tds[4].textContent = locParts[n - 4]; // Venue2
+                if (n >= 5) tds[3].textContent = locParts[n - 5]; // Venue
+            }
+
+            return tds;
+        }
+
+    };
+#+end_example
+
+by taking the country specifically into account
+
+- A full example "Comment" value for country either "USA" or "Canada"
+
+#+begin_example
+live, 1975‐11‐01, early show: Robertson Gymnasium, University of California, Santa Barbara, CA, USA
+#+end_example
+
+should be split into
+
+#+begin_example
+'Event-Type' - live
+'Event-Date' - 1975‐11‐01
+'Event-Detail' - early show
+'Event-Venue' - Robertson Gymnasium
+'Event-Venue2' - University of California
+'Event-City' - Santa Barbara
+'Event-State' - CA
+'Event-Country' - USA
+#+end_example
+
+#+begin_example
+live, 1975‐12‐21: Seneca Field House, Seneca College, Toronto, ON, Canada
+#+end_example
+
+#+begin_example
+live, 1984‐07‐21: Montreal Forum, Montreal, QC, Canada
+#+end_example
+
+All parts could actually be optional.
+
+- A full example "Comment" for country "UK" 
+
+#+begin_example
+live, 2003‐05‐27: National Sports Stadium, Crystal Palace, London, England, UK
+#+end_example
+
+should be split into
+
+#+begin_example
+'Event-Type' - live
+'Event-Date' - 2003‐05‐27
+'Event-Detail' - 
+'Event-Venue' - National Sports Stadium
+'Event-Venue-Detail' - Crystal Palace
+'Event-City' - London
+'Event-State' - England
+'Event-Country' - UK
+#+end_example
+
+#+begin_example
+live, 2003‐05‐27: National Sports Stadium, Crystal Palace, London, England, UK
+#+end_example
+
+#+begin_example
+live, 1985‐07‐04: Wembley Stadium, London, England, UK
+#+end_example
+
+- A full example "Comment" for other countries like "Germany" 
+
+#+begin_example
+live, 2002‐10‐20: Velodrom, Berlin, Germany
+#+end_example
+
+Please show the full code of the newly generated implementation and also make a changelog entry in the uploaded "ShowAllEntityData_CHANGELOG.json" 
+
+** DONE fix for USA and Canada
+
+Please fix for "UK", "USA" and "Canada"
+
+if there are 5 parts after the colon ":"
+
+#+begin_example
+live, 1975‐12‐21: Seneca Field House, Seneca College, Toronto, ON, Canada
+#+end_example
+
+should split into (first part after the colon is the 'Event-Venue', second part the 'Event-Venue-Detail')
+
+#+begin_example
+'Event-Type' - live
+'Event-Date' - 
+'Event-Detail' - 
+'Event-Venue' - Seneca Field House
+'Event-Venue-Detail' - Seneca College
+'Event-City' - Toronto
+'Event-State' - ON
+'Event-Country' - Canada
+#+end_example
+
+and where there are only 4
+
+#+begin_example
+live, 1977‐02‐13: Maple Leaf Gardens, Toronto, ON, Canada
+#+end_example
+
+should split into (first part after the colon is the 'Event-Venue', second part the 'Event-Venue-Detail' should be empty)
+
+#+begin_example
+'Event-Type' - live
+'Event-Date' - 
+'Event-Detail' - 
+'Event-Venue' - Maple Leaf Gardens
+'Event-Venue-Detail' - 
+'Event-City' - Toronto
+'Event-State' - ON
+'Event-Country' - Canada
+#+end_example
+
+** DONE make it configurable
+
+Make the 'eventParts' feature, introduced with the following "syntheticColumnExtractors" parameter
+
+#+begin_example
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+#+end_example
+
+configurable by the end-user by introducing a new boolean parameter (default value "true") in the configuration section
+"const configSchema". Only if "true" really create the new syntheticColumns: "['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue2', 'Event-City', 'Event-State', 'Event-Country']"
+
+** TODO add MB lookup from https://musicbrainz.org/recording/f3f63c9e-c954-49a0-86f3-bd8ce0f32a31 - Thunder Road (live, 1995‐02‐21: Tramps, New York City, NY, USA)
+
+https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278 - Thunder Road (B. Springsteen 1974–1975)
+
+add MB lookup from https://musicbrainz.org/recording/f3f63c9e-c954-49a0-86f3-bd8ce0f32a31 - Thunder Road (live, 1995‐02‐21: Tramps, New York City, NY, USA)
+
+from "recorded at:	Tramps in Flatiron District, New York, New York, United States (on 1995-02-21)"
+
+to the event parts extracted
+
+
+* "video" icon - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings - "shooting location for"
+
+
+
+* GOOD versions
+** /doubleCAAimages
+
+
+* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
+* TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+* TODO for RGs CAA artwork also display the Release from where it's sourced
+* add menu to hover CAA picture, for different actions
+
+
+* TODO in debug log emit also the entity title
+
+* question: image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
+
+
 * on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
 
 on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the
 fetching of all paginated pages begins after pressing the "Show all.." action button
 
 
+
+* TODO Change all the entity links to open in a new tab
+
+
+* TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
@@ -54326,17 +54244,6 @@ The "Cell stucture" submenu list should have, additionally to the entries for mu
 entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
 to give the user the chance to quickly filter either for rows with OR without images
 
-
-* TODO numeric columns "DD","MM", "YYY",  ... should be centered aligned in the data cells like currently the "Releases" column (actually "Releases" gets render by the MB stylesheet, it seems, it's already centered on the initial page)
-
-Is this function also used for alignment inside the columns cells
-
-#+begin_example
-        // --- Helper: is a column name numeric? ---------------------------------
-        const isNumericCol = (name) =>
-            name.includes('Year') || name.includes('Releases') || name.includes('Track') ||
-            name.includes('Length') || name.includes('#');
-#+end_example
 
 
 * TODO add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
@@ -54981,7 +54888,7 @@ MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T12-21-41.o
 
 the "sa_dialog_save_export_autoclose_ms" is NOT honoured
 
-* TODO add shortcut "Render" when no filtering in the "Load from Disk" path
+* DONE add shortcut "Render" when no filtering in the "Load from Disk" path
 ** initial
 
 Place another button "Render without Filtering" right to the "Filter Data" button
@@ -55005,8 +54912,102 @@ the loaded file should be rendered.
 - rename the button to "▶ Render All Rows"
 - why can't the shortcurt "Alt+R" not be used in this context, as the filtering phase hasn't been down yet and the final "Render Data" is NOT visible yet
 
-
 * TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
+
+In the uploaded userscript,
+
+replace the current filter dialog
+
+#+begin_example
+<div style="margin-bottom:12px;position:relative;">
+                    <div style="display:flex;gap:4px;">
+                        <input id="sa-load-filter-input" type="text" placeholder="Filter expression... evaluated for each column" style="flex:1;padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:1em;outline:none;">
+                        <button id="sa-load-history-toggle" title="Show history" style="padding:0 8px;background:#f0f0f0;border:1px solid #ccc;border-radius:6px;cursor:pointer;display:inline-block;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">▼
+			</button>
+                    </div>
+                    <div id="sa-load-history-dropdown" style="display: block; position: absolute; top: 100%; left: 0px; right: 0px; background: white; border: 1px solid rgb(204, 204, 204); border-radius: 6px; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px; z-index: 20001; max-height: 150px; overflow-y: auto; margin-top: 4px;">
+		      <div class="sa-history-item" style="padding:8px 12px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;">school
+		      </div>
+		      <div class="sa-history-item" style="padding:8px 12px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;">from
+		      </div>
+		      <div class="sa-history-item" style="padding:8px 12px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;">jp
+		      </div>
+		    </div>
+</div>
+#+end_example
+
+with a modern full-featured dialog with the following capabilities (but still using our aestethic UI design)
+
+all parameters used in the following list should be configurable in the configuration section (variable "const configSchema")
+
+1) ability to persistently store the last <n> typed filter expressions, default 50 (they should internally use an LRU mechanism and start overwriting)
+2) the persistence storage should not only remember the filter string as typed, but also the state of the checkboxes like "Case Sensitive", "Regular Expression" and "Exclude Matches"
+3) the corresponding "Show LRU history" pull-down menu where the remembered filter strings will be listed should not only be
+   shown when clicked with the mouse but it should also activate with the shortcut key "Alt+H"
+4) the pull-down menu itself should show the last <m> (default 10) remembered filter expressions (with short cut glyphs
+   which checkboxes were enabled at the time they wer stored in persisten storage) in a scrollable window and also
+   keyboard navigable list menu which should be quick filterable (the filter string should be highlighted in the filtered
+   row list)
+5) the keyboard navigation features should be restricted to the open pull-down menu, the "Escape" key should be handle naturally
+   - when there is already a filter string in the quick filter input field, that field should be cleared on first "Escape" press, and on second press the pull-down menu should close
+   - when entering a filter field, the select (highlighted rows should be navigable, on pressing "Escape" when the navigable list has the focus, the filter field should get the focus again  
+6) The following checkboxes
+
+#+begin_example
+<div style="display:flex;gap:20px;justify-content:center;margin-bottom:14px;background:#f9f9f9;padding:10px;border-radius:8px;">
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                        <input type="checkbox" id="sa-load-case"> Case Sensitive
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                        <input type="checkbox" id="sa-load-regex"> Regular Expression
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
+                        <input type="checkbox" id="sa-load-exclude"> Exclude Matches
+                    </label>
+</div>
+#+end_example
+
+should get proper tooltips to explain how the filtering will be influenced
+
+
+* TODO The "Load Table Data" dialog should have a configurable initial 'min-width:640px' instead of the hardcoded 'min-width:320px'
+
+In the uploaded userscript,
+
+The "Load Table Data" dialog should have a configurable initial 'min-width:640px' instead of the hardcoded 'min-width:320px'
+
+#+begin_example
+        dialog.id = 'sa-load-dialog-overlay';
+        dialog.style.cssText = [
+            'position:fixed',
+            'background:#fff',
+            'padding:24px',
+            'border-radius:12px',
+            'box-shadow:0 8px 32px rgba(0,0,0,0.3)',
+            `width:${dialogWidth}`,
+            'max-width:calc(100vw - 40px)',
+            'min-width:320px',
+            'font-family:sans-serif',
+            'border:1px solid #ccc',
+            'z-index:20000',
+            'max-height:calc(100vh - 40px)',
+            'min-height:120px',
+            'overflow-y:auto',
+            'resize:both',
+            'box-sizing:border-box',
+        ].join(';');
+
+#+end_example
+
+but should then remember it's last position and geometry in browser storage (like the corresponding "Export to <format>" dialogs"
+
+* maybe also the other filter dialogs could get the same
+
+persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store
+(push to history) button - (also for load from disk - dialog)
+
+
+* persistent "+"-store history (push to history) with it's own edit dialog for editing the currently stored entries + the ability to add new/edit existant and remove existant entries (same UI look and feel)
 
 
 * TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
@@ -55045,6 +55046,7 @@ after running the current algorithm of "removing (delete from DOM) the first occ
 in the last step also remove all sub-tables from the DOM which are rendered BEFORE the "Album" sub-table
 
 ** remove the sub-tables from the DOM before starting to fetch any CAA images
+
 
 * TODO split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
 ** initial
@@ -55419,4 +55421,51 @@ some more things to implement:
   
 
 * TODO the order of the buttons when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlighning", "Clear all column filters", "Clear all filters"
-▶ 
+
+
+* TODO change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
+
+* TODO numeric columns "DD","MM", "YYY",  ... should be centered aligned in the data cells like currently the "Releases" column (actually "Releases" gets render by the MB stylesheet, it seems, it's already centered on the initial page)
+
+add a new feature
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'Year', align: 'C'}} ],
+                integerColumns: [ {sourceColumn: 'Releases', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'Year'}, {sourceColumn: 'Releases', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'Length', align: 'L'} ],
+                integerColumns: [ {sourceColumn: 'Track'} ],
+                integerColumns: [ {sourceColumn: 'Total Tracks', align: 'R'}} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'C'}}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                integerColumns: [ {sourceColumn: '#', align: 'L'} ],
+#+end_example
+
+The implementation of integerColumns is, during rendering of a table column which matches a sourceColumn from the array,
+the column cell aligement should be left 'L', right 'R' or centered 'C' (default). Also when "align:" is missing in the
+definitin it means centered 'C'
+
+- maybe rewrite the following function in terms of the new "integerColumns" feature
+  
+#+begin_example
+        // --- Helper: is a column name numeric? ---------------------------------
+        const isNumericCol = (name) =>
+            name.includes('Year') || name.includes('Releases') || name.includes('Track') ||
+            name.includes('Length') || name.includes('#');
+#+end_example
+
+- All "integerColumns" should horizontally/center aligned in their column data cells (default)
+
+* Length should actually be right aligned
+
+#+begin_example
+integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
+#+end_example
+
+
+* Make the "Tracks" column a multi-row cell column, "+" is the divider
+
+* todos
+
+In the newly uploaded userscript,
+
+a couple of things are still missing (also add a changelog):
