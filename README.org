@@ -54822,7 +54822,7 @@ Is this function also used for alignment inside the columns cells
 
 
 * DONE deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog*
-* TODO initial
+* DONE initial
 ** DONE initial
 
 1.)
@@ -54935,14 +54935,7 @@ create a new "Save Table Data" dialog window.
 
 - the dialog should also be draggable, "Escape"-key cancelable
 
-
-* TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
-
-
-* TODO add shortcut "Render" when no filtering in the "Load from Disk" path
-
-
-* replace the "Export" dialogs
+* DONE replace the "Export" dialogs
 ** initial
 
 Instead of using the following types of popup ddialogs for export table data to different formats (e.g. the following is a JSON export)
@@ -54987,6 +54980,33 @@ MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T12-21-41.o
 ** the "sa_dialog_save_export_autoclose_ms" is NOT honoured
 
 the "sa_dialog_save_export_autoclose_ms" is NOT honoured
+
+* TODO add shortcut "Render" when no filtering in the "Load from Disk" path
+** initial
+
+Place another button "Render without Filtering" right to the "Filter Data" button
+
+#+begin_example
+<button id="sa-filter-confirm" style="flex:2;padding:10px;background:#1976D2;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
+                        <span><span style="text-decoration:underline">F</span>ilter Data</span>
+                    </button>
+#+end_example
+
+Basically the two buttons should be arranged lile the already existing "Load Data" and "Cancel" buttons
+
+When clicking the "Render without Filtering" button the same action should be called like when clicking the "Render Data" button. 
+
+The new "Render without Filtering" button acts like a shortcut when no filtering should be involved and all the rows in
+the loaded file should be rendered.
+
+** bugs
+
+- make the new "Render all" button green like the "Load Data" button
+- rename the button to "▶ Render All Rows"
+- why can't the shortcurt "Alt+R" not be used in this context, as the filtering phase hasn't been down yet and the final "Render Data" is NOT visible yet
+
+
+* TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 
 
 * TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
@@ -55398,4 +55418,5 @@ some more things to implement:
 #+end_example
   
 
-* TODO the order of the buttons when being visible should alway be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlighning", "Clear all column filters", "Clear all filters"
+* TODO the order of the buttons when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlighning", "Clear all column filters", "Clear all filters"
+▶ 

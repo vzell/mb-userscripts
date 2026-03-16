@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.194+2026-03-16
+// @version      9.99.193+2026-03-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -11757,8 +11757,8 @@
                     <button id="sa-filter-confirm" style="flex:2;padding:10px;background:#1976D2;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
                         <span><span style="text-decoration:underline">F</span>ilter Data</span>
                     </button>
-                    <button id="sa-render-no-filter-confirm" style="flex:1;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;" title="Render all rows from the loaded file without applying any filter">
-                        <span>&#9654; <span style="text-decoration:underline">R</span>ender All Rows</span>
+                    <button id="sa-render-no-filter-confirm" style="flex:1;padding:10px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-weight:bold;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;" title="Render all rows from the loaded file without applying any filter">
+                        <span>&#9654; <span style="text-decoration:underline">R</span>ender all</span>
                     </button>
                 </div>
                 <div id="sa-ld-filter-status" style="display:none;padding:5px 2px;font-size:${statusFontSz};min-height:20px;"></div>
@@ -11812,7 +11812,7 @@
                 #sa-load-confirm:hover:not([disabled])           { background:#45a049 !important; }
                 #sa-load-cancel:hover                            { background:#e0e0e0 !important; }
                 #sa-filter-confirm:hover:not([disabled])         { background:#1565C0 !important; }
-                #sa-render-no-filter-confirm:hover:not([disabled]) { background:#45a049 !important; }
+                #sa-render-no-filter-confirm:hover:not([disabled]) { background:#e0e0e0 !important; }
                 #sa-render-confirm:hover:not([disabled])         { background:#45a049 !important; }
                 #sa-load-confirm:active:not([disabled]),
                 #sa-load-cancel:active,
@@ -12266,16 +12266,12 @@
             } else if (e.altKey && e.key.toLowerCase() === 'f') {
                 e.preventDefault();
                 if (phase2.style.display !== 'none' && !filterBtn.disabled) filterBtn.click();
+            } else if (e.altKey && e.key.toLowerCase() === 'w') {
+                e.preventDefault();
+                if (phase2.style.display !== 'none' && !renderNoFilterBtn.disabled) renderNoFilterBtn.click();
             } else if (e.altKey && e.key.toLowerCase() === 'r') {
                 e.preventDefault();
-                // Alt+R is context-sensitive: while Phase 3 (Render Data) is visible it
-                // triggers renderBtn; otherwise it triggers renderNoFilterBtn (Render All
-                // Rows) — the two phases are mutually exclusive so there is no ambiguity.
-                if (phase3.style.display !== 'none' && !renderBtn.disabled) {
-                    renderBtn.click();
-                } else if (phase2.style.display !== 'none' && !renderNoFilterBtn.disabled) {
-                    renderNoFilterBtn.click();
-                }
+                if (phase3.style.display !== 'none' && !renderBtn.disabled) renderBtn.click();
             }
         };
 

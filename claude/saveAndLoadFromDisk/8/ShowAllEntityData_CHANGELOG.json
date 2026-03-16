@@ -1,18 +1,5 @@
 [
     {
-      "version": "9.99.194",
-      "date": "2026-03-16",
-      "sections": [
-        {
-          "label": "✨ New Features / Changes",
-          "items": [
-            "Load Table Data dialog — 'Render All Rows' button: changed background from grey (#f0f0f0) to green (#4CAF50, hover #45a049) matching the 'Load Data' button; renamed label from '▶ Render all' to '▶ Render All Rows'.",
-            "Load Table Data dialog — keyboard shortcut for 'Render All Rows' changed from Alt+W to Alt+R (context-sensitive): when Phase 3 ('Render Data') is visible Alt+R fires renderBtn as before; when Phase 2 is visible and Phase 3 is hidden (i.e. the user has not yet run Filter Data), Alt+R fires renderNoFilterBtn instead. The two phases are mutually exclusive so there is no ambiguity."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.193",
       "date": "2026-03-16",
       "sections": [
