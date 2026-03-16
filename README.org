@@ -54997,8 +54997,7 @@ Esc with quick-filter empty → closes panel (dialog stays open)
 Esc with panel closed → closes dialog
 #+end_example
 
-
-* TODO The "Load Table Data" dialog should have a configurable initial 'min-width:640px' instead of the hardcoded 'min-width:320px'
+* DONE The "Load Table Data" dialog should have a configurable initial 'min-width:640px' instead of the hardcoded 'min-width:320px'
 
 In the uploaded userscript,
 
@@ -55029,14 +55028,171 @@ The "Load Table Data" dialog should have a configurable initial 'min-width:640px
 
 but should then remember it's last position and geometry in browser storage (like the corresponding "Export to <format>" dialogs"
 
+* TODO persistent "+"-store history (push to history) with it's own edit dialog for editing the currently stored entries + the ability to add new/edit existant and remove existant entries (same UI look and feel)
+
+** init
+
+Add the following functionality to the "History"-button popup:
+
+- add a new really persistent history list to browser storage (call it "persistent-sa-hist-list" and rename the current
+  list to "lru-sa-hist-list" because that one is LRU based)
+
+- the filter field should have right aligned at the end a "+"-button, when pressed the currently configured filter with
+  it's attributes depending on the checkbox states, should be saved to the new "persistent-sa-hist-list"
+
+- the history dialog should be extended (like in the next text based visualization) with a new independently scrollable
+  area for the new "persistent-sa-hist-list" besides the already existing scrollable area for the "lru-sa-hist-list"
+
+- the quick filter should filter both lists
+
+- at the end of the dialog should be an additional info line for the new "persistent-sa-hist-list"
+  
+#+begin_example
+┌──────────────────────────────────────┐
+│ 🔍 Quick filter history...           │  ← #sa-hist-quick-filter (filters both, the #persistent-sa-hist-list and #lru-sa-hist-list)
+├──────────────────────────────────────┤
+│ school                        [Re]   │  ← scrollable #persistent-sa-hist-list
+│ from                                 │    each row: query + badge glyphs
+│ jp                         [Cs][Ex]  │    matching text highlighted yellow
+│ …                                    │
+├──────────────────────────────────────┤
+│ school                        [Re]   │  ← scrollable #lru-sa-hist-list
+│ from                                 │    each row: query + badge glyphs
+│ jp                         [Cs][Ex]  │    matching text highlighted yellow
+│ …                                    │
+├──────────────────────────────────────┤
+│ 3 of 12 entries  ↑↓ navigate…       │  ← #persistant-sa-hist-footer
+│ 3 of 12 entries  ↑↓ navigate…       │  ← #lru-sa-hist-footer
+└──────────────────────────────────────┘
+#+end_example
+
+- Add a new "Edit Filter List" button (Alt-E callable) for editing the persistenly stored history list, rendered right to the existing checkbxes in
+
+#+begin_example
+<div style="display:flex;gap:20px;justify-content:center;margin-bottom:14px;background:#f9f9f9;padding:10px;border-radius:8px;">
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                        <input type="checkbox" id="sa-load-case"> Case Sensitive
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                        <input type="checkbox" id="sa-load-regex"> Regular Expression
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
+                        <input type="checkbox" id="sa-load-exclude"> Exclude Matches
+                    </label>
+                </div>
+#+end_example
+  
+and  when clicked:
+
+A new "Edit Filter List" dialog (same UI look and feel) should popup with the ability to "Add" (Alt+A) a new, "Edit"
+(Alt+E) an existant or "Remove" (Alt+R) an existant entry. A "Save" (Alt+S) and "Cancel" (Alt+C / "Escape"-key) button
+should eiter save the changes or cancel the dialog (with a warning popup if there are unsaved changes). The entries
+should be presented in a nice UI table structure with their attributes like "Case Sensitive", "Regular Expression" and
+"Exclude Matches". The dialog should also have a quick filter functionality with highlightning the filter expression in
+the resulting rows, convenient if the list gets large.
+
+** answer
+
+#+begin_example
+Storage keys — lru-sa-hist-list (renamed from sa_load_filter_history, with transparent migration fallback) and new persistent-sa-hist-list.
+History dropdown now has two independently scrollable sections:
+┌─ 🔍 Quick filter both lists... ──────────┐
+├─ 📌 PINNED ──────────────────────────────┤  green header
+│  school                         [Re]     │  scrollable #persistent-sa-hist-list
+│  jp                          [Cs][Ex]    │
+├─ N of M entries  ↑↓ navigate…  ──────────┤
+├─ 🕐 RECENT (LRU) ────────────────────────┤  blue header
+│  from                                    │  scrollable #lru-sa-hist-list
+│  …                                       │
+├─ N of M entries  ↑↓ navigate…  ──────────┤
+└───────────────────────────────────────────┘
++ pin button — green, between filter input and History toggle. Saves current filter+checkboxes to the persistent list with a flash confirmation.
+✎ Edit Pinned button (amber, Alt+E) — opens showEditPersistentListDialog:
+
+Sticky-header table: # / Filter Expression / Cs / Re / Ex
+Quick-filter with yellow highlight
+Click to select, double-click to open for editing
+Inline form (Add/Edit) with Apply/Discard
+Alt+A Add · Alt+E Edit · Alt+R Remove · Alt+S Save · Alt+C/Escape Cancel
+Unsaved-changes warning on Cancel/Escape
+Draggable, resizable
+
+Navigation flows: quick-filter ↓ → pin list → lru list; ↑ reverses; Escape from list → quick-filter; Escape with empty quick-filter → close panel.
+#+end_example
+
+** "Save" should not leave the complete "Load Table Data" dialog, instead 
+
+a couple of glitches
+
+1.)
+
+a.)
+
+when editing the "Pinned Filter List" and the clicking either the "Cancel" or "Save" button OR pressing the "Escape"
+key, only the "Edit Pinned Filter List" dialog should be closed not the complete "Load Table Data" too
+
+b.)
+
+when the "Edit Pinned Filter List" dialog is open and I click inside the "Quik filter field", the main "Load Table Data"
+is closed, please fix, it should of course stay open
+
+2.)
+
+the "Case sensitive" and "Regexp" checkboxes inside
+
+#+begin_example
+<div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;background:#f9f9f9;padding:10px;border-radius:8px;flex-wrap:wrap;">
+                    <div style="display:flex;gap:20px;justify-content:center;flex:1;flex-wrap:wrap;">
+                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                            <input type="checkbox" id="sa-load-case"> Case Sensitive
+                        </label>
+                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                            <input type="checkbox" id="sa-load-regex"> Regular Expression
+                        </label>
+                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
+                            <input type="checkbox" id="sa-load-exclude"> Exclude Matches
+                        </label>
+                    </div>
+                    <button id="sa-hist-edit-btn" title="Edit the persistent pinned filter list (Alt+E)" style="padding:5px 10px;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;cursor:pointer;font-size:0.82em;font-weight:600;color:#e65100;white-space:nowrap;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
+                        ✎ <span style="text-decoration:underline">E</span>dit Pinned
+                    </button>
+                </div>
+#+end_example
+
+
+are missing their tooltips +
+
+3.) add an unicode "x" (clear) icon inside the filter field right aligen to the end of the filter field
+
+#+begin_example
+<input id="sa-load-filter-input" type="text" placeholder="Filter expression... evaluated for each column" style="flex:1;padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:1em;outline:none;">
+#+end_example
+
+to clear it when clicking with the mouse
+
+4.)
+
+change
+
+#+begin_example
+            const totalPart = totalRows > 0 ? ` out of ${totalRows}` : '';
+            prefilterToggleBtn.title = 'Toggle prefilter highlighting on/off';
+#+end_example
+
+to
+
+#+begin_example
+            const totalPart = totalRows > 0 ? ` of ${totalRows}` : '';
+            prefilterToggleBtn.title = 'Toggle prefilter highlighting';
+#+end_example
+
+
+* TODO "Case sensitive" and "Regexp" checkboxes are missing their tooltips + add an "x" icon to clear the filter field with the mouse
+
 * maybe also the other filter dialogs could get the same
 
 persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store
 (push to history) button - (also for load from disk - dialog)
-
-
-* persistent "+"-store history (push to history) with it's own edit dialog for editing the currently stored entries + the ability to add new/edit existant and remove existant entries (same UI look and feel)
-
 
 * TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
 ** initial

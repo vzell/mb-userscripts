@@ -1,21 +1,5 @@
 [
     {
-      "version": "9.99.197",
-      "date": "2026-03-16",
-      "sections": [
-        {
-          "label": "✨ New Features / Changes",
-          "items": [
-            "Load dialog filter history — add a second persistent 'Pinned' list stored under GM key 'persistent-sa-hist-list'. The existing LRU list is renamed internally to 'lru-sa-hist-list' (with migration from the old 'sa_load_filter_history' key). The history dropdown now shows both lists in two independently scrollable sections: 📌 Pinned (green header) above 🕐 Recent/LRU (blue header), each with its own count footer. The quick-filter searches both lists simultaneously.",
-            "Filter input row: new '+' pin button (green, id: sa-hist-pin-btn) between the filter input and the History toggle. Clicking it saves the current filter expression + checkbox states to the persistent list (deduplicates by query). A brief green flash confirms the save.",
-            "Checkbox row: new '✎ Edit Pinned' button (id: sa-hist-edit-btn, amber style, Alt+E) added to the right of the checkbox group.",
-            "New showEditPersistentListDialog() — full-featured modal for managing the persistent list. Features: sortable table view with # / Filter Expression / Cs / Re / Ex columns; quick-filter with yellow highlight; Add (Alt+A) / Edit (Alt+E) / Remove (Alt+R) operations via an inline form; Save (Alt+S) and Cancel (Alt+C / Escape) with unsaved-changes warning; double-click a row to open it for editing; draggable header. Changes are only committed to GM storage when Save is clicked.",
-            "History dropdown keyboard navigation updated for two-list model: ArrowDown flows from quick-filter → pin list → lru list; ArrowUp flows in reverse; Escape from list → quick-filter focus; Escape with quick-filter empty → close panel."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.196",
       "date": "2026-03-16",
       "sections": [

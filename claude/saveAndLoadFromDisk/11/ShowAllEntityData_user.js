@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.197+2026-03-16
+// @version      9.99.196+2026-03-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -11682,329 +11682,6 @@
         setTimeout(() => { filenameInput.focus(); filenameInput.select(); }, 80);
     }
 
-    /**
-     * Edit-Persistent-Filter-List dialog.
-     *
-     * Shows the full persistent pinned filter list in a table with Add / Edit /
-     * Remove operations, a quick-filter with highlighting, and Save / Cancel.
-     * Changes are only committed when the user clicks Save.
-     *
-     * @param {Array}    currentList  - Current persistent list (array of entry objects).
-     * @param {Function} onSave       - Callback(updatedList) called when Save is clicked.
-     * @param {HTMLElement|null} triggerButton - Anchor button for positioning.
-     */
-    function showEditPersistentListDialog(currentList, onSave, triggerButton = null) {
-        const EDIT_DLG_ID = 'sa-edit-pin-list-dialog';
-        // Toggle: close if already open
-        const existing = document.getElementById(EDIT_DLG_ID);
-        if (existing) { existing.remove(); return; }
-
-        const dialogWidth  = (Lib.settings.sa_ld_dialog_width || 600) + 'px';
-        const headerFontSz = Lib.settings.sa_ld_dialog_header_font_size || '1.00em';
-
-        // Working copy — edits operate on this; committed only on Save.
-        let workList = currentList.map(h =>
-            (typeof h === 'object' && h !== null) ? { ...h } : { query: String(h), useCase: false, useRegex: false, useExclude: false }
-        );
-        let isDirty = false;
-        let selectedIdx = -1; // row selected for editing/removing
-        let quickFilterVal = '';
-
-        const dlg = document.createElement('div');
-        dlg.id = EDIT_DLG_ID;
-        dlg.style.cssText = [
-            'position:fixed', 'background:#fff', 'padding:20px', 'border-radius:12px',
-            'box-shadow:0 8px 32px rgba(0,0,0,0.3)',
-            `width:${dialogWidth}`, 'max-width:calc(100vw - 40px)', 'min-width:480px',
-            'font-family:sans-serif', 'border:1px solid #ccc', 'z-index:20002',
-            'max-height:calc(100vh - 60px)', 'overflow-y:auto', 'resize:both', 'box-sizing:border-box',
-        ].join(';');
-
-        dlg.innerHTML = `
-            <div id="sa-epl-drag" style="margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:10px;cursor:move;user-select:none;">
-                <h3 style="margin:0;color:#222;font-size:1.1em;">&#128204; Edit Pinned Filter List</h3>
-                <p style="margin:4px 0 0;color:#666;font-size:${headerFontSz};">Add, edit or remove entries from the persistent pinned filter list. Changes take effect only when you click <strong>Save</strong>.</p>
-            </div>
-            <!-- Quick filter -->
-            <div style="margin-bottom:10px;">
-                <input id="sa-epl-qf" type="text" placeholder="&#128269; Quick filter list..."
-                    style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:0.9em;outline:none;">
-            </div>
-            <!-- Entry table -->
-            <div id="sa-epl-table-wrap" style="border:1px solid #ddd;border-radius:6px;overflow:auto;max-height:320px;margin-bottom:12px;">
-                <table id="sa-epl-table" style="width:100%;border-collapse:collapse;font-size:0.88em;">
-                    <thead>
-                        <tr style="background:#f5f5f5;position:sticky;top:0;z-index:1;">
-                            <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #ddd;font-weight:700;">#</th>
-                            <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #ddd;font-weight:700;">Filter Expression</th>
-                            <th style="padding:6px 4px;text-align:center;border-bottom:2px solid #ddd;font-weight:700;" title="Case Sensitive">Cs</th>
-                            <th style="padding:6px 4px;text-align:center;border-bottom:2px solid #ddd;font-weight:700;" title="Regular Expression">Re</th>
-                            <th style="padding:6px 4px;text-align:center;border-bottom:2px solid #ddd;font-weight:700;" title="Exclude Matches">Ex</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sa-epl-tbody"></tbody>
-                </table>
-            </div>
-            <!-- Edit form (hidden until Add/Edit clicked) -->
-            <div id="sa-epl-form" style="display:none;background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:12px;margin-bottom:12px;">
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-                    <input id="sa-epl-input" type="text" placeholder="Filter expression..."
-                        style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:0.9em;outline:none;">
-                </div>
-                <div style="display:flex;gap:16px;margin-bottom:8px;flex-wrap:wrap;">
-                    <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:0.88em;font-weight:600;">
-                        <input type="checkbox" id="sa-epl-case"> Case Sensitive
-                    </label>
-                    <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:0.88em;font-weight:600;">
-                        <input type="checkbox" id="sa-epl-regex"> Regular Expression
-                    </label>
-                    <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:0.88em;font-weight:600;">
-                        <input type="checkbox" id="sa-epl-exclude"> Exclude Matches
-                    </label>
-                </div>
-                <div style="display:flex;gap:8px;">
-                    <button id="sa-epl-form-apply" style="padding:6px 14px;background:#4CAF50;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;font-size:0.88em;">Apply</button>
-                    <button id="sa-epl-form-discard" style="padding:6px 14px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:0.88em;">Discard</button>
-                </div>
-            </div>
-            <!-- Status line -->
-            <div id="sa-epl-status" style="min-height:18px;font-size:0.82em;color:#888;margin-bottom:10px;"></div>
-            <!-- Action buttons row -->
-            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-                <button id="sa-epl-add-btn" style="padding:7px 12px;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85em;" title="Add new entry (Alt+A)">
-                    + <span style="text-decoration:underline">A</span>dd
-                </button>
-                <button id="sa-epl-edit-btn" style="padding:7px 12px;background:#fff8e1;color:#e65100;border:1px solid #ffe082;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85em;" title="Edit selected entry (Alt+E)" disabled>
-                    &#9998; <span style="text-decoration:underline">E</span>dit
-                </button>
-                <button id="sa-epl-remove-btn" style="padding:7px 12px;background:#ffebee;color:#c62828;border:1px solid #ef9a9a;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85em;" title="Remove selected entry (Alt+R)" disabled>
-                    &#10005; <span style="text-decoration:underline">R</span>emove
-                </button>
-                <div style="flex:1;"></div>
-                <button id="sa-epl-save-btn" style="padding:7px 14px;background:#4CAF50;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;font-size:0.88em;" title="Save changes (Alt+S)">
-                    &#128190; <span style="text-decoration:underline">S</span>ave
-                </button>
-                <button id="sa-epl-cancel-btn" style="padding:7px 14px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:0.88em;" title="Cancel (Alt+C / Escape)">
-                    <span style="text-decoration:underline">C</span>ancel
-                </button>
-            </div>
-        `;
-
-        document.body.appendChild(dlg);
-
-        // Position
-        setTimeout(() => {
-            if (triggerButton) {
-                const br = triggerButton.getBoundingClientRect();
-                const dr = dlg.getBoundingClientRect();
-                let top = br.bottom + 6, left = br.left;
-                if (top + dr.height > window.innerHeight - 10) top = Math.max(10, br.top - dr.height - 6);
-                if (left + dr.width > window.innerWidth - 10)  left = Math.max(10, window.innerWidth - dr.width - 10);
-                dlg.style.top = top + 'px'; dlg.style.left = left + 'px';
-            } else {
-                dlg.style.left = '50%'; dlg.style.top = '50%'; dlg.style.transform = 'translate(-50%,-50%)';
-            }
-        }, 0);
-
-        // ── Drag ────────────────────────────────────────────────────────────────
-        const eplDragHandle = dlg.querySelector('#sa-epl-drag');
-        let eplDragging = false, eplDX = 0, eplDY = 0;
-        eplDragHandle.addEventListener('mousedown', (e) => {
-            if (e.target.closest('button,input')) return;
-            eplDragging = true;
-            const r = dlg.getBoundingClientRect();
-            eplDX = e.clientX - r.left; eplDY = e.clientY - r.top;
-            dlg.style.transform = 'none'; dlg.style.left = r.left+'px'; dlg.style.top = r.top+'px';
-            e.preventDefault();
-        });
-        const eplDragMove = (e) => {
-            if (!eplDragging) return;
-            dlg.style.left = Math.max(0, Math.min(e.clientX - eplDX, window.innerWidth  - dlg.offsetWidth))  + 'px';
-            dlg.style.top  = Math.max(0, Math.min(e.clientY - eplDY, window.innerHeight - dlg.offsetHeight)) + 'px';
-        };
-        const eplDragEnd = () => { eplDragging = false; };
-        document.addEventListener('mousemove', eplDragMove);
-        document.addEventListener('mouseup',   eplDragEnd);
-
-        // ── Refs ─────────────────────────────────────────────────────────────────
-        const eplQF        = dlg.querySelector('#sa-epl-qf');
-        const eplTbody     = dlg.querySelector('#sa-epl-tbody');
-        const eplForm      = dlg.querySelector('#sa-epl-form');
-        const eplInput     = dlg.querySelector('#sa-epl-input');
-        const eplCaseChk   = dlg.querySelector('#sa-epl-case');
-        const eplRegexChk  = dlg.querySelector('#sa-epl-regex');
-        const eplExclChk   = dlg.querySelector('#sa-epl-exclude');
-        const eplFormApply = dlg.querySelector('#sa-epl-form-apply');
-        const eplFormDiscard = dlg.querySelector('#sa-epl-form-discard');
-        const eplAddBtn    = dlg.querySelector('#sa-epl-add-btn');
-        const eplEditBtn   = dlg.querySelector('#sa-epl-edit-btn');
-        const eplRemoveBtn = dlg.querySelector('#sa-epl-remove-btn');
-        const eplSaveBtn   = dlg.querySelector('#sa-epl-save-btn');
-        const eplCancelBtn = dlg.querySelector('#sa-epl-cancel-btn');
-        const eplStatus    = dlg.querySelector('#sa-epl-status');
-        let editingIdx = -1; // -1 = adding new, >=0 = editing existing
-
-        const _eplGlyphs = (e) => {
-            const g = [];
-            if (e.useCase)    g.push('<span style="color:#1976D2;font-size:0.78em;font-weight:700;border:1px solid #1976D2;border-radius:2px;padding:0 2px;">Cs</span>');
-            if (e.useRegex)   g.push('<span style="color:#7B1FA2;font-size:0.78em;font-weight:700;border:1px solid #7B1FA2;border-radius:2px;padding:0 2px;">Re</span>');
-            if (e.useExclude) g.push('<span style="color:#c62828;font-size:0.78em;font-weight:700;border:1px solid #c62828;border-radius:2px;padding:0 2px;">Ex</span>');
-            return g.join(' ') || '<span style="color:#ccc;">—</span>';
-        };
-
-        const _eplHighlight = (text, needle) => {
-            if (!needle) return text.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-            const esc = text.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-            const nesc = needle.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-            const idx = esc.toLowerCase().indexOf(nesc.toLowerCase());
-            if (idx < 0) return esc;
-            return esc.slice(0,idx) + `<mark style="background:#fff176;padding:0;">${esc.slice(idx, idx+nesc.length)}</mark>` + esc.slice(idx+nesc.length);
-        };
-
-        const _eplStatus = (msg, color = '#888') => {
-            eplStatus.textContent = msg; eplStatus.style.color = color;
-        };
-
-        const _eplSelectRow = (idx) => {
-            selectedIdx = idx;
-            eplTbody.querySelectorAll('tr').forEach((tr, i) => {
-                tr.style.background = i === idx ? '#e3f2fd' : '';
-                tr.style.outline    = i === idx ? '1px solid #90caf9' : '';
-            });
-            eplEditBtn.disabled   = idx < 0;
-            eplRemoveBtn.disabled = idx < 0;
-            eplEditBtn.style.opacity   = idx < 0 ? '0.4' : '';
-            eplRemoveBtn.style.opacity = idx < 0 ? '0.4' : '';
-        };
-
-        const _eplRender = () => {
-            const qf = quickFilterVal.trim().toLowerCase();
-            const visible = workList
-                .map((e, origIdx) => ({ e, origIdx }))
-                .filter(({ e }) => !qf || e.query.toLowerCase().includes(qf));
-
-            eplTbody.innerHTML = visible.map(({ e, origIdx }, visIdx) => {
-                const hl = _eplHighlight(e.query, qf);
-                return `<tr data-orig-idx="${origIdx}" style="cursor:pointer;border-bottom:1px solid #eee;">
-                    <td style="padding:5px 8px;color:#aaa;font-size:0.82em;white-space:nowrap;">${origIdx + 1}</td>
-                    <td style="padding:5px 10px;font-size:0.9em;word-break:break-all;">${hl}</td>
-                    <td style="padding:5px 4px;text-align:center;">${e.useCase    ? '&#10003;' : ''}</td>
-                    <td style="padding:5px 4px;text-align:center;">${e.useRegex   ? '&#10003;' : ''}</td>
-                    <td style="padding:5px 4px;text-align:center;">${e.useExclude ? '&#10003;' : ''}</td>
-                </tr>`;
-            }).join('') || `<tr><td colspan="5" style="padding:12px;text-align:center;color:#aaa;font-size:0.88em;">No entries</td></tr>`;
-
-            // Re-attach row click
-            eplTbody.querySelectorAll('tr[data-orig-idx]').forEach(tr => {
-                const oi = parseInt(tr.dataset.origIdx);
-                const vi = Array.from(eplTbody.querySelectorAll('tr[data-orig-idx]')).indexOf(tr);
-                tr.addEventListener('click', () => _eplSelectRow(oi));
-                tr.addEventListener('dblclick', () => { _eplSelectRow(oi); _eplOpenForm(oi); });
-            });
-
-            // Preserve selection highlight after re-render
-            if (selectedIdx >= 0) {
-                const selTr = eplTbody.querySelector(`tr[data-orig-idx="${selectedIdx}"]`);
-                if (selTr) { selTr.style.background = '#e3f2fd'; selTr.style.outline = '1px solid #90caf9'; }
-            }
-            _eplStatus(`${visible.length} of ${workList.length} entries${isDirty ? ' — unsaved changes' : ''}`, isDirty ? '#e65100' : '#888');
-        };
-
-        const _eplOpenForm = (idx) => {
-            editingIdx = idx;
-            if (idx >= 0 && idx < workList.length) {
-                eplInput.value      = workList[idx].query;
-                eplCaseChk.checked  = !!workList[idx].useCase;
-                eplRegexChk.checked = !!workList[idx].useRegex;
-                eplExclChk.checked  = !!workList[idx].useExclude;
-            } else {
-                eplInput.value = ''; eplCaseChk.checked = false; eplRegexChk.checked = false; eplExclChk.checked = false;
-            }
-            eplForm.style.display = 'block';
-            eplFormApply.textContent = idx >= 0 ? '✓ Apply Edit' : '✓ Add Entry';
-            eplInput.focus(); eplInput.select();
-        };
-
-        const _eplCloseForm = () => { eplForm.style.display = 'none'; editingIdx = -1; };
-
-        eplAddBtn.onclick = () => _eplOpenForm(-1);
-        eplEditBtn.onclick = () => { if (selectedIdx >= 0) _eplOpenForm(selectedIdx); };
-        eplRemoveBtn.onclick = () => {
-            if (selectedIdx < 0 || selectedIdx >= workList.length) return;
-            const removed = workList[selectedIdx].query;
-            workList.splice(selectedIdx, 1);
-            isDirty = true;
-            selectedIdx = -1;
-            _eplSelectRow(-1);
-            _eplCloseForm();
-            _eplRender();
-            _eplStatus(`Removed "${removed}". Unsaved changes.`, '#e65100');
-        };
-
-        eplFormApply.onclick = () => {
-            const q = eplInput.value.trim();
-            if (!q) { eplInput.style.borderColor = 'red'; eplInput.focus(); return; }
-            eplInput.style.borderColor = '';
-            const entry = { query: q, useCase: eplCaseChk.checked, useRegex: eplRegexChk.checked, useExclude: eplExclChk.checked };
-            if (editingIdx >= 0 && editingIdx < workList.length) {
-                workList[editingIdx] = entry;
-                _eplStatus(`Updated entry at position ${editingIdx + 1}. Unsaved changes.`, '#e65100');
-            } else {
-                // Deduplicate by query
-                workList = [entry, ...workList.filter(h => h.query !== q)];
-                _eplStatus(`Added "${q}". Unsaved changes.`, '#e65100');
-            }
-            isDirty = true;
-            selectedIdx = -1;
-            _eplCloseForm();
-            _eplRender();
-        };
-
-        eplFormDiscard.onclick = _eplCloseForm;
-
-        const _eplClose = () => {
-            dlg.remove();
-            document.removeEventListener('keydown', _eplHandleKey);
-            document.removeEventListener('mousemove', eplDragMove);
-            document.removeEventListener('mouseup',   eplDragEnd);
-        };
-
-        eplSaveBtn.onclick = () => {
-            onSave([...workList]);
-            _eplClose();
-        };
-
-        eplCancelBtn.onclick = async () => {
-            if (isDirty) {
-                const confirmed = await Lib.showCustomConfirm(
-                    'You have unsaved changes. Discard them and close?',
-                    '⚠️ Unsaved Changes',
-                    eplCancelBtn
-                );
-                if (!confirmed) return;
-            }
-            _eplClose();
-        };
-
-        eplQF.addEventListener('input', () => { quickFilterVal = eplQF.value; _eplSelectRow(-1); _eplRender(); });
-
-        const _eplHandleKey = (e) => {
-            if (!document.getElementById(EDIT_DLG_ID)) return;
-            if (e.key === 'Escape') { e.stopPropagation(); eplCancelBtn.click(); }
-            else if (e.altKey && e.key.toLowerCase() === 'a') { e.preventDefault(); eplAddBtn.click(); }
-            else if (e.altKey && e.key.toLowerCase() === 'e') { e.preventDefault(); eplEditBtn.click(); }
-            else if (e.altKey && e.key.toLowerCase() === 'r') { e.preventDefault(); eplRemoveBtn.click(); }
-            else if (e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); eplSaveBtn.click(); }
-            else if (e.altKey && e.key.toLowerCase() === 'c') { e.preventDefault(); eplCancelBtn.click(); }
-        };
-        document.addEventListener('keydown', _eplHandleKey);
-
-        // Initial render
-        _eplSelectRow(-1);
-        _eplRender();
-        eplQF.focus();
-    }
-
     async function showLoadFilterDialog(triggerButton = null) {
 
         const historyLimit       = Math.max(0, Math.round(+(Lib.settings.sa_load_history_limit       ?? 50)));
@@ -12016,8 +11693,7 @@
         const statusFontSz  = Lib.settings.sa_ld_status_font_size        || '0.95em';
         // History entries: [{query, useCase, useRegex, useExclude}]
         // Legacy plain-string entries are tolerated on read (treated as {query:item}).
-        let lruHistory  = GM_getValue('lru-sa-hist-list', GM_getValue('sa_load_filter_history', [])); // LRU list (auto-managed)
-        let pinHistory  = GM_getValue('persistent-sa-hist-list', []); // Persistent pinned list
+        let history = GM_getValue('sa_load_filter_history', []);
 
         // Toggle: close if already open
         const existingOverlay = document.getElementById('sa-load-dialog-overlay');
@@ -12073,15 +11749,12 @@
 
             <!-- ── Phase 2 — Filter (hidden until load complete) ── -->
             <div id="sa-ld-phase2" style="display:none;margin-top:18px;border-top:1px solid #eee;padding-top:16px;">
-                <!-- Filter expression row: input + Pin + History button -->
+                <!-- Filter expression row: input + History button -->
                 <div style="margin-bottom:10px;position:relative;">
                     <div style="display:flex;gap:4px;align-items:stretch;">
                         <input id="sa-load-filter-input" type="text"
                             placeholder="Filter expression... evaluated for each column"
                             style="flex:1;padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:1em;outline:none;">
-                        <button id="sa-hist-pin-btn"
-                            title="Pin current filter to persistent list (saves query + checkbox states)"
-                            style="padding:0 10px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;cursor:pointer;font-size:1.1em;font-weight:bold;color:#2e7d32;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">+</button>
                         <button id="sa-load-history-toggle"
                             title="Show/hide filter history (Alt+H)"
                             style="padding:0 10px;background:#f0f0f0;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:0.85em;white-space:nowrap;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
@@ -12093,47 +11766,29 @@
                         <!-- Quick-filter input inside the panel -->
                         <div style="padding:8px 8px 6px;border-bottom:1px solid #eee;">
                             <input id="sa-hist-quick-filter" type="text"
-                                placeholder="&#128269; Quick filter both lists..."
+                                placeholder="&#128269; Quick filter history..."
                                 style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:0.88em;outline:none;">
                         </div>
-                        <!-- Persistent pinned list -->
-                        <div style="padding:4px 8px 2px;background:#e8f5e9;border-bottom:1px solid #c8e6c9;">
-                            <span style="font-size:0.76em;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:0.04em;">&#128204; Pinned</span>
-                        </div>
-                        <div id="persistent-sa-hist-list" style="max-height:${histDropdownPx}px;overflow-y:auto;"></div>
-                        <div id="persistent-sa-hist-footer" style="padding:3px 8px;border-top:1px solid #eee;border-bottom:1px solid #ddd;font-size:0.76em;color:#666;display:flex;justify-content:space-between;background:#f9fbe7;">
-                            <span id="persistent-sa-hist-count"></span>
-                            <span>&#8593;&#8595; navigate &nbsp; Enter: apply</span>
-                        </div>
-                        <!-- LRU recent list -->
-                        <div style="padding:4px 8px 2px;background:#e3f2fd;border-bottom:1px solid #bbdefb;">
-                            <span style="font-size:0.76em;font-weight:700;color:#1565c0;text-transform:uppercase;letter-spacing:0.04em;">&#128337; Recent (LRU)</span>
-                        </div>
-                        <div id="lru-sa-hist-list" style="max-height:${histDropdownPx}px;overflow-y:auto;"></div>
-                        <div id="lru-sa-hist-footer" style="padding:3px 8px;border-top:1px solid #eee;font-size:0.76em;color:#888;display:flex;justify-content:space-between;">
-                            <span id="lru-sa-hist-count"></span>
+                        <!-- Scrollable navigable list -->
+                        <div id="sa-hist-list" style="max-height:${histDropdownPx}px;overflow-y:auto;"></div>
+                        <!-- Footer: count + hint -->
+                        <div id="sa-hist-footer" style="padding:4px 8px;border-top:1px solid #eee;font-size:0.78em;color:#888;display:flex;justify-content:space-between;">
+                            <span id="sa-hist-count"></span>
                             <span>&#8593;&#8595; navigate &nbsp; Enter: apply &nbsp; Esc: close</span>
                         </div>
                     </div>
                 </div>
-                <!-- Checkbox row + Edit Persistent List button -->
-                <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;background:#f9f9f9;padding:10px;border-radius:8px;flex-wrap:wrap;">
-                    <div style="display:flex;gap:20px;justify-content:center;flex:1;flex-wrap:wrap;">
-                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
-                            <input type="checkbox" id="sa-load-case"> Case Sensitive
-                        </label>
-                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
-                            <input type="checkbox" id="sa-load-regex"> Regular Expression
-                        </label>
-                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
-                            <input type="checkbox" id="sa-load-exclude"> Exclude Matches
-                        </label>
-                    </div>
-                    <button id="sa-hist-edit-btn"
-                        title="Edit the persistent pinned filter list (Alt+E)"
-                        style="padding:5px 10px;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;cursor:pointer;font-size:0.82em;font-weight:600;color:#e65100;white-space:nowrap;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
-                        &#9998; <span style="text-decoration:underline">E</span>dit Pinned
-                    </button>
+                <!-- Checkbox row -->
+                <div style="display:flex;gap:20px;justify-content:center;margin-bottom:14px;background:#f9f9f9;padding:10px;border-radius:8px;">
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                        <input type="checkbox" id="sa-load-case"> Case Sensitive
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
+                        <input type="checkbox" id="sa-load-regex"> Regular Expression
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
+                        <input type="checkbox" id="sa-load-exclude"> Exclude Matches
+                    </label>
                 </div>
                 <!-- Action buttons -->
                 <div style="display:flex;gap:12px;margin-bottom:8px;">
@@ -12251,15 +11906,11 @@
         const renderBtn    = dialog.querySelector('#sa-render-confirm');
         const renderNoFilterBtn = dialog.querySelector('#sa-render-no-filter-confirm');
         const renderStatus = dialog.querySelector('#sa-ld-render-status');
-        const historyToggle    = dialog.querySelector('#sa-load-history-toggle');
-        const historyDropdown  = dialog.querySelector('#sa-load-history-dropdown');
-        const histQuickFilter  = dialog.querySelector('#sa-hist-quick-filter');
-        const histPinBtn       = dialog.querySelector('#sa-hist-pin-btn');
-        const histEditBtn      = dialog.querySelector('#sa-hist-edit-btn');
-        const histPinList      = dialog.querySelector('#persistent-sa-hist-list');
-        const histLruList      = dialog.querySelector('#lru-sa-hist-list');
-        const histPinCount     = dialog.querySelector('#persistent-sa-hist-count');
-        const histLruCount     = dialog.querySelector('#lru-sa-hist-count');
+        const historyToggle   = dialog.querySelector('#sa-load-history-toggle');
+        const historyDropdown = dialog.querySelector('#sa-load-history-dropdown');
+        const histQuickFilter = dialog.querySelector('#sa-hist-quick-filter');
+        const histList        = dialog.querySelector('#sa-hist-list');
+        const histCount       = dialog.querySelector('#sa-hist-count');
 
         // ── Cleanup ─────────────────────────────────────────────────────────
         let _outsideHandler = null;
@@ -12507,14 +12158,15 @@
             }
             filterInput.style.borderColor = '';
 
-            // Persist to LRU history as {query, useCase, useRegex, useExclude} object
+            // Persist to history as {query, useCase, useRegex, useExclude} object
             if (query && historyLimit > 0) {
                 const entry = { query, useCase, useRegex, useExclude };
-                const updated = [entry, ...lruHistory.filter(h => (typeof h === 'object' ? h.query : h) !== query)]
+                // Deduplicate by query string (LRU: most recent first)
+                const updated = [entry, ...history.filter(h => (typeof h === 'object' ? h.query : h) !== query)]
                     .slice(0, historyLimit);
-                GM_setValue('lru-sa-hist-list', updated);
-                lruHistory = updated;
-                Lib.debug('cache', `Updated LRU filter history. Count: ${updated.length}`);
+                GM_setValue('sa_load_filter_history', updated);
+                history = updated;
+                Lib.debug('cache', `Updated load filter history. Count: ${updated.length}`);
                 refreshHistoryDropdown();
             }
 
@@ -12622,10 +12274,10 @@
         // ── History dropdown ──────────────────────────────────────────────────────
 
         // Normalise a history entry — legacy plain strings are wrapped into objects.
-        const _histEntry = (h) => (typeof h === 'object' && h !== null) ? h
-            : { query: String(h), useCase: false, useRegex: false, useExclude: false };
+        const _histEntry = (h) => (typeof h === 'object' && h !== null) ? h : { query: String(h), useCase: false, useRegex: false, useExclude: false };
 
-        // Build compact checkbox-state glyphs.
+        // Build compact checkbox-state glyphs for a history entry.
+        // Shown in the dropdown row to remind the user which options were active.
         const _histGlyphs = (e) => {
             const parts = [];
             if (e.useCase)    parts.push('<span title="Case Sensitive" style="color:#1976D2;font-size:0.78em;font-weight:700;border:1px solid #1976D2;border-radius:2px;padding:0 2px;">Cs</span>');
@@ -12634,7 +12286,7 @@
             return parts.length ? '&nbsp;' + parts.join('&nbsp;') : '';
         };
 
-        // Highlight `needle` inside HTML-escaped `haystack` with a yellow mark.
+        // Highlight `needle` inside `haystack` (HTML-escaped) with a yellow mark.
         const _histHighlight = (haystack, needle) => {
             if (!needle) return haystack;
             const idx = haystack.toLowerCase().indexOf(needle.toLowerCase());
@@ -12644,79 +12296,57 @@
                 haystack.slice(idx + needle.length);
         };
 
-        // Navigation state — tracks which list is active ('pin' | 'lru') and index.
-        let _histActiveList  = 'lru'; // 'pin' | 'lru'
-        let _histPinVisible  = [];
-        let _histLruVisible  = [];
-        let _histPinSelIdx   = -1;
-        let _histLruSelIdx   = -1;
+        let _histSelectedIdx = -1;   // keyboard-navigated row index in the visible list
+        let _histVisible = [];        // currently displayed entries (after quick-filter)
 
-        /** Render one section (pin or lru) into its container element. */
-        const _renderHistSection = (entries, container, countEl, qf, listId) => {
-            if (!container) return;
-            const escaped_qf = qf.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-            container.innerHTML = entries.map((e, i) => {
-                const esc   = e.query.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-                const label = _histHighlight(esc, escaped_qf);
-                const glyphs = _histGlyphs(e);
-                return `<div class="sa-hist-row" data-idx="${i}" data-list="${listId}"
+        /**
+         * Re-render the history list inside the dropdown, applying the quick-filter
+         * and rebuilding keyboard navigation state.
+         */
+        const refreshHistoryDropdown = (quickFilter = '') => {
+            if (!historyToggle || !historyDropdown || !histList) return;
+            historyToggle.style.display = history.length > 0 ? 'inline-block' : 'none';
+
+            const qf = quickFilter.trim().toLowerCase();
+            _histVisible = history
+                .map(_histEntry)
+                .filter(e => !qf || e.query.toLowerCase().includes(qf));
+
+            if (histCount) histCount.textContent = `${_histVisible.length} of ${history.length} entries`;
+            _histSelectedIdx = -1;
+
+            histList.innerHTML = _histVisible.map((e, i) => {
+                const escaped = e.query.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                const label   = _histHighlight(escaped, qf.replace(/&/g, '&amp;').replace(/</g, '&lt;'));
+                const glyphs  = _histGlyphs(e);
+                return `<div class="sa-hist-row" data-idx="${i}"
                     style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;gap:6px;">
                     <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${label}</span>
                     <span style="flex-shrink:0;display:flex;gap:3px;align-items:center;">${glyphs}</span>
                 </div>`;
-            }).join('') || `<div style="padding:8px 10px;color:#aaa;font-size:0.85em;text-align:center;">No matching entries</div>`;
+            }).join('') || `<div style="padding:10px;color:#aaa;font-size:0.88em;text-align:center;">No matching entries</div>`;
 
-            container.querySelectorAll('.sa-hist-row').forEach(row => {
-                row.addEventListener('mouseenter', () => {
-                    _histActiveList = listId;
-                    _histSelectRow(parseInt(row.dataset.idx), listId);
-                });
-                row.addEventListener('click', () => _histApplyEntry(parseInt(row.dataset.idx), listId));
+            histList.querySelectorAll('.sa-hist-row').forEach(row => {
+                row.addEventListener('mouseenter', () => _histSelectRow(parseInt(row.dataset.idx)));
+                row.addEventListener('click', () => _histApplyEntry(parseInt(row.dataset.idx)));
             });
-
-            const total = listId === 'pin' ? pinHistory.length : lruHistory.length;
-            if (countEl) countEl.textContent = `${entries.length} of ${total} entries`;
         };
 
-        /**
-         * Re-render both history lists applying the quick-filter.
-         */
-        const refreshHistoryDropdown = (quickFilter = '') => {
-            if (!historyToggle || !historyDropdown) return;
-            const hasAny = pinHistory.length > 0 || lruHistory.length > 0;
-            historyToggle.style.display = hasAny ? 'inline-block' : 'none';
-
-            const qf = quickFilter.trim().toLowerCase();
-            _histPinVisible = pinHistory.map(_histEntry).filter(e => !qf || e.query.toLowerCase().includes(qf));
-            _histLruVisible = lruHistory.map(_histEntry).filter(e => !qf || e.query.toLowerCase().includes(qf));
-            _histPinSelIdx  = -1;
-            _histLruSelIdx  = -1;
-
-            _renderHistSection(_histPinVisible, histPinList, histPinCount, qf, 'pin');
-            _renderHistSection(_histLruVisible, histLruList, histLruCount, qf, 'lru');
-        };
-
-        /** Visually select row i in the given list; deselect rows in the other list. */
-        const _histSelectRow = (i, listId) => {
-            const isPin = listId === 'pin';
-            const container = isPin ? histPinList : histLruList;
-            const other     = isPin ? histLruList : histPinList;
-            if (isPin) _histPinSelIdx = i; else _histLruSelIdx = i;
-            // Clear other list selection
-            if (other) other.querySelectorAll('.sa-hist-row').forEach(r => { r.style.background=''; r.style.outline=''; });
-            if (!container) return;
-            container.querySelectorAll('.sa-hist-row').forEach((row, j) => {
+        /** Visually select row at index i (keyboard or mouse hover). */
+        const _histSelectRow = (i) => {
+            _histSelectedIdx = i;
+            histList.querySelectorAll('.sa-hist-row').forEach((row, j) => {
                 row.style.background = j === i ? '#e3f2fd' : '';
-                row.style.outline    = j === i ? '1px solid #90caf9' : '';
+                row.style.outline = j === i ? '1px solid #90caf9' : '';
             });
-            const sel = container.querySelector(`.sa-hist-row[data-idx="${i}"]`);
+            // Scroll selected row into view
+            const sel = histList.querySelector(`.sa-hist-row[data-idx="${i}"]`);
             if (sel) sel.scrollIntoView({ block: 'nearest' });
         };
 
-        /** Apply entry at index i from the given list to the filter inputs. */
-        const _histApplyEntry = (i, listId) => {
-            const visible = listId === 'pin' ? _histPinVisible : _histLruVisible;
-            const e = visible[i];
+        /** Apply history entry at visible index i to the filter inputs. */
+        const _histApplyEntry = (i) => {
+            const e = _histVisible[i];
             if (!e) return;
             filterInput.value = e.query;
             dialog.querySelector('#sa-load-case').checked    = !!e.useCase;
@@ -12734,55 +12364,16 @@
 
         const _histClose = () => {
             historyDropdown.style.display = 'none';
-            _histPinSelIdx = -1;
-            _histLruSelIdx = -1;
+            _histSelectedIdx = -1;
         };
 
         const _histIsOpen = () => historyDropdown.style.display !== 'none';
-
-        // ── Pin button — saves current filter to persistent list ─────────────────
-        if (histPinBtn) {
-            histPinBtn.addEventListener('click', (ev) => {
-                ev.stopPropagation();
-                const query      = filterInput.value.trim();
-                const useCase    = dialog.querySelector('#sa-load-case').checked;
-                const useRegex   = dialog.querySelector('#sa-load-regex').checked;
-                const useExclude = dialog.querySelector('#sa-load-exclude').checked;
-                if (!query) { filterInput.focus(); return; }
-                const entry = { query, useCase, useRegex, useExclude };
-                // Deduplicate by query
-                pinHistory = [entry, ...pinHistory.filter(h => _histEntry(h).query !== query)];
-                GM_setValue('persistent-sa-hist-list', pinHistory);
-                Lib.debug('cache', `Pinned filter: "${query}". Persistent list size: ${pinHistory.length}`);
-                // Brief flash on pin button to confirm
-                histPinBtn.style.background = '#a5d6a7';
-                setTimeout(() => { histPinBtn.style.background = '#e8f5e9'; }, 600);
-                if (_histIsOpen()) refreshHistoryDropdown(histQuickFilter ? histQuickFilter.value : '');
-            });
-        }
 
         // ── History toggle button ────────────────────────────────────────────────
         if (historyToggle) {
             historyToggle.addEventListener('click', (ev) => {
                 ev.stopPropagation();
                 _histIsOpen() ? _histClose() : _histOpen();
-            });
-        }
-
-        // ── Edit Pinned List button ──────────────────────────────────────────────
-        if (histEditBtn) {
-            histEditBtn.addEventListener('click', (ev) => {
-                ev.stopPropagation();
-                _histClose();
-                showEditPersistentListDialog(
-                    pinHistory,
-                    (updated) => {
-                        pinHistory = updated;
-                        GM_setValue('persistent-sa-hist-list', pinHistory);
-                        if (_histIsOpen()) refreshHistoryDropdown(histQuickFilter ? histQuickFilter.value : '');
-                    },
-                    histEditBtn
-                );
             });
         }
 
@@ -12794,32 +12385,21 @@
 
             histQuickFilter.addEventListener('keydown', (ev) => {
                 if (!_histIsOpen()) return;
-                const allVisible  = [..._histPinVisible, ..._histLruVisible];
-                const totalVisible = allVisible.length;
-
                 if (ev.key === 'ArrowDown') {
                     ev.preventDefault();
-                    // Move into pin list first, then lru list
-                    if (_histActiveList === 'lru' || _histLruVisible.length === 0) {
-                        if (_histPinVisible.length > 0) {
-                            _histActiveList = 'pin';
-                            _histSelectRow(0, 'pin');
-                            histPinList && histPinList.focus();
-                        } else if (_histLruVisible.length > 0) {
-                            _histActiveList = 'lru';
-                            _histSelectRow(0, 'lru');
-                            histLruList && histLruList.focus();
-                        }
-                    } else {
-                        _histActiveList = 'lru';
-                        _histSelectRow(0, 'lru');
-                        histLruList && histLruList.focus();
-                    }
+                    const next = Math.min(_histSelectedIdx + 1, _histVisible.length - 1);
+                    _histSelectRow(next);
+                    // Move focus to list so further arrows work naturally
+                    histList.focus();
+                } else if (ev.key === 'ArrowUp') {
+                    ev.preventDefault();
+                    const prev = Math.max(_histSelectedIdx - 1, 0);
+                    _histSelectRow(prev);
+                    histList.focus();
                 } else if (ev.key === 'Enter') {
                     ev.preventDefault();
-                    // Apply first visible entry from pin, then lru
-                    if (_histPinVisible.length > 0) _histApplyEntry(0, 'pin');
-                    else if (_histLruVisible.length > 0) _histApplyEntry(0, 'lru');
+                    const idx = _histSelectedIdx >= 0 ? _histSelectedIdx : (_histVisible.length > 0 ? 0 : -1);
+                    if (idx >= 0) _histApplyEntry(idx);
                 } else if (ev.key === 'Escape') {
                     ev.stopPropagation();
                     if (histQuickFilter.value) {
@@ -12833,60 +12413,35 @@
             });
         }
 
-        // ── Helper: wire keyboard nav for one list container ─────────────────────
-        const _wireListKeyboard = (container, listId) => {
-            if (!container) return;
-            container.setAttribute('tabindex', '0');
-            container.addEventListener('keydown', (ev) => {
+        // ── List keyboard handling (when list receives focus) ────────────────────
+        if (histList) {
+            histList.setAttribute('tabindex', '0');
+            histList.addEventListener('keydown', (ev) => {
                 if (!_histIsOpen()) return;
-                const visible  = listId === 'pin' ? _histPinVisible : _histLruVisible;
-                const selIdx   = listId === 'pin' ? _histPinSelIdx  : _histLruSelIdx;
-                const otherListId  = listId === 'pin' ? 'lru' : 'pin';
-                const otherVisible = listId === 'pin' ? _histLruVisible : _histPinVisible;
-                const otherEl      = listId === 'pin' ? histLruList     : histPinList;
-
                 if (ev.key === 'ArrowDown') {
                     ev.preventDefault();
-                    const next = selIdx + 1;
-                    if (next < visible.length) {
-                        _histActiveList = listId;
-                        _histSelectRow(next, listId);
-                    } else if (listId === 'pin' && _histLruVisible.length > 0) {
-                        // Fall through from pin list to lru list
-                        _histActiveList = 'lru';
-                        _histSelectRow(0, 'lru');
-                        histLruList && histLruList.focus();
-                    }
+                    _histSelectRow(Math.min(_histSelectedIdx + 1, _histVisible.length - 1));
                 } else if (ev.key === 'ArrowUp') {
                     ev.preventDefault();
-                    const prev = selIdx - 1;
-                    if (prev >= 0) {
-                        _histActiveList = listId;
-                        _histSelectRow(prev, listId);
-                    } else if (listId === 'lru' && _histPinVisible.length > 0) {
-                        // Fall through from lru list back up to pin list
-                        const lastPin = _histPinVisible.length - 1;
-                        _histActiveList = 'pin';
-                        _histSelectRow(lastPin, 'pin');
-                        histPinList && histPinList.focus();
+                    const prev = _histSelectedIdx - 1;
+                    if (prev < 0) {
+                        // Back to quick-filter when navigating past the top
+                        if (histQuickFilter) { histQuickFilter.focus(); }
+                        _histSelectedIdx = -1;
                     } else {
-                        // Back to quick-filter
-                        if (histQuickFilter) histQuickFilter.focus();
-                        if (listId === 'pin') _histPinSelIdx = -1; else _histLruSelIdx = -1;
+                        _histSelectRow(prev);
                     }
                 } else if (ev.key === 'Enter') {
                     ev.preventDefault();
-                    if (selIdx >= 0) _histApplyEntry(selIdx, listId);
+                    if (_histSelectedIdx >= 0) _histApplyEntry(_histSelectedIdx);
                 } else if (ev.key === 'Escape') {
                     ev.stopPropagation();
-                    if (histQuickFilter) histQuickFilter.focus();
+                    // Escape from list → return focus to quick-filter
+                    if (histQuickFilter) { histQuickFilter.focus(); }
                     else { _histClose(); filterInput.focus(); }
                 }
             });
-        };
-
-        _wireListKeyboard(histPinList, 'pin');
-        _wireListKeyboard(histLruList, 'lru');
+        }
 
         // ── Close dropdown when clicking outside the panel ───────────────────────
         dialog.addEventListener('click', (e) => {
@@ -12900,7 +12455,6 @@
 
         // Initial render
         refreshHistoryDropdown();
-
 
         // ── Filter-input auto-resize ──────────────────────────────────────────
         const MIN_DIALOG_WIDTH = 420;
@@ -12940,20 +12494,6 @@
             } else if (e.altKey && e.key.toLowerCase() === 'h') {
                 e.preventDefault();
                 _histIsOpen() ? _histClose() : _histOpen();
-            } else if (e.altKey && e.key.toLowerCase() === 'e') {
-                e.preventDefault();
-                if (phase2.style.display !== 'none') {
-                    _histClose();
-                    showEditPersistentListDialog(
-                        pinHistory,
-                        (updated) => {
-                            pinHistory = updated;
-                            GM_setValue('persistent-sa-hist-list', pinHistory);
-                            if (_histIsOpen()) refreshHistoryDropdown(histQuickFilter ? histQuickFilter.value : '');
-                        },
-                        histEditBtn
-                    );
-                }
             } else if (e.altKey && e.key.toLowerCase() === 'f') {
                 e.preventDefault();
                 if (phase2.style.display !== 'none' && !filterBtn.disabled) filterBtn.click();
