@@ -2927,12 +2927,12 @@
             // Root artist page (Official/Non-Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
-                { label: '🧮 Artist RGs',           params: { all: ['1', '0'], va: '0' } },
-                { label: '🧮 Official RGs',          params: { all: '0', va: '0' } },
-                { label: '🧮 All official RGs',      params: { all: '1', va: '0' } },
-                { label: '🧮 VA RGs',               params: { all: ['1', '0'], va: '1' } },
-                { label: '🧮 Official VA RGs',       params: { all: '0', va: '1' } },
-                { label: '🧮 All official VA RGs',   params: { all: '1', va: '1' } }
+                { label: '🧮 Artist RGs',      params: { all: ['1', '0'], va: '0' } },
+                { label: '🧮 Official RGs',    params: { all: '0', va: '0' } },
+                { label: '🧮 All RGs',         params: { all: '1', va: '0' } },
+                { label: '🧮 VA RGs',          params: { all: ['1', '0'], va: '1' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 All VA RGs',      params: { all: '1', va: '1' } }
             ],
             features: {
                 columnErasers: [
@@ -2953,13 +2953,18 @@
             // Artist Releases page (Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
             buttons: [
-                { label: '🧮 Official releases', params: { va: '0' } },
-                { label: '🧮 VA releases', params: { va: '1' } }
+                { label: '🧮 Artist releases', params: { va: '0' } },
+                { label: '🧮 VA releases',     params: { va: '1' } }
             ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
-                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
                 ],
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
