@@ -53368,11 +53368,10 @@ to
 
 * DONE Rename "Official releases" on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases to "Artist Releases"
 * DONE rename "Save current table data to disk in a serialized format
-* TODO rename "Enter global filter string" to "Enter global filter string (focus filter field with ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')})"
+* DONE rename "Enter global filter string" to "Enter global filter string (focus filter field with ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')})"
 
 rename "Enter global filter string" to something like, "Enter global filter string (focus filter field with ${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+Shift+G')})"
 
-* TODO Change expand multi-row cells to "Expand|all" | "multi-row|cells" - elements under each other aligned in the middle
 * DONE add "syntheticColumns: ['Total Tracks']" to the pageType 
 
 #+begin_example
@@ -54077,6 +54076,9 @@ before
 #+begin_example
     function initCaaPics() {
 #+end_example
+
+
+* TODO Change expand multi-row cells to "Expand|all" | "multi-row|cells" - elements under each other aligned in the middle
 
 
 * TODO Change all the entity links to open in a new tab
