@@ -1,5 +1,53 @@
 [
     {
+      "version": "9.99.179",
+      "date": "2026-03-15",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Four fixes for the two-pass Artist RGs / VA RGs split view: (1) Action button green background on success — activeBtn.style.backgroundColor='#ccffcc' is now set at the end of the multi-pass block, matching the normal single-pass path. (2) Global super-header h2 click events — makeH2sCollapsible() assigns contentNodes=[] to the global h2 (the two section h2s are h2s themselves so the walker stops before collecting them). After makeH2sCollapsible() runs, the global h2's _mbToggle is overridden to call both _officialH2._mbToggle and _nonOffH2._mbToggle with the same forceExpand value, so clicking or Ctrl-clicking the global h2 collapses/expands all h3/table content in both sections. (3) Section filter highlight — _makeSectionFilter now clears existing mb-global-filter-highlight marks before each filter run (_clearHighlights walks the cell and replaces <mark> spans with text nodes), then applies _highlightText (TreeWalker-based text-node replacement with <mark class='mb-global-filter-highlight'> spans styled with the configured highlight colors) to matching rows. The filter supports Cc (case-sensitive), Rx (regular expression), and Ex (exclude) checkboxes. (4) Section h2s missing CAA toggle and Cc/Rx/Ex checkboxes — _makeSectionCaaToggle builds a section-scoped CAA toggle button (same style as the global one) that controls only the bigboxes belonging to tables within its section; it is appended to both the Official and Non-Official h2s. The Cc/Rx/Ex checkboxes are built inline in _makeSectionFilter and wired to the applyFilter function so changing any checkbox re-runs the section filter immediately."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.178",
+      "date": "2026-03-15",
+      "sections": [
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "artist-releasegroups button renames and additions: '🧮 Non-official RGs' renamed to '🧮 All official RGs' (params all=1,va=0); '🧮 Non-official VA RGs' renamed to '🧮 All official VA RGs' (params all=1,va=1); new '🧮 VA RGs' button added (params all=['1','0'],va=1, triggers the same two-pass split fetch as '🧮 Artist RGs' but for VA release groups). Tooltips updated for all renamed/new buttons with accurate label-matching guards. New configSchema entry sa_ui_h2_artist_rgs_global_bg (color_picker, default '#1b5e20' dark green) controls the background of the synthetic global super-header h2 injected by the two-pass path. Three-tier h2 architecture for the two-pass (Artist RGs / VA RGs) result: (1) A new GLOBAL super-header h2 is inserted above 'Official Artist Discography', styled with the configured dark-green background and white text, labelled 'Artist Discography (N)', and carries: the CAA global toggle buttons (moved from the Official h2), a global master-toggle driving ALL sub-tables across both sections, and the existing filterContainer (global filter input + regex/case/exclude/clear buttons) — so the global filter truly acts across both sections. (2) The 'Official Artist Discography' h2 retains its own row-count badge (official-only count), gets a section-scoped master-toggle (drives only the official sub-tables), and gains a compact local filter input (220px) that text-matches directly against visible tbody rows in the official section without re-rendering. (3) The 'Non-Official Artist Discography' h2 gets the same treatment: official non-official count badge, section-scoped master-toggle, and local filter. The _sectionSibs(h2El) helper collects sibling elements between an h2 and the next h2; _makeSectionToggle(h2, label) and _makeSectionFilter(h2, idSuffix) are inline factory helpers inside the multi-pass block."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.177",
+      "date": "2026-03-15",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Fixed six bugs in the '🧮 Artist RGs' two-pass multi-pass fetch path (introduced in 9.99.176): (a) Collapsable sidebar feature not initialised — added initSidebarCollapse() call. (b) Table column background colors missing — the full post-render init sequence (applyStickyHeaders, addAutoResizeButton, makeColumnsResizable, addColumnVisibilityToggle, addBarcodeHighlightToggleButton, addDensityControl, addStatsButton, initKeyboardShortcuts, addShortcutsHelpButton, addExportButton) is now called, mirroring the normal multi-table path exactly. (c) None of the h2 headers clickable for collapse/uncollapse — makeH2sCollapsible() and finalCleanup() are now called after render. (d) Newly injected 'Non-Official Artist Discography' h2 was missing row-count badge, master-toggle button, and sub-section controls — after renderGroupedTable a post-render patch finds the non-official h2 by text content and appends a .mb-row-count-stat span with the non-official row count and a .mb-master-toggle button that drives all h3/table children between that h2 and the next. (e) Row count badge on 'Official Artist Discography' h2 showed the combined total — updateH2Count is now called with officialRows (= Pass-B total) instead of totalRows when a split was found; nonOfficialRows = totalRows - officialRows. (f) Pagination <nav> elements left over from the last XHR pass of _runPass — document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove()) added before renderGroupedTable, matching the normal path."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.176",
+      "date": "2026-03-15",
+      "sections": [
+        {
+          "label": "✨ New Features",
+          "items": [
+            "New '🧮 Artist RGs' button on artist root pages. Uses params { all: ['1','0'], va:'0' } — an array value triggers a new two-pass fetch pipeline in startFetchingProcess. Pass A (all=1) fetches the full discography (official + non-official release groups); Pass B (all=0) fetches official groups only. The two resulting groupedRows arrays are diffed by walking Pass-A category names and matching them against the Pass-B sequence in order: as long as names agree those groups are official; the first Pass-A category name not covered by Pass-B marks the start of non-official groups, which receive a { h2SectionBreak: 'Non-Official Artist Discography' } property. In renderGroupedTable, when group.h2SectionBreak is set a new <h2 class='mb-toggle-h2'> with that text is injected immediately before the group's first <h3>/table via the existing lastInsertedElement chain. The existing 'Discography' h2 on the page is also renamed to 'Official Artist Discography' (by updating the first text-node child to preserve any injected spans). The multi-pass block returns early, bypassing the normal single-pass fetch loop entirely. Post-render art/feature initialisation (initCaaPics, initEaaPics, initCaaInlinePics, initEaaInlinePics, rewireGlobalCollapseButtonMulti, etc.) is called explicitly before returning. Array-param detection is generic: any params key whose value is an Array triggers the two-pass path, making it extensible for future multi-pass buttons."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.175",
       "date": "2026-03-15",
       "sections": [

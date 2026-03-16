@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.175+2026-03-15
+// @version      9.99.179+2026-03-15
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -781,6 +781,13 @@
             type: 'color_picker',
             default: '#f9f9f9',
             description: 'Background color applied to H2 section headers when the cursor hovers over them (.mb-toggle-h2:hover). Default is the original MusicBrainz light grey (#f9f9f9). Takes precedence over the non-hover H2 background (sa_ui_h2_bg).'
+        },
+
+        sa_ui_h2_artist_rgs_global_bg: {
+            label: 'Artist RGs — global super-header background color',
+            type: 'color_picker',
+            default: '#1b5e20',
+            description: 'Background color for the synthetic global super-header h2 injected above the "Official Artist Discography" section when the "🧮 Artist RGs" or "🧮 VA RGs" two-pass button is used. This header carries the global filter, global CAA toggle, and global master-toggle that act across ALL sub-sections. Default is dark green (#1b5e20) to visually distinguish it from the section-level h2 headers.'
         },
 
         sa_ui_h3_hover_bg: {
@@ -2920,10 +2927,12 @@
             // Root artist page (Official/Non-Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Artist RGs',      params: { all: ['1', '0'], va: '0' } },
+                { label: '🧮 Official RGs',    params: { all: '0', va: '0' } },
+                { label: '🧮 All RGs',         params: { all: '1', va: '0' } },
+                { label: '🧮 VA RGs',          params: { all: ['1', '0'], va: '1' } },
                 { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+                { label: '🧮 All VA RGs',      params: { all: '1', va: '1' } }
             ],
             features: {
                 columnErasers: [
@@ -2944,13 +2953,18 @@
             // Artist Releases page (Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases$/),
             buttons: [
-                { label: '🧮 Official releases', params: { va: '0' } },
-                { label: '🧮 VA releases', params: { va: '1' } }
+                { label: '🧮 Artist releases', params: { va: '0' } },
+                { label: '🧮 VA releases',     params: { va: '1' } }
             ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
-                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
                 ],
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
@@ -4107,7 +4121,7 @@
         const btn = document.createElement('button');
         btn.id = `mb-stf-${safeId}-toggle-filter-highlight-btn`;
         btn.type = 'button';
-        btn.title = 'Toggle filter highlighting on/off (sub-table filter and column filters)';
+        btn.title = 'Toggle filter string highlighting for this sub-table filter and ALL sub-table column filters)';
         btn.textContent = '🎨 Toggle highlighting';
         // Initially hidden — shown by updateFilterButtonsVisibility() when active.
         btn.style.cssText = 'font-size:0.8em; padding:2px 6px; border-radius:4px; background:rgb(240,240,240); border:1px solid rgb(204,204,204); cursor:pointer; vertical-align:middle; transition:background-color 0.3s; display:none;';
@@ -5037,7 +5051,7 @@
         btn.type      = 'button';
         btn.className = 'mb-subtable-vis-btn';
         btn.innerHTML = '👁️';
-        btn.title     = `Show/hide columns for "${categoryName}"`;
+	btn.title     = `Show/hide columns in sub-section "${categoryName}"`;
         btn.setAttribute('aria-label', `Column visibility for: ${categoryName}`);
         btn.style.cssText = [
             'font-size:0.85em; padding:1px 5px; border-radius:4px;',
@@ -7925,7 +7939,7 @@
         btn.style.background  = 'rgb(240,240,240)';
         btn.style.borderColor = 'rgb(204,204,204)';
         btn.style.color       = '';
-        btn.title = `Auto-resize columns for "${categoryName}"`;
+	btn.title = `Auto-resize columns in sub-section "${categoryName}"`;
     }
 
     /**
@@ -8147,7 +8161,7 @@
         btn.type      = 'button';
         btn.className = 'mb-subtable-resize-btn';
         btn.innerHTML = '↔️';
-        btn.title     = `Auto-resize columns for "${categoryName}"`;
+	btn.title     = `Auto-resize columns in sub-section "${categoryName}"`;
         btn.setAttribute('aria-label', `Auto-resize columns for: ${categoryName}`);
         btn.style.cssText = [
             'font-size:0.8em; padding:1px 5px; border-radius:4px;',
@@ -9221,15 +9235,19 @@
         if (conf.label.includes('Show all')) {
             // Extract entity types from label (e.g., "Show all Releases for ReleaseGroup")
             eb.title = `Fetch all the table data from the MusicBrainz backend database`;
-        } else if (conf.label.includes('Official RGs')) {
+        } else if (conf.label.includes('Artist RGs')) {
+            eb.title = 'Fetch all official and non-official artist release groups from the MusicBrainz backend database, split into two sections';
+        } else if (conf.label === '🧮 Official RGs' || (conf.label.includes('Official RGs') && !conf.label.includes('VA') && !conf.label.includes('All'))) {
             eb.title = 'Fetch all official artist release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Non-official RGs')) {
-            eb.title = 'Fetch all non-official artist release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Official VA RGs')) {
+        } else if (conf.label.includes('All RGs')) {
+            eb.title = 'Fetch all official and non-official artist release groups from the MusicBrainz backend database (combined)';
+        } else if (conf.label.includes('VA RGs') && !conf.label.includes('Official') && !conf.label.includes('All')) {
+            eb.title = 'Fetch all official and non-official various artists release groups from the MusicBrainz backend database, split into two sections';
+        } else if (conf.label.includes('Official VA RGs') && !conf.label.includes('All')) {
             eb.title = 'Fetch all official various artists release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Non-official VA RGs')) {
-            eb.title = 'Fetch all non-official various artists release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('Official releases')) {
+        } else if (conf.label.includes('All VA RGs')) {
+            eb.title = 'Fetch all official and non-official various artists release groups from the MusicBrainz backend database (combined)';
+        } else if (conf.label.includes('Artist releases')) {
             eb.title = 'Fetch all official artist releases from the MusicBrainz backend database';
         } else if (conf.label.includes('VA releases')) {
             eb.title = 'Fetch all various artists releases from the MusicBrainz backend database';
@@ -9264,7 +9282,7 @@
     saveToDiskBtn.onmouseover = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.hoverBg; };
     saveToDiskBtn.onmouseout  = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.normalBg; };
     saveToDiskBtn.type = 'button';
-    saveToDiskBtn.title = `Save current table data to disk as Gzipped JSON (${getPrefixDisplay()}, then S)`;
+    saveToDiskBtn.title = `Save current table data to disk in a serialized format as Gzipped JSON (${getPrefixDisplay()}, then S)`;
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
     saveToDiskBtn.style.display = 'none';
 
@@ -9701,7 +9719,7 @@
     unhighlightAllBtn.id = 'mb-toggle-filter-highlight-btn';
     unhighlightAllBtn.textContent = '🎨 Toggle highlighting';
     unhighlightAllBtn.style.cssText = `${uiFilterBarBtnCSS()} transition:background-color 0.3s; display:none;`;
-    unhighlightAllBtn.title = 'Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)';
+    unhighlightAllBtn.title = 'Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables)';
 
     /**
      * Update filter highlight button background color based on highlighting state
@@ -9768,7 +9786,7 @@
     clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
     clearColumnFiltersBtn.id = 'mb-clear-column-filters-btn';
     clearColumnFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs — global action (Shift+Esc)';
+    clearColumnFiltersBtn.title = 'Clear ALL column-specific filter inputs — global action (Shift+Esc)';
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
         document.querySelectorAll('.mb-col-filter-input').forEach(input => {
@@ -9798,7 +9816,7 @@
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.id = 'mb-clear-all-filters-btn';
     clearAllFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearAllFiltersBtn.title = `Clear global, ALL sub-table and ALL column filters in all sub-tables (except filter from 'Loading from Disk') — also triggered by ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}`;
+    clearAllFiltersBtn.title = `Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (except the filter when 'Loading from Disk' was used — also triggered by ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}`;
     clearAllFiltersBtn.onclick = () => {
         // filterClear.click() resets the global filter to prefix-only and runs the filter.
         filterClear.click();
@@ -13695,6 +13713,788 @@
         e.preventDefault();
         e.stopPropagation();
 
+        // ── Multi-pass fetch detection ────────────────────────────────────────
+        // When any param value is an Array (e.g. params.all = ['1','0']), run the
+        // full fetch pipeline once per value and merge the results.  Currently only
+        // used by the '🧮 Artist RGs' button (all: ['1','0'], va:'0') which fetches
+        // the combined (all=1) discography first and then the official-only (all=0)
+        // discography to determine the split point between official and non-official
+        // groups.
+        //
+        // Pass order and merge strategy:
+        //   Pass A  — first array element (e.g. all='1'): official + non-official groups
+        //   Pass B  — second array element (e.g. all='0'): official groups only
+        //
+        // The category names from Pass B are compared against Pass A in order.
+        // As long as names match, those groups are "official".  The first name in
+        // Pass A that is not in the Pass-B sequence marks the start of the non-official
+        // section.  A { h2SectionBreak: 'Non-Official Artist Discography' } property
+        // is stamped on that group so renderGroupedTable can inject an <h2> before it.
+        const _multiPassArrayKey = overrideParams
+            ? Object.keys(overrideParams).find(k => Array.isArray(overrideParams[k]))
+            : null;
+
+        if (_multiPassArrayKey) {
+            // ── Two-pass combined fetch ───────────────────────────────────────
+            const _passValues = overrideParams[_multiPassArrayKey]; // e.g. ['1','0']
+
+            // Helper: build a concrete overrideParams with arrayKey replaced by a scalar.
+            const _makePassParams = (val) => {
+                const p = { ...overrideParams };
+                p[_multiPassArrayKey] = val;
+                return p;
+            };
+
+            // Run the UI setup once (same as normal path).
+            stopRequested = false;
+            allRows = [];
+            originalAllRows = [];
+            groupedRows = [];
+            expandedCells.clear();
+            _mbRowIdxCounter = 0;
+            performClutterCleanup();
+            if (pageType === 'events' || pageType === 'artist-releasegroups') removeSanojjonasContainers();
+            activeBtn.disabled = true;
+            activeBtn.classList.add('mb-show-all-btn-loading');
+            allActionButtons.forEach(b => { if (b !== activeBtn) b.disabled = true; });
+            stopBtn.style.display = 'inline-block';
+            stopBtn.disabled = false;
+            ctrlMFunctionMap['o'] = { fn: () => stopBtn.click(), description: 'Stop fetching' };
+            fetchProgressWrap.style.display = 'inline-flex';
+            fetchProgressFill.style.width = '0%';
+            fetchProgressFill.style.background = '#ffcccc';
+            fetchProgressLabel.textContent = 'Loading…';
+            fetchProgressLabel.style.color = '#333';
+            globalStatusDisplay.textContent = 'Loading (pass 1 of 2)…';
+            globalStatusDisplay.style.color = '#999';
+            activeBtn.style.backgroundColor = '#ffcccc';
+            activeBtn.style.color = 'black';
+
+            const _multiPassStart = performance.now();
+
+            /**
+             * Runs one complete fetch pass for the given concrete overrideParams and
+             * returns the resulting groupedRows array.  Resets groupedRows and the
+             * per-pass accumulators before running.
+             */
+            const _runPass = async (passParams, passLabel) => {
+                groupedRows = [];
+                let _lastCat = null;
+
+                const _passMaxPage = await fetchMaxPageGeneric(path, passParams);
+                Lib.debug('fetch', `Multi-pass ${passLabel}: maxPage=${_passMaxPage}`);
+                globalStatusDisplay.textContent = `Loading ${passLabel} (${_passMaxPage} page(s))…`;
+
+                const _passCurrentPageNum = parseInt(
+                    new URLSearchParams(window.location.search).get('page') || '1', 10
+                );
+
+                for (let p = 1; p <= _passMaxPage; p++) {
+                    if (stopRequested) break;
+
+                    const fetchUrl = new URL(window.location.href);
+                    fetchUrl.searchParams.set('page', p.toString());
+                    Object.keys(passParams).forEach(k => fetchUrl.searchParams.set(k, passParams[k]));
+
+                    let doc;
+                    try {
+                        const html = await fetchHtml(fetchUrl.toString());
+                        doc = new DOMParser().parseFromString(html, 'text/html');
+                    } catch (err) {
+                        Lib.error('fetch', `Multi-pass ${passLabel} page ${p} error:`, err);
+                        break;
+                    }
+
+                    expandShowAllCells(doc, p);
+
+                    // ── Header scan: resolve colIdx for extractors/erasers ─────────
+                    let mainColIdx = -1;
+                    let indicesToExclude = [];
+                    const mainColConfig = activeDefinition.features?.extractMainColumn;
+                    if (typeof mainColConfig === 'number') mainColIdx = mainColConfig;
+                    const mainColCandidates = Array.isArray(mainColConfig) ? mainColConfig
+                        : (mainColConfig ? [mainColConfig] : []);
+
+                    const _removalMap = {
+                        'Relationships': 'sa_remove_rel',
+                        'Performance Attributes': 'sa_remove_perf',
+                        'Rating': 'sa_remove_rating',
+                        'Tagger': 'sa_remove_tagger',
+                        'Release events': 'sa_remove_release_events'
+                    };
+
+                    activeColumnExtractors.forEach(e => { e.colIdx = -1; });
+                    activeColumnErasers.forEach(e => { e.colIdx = -1; });
+                    activeRenderMultiRowCols.forEach(e => { e.colIdx = -1; });
+
+                    const _refTable = doc.querySelector('table.tbl');
+                    if (_refTable) {
+                        _refTable.querySelectorAll('thead th').forEach((th, idx) => {
+                            const txt = th.textContent.trim();
+                            for (const [prefix, key] of Object.entries(_removalMap)) {
+                                if (txt.startsWith(prefix) && Lib.settings[key]) {
+                                    indicesToExclude.push(idx); break;
+                                }
+                            }
+                            activeColumnExtractors.forEach(e => { if (txt === e.sourceColumn) e.colIdx = idx; });
+                            activeColumnErasers.forEach(e => { if (txt === e.sourceColumn) e.colIdx = idx; });
+                            activeRenderMultiRowCols.forEach(e => { if (txt === e.columnName) e.colIdx = idx; });
+                            if (mainColIdx === -1 && mainColCandidates.includes(txt)) mainColIdx = idx;
+                        });
+                    }
+
+                    // ── Row extraction (artist-releasegroups) ─────────────────────
+                    doc.querySelectorAll('table.tbl').forEach(table => {
+                        let _prev = table.previousElementSibling, _steps = 0, _h3 = null;
+                        while (_prev && _steps < 5) {
+                            if (_prev.tagName === 'H3') { _h3 = _prev; break; }
+                            _prev = _prev.previousElementSibling; _steps++;
+                        }
+                        const category = _h3 ? _h3.textContent.trim() : 'Other';
+                        if (category !== _lastCat) {
+                            groupedRows.push({ category, rows: [] }); _lastCat = category;
+                        }
+                        const currentGroup = groupedRows[groupedRows.length - 1];
+
+                        table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
+                            if (row.cells.length <= 1) return;
+                            const newRow = document.importNode(row, true);
+
+                            applyColumnErasers(newRow, activeColumnErasers);
+                            applyRenderMultiRowCells(newRow, activeRenderMultiRowCols);
+
+                            const tdName = document.createElement('td');
+                            const tdComment = document.createElement('td');
+                            const extractedSyntheticCells = activeColumnExtractors.map(entry => {
+                                if (entry.colIdx === -1) return entry.syntheticColumns.map(() => document.createElement('td'));
+                                const sc = newRow.cells[entry.colIdx];
+                                if (!sc) return entry.syntheticColumns.map(() => document.createElement('td'));
+                                if (typeof ColumnDataExtractor[entry.extractor] !== 'function') return entry.syntheticColumns.map(() => document.createElement('td'));
+                                const res = ColumnDataExtractor[entry.extractor](sc);
+                                while (res.length < entry.syntheticColumns.length) res.push(document.createElement('td'));
+                                return res.slice(0, entry.syntheticColumns.length);
+                            });
+
+                            if (mainColIdx !== -1) {
+                                const tc = getCellByLogicalIndex(newRow, mainColIdx);
+                                if (tc) {
+                                    const nameLink = tc.querySelector('a bdi')?.closest('a');
+                                    if (nameLink) { tdName.appendChild(nameLink.cloneNode(true)); }
+                                    else {
+                                        let found = false;
+                                        for (const ch of tc.childNodes) {
+                                            if (ch.nodeType === Node.ELEMENT_NODE) {
+                                                if (ch.classList.contains('comment') || ch.tagName === 'SCRIPT' || ch.tagName === 'STYLE') continue;
+                                                if (ch.tagName === 'A') { tdName.appendChild(ch.cloneNode(true)); found = true; break; }
+                                            } else if (ch.nodeType === Node.TEXT_NODE) {
+                                                const t = ch.textContent.trim();
+                                                if (t && t !== '(' && t !== ')' && t !== ',') { tdName.textContent = t; found = true; break; }
+                                            }
+                                        }
+                                        if (!found) {
+                                            const clone = tc.cloneNode(true);
+                                            clone.querySelectorAll('.comment').forEach(el => el.remove());
+                                            tdName.textContent = clone.textContent.trim();
+                                        }
+                                    }
+                                    const cs = tc.querySelector('.comment');
+                                    if (cs) tdComment.textContent = (cs.querySelector('bdi') || cs).textContent.trim();
+                                }
+                            }
+
+                            const primarySyntheticCellMap = new Map();
+                            activeColumnExtractors.forEach((entry, i) => {
+                                entry.syntheticColumns.forEach((colName, j) => {
+                                    const cell = extractedSyntheticCells[i]?.[j];
+                                    if (cell) primarySyntheticCellMap.set(colName, cell);
+                                });
+                            });
+                            if (mainColIdx !== -1) {
+                                primarySyntheticCellMap.set('MB-Name', tdName);
+                                primarySyntheticCellMap.set('Comment', tdComment);
+                            }
+                            const syntheticExtractorCells = activeSyntheticColumnExtractors.map(entry => {
+                                const sc = primarySyntheticCellMap.get(entry.sourceColumn);
+                                if (!sc) return entry.syntheticColumns.map(() => document.createElement('td'));
+                                if (typeof SyntheticColumnDataExtractor[entry.extractor] !== 'function') return entry.syntheticColumns.map(() => document.createElement('td'));
+                                const res = SyntheticColumnDataExtractor[entry.extractor](sc);
+                                while (res.length < entry.syntheticColumns.length) res.push(document.createElement('td'));
+                                return res.slice(0, entry.syntheticColumns.length);
+                            });
+
+                            [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
+                            extractedSyntheticCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
+                            syntheticExtractorCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
+                            if (mainColIdx !== -1) { newRow.appendChild(tdName); newRow.appendChild(tdComment); }
+
+                            newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
+                            currentGroup.rows.push(newRow);
+                        });
+                    });
+
+                    const fillPct = Math.round((p / _passMaxPage) * 100);
+                    fetchProgressFill.style.width = `${fillPct}%`;
+                    fetchProgressLabel.textContent = `${passLabel}: page ${p}/${_passMaxPage}…`;
+                }
+                return groupedRows.map(g => ({ category: g.category, rows: [...g.rows] }));
+            };
+
+            let _passAGroups, _passBGroups;
+            try {
+                _passAGroups = await _runPass(_makePassParams(_passValues[0]), 'pass 1 of 2');
+                _passBGroups = await _runPass(_makePassParams(_passValues[1]), 'pass 2 of 2');
+            } catch (err) {
+                Lib.error('fetch', 'Multi-pass fetch error:', err);
+                activeBtn.disabled = false;
+                activeBtn.classList.remove('mb-show-all-btn-loading');
+                allActionButtons.forEach(b => b.disabled = false);
+                stopBtn.style.display = 'none';
+                delete ctrlMFunctionMap['o'];
+                fetchProgressWrap.style.display = 'none';
+                globalStatusDisplay.textContent = '✗ Fetch failed';
+                globalStatusDisplay.style.color = 'red';
+                return;
+            }
+
+            // ── Diff the two passes to find the official/non-official split ───
+            // Walk the Pass-A category names in order.  As long as the name appears
+            // in the Pass-B sequence (matching the expected official prefixes), those
+            // groups are official.  The first Pass-A name that falls outside the
+            // Pass-B sequence is the start of the non-official section.
+            const _passBNames = _passBGroups.map(g => g.category);
+            let _passBIdx = 0;
+            let _splitFound = false;
+
+            _passAGroups.forEach(group => {
+                if (!_splitFound) {
+                    if (_passBIdx < _passBNames.length &&
+                        _passBNames[_passBIdx] === group.category) {
+                        _passBIdx++;
+                    } else {
+                        // First group in Pass A not matched by Pass B — non-official starts here.
+                        group.h2SectionBreak = 'Non-Official Artist Discography';
+                        _splitFound = true;
+                    }
+                }
+            });
+
+            // Restore module-level groupedRows to the merged Pass-A result.
+            groupedRows = _passAGroups;
+            groupedRows.forEach(g => { g.originalRows = [...g.rows]; });
+            _mbRowIdxCounter = _passAGroups.reduce((acc, g) => acc + g.rows.length, 0);
+
+            const totalRows       = groupedRows.reduce((acc, g) => acc + g.rows.length, 0);
+            const officialRows    = _passBGroups.reduce((acc, g) => acc + g.rows.length, 0);
+            const nonOfficialRows = totalRows - officialRows;
+            const fetchingTime    = performance.now() - _multiPassStart;
+
+            // ── UI teardown ───────────────────────────────────────────────────
+            activeBtn.disabled = false;
+            activeBtn.classList.remove('mb-show-all-btn-loading');
+            allActionButtons.forEach(b => b.disabled = false);
+            stopBtn.style.display = 'none';
+            delete ctrlMFunctionMap['o'];
+            fetchProgressWrap.style.display = 'none';
+
+            // Remove pagination leftover from the last XHR pass.
+            document.querySelectorAll('ul.pagination, nav.pagination, .pageselector').forEach(el => el.remove());
+
+            // ── Rename "Discography" h2 → "Official Artist Discography" ──────
+            if (_splitFound) {
+                for (const _h2 of document.querySelectorAll('h2')) {
+                    if (_h2.textContent.trim().toLowerCase().includes('discography')) {
+                        const _ftn = Array.from(_h2.childNodes)
+                            .find(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
+                        if (_ftn) _ftn.textContent = 'Official Artist Discography';
+                        else _h2.prepend(document.createTextNode('Official Artist Discography'));
+                        break;
+                    }
+                }
+            }
+
+            // Show the official-only row count in the h2 badge.
+            updateH2Count(_splitFound ? officialRows : totalRows,
+                          _splitFound ? officialRows : totalRows);
+
+            // ── Render ────────────────────────────────────────────────────────
+            isLoaded = true;
+            await renderGroupedTable(groupedRows, true);
+
+            // ──────────────────────────────────────────────────────────────────
+            // Three-tier h2 structure for the split (Artist RGs / VA RGs) case:
+            //
+            //  [GLOBAL super-header h2]  ← new, dark-green, carries global filter
+            //     + CAA global toggle
+            //     + global master-toggle (all sub-tables in both sections)
+            //     + filterContainer (existing global filter/toolbar)
+            //
+            //  [Official Artist Discography h2]  ← existing, section-local controls
+            //     + row-count badge (official only)
+            //     + local master-toggle (official sub-tables only)
+            //     + local section filter input
+            //
+            //  [Non-Official Artist Discography h2]  ← injected by renderGroupedTable
+            //     + row-count badge (non-official)
+            //     + local master-toggle (non-official sub-tables only)
+            //     + local section filter input
+            //
+            // The existing filterContainer (which carries the global filter input,
+            // regex/case/exclude checkboxes, column-collapse, clear buttons, etc.)
+            // is moved from the Official h2 to the new GLOBAL super-header so it
+            // truly acts across all sub-sections of both h2 areas.
+            // ──────────────────────────────────────────────────────────────────
+
+            /**
+             * Helper: collect all direct sibling elements between an h2 (exclusive)
+             * and the next h2 sibling (exclusive).  Used by section-level toggles
+             * and section-level filters to scope their actions to one section.
+             */
+            const _sectionSibs = (h2El) => {
+                const nodes = [];
+                let s = h2El.nextElementSibling;
+                while (s && s.tagName !== 'H2') { nodes.push(s); s = s.nextElementSibling; }
+                return nodes;
+            };
+
+            /**
+             * Helper: build a compact "Show all sub-sections" master-toggle button
+             * that drives only the h3/table siblings within one section.
+             */
+            const _makeSectionToggle = (sectionH2El, labelSuffix) => {
+                const btn = document.createElement('button');
+                btn.className       = 'mb-master-toggle';
+                btn.type            = 'button';
+                btn.dataset.state   = 'collapsed';
+                btn.textContent     = 'Show all sub-sections';
+                btn.title           = `Click to uncollapse all ${labelSuffix} sub-sections`;
+                btn.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    const expanding = btn.dataset.state !== 'expanded';
+                    _sectionSibs(sectionH2El).forEach(n => {
+                        if (n.tagName === 'TABLE' && n.classList.contains('tbl')) {
+                            if (expanding) { n.style.display = ''; _artRestoreBigboxesForTable(n); }
+                            else           { n.style.display = 'none'; _artHideBigboxesForTable(n); }
+                        } else if (n.classList.contains('mb-toggle-h3')) {
+                            const ic = n.querySelector('.mb-toggle-icon');
+                            if (ic) ic.textContent = expanding ? '▼' : '▲';
+                            n.style.display = '';
+                        }
+                    });
+                    btn.dataset.state = expanding ? 'expanded' : 'collapsed';
+                    btn.textContent   = expanding ? 'Hide all sub-sections' : 'Show all sub-sections';
+                });
+                return btn;
+            };
+
+            /**
+             * Helper: build a local section filter input with Cc/Rx/Ex checkboxes.
+             * When the user types, rows in only this section's tables are shown/hidden
+             * and matching text is highlighted with <mark class="mb-global-filter-highlight">.
+             */
+            const _makeSectionFilter = (sectionH2El, idSuffix) => {
+                const wrap = document.createElement('span');
+                wrap.style.cssText =
+                    'display:inline-flex; align-items:center; gap:3px;' +
+                    ' margin-left:10px; vertical-align:middle;';
+
+                const inp = document.createElement('input');
+                inp.type        = 'text';
+                inp.id          = `mb-section-filter-${idSuffix}`;
+                inp.placeholder = 'Filter this section…';
+                inp.title       = 'Filter only the sub-tables in this section';
+                inp.style.cssText =
+                    'font-size:0.85em; padding:1px 5px; border:1px solid #888;' +
+                    ' border-radius:3px; width:200px; height:20px; box-sizing:border-box;';
+
+                // Cc / Rx / Ex checkboxes
+                const _mkCb = (lbl, title) => {
+                    const label = document.createElement('label');
+                    label.title = title;
+                    label.style.cssText =
+                        'font-size:0.78em; cursor:pointer; display:flex; align-items:center;' +
+                        ' gap:1px; user-select:none; color:#fff; margin:0;';
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.style.cssText = 'margin:0 1px 0 0; cursor:pointer; vertical-align:middle;';
+                    label.appendChild(cb);
+                    label.appendChild(document.createTextNode(lbl));
+                    return { label, cb };
+                };
+                const { label: ccLbl, cb: ccCb } = _mkCb('Cc', 'Case sensitive');
+                const { label: rxLbl, cb: rxCb } = _mkCb('Rx', 'Regular expression');
+                const { label: exLbl, cb: exCb } = _mkCb('Ex', 'Exclude matches');
+
+                const clr = document.createElement('span');
+                clr.textContent = '✕';
+                clr.title       = 'Clear section filter';
+                clr.style.cssText =
+                    'cursor:pointer; font-size:0.75em; color:#ccc; padding:0 2px;' +
+                    ' user-select:none; vertical-align:middle;';
+
+                /**
+                 * Removes all <mark class="mb-global-filter-highlight"> spans from
+                 * a cell, replacing them with their text content.
+                 */
+                const _clearHighlights = (cell) => {
+                    cell.querySelectorAll('mark.mb-global-filter-highlight').forEach(m => {
+                        m.replaceWith(document.createTextNode(m.textContent));
+                    });
+                };
+
+                /**
+                 * Wraps all occurrences of `q` in `node` (text nodes) with
+                 * <mark class="mb-global-filter-highlight"> elements.
+                 * Handles plain-text search; regex mode is handled separately.
+                 */
+                const _highlightText = (cell, q, caseSensitive, useRegex) => {
+                    if (!q) return;
+                    // Work on text nodes inside the cell
+                    const walker = document.createTreeWalker(
+                        cell, NodeFilter.SHOW_TEXT, null
+                    );
+                    const textNodes = [];
+                    let n;
+                    while ((n = walker.nextNode())) textNodes.push(n);
+
+                    textNodes.forEach(tn => {
+                        const orig = tn.textContent;
+                        if (!orig) return;
+                        let re;
+                        try {
+                            re = useRegex
+                                ? new RegExp(q, caseSensitive ? 'g' : 'gi')
+                                : new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                                             caseSensitive ? 'g' : 'gi');
+                        } catch (e) { return; }
+
+                        if (!re.test(orig)) return;
+                        re.lastIndex = 0;
+
+                        const frag = document.createDocumentFragment();
+                        let last = 0, m2;
+                        while ((m2 = re.exec(orig)) !== null) {
+                            if (m2.index > last) frag.appendChild(document.createTextNode(orig.slice(last, m2.index)));
+                            const mark = document.createElement('mark');
+                            mark.className = 'mb-global-filter-highlight';
+                            mark.style.cssText = `background:${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};color:${Lib.settings.sa_global_filter_highlight_color || 'red'};font-weight:bold;border-radius:2px;padding:0 1px;`;
+                            mark.textContent = m2[0];
+                            frag.appendChild(mark);
+                            last = re.lastIndex;
+                            if (m2[0].length === 0) { re.lastIndex++; }
+                        }
+                        if (last < orig.length) frag.appendChild(document.createTextNode(orig.slice(last)));
+                        tn.parentNode.replaceChild(frag, tn);
+                    });
+                };
+
+                const applyFilter = () => {
+                    const raw = inp.value.trim();
+                    const caseSens = ccCb.checked;
+                    const useRx    = rxCb.checked;
+                    const exclude  = exCb.checked;
+                    const q = caseSens ? raw : raw.toLowerCase();
+
+                    _sectionSibs(sectionH2El).forEach(n => {
+                        if (n.tagName !== 'TABLE' || !n.classList.contains('tbl')) return;
+                        const tbody = n.tBodies[0];
+                        if (!tbody) return;
+                        Array.from(tbody.rows).forEach(row => {
+                            // Clear old highlights
+                            Array.from(row.cells).forEach(_clearHighlights);
+
+                            if (!raw) {
+                                row.style.display = '';
+                                return;
+                            }
+                            const txt = Array.from(row.cells)
+                                .map(c => c.textContent).join(' ');
+                            const haystack = caseSens ? txt : txt.toLowerCase();
+                            let matched;
+                            if (useRx) {
+                                try { matched = new RegExp(q, caseSens ? '' : 'i').test(txt); }
+                                catch (e) { matched = false; }
+                            } else {
+                                matched = haystack.includes(q);
+                            }
+                            const show = exclude ? !matched : matched;
+                            row.style.display = show ? '' : 'none';
+                            if (show && matched && !exclude) {
+                                Array.from(row.cells).forEach(c => _highlightText(c, raw, caseSens, useRx));
+                            }
+                        });
+                    });
+                };
+
+                inp.addEventListener('input', applyFilter);
+                [ccCb, rxCb, exCb].forEach(cb => cb.addEventListener('change', applyFilter));
+                clr.addEventListener('click', () => { inp.value = ''; applyFilter(); inp.focus(); });
+
+                wrap.appendChild(inp);
+                wrap.appendChild(ccLbl);
+                wrap.appendChild(rxLbl);
+                wrap.appendChild(exLbl);
+                wrap.appendChild(clr);
+                return wrap;
+            };
+
+            /**
+             * Helper: build a section-scoped CAA/EAA toggle button that controls
+             * only the bigboxes belonging to tables within this section h2.
+             */
+            const _makeSectionCaaToggle = (sectionH2El, ctx, firstThumbSrc, count) => {
+                if (!Lib.settings.sa_enable_caa_pics || count === 0) return null;
+                const btn = document.createElement('button');
+                btn.type      = 'button';
+                btn.className = ctx.btnClass;
+                btn.style.cssText =
+                    'cursor:pointer; padding:1px 5px 1px 3px; border:1px solid #aaa;' +
+                    ' border-radius:3px; background:#f5f5f5; vertical-align:middle;' +
+                    ' font-size:0.8em; margin-left:5px; display:inline-flex;' +
+                    ' align-items:center; gap:6px; line-height:1; box-sizing:border-box;' +
+                    ' transition:transform 0.1s,box-shadow 0.1s;';
+                const thumb = document.createElement('img');
+                thumb.className = ctx.thumbClass;
+                thumb.src = firstThumbSrc || '';
+                thumb.style.cssText = 'height:18px;width:18px;object-fit:cover;border-radius:2px;vertical-align:middle;display:block;';
+                const badge = document.createElement('span');
+                badge.className   = ctx.countClass;
+                badge.textContent = String(count);
+                btn.appendChild(thumb);
+                btn.appendChild(badge);
+                btn.title = 'Toggle ' + ctx.toggleLabel + ' — Show';
+                btn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const sectionTables = _sectionSibs(sectionH2El)
+                        .filter(n => n.tagName === 'TABLE' && n.classList.contains('tbl'));
+                    const sectionBoxes = sectionTables.flatMap(t => {
+                        const idx = Array.from(document.querySelectorAll('table.tbl')).indexOf(t);
+                        if (idx < 0) return [];
+                        const box = document.getElementById(ctx.boxPrefix + '-' + idx);
+                        return box ? [box] : [];
+                    });
+                    const anyVisible = sectionBoxes.some(b => b.dataset[ctx.visAttr] !== 'false');
+                    const makeVisible = !anyVisible;
+                    sectionBoxes.forEach(b => {
+                        b.style.display        = makeVisible ? 'flex' : 'none';
+                        b.dataset[ctx.visAttr] = makeVisible ? 'true' : 'false';
+                    });
+                    btn.title = 'Toggle ' + ctx.toggleLabel + (makeVisible ? ' — Hide' : ' — Show');
+                });
+                return btn;
+            };
+
+            // ── Locate the Official and Non-Official h2 elements ─────────────
+            const _officialH2 = _splitFound
+                ? Array.from(document.querySelectorAll('h2')).find(
+                      h => h.textContent.includes('Official Artist Discography') &&
+                           !h.textContent.includes('Non-Official'))
+                : null;
+            const _nonOffH2 = _splitFound
+                ? Array.from(document.querySelectorAll('h2')).find(
+                      h => h.textContent.includes('Non-Official Artist Discography'))
+                : null;
+
+            if (_splitFound && _officialH2 && _nonOffH2) {
+                // ── 1. Inject the GLOBAL super-header h2 before the Official h2 ──
+                const globalBg = Lib.settings.sa_ui_h2_artist_rgs_global_bg || '#1b5e20';
+                const _globalH2 = document.createElement('h2');
+                _globalH2.className = 'mb-toggle-h2 mb-artist-rgs-global-hdr';
+                _globalH2.style.cssText =
+                    `background-color:${globalBg}; color:#fff; cursor:pointer;` +
+                    ` user-select:none; margin-top:0.5em; padding:4px 8px;`;
+                _globalH2.title = 'Click to collapse/uncollapse all sections';
+
+                _globalH2.appendChild(document.createTextNode('Artist Discography '));
+
+                const _gcnt = document.createElement('span');
+                _gcnt.className   = 'mb-row-count-stat';
+                _gcnt.textContent = `(${totalRows.toLocaleString()})`;
+                _gcnt.style.color = '#ddd';
+                _globalH2.appendChild(_gcnt);
+
+                // Move existing CAA global toggle buttons to the global h2
+                _officialH2.querySelectorAll(
+                    '.mb-global-art-toggle-btn, [id$="-global-retry"]'
+                ).forEach(b => _globalH2.appendChild(b));
+
+                // Global master-toggle for ALL sub-sections
+                const _globalToggle = document.createElement('button');
+                _globalToggle.className     = 'mb-master-toggle';
+                _globalToggle.type          = 'button';
+                _globalToggle.dataset.state = 'collapsed';
+                _globalToggle.textContent   = 'Show all sub-sections';
+                _globalToggle.title         = 'Click to uncollapse ALL sub-sections in both sections';
+                _globalToggle.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    const expanding = _globalToggle.dataset.state !== 'expanded';
+                    document.querySelectorAll('table.tbl').forEach(t => {
+                        if (expanding) { t.style.display = ''; _artRestoreBigboxesForTable(t); }
+                        else           { t.style.display = 'none'; _artHideBigboxesForTable(t); }
+                    });
+                    document.querySelectorAll('.mb-toggle-h3').forEach(h => {
+                        const ic = h.querySelector('.mb-toggle-icon');
+                        if (ic) ic.textContent = expanding ? '▼' : '▲';
+                        h.style.display = '';
+                    });
+                    _globalToggle.dataset.state = expanding ? 'expanded' : 'collapsed';
+                    _globalToggle.textContent   = expanding ? 'Hide all sub-sections' : 'Show all sub-sections';
+                });
+                _globalH2.appendChild(_globalToggle);
+
+                // Move filterContainer to the global h2
+                if (filterContainer.parentNode) filterContainer.parentNode.removeChild(filterContainer);
+                filterContainer.style.display    = 'inline-flex';
+                filterContainer.style.marginLeft = '12px';
+                filterContainer.style.verticalAlign = 'middle';
+                _globalH2.appendChild(filterContainer);
+
+                _officialH2.parentNode.insertBefore(_globalH2, _officialH2);
+
+                // ── 2. Official h2 — local controls ──────────────────────────
+                {
+                    let _ocs = _officialH2.querySelector('.mb-row-count-stat');
+                    if (!_ocs) {
+                        _ocs = document.createElement('span');
+                        _ocs.className = 'mb-row-count-stat';
+                        _officialH2.insertBefore(_ocs, _officialH2.querySelector('.mb-master-toggle'));
+                    }
+                    _ocs.textContent = `(${officialRows.toLocaleString()})`;
+
+                    // Section-scoped CAA toggle
+                    const _offFirstThumb = (() => {
+                        for (const sib of _sectionSibs(_officialH2)) {
+                            if (sib.tagName !== 'TABLE') continue;
+                            const img = sib.querySelector('.mb-caa-toggle-thumb');
+                            if (img && img.src) return img.src;
+                        }
+                        return '';
+                    })();
+                    const _offCaaBtn = _makeSectionCaaToggle(
+                        _officialH2, CAA_CTX, _offFirstThumb, officialRows
+                    );
+                    if (_offCaaBtn) _officialH2.appendChild(_offCaaBtn);
+
+                    _officialH2.querySelectorAll('.mb-master-toggle').forEach(b => b.remove());
+                    _officialH2.appendChild(_makeSectionToggle(_officialH2, 'official'));
+                    _officialH2.appendChild(_makeSectionFilter(_officialH2, 'official'));
+                }
+
+                // ── 3. Non-Official h2 — local controls ───────────────────────
+                {
+                    _nonOffH2.querySelectorAll(
+                        '.mb-row-count-stat, .mb-master-toggle, [id^="mb-section-filter"]'
+                    ).forEach(el => el.remove());
+
+                    const _noC = document.createElement('span');
+                    _noC.className   = 'mb-row-count-stat';
+                    _noC.textContent = `(${nonOfficialRows.toLocaleString()})`;
+                    _nonOffH2.appendChild(_noC);
+
+                    // Section-scoped CAA toggle for non-official
+                    const _noFirstThumb = (() => {
+                        for (const sib of _sectionSibs(_nonOffH2)) {
+                            if (sib.tagName !== 'TABLE') continue;
+                            const img = sib.querySelector('.mb-caa-toggle-thumb');
+                            if (img && img.src) return img.src;
+                        }
+                        return '';
+                    })();
+                    const _noCaaBtn = _makeSectionCaaToggle(
+                        _nonOffH2, CAA_CTX, _noFirstThumb, nonOfficialRows
+                    );
+                    if (_noCaaBtn) _nonOffH2.appendChild(_noCaaBtn);
+
+                    _nonOffH2.appendChild(_makeSectionToggle(_nonOffH2, 'non-official'));
+                    _nonOffH2.appendChild(_makeSectionFilter(_nonOffH2, 'nonofficial'));
+                }
+            } else {
+                // No split — just patch the official row count if needed.
+                if (_officialH2) {
+                    const _ocs = _officialH2.querySelector('.mb-row-count-stat');
+                    if (_ocs) _ocs.textContent = `(${totalRows.toLocaleString()})`;
+                }
+                if (!filterContainer.parentNode) filterContainer.style.display = 'inline-flex';
+            }
+
+            // ── Full post-render init — mirrors normal multi-table path exactly ──
+            finalCleanup();
+            initNavigationGuard();
+            makeH2sCollapsible();
+
+            // ── Fix Bug 2: wire _globalH2 click to collapse/expand both section h2s ──
+            // makeH2sCollapsible() assigns contentNodes = [] to _globalH2 (the two
+            // section h2s are themselves h2s, so the walker stops immediately).
+            // Override _mbToggle to drive the Official and Non-Official h2s directly.
+            if (_splitFound) {
+                const _gH2El = document.querySelector('.mb-artist-rgs-global-hdr');
+                const _offH2El = Array.from(document.querySelectorAll('h2')).find(
+                    h => h.textContent.includes('Official Artist Discography') &&
+                         !h.textContent.includes('Non-Official'));
+                const _noH2El = Array.from(document.querySelectorAll('h2')).find(
+                    h => h.textContent.includes('Non-Official Artist Discography'));
+                if (_gH2El && _offH2El && _noH2El) {
+                    // Override the _mbToggle function that makeH2sCollapsible wired
+                    // so clicking/Ctrl-clicking the global h2 also drives both sections.
+                    const _origGlobalToggle = _gH2El._mbToggle;
+                    _gH2El._mbToggle = (forceExpand) => {
+                        if (_origGlobalToggle) _origGlobalToggle(forceExpand);
+                        // Determine effective expansion from the global h2's icon
+                        const _gIcon = _gH2El.querySelector(':scope > .mb-toggle-icon');
+                        const _shouldExpand = forceExpand !== undefined
+                            ? forceExpand
+                            : (_gIcon ? _gIcon.textContent !== '▼' : true);
+                        if (typeof _offH2El._mbToggle === 'function') _offH2El._mbToggle(_shouldExpand);
+                        if (typeof _noH2El._mbToggle === 'function')  _noH2El._mbToggle(_shouldExpand);
+                    };
+                }
+            }
+
+            if (Lib.settings.sa_enable_sticky_headers) applyStickyHeaders();
+            if (Lib.settings.sa_enable_column_resizing) {
+                addAutoResizeButton();
+                document.querySelectorAll('table.tbl').forEach(t => makeColumnsResizable(t));
+            }
+            if (Lib.settings.sa_enable_column_visibility) {
+                const _firstTbl = document.querySelector('table.tbl');
+                if (_firstTbl) addColumnVisibilityToggle(_firstTbl);
+            }
+            addBarcodeHighlightToggleButton();
+            if (Lib.settings.sa_enable_density_control)  addDensityControl();
+            if (Lib.settings.sa_enable_stats_panel)       addStatsButton();
+            if (Lib.settings.sa_enable_keyboard_shortcuts) {
+                initKeyboardShortcuts();
+                addShortcutsHelpButton();
+            }
+            if (Lib.settings.sa_enable_export) addExportButton();
+
+            setTimeout(() => {
+                const _gfi = document.getElementById('mb-global-filter-input') ||
+                             document.querySelector('.mb-global-filter input');
+                if (_gfi) _gfi.focus();
+            }, 150);
+            if (Lib.settings.sa_collabsable_sidebar) initSidebarCollapse();
+
+            if (Lib.settings.sa_enable_expand_rgs) initExpandRGsFeature();
+            initBarcodeHighlight();
+            // CAA/EAA: renderGroupedTable already called init* at its tail — do NOT call again.
+            if (_caaQueue && Lib.settings.sa_enable_caa_pics) {
+                _caaQueue.onIdle(_showCaaCompletionToast);
+            }
+            initSaUnicodeCharsFeature();
+            rewireGlobalCollapseButtonMulti();
+
+            const fetchSeconds = (fetchingTime / 1000).toFixed(2);
+            globalStatusDisplay.textContent =
+                `✓ ${totalRows.toLocaleString()} rows (official + non-official) in ${fetchSeconds}s`;
+            globalStatusDisplay.style.color = 'green';
+            activeBtn.style.backgroundColor = '#ccffcc'; // light green — mirrors normal success path
+
+            return; // ← skip the normal single-pass pipeline below
+        }
+        // ── end multi-pass block ──────────────────────────────────────────────
+
         // UI Cleanup: If targeting a specific header, remove ONLY those h2 headers and
         // their associated tables from the current page which are part of the OTHER button configurations.
         if (targetHeader && activeDefinition && activeDefinition.buttons) {
@@ -15093,7 +15893,7 @@
         const highlightBtn = document.createElement('button');
         highlightBtn.id = `${pfx}-toggle-filter-highlight-btn`;
         highlightBtn.type = 'button';
-        highlightBtn.title = 'Toggle filter highlighting on/off (sub-table filter and column filters)';
+	highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table)';
         highlightBtn.textContent = '🎨 Toggle highlighting';
         // Initially hidden — shown by updateFilterButtonsVisibility() as soon as any
         // filter (subtable input or column filter) is active for this subtable.
@@ -15852,6 +16652,33 @@
                 // show it once initCollapsableColumns() has run.
                 const subCollapseBtn = createSubTableCollapseButton(table, categoryName);
                 h3.insertBefore(subCollapseBtn, subTableControls);
+
+                // ── Section-break h2 injection ────────────────────────────────
+                // Stamped by the multi-pass fetch (Artist RGs button) to separate
+                // the official groups from the non-official groups.
+                if (group.h2SectionBreak) {
+                    const breakH2 = document.createElement('h2');
+                    breakH2.className = 'mb-toggle-h2';
+                    breakH2.textContent = group.h2SectionBreak;
+                    breakH2.style.cssText =
+                        'cursor:pointer; user-select:none; margin-top:1.4em;';
+                    breakH2.title = 'Click to collapse/uncollapse section';
+                    // Wire the same collapse-on-click behaviour as the original h2.
+                    breakH2.addEventListener('click', (ev) => {
+                        if (['A','BUTTON','INPUT','LABEL','SELECT','TEXTAREA']
+                            .includes(ev.target.tagName)) return;
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                    });
+                    if (lastInsertedElement) {
+                        lastInsertedElement.after(breakH2);
+                        lastInsertedElement = breakH2;
+                    } else {
+                        container.appendChild(breakH2);
+                        lastInsertedElement = breakH2;
+                    }
+                }
+
                 if (lastInsertedElement) {
                     lastInsertedElement.after(h3);
                     h3.after(table);
@@ -15867,7 +16694,7 @@
                     // Use the stored seeAllCount to update button text
                     const countSuffix = group.seeAllCount ? ` ${group.seeAllCount}` : '';
                     showAllBtn.textContent = `Show all${countSuffix} rows`;
-                    showAllBtn.title = `Click to show all${countSuffix} rows in a new browser tab (currently only showing 100 entries per MusicBrainz limitation)`;
+		    showAllBtn.title = `Click to show all${countSuffix} rows in a new browser tab (MusicBrainz Artist-Relationships pages have currently a limit of 100 rows rendered at most per relationship type)`;
                     showAllBtn.className = 'mb-show-all-subtable-btn';
                     showAllBtn.type = 'button';
                     // Apply configurable initial background color (overrides the CSS class default).
@@ -17229,8 +18056,8 @@
                 caaBtn.dataset.caaExpandBtn = nowExpanding ? 'expanded' : 'collapsed';
                 caaBtn.innerHTML = nowExpanding ? '&#9660;' : '&#9654;'; // ▼ : ▶
                 caaBtn.title = nowExpanding
-                    ? `Collapse \u2014 click to hide CAA images`
-                    : `Show all image(s) (${imageLis.length}) \u2014 click to expand`;
+                    ? `Collapse all ${ctx.toggleLabel} (${imageLis.length}) in this cell`
+                    : `Show all ${ctx.toggleLabel} (${imageLis.length}) in this cell`;
                 // Sync expandedCells so the filter / unique-values counter track state.
                 const tr      = caaBtn.closest('tr');
                 const rowIdx  = tr ? tr.dataset.mbRowIdx : undefined;
@@ -17733,7 +18560,7 @@
             const collapseHdrBtn = document.createElement('span');
             collapseHdrBtn.className = 'mb-col-collapse-hdr-btn';
             collapseHdrBtn.dataset.colIndex = String(colIndex);
-            collapseHdrBtn.title = `Expand all multi-row ${colName} image cells in this table column`;
+            collapseHdrBtn.title = `Expand all multi-row ${colName} cells in this table column`;
             collapseHdrBtn.setAttribute('role', 'button');
             collapseHdrBtn.setAttribute('aria-expanded', 'false');
             collapseHdrBtn.setAttribute('aria-label', `Expand all collapsed cells in: ${colName}`);
@@ -17775,14 +18602,14 @@
                 // Flip header button glyph (child span) and tooltip.
                 _glyphSpan.textContent = targetExpand ? '▼' : '▶';
                 collapseHdrBtn.title = targetExpand
-                    ? `Collapse all multi-row ${colName} image cells in this table column`
-                    : `Expand all multi-row ${colName} image cells in this table column`;
+                    ? `Collapse all multi-row ${colName} cells in this table column`
+                    : `Expand all multi-row ${colName} cells in this table column`;
                 collapseHdrBtn.setAttribute('aria-expanded', targetExpand ? 'true' : 'false');
                 collapseHdrBtn.setAttribute(
                     'aria-label',
                     targetExpand
-                        ? `Collapse all multi-row ${colName} image cells in: ${colName}`
-                        : `Expand all collapsed cells in: ${colName}`
+                        ? `Collapse all multi-row cells in: ${colName}`
+                        : `Expand all multi-row cells in: ${colName}`
                 );
             });
 
@@ -22396,11 +23223,11 @@
                 if (wasExpanded) {
                     expandBtn.dataset.caaExpandBtn = 'expanded';
                     expandBtn.innerHTML = '&#9660;'; // ▼
-                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+                    expandBtn.title = `Collapse all (${n}) ${ctx.toggleLabel} in this cell`;
                 } else {
                     expandBtn.dataset.caaExpandBtn = 'collapsed';
                     expandBtn.innerHTML = '&#9654;'; // ▶
-                    expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
+                    expandBtn.title = `Show all (${n}) ${ctx.toggleLabel} in this cell`;
                 }
             }
 
@@ -22449,7 +23276,7 @@
             expandBtn.innerHTML = '&#9654;'; // ▶
             expandBtn.style.cssText =
                 'cursor:pointer; margin-right:4px; color:#777; user-select:none;';
-            expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
+            expandBtn.title = `Show all ${ctx.toggleLabel} (${n}) in this cell`;
             li0.insertBefore(expandBtn, li0.firstChild);
 
             // Ensure the tbody delegation listener is installed on this table.
@@ -23639,7 +24466,7 @@
                 });
 
                 // Update global button title.
-                btn.title = 'Globally Toggle ' + ctx.toggleLabel +
+                btn.title = 'Globally toggle ' + ctx.toggleLabel +
                             (makeVisible ? ' - Hide' : ' - Show');
 
                 Lib.debug(ctx.key, `Global ${ctx.key} toggle: all boxes ${makeVisible ? 'shown' : 'hidden'}`);
@@ -23667,7 +24494,7 @@
         const allBoxesForTitle = Array.from(document.querySelectorAll('.' + ctx.boxClass))
             .filter(box => !box.id.endsWith('-global'));
         const anyVisible = allBoxesForTitle.some(box => box.dataset[ctx.visAttr] !== 'false');
-        btn.title = 'Globally Toggle ' + ctx.toggleLabel +
+        btn.title = 'Globally toggle ' + ctx.toggleLabel +
                     (anyVisible ? ' - Hide' : ' - Show');
 
         // ── Global retry button (idempotent — created once) ───────────────────
@@ -23906,8 +24733,8 @@
                 liveBox.style.display        = nowVisible ? 'flex' : 'none';
                 liveBox.dataset[ctx.visAttr] = nowVisible ? 'true' : 'false';
                 btn.title = nowVisible
-                    ? 'Hide big artwork ' + ctx.toggleLabel
-                    : 'Show big artwork ' + ctx.toggleLabel;
+                    ? 'Hide big artwork ' + ctx.toggleLabel + ' stripe'
+                    : 'Show big artwork ' + ctx.toggleLabel + ' stripe';
                 Lib.debug(ctx.key, `${ctx.key} toggle btn ${btnId}: strip ${nowVisible ? 'shown' : 'hidden'}`);
             });
 
@@ -23954,8 +24781,8 @@
             ? liveBoxForTitle.dataset[ctx.visAttr] !== 'false'
             : false;
         btn.title = visible
-            ? 'Hide big artwork ' + ctx.toggleLabel
-            : 'Show big artwork ' + ctx.toggleLabel;
+            ? 'Hide big artwork ' + ctx.toggleLabel + ' stripe'
+            : 'Show big artwork ' + ctx.toggleLabel + ' stripe';
 
         Lib.debug(ctx.key, `${ctx.key}CreateOrUpdateToggleButton: ${isNew ? 'created' : 'updated'} btn ${btnId} (${count} link(s))`);
         return btnId;
@@ -24206,8 +25033,8 @@
         const glyph = btn.querySelector('span');
         if (glyph) glyph.textContent = expanded ? '▼' : '▶';
         btn.title = expanded
-            ? `Collapse all ${archiveName} images`
-            : `Show all ${archiveName} images`;
+            ? `Collapse all ${archiveName} images in this column`
+            : `Show all ${archiveName} images in this column`;
         btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
         const img = btn.querySelector('img');
         if (img) {
@@ -24727,18 +25554,6 @@
     // ── Public entry points ───────────────────────────────────────────────────
 
     /**
-     * Entry point for the CAA Illustrated Discography feature.
-     *
-     * (Re-)creates the shared `_caaQueue` — which is also consumed by
-     * initEaaPics / initCaaInlinePics / initEaaInlinePics — so this MUST be called
-     * before any of those functions at every render-completion site.
-     *
-     * Guards: `Lib.settings.sa_enable_caa_pics` must be true.
-     *
-     * Called from: main fetch pipeline, runFilter() single-table branch,
-     *              renderGroupedTable() multi-table re-renders, load-from-disk pipeline.
-     */
-    /**
      * Shows a small non-intrusive toast in the bottom-right corner of the
      * viewport confirming that all CAA/EAA artwork has finished loading.
      * Auto-dismisses after `sa_caa_completion_toast_duration` seconds (0 = disabled).
@@ -24848,6 +25663,18 @@
         const timer = setTimeout(dismiss, duration);
     }
 
+    /**
+     * Entry point for the CAA Illustrated Discography feature.
+     *
+     * (Re-)creates the shared `_caaQueue` — which is also consumed by
+     * initEaaPics / initCaaInlinePics / initEaaInlinePics — so this MUST be called
+     * before any of those functions at every render-completion site.
+     *
+     * Guards: `Lib.settings.sa_enable_caa_pics` must be true.
+     *
+     * Called from: main fetch pipeline, runFilter() single-table branch,
+     *              renderGroupedTable() multi-table re-renders, load-from-disk pipeline.
+     */
     function initCaaPics() {
         if (!Lib.settings.sa_enable_caa_pics) return;
 
