@@ -6,13 +6,7 @@
         {
           "label": "🐛 Bug Fixes",
           "items": [
-            "Fix CAA/EAA inline expand button tooltip showing wrong archive label after clicking. Root cause: ensureCollapseDelegate is idempotent — only the first caller's ctx is captured in the tbody click-handler closure. Since initCaaPics always runs before initEaaPics, EAA cells always got 'CAA cover art images' in the tooltip on click. Fixed by deriving the label dynamically from the DOM inside the click handler (.mb-eaa-count-badge presence distinguishes EAA from CAA) instead of relying on the closed-over ctx.toggleLabel. Secondary fixes: (1) rebuild-branch title format had (n) before the label instead of after — now consistent with the canonical 'Verb all Label (n) in this cell' format used by the click handler and first-build; (2) _stripTransientCellState now also resets btn.title to the correct collapsed tooltip when forcing the collapsed state, preventing a stale expanded tooltip from surviving a collapse-all or load-from-disk reset."
-          ]
-        },
-        {
-          "label": "✨ New Features / Changes",
-          "items": [
-            "ERG (Expand Release Groups): inject CAA front-cover inline thumbnails into the release rows of expanded release-group sub-tables. When a release-group ERG button is clicked and its release list appears, each release row now gets a 20×20 px mb-caa-inline-ph thumbnail (identical in style to the inline thumbnails in the main table) inserted after its ▶ expand button. Fetches are throttled through the shared _caaQueue, use the full three-tier IDB/memory/network cache stack, and honour sa_enable_caa_pics, sa_caa_pics_inline, sa_caa_hover_preview, and sa_rt_enable/sa_rt_show_inline. Releases with no front image simply show an empty spacer."
+            "Fix CAA/EAA inline expand button tooltip showing wrong text after clicking. Root cause: ensureCollapseDelegate is idempotent — only the first caller's ctx is captured in the tbody click-handler closure. When CAA installs the delegate first, EAA cells would get 'CAA cover art images' in the tooltip; when the delegate ran before any cell was built, ctx.toggleLabel was stale. Fixed by deriving the archive label dynamically from the DOM inside the click handler (EAA cells are detected via .mb-eaa-count-badge presence) instead of relying on the closed-over ctx.toggleLabel. Secondary fixes: (1) rebuild-branch title format had (n) before the label instead of after — now matches the canonical 'Verb all Label (n) in this cell' format; (2) _stripTransientCellState now resets btn.title to the correct collapsed tooltip when forcing the collapsed state, so cells that are reset via collapse-all or load-from-disk no longer retain a stale expanded tooltip."
           ]
         }
       ]

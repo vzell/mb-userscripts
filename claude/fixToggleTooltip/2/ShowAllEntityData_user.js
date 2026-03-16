@@ -18058,8 +18058,8 @@
                 // Derive the archive label from the DOM so this single delegate
                 // handler works correctly for both CAA and EAA cells regardless of
                 // which ctx closed over the listener when ensureCollapseDelegate ran.
-                const _isEaa    = !!td.querySelector('.mb-eaa-count-badge');
-                const _artLabel = _isEaa ? EAA_CTX.toggleLabel : CAA_CTX.toggleLabel;
+                const _isEaa      = !!td.querySelector('.mb-eaa-count-badge');
+                const _artLabel   = _isEaa ? EAA_CTX.toggleLabel : CAA_CTX.toggleLabel;
                 caaBtn.title = nowExpanding
                     ? `Collapse all ${_artLabel} (${imageLis.length}) in this cell`
                     : `Show all ${_artLabel} (${imageLis.length}) in this cell`;
@@ -21411,174 +21411,6 @@
     }
 
     /**
-     * Injects a CAA front-cover inline thumbnail (20×20 px, identical in style to
-     * the `mb-caa-inline-ph` spans injected by `_artInitInlinePics`) into every
-     * release row that was just built by `ergParseReleaseGroup`.
-     *
-     * Called once per `ergParseReleaseGroup` invocation, after all rows have been
-     * appended to `table`.  Iterates the first `<td>` of every data row (those that
-     * contain a `[data-erg-btn]` span and a release `<a>` link), extracts the
-     * release MBID from the href, builds a `mb-caa-inline-ph` placeholder, inserts
-     * it immediately after the ERG ▶ button, and queues a throttled fetch through
-     * `_caaQueue`.
-     *
-     * Guards:
-     *   - `Lib.settings.sa_enable_caa_pics` must be true (master CAA toggle).
-     *   - `Lib.settings.sa_caa_pics_inline` must be true (inline thumbnail toggle).
-     *   - `_caaQueue` must be initialised (initCaaPics() must have run first).
-     *
-     * Respects the full fetch stack used by `_artInitInlinePics`:
-     *   - IDB path  (`sa_art_idb_enable`): `_artFetchCachedImage` → blob: URL.
-     *   - Native path (IDB disabled): native `img.src` load.
-     *   - Hover preview (`sa_caa_hover_preview`): mouseenter/mouseleave on `ph`.
-     *   - Cache-hint indicator (`sa_rt_enable` + `sa_rt_show_inline`): emoji overlay.
-     *
-     * @param {HTMLTableElement} table  The ERG release-list table just populated by
-     *                                  `ergParseReleaseGroup`.
-     */
-    function ergInjectCaaInlineThumbnails(table) {
-        if (!Lib.settings.sa_enable_caa_pics)  return;
-        if (!Lib.settings.sa_caa_pics_inline)  return;
-        if (!_caaQueue) {
-            Lib.warn('caa', 'ergInjectCaaInlineThumbnails: _caaQueue not initialised — skipping');
-            return;
-        }
-
-        const GUID_RE = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/;
-        const size    = Lib.settings.sa_caa_small_img_size || 250;
-        const PH      = 20; // placeholder side length in pixels
-
-        // Only process rows that contain a release link (first <td> per row).
-        // Skip the spacer rows (colspan=6) and the footer row.
-        table.querySelectorAll('tbody tr td:first-child a[href^="/release/"]').forEach(link => {
-            const td     = link.closest('td');
-            if (!td) return;
-
-            // Idempotency: skip if a placeholder was already injected.
-            if (td.querySelector('.mb-caa-inline-ph')) return;
-
-            const href      = link.getAttribute('href');
-            const guidMatch = href.match(GUID_RE);
-            if (!guidMatch) return;
-
-            const imgurl = CAA_CTX.archiveHost + '/release/' + guidMatch[0] + '/front-' + size;
-
-            // Build placeholder + img element.
-            const ph = document.createElement('span');
-            ph.className     = CAA_CTX.inlinePh;
-            ph.style.cssText =
-                `display:inline-block; width:${PH}px; height:${PH}px;` +
-                ` margin-right:3px; vertical-align:middle; flex-shrink:0;` +
-                ` overflow:hidden; border-radius:2px;`;
-
-            const img         = document.createElement('img');
-            img.alt           = '';
-            img.style.cssText =
-                `width:${PH}px; height:${PH}px; object-fit:cover;` +
-                ` display:none; border-radius:2px;`;
-            ph.appendChild(img);
-
-            // Insert after the ERG ▶ button (first child of the td).
-            const ergBtn = td.querySelector('[data-erg-btn]');
-            if (ergBtn) {
-                ergBtn.after(ph);
-            } else {
-                td.insertBefore(ph, td.firstChild);
-            }
-
-            // Throttled fetch — mirrors _artInitInlinePics loadTask exactly.
-            const loadTask = () => {
-                if (Lib.settings.sa_art_idb_enable) {
-                    return _artFetchCachedImage(imgurl)
-                        .then(({ objectUrl, fromIdb, fromMemory }) => {
-                            if (!ph.isConnected) return;
-                            img.src = objectUrl;
-                            img.style.display = 'inline';
-                            if (Lib.settings.sa_caa_hover_preview) {
-                                const bigSize = Lib.settings.sa_caa_big_img_size || 250;
-                                const bigUrl  = imgurl.replace('/front-' + size, '/front-' + bigSize);
-                                ph.style.cursor = 'crosshair';
-                                ph.addEventListener('mouseenter', () => _showArtHoverPreview(bigUrl, ph));
-                                ph.addEventListener('mouseleave', _hideArtHoverPreview);
-                            }
-                            if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_inline) {
-                                let hintStatus, hintLabel;
-                                if (fromIdb) {
-                                    hintStatus = 'idb';
-                                    hintLabel  = cacheStatusLabel('idb', null);
-                                } else {
-                                    const hint = getResourceTimingHint(objectUrl);
-                                    hintStatus = hint.status;
-                                    hintLabel  = cacheStatusLabel(hint.status, hint.duration);
-                                }
-                                const emoji = cacheStatusEmoji(hintStatus);
-                                const hintSpan           = document.createElement('span');
-                                hintSpan.className       = 'mb-art-cache-hint-inline';
-                                hintSpan.textContent     = emoji;
-                                hintSpan.title           = hintLabel;
-                                hintSpan.style.cssText   =
-                                    'font-size:0.65em; line-height:1; position:absolute;' +
-                                    ' top:0; left:0; user-select:none; cursor:default;' +
-                                    ' pointer-events:none;';
-                                ph.style.position = 'relative';
-                                ph.appendChild(hintSpan);
-                            }
-                            if (fromMemory)   _caaFetchStats.inline.memory++;
-                            else if (fromIdb) _caaFetchStats.inline.idb++;
-                            else              _caaFetchStats.inline.network++;
-                            Lib.debug('caa', `ergInjectCaaInlineThumbnails: loaded OK (idb=${fromIdb} memory=${fromMemory}) — ${imgurl}`);
-                        })
-                        .catch(() => {
-                            Lib.debug('caa', `ergInjectCaaInlineThumbnails: failed to load ${imgurl} — placeholder stays as spacer`);
-                        });
-                }
-
-                // Native img.src fallback (IDB disabled).
-                return new Promise(resolve => {
-                    img.addEventListener('load', function() {
-                        if (ph.isConnected) {
-                            this.style.display = 'inline';
-                            if (Lib.settings.sa_caa_hover_preview) {
-                                const bigSize = Lib.settings.sa_caa_big_img_size || 250;
-                                const bigUrl  = imgurl.replace('/front-' + size, '/front-' + bigSize);
-                                ph.style.cursor = 'crosshair';
-                                ph.addEventListener('mouseenter', () => _showArtHoverPreview(bigUrl, ph));
-                                ph.addEventListener('mouseleave', _hideArtHoverPreview);
-                            }
-                            if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_inline) {
-                                const hint  = getResourceTimingHint(this.src);
-                                const emoji = cacheStatusEmoji(hint.status);
-                                const label = cacheStatusLabel(hint.status, hint.duration);
-                                const hintSpan           = document.createElement('span');
-                                hintSpan.className       = 'mb-art-cache-hint-inline';
-                                hintSpan.textContent     = emoji;
-                                hintSpan.title           = label;
-                                hintSpan.style.cssText   =
-                                    'font-size:0.65em; line-height:1; position:absolute;' +
-                                    ' top:0; left:0; user-select:none; cursor:default;' +
-                                    ' pointer-events:none;';
-                                ph.style.position = 'relative';
-                                ph.appendChild(hintSpan);
-                            }
-                            _caaFetchStats.inline.browser++;
-                            Lib.debug('caa', `ergInjectCaaInlineThumbnails: loaded OK — ${imgurl}`);
-                        }
-                        resolve();
-                    });
-                    img.addEventListener('error', function() {
-                        Lib.debug('caa', `ergInjectCaaInlineThumbnails: failed to load ${imgurl} — placeholder stays as spacer`);
-                        resolve();
-                    });
-                    img.src = imgurl;
-                });
-            };
-
-            _caaQueue.enqueue(loadTask);
-            Lib.debug('caa', `ergInjectCaaInlineThumbnails: enqueued ${imgurl}`);
-        });
-    }
-
-    /**
      * Injects an expand/collapse button into the `<td>` containing a release-group link.
      * The expanded inline table lists all releases in the release group with their
      * format, track counts, date, country, status, and nested release-expand buttons.
@@ -21731,11 +21563,6 @@
         bottomTd.appendChild(ergCreateNewTabLink(`/release-group/${mbid}/edits`, 'editing history'));
         bottomTr.appendChild(bottomTd);
         table.appendChild(bottomTr);
-
-        // Inject CAA front-cover inline thumbnails into each release row.
-        // Mirrors the mb-caa-inline-ph spans that _artInitInlinePics adds to the
-        // main table; guarded by sa_enable_caa_pics + sa_caa_pics_inline.
-        ergInjectCaaInlineThumbnails(table);
     }
 
     /**

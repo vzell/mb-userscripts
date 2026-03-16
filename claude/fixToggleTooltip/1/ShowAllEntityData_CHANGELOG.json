@@ -1,18 +1,24 @@
 [
     {
+      "version": "9.99.181",
+      "date": "2026-03-16",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Fix CAA/EAA inline expand button tooltip remaining stale after a reset via _stripTransientCellState (e.g. collapse-all, load-from-disk). The previous fix (9.99.180) corrected the rebuild-branch format but missed the actual root cause: _stripTransientCellState reset btn.dataset.caaExpandBtn and innerHTML to the collapsed state but never updated btn.title, leaving it with whatever tooltip was set previously. Fixed by adding a title reset inside the forEach that already resets the other collapsed-state properties; the image count and label (CAA vs EAA) are derived from the sibling ul so no external context is needed."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.180",
       "date": "2026-03-16",
       "sections": [
         {
           "label": "🐛 Bug Fixes",
           "items": [
-            "Fix CAA/EAA inline expand button tooltip showing wrong archive label after clicking. Root cause: ensureCollapseDelegate is idempotent — only the first caller's ctx is captured in the tbody click-handler closure. Since initCaaPics always runs before initEaaPics, EAA cells always got 'CAA cover art images' in the tooltip on click. Fixed by deriving the label dynamically from the DOM inside the click handler (.mb-eaa-count-badge presence distinguishes EAA from CAA) instead of relying on the closed-over ctx.toggleLabel. Secondary fixes: (1) rebuild-branch title format had (n) before the label instead of after — now consistent with the canonical 'Verb all Label (n) in this cell' format used by the click handler and first-build; (2) _stripTransientCellState now also resets btn.title to the correct collapsed tooltip when forcing the collapsed state, preventing a stale expanded tooltip from surviving a collapse-all or load-from-disk reset."
-          ]
-        },
-        {
-          "label": "✨ New Features / Changes",
-          "items": [
-            "ERG (Expand Release Groups): inject CAA front-cover inline thumbnails into the release rows of expanded release-group sub-tables. When a release-group ERG button is clicked and its release list appears, each release row now gets a 20×20 px mb-caa-inline-ph thumbnail (identical in style to the inline thumbnails in the main table) inserted after its ▶ expand button. Fetches are throttled through the shared _caaQueue, use the full three-tier IDB/memory/network cache stack, and honour sa_enable_caa_pics, sa_caa_pics_inline, sa_caa_hover_preview, and sa_rt_enable/sa_rt_show_inline. Releases with no front image simply show an empty spacer."
+            "Fix CAA/EAA inline expand button tooltip showing stale 'Show all …' text when the cell is in the expanded state. Three title assignments were unified to the canonical format 'Collapse/Show all <label> (n) in this cell': (1) rebuild path expanded branch (line ~23226) had (n) before the label instead of after; (2) rebuild path collapsed branch (line ~23230) had the same transposition; both are now consistent with the click-handler format in ensureCollapseDelegate (lines ~18058-18060) and the first-build assignment (line ~23279). The visible symptom was data-caa-expand-btn='expanded' / ▼ icon showing the tooltip 'Show all CAA cover art images (8) in this cell' instead of 'Collapse all CAA cover art images (8) in this cell'."
           ]
         }
       ]
