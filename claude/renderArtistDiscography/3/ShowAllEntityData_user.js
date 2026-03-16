@@ -4121,7 +4121,7 @@
         const btn = document.createElement('button');
         btn.id = `mb-stf-${safeId}-toggle-filter-highlight-btn`;
         btn.type = 'button';
-        btn.title = 'Toggle filter highlighting on/off (sub-table filter and column filters)';
+        btn.title = 'Toggle filter string highlighting for this sub-table filter and ALL sub-table column filters)';
         btn.textContent = '🎨 Toggle highlighting';
         // Initially hidden — shown by updateFilterButtonsVisibility() when active.
         btn.style.cssText = 'font-size:0.8em; padding:2px 6px; border-radius:4px; background:rgb(240,240,240); border:1px solid rgb(204,204,204); cursor:pointer; vertical-align:middle; transition:background-color 0.3s; display:none;';
@@ -5051,7 +5051,7 @@
         btn.type      = 'button';
         btn.className = 'mb-subtable-vis-btn';
         btn.innerHTML = '👁️';
-        btn.title     = `Show/hide columns for "${categoryName}"`;
+	btn.title     = `Show/hide columns in sub-section "${categoryName}"`;
         btn.setAttribute('aria-label', `Column visibility for: ${categoryName}`);
         btn.style.cssText = [
             'font-size:0.85em; padding:1px 5px; border-radius:4px;',
@@ -7939,7 +7939,7 @@
         btn.style.background  = 'rgb(240,240,240)';
         btn.style.borderColor = 'rgb(204,204,204)';
         btn.style.color       = '';
-        btn.title = `Auto-resize columns for "${categoryName}"`;
+	btn.title = `Auto-resize columns in sub-section "${categoryName}"`;
     }
 
     /**
@@ -8161,7 +8161,7 @@
         btn.type      = 'button';
         btn.className = 'mb-subtable-resize-btn';
         btn.innerHTML = '↔️';
-        btn.title     = `Auto-resize columns for "${categoryName}"`;
+	btn.title     = `Auto-resize columns in sub-section "${categoryName}"`;
         btn.setAttribute('aria-label', `Auto-resize columns for: ${categoryName}`);
         btn.style.cssText = [
             'font-size:0.8em; padding:1px 5px; border-radius:4px;',
@@ -9239,15 +9239,15 @@
             eb.title = 'Fetch all official and non-official artist release groups from the MusicBrainz backend database, split into two sections';
         } else if (conf.label === '🧮 Official RGs' || (conf.label.includes('Official RGs') && !conf.label.includes('VA') && !conf.label.includes('All'))) {
             eb.title = 'Fetch all official artist release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('All official RGs')) {
+        } else if (conf.label.includes('All RGs')) {
             eb.title = 'Fetch all official and non-official artist release groups from the MusicBrainz backend database (combined)';
         } else if (conf.label.includes('VA RGs') && !conf.label.includes('Official') && !conf.label.includes('All')) {
             eb.title = 'Fetch all official and non-official various artists release groups from the MusicBrainz backend database, split into two sections';
         } else if (conf.label.includes('Official VA RGs') && !conf.label.includes('All')) {
             eb.title = 'Fetch all official various artists release groups from the MusicBrainz backend database';
-        } else if (conf.label.includes('All official VA RGs')) {
+        } else if (conf.label.includes('All VA RGs')) {
             eb.title = 'Fetch all official and non-official various artists release groups from the MusicBrainz backend database (combined)';
-        } else if (conf.label.includes('Official releases')) {
+        } else if (conf.label.includes('Artist releases')) {
             eb.title = 'Fetch all official artist releases from the MusicBrainz backend database';
         } else if (conf.label.includes('VA releases')) {
             eb.title = 'Fetch all various artists releases from the MusicBrainz backend database';
@@ -9282,7 +9282,7 @@
     saveToDiskBtn.onmouseover = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.hoverBg; };
     saveToDiskBtn.onmouseout  = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.normalBg; };
     saveToDiskBtn.type = 'button';
-    saveToDiskBtn.title = `Save current table data to disk as Gzipped JSON (${getPrefixDisplay()}, then S)`;
+    saveToDiskBtn.title = `Save current table data to disk in a serialized format as Gzipped JSON (${getPrefixDisplay()}, then S)`;
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
     saveToDiskBtn.style.display = 'none';
 
@@ -9719,7 +9719,7 @@
     unhighlightAllBtn.id = 'mb-toggle-filter-highlight-btn';
     unhighlightAllBtn.textContent = '🎨 Toggle highlighting';
     unhighlightAllBtn.style.cssText = `${uiFilterBarBtnCSS()} transition:background-color 0.3s; display:none;`;
-    unhighlightAllBtn.title = 'Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)';
+    unhighlightAllBtn.title = 'Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables)';
 
     /**
      * Update filter highlight button background color based on highlighting state
@@ -9786,7 +9786,7 @@
     clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
     clearColumnFiltersBtn.id = 'mb-clear-column-filters-btn';
     clearColumnFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearColumnFiltersBtn.title = 'Clear all column-specific filter inputs — global action (Shift+Esc)';
+    clearColumnFiltersBtn.title = 'Clear ALL column-specific filter inputs — global action (Shift+Esc)';
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
         document.querySelectorAll('.mb-col-filter-input').forEach(input => {
@@ -9816,7 +9816,7 @@
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.id = 'mb-clear-all-filters-btn';
     clearAllFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearAllFiltersBtn.title = `Clear global, ALL sub-table and ALL column filters in all sub-tables (except filter from 'Loading from Disk') — also triggered by ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}`;
+    clearAllFiltersBtn.title = `Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (except the filter when 'Loading from Disk' was used — also triggered by ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}`;
     clearAllFiltersBtn.onclick = () => {
         // filterClear.click() resets the global filter to prefix-only and runs the filter.
         filterClear.click();
@@ -15893,7 +15893,7 @@
         const highlightBtn = document.createElement('button');
         highlightBtn.id = `${pfx}-toggle-filter-highlight-btn`;
         highlightBtn.type = 'button';
-        highlightBtn.title = 'Toggle filter highlighting on/off (sub-table filter and column filters)';
+	highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table)';
         highlightBtn.textContent = '🎨 Toggle highlighting';
         // Initially hidden — shown by updateFilterButtonsVisibility() as soon as any
         // filter (subtable input or column filter) is active for this subtable.
@@ -16694,7 +16694,7 @@
                     // Use the stored seeAllCount to update button text
                     const countSuffix = group.seeAllCount ? ` ${group.seeAllCount}` : '';
                     showAllBtn.textContent = `Show all${countSuffix} rows`;
-                    showAllBtn.title = `Click to show all${countSuffix} rows in a new browser tab (currently only showing 100 entries per MusicBrainz limitation)`;
+		    showAllBtn.title = `Click to show all${countSuffix} rows in a new browser tab (MusicBrainz Artist-Relationships pages have currently a limit of 100 rows rendered at most per relationship type)`;
                     showAllBtn.className = 'mb-show-all-subtable-btn';
                     showAllBtn.type = 'button';
                     // Apply configurable initial background color (overrides the CSS class default).
@@ -18056,8 +18056,8 @@
                 caaBtn.dataset.caaExpandBtn = nowExpanding ? 'expanded' : 'collapsed';
                 caaBtn.innerHTML = nowExpanding ? '&#9660;' : '&#9654;'; // ▼ : ▶
                 caaBtn.title = nowExpanding
-                    ? `Collapse \u2014 click to hide CAA images`
-                    : `Show all image(s) (${imageLis.length}) \u2014 click to expand`;
+                    ? `Collapse all ${ctx.toggleLabel} (${imageLis.length}) in this cell`
+                    : `Show all ${ctx.toggleLabel} (${imageLis.length}) in this cell`;
                 // Sync expandedCells so the filter / unique-values counter track state.
                 const tr      = caaBtn.closest('tr');
                 const rowIdx  = tr ? tr.dataset.mbRowIdx : undefined;
@@ -18560,7 +18560,7 @@
             const collapseHdrBtn = document.createElement('span');
             collapseHdrBtn.className = 'mb-col-collapse-hdr-btn';
             collapseHdrBtn.dataset.colIndex = String(colIndex);
-            collapseHdrBtn.title = `Expand all multi-row ${colName} image cells in this table column`;
+            collapseHdrBtn.title = `Expand all multi-row ${colName} cells in this table column`;
             collapseHdrBtn.setAttribute('role', 'button');
             collapseHdrBtn.setAttribute('aria-expanded', 'false');
             collapseHdrBtn.setAttribute('aria-label', `Expand all collapsed cells in: ${colName}`);
@@ -18602,14 +18602,14 @@
                 // Flip header button glyph (child span) and tooltip.
                 _glyphSpan.textContent = targetExpand ? '▼' : '▶';
                 collapseHdrBtn.title = targetExpand
-                    ? `Collapse all multi-row ${colName} image cells in this table column`
-                    : `Expand all multi-row ${colName} image cells in this table column`;
+                    ? `Collapse all multi-row ${colName} cells in this table column`
+                    : `Expand all multi-row ${colName} cells in this table column`;
                 collapseHdrBtn.setAttribute('aria-expanded', targetExpand ? 'true' : 'false');
                 collapseHdrBtn.setAttribute(
                     'aria-label',
                     targetExpand
-                        ? `Collapse all multi-row ${colName} image cells in: ${colName}`
-                        : `Expand all collapsed cells in: ${colName}`
+                        ? `Collapse all multi-row cells in: ${colName}`
+                        : `Expand all multi-row cells in: ${colName}`
                 );
             });
 
@@ -23223,11 +23223,11 @@
                 if (wasExpanded) {
                     expandBtn.dataset.caaExpandBtn = 'expanded';
                     expandBtn.innerHTML = '&#9660;'; // ▼
-                    expandBtn.title = `Collapse \u2014 click to hide CAA images`;
+                    expandBtn.title = `Collapse all (${n}) ${ctx.toggleLabel} in this cell`;
                 } else {
                     expandBtn.dataset.caaExpandBtn = 'collapsed';
                     expandBtn.innerHTML = '&#9654;'; // ▶
-                    expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
+                    expandBtn.title = `Show all (${n}) ${ctx.toggleLabel} in this cell`;
                 }
             }
 
@@ -23276,7 +23276,7 @@
             expandBtn.innerHTML = '&#9654;'; // ▶
             expandBtn.style.cssText =
                 'cursor:pointer; margin-right:4px; color:#777; user-select:none;';
-            expandBtn.title = `Show all image(s) (${n}) \u2014 click to expand`;
+            expandBtn.title = `Show all ${ctx.toggleLabel} (${n}) in this cell`;
             li0.insertBefore(expandBtn, li0.firstChild);
 
             // Ensure the tbody delegation listener is installed on this table.
@@ -24466,7 +24466,7 @@
                 });
 
                 // Update global button title.
-                btn.title = 'Globally Toggle ' + ctx.toggleLabel +
+                btn.title = 'Globally toggle ' + ctx.toggleLabel +
                             (makeVisible ? ' - Hide' : ' - Show');
 
                 Lib.debug(ctx.key, `Global ${ctx.key} toggle: all boxes ${makeVisible ? 'shown' : 'hidden'}`);
@@ -24494,7 +24494,7 @@
         const allBoxesForTitle = Array.from(document.querySelectorAll('.' + ctx.boxClass))
             .filter(box => !box.id.endsWith('-global'));
         const anyVisible = allBoxesForTitle.some(box => box.dataset[ctx.visAttr] !== 'false');
-        btn.title = 'Globally Toggle ' + ctx.toggleLabel +
+        btn.title = 'Globally toggle ' + ctx.toggleLabel +
                     (anyVisible ? ' - Hide' : ' - Show');
 
         // ── Global retry button (idempotent — created once) ───────────────────
@@ -24733,8 +24733,8 @@
                 liveBox.style.display        = nowVisible ? 'flex' : 'none';
                 liveBox.dataset[ctx.visAttr] = nowVisible ? 'true' : 'false';
                 btn.title = nowVisible
-                    ? 'Hide big artwork ' + ctx.toggleLabel
-                    : 'Show big artwork ' + ctx.toggleLabel;
+                    ? 'Hide big artwork ' + ctx.toggleLabel + ' stripe'
+                    : 'Show big artwork ' + ctx.toggleLabel + ' stripe';
                 Lib.debug(ctx.key, `${ctx.key} toggle btn ${btnId}: strip ${nowVisible ? 'shown' : 'hidden'}`);
             });
 
@@ -24781,8 +24781,8 @@
             ? liveBoxForTitle.dataset[ctx.visAttr] !== 'false'
             : false;
         btn.title = visible
-            ? 'Hide big artwork ' + ctx.toggleLabel
-            : 'Show big artwork ' + ctx.toggleLabel;
+            ? 'Hide big artwork ' + ctx.toggleLabel + ' stripe'
+            : 'Show big artwork ' + ctx.toggleLabel + ' stripe';
 
         Lib.debug(ctx.key, `${ctx.key}CreateOrUpdateToggleButton: ${isNew ? 'created' : 'updated'} btn ${btnId} (${count} link(s))`);
         return btnId;
@@ -25033,8 +25033,8 @@
         const glyph = btn.querySelector('span');
         if (glyph) glyph.textContent = expanded ? '▼' : '▶';
         btn.title = expanded
-            ? `Collapse all ${archiveName} images`
-            : `Show all ${archiveName} images`;
+            ? `Collapse all ${archiveName} images in this column`
+            : `Show all ${archiveName} images in this column`;
         btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
         const img = btn.querySelector('img');
         if (img) {
