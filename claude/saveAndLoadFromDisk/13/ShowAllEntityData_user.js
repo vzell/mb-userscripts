@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.199+2026-03-16
+// @version      9.99.198+2026-03-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -12090,6 +12090,7 @@
                                 title="Clear filter expression"
                                 style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:1em;line-height:1;padding:2px 3px;border-radius:3px;display:none;">&#10005;</button>
                         </div>
+                        </div>
                         <button id="sa-hist-pin-btn"
                             title="Pin current filter to persistent list (saves query + checkbox states)"
                             style="padding:0 10px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;cursor:pointer;font-size:1.1em;font-weight:bold;color:#2e7d32;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">+</button>
@@ -12852,13 +12853,11 @@
                     if (_histPinVisible.length > 0) _histApplyEntry(0, 'pin');
                     else if (_histLruVisible.length > 0) _histApplyEntry(0, 'lru');
                 } else if (ev.key === 'Escape') {
-                    ev.stopImmediatePropagation();
+                    ev.stopPropagation();
                     if (histQuickFilter.value) {
-                        // First Escape: clear quick-filter only, keep panel open
                         histQuickFilter.value = '';
                         refreshHistoryDropdown('');
                     } else {
-                        // Second Escape (field already empty): close panel
                         _histClose();
                         filterInput.focus();
                     }

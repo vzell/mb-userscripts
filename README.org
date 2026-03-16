@@ -55133,7 +55133,7 @@ key, only the "Edit Pinned Filter List" dialog should be closed not the complete
 
 b.)
 
-when the "Edit Pinned Filter List" dialog is open and I click inside the "Quik filter field", the main "Load Table Data"
+when the "Edit Pinned Filter List" dialog is open and I click inside the "Quick filter field", the main "Load Table Data"
 is closed, please fix, it should of course stay open
 
 2.)
@@ -55162,7 +55162,7 @@ the "Case sensitive" and "Regexp" checkboxes inside
 
 are missing their tooltips +
 
-3.) add an unicode "x" (clear) icon inside the filter field right aligen to the end of the filter field
+3.) add an unicode "x" (clear) icon inside the filter field right aligned to the end of the filter field
 
 #+begin_example
 <input id="sa-load-filter-input" type="text" placeholder="Filter expression... evaluated for each column" style="flex:1;padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:1em;outline:none;">
@@ -55185,6 +55185,18 @@ to
             const totalPart = totalRows > 0 ? ` of ${totalRows}` : '';
             prefilterToggleBtn.title = 'Toggle prefilter highlighting';
 #+end_example
+
+** bugs
+
+1.)
+
+Initially when entering the "Load Table Data", there is NO unicode "x" (clear) icon inside the filter field visible
+right aligned to the end of the filter field, but the "+" and "History" buttons" are moved one row below the filter
+field and they are mich smaller than before, something is broken here
+
+2.)
+
+pressing the "Escape" key in the quick filter list and it's NOT empty should clear the filter field only the second press should leave the dialog
 
 
 * TODO "Case sensitive" and "Regexp" checkboxes are missing their tooltips + add an "x" icon to clear the filter field with the mouse

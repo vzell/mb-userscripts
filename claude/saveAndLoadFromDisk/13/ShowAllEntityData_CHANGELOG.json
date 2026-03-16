@@ -1,18 +1,5 @@
 [
     {
-      "version": "9.99.199",
-      "date": "2026-03-16",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "Load dialog filter row — fix broken HTML structure introduced in 9.99.198: a misplaced </div> was closing the outer flex row immediately after the input wrapper, pushing the '+' pin button and 'History' toggle button outside the flex container and onto a new line at reduced size. Fixed by removing the extra </div> so all three elements (input wrapper, pin button, history button) remain correctly inside the flex row.",
-            "History dropdown quick-filter — pressing Escape when the quick-filter field is non-empty was also closing the Load Table Data dialog. Root cause: stopPropagation only stops DOM bubbling but not other document-level keydown listeners. Fixed by using stopImmediatePropagation, which prevents the load dialog's handleKey from also receiving the Escape event. Behaviour is now: first Escape clears the quick-filter and keeps the panel open; second Escape (field empty) closes the panel only, never the load dialog."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.198",
       "date": "2026-03-16",
       "sections": [
