@@ -1,5 +1,32 @@
 [
     {
+      "version": "9.99.184",
+      "date": "2026-03-16",
+      "sections": [
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "makeCollapseExpandBtnHTML: move the toggle arrow glyph (▶/◀) out of the first flex column and render it as a standalone leading span (align-self:center) in front of both side-by-side columns. The first flex column now contains only 'Expand'/'Collapse' + 'ALL'.",
+            "collapseHdrBtn tooltips: capitalize 'all' → 'ALL' in both the initial Expand title and the click-handler Collapse/Expand titles, consistent with the global button tooltip style."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.183",
+      "date": "2026-03-16",
+      "sections": [
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "mb-col-collapse-all-btn: restructure button label so arrow, action word ('Expand'/'Collapse'), and 'ALL' stack vertically in one column (centered), followed by a second column with 'multi-row' / 'cells' — also centered. Previously the arrow and action word were a single inline span.",
+            "mb-col-collapse-all-btn: update tooltip from 'Expand/Collapse all …' to 'Expand/Collapse ALL … in EVERY …' to match the visual emphasis.",
+            "collapseHdrBtn (per-column header button): include the multi-row cell count in the tooltip for both Expand and Collapse states, e.g. 'Expand all multi-row \"Title\" cells (12) in this table column'."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.182",
       "date": "2026-03-16",
       "sections": [

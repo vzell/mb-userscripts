@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.182+2026-03-16
+// @version      9.99.184+2026-03-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4196,9 +4196,14 @@
      * @returns {string} HTML string to assign to btn.innerHTML
      */
     function makeCollapseExpandBtnHTML(expand) {
-        const arrowLabel = expand ? '▶ Expand' : '◀ Collapse';
-        return `<span>${arrowLabel}</span>` +
-            `<span style="display:flex;flex-direction:column;align-items:flex-start;` +
+        const arrow  = expand ? '▶' : '◀';
+        const action = expand ? 'Expand' : 'Collapse';
+        return `<span style="align-self:center;font-size:1em;">${arrow}</span>` +
+            `<span style="display:flex;flex-direction:column;align-items:center;` +
+            `line-height:1;font-size:0.9em;">` +
+            `<span>${action}</span>` +
+            `<span>ALL</span></span>` +
+            `<span style="display:flex;flex-direction:column;align-items:center;` +
             `line-height:1;font-size:0.9em;"><span>multi-row</span>` +
             `<span>cells</span></span>`;
     }
@@ -9772,7 +9777,7 @@
     // align-items/gap are effective only when display switches to inline-flex (on show).
     globalCollapseBtn.style.cssText = `${uiFilterBarBtnCSS()} align-items:center; gap:4px; display:none;`;
     globalCollapseBtn.title =
-        'Expand all collapsed multi-row cells in every collapsable table column';
+        'Expand ALL collapsed multi-row cells in EVERY collapsable table column';
     filterContainer.insertBefore(globalCollapseBtn, unhighlightAllBtn);
 
     const xSymbol = document.createElement('span');
@@ -18000,7 +18005,7 @@
         // always reads "▶ Expand …" after a re-render.
         globalBtn.style.display = 'inline-flex';
         globalBtn.innerHTML     = makeCollapseExpandBtnHTML(true);
-        globalBtn.title         = 'Expand all collapsed multi-row cells in every collapsable table column';
+        globalBtn.title         = 'Expand ALL collapsed multi-row cells in EVERY collapsable table column';
 
         // Re-wire onclick with the freshly collected allHdrBtns array.
         globalBtn.onclick = (e) => {
@@ -18019,8 +18024,8 @@
 
             globalBtn.innerHTML = makeCollapseExpandBtnHTML(!targetExpand);
             globalBtn.title = targetExpand
-                ? 'Collapse all expanded multi-row cells in every collapsable table column'
-                : 'Expand all collapsed multi-row cells in every collapsable table column';
+                ? 'Collapse ALL expanded multi-row cells in EVERY collapsable table column'
+                : 'Expand ALL collapsed multi-row cells in EVERY collapsable table column';
         };
 
         // Apply or clear the highlight tint based on the full document scan.
@@ -18565,7 +18570,7 @@
             const collapseHdrBtn = document.createElement('span');
             collapseHdrBtn.className = 'mb-col-collapse-hdr-btn';
             collapseHdrBtn.dataset.colIndex = String(colIndex);
-            collapseHdrBtn.title = `Expand all ${collapseHdrBtns.length} multi-row "${colName}" cells in this table column`;
+            collapseHdrBtn.title = `Expand ALL multi-row "${colName}" cells (${multiRowCells.length}) in this table column`;
             collapseHdrBtn.setAttribute('role', 'button');
             collapseHdrBtn.setAttribute('aria-expanded', 'false');
             collapseHdrBtn.setAttribute('aria-label', `Expand all collapsed cells in: ${colName}`);
@@ -18606,9 +18611,10 @@
 
                 // Flip header button glyph (child span) and tooltip.
                 _glyphSpan.textContent = targetExpand ? '▼' : '▶';
+                const _count = _countSpan.textContent;
                 collapseHdrBtn.title = targetExpand
-                    ? `Collapse all multi-row ${colName} cells in this table column`
-                    : `Expand all multi-row ${colName} cells in this table column`;
+                    ? `Collapse ALL multi-row ${colName} cells (${_count}) in this table column`
+                    : `Expand ALL multi-row ${colName} cells (${_count}) in this table column`;
                 collapseHdrBtn.setAttribute('aria-expanded', targetExpand ? 'true' : 'false');
                 collapseHdrBtn.setAttribute(
                     'aria-label',
@@ -18650,7 +18656,7 @@
                     globalBtn.style.display = 'inline-flex';
                     // Reset to collapsed state on every (re-)init.
                     globalBtn.innerHTML = makeCollapseExpandBtnHTML(true);
-                    globalBtn.title = 'Expand all collapsed multi-row cells in every collapsable table column';
+                    globalBtn.title = 'Expand ALL collapsed multi-row cells in EVERY collapsable table column';
 
                     // Re-wire onclick (safe for disk-load re-runs — re-wiring
                     // captures the fresh collapseHdrBtns array from this init).
@@ -18674,8 +18680,8 @@
 
                         globalBtn.innerHTML = makeCollapseExpandBtnHTML(!targetExpand);
                         globalBtn.title = targetExpand
-                            ? 'Collapse all expanded multi-row cells in every collapsable table column'
-                            : 'Expand all collapsed multi-row cells in every collapsable table column';
+                            ? 'Collapse ALL expanded multi-row cells in EVERY collapsable table column'
+                            : 'Expand ALL collapsed multi-row cells in EVERY collapsable table column';
                     };
                 } else {
                     globalBtn.style.display = 'none';

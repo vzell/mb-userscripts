@@ -54105,7 +54105,10 @@ clicking on the "SHow all..." icon when in collapsed state, all images are uncol
 </td>
 #+end_example
 
-* TODO Change expand multi-row cells to "Expand|all" | "multi-row|cells" - elements under each other aligned in the middle
+* DONE Change expand multi-row cells to "Expand|all" | "multi-row|cells" - elements under each other aligned in the middle
+** initial
+
+In the uploaded userscript,
 
 1.)
 
@@ -54130,10 +54133,13 @@ I want that "Expand" also renders above "ALL", like in the following HTML snippe
 
 #+begin_example
 <button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;">
-  <span>▶ Expand
+  <span>▶
   </span>
+    <span>Expand
+    </span>
     <span>ALL
     </span>
+  </span>
   <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;">
     <span>multi-row
     </span>
@@ -54143,18 +54149,20 @@ I want that "Expand" also renders above "ALL", like in the following HTML snippe
 </button>
 #+end_example
 
+Also the alignment should be centered for both
+
 2.)
 
-the tooltip of "mb-col-collapse-all-btn" should change from
+the tooltip of "mb-col-collapse-all-btn" should also change from
 
 #+begin_example
-
+Expand all collapsed multi-row cells in every collapsable table column
 #+end_example
 
 to
 
 #+begin_example
-
+Expand ALL collapsed multi-row cells in EVERY collapsable table column
 #+end_example
 
 3.)
@@ -54169,12 +54177,34 @@ Change the button text from
             collapseHdrBtn.title = `Expand all multi-row "${colName}" cells (<number of multi-row cells in this column>) in this table column`;
 #+end_example
 
-to add the "<number of multi-row cells in this column>" to the tooltip
+to add the "<number of multi-row cells in this column>" to the tooltip. Do the same for the "Collapse" case.
+
 
 Please implement
 
+** fix
+
+1.)
+
+the toggle symbol itself should NOT be rendered in the first side-by-side flex column, but instead should be in front of the two side-by-side flex columns, vertically centered
+
+2.)
+
+Rename
+
+#+begin_example
+            collapseHdrBtn.title = `Expand all multi-row "${colName}" cells in this table column`;
+#+end_example
+
+#+begin_example
+            collapseHdrBtn.title = `Expand ALL multi-row "${colName}" cells in this table column`;
+#+end_example
+
+Do the same for the "Collapse" case
+
 
 * TODO Change all the entity links to open in a new tab
+
 
 * TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
 
@@ -55206,4 +55236,4 @@ some more things to implement:
 #+end_example
   
 
-* TODO the order of the buttons when being visible should alway be klike in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlighning", "Clear all column filters", "Clear all filters"
+* TODO the order of the buttons when being visible should alway be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlighning", "Clear all column filters", "Clear all filters"
