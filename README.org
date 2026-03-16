@@ -54969,6 +54969,34 @@ all parameters used in the following list should be configurable in the configur
 
 should get proper tooltips to explain how the filtering will be influenced
 
+** answer
+
+#+begin_example
+┌──────────────────────────────────────┐
+│ 🔍 Quick filter history...           │  ← #sa-hist-quick-filter
+├──────────────────────────────────────┤
+│ school                        [Re]   │  ← scrollable #sa-hist-list
+│ from                                 │    each row: query + badge glyphs
+│ jp                         [Cs][Ex]  │    matching text highlighted yellow
+│ …                                    │
+├──────────────────────────────────────┤
+│ 3 of 12 entries  ↑↓ navigate…       │  ← #sa-hist-footer
+└──────────────────────────────────────┘
+#+end_example
+
+#+begin_example
+Badge glyphs — Cs (blue, Case Sensitive), Re (purple, Regex), Ex (red, Exclude), shown only when active.
+Keyboard flow:
+
+Alt+H — toggle panel from anywhere in dialog
+Quick-filter ↓ → moves to list; list ↑ past top → back to quick-filter
+Enter — applies selected entry (query + all checkbox states), closes panel
+Esc in list → quick-filter gets focus
+Esc with quick-filter non-empty → clears it
+Esc with quick-filter empty → closes panel (dialog stays open)
+Esc with panel closed → closes dialog
+#+end_example
+
 
 * TODO The "Load Table Data" dialog should have a configurable initial 'min-width:640px' instead of the hardcoded 'min-width:320px'
 
