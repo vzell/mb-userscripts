@@ -54078,7 +54078,15 @@ before
 #+end_example
 
 * DONE in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
+** why is the 
 
+In the uploaded userscript,
+
+why ist the "function ergInjectCaaInlineThumbnails(table)" not working on the URL
+
+"https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings"
+
+in column "Release groups" when expanding a release group
 
 * TODO Change expand multi-row cells to "Expand|all" | "multi-row|cells" - elements under each other aligned in the middle
 
