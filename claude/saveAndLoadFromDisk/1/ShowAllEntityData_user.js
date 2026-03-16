@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.192+2026-03-16
+// @version      9.99.186+2026-03-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -923,17 +923,6 @@
             type: 'text',
             default: '1.2em',
             description: 'Font size of the message text inside the "Save to Disk" / export download notification popup (e.g. 0.9em, 14px, 1rem)'
-        },
-
-        sa_dialog_save_export_autoclose_ms: {
-            label: 'Save / Export dialog auto-close delay (ms)',
-            type: 'number',
-            default: 1800,
-            min: 0,
-            max: 30000,
-            description: 'How long (in milliseconds) the "Save Table Data" and "Export Table Data" dialogs remain open after a download has been initiated before auto-closing. ' +
-                         'Set to 0 to disable auto-close entirely (the dialog must then be dismissed manually via the × close button or the Escape key). ' +
-                         'Range: 0 – 30 000 ms (0 – 30 s). Default: 1800 ms (1.8 s).'
         },
 
         // ============================================================
@@ -5345,60 +5334,110 @@
      */
     function exportTableToCSV() {
         const table = document.querySelector('table.tbl');
-        if (!table) { alert('No table found to export'); Lib.error('export', 'No table found for CSV export'); return; }
+        if (!table) {
+            alert('No table found to export');
+            Lib.error('export', 'No table found for CSV export');
+            return;
+        }
+
         Lib.debug('export', 'Starting CSV export...');
 
         const rows = [];
         let totalCells = 0;
+
+        // Get headers from first row
         const headerRow = table.querySelector('thead tr:first-child');
-        const headers = [];
         if (headerRow) {
+            const headers = [];
             Array.from(headerRow.cells).forEach(cell => {
+                // Skip hidden columns
                 if (cell.style.display === 'none') return;
+
+                // Clean header text (remove sort icons)
                 let headerText = cell.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim();
                 headers.push(headerText);
             });
             rows.push(headers);
             totalCells += headers.length;
+            Lib.debug('export', `Exported ${headers.length} headers: ${headers.join(', ')}`);
         }
 
+        // Get data rows (only visible ones)
         const dataRows = table.querySelectorAll('tbody tr');
-        let rowsExported = 0, rowsSkipped = 0;
+        let rowsExported = 0;
+        let rowsSkipped = 0;
+
         dataRows.forEach(row => {
-            if (row.style.display === 'none') { rowsSkipped++; return; }
+            // Skip hidden rows (filtered out)
+            if (row.style.display === 'none') {
+                rowsSkipped++;
+                return;
+            }
+
             const cells = [];
-            Array.from(row.cells).forEach(cell => {
+            Array.from(row.cells).forEach((cell, index) => {
+                // Skip hidden columns
                 if (cell.style.display === 'none') return;
-                let text = cell.textContent.trim().replace(/\s+/g, ' ').replace(/"/g, '""');
-                if (text.includes(',') || text.includes('\n') || text.includes('"')) text = `"${text}"`;
+
+                // Get text content and clean it up
+                let text = cell.textContent.trim();
+
+                // Remove extra whitespace
+                text = text.replace(/\s+/g, ' ');
+
+                // Escape quotes (CSV standard: " becomes "")
+                text = text.replace(/"/g, '""');
+
+                // Wrap in quotes if contains comma, newline, or quote
+                if (text.includes(',') || text.includes('\n') || text.includes('"')) {
+                    text = `"${text}"`;
+                }
+
                 cells.push(text);
             });
-            if (cells.length > 0) { rows.push(cells); totalCells += cells.length; rowsExported++; }
+
+            if (cells.length > 0) {
+                rows.push(cells);
+                totalCells += cells.length;
+                rowsExported++;
+            }
         });
 
-        Lib.debug('export', `CSV: ${rowsExported} rows exported, ${rowsSkipped} skipped, ${totalCells} cells`);
+        Lib.debug('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
 
-        // Build meta comment block (# lines prepended before data)
-        const metaLines = _buildExportMetaLines('# ');
-        const csvContent = metaLines + rows.map(r => r.join(',')).join('\n');
+        // Create CSV string
+        const csv = rows.map(row => row.join(',')).join('\n');
 
-        const { filename } = _assembleExportFilename('csv', rowsExported);
+        // Create Blob and download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url  = URL.createObjectURL(blob);
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName = pageType || 'table';
+        const filename = `musicbrainz-${pageName}-${timestamp}.csv`;
+        link.download = filename;
 
-        showExportDialog({
-            format:      'CSV',
-            description: 'Comma-separated values — compatible with Excel, Google Sheets, and any spreadsheet application. ' +
-                         'Metadata is prepended as <code>#&nbsp;comment</code> lines before the header row.',
-            mimeType:    'text/csv;charset=utf-8;',
-            extension:   'csv',
-            blobUrl:     url,
-            filename,
-            rowsExported,
-            rowsTotal:   rowsExported + rowsSkipped,
-            triggerButton: document.getElementById('mb-export-btn'),
-        });
+        // Trigger download
+        link.click();
+
+        // Cleanup
+        URL.revokeObjectURL(url);
+
+        // Update status bar
+        const infoDisplay = document.getElementById('mb-info-display');
+        if (infoDisplay) {
+            infoDisplay.textContent = `✓ Exported ${rowsExported} rows to ${filename}`;
+            infoDisplay.style.color = 'green';
+        }
+
+        Lib.debug('export', `CSV export complete: ${filename} (${rowsExported} rows exported, ${rowsSkipped} skipped, ${totalCells} cells)`);
+
+        // Shared notification popup (focus + Escape handled inside)
+        const csvTotalRows = rowsExported + rowsSkipped;
+        showExportNotification('CSV', filename, rowsExported, csvTotalRows);
     }
 
     /**
@@ -5406,23 +5445,34 @@
      */
     function exportTableToJSON() {
         const table = document.querySelector('table.tbl');
-        if (!table) { alert('No table found to export'); Lib.error('export', 'No table found for JSON export'); return; }
+        if (!table) {
+            alert('No table found to export');
+            Lib.error('export', 'No table found for JSON export');
+            return;
+        }
+
         Lib.debug('export', 'Starting JSON export...');
 
-        const data = { meta: _buildExportMetaObject(), headers: [], rows: [] };
+        const data = { headers: [], rows: [] };
 
+        // Get headers from first row
         const headerRow = table.querySelector('thead tr:first-child');
         if (headerRow) {
             Array.from(headerRow.cells).forEach(cell => {
                 if (cell.style.display === 'none') return;
-                data.headers.push(cell.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim().replace(/\s+/g, ' '));
+                let headerText = cell.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim().replace(/\s+/g, ' ');
+                data.headers.push(headerText);
             });
         }
 
+        // Get data rows (only visible ones)
         const dataRows = table.querySelectorAll('tbody tr');
-        let rowsExported = 0, rowsSkipped = 0;
+        let rowsExported = 0;
+        let rowsSkipped = 0;
+
         dataRows.forEach(row => {
             if (row.style.display === 'none') { rowsSkipped++; return; }
+
             const rowData = {};
             Array.from(row.cells).forEach((cell, index) => {
                 if (cell.style.display === 'none') return;
@@ -5430,30 +5480,33 @@
                 const headerName = data.headers[headerIndex] || `Column${index}`;
                 rowData[headerName] = cell.textContent.trim().replace(/\s+/g, ' ');
             });
-            if (Object.keys(rowData).length > 0) { data.rows.push(rowData); rowsExported++; }
+
+            if (Object.keys(rowData).length > 0) {
+                data.rows.push(rowData);
+                rowsExported++;
+            }
         });
 
-        Lib.debug('export', `JSON: ${rowsExported} rows exported, ${rowsSkipped} skipped`);
-
+        // Create JSON string
         const json = JSON.stringify(data, null, 2);
-        const { filename } = _assembleExportFilename('json', rowsExported);
 
+        // Create Blob and download
         const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
-        const url  = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
 
-        showExportDialog({
-            format:      'JSON',
-            description: 'JavaScript Object Notation — structured data with a top-level <code>meta</code> object, ' +
-                         'a <code>headers</code> array, and a <code>rows</code> array of objects keyed by column name. ' +
-                         'Metadata is embedded natively as a <code>meta</code> property.',
-            mimeType:    'application/json;charset=utf-8;',
-            extension:   'json',
-            blobUrl:     url,
-            filename,
-            rowsExported,
-            rowsTotal:   rowsExported + rowsSkipped,
-            triggerButton: document.getElementById('mb-export-btn'),
-        });
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName = pageType || 'table';
+        const filename = `musicbrainz-${pageName}-${timestamp}.json`;
+        link.download = filename;
+
+        link.click();
+        URL.revokeObjectURL(url);
+
+        Lib.debug('export', `JSON export complete: ${filename} (${rowsExported} rows exported, ${rowsSkipped} skipped)`);
+        const jsonTotalRows = rowsExported + rowsSkipped;
+        showExportNotification('JSON', filename, rowsExported, jsonTotalRows);
     }
 
     /**
@@ -5461,56 +5514,72 @@
      */
     function exportTableToOrgMode() {
         const table = document.querySelector('table.tbl');
-        if (!table) { alert('No table found to export'); Lib.error('export', 'No table found for Org-Mode export'); return; }
+        if (!table) {
+            alert('No table found to export');
+            Lib.error('export', 'No table found for Org-Mode export');
+            return;
+        }
+
         Lib.debug('export', 'Starting Org-Mode export...');
 
         const rows = [];
+
+        // Get headers from first row
         const headerRow = table.querySelector('thead tr:first-child');
         if (headerRow) {
             const headers = [];
             Array.from(headerRow.cells).forEach(cell => {
                 if (cell.style.display === 'none') return;
-                headers.push(cell.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim().replace(/\s+/g, ' '));
+                let headerText = cell.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim().replace(/\s+/g, ' ');
+                headers.push(headerText);
             });
             rows.push('| ' + headers.join(' | ') + ' |');
             rows.push('|' + headers.map(() => '---').join('|') + '|');
         }
 
+        // Get data rows (only visible ones)
         const dataRows = table.querySelectorAll('tbody tr');
-        let rowsExported = 0, rowsSkipped = 0;
+        let rowsExported = 0;
+        let rowsSkipped = 0;
+
         dataRows.forEach(row => {
             if (row.style.display === 'none') { rowsSkipped++; return; }
+
             const cells = [];
             Array.from(row.cells).forEach(cell => {
                 if (cell.style.display === 'none') return;
-                cells.push(cell.textContent.trim().replace(/\s+/g, ' ').replace(/\|/g, '\\vert'));
+                let text = cell.textContent.trim().replace(/\s+/g, ' ');
+                // Escape pipe characters in org-mode
+                text = text.replace(/\|/g, '\\vert');
+                cells.push(text);
             });
-            if (cells.length > 0) { rows.push('| ' + cells.join(' | ') + ' |'); rowsExported++; }
+
+            if (cells.length > 0) {
+                rows.push('| ' + cells.join(' | ') + ' |');
+                rowsExported++;
+            }
         });
 
-        Lib.debug('export', `Org-Mode: ${rowsExported} rows exported, ${rowsSkipped} skipped`);
+        // Create org-mode string
+        const orgMode = rows.join('\n');
 
-        // Build meta comment block (# lines) and prepend before the table
-        const metaLines = _buildExportMetaLines('# ');
-        const orgContent = metaLines + rows.join('\n');
+        // Create Blob and download
+        const blob = new Blob([orgMode], { type: 'text/plain;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
 
-        const { filename } = _assembleExportFilename('org', rowsExported);
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName = pageType || 'table';
+        const filename = `musicbrainz-${pageName}-${timestamp}.org`;
+        link.download = filename;
 
-        const blob = new Blob([orgContent], { type: 'text/plain;charset=utf-8;' });
-        const url  = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(url);
 
-        showExportDialog({
-            format:      'Org-Mode',
-            description: 'Emacs Org-Mode table — pipe-delimited table compatible with <code>org-mode</code> and <code>org-table</code>. ' +
-                         'Metadata is prepended as <code>#&nbsp;comment</code> lines before the table header.',
-            mimeType:    'text/plain;charset=utf-8;',
-            extension:   'org',
-            blobUrl:     url,
-            filename,
-            rowsExported,
-            rowsTotal:   rowsExported + rowsSkipped,
-            triggerButton: document.getElementById('mb-export-btn'),
-        });
+        Lib.debug('export', `Org-Mode export complete: ${filename} (${rowsExported} rows exported, ${rowsSkipped} skipped)`);
+        const orgTotalRows = rowsExported + rowsSkipped;
+        showExportNotification('Org-Mode', filename, rowsExported, orgTotalRows);
     }
 
     /**
@@ -5623,360 +5692,8 @@
     }
 
     /**
-     * Build a plain-text metadata block for export formats that carry metadata as comments.
-     * Each key-value line is prefixed with `prefix` (e.g. "# " for CSV/Org-Mode).
-     * Returns the block as a multi-line string with a trailing newline ready to prepend.
-     *
-     * @param {string} prefix - Comment prefix, e.g. "# "
-     * @returns {string}
+     * Add export button with dropdown menu to the controls
      */
-
-    /**
-     * Assemble a download filename for any export or save operation using exactly
-     * the same naming convention as the "Save to Disk" path:
-     *
-     *   <prefix><EntityType>-(<EntityName>)-<SectionSuffix>[-<detailSegment>][-(<rowCount>)][_<timestamp>].<ext>
-     *
-     * e.g.  MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T12-21-41.csv
-     *
-     * All optional segments (prefix, detail, rowCount, timestamp) honour the same
-     * settings flags as saveTableDataToDisk:
-     *   sa_filename_prefix              (default "MB-")
-     *   sa_filename_include_detail      (default true)
-     *   sa_filename_include_row_count   (default true)
-     *   sa_filename_include_timestamp   (default true)
-     *
-     * @param {string} extension  - File extension WITHOUT the leading dot, e.g. "csv", "json", "org".
-     * @param {number} rowCount   - Number of rows being exported (used for the row-count segment).
-     * @returns {string}          - The fully assembled filename string.
-     */
-    function _assembleExportFilename(extension, rowCount) {
-        // ── Slug helpers (mirrors the closure-local helpers in saveTableDataToDisk) ──
-        const _toSlug = (text) => {
-            if (!text) return '';
-            return text
-                .toLowerCase().trim()
-                .replace(/\s+/g, '_')
-                .replace(/[^a-z0-9_]/g, '')
-                .replace(/_+/g, '_')
-                .replace(/^_+|_+$/g, '');
-        };
-        const _toTitleSlug = (slug) =>
-            slug.replace(/(^|-)([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
-
-        // ── Detail slug (same two-branch logic as saveTableDataToDisk) ──────────
-        let detailSlug = '';
-        const isMultiBtn = activeDefinition &&
-                           Array.isArray(activeDefinition.buttons) &&
-                           activeDefinition.buttons.length > 1;
-        if (isMultiBtn && lastClickedButtonLabel) {
-            detailSlug = _toSlug(lastClickedButtonLabel);
-        } else if (isFilteredRelationshipPage) {
-            const h2 = document.querySelector('#content h2');
-            if (h2) {
-                const quoted = (h2.textContent || '').match(/["\u201C\u201D]([^"\u201C\u201D]+)["\u201C\u201D]/);
-                if (quoted && quoted[1]) detailSlug = _toSlug(quoted[1]);
-            }
-        }
-
-        // ── Page-type slug and entity components ─────────────────────────────
-        const rawPageTypeSlug = pageType.replace(/-filtered$/, '');
-        const pageTypeSlug    = _toTitleSlug(rawPageTypeSlug);
-        const entityName      = _cachedEntityName || '';
-        const firstDash       = pageTypeSlug.indexOf('-');
-        const entityType      = firstDash !== -1 ? pageTypeSlug.slice(0, firstDash) : pageTypeSlug;
-        const sectionSuffix   = firstDash !== -1 ? pageTypeSlug.slice(firstDash + 1) : '';
-
-        // ── Settings-controlled optional segments ─────────────────────────────
-        const includeDetail    = Lib.settings.sa_filename_include_detail    !== false;
-        const includeRowCount  = Lib.settings.sa_filename_include_row_count !== false;
-        const includeTimestamp = Lib.settings.sa_filename_include_timestamp !== false;
-        const filenamePrefix   = Lib.settings.sa_filename_prefix != null
-            ? Lib.settings.sa_filename_prefix : 'MB-';
-
-        const detailSegment  = (includeDetail && detailSlug) ? `-${detailSlug}` : '';
-        const rowPart        = includeRowCount  ? `-(${rowCount})` : '';
-        const timestamp      = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-        const timestampPart  = includeTimestamp ? `_${timestamp}` : '';
-
-        // ── Assemble slug ─────────────────────────────────────────────────────
-        let assembledSlug;
-        if (firstDash !== -1) {
-            assembledSlug = entityName
-                ? `${entityType}-(${entityName})-${sectionSuffix}${detailSegment}`
-                : `${entityType}-${sectionSuffix}${detailSegment}`;
-        } else {
-            assembledSlug = entityName
-                ? `${pageTypeSlug}-(${entityName})${detailSegment}`
-                : `${pageTypeSlug}${detailSegment}`;
-        }
-
-        return {
-            filename:      `${filenamePrefix}${assembledSlug}${rowPart}${timestampPart}.${extension}`,
-            entityType:    entityType    || null,
-            entityName:    entityName    || null,
-            sectionSuffix: sectionSuffix || null,
-            detailSegment: detailSlug    || null,
-        };
-    }
-
-    function _buildExportMetaLines(prefix) {
-        const now     = new Date();
-        const lines   = [
-            `${prefix}Exported:     ${now.toLocaleString()} (${now.toISOString()})`,
-            `${prefix}URL:          ${window.location.href}`,
-            `${prefix}Page type:    ${pageType || '—'}`,
-            `${prefix}Entity type:  ${(activeDefinition && pageType) ? pageType.replace(/-.*$/, '') : '—'}`,
-            `${prefix}Entity name:  ${_cachedEntityName || '—'}`,
-            `${prefix}Button label: ${lastClickedButtonLabel || '—'}`,
-            `${prefix}Script:       ${SCRIPT_NAME || SCRIPT_BASE_NAME}`,
-            '',   // blank separator line between meta and data
-        ];
-        return lines.map(l => (l === '' ? '' : l)).join('\n') + '\n';
-    }
-
-    /**
-     * Build a metadata object for export formats that carry metadata natively (JSON).
-     * @returns {object}
-     */
-    function _buildExportMetaObject() {
-        return {
-            exportedAt:   new Date().toISOString(),
-            url:          window.location.href,
-            pageType:     pageType || null,
-            entityType:   pageType ? pageType.replace(/-.*$/, '') : null,
-            entityName:   _cachedEntityName || null,
-            buttonLabel:  lastClickedButtonLabel || null,
-            script:       SCRIPT_NAME || SCRIPT_BASE_NAME,
-        };
-    }
-
-    /**
-     * Show the "Export Table Data" dialog.
-     *
-     * Parametrized by format — presents a description of the export format, the
-     * metadata block (showing what will be embedded in the file), an editable
-     * filename input, and Save / Cancel buttons.  Replaces the old
-     * showExportNotification popup for all export paths.
-     *
-     * @param {object} opts
-     * @param {string}          opts.format        - Display name, e.g. "CSV"
-     * @param {string}          opts.description   - HTML description of the format (shown after header)
-     * @param {string}          opts.mimeType      - MIME type for the blob
-     * @param {string}          opts.extension     - File extension without dot, e.g. "csv"
-     * @param {string}          opts.blobUrl       - Pre-created object URL (already compressed/encoded)
-     * @param {string}          opts.filename      - Default assembled filename
-     * @param {number}          opts.rowsExported  - Number of rows in the export
-     * @param {number}          opts.rowsTotal     - Total rows (exported + skipped)
-     * @param {HTMLElement|null} opts.triggerButton - Button that triggered the export (for positioning)
-     */
-    function showExportDialog(opts) {
-        const { format, description, blobUrl, filename: defaultFilename,
-                rowsExported, rowsTotal, triggerButton = null } = opts;
-
-        const dialogWidth  = (Lib.settings.sa_ld_dialog_width || 600) + 'px';
-        const headerFontSz = Lib.settings.sa_ld_dialog_header_font_size || '1.00em';
-        const statusFontSz = Lib.settings.sa_ld_status_font_size        || '0.95em';
-
-        // Toggle: close if already open for the same format
-        const existingId = 'sa-export-dialog-overlay';
-        const existing = document.getElementById(existingId);
-        if (existing) { existing.remove(); URL.revokeObjectURL(blobUrl); return; }
-
-        // Build a minimal dataToSave-compatible object so buildMetaBlockHTML can render it
-        const metaData = {
-            version:      '—',
-            url:          window.location.href,
-            pageType:     pageType || null,
-            entityType:   pageType ? pageType.replace(/-.*$/, '') : null,
-            entityName:   _cachedEntityName || null,
-            sectionSuffix: (activeDefinition && pageType && pageType.includes('-'))
-                            ? pageType.replace(/^[^-]+-/, '').replace(/-filtered$/, '') : null,
-            detailSegment: lastClickedButtonLabel || null,
-            tableMode:    activeDefinition ? activeDefinition.tableMode : null,
-            buttonLabel:  lastClickedButtonLabel || null,
-            timestamp:    Date.now(),
-        };
-
-        const isFiltered   = rowsTotal > rowsExported;
-        const rowSummary   = isFiltered
-            ? `<strong>${rowsExported.toLocaleString()}</strong> of ${rowsTotal.toLocaleString()} rows <span style="color:#888;font-size:0.9em;">(${rowsTotal - rowsExported} filtered out)</span>`
-            : `<strong>${rowsExported.toLocaleString()}</strong> rows`;
-
-        const dialog = document.createElement('div');
-        dialog.id = existingId;
-        dialog.style.cssText = [
-            'position:fixed',
-            'background:#fff',
-            'padding:24px',
-            'border-radius:12px',
-            'box-shadow:0 8px 32px rgba(0,0,0,0.3)',
-            `width:${dialogWidth}`,
-            'max-width:calc(100vw - 40px)',
-            'min-width:320px',
-            'font-family:sans-serif',
-            'border:1px solid #ccc',
-            'z-index:20000',
-            'max-height:calc(100vh - 40px)',
-            'overflow-y:auto',
-            'resize:both',
-            'box-sizing:border-box',
-        ].join(';');
-
-        dialog.innerHTML = `
-            <div id="sa-ed-drag-handle" style="margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:12px;cursor:move;user-select:none;">
-                <h3 style="margin:0;color:#222;font-size:1.2em;">&#128229; Export Table Data &mdash; ${format}</h3>
-                <p style="margin:8px 0 0;color:#555;font-size:${headerFontSz};">${description}</p>
-                <p style="margin:6px 0 0;color:#666;font-size:0.9em;">Exporting ${rowSummary}. Review the metadata below, optionally edit the filename, then click <strong>Save Data</strong>.</p>
-            </div>
-            <div id="sa-ed-meta-block" style="margin-bottom:16px;border:1px solid #eee;border-radius:6px;padding:10px 14px;background:#fafafa;">
-                ${buildMetaBlockHTML(metaData, rowsExported, null)}
-            </div>
-            <div style="margin-bottom:14px;">
-                <label for="sa-ed-filename-input" style="display:block;font-size:0.88em;font-weight:600;color:#444;margin-bottom:5px;">&#128462; Filename</label>
-                <input id="sa-ed-filename-input" type="text" value=""
-                    style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:0.9em;font-family:monospace;outline:none;">
-            </div>
-            <div style="display:flex;gap:12px;margin-bottom:8px;">
-                <button id="sa-ed-save-confirm" style="flex:2;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
-                    <span>&#128229; <span style="text-decoration:underline">S</span>ave Data</span>
-                </button>
-                <button id="sa-ed-cancel" style="flex:1;padding:10px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">Cancel</button>
-            </div>
-            <div id="sa-ed-status" style="display:none;padding:5px 2px;font-size:${statusFontSz};min-height:20px;"></div>
-        `;
-
-        document.body.appendChild(dialog);
-        dialog.querySelector('#sa-ed-filename-input').value = defaultFilename;
-
-        // ── Position ─────────────────────────────────────────────────────────
-        setTimeout(() => {
-            if (triggerButton) {
-                const btnRect = triggerButton.getBoundingClientRect();
-                const dlgRect = dialog.getBoundingClientRect();
-                let top  = btnRect.bottom + 10;
-                let left = btnRect.left;
-                if (top  + dlgRect.height > window.innerHeight - 10) top  = Math.max(10, btnRect.top - dlgRect.height - 10);
-                if (left + dlgRect.width  > window.innerWidth  - 10) left = Math.max(10, window.innerWidth - dlgRect.width - 10);
-                dialog.style.top  = top  + 'px';
-                dialog.style.left = left + 'px';
-            } else {
-                dialog.style.left      = '50%';
-                dialog.style.top       = '50%';
-                dialog.style.transform = 'translate(-50%,-50%)';
-            }
-        }, 0);
-
-        // ── Hover styles ──────────────────────────────────────────────────────
-        const styleId = 'sa-export-dialog-styles';
-        if (!document.getElementById(styleId)) {
-            const s = document.createElement('style');
-            s.id = styleId;
-            s.textContent = `
-                #sa-ed-save-confirm:hover:not([disabled]) { background:#45a049 !important; }
-                #sa-ed-cancel:hover                        { background:#e0e0e0 !important; }
-                #sa-ed-save-confirm:active:not([disabled]),
-                #sa-ed-cancel:active {
-                    transform: translateY(1px);
-                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
-                }
-            `;
-            document.head.appendChild(s);
-        }
-
-        // ── Refs ──────────────────────────────────────────────────────────────
-        const saveBtn       = dialog.querySelector('#sa-ed-save-confirm');
-        const cancelBtn     = dialog.querySelector('#sa-ed-cancel');
-        const statusDiv     = dialog.querySelector('#sa-ed-status');
-        const filenameInput = dialog.querySelector('#sa-ed-filename-input');
-
-        // ── Cleanup ───────────────────────────────────────────────────────────
-        let _outsideHandler = null;
-        const closeDialog = () => {
-            dialog.remove();
-            document.removeEventListener('keydown', handleKey);
-            if (_outsideHandler) document.removeEventListener('mousedown', _outsideHandler);
-            document.removeEventListener('mousemove', onDragMove);
-            document.removeEventListener('mouseup',   onDragEnd);
-        };
-        _outsideHandler = (e) => { if (!dialog.contains(e.target)) closeDialog(); };
-        setTimeout(() => document.addEventListener('mousedown', _outsideHandler), 200);
-
-        // ── Drag ──────────────────────────────────────────────────────────────
-        const dragHandle = dialog.querySelector('#sa-ed-drag-handle');
-        let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
-        dragHandle.addEventListener('mousedown', (e) => {
-            if (e.target.closest('button, a, input')) return;
-            isDragging = true;
-            const rect = dialog.getBoundingClientRect();
-            dragOffsetX = e.clientX - rect.left;
-            dragOffsetY = e.clientY - rect.top;
-            dialog.style.transform = 'none';
-            dialog.style.left = rect.left + 'px';
-            dialog.style.top  = rect.top  + 'px';
-            e.preventDefault();
-        });
-        const onDragMove = (e) => {
-            if (!isDragging) return;
-            dialog.style.left = Math.max(0, Math.min(e.clientX - dragOffsetX, window.innerWidth  - dialog.offsetWidth))  + 'px';
-            dialog.style.top  = Math.max(0, Math.min(e.clientY - dragOffsetY, window.innerHeight - dialog.offsetHeight)) + 'px';
-        };
-        const onDragEnd = () => { isDragging = false; };
-        document.addEventListener('mousemove', onDragMove);
-        document.addEventListener('mouseup',   onDragEnd);
-
-        // ── Keyboard ──────────────────────────────────────────────────────────
-        const handleKey = (e) => {
-            if (e.key === 'Escape') { URL.revokeObjectURL(blobUrl); closeDialog(); }
-            else if (e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); if (!saveBtn.disabled) saveBtn.click(); }
-        };
-        document.addEventListener('keydown', handleKey);
-
-        // ── Cancel ────────────────────────────────────────────────────────────
-        cancelBtn.onclick = () => { URL.revokeObjectURL(blobUrl); closeDialog(); };
-
-        // ── Save ──────────────────────────────────────────────────────────────
-        saveBtn.onclick = () => {
-            const chosenFilename = filenameInput.value.trim() || defaultFilename;
-            saveBtn.disabled = true; saveBtn.style.opacity = '0.7'; saveBtn.innerHTML = '&#9203; Saving\u2026';
-
-            const a = document.createElement('a');
-            a.href = blobUrl; a.download = chosenFilename;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-
-            Lib.debug('export', `Export dialog: download triggered — "${chosenFilename}"`);
-
-            const infoDisp = document.getElementById('mb-info-display');
-            if (infoDisp) {
-                const rs = isFiltered
-                    ? `${rowsExported.toLocaleString()} of ${rowsTotal.toLocaleString()} rows`
-                    : `${rowsExported.toLocaleString()} rows`;
-                infoDisp.textContent = `✓ Exported ${rs} to ${chosenFilename}`;
-                infoDisp.style.color = 'green';
-            }
-
-            statusDiv.innerHTML     = `\u2705 Download initiated for <em>"${chosenFilename}"</em>. Monitor your browser for the file.`;
-            statusDiv.style.color   = '#2e7d32';
-            statusDiv.style.display = 'block';
-            saveBtn.innerHTML  = '&#128229; <span style="text-decoration:underline">S</span>ave Data';
-            saveBtn.disabled   = false; saveBtn.style.opacity = '';
-
-            // Parse the setting robustly: GM storage returns strings, not numbers.
-            // parseInt handles both '1800' and 1800; NaN falls back to the default 1800.
-            // We must NOT use "|| 1800" because that would treat 0 (disable) as falsy.
-            const _rawAutoClose = Lib.settings.sa_dialog_save_export_autoclose_ms;
-            const delay = Number.isFinite(+_rawAutoClose) ? Math.max(0, Math.round(+_rawAutoClose)) : 1800;
-            if (delay > 0) {
-                setTimeout(() => closeDialog(), delay);
-            }
-            // If delay === 0 the user must close manually via Escape, outside-click, or the × button.
-        };
-
-        setTimeout(() => { filenameInput.focus(); filenameInput.select(); }, 80);
-    }
-
-
     function addExportButton() {
         const controlsContainer = document.getElementById('mb-show-all-controls-container');
         if (!controlsContainer) {
@@ -11353,319 +11070,7 @@
      *
      * @param {HTMLElement|null} triggerButton - Button to anchor the dialog to.
      */
-    /**
-     * Build the "File Metadata" HTML table block shared by both the Save and Load dialogs.
-     *
-     * For the Save dialog `file` is null (no filename yet) and `totalRows` comes from
-     * dataToSave.rowCount.  For the Load dialog `file` is the File object and `totalRows`
-     * is computed from the parsed data.
-     *
-     * New files (saved with 9.99.187+) carry entityType / entityName / sectionSuffix /
-     * detailSegment directly.  Legacy files fall back to filename parsing.
-     *
-     * @param {object}      data       - The parsed JSON data object (dataToSave or loaded data).
-     * @param {number}      totalRows  - Row count to display.
-     * @param {File|null}   file       - The File object (for legacy filename parsing), or null.
-     * @returns {string} HTML string for the meta block (ready to set as innerHTML).
-     */
-    function buildMetaBlockHTML(data, totalRows, file = null) {
-        const esc  = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const dash = '<span style="color:#bbb;">—</span>';
-        const legacyVal = (val) => val
-            ? `<span style="color:#888;font-style:italic;">${esc(val)} <span style="font-size:0.85em;">(from filename)</span></span>`
-            : dash;
-        const fmtDate = (ts) => {
-            if (!ts) return '\u2014';
-            try { return new Date(ts).toLocaleString(); } catch (_) { return String(ts); }
-        };
-        const row = (label, value) =>
-            `<tr>` +
-            `<td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">${label}</td>` +
-            `<td style="padding:3px 0;word-break:break-all;">${value}</td>` +
-            `</tr>`;
-
-        const fname     = file ? file.name : '';
-        const fnBase    = fname.replace(/\.json(\.gz)?$/, '');
-        const fnParens  = fnBase.match(/\(([^)]+)\)/g) || [];
-        const fnEntityN = fnParens[0] ? fnParens[0].replace(/[()]/g, '') : '';
-
-        let displayEntityType;
-        if (data.entityType) {
-            displayEntityType = esc(data.entityType);
-        } else if (fname) {
-            const beforeParen = fnBase.split('(')[0].replace(/^MB-/, '').replace(/-$/, '');
-            const legacyType  = beforeParen.split('-')[0];
-            displayEntityType = legacyType ? legacyVal(legacyType) : dash;
-        } else {
-            displayEntityType = dash;
-        }
-
-        let displayEntityName;
-        if (data.entityName) {
-            displayEntityName = esc(data.entityName);
-        } else if (fname) {
-            displayEntityName = fnEntityN ? legacyVal(fnEntityN) : dash;
-        } else {
-            displayEntityName = dash;
-        }
-
-        let displaySectionSuffix;
-        if (data.sectionSuffix) {
-            displaySectionSuffix = esc(data.sectionSuffix);
-        } else if (fname && fnParens.length >= 2) {
-            const betweenIdx = fnBase.indexOf(fnParens[0]) + fnParens[0].length;
-            const lastIdx    = fnBase.lastIndexOf(fnParens[fnParens.length - 1]);
-            const between    = fnBase.slice(betweenIdx, lastIdx).replace(/^-|-$/g, '');
-            displaySectionSuffix = between ? legacyVal(between) : dash;
-        } else {
-            displaySectionSuffix = dash;
-        }
-
-        const displayDetail   = data.detailSegment ? esc(data.detailSegment) : dash;
-        const isFiltered      = (data.pageType || '').endsWith('-filtered');
-        const pageTypeDisplay = esc(data.pageType || '')
-            + (isFiltered ? ' <span style="color:#e65100;font-size:0.85em;">(filtered)</span>' : '');
-        const modeColor   = data.tableMode === 'multi' ? '#1565c0' : '#2e7d32';
-        const modeDisplay = data.tableMode
-            ? `<span style="background:${modeColor};color:#fff;border-radius:3px;padding:0 5px;font-size:0.82em;">${esc(data.tableMode)}</span>`
-            : dash;
-        const btnLabelDisplay = data.buttonLabel ? `<em>${esc(data.buttonLabel)}</em>` : dash;
-        const urlDisplay = data.url
-            ? `<a href="${esc(data.url)}" target="_blank" style="color:#1565c0;font-size:0.88em;word-break:break-all;">${esc(data.url)}</a>`
-            : dash;
-        const verDisplay = data.version
-            ? `<span style="background:#f5f5f5;border:1px solid #ddd;border-radius:3px;padding:0 5px;font-size:0.85em;">${esc(data.version)}</span>`
-            : dash;
-
-        return (
-            `<div style="font-size:0.82em;color:#555;margin-bottom:6px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;">&#128196; File Metadata</div>` +
-            `<table style="border-collapse:collapse;width:100%;font-size:0.88em;line-height:1.5;">` +
-            row('Entity type',  displayEntityType) +
-            row('Entity name',  displayEntityName) +
-            row('Section',      displaySectionSuffix) +
-            row('Detail',       displayDetail) +
-            row('Page type',    pageTypeDisplay) +
-            row('Table mode',   modeDisplay) +
-            row('Rows',         `<strong>${totalRows.toLocaleString()}</strong>`) +
-            row('Button label', btnLabelDisplay) +
-            row('Saved',        fmtDate(data.timestamp)) +
-            row('Version',      verDisplay) +
-            row('URL',          urlDisplay) +
-            `</table>`
-        );
-    }
-
-    /**
-     * Show the "Save Table Data" dialog.
-     *
-     * Presents metadata about what will be saved and lets the user edit the
-     * filename before confirming.  Replaces the old showDownloadNotification popup
-     * for the Save-to-Disk path.
-     *
-     * @param {string}          blobUrl         - Object URL from URL.createObjectURL().
-     * @param {string}          defaultFilename  - Default fully-assembled filename.
-     * @param {object}          dataToSave       - The dataToSave object (for meta display).
-     * @param {HTMLElement|null} triggerButton   - Button that opened the dialog (for positioning).
-     */
-    function showSaveDialog(blobUrl, defaultFilename, dataToSave, triggerButton = null) {
-        const dialogWidth  = (Lib.settings.sa_ld_dialog_width || 600) + 'px';
-        const headerFontSz = Lib.settings.sa_ld_dialog_header_font_size || '1.00em';
-        const statusFontSz = Lib.settings.sa_ld_status_font_size        || '0.95em';
-
-        const existing = document.getElementById('sa-save-dialog-overlay');
-        if (existing) { existing.remove(); return; }
-
-        const dialog = document.createElement('div');
-        dialog.id = 'sa-save-dialog-overlay';
-        dialog.style.cssText = [
-            'position:fixed',
-            'background:#fff',
-            'padding:24px',
-            'border-radius:12px',
-            'box-shadow:0 8px 32px rgba(0,0,0,0.3)',
-            `width:${dialogWidth}`,
-            'max-width:calc(100vw - 40px)',
-            'min-width:320px',
-            'font-family:sans-serif',
-            'border:1px solid #ccc',
-            'z-index:20000',
-            'max-height:calc(100vh - 40px)',
-            'overflow-y:auto',
-            'resize:both',
-            'box-sizing:border-box',
-        ].join(';');
-
-        const totalRows = dataToSave.rowCount || 0;
-
-        dialog.innerHTML = `
-            <div id="sa-sd-drag-handle" style="margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:12px;cursor:move;user-select:none;">
-                <h3 style="margin:0;color:#222;font-size:1.2em;">&#128190; Save Table Data</h3>
-                <p style="margin:5px 0 0;color:#666;font-size:${headerFontSz};">Review the metadata below, optionally edit the filename, then click <strong>Save Data</strong> to download the compressed JSON file.</p>
-            </div>
-            <div id="sa-sd-meta-block" style="margin-bottom:16px;border:1px solid #eee;border-radius:6px;padding:10px 14px;background:#fafafa;">
-                ${buildMetaBlockHTML(dataToSave, totalRows, null)}
-            </div>
-            <div style="margin-bottom:14px;">
-                <label for="sa-sd-filename-input" style="display:block;font-size:0.88em;font-weight:600;color:#444;margin-bottom:5px;">&#128462; Filename</label>
-                <input id="sa-sd-filename-input" type="text" value=""
-                    style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:0.9em;font-family:monospace;outline:none;">
-            </div>
-            <div style="display:flex;gap:12px;margin-bottom:8px;">
-                <button id="sa-sd-save-confirm" style="flex:2;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
-                    <span>&#128190; <span style="text-decoration:underline">S</span>ave Data</span>
-                </button>
-                <button id="sa-sd-cancel" style="flex:1;padding:10px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">Cancel</button>
-            </div>
-            <div id="sa-sd-status" style="display:none;padding:5px 2px;font-size:${statusFontSz};min-height:20px;"></div>
-        `;
-
-        document.body.appendChild(dialog);
-
-        // Set filename after insertion to avoid HTML-escaping issues with special chars
-        dialog.querySelector('#sa-sd-filename-input').value = defaultFilename;
-
-        // ── Position ─────────────────────────────────────────────────────────
-        setTimeout(() => {
-            if (triggerButton) {
-                const btnRect = triggerButton.getBoundingClientRect();
-                const dlgRect = dialog.getBoundingClientRect();
-                let top  = btnRect.bottom + 10;
-                let left = btnRect.left;
-                if (top  + dlgRect.height > window.innerHeight - 10) top  = Math.max(10, btnRect.top - dlgRect.height - 10);
-                if (left + dlgRect.width  > window.innerWidth  - 10) left = Math.max(10, window.innerWidth - dlgRect.width - 10);
-                dialog.style.top  = top  + 'px';
-                dialog.style.left = left + 'px';
-            } else {
-                dialog.style.left      = '50%';
-                dialog.style.top       = '50%';
-                dialog.style.transform = 'translate(-50%,-50%)';
-            }
-        }, 0);
-
-        // ── Hover styles ──────────────────────────────────────────────────────
-        const styleId = 'sa-save-dialog-styles';
-        if (!document.getElementById(styleId)) {
-            const s = document.createElement('style');
-            s.id = styleId;
-            s.textContent = `
-                #sa-sd-save-confirm:hover:not([disabled]) { background:#45a049 !important; }
-                #sa-sd-cancel:hover                        { background:#e0e0e0 !important; }
-                #sa-sd-save-confirm:active:not([disabled]),
-                #sa-sd-cancel:active {
-                    transform: translateY(1px);
-                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
-                }
-            `;
-            document.head.appendChild(s);
-        }
-
-        // ── Refs ──────────────────────────────────────────────────────────────
-        const saveBtn       = dialog.querySelector('#sa-sd-save-confirm');
-        const cancelBtn     = dialog.querySelector('#sa-sd-cancel');
-        const statusDiv     = dialog.querySelector('#sa-sd-status');
-        const filenameInput = dialog.querySelector('#sa-sd-filename-input');
-
-        // ── Cleanup ───────────────────────────────────────────────────────────
-        let _outsideHandler = null;
-        const closeDialog = () => {
-            dialog.remove();
-            document.removeEventListener('keydown', handleKey);
-            if (_outsideHandler) document.removeEventListener('mousedown', _outsideHandler);
-            document.removeEventListener('mousemove', onDragMove);
-            document.removeEventListener('mouseup',   onDragEnd);
-        };
-
-        _outsideHandler = (e) => { if (!dialog.contains(e.target)) closeDialog(); };
-        setTimeout(() => document.addEventListener('mousedown', _outsideHandler), 200);
-
-        // ── Drag ──────────────────────────────────────────────────────────────
-        const dragHandle = dialog.querySelector('#sa-sd-drag-handle');
-        let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
-
-        dragHandle.addEventListener('mousedown', (e) => {
-            if (e.target.closest('button, a, input')) return;
-            isDragging = true;
-            const rect = dialog.getBoundingClientRect();
-            dragOffsetX = e.clientX - rect.left;
-            dragOffsetY = e.clientY - rect.top;
-            dialog.style.transform = 'none';
-            dialog.style.left = rect.left + 'px';
-            dialog.style.top  = rect.top  + 'px';
-            e.preventDefault();
-        });
-        const onDragMove = (e) => {
-            if (!isDragging) return;
-            dialog.style.left = Math.max(0, Math.min(e.clientX - dragOffsetX, window.innerWidth  - dialog.offsetWidth))  + 'px';
-            dialog.style.top  = Math.max(0, Math.min(e.clientY - dragOffsetY, window.innerHeight - dialog.offsetHeight)) + 'px';
-        };
-        const onDragEnd = () => { isDragging = false; };
-        document.addEventListener('mousemove', onDragMove);
-        document.addEventListener('mouseup',   onDragEnd);
-
-        // ── Keyboard ──────────────────────────────────────────────────────────
-        const handleKey = (e) => {
-            if (e.key === 'Escape') {
-                URL.revokeObjectURL(blobUrl);
-                closeDialog();
-            } else if (e.altKey && e.key.toLowerCase() === 's') {
-                e.preventDefault();
-                if (!saveBtn.disabled) saveBtn.click();
-            }
-        };
-        document.addEventListener('keydown', handleKey);
-
-        // ── Cancel ────────────────────────────────────────────────────────────
-        cancelBtn.onclick = () => {
-            URL.revokeObjectURL(blobUrl);
-            closeDialog();
-        };
-
-        // ── Save ──────────────────────────────────────────────────────────────
-        saveBtn.onclick = () => {
-            const chosenFilename = filenameInput.value.trim() || defaultFilename;
-
-            saveBtn.disabled      = true;
-            saveBtn.style.opacity = '0.7';
-            saveBtn.innerHTML     = '&#9203; Saving\u2026';
-
-            const a = document.createElement('a');
-            a.href     = blobUrl;
-            a.download = chosenFilename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-
-            Lib.debug('cache', `Save dialog: download triggered for "${chosenFilename}"`);
-
-            infoDisplay.textContent = `✓ Serialized ${totalRows.toLocaleString()} rows to ${chosenFilename}`;
-            infoDisplay.style.color = 'green';
-
-            statusDiv.innerHTML     = `\u2705 Download initiated for <em>"${chosenFilename}"</em>. Monitor your browser for the file.`;
-            statusDiv.style.color   = '#2e7d32';
-            statusDiv.style.display = 'block';
-
-            saveBtn.innerHTML     = '&#128190; <span style="text-decoration:underline">S</span>ave Data';
-            saveBtn.disabled      = false;
-            saveBtn.style.opacity = '';
-
-            // Parse the setting robustly: GM storage returns strings, not numbers.
-            // parseInt handles both '1800' and 1800; NaN falls back to the default 1800.
-            // We must NOT use "|| 1800" because that would treat 0 (disable) as falsy.
-            const _rawAutoClose = Lib.settings.sa_dialog_save_export_autoclose_ms;
-            const delay = Number.isFinite(+_rawAutoClose) ? Math.max(0, Math.round(+_rawAutoClose)) : 1800;
-            if (delay > 0) {
-                setTimeout(() => closeDialog(), delay);
-            }
-            // If delay === 0 the user must close manually via Escape, outside-click, or the × button.
-        };
-
-        // Focus + select filename for immediate editing
-        setTimeout(() => { filenameInput.focus(); filenameInput.select(); }, 80);
-    }
-
     async function showLoadFilterDialog(triggerButton = null) {
-
         const historyLimit  = Lib.settings.sa_load_history_limit || 10;
         const dialogWidth   = (Lib.settings.sa_ld_dialog_width   || 600) + 'px';
         const headerFontSz  = Lib.settings.sa_ld_dialog_header_font_size || '1.00em';
@@ -12021,9 +11426,71 @@
                 loadStatus.style.color = '#2e7d32';
                 loadStatus.style.display = 'block';
 
-                // Render meta information block using the shared builder
+                // Render meta information block
                 if (metaBlock) {
-                    metaBlock.innerHTML    = buildMetaBlockHTML(data, totalRows, file);
+                    const fmtDate = (ts) => {
+                        if (!ts) return '\u2014';
+                        try { return new Date(ts).toLocaleString(); } catch (_) { return String(ts); }
+                    };
+                    const esc = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                    const row = (label, value, valueStyle = '') =>
+                        `<tr>` +
+                        `<td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">${label}</td>` +
+                        `<td style="padding:3px 0;word-break:break-all;${valueStyle}">${value}</td>` +
+                        `</tr>`;
+
+                    // EntityName — new format or legacy (derive from filename if absent)
+                    let displayEntity = esc(data.entityName || '');
+                    if (!displayEntity) {
+                        // Legacy: try to parse "(EntityName)" from filename
+                        const fnMatch = file.name.match(/\(([^)]+)\)/);
+                        if (fnMatch) displayEntity = `<span style="color:#888;font-style:italic;">${esc(fnMatch[1])} <span style="font-size:0.85em;">(from filename)</span></span>`;
+                        else         displayEntity = '<span style="color:#bbb;">—</span>';
+                    }
+
+                    // SectionSuffix — new format or legacy
+                    let displaySection = esc(data.sectionSuffix || '');
+                    if (!displaySection) displaySection = '<span style="color:#bbb;">—</span>';
+
+                    // PageType with optional -filtered indicator
+                    const isFiltered = (data.pageType || '').endsWith('-filtered');
+                    const pageTypeDisplay = esc(data.pageType || '')
+                        + (isFiltered ? ' <span style="color:#e65100;font-size:0.85em;">(filtered)</span>' : '');
+
+                    // TableMode badge
+                    const modeColor = data.tableMode === 'multi' ? '#1565c0' : '#2e7d32';
+                    const modeDisplay = data.tableMode
+                        ? `<span style="background:${modeColor};color:#fff;border-radius:3px;padding:0 5px;font-size:0.82em;">${esc(data.tableMode)}</span>`
+                        : '<span style="color:#bbb;">—</span>';
+
+                    // ButtonLabel
+                    const btnLabelDisplay = data.buttonLabel
+                        ? `<em>${esc(data.buttonLabel)}</em>`
+                        : '<span style="color:#bbb;">—</span>';
+
+                    // URL (truncate if very long)
+                    const urlDisplay = data.url
+                        ? `<a href="${esc(data.url)}" target="_blank" style="color:#1565c0;font-size:0.88em;word-break:break-all;">${esc(data.url)}</a>`
+                        : '<span style="color:#bbb;">—</span>';
+
+                    // Version badge
+                    const verDisplay = data.version
+                        ? `<span style="background:#f5f5f5;border:1px solid #ddd;border-radius:3px;padding:0 5px;font-size:0.85em;">${esc(data.version)}</span>`
+                        : '<span style="color:#bbb;">—</span>';
+
+                    metaBlock.innerHTML =
+                        `<div style="font-size:0.82em;color:#555;margin-bottom:6px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;">&#128196; File Metadata</div>` +
+                        `<table style="border-collapse:collapse;width:100%;font-size:0.88em;line-height:1.5;">` +
+                        row('Entity',       displayEntity) +
+                        row('Section',      displaySection) +
+                        row('Page type',    pageTypeDisplay) +
+                        row('Table mode',   modeDisplay) +
+                        row('Rows',         `<strong>${totalRows.toLocaleString()}</strong>`) +
+                        row('Button label', btnLabelDisplay) +
+                        row('Saved',        fmtDate(data.timestamp)) +
+                        row('Version',      verDisplay) +
+                        row('URL',          urlDisplay) +
+                        `</table>`;
                     metaBlock.style.display = 'block';
                 }
 
@@ -20687,10 +20154,8 @@
                 timestamp: Date.now(),
                 timestampReadable: new Date().toISOString(),
                 tableMode: activeDefinition.tableMode,
-                entityType: null,       // filled in below — e.g. "Artist"
-                entityName: null,       // filled in below — e.g. "Bruce Springsteen"
-                sectionSuffix: null,    // filled in below — e.g. "Relationships"
-                detailSegment: null,    // filled in below — e.g. "composed" (slug of relationship type or button label)
+                entityName: null,       // filled in below after extractEntityName() runs
+                sectionSuffix: null,    // filled in below after slug assembly
                 rowCount: 0,
                 headers: null,
                 rows: null,
@@ -20750,32 +20215,6 @@
                 return;
             }
 
-            // --- Metadata + Filename computation ---
-            //
-            // ALL metadata fields (entityType, entityName, sectionSuffix, detailSegment)
-            // MUST be computed and written into dataToSave BEFORE JSON.stringify() below.
-            // _assembleExportFilename() performs all slug/entity/settings logic and returns
-            // both the filename string and the four metadata components in one call.
-            //
-            // Format: <prefix><EntityType>-(<EntityName>)-<SectionSuffix>[-<detailSegment>][(-rowCount)][_timestamp].json.gz
-            // Example: MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T11-42-22.json.gz
-            const {
-                filename,
-                entityType,
-                entityName,
-                sectionSuffix,
-                detailSegment: detailSlug,
-            } = _assembleExportFilename('json.gz', dataToSave.rowCount);
-
-            // Persist the four metadata fields that mirror the filename components.
-            // These must be set BEFORE JSON.stringify() below.
-            dataToSave.entityType     = entityType;
-            dataToSave.entityName     = entityName;
-            dataToSave.sectionSuffix  = sectionSuffix;
-            dataToSave.detailSegment  = detailSlug;
-            Lib.debug('cache', `Metadata: entityType="${entityType}", entityName="${entityName}", sectionSuffix="${sectionSuffix}", detailSegment="${detailSlug}"`);
-            Lib.debug('cache', `Filename assembled: "${filename}"`);
-
             // Create JSON blob and trigger download
             const jsonStr = JSON.stringify(dataToSave, null, 2);
 
@@ -20793,10 +20232,200 @@
             const blob = new Blob([compressedData], { type: 'application/gzip' });
             const url = URL.createObjectURL(blob);
 
-            // Open the Save dialog — user can review metadata, optionally edit the
-            // filename, then click "Save Data" to trigger the actual browser download.
-            // The dialog takes ownership of `url` and revokes it on Save or Cancel.
-            showSaveDialog(url, filename, dataToSave, document.getElementById('mb-save-to-disk-btn'));
+            // --- Filename generation ---
+            //
+            // Format: <prefix><PageType>-(<EntityName>)-<PageSection>[-(detailSlug)][(-rowCount)][_timestamp].json.gz
+            //
+            // Components:
+            //   <prefix>       — configurable via sa_filename_prefix (default "MB-")
+            //   <PageType>     — pageTypeSlug with each dash-delimited word Title-Cased
+            //                    e.g. "artist-relationships" → "Artist-Relationships"
+            //   <EntityName>   — text extracted from the h1 <bdi> element plus any
+            //                    trailing text after the closing </a> (e.g. "(2024-10-04)")
+            //                    wrapped in parentheses: "(Bruce Springsteen)"
+            //   <PageSection>  — the Title-Cased last word(s) of the pageTypeSlug,
+            //                    i.e. everything after the first dash segment
+            //                    (same as the full capitalised slug minus the entity-type prefix)
+            //   <detailSegment>— OPTIONAL slug derived from the page context (same logic as before),
+            //                    included only when sa_filename_include_detail is true
+            //   <rowCount>     — included in parentheses when sa_filename_include_row_count is true
+            //   <timestamp>    — ISO-8601, appended with "_" separator when sa_filename_include_timestamp is true
+            //
+            // Examples:
+            //   MB-Artist-(Bruce Springsteen)-Relationships-(1329)_2026-03-13T11-54-51.json.gz
+            //   MB-Work-(Thunder Road)-Recordings-(428)_2026-03-13T12-00-00.json.gz
+
+            /**
+             * Convert an arbitrary label string into a safe filename slug.
+             * Steps: lowercase, collapse whitespace to single spaces, spaces → underscores,
+             * strip all characters that are neither alphanumeric nor underscore.
+             *
+             * @param {string} text - Raw label text.
+             * @returns {string} Slug string, or empty string on falsy input.
+             */
+            const toSlug = (text) => {
+                if (!text) return '';
+                return text
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, '_')
+                    .replace(/[^a-z0-9_]/g, '')
+                    .replace(/_+/g, '_')       // collapse runs of underscores (e.g. from stripped special chars like ℗)
+                    .replace(/^_+|_+$/g, '');  // strip leading/trailing underscores (e.g. emoji prefix like 🧮)
+            };
+
+            /**
+             * Title-case a pageType slug: capitalise the first letter of every
+             * dash-separated word.  e.g. "artist-relationships" → "Artist-Relationships".
+             *
+             * @param {string} slug - e.g. "artist-relationships"
+             * @returns {string}    - e.g. "Artist-Relationships"
+             */
+            const toTitleSlug = (slug) =>
+                slug.replace(/(^|-)([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
+
+            /**
+             * Extract the entity name from the h1 heading of the current MusicBrainz page.
+             *
+             * MusicBrainz h1 headings follow two patterns:
+             *   1. Plain entity:
+             *        <h1><a href="…"><bdi>Thunder Road</bdi></a></h1>
+             *   2. Entity with extra text after the anchor (e.g. event date):
+             *        <h1><a href="…"><bdi>From the Studio to the Stage: New York</bdi></a> (2024-10-04)</h1>
+             *
+             * The returned name combines the <bdi> text with any trailing text that follows
+             * the closing </a> inside the h1 (trimmed), producing e.g.:
+             *   "Thunder Road"
+             *   "From the Studio to the Stage: New York (2024-10-04)"
+             *
+             * @returns {string} Entity name, or empty string when the h1 / bdi cannot be found.
+             */
+            const extractEntityName = () => {
+                const h1 = document.querySelector('h1');
+                if (!h1) return '';
+                const bdi = h1.querySelector('bdi');
+                if (!bdi) return '';
+                const bdiText = bdi.textContent.trim();
+                // Collect any text nodes that follow the closing </a> inside the h1.
+                // Walk h1 child nodes in reverse; gather text nodes that appear after
+                // all anchor elements.
+                let afterAnchorText = '';
+                let pastLastAnchor = false;
+                const h1Nodes = Array.from(h1.childNodes);
+                for (let i = h1Nodes.length - 1; i >= 0; i--) {
+                    const node = h1Nodes[i];
+                    if (!pastLastAnchor) {
+                        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') {
+                            pastLastAnchor = true;
+                        }
+                        // continue scanning backwards
+                    } else {
+                        // We are past (i.e. to the left of) the last anchor.
+                        // Any further anchors mean we overshot — stop.
+                        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') break;
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            afterAnchorText = node.textContent.trim() + (afterAnchorText ? ' ' + afterAnchorText : '');
+                        }
+                    }
+                }
+                return afterAnchorText ? `${bdiText} ${afterAnchorText}` : bdiText;
+            };
+
+            const isMultiBtn = activeDefinition &&
+                               Array.isArray(activeDefinition.buttons) &&
+                               activeDefinition.buttons.length > 1;
+
+            let detailSlug = '';
+
+            if (isMultiBtn && lastClickedButtonLabel) {
+                // (a) Multi-button page: use the label of the last clicked fetch button.
+                detailSlug = toSlug(lastClickedButtonLabel);
+                Lib.debug('cache', `Filename detail (multi-button): "${lastClickedButtonLabel}" → "${detailSlug}"`);
+            } else if (isFilteredRelationshipPage) {
+                // (b) Filtered-relationship page (?link_type_id=…): extract quoted text from the h2.
+                // MusicBrainz renders these headings as: "…relationship label…" relationships
+                const h2 = document.querySelector('#content h2');
+                if (h2) {
+                    const h2Text = h2.textContent || '';
+                    const quoted = h2Text.match(/["\u201C\u201D]([^"\u201C\u201D]+)["\u201C\u201D]/);
+                    if (quoted && quoted[1]) {
+                        detailSlug = toSlug(quoted[1]);
+                        Lib.debug('cache', `Filename detail (link_type_id h2): "${quoted[1]}" → "${detailSlug}"`);
+                    }
+                }
+            }
+
+            // Strip the '-filtered' suffix that is part of the internal pageType identifier
+            // for link_type_id pages — it is redundant in the filename since the detail slug
+            // already captures the relationship label.
+            const rawPageTypeSlug = pageType.replace(/-filtered$/, '');
+
+            // Title-case the full pageType slug: "artist-relationships" → "Artist-Relationships"
+            const pageTypeSlug = toTitleSlug(rawPageTypeSlug);
+
+            // Extract the entity name from the cached value captured at init time
+            // (before any DOM mutations).  extractEntityName() is kept as a late
+            // fallback for callers outside the save path, but here we always prefer
+            // the pre-mutation snapshot.
+            const entityName = _cachedEntityName || extractEntityName();
+            Lib.debug('cache', `Filename entity name: "${entityName}" (cached: "${_cachedEntityName}")`);
+
+            // Determine the detail segment (only included when setting is enabled).
+            const includeDetail = Lib.settings.sa_filename_include_detail !== false;
+            const detailSegment = (includeDetail && detailSlug) ? `-${detailSlug}` : '';
+
+            // Split the Title-cased slug at the first dash to get entity-type prefix and
+            // page-section suffix, then re-assemble with the entity name inserted.
+            // e.g. "Artist-Relationships" → prefix="Artist", section="Relationships"
+            //      result: "Artist-(Bruce Springsteen)-Relationships"
+            // For slugs without a dash (e.g. a bare "Artist") the entity name is still
+            // inserted but there is no section suffix:
+            //      result: "Artist-(Bruce Springsteen)"
+            const firstDash = pageTypeSlug.indexOf('-');
+            let assembledSlug;
+            if (firstDash !== -1) {
+                const entityTypePrefix = pageTypeSlug.slice(0, firstDash);
+                const sectionSuffix    = pageTypeSlug.slice(firstDash + 1);
+                assembledSlug = entityName
+                    ? `${entityTypePrefix}-(${entityName})-${sectionSuffix}${detailSegment}`
+                    : `${entityTypePrefix}-${sectionSuffix}${detailSegment}`;
+                dataToSave.entityName    = entityName || null;
+                // sectionSuffix stored in metadata: for filtered pages (where detailSlug
+                // carries the meaningful relationship-type label, e.g. "instruments"),
+                // store detailSlug alone so the Load dialog shows "instruments" rather
+                // than the redundant "Relationships-instruments".
+                // For normal pages store the full section string (+ detail if present).
+                dataToSave.sectionSuffix = isFilteredRelationshipPage
+                    ? (detailSlug || sectionSuffix || null)
+                    : (sectionSuffix + (detailSlug ? `-${detailSlug}` : '')) || null;
+            } else {
+                assembledSlug = entityName
+                    ? `${pageTypeSlug}-(${entityName})${detailSegment}`
+                    : `${pageTypeSlug}${detailSegment}`;
+                dataToSave.entityName    = entityName || null;
+                dataToSave.sectionSuffix = detailSlug || null;
+            }
+
+            // Configurable prefix (default "MB-").
+            const filenamePrefix = Lib.settings.sa_filename_prefix != null
+                ? Lib.settings.sa_filename_prefix
+                : 'MB-';
+
+            // Optional row-count segment in parentheses.
+            const includeRowCount = Lib.settings.sa_filename_include_row_count !== false;
+            const rowPart = includeRowCount ? `-(${dataToSave.rowCount})` : '';
+
+            // Optional timestamp segment, separated by "_".
+            const includeTimestamp = Lib.settings.sa_filename_include_timestamp !== false;
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const timestampPart = includeTimestamp ? `_${timestamp}` : '';
+
+            const filename = `${filenamePrefix}${assembledSlug}${rowPart}${timestampPart}.json.gz`;
+            Lib.debug('cache', `Filename assembled: "${filename}"`);
+
+            triggerStandardDownload(url, filename, dataToSave.rowCount);
+            infoDisplay.textContent = `✓ Serialized ${dataToSave.rowCount.toLocaleString()} rows to ${filename}`;
+            infoDisplay.style.color = 'green';
 
 
         } catch (err) {

@@ -1,17 +1,5 @@
 [
     {
-      "version": "9.99.192",
-      "date": "2026-03-16",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "sa_dialog_save_export_autoclose_ms was not honoured in showSaveDialog or showExportDialog. Root cause: the guard 'typeof autoCloseMs === \"number\"' is always false when VZ_MBLibrary returns the setting value as a string (GM storage is string-based), so the hardcoded 1800 ms fallback was always used regardless of what the user had configured. Fixed by replacing the typeof guard with robust numeric coercion: 'Number.isFinite(+_rawAutoClose) ? Math.max(0, Math.round(+_rawAutoClose)) : 1800'. This correctly handles both string ('3000') and numeric (3000) values from GM storage, preserves 0 as a valid disable value (unlike '|| 1800' which would treat 0 as falsy), and falls back to 1800 only when the setting is absent or non-numeric."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.191",
       "date": "2026-03-16",
       "sections": [

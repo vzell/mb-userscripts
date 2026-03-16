@@ -54209,8 +54209,6 @@ Do the same for the "Collapse" case
 * TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
 
 
-* TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just dispay ONE
-
 * TODO add information that ALL CAA images have been loaded
 ** DONE initial
 
@@ -54823,11 +54821,172 @@ Is this function also used for alignment inside the columns cells
 * TODO add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
 
 
+* DONE deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog*
+* TODO initial
+** DONE initial
+
+1.)
+
+When saving data to disk with "Save to Disk" button please also add the "EntityName" (coming from the h1 header of a
+page, like "Bruce Springsteen") and the optional "sectionSuffix" (e.g. "Relationships-published") to the meta information saved
+
+2.)
+
+When loading data from disk via the button "Load from Disk"
+
+Please instead of just rendering the line, e.g.
+
+#+begin_example
+<div id="sa-ld-load-status" style="display: block; padding: 5px 2px; font-size: 0.95em; min-height: 20px; color: rgb(46, 125, 50);">✅ Loaded <strong>109</strong> rows from <em>"MB-Place-(The Stone Pony)-Events-(109)_2026-03-16T10-57-40.json.gz"</em></div>
+#+end_example
+
+which tells us from which filename how many rows have been read
+
+#+begin_example
+  "version": "1.0",                                                                                                                                                                                                                                                                                                            ▓
+  "url": "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=161&page=1",                                                                                                                                                                                              ▓
+  "pageType": "artist-relationships-filtered",                                                                                                                                                                                                                                                                                 ▓
+  "buttonLabel": "Show all Relationships for Artist (specialized)",                                                                                                                                                                                                                                                            ▓
+  "timestamp": 1773658913025,                                                                                                                                                                                                                                                                                                  ▓
+  "timestampReadable": "2026-03-16T11:01:53.025Z",                                                                                                                                                                                                                                                                             ▓
+  "tableMode": "single",                                                                                                                                                                                                                                                                                                       ▓
+  "rowCount": 129,
+#+end_example
+
+please render a nicely formatted meta information block (it should fit into the rest of the UI desing of the "Load Table
+Data" dialog) after the "Load Data" and "Cancel" buttons (maybe add another horizontal divider line which already exists
+in the current dialog after the "sa-ld-load-status"
+
+Please also allow reading the legacy format.
+
+** DONE bug
+
+there is a bug when saving the metadata, e.g. for the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=44
+
+the "entityName" should actually be "Bruce Springsteen" and the "sectionSuffix" "instruments" but what gets stored is
+
+#+begin_example
+  "version": "1.0",                                                                                                                                                                                                                                                                                                            ▓
+  "url": "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=44&page=1",                                                                                                                                                                                               ▓
+  "pageType": "artist-relationships-filtered",                                                                                                                                                                                                                                                                                 ░
+  "buttonLabel": "Show all Relationships for Artist (specialized)",                                                                                                                                                                                                                                                            ░
+  "timestamp": 1773660030613,                                                                                                                                                                                                                                                                                                  ░
+  "timestampReadable": "2026-03-16T11:20:30.613Z",                                                                                                                                                                                                                                                                             ░
+  "tableMode": "single",                                                                                                                                                                                                                                                                                                       ░
+  "entityName": null,                                                                                                                                                                                                                                                                                                          ░
+  "sectionSuffix": null,                                                                                                                                                                                                                                                                                                       ░
+  "rowCount": 247,
+#+end_example
+
+** DONE still
+
+the bug is still there, e.g. for URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=168 (the link_type_id=168 means the "composed" relationship)
+
+but we still get
+
+#+begin_example
+{
+  "version": "1.0",
+  "url": "https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=168&page=1",
+  "pageType": "artist-relationships-filtered",
+  "buttonLabel": "Show all Relationships for Artist (specialized)",
+  "timestamp": 1773661342034,
+  "timestampReadable": "2026-03-16T11:42:22.034Z",
+  "tableMode": "single",
+  "entityName": null,
+  "sectionSuffix": null,
+  "rowCount": 894,#+end_example
+#+end_example
+
+actually I don't get it, when saving the constructed filename was
+
+#+begin_example
+MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T11-42-22
+#+end_example
+
+So all the relevant information is already in the filename
+
+  "entityType": Artist
+  "entityName": Bruce Springsteen
+  "sectionSuffix": Relationships
+  "detailSegment": composed
+
+please persist this exact information and also present it in the metainformation block when loading
+
+** DONE create a new "Save Table Data" dialog window 
+
+instead of the following popup window which tells the filename which is used to save the file
+
+#+begin_example
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid rgb(136, 136, 136); border-radius: 6px; padding: 20px; box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px; z-index: 10000; max-width: 400px; text-align: center; font-family: sans-serif; opacity: 1; transition: opacity 0.3s;"><div style="margin-bottom: 15px; font-size: 1.2em;">Saving of JSON table data to the filesystem initiated. 894 rows serialized to MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T12-04-23.json.gz. Please monitor your browser for the file download.</div><button type="button" style="padding: 6px 12px; cursor: pointer; border-radius: 4px; background: rgb(76, 175, 80); color: white; border: none; font-size: 0.9em; transition: background-color 0.2s, transform 0.1s, box-shadow 0.1s;">Close</button></div>
+#+end_example
+
+create a new "Save Table Data" dialog window.
+
+- it should have the same UI look and feel like the "Load from Disk" dialog
+
+- it should present the user with some general information after the h3 dialog header
+
+- then the same mate information block (like in the "Load from Disk" dialog) should be presented about what will be saved
+
+- then in a text field the default constructed filename (so that the user can overwrite it if necessary)
+
+- finally two buttons for saving the data "Save Data" and canceling the whole dialog "Cancel"
+
+- the dialog should also be draggable, "Escape"-key cancelable
+
+
 * TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
+
 
 * TODO add shortcut "Render" when no filtering in the "Load from Disk" path
 
-* TODO deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog
+
+* replace the "Export" dialogs
+** initial
+
+Instead of using the following types of popup ddialogs for export table data to different formats (e.g. the following is a JSON export)
+
+#+begin_example
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid rgb(136, 136, 136); border-radius: 6px; padding: 20px; box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px; z-index: 10000; max-width: 400px; text-align: center; font-family: sans-serif; opacity: 1; transition: opacity 0.3s;"><div style="margin-bottom: 15px; font-size: 1.2em;">JSON export complete: 47 rows. Please monitor your browser for the file download.</div><button type="button" style="padding: 6px 12px; cursor: pointer; border-radius: 4px; background: rgb(76, 175, 80); color: white; border: none; font-size: 0.9em; transition: background-color 0.2s, transform 0.1s, box-shadow 0.1s;">Close</button></div>
+#+end_example
+
+create a new generic "Export Table Data" dialog window (it should be parametrized with the export type later).
+
+- it should have the same UI look and feel like the "Save Table Data" dialog you just created in our latest session
+
+- it should present the user with some general information after the h3 dialog header about the type of export and how the exported format will look like
+
+- then the same meta information block (like in the "Save Table Data" dialog) should be presented about what will be saved
+
+- the metainformation block should be saved in a comment structure applicable for the different export types, if the export format does not support meta information natively (like JSON probably does)
+
+- then in a text field the default constructed filename (so that the user can overwrite it if necessary)
+
+- finally two buttons for saving the data "Save Data" and canceling the whole dialog "Cancel"
+
+- the dialog should also be draggable, "Escape"-key cancelable
+
+** create a configurable timeout variable (in the variable "const configSchema") after which the "Save to Disk" and the different "Export to <format>" dialogs outoclose after initiating the writing to the filesystem
+  
+create a configurable timeout variable (in the variable "const configSchema") after which the "Save to Disk" and the
+different "Export to <format>" dialogs outo-close after initiating the writing to the filesystem
+
+** the default export filename for each export type should have the SAME naming conventions like the "Save to Disk" filename 
+
+the default export filename for each export type should have the SAME naming conventions like the "Save to Disk" filename
+
+so e.g.
+
+#+begin_example
+MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T12-21-41.json
+MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T12-21-41.csv
+MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T12-21-41.org
+#+end_example
+
+** the "sa_dialog_save_export_autoclose_ms" is NOT honoured
+
+the "sa_dialog_save_export_autoclose_ms" is NOT honoured
 
 
 * TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
@@ -55161,6 +55320,7 @@ and from the filter container the additional checkboxes for "Case sensitive", "r
 #+end_example
 
 should be splitted into MultiRowCells
+
 * TODO add collpase icon to all "Location" split types in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events after making them multi-row cells
 
 #+begin_example
@@ -55204,6 +55364,8 @@ collapsableColumns: [ 'Location', '', ... ],
             tableMode: 'single'
         }
 #+end_example
+
+* TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just dispay ONE
 
 
 * TODO Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images (count 0)

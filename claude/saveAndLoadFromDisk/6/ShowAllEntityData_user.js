@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.192+2026-03-16
+// @version      9.99.191+2026-03-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -5962,11 +5962,8 @@
             saveBtn.innerHTML  = '&#128229; <span style="text-decoration:underline">S</span>ave Data';
             saveBtn.disabled   = false; saveBtn.style.opacity = '';
 
-            // Parse the setting robustly: GM storage returns strings, not numbers.
-            // parseInt handles both '1800' and 1800; NaN falls back to the default 1800.
-            // We must NOT use "|| 1800" because that would treat 0 (disable) as falsy.
-            const _rawAutoClose = Lib.settings.sa_dialog_save_export_autoclose_ms;
-            const delay = Number.isFinite(+_rawAutoClose) ? Math.max(0, Math.round(+_rawAutoClose)) : 1800;
+            const autoCloseMs = Lib.settings.sa_dialog_save_export_autoclose_ms;
+            const delay = (typeof autoCloseMs === 'number') ? autoCloseMs : 1800;
             if (delay > 0) {
                 setTimeout(() => closeDialog(), delay);
             }
@@ -11649,11 +11646,8 @@
             saveBtn.disabled      = false;
             saveBtn.style.opacity = '';
 
-            // Parse the setting robustly: GM storage returns strings, not numbers.
-            // parseInt handles both '1800' and 1800; NaN falls back to the default 1800.
-            // We must NOT use "|| 1800" because that would treat 0 (disable) as falsy.
-            const _rawAutoClose = Lib.settings.sa_dialog_save_export_autoclose_ms;
-            const delay = Number.isFinite(+_rawAutoClose) ? Math.max(0, Math.round(+_rawAutoClose)) : 1800;
+            const autoCloseMs = Lib.settings.sa_dialog_save_export_autoclose_ms;
+            const delay = (typeof autoCloseMs === 'number') ? autoCloseMs : 1800;
             if (delay > 0) {
                 setTimeout(() => closeDialog(), delay);
             }

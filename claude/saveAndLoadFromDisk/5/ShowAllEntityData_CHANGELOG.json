@@ -1,30 +1,5 @@
 [
     {
-      "version": "9.99.192",
-      "date": "2026-03-16",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "sa_dialog_save_export_autoclose_ms was not honoured in showSaveDialog or showExportDialog. Root cause: the guard 'typeof autoCloseMs === \"number\"' is always false when VZ_MBLibrary returns the setting value as a string (GM storage is string-based), so the hardcoded 1800 ms fallback was always used regardless of what the user had configured. Fixed by replacing the typeof guard with robust numeric coercion: 'Number.isFinite(+_rawAutoClose) ? Math.max(0, Math.round(+_rawAutoClose)) : 1800'. This correctly handles both string ('3000') and numeric (3000) values from GM storage, preserves 0 as a valid disable value (unlike '|| 1800' which would treat 0 as falsy), and falls back to 1800 only when the setting is absent or non-numeric."
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.191",
-      "date": "2026-03-16",
-      "sections": [
-        {
-          "label": "✨ New Features / Changes",
-          "items": [
-            "Export filenames (CSV, JSON, Org-Mode) now use the same naming convention as Save-to-Disk, e.g. MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T12-21-41.csv. Previously they used the old musicbrainz-<pageType>-<timestamp>.<ext> scheme.",
-            "Extract shared _assembleExportFilename(extension, rowCount) helper that encapsulates all filename slug logic (toSlug, toTitleSlug, detailSlug computation, entity/section assembly, settings-controlled prefix/rowCount/timestamp/detail segments). Returns both the assembled filename string and the four metadata components (entityType, entityName, sectionSuffix, detailSegment) so callers avoid redundant computation. saveTableDataToDisk now delegates to this helper instead of containing its own ~80-line filename assembly block, which is removed entirely."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.190",
       "date": "2026-03-16",
       "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.192+2026-03-16
+// @version      9.99.189+2026-03-16
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -923,17 +923,6 @@
             type: 'text',
             default: '1.2em',
             description: 'Font size of the message text inside the "Save to Disk" / export download notification popup (e.g. 0.9em, 14px, 1rem)'
-        },
-
-        sa_dialog_save_export_autoclose_ms: {
-            label: 'Save / Export dialog auto-close delay (ms)',
-            type: 'number',
-            default: 1800,
-            min: 0,
-            max: 30000,
-            description: 'How long (in milliseconds) the "Save Table Data" and "Export Table Data" dialogs remain open after a download has been initiated before auto-closing. ' +
-                         'Set to 0 to disable auto-close entirely (the dialog must then be dismissed manually via the × close button or the Escape key). ' +
-                         'Range: 0 – 30 000 ms (0 – 30 s). Default: 1800 ms (1.8 s).'
         },
 
         // ============================================================
@@ -5382,7 +5371,9 @@
         const metaLines = _buildExportMetaLines('# ');
         const csvContent = metaLines + rows.map(r => r.join(',')).join('\n');
 
-        const { filename } = _assembleExportFilename('csv', rowsExported);
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName  = pageType || 'table';
+        const filename  = `musicbrainz-${pageName}-${timestamp}.csv`;
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url  = URL.createObjectURL(blob);
@@ -5436,7 +5427,9 @@
         Lib.debug('export', `JSON: ${rowsExported} rows exported, ${rowsSkipped} skipped`);
 
         const json = JSON.stringify(data, null, 2);
-        const { filename } = _assembleExportFilename('json', rowsExported);
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName  = pageType || 'table';
+        const filename  = `musicbrainz-${pageName}-${timestamp}.json`;
 
         const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
         const url  = URL.createObjectURL(blob);
@@ -5494,7 +5487,9 @@
         const metaLines = _buildExportMetaLines('# ');
         const orgContent = metaLines + rows.join('\n');
 
-        const { filename } = _assembleExportFilename('org', rowsExported);
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName  = pageType || 'table';
+        const filename  = `musicbrainz-${pageName}-${timestamp}.org`;
 
         const blob = new Blob([orgContent], { type: 'text/plain;charset=utf-8;' });
         const url  = URL.createObjectURL(blob);
@@ -5630,96 +5625,6 @@
      * @param {string} prefix - Comment prefix, e.g. "# "
      * @returns {string}
      */
-
-    /**
-     * Assemble a download filename for any export or save operation using exactly
-     * the same naming convention as the "Save to Disk" path:
-     *
-     *   <prefix><EntityType>-(<EntityName>)-<SectionSuffix>[-<detailSegment>][-(<rowCount>)][_<timestamp>].<ext>
-     *
-     * e.g.  MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T12-21-41.csv
-     *
-     * All optional segments (prefix, detail, rowCount, timestamp) honour the same
-     * settings flags as saveTableDataToDisk:
-     *   sa_filename_prefix              (default "MB-")
-     *   sa_filename_include_detail      (default true)
-     *   sa_filename_include_row_count   (default true)
-     *   sa_filename_include_timestamp   (default true)
-     *
-     * @param {string} extension  - File extension WITHOUT the leading dot, e.g. "csv", "json", "org".
-     * @param {number} rowCount   - Number of rows being exported (used for the row-count segment).
-     * @returns {string}          - The fully assembled filename string.
-     */
-    function _assembleExportFilename(extension, rowCount) {
-        // ── Slug helpers (mirrors the closure-local helpers in saveTableDataToDisk) ──
-        const _toSlug = (text) => {
-            if (!text) return '';
-            return text
-                .toLowerCase().trim()
-                .replace(/\s+/g, '_')
-                .replace(/[^a-z0-9_]/g, '')
-                .replace(/_+/g, '_')
-                .replace(/^_+|_+$/g, '');
-        };
-        const _toTitleSlug = (slug) =>
-            slug.replace(/(^|-)([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
-
-        // ── Detail slug (same two-branch logic as saveTableDataToDisk) ──────────
-        let detailSlug = '';
-        const isMultiBtn = activeDefinition &&
-                           Array.isArray(activeDefinition.buttons) &&
-                           activeDefinition.buttons.length > 1;
-        if (isMultiBtn && lastClickedButtonLabel) {
-            detailSlug = _toSlug(lastClickedButtonLabel);
-        } else if (isFilteredRelationshipPage) {
-            const h2 = document.querySelector('#content h2');
-            if (h2) {
-                const quoted = (h2.textContent || '').match(/["\u201C\u201D]([^"\u201C\u201D]+)["\u201C\u201D]/);
-                if (quoted && quoted[1]) detailSlug = _toSlug(quoted[1]);
-            }
-        }
-
-        // ── Page-type slug and entity components ─────────────────────────────
-        const rawPageTypeSlug = pageType.replace(/-filtered$/, '');
-        const pageTypeSlug    = _toTitleSlug(rawPageTypeSlug);
-        const entityName      = _cachedEntityName || '';
-        const firstDash       = pageTypeSlug.indexOf('-');
-        const entityType      = firstDash !== -1 ? pageTypeSlug.slice(0, firstDash) : pageTypeSlug;
-        const sectionSuffix   = firstDash !== -1 ? pageTypeSlug.slice(firstDash + 1) : '';
-
-        // ── Settings-controlled optional segments ─────────────────────────────
-        const includeDetail    = Lib.settings.sa_filename_include_detail    !== false;
-        const includeRowCount  = Lib.settings.sa_filename_include_row_count !== false;
-        const includeTimestamp = Lib.settings.sa_filename_include_timestamp !== false;
-        const filenamePrefix   = Lib.settings.sa_filename_prefix != null
-            ? Lib.settings.sa_filename_prefix : 'MB-';
-
-        const detailSegment  = (includeDetail && detailSlug) ? `-${detailSlug}` : '';
-        const rowPart        = includeRowCount  ? `-(${rowCount})` : '';
-        const timestamp      = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-        const timestampPart  = includeTimestamp ? `_${timestamp}` : '';
-
-        // ── Assemble slug ─────────────────────────────────────────────────────
-        let assembledSlug;
-        if (firstDash !== -1) {
-            assembledSlug = entityName
-                ? `${entityType}-(${entityName})-${sectionSuffix}${detailSegment}`
-                : `${entityType}-${sectionSuffix}${detailSegment}`;
-        } else {
-            assembledSlug = entityName
-                ? `${pageTypeSlug}-(${entityName})${detailSegment}`
-                : `${pageTypeSlug}${detailSegment}`;
-        }
-
-        return {
-            filename:      `${filenamePrefix}${assembledSlug}${rowPart}${timestampPart}.${extension}`,
-            entityType:    entityType    || null,
-            entityName:    entityName    || null,
-            sectionSuffix: sectionSuffix || null,
-            detailSegment: detailSlug    || null,
-        };
-    }
-
     function _buildExportMetaLines(prefix) {
         const now     = new Date();
         const lines   = [
@@ -5962,15 +5867,7 @@
             saveBtn.innerHTML  = '&#128229; <span style="text-decoration:underline">S</span>ave Data';
             saveBtn.disabled   = false; saveBtn.style.opacity = '';
 
-            // Parse the setting robustly: GM storage returns strings, not numbers.
-            // parseInt handles both '1800' and 1800; NaN falls back to the default 1800.
-            // We must NOT use "|| 1800" because that would treat 0 (disable) as falsy.
-            const _rawAutoClose = Lib.settings.sa_dialog_save_export_autoclose_ms;
-            const delay = Number.isFinite(+_rawAutoClose) ? Math.max(0, Math.round(+_rawAutoClose)) : 1800;
-            if (delay > 0) {
-                setTimeout(() => closeDialog(), delay);
-            }
-            // If delay === 0 the user must close manually via Escape, outside-click, or the × button.
+            setTimeout(() => closeDialog(), 1800);
         };
 
         setTimeout(() => { filenameInput.focus(); filenameInput.select(); }, 80);
@@ -11649,15 +11546,7 @@
             saveBtn.disabled      = false;
             saveBtn.style.opacity = '';
 
-            // Parse the setting robustly: GM storage returns strings, not numbers.
-            // parseInt handles both '1800' and 1800; NaN falls back to the default 1800.
-            // We must NOT use "|| 1800" because that would treat 0 (disable) as falsy.
-            const _rawAutoClose = Lib.settings.sa_dialog_save_export_autoclose_ms;
-            const delay = Number.isFinite(+_rawAutoClose) ? Math.max(0, Math.round(+_rawAutoClose)) : 1800;
-            if (delay > 0) {
-                setTimeout(() => closeDialog(), delay);
-            }
-            // If delay === 0 the user must close manually via Escape, outside-click, or the × button.
+            setTimeout(() => closeDialog(), 1800);
         };
 
         // Focus + select filename for immediate editing
@@ -20754,27 +20643,158 @@
             //
             // ALL metadata fields (entityType, entityName, sectionSuffix, detailSegment)
             // MUST be computed and written into dataToSave BEFORE JSON.stringify() below.
-            // _assembleExportFilename() performs all slug/entity/settings logic and returns
-            // both the filename string and the four metadata components in one call.
             //
             // Format: <prefix><EntityType>-(<EntityName>)-<SectionSuffix>[-<detailSegment>][(-rowCount)][_timestamp].json.gz
             // Example: MB-Artist-(Bruce Springsteen)-Relationships-composed-(894)_2026-03-16T11-42-22.json.gz
-            const {
-                filename,
-                entityType,
-                entityName,
-                sectionSuffix,
-                detailSegment: detailSlug,
-            } = _assembleExportFilename('json.gz', dataToSave.rowCount);
+            //   entityType    = "Artist"
+            //   entityName    = "Bruce Springsteen"
+            //   sectionSuffix = "Relationships"
+            //   detailSegment = "composed"
+
+            /**
+             * Convert an arbitrary label string into a safe filename slug.
+             * Steps: lowercase, collapse whitespace to single spaces, spaces → underscores,
+             * strip all characters that are neither alphanumeric nor underscore.
+             *
+             * @param {string} text - Raw label text.
+             * @returns {string} Slug string, or empty string on falsy input.
+             */
+            const toSlug = (text) => {
+                if (!text) return '';
+                return text
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, '_')
+                    .replace(/[^a-z0-9_]/g, '')
+                    .replace(/_+/g, '_')       // collapse runs of underscores (e.g. from stripped special chars like ℗)
+                    .replace(/^_+|_+$/g, '');  // strip leading/trailing underscores (e.g. emoji prefix like 🧮)
+            };
+
+            /**
+             * Title-case a pageType slug: capitalise the first letter of every
+             * dash-separated word.  e.g. "artist-relationships" → "Artist-Relationships".
+             *
+             * @param {string} slug - e.g. "artist-relationships"
+             * @returns {string}    - e.g. "Artist-Relationships"
+             */
+            const toTitleSlug = (slug) =>
+                slug.replace(/(^|-)([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
+
+            /**
+             * Extract the entity name from the h1 heading of the current MusicBrainz page.
+             *
+             * MusicBrainz h1 headings follow two patterns:
+             *   1. Plain entity:
+             *        <h1><a href="…"><bdi>Thunder Road</bdi></a></h1>
+             *   2. Entity with extra text after the anchor (e.g. event date):
+             *        <h1><a href="…"><bdi>From the Studio to the Stage: New York</bdi></a> (2024-10-04)</h1>
+             *
+             * The returned name combines the <bdi> text with any trailing text that follows
+             * the closing </a> inside the h1 (trimmed), producing e.g.:
+             *   "Thunder Road"
+             *   "From the Studio to the Stage: New York (2024-10-04)"
+             *
+             * @returns {string} Entity name, or empty string when the h1 / bdi cannot be found.
+             */
+            const extractEntityName = () => {
+                const h1 = document.querySelector('h1');
+                if (!h1) return '';
+                const bdi = h1.querySelector('bdi');
+                if (!bdi) return '';
+                const bdiText = bdi.textContent.trim();
+                // Collect any text nodes that follow the closing </a> inside the h1.
+                // Walk h1 child nodes in reverse; gather text nodes that appear after
+                // all anchor elements.
+                let afterAnchorText = '';
+                let pastLastAnchor = false;
+                const h1Nodes = Array.from(h1.childNodes);
+                for (let i = h1Nodes.length - 1; i >= 0; i--) {
+                    const node = h1Nodes[i];
+                    if (!pastLastAnchor) {
+                        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') {
+                            pastLastAnchor = true;
+                        }
+                        // continue scanning backwards
+                    } else {
+                        // We are past (i.e. to the left of) the last anchor.
+                        // Any further anchors mean we overshot — stop.
+                        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') break;
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            afterAnchorText = node.textContent.trim() + (afterAnchorText ? ' ' + afterAnchorText : '');
+                        }
+                    }
+                }
+                return afterAnchorText ? `${bdiText} ${afterAnchorText}` : bdiText;
+            };
+
+            const isMultiBtn = activeDefinition &&
+                               Array.isArray(activeDefinition.buttons) &&
+                               activeDefinition.buttons.length > 1;
+
+            let detailSlug = '';
+
+            if (isMultiBtn && lastClickedButtonLabel) {
+                // (a) Multi-button page: use the label of the last clicked fetch button.
+                detailSlug = toSlug(lastClickedButtonLabel);
+                Lib.debug('cache', `Filename detail (multi-button): "${lastClickedButtonLabel}" → "${detailSlug}"`);
+            } else if (isFilteredRelationshipPage) {
+                // (b) Filtered-relationship page (?link_type_id=…): extract quoted text from the h2.
+                // MusicBrainz renders these headings as: "…relationship label…" relationships
+                const h2 = document.querySelector('#content h2');
+                if (h2) {
+                    const h2Text = h2.textContent || '';
+                    const quoted = h2Text.match(/["\u201C\u201D]([^"\u201C\u201D]+)["\u201C\u201D]/);
+                    if (quoted && quoted[1]) {
+                        detailSlug = toSlug(quoted[1]);
+                        Lib.debug('cache', `Filename detail (link_type_id h2): "${quoted[1]}" → "${detailSlug}"`);
+                    }
+                }
+            }
+
+            // Strip the '-filtered' suffix that is part of the internal pageType identifier
+            // for link_type_id pages — it is redundant in the filename since the detail slug
+            // already captures the relationship label.
+            const rawPageTypeSlug = pageType.replace(/-filtered$/, '');
+
+            // Title-case the full pageType slug: "artist-relationships" → "Artist-Relationships"
+            const pageTypeSlug = toTitleSlug(rawPageTypeSlug);
+
+            // Entity name: use the value cached at init time (before any DOM mutations).
+            // Fall back to extractEntityName() only when the cache is empty (e.g. pages
+            // where headerContainer resolved to a non-h1 element at startup).
+            const entityName = _cachedEntityName || extractEntityName();
+            Lib.debug('cache', `Filename entity name: "${entityName}" (cached: "${_cachedEntityName}")`);
+
+            // Split the Title-cased slug at the first dash to get entityType and sectionSuffix.
+            // e.g. "Artist-Relationships" → entityType="Artist", sectionSuffix="Relationships"
+            const firstDash = pageTypeSlug.indexOf('-');
+            const entityType    = firstDash !== -1 ? pageTypeSlug.slice(0, firstDash) : pageTypeSlug;
+            const sectionSuffix = firstDash !== -1 ? pageTypeSlug.slice(firstDash + 1) : '';
 
             // Persist the four metadata fields that mirror the filename components.
             // These must be set BEFORE JSON.stringify() below.
-            dataToSave.entityType     = entityType;
-            dataToSave.entityName     = entityName;
-            dataToSave.sectionSuffix  = sectionSuffix;
-            dataToSave.detailSegment  = detailSlug;
+            dataToSave.entityType     = entityType    || null;
+            dataToSave.entityName     = entityName    || null;
+            dataToSave.sectionSuffix  = sectionSuffix || null;
+            dataToSave.detailSegment  = detailSlug    || null;  // human-readable slug, e.g. "composed"
             Lib.debug('cache', `Metadata: entityType="${entityType}", entityName="${entityName}", sectionSuffix="${sectionSuffix}", detailSegment="${detailSlug}"`);
-            Lib.debug('cache', `Filename assembled: "${filename}"`);
+
+            // Determine the detail segment for the filename (only included when setting is enabled).
+            const includeDetail = Lib.settings.sa_filename_include_detail !== false;
+            const detailSegment = (includeDetail && detailSlug) ? `-${detailSlug}` : '';
+
+            // Assemble the filename slug:
+            // <EntityType>-(<EntityName>)-<SectionSuffix>[-<detailSegment>]
+            let assembledSlug;
+            if (firstDash !== -1) {
+                assembledSlug = entityName
+                    ? `${entityType}-(${entityName})-${sectionSuffix}${detailSegment}`
+                    : `${entityType}-${sectionSuffix}${detailSegment}`;
+            } else {
+                assembledSlug = entityName
+                    ? `${pageTypeSlug}-(${entityName})${detailSegment}`
+                    : `${pageTypeSlug}${detailSegment}`;
+            }
 
             // Create JSON blob and trigger download
             const jsonStr = JSON.stringify(dataToSave, null, 2);
@@ -20792,6 +20812,23 @@
 
             const blob = new Blob([compressedData], { type: 'application/gzip' });
             const url = URL.createObjectURL(blob);
+
+            // Configurable prefix (default "MB-").
+            const filenamePrefix = Lib.settings.sa_filename_prefix != null
+                ? Lib.settings.sa_filename_prefix
+                : 'MB-';
+
+            // Optional row-count segment in parentheses.
+            const includeRowCount = Lib.settings.sa_filename_include_row_count !== false;
+            const rowPart = includeRowCount ? `-(${dataToSave.rowCount})` : '';
+
+            // Optional timestamp segment, separated by "_".
+            const includeTimestamp = Lib.settings.sa_filename_include_timestamp !== false;
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const timestampPart = includeTimestamp ? `_${timestamp}` : '';
+
+            const filename = `${filenamePrefix}${assembledSlug}${rowPart}${timestampPart}.json.gz`;
+            Lib.debug('cache', `Filename assembled: "${filename}"`);
 
             // Open the Save dialog — user can review metadata, optionally edit the
             // filename, then click "Save Data" to trigger the actual browser download.
